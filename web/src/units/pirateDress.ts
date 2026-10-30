@@ -411,9 +411,9 @@ export function bombSash(scene: Scene, body: ArticulatedBody, teamColor: Color3)
  * round the waist over the vest's foot, its front a little taller, a big square tan buckle frame in the middle with its tongue). PIRATE_BELT, on the trunk
  * (W, H, D the trunk's box, torso frame): a band .tall of H tall at .at of H/2 under the middle, .out of W wide and .deep of D deep (clear of the open
  * vest's fronts); on its front a square buckle frame .buckle of W across, four bars .bar of it thick, .proud of D off the band, and the tongue across its
- * middle. Leather self-lit .glow, the buckle tan .buckleGlow. The sash (BOMB_SASH) still runs from under it.
+ * middle. Leather self-lit .glow, the buckle tan .buckleGlow. It sits above the sash (BOMB_SASH): at the sash's height the band hid behind it (431 look).
  */
-const PIRATE_BELT = { tall: 0.13, at: -0.84, out: 1.16, deep: 1.36, buckle: 0.3, bar: 0.2, proud: 0.06, leather: new Color3(0.62, 0.22, 0.1), tan: new Color3(0.8, 0.6, 0.35), glow: 0.14, buckleGlow: 0.3 };
+const PIRATE_BELT = { tall: 0.18, at: -0.6, out: 1.18, deep: 1.4, buckle: 0.34, bar: 0.2, proud: 0.06, leather: new Color3(0.62, 0.22, 0.1), tan: new Color3(0.8, 0.6, 0.35), glow: 0.14, buckleGlow: 0.3 };
 
 /** A wide leather belt round the waist over the vest's foot with a big square tan buckle (spec at PIRATE_BELT). */
 export function pirateBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
