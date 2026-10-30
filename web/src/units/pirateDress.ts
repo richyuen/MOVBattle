@@ -742,6 +742,73 @@ const QUEEN_SKIRT = {
   flapWide: 0.6, flapFoot: 0.22, flapX: -0.25, flapLong: 1.3, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
 };
 
+/*
+ * [S] 433 the Pirate Queen's shirt (CONFIRM 431 a.2: "arms are bare from the shoulder below a sleeveless dark block vest - TABS: puffy short team sleeves
+ * over a laced shirt"; pirate.pirate_queen.red.png, card Appearance "red short-sleeved shirt": the shirt in the skirt's team colour, a short sleeve
+ * ballooning out round each upper arm from the shoulder and gathered above the elbow, the bare arm below; at the neck a V opening on her skin with
+ * criss-cross laces). QUEEN_SHIRT: the trunk mesh takes the skirt's team cloth (the darker body shade read as a vest); on each upper arm (shoulder
+ * frame, limbBox) two six-sided frusta, the shoulder's top widening from .shoulderOut of the arm to .puff at .puffAt of its length, then gathering
+ * to .cuffOut at .to; at the trunk's top front a skin V .vee of the trunk wide and .veeLong of its height long, .proud off it, with .laces crossed
+ * dark strokes. Self-lit .glow.
+ */
+const QUEEN_SHIRT = {
+  shoulderOut: 1.45, puff: 1.95, puffAt: 0.3, to: 0.62, cuffOut: 1.25, vee: 0.28, veeLong: 0.34, proud: 0.03,
+  laces: 2, laceLong: 0.2, laceFrom: 0.12, laceStep: 0.1, lace: new Color3(0.2, 0.11, 0.06), glow: 0.12,
+};
+
+/** The Pirate Queen's team shirt: puffy short sleeves and a laced V at the neck (spec at QUEEN_SHIRT). */
+export function queenShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const Q = QUEEN_SHIRT;
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", teamColor, { emissive: teamColor.scale(Q.glow) });
+  const lace = mf.get("cloth", Q.lace, { emissive: Q.lace.scale(Q.glow) });
+  const skin = body.headMesh.material ?? cloth;
+  const out: Mesh[] = [];
+  const tm = body.torsoMesh;
+  tm.material = cloth;
+  // the sleeves
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const L = limbBox(arm);
+    const r = Math.max(L.wide, L.deep), top = L.mid + L.half;
+    const at = (f: number): number => top - f * L.half * 2;
+    for (const [name, from, to, a, b] of [["queenSleeve", 0, Q.puffAt, Q.shoulderOut, Q.puff], ["queenSleeveCuff", Q.puffAt, Q.to, Q.puff, Q.cuffOut]] as const) {
+      const shell = MeshBuilder.CreateCylinder(name, { height: at(from) - at(to), diameterTop: r * 2 * a, diameterBottom: r * 2 * b, tessellation: 6 }, scene);
+      shell.convertToFlatShadedMesh();
+      shell.scaling.z = L.deep / r * 1.08;
+      shell.parent = arm.parent;
+      shell.position.y = (at(from) + at(to)) / 2;
+      shell.material = cloth;
+      out.push(shell);
+    }
+  }
+  // the laced V at the neck (trunk frame, +z her front)
+  const tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const front = cz + D / 2, topY = cy + H / 2;
+  const vee = MeshBuilder.CreateCylinder("queenShirtVee", { height: H * Q.veeLong, diameterTop: W * Q.vee, diameterBottom: 0, tessellation: 4 }, scene);
+  vee.rotation.y = Math.PI / 4;
+  vee.bakeCurrentTransformIntoVertices();
+  vee.scaling.z = (D * Q.proud * 2) / (W * Q.vee * Math.SQRT1_2);
+  vee.convertToFlatShadedMesh();
+  vee.parent = tm.parent;
+  vee.rotation.copyFrom(tm.rotation);
+  vee.position.set(cx, topY - H * Q.veeLong / 2, front);
+  vee.material = skin;
+  out.push(vee);
+  for (let i = 0; i < Q.laces; i++) for (const side of [-1, 1]) {
+    const s = MeshBuilder.CreateBox("queenShirtLace", { width: W * Q.laceLong, height: H * 0.022, depth: D * Q.proud * 2.4 }, scene);
+    s.parent = tm.parent;
+    s.rotation.copyFrom(tm.rotation);
+    s.rotation.z += side * 0.5;
+    s.position.set(cx, topY - H * (Q.laceFrom + i * Q.laceStep), front);
+    s.material = lace;
+    s.convertToFlatShadedMesh();
+    out.push(s);
+  }
+  return out;
+}
+
 /** The Pirate Queen's team wrap skirt to the knees, a slanted hem with green beads, and pale trousers under it (spec at QUEEN_SKIRT). */
 export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const Q = QUEEN_SKIRT;
