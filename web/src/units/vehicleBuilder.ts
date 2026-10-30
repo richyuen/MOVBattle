@@ -791,6 +791,9 @@ const HWACHA_RACK = {
 /** [S] 418 the hwacha's wheels (dynasty.hwacha.jpg: two big open wheels of light timber, an eight-sided rim on eight spokes round a dark hub): .across
  * tall, the rim .rim thick and .wide across the tread, .sides facets, .spokes spokes .spoke thick, the hub .hub across; set .out outside the cart's rails at .z. */
 const HWACHA_WHEEL = { across: 0.74, rim: 0.07, wide: 0.08, sides: 8, spokes: 8, spoke: 0.035, hub: 0.14, out: 0.05, z: -0.1 };
+/** [S] 419 the hwacha's shafts (dynasty.hwacha.red.png: two long brown beams from under the rack, past the wheels' inside, sloping down behind to team-coloured
+ * end blocks): each .wide x .deep, from .frontY/.frontZ to .rearY/.rearZ at .x either side; a team cap .cap tall, .capLong long at the rear end. */
+const HWACHA_SHAFT = { x: 0.45, wide: 0.1, deep: 0.09, frontY: 0.5, frontZ: 0.55, rearY: 0.18, rearZ: -1.45, cap: 0.2, capLong: 0.1, wood: new Color3(0.5, 0.28, 0.14) };
 // TABS-style hwacha: wide wooden cart with large, steeply-tilted rack of tube holes
 // filled with rocket arrows pointing upward. Big spoked wheels, cart handles behind.
 function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
@@ -805,7 +808,11 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
 
   // ─── Cart base ───
   const base = MeshBuilder.CreateBox("base", { width: 1.3, height: 0.1, depth: 1.2 }, scene);
-  base.position.y = 0.4; base.parent = root; base.material = teamPrimary; allMeshes.push(base);
+  base.position.y = 0.4; base.parent = root; base.material = makeMat(scene, HWACHA_RACK.wood); allMeshes.push(base); // [S] 419 a timber bed, not a team tray
+  // the body's own material is tinted to the team (wrapAsBody, applyMaterialPreset), so the body mesh is a team core hidden inside the bed, and the bed's
+  // timber material (shared with the rack and wheels) stays wood
+  const core = MeshBuilder.CreateBox("hwachaCore", { width: 1.2, height: 0.08, depth: 1.1 }, scene);
+  core.position.y = 0.4; core.parent = root; core.material = teamPrimary; allMeshes.push(core);
 
   // Side rails along the cart
   for (const xOff of [-0.6, 0.6]) {
@@ -837,11 +844,20 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
     }
   }
 
-  // ─── Cart handles extending behind (-Z) ───
-  for (const xOff of [-0.2, 0.2]) {
-    const handle = MeshBuilder.CreateBox("handle", { width: 0.05, height: 0.05, depth: 0.7 }, scene);
-    handle.position.set(xOff, 0.38, -0.85);
-    handle.parent = root; handle.material = darkWood; allMeshes.push(handle);
+  // ─── [S] 419 two long brown shafts (spec at HWACHA_SHAFT; audit a.4: "a flat team-blue tray - TABS: two long brown shafts with team end caps") ───
+  const Sh = HWACHA_SHAFT;
+  const shaftWood = makeMat(scene, Sh.wood);
+  for (const side of [-1, 1]) {
+    const from = new Vector3(side * Sh.x, Sh.frontY, Sh.frontZ), to = new Vector3(side * Sh.x, Sh.rearY, Sh.rearZ);
+    const run = to.subtract(from);
+    const bar = MeshBuilder.CreateBox("hwachaShaft", { width: Sh.wide, height: Sh.deep, depth: run.length() }, scene);
+    bar.position.copyFrom(Vector3.Center(from, to));
+    bar.lookAt(to); // the root stands at the origin while it is built
+    bar.parent = root; bar.material = shaftWood; allMeshes.push(bar);
+    const cap = MeshBuilder.CreateBox("hwachaShaftCap", { width: Sh.wide * 1.25, height: Sh.cap, depth: Sh.capLong }, scene);
+    cap.position.copyFrom(to.add(run.normalize().scale(Sh.capLong * 0.3)));
+    cap.lookAt(cap.position.add(run));
+    cap.parent = root; cap.material = teamPrimary; allMeshes.push(cap);
   }
 
   // ─── [S] 416 the launch rack: an upright light-wood lattice, HWACHA_RACK.cols x .rows square slots facing forward, a dark diamond rocket head in each
@@ -929,7 +945,7 @@ function buildHwacha(scene: Scene, color: Color3, options: { showOperators?: boo
   return wrapAsBody(
     scene,
     root,
-    base,
+    core,
     allMeshes,
     operator?.headMesh,
     makeBodyMetrics(operator?.headTopY ?? 1.58, 0.95, 0.52, 0.76),
