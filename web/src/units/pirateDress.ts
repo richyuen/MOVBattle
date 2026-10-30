@@ -766,6 +766,8 @@ export function queenShirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   const out: Mesh[] = [];
   const tm = body.torsoMesh;
   tm.material = cloth;
+  // the shoulder yoke over the trunk carries the same dark body shade
+  for (const m of body.allMeshes) if (/_yoke$/.test(m.name)) m.material = cloth;
   // the sleeves
   for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
     const L = limbBox(arm);
