@@ -36,7 +36,7 @@ secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 420 first: RE-AUDIT dragon a, b, c (the 419 review's capture tool frames a unit by its mesh top: the dragon's idle and motion shots now show the head and mouth, rig 5.70 m). The [R] slot is minotaur a (plateau: CONFIRM failed 403, 405, 408, 415; starving), specified from those four lists: size toward 1.2x, a thin flat strap, a wide team girdle, one arm-wide shoulder cap. Viking's checkpoint ran at the review (12/12 green) and viking left Batch.
+- 420 first: RE-AUDIT dragon a, b, c and monkey_king a, b, c (the 419 review's capture tool frames a unit by its mesh top: the dragon's shots now show the head and mouth, rig 5.70 m; the monkey king's tail pulls his frame back, rig 3.80 m; the other four open units' rigs are unchanged). The [R] slot is minotaur a (plateau: CONFIRM failed 403, 405, 408, 415; starving), specified from those four lists: size toward 1.2x, a thin flat strap, a wide team girdle, one arm-wide shoulder cap. Viking's checkpoint ran at the review (12/12 green) and viking left Batch.
 - Starving at 421: monkey_king a (last 416). Next ranked: dragon carriers with arms/heads, breath plume, ribbon; samurai a hakama / kabuto; firework b upright bow / c full draw / a legs; hwacha a timber (palette, --noglow); monkey_king a face / headgear.
 - The samurai spars with an archer (evidence 417); the monkey king starts at 8 m (jump_charge makes him a charger).
 - A world-posed rest (_restIceBow, _restKatana, _restNorseBoard) must clear rotationQuaternion outside the rest; the monkey king rides _restMonkBo via the "monkBoHolder" holder.
