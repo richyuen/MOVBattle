@@ -449,7 +449,7 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
   const body = buildCannon(scene, color, options);
   const root = body.root;
   // One fat tapered mortar barrel: the field gun's own barrel comes off, so there are not two tubes stacked
-  for (const name of ["barrel", "barrelBand", "breechKnob", "muzzle"]) {
+  for (const name of ["barrel", "barrelBand", "breechKnob", "muzzle", "cannonSight"]) {
     for (let i = body.allMeshes.length - 1; i >= 0; i--) {
       if (body.allMeshes[i].name === name) body.allMeshes.splice(i, 1)[0].dispose();
     }
@@ -1074,6 +1074,14 @@ const CANNON_WHEEL = {
   color: new Color3(0.1, 0.1, 0.11), glow: 0.12,
 };
 
+/**
+ * [S] 426 the cannon's ring sight (audit 422 a.2: "the top of the barrel plain - TABS: a ring crosshair sight standing on the barrel"; pirate.cannon.red.png:
+ * an iron octagon ring standing upright on the barrel's back a third of the way from the breech, as wide as the barrel, a small octagon at its middle and
+ * four bars from it out through the ring). In m: .at along the barrel from its breech end, on the barrel's back .seat over its axis; a post .post tall;
+ * the ring .ring in radius, the inner .inner; bars .bar square, .thick deep along the bore's line; spokes reach .spokeOut of the ring's radius.
+ */
+const CANNON_SIGHT = { at: 0.42, seat: 0.12, post: 0.03, ring: 0.12, inner: 0.04, bar: 0.022, thick: 0.03, spokeOut: 1.3 };
+
 function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("cannon_root", scene);
   const allMeshes: Mesh[] = [];
@@ -1157,6 +1165,35 @@ function buildCannon(scene: Scene, color: Color3, options: { showOperators?: boo
   bore.position.set(0, B.axis, B.breech + B.boreAt);
   bore.parent = root; bore.material = makeMat(scene, new Color3(0.08, 0.08, 0.09)); allMeshes.push(bore);
   const muzzleZ = B.breech + B.profile[B.profile.length - 1][1];
+
+  // [S] 426 the ring sight to the spec at CANNON_SIGHT, standing on the barrel's back over the chase: an octagon ring upright across the bore's line, a
+  // small octagon in its middle, four bars from it out through the ring, on a short post. Named "cannonSight" so the bomb cannon strips it with the barrel
+  const S = CANNON_SIGHT;
+  const sightY = B.axis + S.seat + S.post + S.ring;
+  const octagon = (r: number, bar: number): void => {
+    const chordS = 2 * r * Math.tan(Math.PI / 8) * 1.08;
+    for (let k = 0; k < 8; k++) {
+      const a = k * Math.PI / 4 + Math.PI / 8;
+      const seg = MeshBuilder.CreateBox("cannonSight", { width: chordS, height: bar, depth: S.thick }, scene);
+      seg.position.set(r * Math.cos(a), sightY + r * Math.sin(a), B.breech + S.at);
+      // its length (+x) along the ring's tangent at its place
+      seg.rotation.z = a + Math.PI / 2;
+      seg.parent = root; seg.material = metal; allMeshes.push(seg);
+    }
+  };
+  octagon(S.ring, S.bar);
+  octagon(S.inner, S.bar * 0.8);
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2;
+    const long = S.ring * S.spokeOut - S.inner;
+    const spokeS = MeshBuilder.CreateBox("cannonSight", { width: long, height: S.bar * 0.8, depth: S.thick }, scene);
+    spokeS.position.set(Math.cos(a) * (S.inner + long / 2), sightY + Math.sin(a) * (S.inner + long / 2), B.breech + S.at);
+    spokeS.rotation.z = a;
+    spokeS.parent = root; spokeS.material = metal; allMeshes.push(spokeS);
+  }
+  const post = MeshBuilder.CreateBox("cannonSight", { width: S.bar * 1.4, height: S.post + S.seat * 0.4, depth: S.thick * 1.6 }, scene);
+  post.position.set(0, B.axis + S.seat * 0.8 + S.post / 2, B.breech + S.at);
+  post.parent = root; post.material = metal; allMeshes.push(post);
 
   // Operator stands on the ground beside the wheel, turned in to it, and shoves it: both hands flat on the wheel's
   // outer face, back straight in one line with the braced rear leg, lead knee bent. Sunk 0.03 so both feet are on the ground
