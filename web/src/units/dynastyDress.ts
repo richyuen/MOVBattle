@@ -1133,7 +1133,19 @@ export function monkeyHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  * .shoeOut of the foot's box up to .shoeTall of it, a pointed toe .toe of the foot long standing from its front tilted .toeLift rad up, a gold anklet
  * .anklet of the foot tall round the cuff.
  */
-const MONKEY_SHORTS = { hipOut: 1.7, puffAt: 0.5, puff: 2.3, kneeOut: 1.45, kneeTo: 0.14, cuffOut: 1.6, shoeOut: 1.15, shoeTall: 0.78, toe: 1.2, toeWide: 1.5, toeLift: 0.55, anklet: 0.4, ankletOut: 1.25, gold: new Color3(0.86, 0.62, 0.18), glow: 0.12 };
+/*
+ * [R] 432 MONKEY_BUILD, the Monkey King's whole silhouette (plateau: CONFIRM 422, 429, 430 failed a; their lists: "a bulky box wider than the shoulders,
+ * rounded into puffy shorts", "1.45x his neighbours' height and 2x their width", "the shorts reach almost to the shoes, so there are no shins").
+ * Spec read off dynasty.monkey_king.blue.png (feet to crown 640 px): head and ruff 90 px; chest 130 px across at the armpits (.2 of his height),
+ * narrower than the shorts; a darker team waist wrap 110 px across between robe and shorts; the shorts 170 px across at mid-thigh (.27), 160 px tall
+ * (.25), from the wrap to the knee and gathered there under an orange band; bare team shins 110 px (.17); an orange band at each ankle; small pointy
+ * shoes 50 px tall (.08). reference/factions/dynasty.jpg: a little taller than the soldiers, as slim. Mechanism: unitVisuals scale 1.25 (the
+ * samurai's 1.1) and bulk .85 thin every limb and the trunk; MONKEY_SHORTS puff to .27 of his height and stop at the knee joint (the knee piece
+ * gathers to .kneeOut, a hair over the thigh, at .hem of the thigh mesh, which runs on past the knee joint), an orange band .band of the
+ * thigh tall at the hem, the shoe shell .shoeTall of the foot box so the shin shows,
+ * the anklet orange; MONKEY_TRUNK's wrap a shade darker (.wrapShade) so the waist reads apart from robe and shorts.
+ */
+const MONKEY_SHORTS = { hipOut: 1.35, puffAt: 0.55, puff: 1.9, kneeOut: 1.12, hem: 0.72, band: 0.08, cuffOut: 1.22, shoeOut: 1.08, shoeTall: 0.45, toe: 1.2, toeWide: 1.4, toeLift: 0.55, anklet: 0.24, ankletOut: 1.2, gold: new Color3(1, 0.42, 0.1), glow: 0.12 };
 /** The Monkey King's puffy team shorts gathered to gold knee cuffs, over pointy team shoes with gold anklets (spec at MONKEY_SHORTS). */
 export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const S = MONKEY_SHORTS;
@@ -1155,10 +1167,10 @@ export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
     out.push(shell);
   };
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
-    flare("monkeyShortsHip", leg, 0, S.puffAt, S.hipOut, S.puff);
-    flare("monkeyShortsKnee", leg, S.puffAt, 1, S.puff, S.kneeOut);
+    flare("monkeyShortsHip", leg, 0, S.puffAt * S.hem, S.hipOut, S.puff);
+    flare("monkeyShortsKnee", leg, S.puffAt * S.hem, S.hem, S.puff, S.kneeOut);
+    out.push(limbShell(scene, "monkeyShortsCuff", leg, S.hem - S.band, S.hem + S.band * 0.5, S.cuffOut, gold));
   }
-  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "monkeyShortsCuff", shin, 0, S.kneeTo, S.cuffOut, gold));
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const foot of knee.getChildMeshes(true)) {
       if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
@@ -1187,7 +1199,7 @@ export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
  * on; round the trunk's foot the wrap, .wraps stacked 8-sided team rings .wrap of the trunk's height tall, .wrapOut of its new width across and .deep
  * of its depth, each a little narrower than the one under it (.step), the top one .tilt rad askew as a tucked end. Team self-lit .glow.
  */
-const MONKEY_TRUNK = { narrow: 0.7, wraps: 2, wrap: 0.11, wrapOut: 1.18, deep: 1.25, step: 0.94, tilt: 0.08, glow: 0.12 };
+const MONKEY_TRUNK = { narrow: 0.7, wraps: 2, wrap: 0.11, wrapOut: 1.18, deep: 1.25, step: 0.94, tilt: 0.08, wrapShade: 0.62, glow: 0.12 };
 export function monkeyTrunk(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const T = MONKEY_TRUNK;
   const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox;
@@ -1198,7 +1210,8 @@ export function monkeyTrunk(scene: Scene, body: ArticulatedBody, teamColor: Colo
   const take = half * (1 - T.narrow);
   for (const shoulder of [body.leftShoulder, body.rightShoulder]) shoulder.position.x -= Math.sign(shoulder.position.x) * take;
   // the waist wrap round the trunk's foot
-  const cloth = getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(T.glow) });
+  const wrapColor = teamColor.scale(T.wrapShade);
+  const cloth = getMaterialFactory().get("cloth", wrapColor, { emissive: wrapColor.scale(T.glow) });
   const W = tb.extendSize.x * 2 * tm.scaling.x, H = tb.extendSize.y * 2 * tm.scaling.y, D = tb.extendSize.z * 2 * tm.scaling.z;
   const cx = tm.position.x + tb.center.x * tm.scaling.x, cz = tm.position.z + tb.center.z * tm.scaling.z;
   const foot = tm.position.y + (tb.center.y - tb.extendSize.y) * tm.scaling.y;

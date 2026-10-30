@@ -947,7 +947,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       // [S] 416 his staff is dynastyDress MONKEY_STAFF on the Monk's level carry, not the shared bo_staff
       // [S] 420 the torus crown is off: his gold circlet with two feather antennae is dynastyDress MONKEY_CROWN
       // [R] 430 no cape: the khaki panel on his back (CONFIRM 429 a.2); his robe is team all round (dynastyDress MONKEY_ROBE)
-      return vis({ scale: 1.72, bulk: 1.18, headSize: 1.14, armLength: 1.28 }, "none", "none", "none", "none", "#9a6a2d", undefined, {
+      // [R] 432 the slim wobbler build at about his card size (CONFIRM 422/429/430 a: bulky, 1.45x the soldiers' height, 2x their width; spec at
+      // dynastyDress MONKEY_BUILD): scale 1.72 -> 1.25 (the samurai and monk are 1.1), bulk 1.18 -> .85
+      return vis({ scale: 1.25, bulk: 0.85, headSize: 1.14, armLength: 1.28 }, "none", "none", "none", "none", "#9a6a2d", undefined, {
         posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "hero_halo", fxPreset: "royal",
         bodyDetailLevel: "hero",
         stateVariants: { moving: ["halo_flare"], attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
