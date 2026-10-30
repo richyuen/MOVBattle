@@ -10,7 +10,7 @@ import { getMaterialFactory } from "./materialFactory";
  */
 
 /** The bead eyes' bottom and top in the head block's own frame (null when the body has no eyes); the eyes hang off the neck, not the head block. */
-function eyeSpanInHead(body: ArticulatedBody): [number, number] | null {
+export function eyeSpanInHead(body: ArticulatedBody): [number, number] | null {
   const eyes = [body.leftEye, body.rightEye].filter((m): m is Mesh => !!m);
   if (!eyes.length) return null;
   const chain: Node[] = [];

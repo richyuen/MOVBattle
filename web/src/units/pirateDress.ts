@@ -2,6 +2,7 @@ import { Scene, Color3, Mesh, MeshBuilder, Matrix, Vector3, TransformNode, type 
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox, limbShell } from "./medievalDress";
+import { eyeSpanInHead } from "./dynastyDress";
 
 /*
  * Pirate dress (units/pirate.*): the cloth each sailor wears over the dark tar trunk, built per unit id by unitFactory. Sized off the trunk mesh's own
@@ -557,5 +558,49 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
     tail.setPivotPoint(new Vector3(0, e.y * Q.tail, 0));
     tail.rotation.z = side * Q.splay;
   }
+  return out;
+}
+
+/*
+ * [S] 429 the pirate's long hair (audit 422 flintlock a.4: "the sides of the head - bare under the cap - TABS: long dark-team hair falling to the
+ * shoulders either side of the face"; pirate.flintlock.red.png: two thick locks a shade darker than the skin from under the cap at the eyes' top,
+ * down past the jaw to the shoulders either side, behind the face's front, joined by a fall down the back of the head). PIRATE_HAIR, in the head's
+ * own box (e its half sizes): a cap shell .out of the head wide and deep from .clear over the eyes' top to .top of e.y; two side locks .side of e.x
+ * thick each from the cap down to .drop of e.y, from the back to .front of e.z (the face's front is e.z), splayed .splay rad out at the foot; a back
+ * fall .out wide from the crown to .drop, .back of e.z behind the head. The colour is the caller's (the team times .dark by default), self-lit .glow.
+ */
+const PIRATE_HAIR = { out: 1.1, clear: 0.06, top: 1.0, side: 0.34, drop: -1.75, front: 0.45, splay: 0.12, back: 0.22, dark: 0.55, glow: 0.12 };
+
+/** Long hair from under the cap to the shoulders either side of the face (spec at PIRATE_HAIR). */
+export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, opts: Partial<typeof PIRATE_HAIR> = {}): Mesh[] {
+  const P = { ...PIRATE_HAIR, ...opts };
+  const hair = getMaterialFactory().get("cloth", color, { emissive: color.scale(P.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const X = e.x * P.out, Z = e.z * P.out;
+  const capFoot = span[1] + e.y * P.clear, top = c.y + e.y * P.top, foot = c.y + e.y * P.drop;
+  const out: Mesh[] = [];
+  const slab = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene);
+    m.position.set(c.x + (x0 + x1) / 2, (y0 + y1) / 2, c.z + (z0 + z1) / 2);
+    m.parent = head;
+    m.material = hair;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  // the cap of hair under the hat, so the locks hang from something
+  slab("pirateHairCap", -X, X, capFoot, top, -Z, e.z * P.front);
+  // the locks either side of the face, hinged at the cap's foot and splayed out over the shoulders
+  for (const side of [-1, 1]) {
+    const x0 = side > 0 ? X - e.x * P.side : -X, x1 = side > 0 ? X : -X + e.x * P.side;
+    const lock = slab("pirateHairLock", x0, x1, foot, capFoot, -Z, e.z * P.front);
+    lock.setPivotPoint(new Vector3(0, (capFoot - foot) / 2, 0));
+    lock.rotation.z = side * P.splay;
+  }
+  // the fall down the back of the head
+  slab("pirateHairFall", -X * 0.94, X * 0.94, foot, top, -Z - e.z * P.back, -Z + e.z * 0.3);
   return out;
 }
