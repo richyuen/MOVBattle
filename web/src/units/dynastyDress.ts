@@ -1134,56 +1134,65 @@ export function monkeyHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  * .anklet of the foot tall round the cuff.
  */
 /*
- * [R] 432 MONKEY_BUILD, the Monkey King's whole silhouette (plateau: CONFIRM 422, 429, 430 failed a; their lists: "a bulky box wider than the shoulders,
- * rounded into puffy shorts", "1.45x his neighbours' height and 2x their width", "the shorts reach almost to the shoes, so there are no shins").
- * Spec read off dynasty.monkey_king.blue.png (feet to crown 640 px): head and ruff 90 px; chest 130 px across at the armpits (.2 of his height),
- * narrower than the shorts; a darker team waist wrap 110 px across between robe and shorts; the shorts 170 px across at mid-thigh (.27), 160 px tall
- * (.25), from the wrap to the knee and gathered there under an orange band; bare team shins 110 px (.17); an orange band at each ankle; small pointy
- * shoes 50 px tall (.08). reference/factions/dynasty.jpg: a little taller than the soldiers, as slim. Mechanism: unitVisuals scale 1.25 (the
- * samurai's 1.1) and bulk .85 thin every limb and the trunk; MONKEY_SHORTS puff to .27 of his height and stop at the knee joint (the knee piece
- * gathers to .kneeOut, a hair over the thigh, at .hem of the thigh mesh, which runs on past the knee joint), an orange band .band of the
- * thigh tall at the hem, the shoe shell .shoeTall of the foot box so the shin shows,
- * the anklet orange; MONKEY_TRUNK's wrap a shade darker (.wrapShade) so the waist reads apart from robe and shorts.
+ * [R] 432 MONKEY_BUILD (unitVisuals scale 1.25, bulk .85; MONKEY_TRUNK's darker wrap) set the Monkey King's silhouette: plateau by CONFIRM 422, 429,
+ * 430 ("a bulky box wider than the shoulders, rounded into puffy shorts", "1.45x his neighbours' height and 2x their width", "the shorts reach almost
+ * to the shoes, so there are no shins"); 432 struck the first two.
+ * [R] 433 MONKEY_SHORTS leg cut (blocker 3: "the puffy shorts reach almost to the shoes, so there are no shins. TABS: knee-length puffy shorts above
+ * bare team shins with orange ankle bands over the pointy shoes"). Spec read off dynasty.monkey_king.blue.png and .red.png (feet to crown 640 px):
+ * the shorts 160 px tall (.25 of him) from the waist wrap to the knee, widest (170 px, .27) at mid-thigh, gathered at the knee under an orange
+ * band; below it a bare team shin 110 px (.17) as slim as the forearm; an orange band round the ankle just over the shoe; a low pointy shoe 50 px
+ * (.08) with an upturned toe. Probe 433 (rig at the idle shot, hip 0.84 m up): knee joint 0.45 m up (.41 under the hip joint), the thigh mesh running
+ * .08 past it (the hinge fill), the 432 cut at .72 of that mesh ending .08 ABOVE the joint; the foot mesh a boot 0.29 m tall whose team cuff rises
+ * half the shin, the shoe .45 of it and the anklet at its top (0.29), so the bare shin was 0.16 m. Mechanism: every height is taken off the knee JOINT (its position in the hip frame the shorts hang in), not the
+ * thigh mesh: the hip frustum from the thigh's top to .puffAt of the hip-to-knee run, the knee frustum from there to .below of that run under the
+ * joint, gathering to .kneeOut; the orange band .band of the run tall, its foot at the hem. On the foot the shoe shell .shoeTall of the boot box (the
+ * instep, LESSONS 47: the toe box tops out at about .42), the toe spike from it, the orange anklet from the shoe's top up .anklet of the box, so the
+ * boot's team cuff and the shin read as one bare team shin from the anklet to the hem.
  */
-const MONKEY_SHORTS = { hipOut: 1.35, puffAt: 0.55, puff: 1.9, kneeOut: 1.12, hem: 0.72, band: 0.08, cuffOut: 1.22, shoeOut: 1.08, shoeTall: 0.45, toe: 1.2, toeWide: 1.4, toeLift: 0.55, anklet: 0.24, ankletOut: 1.2, gold: new Color3(1, 0.42, 0.1), glow: 0.12 };
-/** The Monkey King's puffy team shorts gathered to gold knee cuffs, over pointy team shoes with gold anklets (spec at MONKEY_SHORTS). */
+const MONKEY_SHORTS = { hipOut: 1.35, puffAt: 0.5, puff: 1.9, kneeOut: 1.12, below: 0, band: 0.12, cuffOut: 1.2, shoeOut: 1.08, shoeTall: 0.32, toe: 1.2, toeWide: 1.4, toeLift: 0.55, anklet: 0.13, ankletOut: 1.18, gold: new Color3(1, 0.42, 0.1), glow: 0.12 };
+/** The Monkey King's puffy team shorts gathered to orange bands at the knee joint, bare shins, low pointy shoes with orange anklets (spec at MONKEY_SHORTS). */
 export function monkeyShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const S = MONKEY_SHORTS;
   const mf = getMaterialFactory();
   const cloth = mf.get("cloth", teamColor, { emissive: teamColor.scale(S.glow) });
   const gold = mf.get("cloth", S.gold, { emissive: S.gold.scale(S.glow) });
   const out: Mesh[] = [];
-  // a flared shell: a six-sided frustum over a limb from `from` to `to` of the way down it, outTop of the limb wide at its head, outBottom at its foot
-  const flare = (name: string, limb: Mesh, from: number, to: number, outTop: number, outBottom: number): void => {
-    const L = limbBox(limb);
-    const yTop = L.mid + L.half - from * L.half * 2, yBot = L.mid + L.half - to * L.half * 2;
+  // a six-sided frustum in the hip frame from yTop down to yBot, outTop of the thigh wide at its head, outBottom at its foot
+  const flare = (name: string, leg: Mesh, yTop: number, yBot: number, outTop: number, outBottom: number, mat = cloth): void => {
+    const L = limbBox(leg);
     const r = Math.max(L.wide, L.deep);
     const shell = MeshBuilder.CreateCylinder(name, { height: yTop - yBot, diameterTop: r * 2 * outTop, diameterBottom: r * 2 * outBottom, tessellation: 6 }, scene);
     shell.convertToFlatShadedMesh();
     shell.scaling.z = L.deep / r * 1.08;
-    shell.parent = limb.parent;
+    shell.parent = leg.parent;
     shell.position.y = (yTop + yBot) / 2;
-    shell.material = cloth;
+    shell.material = mat;
     out.push(shell);
   };
-  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
-    flare("monkeyShortsHip", leg, 0, S.puffAt * S.hem, S.hipOut, S.puff);
-    flare("monkeyShortsKnee", leg, S.puffAt * S.hem, S.hem, S.puff, S.kneeOut);
-    out.push(limbShell(scene, "monkeyShortsCuff", leg, S.hem - S.band, S.hem + S.band * 0.5, S.cuffOut, gold));
+  for (const [leg, knee] of [[body.leftUpperLeg, body.leftKnee], [body.rightUpperLeg, body.rightKnee]] as const) {
+    const L = limbBox(leg);
+    const top = L.mid + L.half, kneeY = knee.position.y, run = top - kneeY;
+    const puffY = top - run * S.puffAt, hemY = kneeY - run * S.below;
+    flare("monkeyShortsHip", leg, top, puffY, S.hipOut, S.puff);
+    flare("monkeyShortsKnee", leg, puffY, hemY, S.puff, S.kneeOut);
+    flare("monkeyShortsCuff", leg, hemY + run * S.band, hemY, S.cuffOut, S.cuffOut * 0.94, gold);
   }
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const foot of knee.getChildMeshes(true)) {
       if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
       const fb = foot.getBoundingInfo().boundingBox, ex = fb.extendSize;
       const put = (m: Mesh, x: number, y: number, z: number, mat = cloth): Mesh => { m.parent = foot; m.position.set(x, y, z); m.material = mat; m.convertToFlatShadedMesh(); out.push(m); return m; };
-      put(MeshBuilder.CreateBox("monkeyShoe", { width: ex.x * 2 * S.shoeOut, height: ex.y * 2 * S.shoeTall, depth: ex.z * 2 * S.shoeOut }, scene), fb.center.x, fb.minimum.y + ex.y * S.shoeTall, fb.center.z);
+      const shoeH = ex.y * 2 * S.shoeTall;
+      put(MeshBuilder.CreateBox("monkeyShoe", { width: ex.x * 2 * S.shoeOut, height: shoeH, depth: ex.z * 2 * S.shoeOut }, scene), fb.center.x, fb.minimum.y + shoeH / 2, fb.center.z);
       // the pointed toe: a four-sided spike from the shoe's front, tilted up (the foot's +z is its toe)
       const long = ex.z * 2 * S.toe * 0.5;
       const toe = put(MeshBuilder.CreateCylinder("monkeyShoeToe", { height: long, diameterTop: 0, diameterBottom: ex.x * S.toeWide, tessellation: 4 }, scene), 0, 0, 0);
       toe.rotation.x = Math.PI / 2 - S.toeLift;
       const axis = new Vector3(0, Math.sin(S.toeLift), Math.cos(S.toeLift));
-      toe.position.set(fb.center.x, fb.minimum.y + ex.y * S.shoeTall * 0.5, fb.maximum.z * S.shoeOut - ex.z * 0.1).addInPlace(axis.scale(long * 0.5));
-      const anklet = put(MeshBuilder.CreateCylinder("monkeyAnklet", { height: ex.y * 2 * S.anklet, diameter: ex.x * 2 * S.ankletOut, tessellation: 6 }, scene), fb.center.x, fb.maximum.y - ex.y * S.anklet * 0.9, fb.minimum.z + ex.z * 0.55, gold);
+      toe.position.set(fb.center.x, fb.minimum.y + shoeH * 0.5, fb.maximum.z * S.shoeOut - ex.z * 0.1).addInPlace(axis.scale(long * 0.5));
+      // the orange anklet sits on the shoe's top round the boot's cuff (the back of the foot box)
+      const ankH = ex.y * 2 * S.anklet;
+      const anklet = put(MeshBuilder.CreateCylinder("monkeyAnklet", { height: ankH, diameter: ex.x * 2 * S.ankletOut, tessellation: 6 }, scene), fb.center.x, fb.minimum.y + shoeH + ankH / 2, fb.minimum.z + ex.z * 0.55, gold);
       anklet.scaling.z = (ex.z * 1.15) / (ex.x * S.ankletOut);
     }
   }
