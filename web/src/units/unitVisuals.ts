@@ -556,7 +556,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "pirate.harpooner": vis(
-    { scale: 1.05, armLength: 1.15 }, "harpoon", "bandana", "none", "none", "#708090",
+    // [S] 425 a brown tricorn, brim turned up three ways (card "brown tricorn hat"), in place of the bandana
+    { scale: 1.05, armLength: 1.15 }, "harpoon", "tricorn", "none", "none", "#708090",
     undefined,
     { materialPreset: "pirate_tar" },
   ),

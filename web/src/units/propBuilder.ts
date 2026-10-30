@@ -70,6 +70,8 @@ const TRICORN_WALL = 0.42;
 const TRICORN_LEAN = 0.3;
 // The captain's skull plate on the hat's front wall (see the pirate_hat branch of the tricorn), in wall heights: skull across, its centre's height off the
 // wall's middle, the crossed bones' length and width, how far the plate stands off the felt, and each slab's thickness
+// The plain tricorn's felt (the harpooner's): palette brown x .7, a red-brown in the capture
+const TRICORN_BROWN = new Color3(0.43, 0.2, 0.13);
 const TRICORN_PLATE = { skull: 0.5, at: 0.08, bone: 0.95, boneWide: 0.1, proud: 0.12, thick: 0.06, white: new Color3(0.95, 0.94, 0.9) };
 /*
  * A bandana tied over the skull (249; units/secret.taekwondo, factions/secret: cloth pulled down over the whole crown to the brow, the face and bead eyes clear
@@ -857,7 +859,9 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     return holder;
   }
   if (type === "tricorn" || type === "pirate_hat") {
-    const felt = mat(scene, new Color3(0.11, 0.1, 0.12));
+    // [S] 425 the plain tricorn is the harpooner's brown felt (pirate.harpooner.red.png: a wide red-brown tricorn, a corner over the brow); the
+    // captain's and the queen's pirate_hat stay black
+    const felt = type === "tricorn" ? mat(scene, TRICORN_BROWN, 0.12, "cloth") : mat(scene, new Color3(0.11, 0.1, 0.12));
     // Crown: a low dome pulled down over the skull to the seat
     const domeTall = eyeTop - HAT_EYE_CLEAR * H + TRICORN_CROWN * H;
     const crown = MeshBuilder.CreateSphere("tricornCrown", { diameterX: u(TRICORN_DOME * W), diameterY: u(domeTall * 2), diameterZ: u(TRICORN_DOME * W * 1.05), segments: 6, slice: 0.5 }, scene);
