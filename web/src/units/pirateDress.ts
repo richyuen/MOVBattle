@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, Matrix } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox, limbShell } from "./medievalDress";
@@ -111,6 +111,59 @@ export function barrelArmour(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const side of [-1, 1]) for (const face of [-1, 1]) {
     const strap = MeshBuilder.CreateBox("barrelStrap", { width: W * B.strap, height: strapTall, depth: D * 0.05 }, scene);
     place(strap, side * W * B.strapAt / 2, top + strapTall / 2, face * (D / 2 + D * 0.03), 0, dark);
+  }
+  return out;
+}
+
+/*
+ * [S] 426 the open coat (audit 422 a.3: "a dark closed tunic - TABS: an open team coat with tan lapels over a white V undershirt"; pirate.harpooner.red.png,
+ * card Appearance "open coat, undershirt": a team coat from the shoulders to the top of the thighs, open down the front over a white undershirt cut in a
+ * deep V, its two fronts edged with broad tan lapels turned back from the collar). OPEN_COAT: the coat a shell .out of the trunk wide and .deep of it deep,
+ * .long of its height from the shoulders down, in the team colour; the white V a flat wedge .vee of the trunk across at the collar narrowing to a point
+ * .veeLong of the trunk's height down, standing .proud off the shell's front; the two fronts .front of the trunk across either side of the V; the lapels
+ * tan strips .lapel across, .lapelLong of the height, .lapelProud proud, along the V's edges leaning .lean rad in to its point. Self-lit .glow.
+ */
+const OPEN_COAT = {
+  out: 1.12, deep: 1.14, long: 1.32, vee: 0.42, veeLong: 0.62, proud: 0.03, front: 0.34, lapel: 0.11, lapelLong: 0.5, lapelProud: 0.07, lean: 0.3,
+  white: new Color3(0.9, 0.88, 0.84), tan: new Color3(0.8, 0.6, 0.35), glow: 0.12,
+};
+
+export function openCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = OPEN_COAT;
+  const mf = getMaterialFactory();
+  const coat = mf.get("cloth", teamColor, { emissive: teamColor.scale(C.glow) });
+  const white = mf.get("cloth", C.white, { emissive: C.white.scale(C.glow * 1.5) });
+  const tan = mf.get("cloth", C.tan, { emissive: C.tan.scale(C.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  const place = (m: Mesh, x: number, y: number, z: number, rz: number, mat: typeof coat): Mesh => {
+    m.position.set(cx + x, cy + y, cz + z);
+    m.rotation.copyFrom(tm.rotation);
+    m.rotation.z += rz;
+    m.parent = tm.parent;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  // the coat: a shell from the shoulders down past the belt
+  const long = H * C.long, drop = (H - long) / 2;
+  const front = D * C.deep / 2;
+  place(MeshBuilder.CreateBox("openCoat", { width: W * C.out, height: long, depth: D * C.deep }, scene), 0, drop, 0, 0, coat);
+  // the white V: a wedge from the collar to a point, a squared 4-sided frustum flattened onto the coat's front
+  const veeLong = H * C.veeLong, veeTop = H / 2;
+  const vee = MeshBuilder.CreateCylinder("openCoatVee", { height: veeLong, diameterTop: W * C.vee * Math.SQRT2, diameterBottom: 0.002, tessellation: 4 }, scene);
+  vee.bakeTransformIntoVertices(Matrix.RotationY(Math.PI / 4));
+  vee.scaling.z = (D * C.proud) / (W * C.vee);
+  place(vee, 0, veeTop - veeLong / 2, front + D * C.proud / 2, 0, white);
+  // the lapels: tan strips along the V's two edges, turned back from the collar toward its point
+  const lapelLong = H * C.lapelLong;
+  for (const side of [-1, 1]) {
+    const x = side * (W * C.vee / 4 + W * C.lapel * 0.3);
+    place(MeshBuilder.CreateBox("openCoatLapel", { width: W * C.lapel, height: lapelLong, depth: D * C.lapelProud }, scene),
+      x, veeTop - lapelLong / 2, front + D * C.lapelProud / 2, -side * C.lean, tan);
   }
   return out;
 }
