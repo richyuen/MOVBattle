@@ -904,6 +904,9 @@ export class ProjectileSystem {
       if (p.shape === "davinci_ball") {
         // A da Vinci ball does not explode: it shatters into iron fragments where it lands
         this.visualEffects?.spawnShatter(p.mesh.position);
+      } else if (p.shape === "pumpkin" && this.visualEffects) {
+        // [S] 435 a pumpkin bursts into rind and bouncing jack-o'-lanterns, not a fireball (VisualEffects.spawnPumpkinBurst)
+        this.visualEffects.spawnPumpkinBurst(p.targetPos);
       } else if (this.impactPresentation) {
         this.impactPresentation.presentExplosion(p.targetPos, explosionScale);
       } else {

@@ -20,6 +20,8 @@ interface TimedEffect {
 // Shed gear (see VisualEffects.spawnGearLitter): how far off it lands, how far a board leans back off upright, and how far a weapon's grip end stands off the ground.
 // A da Vinci ball's break-up (see spawnShatter): shards, size (m), outward and upward speed (m/s), seconds
 const SHATTER = { count: 7, size: 0.11, speed: 3.2, up: 3.0, last: 0.9 };
+// The pumpkin landing (see spawnPumpkinBurst): rind shards and their size, bouncing lanterns and their size (m), out and up speed (m/s), bounce keep, seconds
+const PUMPKIN_BURST = { shards: 8, rind: 0.2, lanterns: 4, lantern: 0.32, out: 3.4, up: 5.5, keep: 0.62, last: 2.4, orange: new Color3(0.9, 0.38, 0.08), face: new Color3(1, 0.8, 0.2), stem: new Color3(0.25, 0.3, 0.1) };
 // Paint flung off the painter's brush (see spawnPaintSplotches): blobs, size (m), speed along the swing, spread across it and up (m/s), seconds
 const PAINT_SPLOTCH = { count: 5, size: 0.09, speed: 3.4, spread: 1.6, up: 2.2, last: 1.0 };
 const GEAR_TOSS_MIN = 0.6;
@@ -1335,6 +1337,83 @@ export class VisualEffects {
     });
   }
   private _shatterMat: ReturnType<ReturnType<typeof getMaterialFactory>["createUnique"]> | undefined;
+
+  /*
+   * [S] 435 the Pumpkin Catapult's pumpkin landing (audit 434 spooky.pumpkin_catapult c.2: "impact throws dark rock chunks - TABS: bouncy jack o'
+   * lanterns"; card Characteristics "bones and bouncy jack o' lanterns as the payload"): no fireball and no rock. PUMPKIN_BURST.shards curved orange
+   * rind pieces fly out and fall, and PUMPKIN_BURST.lanterns small jack-o'-lanterns (an orange ball .lantern across, a stem, two glowing triangle eyes and
+   * a mouth on front and back) bounce out across the ground: thrown out .out m/s and up .up, each bounce keeping .keep of its fall, rolling as they go,
+   * for .last s. An orange flash puff marks the hit.
+   */
+  spawnPumpkinBurst(position: Vector3): void {
+    const B = PUMPKIN_BURST;
+    const root = new TransformNode("pumpkinBurst", this._scene);
+    root.position = position.clone();
+    const floorY = -root.position.y;
+    const factory = getMaterialFactory();
+    const rind = factory.get("cloth", B.orange, { emissive: B.orange.scale(0.12) });
+    const glow = factory.get("cloth", B.face, { emissive: B.face.scale(0.9) });
+    const stemMat = factory.get("cloth", B.stem);
+    const bits: { node: TransformNode; velocity: Vector3; spin: Vector3; r: number; keep: number }[] = [];
+    for (let i = 0; i < B.shards; i++) {
+      const m = MeshBuilder.CreateBox("pumpkinRind", { width: B.rind, height: B.rind * 0.3, depth: B.rind * 0.7 }, this._scene);
+      m.material = rind;
+      m.parent = root;
+      m.rotation.set(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28);
+      const a = (i / B.shards) * Math.PI * 2 + Math.random() * 0.5;
+      const v = B.out * (0.8 + Math.random() * 0.8);
+      bits.push({ node: m, velocity: new Vector3(Math.cos(a) * v, B.up * (0.6 + Math.random() * 0.6), Math.sin(a) * v), spin: new Vector3(8, 4, 6), r: B.rind * 0.15, keep: 0.2 });
+    }
+    for (let i = 0; i < B.lanterns; i++) {
+      const s = B.lantern * (0.85 + Math.random() * 0.3);
+      const node = new TransformNode("pumpkinLantern", this._scene);
+      node.parent = root;
+      const ball = MeshBuilder.CreateSphere("pumpkinLanternBall", { diameter: s, segments: 6 }, this._scene);
+      ball.scaling.y = 0.82;
+      ball.material = rind;
+      ball.parent = node;
+      const stem = MeshBuilder.CreateCylinder("pumpkinLanternStem", { height: s * 0.22, diameter: s * 0.1, tessellation: 5 }, this._scene);
+      stem.position.y = s * 0.45;
+      stem.material = stemMat;
+      stem.parent = node;
+      for (const side of [-1, 1]) {
+        const z = side * s * 0.47;
+        for (const ex of [-1, 1]) {
+          const eye = MeshBuilder.CreateCylinder("pumpkinLanternEye", { height: s * 0.04, diameter: s * 0.2, tessellation: 3 }, this._scene);
+          eye.rotation.x = Math.PI / 2;
+          eye.position.set(ex * s * 0.15, s * 0.08, z);
+          eye.material = glow;
+          eye.parent = node;
+        }
+        const mouth = MeshBuilder.CreateBox("pumpkinLanternMouth", { width: s * 0.38, height: s * 0.08, depth: s * 0.04 }, this._scene);
+        mouth.position.set(0, -s * 0.13, z);
+        mouth.material = glow;
+        mouth.parent = node;
+      }
+      const a = (i / B.lanterns) * Math.PI * 2 + 0.4 + Math.random() * 0.4;
+      const v = B.out * (0.6 + Math.random() * 0.5);
+      node.rotation.y = a;
+      bits.push({ node, velocity: new Vector3(Math.cos(a) * v, B.up * (0.8 + Math.random() * 0.4), Math.sin(a) * v), spin: new Vector3(0, 0, -v * 2.2), r: s * 0.41, keep: B.keep });
+    }
+    this.spawnSmokePuff(position.add(new Vector3(0, 0.3, 0)), B.orange);
+    this._effects.push({
+      root,
+      remaining: B.last,
+      update: (dt) => {
+        for (const b of bits) {
+          b.velocity.y -= 12 * dt;
+          b.node.position.addInPlace(b.velocity.scale(dt));
+          b.node.rotation.addInPlace(b.spin.scale(dt));
+          if (b.node.position.y < floorY + b.r) {
+            b.node.position.y = floorY + b.r;
+            if (b.velocity.y < 0) b.velocity.y = -b.velocity.y * b.keep;
+            b.velocity.x *= 0.8; b.velocity.z *= 0.8;
+            if (b.keep < 0.5) b.spin.scaleInPlace(0.3);
+          }
+        }
+      },
+    });
+  }
   // ══════════════════ PAINT SPLOTCHES ══════════════════
   /**
    * Paint flying off the painter's brush as it lands (renaissance.painter card Appearance: "when the Painter attacks with its brush, splotches of paint fly
