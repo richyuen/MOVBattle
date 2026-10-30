@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, TransformNode } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { eyeSpanInHead } from "./dynastyDress";
@@ -103,5 +103,50 @@ export function swordcasterBowl(scene: Scene, body: ArticulatedBody): Mesh[] {
   slab("swordcasterBowlSide", X - e.x * B.side, X, sideFoot, fringe, -Z, e.z * B.front);
   // the back down to the nape
   slab("swordcasterBowlBack", -X, X, c.y + e.y * B.nape, fringe, -Z, -Z + e.z * B.back * 2);
+  return out;
+}
+
+/*
+ * [S] 435 the Reaper Wings (audit 434 reaper a.1: "tendrils in unit_spooky.reaper_idle absent - TABS: six long dark tendrils fanning behind the
+ * shoulders, three each side"; spooky.reaper.red.png, card Abilities "a pair of six dark tendrils that looms behind their host; three on the left, three
+ * on their right": thin near-black navy tentacles out of the upper back, each running out sideways and a little back for several of his own widths,
+ * fanned one over another, waving gently along their length and thinning to a point). REAPER_TENDRILS, in the torso mesh's own box (e its half sizes,
+ * T its height): per side .fan tubes rooted .rootX of e.x off the spine at .rootY of e.y on the back, each .long of T long, sent .out of the way
+ * sideways and .back of it backward, lifted by its .rise angle (rad), a sine wave .wave of T tall over .waves cycles growing along it, .thick of T thick
+ * at the root tapering to .tip of that. Near-black navy, self-lit .glow so it reads dark blue, not a hole.
+ */
+const REAPER_TENDRILS = {
+  rootX: 0.3, rootY: 0.55, long: 4.6, out: 0.88, back: 0.45, rise: [0.24, 0.04, -0.16], wave: 0.22, waves: 1.6, thick: 0.1, tip: 0.18,
+  steps: 18, glow: 0.18, color: new Color3(0.035, 0.035, 0.09),
+};
+
+/** Six dark tendrils fanned from the upper back, three each side (spec at REAPER_TENDRILS). */
+export function reaperTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const R = REAPER_TENDRILS;
+  const torso = body.torsoMesh;
+  const bb = torso.getBoundingInfo().boundingBox, e = bb.extendSize, c = bb.center;
+  const T = e.y * 2;
+  const mat = getMaterialFactory().get("cloth", R.color, { emissive: R.color.scale(R.glow) });
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    R.rise.forEach((rise, i) => {
+      const root = new Vector3(c.x + side * e.x * R.rootX, c.y + e.y * R.rootY - i * e.y * 0.12, c.z - e.z * 0.9);
+      const dir = new Vector3(side * R.out, 0, -R.back).normalize();
+      const path: Vector3[] = [];
+      for (let k = 0; k <= R.steps; k++) {
+        const t = k / R.steps, d = R.long * T * t;
+        const wave = Math.sin(t * Math.PI * 2 * R.waves + i * 1.3 + (side > 0 ? 0.6 : 0)) * R.wave * T * t;
+        path.push(new Vector3(root.x + dir.x * d * Math.cos(rise), root.y + d * Math.sin(rise) + wave, root.z + dir.z * d * Math.cos(rise)));
+      }
+      const tube = MeshBuilder.CreateTube("reaperTendril", {
+        path, tessellation: 6, cap: Mesh.CAP_START,
+        radiusFunction: (k: number) => (R.thick * T * 0.5) * (1 - (1 - R.tip) * (k / R.steps)) * (k === R.steps ? 0.05 : 1),
+      }, scene);
+      tube.parent = torso;
+      tube.material = mat;
+      tube.isPickable = false;
+      out.push(tube);
+    });
+  }
   return out;
 }

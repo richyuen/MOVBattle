@@ -14,7 +14,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { vampireClaws, swordcasterBowl } from "./spookyDress";
+import { vampireClaws, swordcasterBowl, reaperTendrils } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -521,6 +521,8 @@ export class UnitFactory {
     }
     if (definition.id === "spooky.reaper" && !shouldUseVehicleBody) {
       propMeshes.push(...dressReaper(this._scene, body, teamColor));
+      // [S] 435 the Reaper Wings: six dark tendrils fanned from his upper back, three each side (spookyDress REAPER_TENDRILS)
+      propMeshes.push(...reaperTendrils(this._scene, body));
     }
     if (definition.id === "secret.tree_giant" && !shouldUseVehicleBody) {
       propMeshes.push(...dressTreeGiant(this._scene, body, teamColor));
