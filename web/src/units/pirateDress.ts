@@ -353,6 +353,58 @@ export function queenSash(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 430 the Bomb Thrower's bomb sash (audit 422 bomb_thrower a.4: "the hip - nothing across it - TABS: a team sash slung from the belt across the hip
+ * carrying a bomb"; pirate.bomb_thrower.red.png, card Appearance "bomb pouch": a team cloth band from under the belt at his left hip slung down across
+ * the front of the shorts to his right hip, where it gathers into a pouch holding one black fused bomb at the side of his thigh). BOMB_SASH, on the
+ * trunk (torso frame, -x his left; W, H, D the trunk's box): a band .wide of W across and .thick of D thick from (.fromX of W/2, .fromY of H/2 under the
+ * middle) to (.toX, .toY), standing .proud of D off the trunk's front; at its foot a pouch, a team cloth cup .pouch of W across, and in it a black
+ * faceted bomb .bomb of W across sat .seat of its radius up, a brown fuse stub on top. Team times .shade self-lit .glow, the bomb .bombGlow.
+ */
+const BOMB_SASH = {
+  wide: 0.16, thick: 0.1, fromX: -0.75, fromY: -0.92, toX: 1.02, toY: -1.42, proud: 0.06, pouch: 0.26, bomb: 0.26, seat: 0.55, shade: 0.85,
+  black: new Color3(0.035, 0.035, 0.04), fuse: new Color3(0.24, 0.13, 0.065), glow: 0.12, bombGlow: 0.2,
+};
+
+/** A team sash slung from the belt across the front to a pouch and bomb at the right hip (spec at BOMB_SASH). */
+export function bombSash(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = BOMB_SASH;
+  const mf = getMaterialFactory();
+  const shade = teamColor.scale(S.shade);
+  const cloth = mf.get("cloth", shade, { emissive: shade.scale(S.glow) });
+  const black = mf.get("cloth", S.black, { emissive: S.black.scale(S.bombGlow) });
+  const fuseMat = mf.get("cloth", S.fuse, { emissive: S.fuse.scale(S.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat = cloth): Mesh => {
+    m.parent = tm.parent;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  const x0 = W / 2 * S.fromX, y0 = H / 2 * S.fromY, x1 = W / 2 * S.toX, y1 = H / 2 * S.toY;
+  const len = Math.hypot(x1 - x0, y1 - y0), ang = Math.atan2(y1 - y0, x1 - x0);
+  const thick = D * S.thick, faceZ = cz + D / 2 + D * S.proud;
+  const band = put(MeshBuilder.CreateBox("bombSash", { width: len, height: W * S.wide, depth: thick }, scene));
+  band.position.set(cx + (x0 + x1) / 2, cy + (y0 + y1) / 2, faceZ + thick / 2);
+  band.rotation.z = ang;
+  // the pouch at the foot of the band, the bomb sat in it at the side of the thigh
+  const pr = W * S.pouch / 2, br = W * S.bomb / 2;
+  const px = cx + x1, py = cy + y1, pz = faceZ - D * 0.15;
+  const pouch = put(MeshBuilder.CreateSphere("bombSashPouch", { diameter: pr * 2, segments: 4, slice: 0.5 }, scene));
+  pouch.rotation.x = Math.PI;
+  pouch.position.set(px, py, pz);
+  const bomb = put(MeshBuilder.CreateIcoSphere("bombSashBomb", { radius: br, subdivisions: 1, flat: true }, scene), black);
+  bomb.position.set(px, py + br * S.seat, pz);
+  const fuse = put(MeshBuilder.CreateCylinder("bombSashFuse", { height: br * 0.7, diameter: br * 0.3, tessellation: 5 }, scene), fuseMat);
+  fuse.position.set(px + br * 0.2, py + br * S.seat + br * 1.15, pz);
+  fuse.rotation.z = -0.4;
+  return out;
+}
+
+/*
  * [S] 428 the cannon rider's striped shirt (audit 422 a.3: "the rider's shirt - plain team - TABS: a white shirt with team stripes"; pirate.cannon.red.png,
  * card Appearance "a white, striped shirt": a white short-sleeved shirt over the trunk with broad team bands round it, the sleeves striped too).
  * CANNON_SHIRT, on the crewman (dressCannonCrew's five "crewHoop" bands round his trunk, torso frame): under the bands a white faceted shell following
