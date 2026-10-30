@@ -464,3 +464,52 @@ export function dragonForm(scene: Scene, body: ArticulatedBody, teamColor: Color
   mouth.position.copyFrom(Vector3.Center(snoutAt, jawAt).add(new Vector3(0, 0, D.jaw[2] * h * 0.55)));
   return out;
 }
+
+/*
+ * [S] 416 the Monkey King's staff (audit 411 b.1: "a dark brown pole about 1 m long - TABS: a staff longer than his arm span"; b.2: "plain brown -
+ * TABS: a team-coloured shaft with gold banded ends"; dynasty.monkey_king.red.png: a team staff held level across his chest in both fists, reaching
+ * well past both hands, each end sheathed in gold with green bands). Carried on the Monk's holder ("monkBoHolder"), so _restMonkBo lays it level
+ * across his chest and swings it two-handed: MONKEY_STAFF.long of his height, .thick across, team-coloured; each end a gold sleeve .end of it long,
+ * a shade wider, with .bands green bands.
+ */
+const MONKEY_STAFF = {
+  long: 1.35, thick: 0.024, offset: 0.12, end: 0.2, endWide: 1.25, bands: 2, band: 0.018,
+  gold: new Color3(0.9, 0.6, 0.2), green: new Color3(0.25, 0.55, 0.3), glow: 0.14,
+};
+/** The Monkey King's long team staff with gold banded ends, on the Monk's level carry (spec at MONKEY_STAFF). */
+export function monkeyStaff(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = MONKEY_STAFF;
+  const mf = getMaterialFactory();
+  const lit = (c: Color3) => mf.get("cloth", c, { emissive: c.scale(S.glow) });
+  const team = lit(teamColor), gold = lit(S.gold), green = lit(S.green);
+  body.rightHand.computeWorldMatrix(true);
+  const scale = Math.max(0.001, body.rightHand.absoluteScaling.y);
+  const height = (body.metrics.overallHeight * body.root.scaling.y) / scale;
+  const L = height * S.long, r = height * S.thick;
+  const holder = new TransformNode("monkBoHolder", scene);
+  holder.parent = body.rightHand;
+  const shaft = MeshBuilder.CreateCylinder("monkBo", { height: L, diameter: r * 2, tessellation: 7 }, scene);
+  shaft.parent = holder;
+  shaft.position.y = L * S.offset;
+  shaft.material = team;
+  shaft.convertToFlatShadedMesh();
+  new TransformNode("boGrip", scene).parent = shaft;
+  const out: Mesh[] = [shaft];
+  for (const end of [-1, 1]) {
+    const sleeve = MeshBuilder.CreateCylinder("monkeyStaffEnd", { height: L * S.end, diameter: r * 2 * S.endWide, tessellation: 7 }, scene);
+    sleeve.parent = shaft;
+    sleeve.position.y = end * (L * 0.5 - L * S.end * 0.5);
+    sleeve.material = gold;
+    sleeve.convertToFlatShadedMesh();
+    out.push(sleeve);
+    for (let i = 0; i < S.bands; i++) {
+      const band = MeshBuilder.CreateCylinder("monkeyStaffBand", { height: L * S.band, diameter: r * 2 * S.endWide * 1.15, tessellation: 7 }, scene);
+      band.parent = shaft;
+      band.position.y = end * (L * 0.5 - L * S.end * (0.2 + i * 0.6));
+      band.material = green;
+      out.push(band);
+    }
+  }
+  return out;
+}
+

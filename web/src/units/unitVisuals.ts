@@ -938,7 +938,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "vehicle", materialPreset: "secret_bandit",
       });
     case "iconic_monkey_king":
-      return vis({ scale: 1.72, bulk: 1.18, headSize: 1.14, armLength: 1.28 }, "bo_staff", "crown", "none", "cape", "#9a6a2d", undefined, {
+      // [S] 416 his staff is dynastyDress MONKEY_STAFF on the Monk's level carry, not the shared bo_staff
+      return vis({ scale: 1.72, bulk: 1.18, headSize: 1.14, armLength: 1.28 }, "none", "crown", "none", "cape", "#9a6a2d", undefined, {
         posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "hero_halo", fxPreset: "royal",
         bodyDetailLevel: "hero",
         stateVariants: { moving: ["halo_flare"], attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
