@@ -983,8 +983,8 @@ export function harpoonerPants(scene: Scene, body: ArticulatedBody): Mesh[] {
  * a brass buckle .buckle of the tongue across on its face. Self-lit .glow.
  */
 const HARPOONER_SHOES = {
-  sockFrom: 0.34, sockTo: 0.82, sockOut: 1.22, skinOut: 1.1, cuffAt: 0.55, tongue: 0.55, tongueTall: 0.3, tongueLean: 0.25, buckle: 0.6,
-  brown: new Color3(0.4, 0.2, 0.13), grey: new Color3(0.45, 0.4, 0.34), brass: new Color3(0.8, 0.6, 0.25), glow: 0.12,
+  shellTo: 0.45, shellOut: 1.25, shellLong: 1.12, sockFrom: 0.45, sockTo: 0.82, sockOut: 1.22, skinOut: 1.1, cuffAt: 0.55, tongue: 0.55, tongueTall: 0.3, tongueLean: 0.25, buckle: 0.6,
+  brown: new Color3(0.4, 0.2, 0.13), grey: new Color3(0.55, 0.48, 0.38), brass: new Color3(0.8, 0.6, 0.25), glow: 0.12,
 };
 
 /** Brown buckled shoes under short grey socks, bare shin above (spec at HARPOONER_SHOES). */
@@ -1012,13 +1012,22 @@ export function harpoonerShoes(scene: Scene, body: ArticulatedBody): Mesh[] {
         r.convertToFlatShadedMesh();
         out.push(r);
       };
+      // [S] 434 the shoe shell: a brown box over the toe box from the sole to .shellTo of the foot box, .shellOut wide and .shellLong long,
+      // so the shoe stands up out of the grass (433 critic: the idle shoe sank below the grass line)
+      const shellY = ex.y * 2 * S.shellTo;
+      const shell = MeshBuilder.CreateBox("harpoonerShoeShell", { width: ex.x * 2 * S.shellOut, height: shellY, depth: ex.z * 2 * S.shellLong }, scene);
+      shell.parent = foot;
+      shell.position.set(fb.center.x, fb.minimum.y + shellY / 2, fb.center.z + ex.z * (S.shellLong - 1) * 0.5);
+      shell.material = brown;
+      shell.convertToFlatShadedMesh();
+      out.push(shell);
       ring("harpoonerSock", S.sockFrom, S.sockTo, S.sockOut, grey);
       ring("harpoonerShin", S.sockTo, 1, S.skinOut, skin);
       // the tongue up the front of the ankle, and its buckle
       const tall = ex.y * 2 * S.tongueTall, wide = ex.x * 2 * S.tongue;
       const pivot = new TransformNode("harpoonerTongue", scene);
       pivot.parent = foot;
-      pivot.position.set(fb.center.x, fb.minimum.y + ex.y * 2 * 0.4, cuffZ + ex.z * 1.15 * 0.5);
+      pivot.position.set(fb.center.x, fb.minimum.y + ex.y * 2 * S.shellTo, cuffZ + ex.z * 1.15 * 0.5);
       pivot.rotation.x = S.tongueLean;
       const tongue = MeshBuilder.CreateBox("harpoonerShoeTongue", { width: wide, height: tall, depth: ex.z * 0.12 }, scene);
       tongue.parent = pivot;
