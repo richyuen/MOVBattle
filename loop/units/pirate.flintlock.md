@@ -1,0 +1,23 @@
+# pirate.flintlock
+Status: open   Audited: 422   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
+a FAIL (0 since 422)
+ 1. the torso in unit_pirate.flintlock_idle - a closed dark trunk tunic - TABS: an open team vest hanging either side of a bare team chest (ref: pirate.flintlock.red.png; card Appearance "vest")
+ 2. the legs in unit_pirate.flintlock_idle - bare team legs - TABS: brown rolled-up pants ending mid-shin (ref: pirate.flintlock.red.png; card "rolled-up brown pants")
+ 3. the shins in unit_pirate.flintlock_idle - bare - TABS: grey socks between the pant cuff and brown shoes (ref: pirate.flintlock.blue.png; card "socks")
+ 4. the sides of the head in unit_pirate.flintlock_idle - bare under the cap - TABS: long dark-team hair falling to the shoulders either side of the face (ref: pirate.flintlock.red.png; card "hair")
+b FAIL (0 since 422)
+ 1. the main-hand gun in unit_pirate.flintlock_idle - a musket, its barrel longer than the arm, slung up past the shoulder - TABS: a flintlock pistol a forearm long with a brown stock and a wide flared octagonal bell muzzle, held out at arm's length (ref: pirate.flintlock.red.png; card Main Hand Flintlock)
+ 2. the off hand in unit_pirate.flintlock_idle - empty, hanging - TABS: a second flintlock pistol held out the other way (ref: pirate.flintlock.red.png; card Off Hand Flintlock)
+ 3. the grip in unit_pirate.flintlock_windup - the one gun carried in both hands at the hip like a rifle - TABS: each pistol in one hand, arms spread (ref: pirate.flintlock.red.png; card Weapon Type One-handed)
+c FAIL (0 since 422)
+ 1. the discharge in unit_pirate.flintlock_release - a white sphere the size of his torso floating ahead of the chest while the barrel sits at the hip pointing down-forward - TABS: a small flash at the pistol's bell and a bullet leaving the muzzle (card Weapons: projectile Flintlock Bullet, speed 65)
+ 2. the gun in unit_pirate.flintlock_flight - still in hand 150 ms after the shot, raised vertical, summary.notes recording only "fire" - TABS: the pistol thrown away as soon as it fires and the man closing bare-fisted (card Characteristics)
+d PASS (cost 100, hp 0.55x, dmg 0.61x, cd 2.50x; 422 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] b a flintlock pistol in place of the musket - blocker 1: FLINTLOCK_PISTOL prop (brown stock, grey barrel, flared octagonal bell, forearm length) in propBuilder, held out one-handed - ref: pirate.flintlock.red.png - ours: unit_pirate.flintlock_idle (audit rank 2)
+2. [S] a open vest over a bare chest - blocker 1: PIRATE_VEST in pirateDress.ts: two team-dark front panels hanging from the shoulders, the chest left in team skin - ref: pirate.flintlock.red.png - ours: unit_pirate.flintlock_idle (audit rank 9)
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)
+- 422 audit: the "flintlock" prop (propBuilder case "flintlock") is shared with wild_west gunslinger/quick_draw and secret bank_robbers; the pirate_queen's off hand uses it too.

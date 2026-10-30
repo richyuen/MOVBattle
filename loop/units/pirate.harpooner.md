@@ -1,0 +1,23 @@
+# pirate.harpooner
+Status: open   Audited: 422   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
+a FAIL (0 since 422)
+ 1. the head in unit_pirate.harpooner_idle - a flat grey-blue beret - TABS: a wide brown tricorn with its brim turned up three ways (ref: pirate.harpooner.red.png; card "brown tricorn hat")
+ 2. the chin in unit_pirate.harpooner_idle - bare - TABS: a thick dark-brown beard under the eyes (ref: pirate.harpooner.red.png; card "fairly thick beard")
+ 3. the torso in unit_pirate.harpooner_idle - a dark closed tunic - TABS: an open team coat with tan lapels over a white V undershirt (ref: pirate.harpooner.red.png; card "open coat, undershirt")
+ 4. his height in lineup_pirate - level with the flintlock and bomb thrower beside him - TABS: 1.30x, a head over the rest of the crew (ref: reference/factions/pirate.jpg; card Size 1.30x)
+b FAIL (0 since 422)
+ 1. the gun body in unit_pirate.harpooner_idle - a plain dark cylinder - TABS: a boxy team-coloured breech block as deep as his torso with a grey ringed muzzle (ref: pirate.harpooner.red.png; card Main Hand Harpoon Gun)
+ 2. the grip in unit_pirate.harpooner_idle - one hand holding it up at the shoulder, the other arm hanging - TABS: both hands on it, held low at the hip (ref: pirate.harpooner.jpg; card Weapon Type Two-handed)
+ 3. the bayonet in unit_pirate.harpooner_idle - a hand-long stub under the barrel - TABS: a thin sword-bayonet under the barrel reaching down past the knee (ref: pirate.harpooner.red.png; card "sword-bayonet under the barrel")
+c FAIL (0 since 422)
+ 1. the knight in unit_pirate.harpooner_struck - on its feet swinging its sword, the line slack - TABS: hauled along the line to the harpooner once the harpoon lands (card Characteristics "reel in the enemy unit")
+ 2. the harpooner's leg in unit_pirate.harpooner_struck - out of frame, summary.notes recording only fire and impact - TABS: a kick once the reeled man is in melee range (card Characteristics; Abilities Pirate Kick)
+d PASS (cost 300, hp 3.38x, dmg 0.29x, cd 1.80x; 422 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] b the harpoon gun's boxy body - blocker 1: HARPOON_GUN prop: team breech block with a grey ringed muzzle (bayonet and two-hand hold are blockers 2-3) - ref: pirate.harpooner.red.png - ours: unit_pirate.harpooner_idle (audit rank 5)
+2. [S] a brown tricorn - blocker 1: TRICORN in pirateDress.ts: a wide brown three-cocked brim with a low crown - ref: pirate.harpooner.red.png - ours: unit_pirate.harpooner_idle (audit rank 11)
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)
+- The harpoon gun is propBuilder case "harpoon" (HARPOON_GUN_LONG/WIDE, HARPOON_MUZZLE node the rope leaves from); the pull is simulationSystem pull_hook.

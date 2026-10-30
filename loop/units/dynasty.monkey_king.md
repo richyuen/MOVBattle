@@ -1,25 +1,26 @@
 # dynasty.monkey_king
-Status: open   Audited: 411, 420 (RE-AUDIT a, b, c after the mesh-top camera)   Done: -
+Status: open   Audited: 411, 420 (RE-AUDIT a, b, c), 422 (CONFIRM: failed a, b)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (2 since 420)
- 3. trousers in unit_dynasty.monkey_king_idle: slim straight legs down to plain boots - TABS: puffy team-coloured shorts gathered at the knee over pointy shoes (ref: dynasty.monkey_king.red.png)
- 4. robe in lineup_dynasty: a tan box tunic over the whole trunk - TABS: a team-coloured robe draped over the left side only, with golden strips and a scarf at the neck (ref: dynasty.monkey_king.red.png)
-  (struck 1 at 420: gold circlet with two feather antennae; 2 at 421: baboon face)
-b PASS (416; RE-AUDIT 420)
-c PASS (418; RE-AUDIT 420)
+a FAIL (0 since 422; the CONFIRM list, the 420 list cleared at 422)
+ 1. crown feathers in unit_dynasty.monkey_king_idle - TABS: two broad leaf-shaped team-coloured feathers with a gold spine, each as tall as the head and a quarter as wide, leaning outward in a V from the crown either side of the tail (ref: reference/units/dynasty.monkey_king.blue.png)
+ 2. blonde hair in unit_dynasty.monkey_king_idle - TABS: an orange-blonde ring of hair curling over the crown and down both cheeks, framing the dark face (ref: card Appearance "blonde hair and a dark colored face"; reference/units/dynasty.monkey_king.red.png)
+ 3. trunk in unit_dynasty.monkey_king_idle - TABS: a slim trunk under the half robe, shoulders about a quarter of the figure's height across and narrower than the puffy shorts (ref: reference/units/dynasty.monkey_king.red.png; reference/factions/dynasty.jpg)
+b FAIL (0 since 422; the CONFIRM list)
+ 1. staff length in unit_dynasty.monkey_king_idle - TABS: the staff runs about 1.7x the figure's height, each end reaching a full arm's length past the hand, wider than the whole arm span by half again (ref: reference/units/dynasty.monkey_king.red.png; reference/units/dynasty.monkey_king.jpg)
+c PASS (418; RE-AUDIT 420; CONFIRM 422)
 d PASS (cost 2000, hp 6.71x, dmg 0.73x, cd 0.41x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a shorts and shoes - blocker 3: MONKEY_SHORTS, a puffed hip-to-knee shell gathered to a gold cuff, pointy shoe wedges on the feet - ref: dynasty.monkey_king.red.png - ours: unit_dynasty.monkey_king_idle
-2. [S] a half robe - blocker 4: MONKEY_ROBE, a team robe shell over the left shoulder and side only with two gold strips, a scarf ring at the neck, the tan tunic cut back to the right side - ref: dynasty.monkey_king.red.png - ours: lineup_dynasty
+1. [S] a crown feathers - blocker 1: MONKEY_CROWN feathers as broad leaf blades (featherWide ~.25 of the head, a gold spine ridge), not .2 e.x rods - ref: dynasty.monkey_king.blue.png - ours: unit_dynasty.monkey_king_idle
+2. [S] b staff length - blocker 1: MONKEY_STAFF.long to ~1.7 of his height - ref: dynasty.monkey_king.red.png - ours: unit_dynasty.monkey_king_idle
+3. [S] a blond hair ring - blocker 2: MONKEY_FACE tufts grown into a curling orange-blond ring over the crown and down both cheeks - ref: dynasty.monkey_king.red.png - ours: unit_dynasty.monkey_king_idle
 ## Attempts (iter | gap | criterion | verdict)
-416 | MONKEY_STAFF on the monk carry (10e4da35) | b | approved (struck 1, 2; b PASS)
-416 | MONKEY_TAIL: team tube tail over the head (f97d38f2) | a | approved (struck 3)
-417 | jump_charge leap (adc7786a; capture start 8 m) | c | approved (struck 1)
-418 | BO_SHOVE 8.5/5.5 launch (0c817d95) | c | approved (c PASS)
+416-418 | MONKEY_STAFF, MONKEY_TAIL, jump_charge leap, BO_SHOVE | a,b,c | approved (b, c PASS)
 420 | MONKEY_CROWN circlet + feather antennae (6c4aff46) | a | approved (struck 1)
-421 | MONKEY_FACE dark plate round the eyes, tan muzzle, blond tufts (2dc865d6) | a | approved (struck 2)
+421 | MONKEY_FACE dark plate, tan muzzle, blond tufts (2dc865d6) | a | approved (struck 2)
+422 | MONKEY_SHORTS shorts, gold cuffs, pointy shoes (8db34616, b9adb0a3) | a | approved (struck 3)
+422 | MONKEY_ROBE half robe, gold strips, scarf (6ff201bb) | a | approved (struck 4; a PASS, CONFIRM failed a, b)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 421 critic: the face plate is a flat rectangle wider than the head with square corners (TABS the dark face follows the head's rounded outline). 420: antennae plain rods, circlet wire-thin.
-- 420: the tail over his head pulls his frame back (rig 3.77 m). The tan tunic is the generic trunk dress; the robe gap must cut it back to the right side.
-- 411 audit: the self-copy reads (clones appear in _windup/_ability).
+- 422 defects: puff barrel-wide; toe a spike (TABS a broad curled toe); right trunk half tan (TABS skin + one orange strap); scarf thin (TABS a broad V collar).
+- Trunk = vis bulk 1.18 + robe out 1.14: CONFIRM a.3 may be the body (unitVisuals iconic_monkey_king). Tail frames him (rig 3.80 m).
+- Starts at 8 m (jump_charge), rides _restMonkBo via "monkBoHolder"; staff MONKEY_STAFF long 1.35.

@@ -1,0 +1,16 @@
+# pirate.bomb_thrower
+Status: open   Audited: 422   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
+a FAIL (0 since 422)
+ 1. the torso in unit_pirate.bomb_thrower_idle - a dark closed tunic - TABS: an open dark-team vest over a bare team chest (ref: pirate.bomb_thrower.red.png; card Appearance "vest")
+ 2. the thighs in unit_pirate.bomb_thrower_idle - bare team - TABS: ripped tan shorts ending above the knee (ref: pirate.bomb_thrower.red.png; card "ripped shorts")
+ 3. the shins in unit_pirate.bomb_thrower_idle - bare - TABS: team-and-grey ringed socks from the knee down to brown shoes (ref: pirate.bomb_thrower.red.png; card "striped socks")
+ 4. the hip in unit_pirate.bomb_thrower_idle - nothing across it - TABS: a team sash slung from the belt across the hip carrying a bomb (ref: pirate.bomb_thrower.red.png; card "bomb pouch")
+b PASS (422: two black fused bombs, one per hand, fist-sized)
+c PASS (422: overarm throw, high arc, orange blast hurls the knight)
+d PASS (cost 250, hp 1.89x, dmg 0.27x, cd 4.99x; 422 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] a open vest over a bare chest - blocker 1: PIRATE_VEST applied to the bomb thrower (same chunk as the flintlock's vest gap) - ref: pirate.bomb_thrower.red.png - ours: unit_pirate.bomb_thrower_idle (audit rank 10)
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)

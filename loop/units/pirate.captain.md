@@ -1,0 +1,22 @@
+# pirate.captain
+Status: open   Audited: 422   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
+a FAIL (0 since 422)
+ 1. the front of the hat in unit_pirate.captain_idle - plain dark - TABS: a white skull-and-crossbones on the black tricorn's front (ref: pirate.captain.red.png; card "painted skull and crossbones")
+ 2. the hat's crown in unit_pirate.captain_idle - bare - TABS: two parrots, one blue and one red, perched on it (ref: pirate.captain.red.png; card "two parrots")
+ 3. the torso in unit_pirate.captain_idle - a dark closed tunic ending at the hips - TABS: a long team coat with tan trim hanging open to the knees over a tan shirt and white cravat (ref: pirate.captain.red.png; card "long, team-colored coat")
+ 4. the chin in unit_pirate.captain_idle - dark hair hangs beside the face but the chin is bare - TABS: a long brown beard with a moustache under the eyes (ref: pirate.captain.red.png; card "long, brown beard")
+b FAIL (0 since 422)
+ 1. the off hand in unit_pirate.captain_idle - empty, the only gun a musket-length dark rod slung up behind the right shoulder - TABS: a dragon pistol, a forearm-long flintlock with a wide bell muzzle, held out in the off hand (ref: pirate.captain.red.png; card Off Hand Flintlock Blunderbuss)
+ 2. the main-hand blade in unit_pirate.captain_idle - a straight broad double-edged sword with a cross guard - TABS: a curved slim cutlass with a tan cup guard (ref: pirate.captain.red.png; card Main Hand Captain's Cutlass)
+c FAIL (0 since 422)
+ 1. the blow in unit_pirate.captain_release - the long rod held across the chest in both hands, the sword not swinging - TABS: the cutlass slashing through the man (card Weapons Captain's Cutlass; ref: pirate.captain.jpg)
+ 2. missing: the dragon pistol blast - summary.notes records only a melee hit - TABS: a point-blank bell-muzzle shot that hurls the man (card Weapons off Flintlock Blunderbuss, force 3000, range 3)
+d PASS (cost 1500, hp 14.67x, dmg 1.33x, cd 0.50x; 422 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] c the melee blow swings the cutlass, not a rod - blocker 1: CUTLASS_SLASH attack: the main-hand blade arcs through the target while the slung gun stays slung - ref: pirate.captain.jpg - ours: unit_pirate.captain_release (audit rank 1)
+2. [S] a skull plate on the hat - blocker 1: TRICORN_SKULL in pirateDress.ts: a white skull-and-crossbones plate on the hat's front face - ref: pirate.captain.red.png - ours: unit_pirate.captain_idle (audit rank 8)
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)
+- Manifest: heavy_melee, weaponHint cutlass, hatHint captain_hat, posePreset monarch, special "cape"; where the slung dark rod and the two-handed rod carry at the hit come from is unread (find it before gap 1).

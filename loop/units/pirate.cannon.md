@@ -1,0 +1,20 @@
+# pirate.cannon
+Status: open   Audited: 422   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
+a FAIL (0 since 422)
+ 1. the wheels in unit_pirate.cannon_idle - small black spoked wheels whose rims stop at the carriage top - TABS: two black spoked wheels as tall as the whole gun, standing over the barrel (ref: pirate.cannon.red.png; card "two black wheels")
+ 2. the top of the barrel in unit_pirate.cannon_idle - plain - TABS: a ring crosshair sight standing on the barrel (ref: pirate.cannon.red.png; card "a crosshair on it")
+ 3. the rider's shirt in unit_pirate.cannon_idle - plain team - TABS: a white shirt with team stripes (ref: pirate.cannon.red.png; card "white, striped shirt")
+ 4. the carriage in unit_pirate.cannon_idle - a long brown box with a trail reaching back behind the rider - TABS: a short brown block between the wheels, nothing trailing (ref: pirate.cannon.red.png)
+b FAIL (0 since 422)
+ 1. the barrel in unit_pirate.cannon_idle - a short blue-grey cylinder sunk flush in the carriage box - TABS: a long grey faceted barrel tapering to a thick flared muzzle ring, standing proud of the carriage and longer than it (ref: pirate.cannon.red.png, pirate.cannon.jpg)
+ 2. the rider's hands in unit_pirate.cannon_idle - pushing on the wheel rim from behind - TABS: on the two handles either side of the breech (ref: pirate.cannon.red.png)
+c FAIL (0 since 422)
+ 1. the ball's path in unit_pirate.cannon_flight - a steep lob, the ball already above the treeline with the smoke trail climbing at near 45 degrees - TABS: a fast flat shot from a level muzzle (card Weapons: projectile speed 45, range 25; ref: pirate.cannon.jpg)
+d PASS (cost 1000, hp 6.25x, dmg 2.09x, cd 3.00x; 422 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] b a real cannon barrel - blocker 1: CANNON_BARREL in vehicleBuilder: a long grey faceted tapering barrel with a flared muzzle ring, mounted proud of the carriage - ref: pirate.cannon.red.png - ours: unit_pirate.cannon_idle (audit rank 6)
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)
+- A vehicle (vehicleBuilder cannon, special "cannon_base"); the crewman is dressed by unitFactory dressCannonCrew.

@@ -1,0 +1,23 @@
+# pirate.blunderbuss
+Status: open   Audited: 422   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
+a FAIL (0 since 422)
+ 1. the head in unit_pirate.blunderbuss_idle - a small round tan cap - TABS: a flat wooden plank hat as wide as the shoulders, a barrel lid worn level (ref: pirate.blunderbuss.red.png)
+ 2. the torso in unit_pirate.blunderbuss_idle - a dark closed tunic - TABS: a brown barrel of vertical staves with two black straps round the chest (ref: pirate.blunderbuss.red.png; card Appearance "barrel armor")
+ 3. the forearms in unit_pirate.blunderbuss_idle - bare team - TABS: brown stave bracers with black straps on each arm (ref: pirate.blunderbuss.red.png; card "large straps around their arms")
+ 4. the sides of the head in unit_pirate.blunderbuss_idle - bare - TABS: dark-brown hair falling to the shoulders either side of the face (ref: pirate.blunderbuss.blue.png)
+b FAIL (0 since 422)
+ 1. the main-hand prop in unit_pirate.blunderbuss_idle - a dark stick ending in a blue ball, reading as a mace - TABS: a blunderbuss: a brown wooden stock, a grey barrel and a wide flared bell muzzle, the whole as long as the man is tall (ref: pirate.blunderbuss.red.png, pirate.blunderbuss.jpg; card Main Hand Blunderbuss)
+ 2. the grip in unit_pirate.blunderbuss_idle - one hand at the stick's end, the other hand empty and held out - TABS: both hands on the stock, the gun levelled low (ref: pirate.blunderbuss.jpg; card Weapon Type Two-handed)
+c FAIL (0 since 422)
+ 1. the shooter in unit_pirate.blunderbuss_release - not in frame, the field empty at the 200 ms shot - TABS: the man planted with the blunderbuss levelled and its bell flashing (ref: pirate.blunderbuss.jpg; card Weapons)
+ 2. the knight in unit_pirate.blunderbuss_struck - standing on its feet mid-swing, untouched - TABS: blown off its feet by the shot (card Weapons: force 650)
+ 3. the recoil in unit_pirate.blunderbuss_flight - no man in frame to show it - TABS: the shooter thrown backwards by his own shot (card Abilities: Blunderbuss Recoil)
+d PASS (cost 160, hp 2.49x, dmg 0.45x, cd 4.00x; 422 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] b a blunderbuss in place of the ball-on-a-stick - blocker 1: BLUNDERBUSS prop (brown stock, grey barrel, wide bell, man-long) with a two-hand low hold - ref: pirate.blunderbuss.red.png - ours: unit_pirate.blunderbuss_idle (audit rank 3)
+2. [S] a barrel-stave torso - blocker 2: BARREL_ARMOUR in pirateDress.ts: a ring of brown staves round the chest with two black straps - ref: pirate.blunderbuss.red.png - ours: unit_pirate.blunderbuss_idle (audit rank 7)
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)
+- EVIDENCE COMMIT FIRST (422 audit): the shot fires at 200 ms and the man is out of the side-on frame in _windup, _release and _flight; re-aim the capture (frame the shooter at and after the shot) before any pick on this unit.

@@ -13,12 +13,11 @@ drop a lesson once it is a comment at the code it describes.
 - Lit cloth in shadow (under a beard, brim, cuff or belt) reads grey however white or warm it is: self-light it or go unlit; fur that must read cream wants the unlit cut (399/400 headbutter).
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it, and a vehicle's `bodyMaterial` IS the team colour: timber, iron and leather need their own materials, and a team-trim mesh goes in as the body source (392 longship).
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
-- Spikes sized off a part's smallest half-extent vanish at lineup distance: key them on the mean half-extent times ~2.4 (395 frost).
 
 ## Capture and probes
 - Capture renders once per advanceTime call: step 100 ms chunks and replay to a frame in one call (16 ms stepping made a batch take 32 min).
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
-- stats.json is written by stats.mjs, not by capture; every capture clears iter-N with it and each stats run overwrites it: rerun `stats.mjs <id,id,...> --iter N` once with every unit after the final capture.
+- stats.json is written by stats.mjs, not by capture; every non-regression capture wipes iter-N (stats.json, a tail-overlap batch's audit.md too) and each stats run overwrites it: copy audit.md out before step 5 and restore it, rerun `stats.mjs <id,id,...> --iter N` once with every unit after the final capture (422).
 - Probes live in `loop/scripts/probes/` (run from the repo root, `--build` after a source change, each starts its own vite preview on its own port): probe_bbox (--unit --pat --frame=torso --ylo --yhi: vertex bboxes), probe_mat <unit> <name regex>, probe_near, probe_zeus_shot, probe_close (--aim=head|torso|y:<root y> --dist --yaw, UI hidden via capture-mode after resetBattle; --noglow reads a swatch's true colour), probe_head, probe_local, probe_axes (--unit --pat --frame: parent, origin, local axes, local bbox: a prop's face normal), and per-unit ones.
 - A flat plate on a dress ribbon needs 7+ cm of stand-off, not 3: the ribbon's chords dip inside the rim sampled for its surface, so a bolt 3.5 cm proud read as a ghost (398/399 zeus).
 - Sim reads of joint positions must settle world matrices first (computeWorldMatrix(true) up the parent chain, as capture's __wp does).
