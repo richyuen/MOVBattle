@@ -69,6 +69,8 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
 // [S] ...and the potionseller's bottle (341; card Weapons: Potion Throw, a lobbed potion): the glass ball in her right hand is what flies, on the bomb's high lob
+/** [S] 416 the Dragon's breath: the jet lasts .seconds, from .ahead of his scale in front of his head and .down under it, onto the man's chest (.chest m up). */
+const DRAGON_BREATH = { seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
  * [S] planted full-draw loose (354; medieval.archer.jpg: feet set, bow arm out, string at the cheek as the arrow leaves; card shoot delay 1.2 s). A bowman here
@@ -2369,6 +2371,23 @@ export class SimulationSystem {
             "sword", lifted?.at ?? head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
             undefined, SWORD_HOVER, lifted ? { originLift: 0, hover: true, size: lifted.size, riseTo: head.getAbsolutePosition().y + SWORD_RISE_OVER } : { originLift: 0.35, hover: true },
           );
+        } else if (attacker.definition.id === "dynasty.dragon" && this.visualEffects) {
+          // [S] 416 the Dragon breathes fire: a held flame jet from his mouth onto the man (visualEffects FLAME_JET), the damage dealt where it lands,
+          // not a lone puff lobbed ahead of him (audit 411 c.1)
+          const body = attacker.body;
+          const mouth = (): Vector3 | null => {
+            if (attacker.isDead) return null;
+            body.headMesh.computeWorldMatrix(true);
+            const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), body.root.getWorldMatrix());
+            fwd.y = 0;
+            if (fwd.lengthSquared() > 1e-6) fwd.normalize();
+            const at = body.headMesh.getAbsolutePosition().clone();
+            return at.addInPlace(fwd.scale(DRAGON_BREATH.ahead * body.root.scaling.y)).addInPlace(new Vector3(0, -DRAGON_BREATH.down * body.root.scaling.y, 0));
+          };
+          const man = (): Vector3 | null => (target.isDead ? null : target.position.add(new Vector3(0, DRAGON_BREATH.chest, 0)));
+          this.visualEffects.spawnFlameJet(mouth, man, DRAGON_BREATH.seconds);
+          this._logAbility(attacker, "breath", now);
+          this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
         } else if (harpoonMuzzleOf(attacker)) {
           // The harpoon leaves the gun's muzzle at the hip, trailing its rope back to it
           const muzzle = harpoonMuzzleOf(attacker)!;

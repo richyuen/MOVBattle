@@ -58,6 +58,16 @@ const SMOKE_LIFE = 2.4;
  * HEAL_BEAM.core m thick inside a see-through halo .halo m thick at .haloAlpha, both self-lit (so the glow layer haloes them), re-aimed every frame from the orb to his
  * chest; it fades out over the last .fade s of its life.
  */
+/*
+ * [S] 416 the Dragon's flame jet (audit 411 c.1: "a single pale yellow hex puff detached about 4 m ahead of the mouth - TABS: a continuous
+ * white-yellow flame jet from the mouth"; dynasty.dragon.jpg): from the mouth to the man, read every frame, for the breath's seconds: a white-yellow
+ * core cone .core across at the mouth widening to .coreFar at the far end, inside an orange shell .shell -> .shellFar, half see-through, both
+ * flickering .flicker of their width; .puffs faceted orange flame lumps tumbling out along it; all fading over the last .fade s.
+ */
+const FLAME_JET = {
+  core: 0.12, coreFar: 0.7, shell: 0.25, shellFar: 1.3, shellAlpha: 0.7, flicker: 0.18, puffs: 5, puff: 0.35, fade: 0.2,
+  white: new Color3(1, 0.95, 0.7), orange: new Color3(1, 0.48, 0.1),
+};
 const HEAL_BEAM = { core: 0.12, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: new Color3(1, 0.82, 0.25), glow: new Color3(1, 0.7, 0.15) };
 /*
  * [S] banjo music notes (354; medieval.bard.blue.png, card Appearance "Notes will appear above the Bard's head"): orange eighth notes over his head while he
@@ -127,6 +137,79 @@ export class VisualEffects {
         this._effects.splice(i, 1);
       }
     }
+  }
+
+  /** The Dragon's flame jet (FLAME_JET) from `from()` (the mouth) to `to()` (the man), both read every frame, for `seconds`. */
+  spawnFlameJet(from: () => Vector3 | null, to: () => Vector3 | null, seconds: number): void {
+    const F = FLAME_JET;
+    const root = new TransformNode("flameJet", this._scene);
+    // the cones' +y runs from the mouth (y -.5) to the far end (y +.5)
+    const core = MeshBuilder.CreateCylinder("flameJetCore", { height: 1, diameterBottom: F.core, diameterTop: F.coreFar, tessellation: 7 }, this._scene);
+    const shell = MeshBuilder.CreateCylinder("flameJetShell", { height: 1, diameterBottom: F.shell, diameterTop: F.shellFar, tessellation: 8 }, this._scene);
+    // unlit, self-lit flame colours (the lit fx material read pale tan against the grass)
+    const flat = (c: Color3, alpha: number): StandardMaterial => {
+      const m = new StandardMaterial("flameJetMat", this._scene);
+      m.disableLighting = true;
+      m.emissiveColor = c;
+      m.diffuseColor = c;
+      m.alpha = alpha;
+      m.backFaceCulling = false;
+      return m;
+    };
+    const coreMat = flat(F.white, 1);
+    const shellMat = flat(F.orange, F.shellAlpha);
+    core.material = coreMat;
+    shell.material = shellMat;
+    const puffs: Mesh[] = [];
+    for (let i = 0; i < F.puffs; i++) {
+      const p = MeshBuilder.CreateIcoSphere("flameJetPuff", { radius: F.puff, subdivisions: 1, flat: true }, this._scene);
+      p.material = shellMat;
+      p.parent = root;
+      puffs.push(p);
+    }
+    // kept out of the glow layer: bloomed, the jet washed out to a flat white bar with no orange shell
+    const glowLayer = this._scene.getGlowLayerByName("glow");
+    for (const m of [core, shell, ...puffs]) { m.isPickable = false; m.parent = root; glowLayer?.addExcludedMesh(m); }
+    root.rotationQuaternion = new Quaternion();
+    let t = 0;
+    const aim = (): void => {
+      const a = from();
+      const b = to();
+      if (!a || !b) { root.setEnabled(false); return; }
+      const d = b.subtract(a);
+      const len = d.length();
+      if (len < 0.05) { root.setEnabled(false); return; }
+      root.setEnabled(true);
+      root.position.copyFrom(a.add(b).scale(0.5));
+      const up = Vector3.Up();
+      const axis = Vector3.Cross(up, d.normalize());
+      const angle = Math.acos(Math.max(-1, Math.min(1, Vector3.Dot(up, d))));
+      if (axis.lengthSquared() < 1e-8) root.rotationQuaternion!.copyFrom(angle > 1 ? Quaternion.RotationAxis(Vector3.Right(), Math.PI) : Quaternion.Identity());
+      else Quaternion.RotationAxisToRef(axis.normalize(), angle, root.rotationQuaternion!);
+      const flick = (k: number): number => 1 + F.flicker * Math.sin(t * 37 + k * 2.3);
+      core.scaling.set(flick(0), len, flick(1));
+      shell.scaling.set(flick(2), len, flick(3));
+      puffs.forEach((p, i) => {
+        const along = ((i / F.puffs + t * 1.7) % 1);
+        p.position.set(Math.sin(i * 2.1 + t * 9) * 0.15 * along, (along - 0.5) * len, Math.cos(i * 1.7 + t * 8) * 0.15 * along);
+        p.scaling.setAll(0.4 + along * 1.4);
+        p.rotation.set(t * 5 + i, t * 3 + i * 2, 0);
+      });
+    };
+    aim();
+    this._effects.push({
+      root,
+      remaining: seconds,
+      update: (dt, remaining) => {
+        t += dt;
+        aim();
+        const k = Math.max(0, Math.min(1, remaining / F.fade));
+        coreMat.alpha = k;
+        if (k < 1) coreMat.transparencyMode = 2;
+        shellMat.alpha = F.shellAlpha * k;
+      },
+      dispose: () => { coreMat.dispose(); shellMat.dispose(); },
+    });
   }
 
   /** A healer's gold beam (HEAL_BEAM) from `from()` to `to()`, both read every frame, for `seconds`. */
