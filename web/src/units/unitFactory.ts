@@ -1,5 +1,5 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
-import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenSkirt, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
+import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -653,6 +653,8 @@ export class UnitFactory {
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenSkirt(this._scene, body, teamColor));
     // [S] 433 the Pirate Queen's team shirt, puffy short sleeves, laced V at the neck (pirateDress QUEEN_SHIRT)
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenShirt(this._scene, body, teamColor));
+    // [R] 435 the Pirate Queen's knee-high red-brown boots with a team band (pirateDress QUEEN_BOOTS)
+    if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenBoots(this._scene, body, teamColor));
     // [S] 428 the Captain's long team coat open to the knees over a tan shirt and white cravat (pirateDress CAPTAIN_COAT; no tunic skirt under it)
     if (definition.id === "pirate.captain" && !shouldUseVehicleBody) propMeshes.push(...captainCoat(this._scene, body, teamColor));
     // [S] 432 the Captain's tan pants tucked into black knee boots with brass buckles (pirateDress CAPTAIN_LEGS)

@@ -574,7 +574,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { scale: 1.6, bulk: 1.8, legLength: 0.7 }, "none", "bandana", "none", "cannon_base", "#8f2a24",
   ),
   "pirate.pirate_queen": vis(
-    { scale: 1.6, bulk: 1.2, headSize: 1.1 }, "cutlass", "pirate_hat", "none", "cape", "#FF1493",
+    // [R] 435 slim, about the captain's height (pirateDress QUEEN_BOOTS build spec)
+    { scale: 1.45, bulk: 0.85, headSize: 1.1 }, "cutlass", "pirate_hat", "none", "cape", "#FF1493",
   ),
 
   // ═══════════════════════ SPOOKY ═══════════════════════

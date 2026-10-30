@@ -364,7 +364,7 @@ export function captainCoat(scene: Scene, body: ArticulatedBody, teamColor: Colo
  * strap, each sat .seat of its radius out of the strap's face, a short fuse stub on top. Brown self-lit .glow, the bombs .bombGlow.
  */
 const QUEEN_SASH = {
-  wide: 0.17, thick: 0.08, fromX: 0.72, over: 0.04, toX: -0.86, toY: -0.92, proud: 0.03, bombs: 4, bomb: 0.2, at: [0.14, 0.36, 0.58, 0.8], seat: 0.75,
+  wide: 0.27, thick: 0.1, fromX: 0.72, over: 0.04, toX: -0.86, toY: -0.92, proud: 0.12, bombs: 4, bomb: 0.25, at: [0.14, 0.36, 0.58, 0.8], seat: 0.95,
   brown: new Color3(0.24, 0.13, 0.065), black: new Color3(0.035, 0.035, 0.04), glow: 0.14, bombGlow: 0.2,
 };
 
@@ -738,7 +738,7 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  * the beads riding it, and the trousers are the leg meshes themselves in the pale team shade, no shells, so nothing bulges at the knee.
  */
 const QUEEN_SKIRT = {
-  top: 0.14, knee: 1.08, out: 1.06, flare: 1.45, deep: 1.25, slant: 0.6, frontDrop: 0.4, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
+  top: 0.14, knee: 1.08, out: 1.04, flare: 1.22, deep: 1.1, slant: 0.6, frontDrop: 0.4, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
   flapWide: 0.6, flapFoot: 0.22, flapX: -0.25, flapLong: 1.3, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
 };
 
@@ -752,9 +752,48 @@ const QUEEN_SKIRT = {
  * dark strokes. Self-lit .glow.
  */
 const QUEEN_SHIRT = {
-  shoulderOut: 1.45, puff: 1.95, puffAt: 0.3, to: 0.62, cuffOut: 1.25, vee: 0.28, veeLong: 0.34, proud: 0.03,
+  shoulderOut: 1.2, puff: 1.6, puffAt: 0.3, to: 0.62, cuffOut: 1.1, vee: 0.28, veeLong: 0.34, proud: 0.03,
   laces: 2, laceLong: 0.2, laceFrom: 0.12, laceStep: 0.1, lace: new Color3(0.2, 0.11, 0.06), glow: 0.12,
 };
+
+/*
+ * [R] 435 the Pirate Queen's build (plateau a; CONFIRM 431 + 434: "torso and skirt a wide hunched block, about twice a pirate's width, and clearly
+ * taller and broader than the captain in lineup_pirate - TABS: slim long-limbed build, about the captain's height"; "lower legs and feet plain dark
+ * team blue - TABS: tall red-brown boots with a team-coloured band"; "only a thin brown strap behind the crossed blades, no bombs on the chest - TABS:
+ * a broad brown sash ... four black bombs on it across the chest"). Spec read off pirate.pirate_queen.red.png and factions/pirate.jpg:
+ *  - build: about the captain's height (wiki size 1.4 vs his 1.35 here) and narrow: shoulders under twice the head's width, trunk about 1.5 heads
+ *    wide, long bare forearms. unitVisuals scale 1.6 -> 1.45, bulk 1.2 -> .85.
+ *  - shirt: sleeves a modest puff, about 1.5 of the arm at their widest, not balloons (QUEEN_SHIRT shoulderOut 1.45 -> 1.2, puff 1.95 -> 1.6,
+ *    cuffOut 1.25 -> 1.1).
+ *  - skirt: a narrow wrap barely wider at the knee than at the waist (QUEEN_SKIRT flare 1.45 -> 1.22, deep 1.25 -> 1.1, out 1.06 -> 1.04).
+ *  - boots: knee-high red-brown boots, the shaft a straight tube a little wider than the shin from just under the knee to the foot, a wider turned
+ *    top, a team band round the shaft under it, the foot red-brown (QUEEN_BOOTS below).
+ *  - sash: a broad brown band about a quarter of the trunk wide from her right shoulder to her left hip, standing well off the shirt, four black
+ *    bombs each about a quarter of the trunk wide stood on it (QUEEN_SASH wide .17 -> .27, proud .03 -> .12, bomb .2 -> .25, seat .75 -> .95).
+ * The CONFIRM 431 list (skirt, shirt, hair) keeps its pieces: the same functions, slimmer numbers.
+ * QUEEN_BOOTS, per shin (limbShell, 0 its top): the shaft .shaft of the shin from .from to the foot, the turned top .top wide and .topTall tall from
+ * .from, the team band .band wide and .bandTall tall at .bandAt; red-brown .leather (the foot mesh too), self-lit .glow.
+ */
+const QUEEN_BOOTS = { from: 0.12, shaft: 1.35, top: 1.7, topTall: 0.14, band: 1.42, bandTall: 0.1, bandAt: 0.34, leather: new Color3(0.45, 0.16, 0.1), glow: 0.12 };
+
+/** The Pirate Queen's knee-high red-brown boots with a team band (spec at QUEEN_BOOTS, in the [R] 435 build spec). */
+export function queenBoots(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const B = QUEEN_BOOTS;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", B.leather, { emissive: B.leather.scale(B.glow) });
+  const band = mf.get("cloth", teamColor, { emissive: teamColor.scale(B.glow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    if (!shin) continue;
+    out.push(limbShell(scene, "queenBoot", shin, B.from, 1, B.shaft, leather));
+    out.push(limbShell(scene, "queenBootTop", shin, B.from, B.from + B.topTall, B.top, leather));
+    out.push(limbShell(scene, "queenBootBand", shin, B.bandAt, B.bandAt + B.bandTall, B.band, band));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = leather;
+  }
+  return out;
+}
 
 /** The Pirate Queen's team shirt: puffy short sleeves and a laced V at the neck (spec at QUEEN_SHIRT). */
 export function queenShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
