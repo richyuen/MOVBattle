@@ -855,3 +855,55 @@ export function archerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color
   out.push(...strapSandals(scene, body, L.sandal, L.glow, "archer"));
   return out;
 }
+
+/*
+ * [S] 421 the Monkey King's baboon face (RE-AUDIT 420 a.2: "a plain team head with two bead eyes - TABS: a baboon face, dark with a tan muzzle and
+ * blond hair tufts round it"; card Appearance "a baboon-like head. It has blonde hair and a dark colored face"; dynasty.monkey_king.red.png: the
+ * whole front of the head a dark plate, the bead eyes white in it, a pale tan muzzle standing out over the mouth with a dark nose bar on its top, and
+ * blond tufts of hair ringing the face at the cheeks, jaw and brow under the circlet). In the head's half extents e, like NINJA_HOOD's split round the
+ * bead eyes (eyeSpanInHead): a dark plate MONKEY_FACE.plate of e.z thick on the face from .chin of e.y up to under the eyes, two dark side slabs
+ * beside the eyes from .sideFrom of e.x out, a dark brow slab over them up to .brow of e.y (under MONKEY_CROWN.at); the muzzle a tan box .muzzle of
+ * e.x wide from .chin up to .muzzleTop of e.y, standing .muzzleOut of e.z off the plate, a dark nose bar .nose of e.x across its top; .tufts blond
+ * faceted lumps .tuft of e.y across at the given [x, y, z] of e round the face.
+ */
+const MONKEY_FACE = {
+  plate: 0.1, chin: -1.02, sideFrom: 0.7, brow: 0.58, muzzle: 1.1, muzzleTop: -0.3, muzzleOut: 0.32, nose: 0.5, tuft: 0.26,
+  tufts: [[-1.02, -0.3, 0.6], [1.02, -0.3, 0.6], [-0.9, -0.88, 0.5], [0.9, -0.88, 0.5], [-0.98, 0.42, 0.55], [0.98, 0.42, 0.55], [-0.45, 0.6, 0.9], [0.45, 0.6, 0.9]] as [number, number, number][],
+  dark: new Color3(0.1, 0.06, 0.05), tan: new Color3(0.72, 0.54, 0.32), blond: new Color3(0.78, 0.56, 0.2), glow: 0.14,
+};
+/** The Monkey King's dark baboon face with a tan muzzle and blond tufts round it, the bead eyes left open (spec at MONKEY_FACE). */
+export function monkeyFace(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const F = MONKEY_FACE;
+  const mf = getMaterialFactory();
+  const dark = mf.get("cloth", F.dark, { emissive: F.dark.scale(F.glow) });
+  const tan = mf.get("cloth", F.tan, { emissive: F.tan.scale(F.glow) });
+  const blond = mf.get("cloth", F.blond, { emissive: F.blond.scale(F.glow) });
+  const e = body.headMesh.getBoundingInfo().boundingBox.extendSize;
+  const span = eyeSpanInHead(body) ?? [-e.y * 0.2, e.y * 0.3];
+  const out: Mesh[] = [];
+  const slab = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, mat = dark): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene);
+    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    m.parent = body.headMesh;
+    m.material = mat;
+    out.push(m);
+    return m;
+  };
+  const front = e.z * 1.01, back = front + e.z * F.plate;
+  const eyeBottom = span[0] - e.y * 0.04, eyeTop = span[1] + e.y * 0.04;
+  const X = e.x * 1.04, chin = e.y * F.chin;
+  slab("monkeyFacePlate", -X, X, chin, eyeBottom, front, back);
+  for (const side of [-1, 1]) slab("monkeyFaceSide", side > 0 ? e.x * F.sideFrom : -X, side > 0 ? X : -e.x * F.sideFrom, eyeBottom, eyeTop, front, back);
+  slab("monkeyFaceBrow", -X, X, eyeTop, e.y * F.brow, front, back);
+  const muzzleFront = back + e.z * F.muzzleOut;
+  slab("monkeyMuzzle", -e.x * F.muzzle * 0.5, e.x * F.muzzle * 0.5, chin, e.y * F.muzzleTop, back - e.z * 0.02, muzzleFront, tan);
+  slab("monkeyNose", -e.x * F.nose * 0.5, e.x * F.nose * 0.5, e.y * F.muzzleTop - e.y * 0.1, e.y * F.muzzleTop + e.y * 0.03, muzzleFront - e.z * 0.14, muzzleFront + e.z * 0.02);
+  for (const [x, y, z] of F.tufts) {
+    const tuft = MeshBuilder.CreateIcoSphere("monkeyTuft", { radius: e.y * F.tuft, subdivisions: 1, flat: true }, scene);
+    tuft.position.set(x * e.x, y * e.y, z * e.z);
+    tuft.parent = body.headMesh;
+    tuft.material = blond;
+    out.push(tuft);
+  }
+  return out;
+}

@@ -1,4 +1,4 @@
-import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
+import { archerHair, archerLegs, archerRobe, dragonForm, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyStaff, monkeyTail, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -589,6 +589,7 @@ export class UnitFactory {
     if (definition.id === "dynasty.monkey_king" && !shouldUseVehicleBody) {
       propMeshes.push(...monkeyStaff(this._scene, body, teamColor), ...monkeyTail(this._scene, body, teamColor));
       propMeshes.push(...monkeyCrown(this._scene, body, teamColor)); // [S] 420 gold swirl circlet with two team feather antennae (dynastyDress MONKEY_CROWN)
+      propMeshes.push(...monkeyFace(this._scene, body)); // [S] 421 dark baboon face, tan muzzle, blond tufts (dynastyDress MONKEY_FACE)
     }
     // [S] 416 the Dragon's giant paper head on a pole and its long body ribbon (dynastyDress DRAGON_FORM)
     if (definition.id === "dynasty.dragon" && !shouldUseVehicleBody) propMeshes.push(...dragonForm(this._scene, body, teamColor));
