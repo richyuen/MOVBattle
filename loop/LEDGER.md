@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-424 | MONKEY_CROWN leaf feathers, gold spine (87217f77) | dynasty.monkey_king.a | approved
-424 | DRAGON_MUZZLE squared snout, lip rim, diamonds (576ac9b3) | dynasty.dragon.a | approved
-424 | FRONT_GRIP orange-red head pole, wrapped grip (8ceb87bb) | dynasty.dragon.b | approved
-424 | off-hand pistol, _aimPistol both arms (785cfeb0) | pirate.flintlock.b | approved
-424 | PIRATE_PANTS brown pants, turned cuff (87042b0e) | pirate.flintlock.a | approved
-424 | PIRATE_SHORTS ripped tan shorts (d95ec795) | pirate.bomb_thrower.a | approved
-424 | HARPOON_OFF_GRIP + _gripHarpoon (3f068837) | pirate.harpooner.b | approved
 425 | TRICORN_BROWN fitted tricorn (75a4ea7d) | pirate.harpooner.a | approved
 425 | HARPOON_REEL reel-in, taut rope (3f3fd30b, 443edc44) | pirate.harpooner.c | approved
 425 | GUN_TOSS + disarmToFists (36eb9aaa) | pirate.flintlock.c | approved
@@ -48,12 +41,18 @@ for 25 iterations.
 428 | CANNON_HANDLES rider behind the breech on two handles (8009017b, 0a24e9b0) | pirate.cannon.b | approved
 428 | CANNON_SHIRT white shell, team bands, striped sleeves (a478d4ce) | pirate.cannon.a | approved
 428 | MONKEY_TRUNK slim trunk + shoulders, waist wrap (eea59cc5) | dynasty.monkey_king.a | approved
+429 | PIRATE_HAIR locks from under the cap to the shoulders (a216eda0, 70fa9c2c) | pirate.flintlock.a | approved
+429 | PIRATE_SOCKS team/grey ringed socks (784eeeca) | pirate.bomb_thrower.a | approved
+429 | CANNON_BANDANNA brimless dome, crew cap off (1f3e8df6) | pirate.cannon.a | approved
+429 | MONKEY_HAIR curl ring + crown hair (e6fad918) | dynasty.monkey_king.a | approved
+429 | DRAGON_TRIM orange collar, hem, cuffs on every carrier (3b24b339) | dynasty.dragon.a | approved
+429 | DRAGON_HOLD _holdDragonPole, pole in at the chest (df5dd028) | dynasty.dragon.b | approved
+429 | HARPOON_BAYONET lug + blade under the nozzle (37ea2e85) | pirate.harpooner.b | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
 
-viking 401-403 rows (ICE_ARCHER_MANTLE, ICE_ARCHER_EYE_CLEAR, VIKING_BEARD, JARL_BEARD, HEADBUTTER_KIT, LONGSHIP_SHIP, LONGSHIP_HURL.sink) | compacted 409 | 403 | approved | values: git show 2ccd9f2:loop/LEDGER.md
 viking 392-409 rows (BEARDED_AXE, JARL_AXE, LEAP_AIR, HEADBUTT, LONGSHIP_*, HEADBUTTER_KIT/BRAID/HAIR/COPPER, ICE_BOW, FROST, BRAWLER_*, JUMP_CHARGE, FLY, VALKYRIE_WINGS) | compacted 411 | 409 | approved | values: git show 186849d:loop/LEDGER.md, 4778c43, cdc71a4
 viking done 403-409 rows (LONGSHIP_OARS/gunwale/SHEER/PLANKS/PROW/STERN, ICE_ARCHER_BAND/SNOWCAP/COAT, ICE_BOW, ICE_UPRIGHT, HEADBUTTER_LEGS/TUNIC, headbutter legLength, JARL_REST) | compacted 424 | 409 | approved | values: git show 3f068837:loop/LEDGER.md
 viking done rows (JARL_PELT, JARL_BEARD_RUN, JARL_BELT, JARL_WRAPS, JARL_FLAPS, JARL_CRESCENT, HEADBUTTER_CAP, LONGSHIP_CARRIER) | compacted 416 | 409 | approved | values: git show a312f052:loop/LEDGER.md
@@ -96,3 +95,10 @@ pirateDress.ts:BARREL_BRACERS (staves, out, from, to, upFrom, upTo, wide, thick,
 vehicleBuilder.ts:CANNON_HANDLES (rider, x, y, z, lean, hipBack, hipFwd, knee, grip, gripWide, knob, blockTop) | .66, .24, .72, -.36, .2, .25, -.3, .3, .1, .035, .05, .5 | 428 | approved | y .57 x .2 (428.5); rider .46 shoving the wheel rim (before 428)
 pirateDress.ts:CANNON_SHIRT (top, under, out, sleeve, sleeveTo, band, bandAt; white) | .9, 1, 1.06, 1.4, .55, .22, .28; (.9,.88,.84) | 428 | approved | tan crewHoop bands on team (before 428)
 dynastyDress.ts:MONKEY_TRUNK (narrow, wraps, wrap, wrapOut, deep, step, tilt) | .7, 2, .11, 1.18, 1.25, .94, .08 | 428 | approved | full-width trunk (before 428)
+pirateDress.ts:PIRATE_HAIR (out, clear, top, side, drop, front, splay, back; flintlock colour team x) | 1.08, .06, .62, .28, -1.7, .25, .12, .2; .42 | 429 | approved | crown cap slab, team x.55 (429.1); none (before 429)
+pirateDress.ts:PIRATE_SOCKS (from, top, topOut, bands, to, out, shade; grey) | .22, .34, 1.5, 6, .98, 1.3, .8; (.5,.49,.47) | 429 | approved | bare shins (before 429)
+pirateDress.ts:CANNON_BANDANNA (out, clear, rise, back, knot, segments, shade) | 1.22, .05, .12, .04, .32, 6, .8 | 429 | approved | dressCannonCrew crewCap + peak (before 429)
+dynastyDress.ts:MONKEY_HAIR (curls, curl, swell, midY, rx, ry, sweep, z, capOut, capFoot, capTop; color) | 11, .34, .25, -.15, 1.12, 1.05, 2.2, .72, 1.06, .55, 1.1; (.95,.52,.14) | 429 | approved | MONKEY_FACE tufts only (before 429)
+dynastyDress.ts:DRAGON_TRIM (collar, hem, out, cuff, sleeve, bodyCollar, bodyHem, limbCuff, limbOut) | .04, .045, 1.14, .05, 1.5, .1, .1, .16, 1.5 | 429 | approved | none (before 429)
+proceduralAnimation.ts:DRAGON_HOLD (top, low) + dynastyDress FRONT_GRIP.ahead | .28, .22; .22 | 429 | approved | pole foot at D.headZ*.8 (.4 h), no hold (before 429)
+propBuilder.ts:HARPOON_BAYONET (long, wide, thin, point, at, lug, below; steel) | .5, .04, .012, .18, .5, .03, .01; (.36,.37,.4) | 429 | approved | none (before 429)

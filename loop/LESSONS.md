@@ -29,7 +29,7 @@ drop a lesson once it is a comment at the code it describes.
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).
 - A wide side-by-side stance reads as a fore-aft stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a pose gap on "stride"; the fix may be the camera (403 halfling: feet .015 m apart fore-aft).
 - `capture.mjs --units` takes a comma-separated list; space-separated ids capture the first unit only. Every iter-N capture also clears the probe swatches: render them after the final capture (402).
-- For a small piece in a look shot, a crop of the PNG (python PIL crop + NEAREST resize) is a faster close-up than probe_close, whose --aim can frame another mesh entirely (404 headbutter, minotaur).
+- No python on this machine (429): a head piece is checked with probe_close --build --aim=head (about a minute); its --aim can frame another mesh (404).
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 - A blow resolved at the decision (a preset's instant "slam") logs at the swing start: release shows the cock; use the pending blow (426).
 - A missile that leaves with a special just logged is that mechanic's, not the release (427 queen Bomb Spin bombs read as her attack).
@@ -48,7 +48,7 @@ drop a lesson once it is a comment at the code it describes.
 - A critic's "the X's kit" ask is often cheapest as a call to the other unit's dress function, which adapts to the receiver's own limb boxes (399 berserker/brawlerLegs).
 - A pelvis (hip-joint) pitch carries the legs with it: +1.2 rad lays the body flat - head forward, face down, legs trailing - so a whole-body dive pose comes from the hip joint alone (400 headbutter).
 - A piece hung in the head's frame cannot run on down the torso: at the chest's z it sits inside the chest box - build the torso run as its own torso-parented piece (401 jarl).
-- The bead eyes hang off the neck joint, not the head block: a head-hung cap or band must be seated off the eyes' world tops read into the head's frame, or it covers them (403 ice archer); shrinking headSize leaves the eyes where they were (403 headbutter band across the eyes).
+- The bead eyes hang off the neck joint, not the head block: a head-hung cap or band must be seated off the eyes' world tops read into the head's frame, or it covers them (403 ice archer); shrinking headSize leaves the eyes where they were (403 headbutter band across the eyes). A peaked cap brim hides them too (429 cannon).
 - A beast hood's ellipsoid skull reads as a flat cap unless its features stand proud of the ellipsoid's own front at their height: sample the skull's front z at the eye's y, not one z for all (400 jarl).
 - bakeCurrentTransformIntoVertices on a parented mesh bakes the parent's world transform in too: bake, then parent (407 jarl flaps stood over his head).
 - A leg-length change reads only if the dress over the leg scales with it: brawlerLegs' boots and cuffs kept the visible belt-to-sole at 41% while the probe hip rose to 52% (406 headbutter). Measure the shot, not the bone.
