@@ -14,7 +14,7 @@ c FAIL (0 since 419; the CONFIRM's list)
  1. breath in unit_dynasty.dragon_struck: a straight-edged translucent orange box beam - TABS: a billowing bright white-yellow flame plume swelling out of the mouth (ref: dynasty.dragon.jpg, factions/dynasty.jpg)
 d PASS (cost 1000, hp 18.78x)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. evidence first (CONFIRM 419): idle, release and ability shots are framed on a carrier and never show the head or mouth; the pairs are identical frames - re-aim the dragon's idle and motion pairs at the head/mouth
+1. re-audit first (tools 420): the capture now frames a unit by its mesh top, so the dragon's idle and motion shots show the head and mouth (rig 5.70 m); step 2 RE-AUDITs a, b, c on the 420 shots before any pick
 2. [S] a carriers - blocker 1 (clears b.1): full carriers with a head, bun, bead eyes and two arms gripping the pole at chest height - ref: dynasty.dragon.jpg - ours: unit_dynasty.dragon_idle.png
 3. [S] c breath plume - blocker 1: FLAME_JET rebuilt as a billowing white-yellow plume swelling from the mouth - ref: dynasty.dragon.jpg - ours: unit_dynasty.dragon_struck.png
 4. [S] a body ribbon - blocker 4: flat paper ribbon, scalloped frill edge, team fins in place of the slab and black cones - ref: dynasty.dragon.jpg - ours: lineup_dynasty.png
