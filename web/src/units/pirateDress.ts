@@ -519,11 +519,11 @@ export function cannonShirt(scene: Scene, body: ArticulatedBody, teamColor: Colo
  */
 const PIRATE_PANTS = { thigh: 1.6, shin: 1.5, to: 0.5, cuff: 0.14, cuffOut: 1.78, cuffLight: 1.3, brown: new Color3(0.45, 0.19, 0.045), glow: 0.12 };
 
-export function piratePants(scene: Scene, body: ArticulatedBody): Mesh[] {
+export function piratePants(scene: Scene, body: ArticulatedBody, color: Color3 = PIRATE_PANTS.brown, cuffLight: number = PIRATE_PANTS.cuffLight): Mesh[] {
   const P = PIRATE_PANTS;
   const mf = getMaterialFactory();
-  const brown = mf.get("cloth", P.brown, { emissive: P.brown.scale(P.glow) });
-  const cuffColor = P.brown.scale(P.cuffLight);
+  const brown = mf.get("cloth", color, { emissive: color.scale(P.glow) });
+  const cuffColor = color.scale(cuffLight);
   const cuff = mf.get("cloth", cuffColor, { emissive: cuffColor.scale(P.glow) });
   const out: Mesh[] = [];
   for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(limbShell(scene, "piratePantsThigh", thigh, 0, 1, P.thigh, brown));
@@ -791,6 +791,21 @@ export function pirateHair(scene: Scene, body: ArticulatedBody, color: Color3, o
  * the plank). BLUNDERBUSS_HAIR: pirateHair's locks and fall in .color reaching .top of e.y up under the plank, dropping to .drop; over the crown a cap
  * .cap of the head across from the locks' top to the plank's underside (PLANK_HAT.sit under the head's top), so the plank sits on hair.
  */
+/*
+ * [S] 432 the Harpooner's rolled pants (CONFIRM 431 a.1: "legs dark team blue from hip to shoe - TABS: beige pants rolled up to mid-calf, bare team-skin
+ * shins below"; pirate.harpooner.red.png, card Appearance "rolled-up beige pants": loose grey-beige trousers from the coat's hem over the knee to
+ * halfway down the calf, a turned cuff a shade darker, the bare shin below in the face's team skin). HARPOONER_PANTS: the Flintlock's PIRATE_PANTS
+ * cut in .beige, its cuff the beige times .cuff; the shin and thigh meshes take the head's team-skin material so the calf shows bare under the cuff.
+ */
+const HARPOONER_PANTS = { beige: new Color3(0.5, 0.43, 0.33), cuff: 0.82 };
+
+export function harpoonerPants(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = HARPOONER_PANTS;
+  const skin = body.headMesh.material;
+  if (skin) for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) if (leg) leg.material = skin;
+  return piratePants(scene, body, P.beige, P.cuff);
+}
+
 const BLUNDERBUSS_HAIR = { top: 0.95, drop: -1.55, side: 0.3, cap: 1.1, color: new Color3(0.28, 0.135, 0.09) };
 
 /** The Blunderbuss's dark-brown bob under the plank hat (spec at BLUNDERBUSS_HAIR). */
