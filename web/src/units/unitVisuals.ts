@@ -617,8 +617,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "spooky.swordcaster": vis(
-    { scale: 1.08, bulk: 0.92, headSize: 1.08 }, "lockbox", "hood", "none", "cape", "#A793FF", undefined, {
+    { scale: 1.08, bulk: 0.92, headSize: 1.08 }, "lockbox", "none", "none", "cape", "#A793FF", undefined, {
       // units/spooky.swordcaster: no hand sword, a lockbox chest in both hands at the belly; the cast keeps the sword's timing
+      // [S] 435 no hood: a black bowl cut round the bare face (spookyDress SWORDCASTER_BOWL)
       weaponPresentationFamily: "blade_slash",
       posePreset: "caster",
       materialPreset: "secret_ghost",

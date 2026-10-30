@@ -1,6 +1,7 @@
 import { Scene, Color3, Mesh, MeshBuilder, TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
+import { eyeSpanInHead } from "./dynastyDress";
 
 /*
  * Spooky dress (units/spooky.*): per-unit cloth, hair and ornaments, built per unit id by unitFactory. Sized off the body's own joints and meshes.
@@ -59,5 +60,48 @@ export function vampireClaws(scene: Scene, body: ArticulatedBody): Mesh[] {
       out.push(nail);
     }
   }
+  return out;
+}
+
+/*
+ * [S] 435 the Swordcaster's bowl haircut (audit 434 swordcaster a.1: "head is a closed purple dome with a spike, no face - TABS: team face with two
+ * bead eyes under a black bowl haircut"; spooky.swordcaster.red.png: a glossy black bowl over the crown, its fringe cut straight across the brow just
+ * over the bead eyes, the sides down past the eyes to about the jaw's top, the back down to the nape; the face and eyes bare team skin). SWORDCASTER_BOWL,
+ * in the head's own box (e its half sizes): a crown .out of the head wide and deep from .clear over the eyes' top to .crown of e.y over the head's top;
+ * a side panel each side .side of e.x thick from that fringe line down to .sideTo of e.y under the eyes' bottom, from the back to .front of e.z; a back
+ * panel .back of e.z thick down to .nape of e.y. Near-black self-lit .glow so it reads black, not grey, under SSAO.
+ */
+const SWORDCASTER_BOWL = {
+  out: 1.14, clear: 0.05, crown: 0.16, side: 0.16, sideTo: 0.15, front: 0.45, back: 0.16, nape: -0.75, glow: 0.1,
+  black: new Color3(0.03, 0.03, 0.04),
+};
+
+/** A black bowl cut round the bare face, its fringe straight over the eyes (spec at SWORDCASTER_BOWL). */
+export function swordcasterBowl(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = SWORDCASTER_BOWL;
+  const hair = getMaterialFactory().get("cloth", B.black, { emissive: B.black.scale(B.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const X = e.x * B.out, Z = e.z * B.out;
+  const fringe = span[1] + e.y * B.clear, top = bb.maximum.y + e.y * B.crown;
+  const out: Mesh[] = [];
+  const slab = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number): void => {
+    const m = MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene);
+    m.position.set(c.x + (x0 + x1) / 2, (y0 + y1) / 2, c.z + (z0 + z1) / 2);
+    m.parent = head;
+    m.material = hair;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  };
+  // the crown, its front edge the straight fringe over the eyes
+  slab("swordcasterBowlCrown", -X, X, fringe, top, -Z, Z);
+  // the sides down past the eyes, behind the face's front
+  const sideFoot = span[0] - e.y * B.sideTo;
+  slab("swordcasterBowlSide", -X, -X + e.x * B.side, sideFoot, fringe, -Z, e.z * B.front);
+  slab("swordcasterBowlSide", X - e.x * B.side, X, sideFoot, fringe, -Z, e.z * B.front);
+  // the back down to the nape
+  slab("swordcasterBowlBack", -X, X, c.y + e.y * B.nape, fringe, -Z, -Z + e.z * B.back * 2);
   return out;
 }
