@@ -615,7 +615,9 @@ async function main() {
             for (const e of ab.slice(logged)) if (!seen.has(e.kind)) { events.push({ kind: e.kind, tick: tickOf(e.t) }); seen.add(e.kind); }
             logged = ab.length;
             const now = missiles();
-            if (now > before && !seen.has("missile") && !seen.has("fire") && !seen.has("throw") && !seen.has("cast")) { events.push({ kind: "missile", tick }); seen.add("missile"); }
+            // [evidence 427] a missile that leaves with a special just logged is that mechanic's (the Pirate Queen's Bomb Spin bombs), not the unit's attack
+            const withSpecial = events.some((e) => special(e.kind) && tick - e.tick <= 12);
+            if (now > before && !withSpecial && !seen.has("missile") && !seen.has("fire") && !seen.has("throw") && !seen.has("cast")) { events.push({ kind: "missile", tick }); seen.add("missile"); }
             before = now;
             // Done once a plain attack, its impact and a special mechanic are all seen, or 3 s after the first event
             if (want && !seen.has(want)) continue;
