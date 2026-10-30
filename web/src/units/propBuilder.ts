@@ -61,14 +61,16 @@ const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalie
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
  * front). Not a stovepipe: the old tricorn was a box on a flat triangle and read as a black top hat at lineup range.
  *   Crown TRICORN_DOME heads across, from the seat to TRICORN_CROWN of the head over the crown; brim corners on a circle TRICORN_BRIM heads across, walls
- *   TRICORN_WALL of the head high leaning TRICORN_LEAN out; skull TRICORN_SKULL head widths across.
+ *   TRICORN_WALL of the head high leaning TRICORN_LEAN out; the captain's skull plate is TRICORN_PLATE.
  */
 const TRICORN_DOME = 1.12;
 const TRICORN_CROWN = 0.16;
 const TRICORN_BRIM = 2.3;
 const TRICORN_WALL = 0.42;
 const TRICORN_LEAN = 0.3;
-const TRICORN_SKULL = 0.26;
+// The captain's skull plate on the hat's front wall (see the pirate_hat branch of the tricorn), in wall heights: skull across, its centre's height off the
+// wall's middle, the crossed bones' length and width, how far the plate stands off the felt, and each slab's thickness
+const TRICORN_PLATE = { skull: 0.5, at: 0.08, bone: 0.95, boneWide: 0.1, proud: 0.12, thick: 0.06, white: new Color3(0.95, 0.94, 0.9) };
 /*
  * A bandana tied over the skull (249; units/secret.taekwondo, factions/secret: cloth pulled down over the whole crown to the brow, the face and bead eyes clear
  * under its edge, knotted at the nape with two short tails hanging and flaring behind). Not a halo: the old bandana was a thin ring floating at the crown, and
@@ -865,7 +867,9 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
     // Brim: three walls on the sides of a triangle, one corner over the brow and two behind the ears, each turned up and leaning out
     const R = TRICORN_BRIM * W * 0.5;
     const wallTall = u(TRICORN_WALL * H);
-    const corners = [90, 210, 330].map((d) => (d * Math.PI) / 180);
+    // [S] 423 the captain's (pirate_hat) is turned a third so a wall, not a corner, faces the front: his skull plate stands on that wall (TRICORN_PLATE)
+    const corners = (type === "pirate_hat" ? [30, 150, 270] : [90, 210, 330]).map((d) => (d * Math.PI) / 180);
+    const walls: Mesh[] = [];
     const plate: number[] = [0, 0, 0];
     for (const a of corners) plate.push(u(R * Math.cos(a)), 0, u(R * Math.sin(a)));
     const flat = new Mesh("tricornBrim", scene);
@@ -889,21 +893,45 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       wall.rotation.x = TRICORN_LEAN;
       wall.material = felt;
       wall.parent = crown;
+      walls.push(wall);
     }
     if (type === "pirate_hat") {
-      // The captain's white skull on the front of the crown, over the brow corner
-      const bone = mat(scene, new Color3(0.92, 0.9, 0.84));
-      const skull = MeshBuilder.CreateSphere("tricornSkull", { diameter: u(TRICORN_SKULL * W), segments: 4 }, scene);
-      skull.position.set(0, u(domeTall * 0.55), u(TRICORN_DOME * W * 0.5));
-      skull.material = bone;
-      skull.parent = crown;
-      for (const s of [-1, 1]) {
-        const bar = MeshBuilder.CreateBox("tricornBone", { width: u(TRICORN_SKULL * 1.5 * W), height: u(0.05 * W), depth: u(0.04 * W) }, scene);
-        bar.position.set(0, u(domeTall * 0.55 - TRICORN_SKULL * 0.6 * W), u(TRICORN_DOME * W * 0.5));
-        bar.rotation.z = s * 0.6;
-        bar.material = bone;
-        bar.parent = crown;
+      // [S] 423 the captain's white skull and crossbones (critic 422: the hat's front plain dark - the old skull ball sat inside the V of the two front
+      // walls; pirate.captain.red.png: a white skull over two crossed bones painted on the hat's front face). Thin closed slabs on the front wall's
+      // outer face (the wall between the 30 and 150 degree corners, its +z out), TRICORN_PLATE: the skull .skull wall-heights across, its jaw, two dark
+      // eye holes, and the bones .bone long crossed behind it; unlit white so it stays white in the felt's shade (out of the glow)
+      const P = TRICORN_PLATE;
+      const front = walls[0];
+      const glow = scene.getGlowLayerByName("glow");
+      const bone = getMaterialFactory().get("unlit", P.white, { emissive: P.white });
+      const hole = mat(scene, new Color3(0.06, 0.05, 0.06));
+      const face = u(0.06 * W) * 0.5;
+      const slab = (name: string, w: number, h: number, x: number, y: number, z: number, rz: number, m: PBRMetallicRoughnessMaterial): Mesh => {
+        const piece = MeshBuilder.CreateBox(name, { width: w, height: h, depth: P.thick * wallTall }, scene);
+        piece.position.set(x, y, face + z * wallTall);
+        piece.rotation.z = rz;
+        piece.material = m;
+        piece.parent = front;
+        if (m === bone) glow?.addExcludedMesh(piece);
+        return piece;
+      };
+      const d = P.skull * wallTall;
+      for (const k of [-1, 1]) {
+        slab("tricornBone", P.bone * wallTall, P.boneWide * wallTall, 0, P.at * wallTall - d * 0.15, P.proud * 0.5, k * 0.62, bone);
+        for (const e of [-1, 1]) {
+          const tip = slab("tricornBoneEnd", P.boneWide * 1.7 * wallTall, P.boneWide * 1.7 * wallTall, 0, 0, 0, k * 0.62, bone);
+          tip.position.x = k * e * Math.cos(0.62) * P.bone * 0.5 * wallTall;
+          tip.position.y = P.at * wallTall - d * 0.15 + e * Math.sin(0.62) * P.bone * 0.5 * wallTall;
+        }
       }
+      const skull = MeshBuilder.CreateCylinder("tricornSkull", { height: P.thick * wallTall, diameter: d, tessellation: 8 }, scene);
+      skull.rotation.x = Math.PI / 2;
+      skull.position.set(0, P.at * wallTall + d * 0.08, face + P.proud * wallTall);
+      skull.material = bone;
+      skull.parent = front;
+      glow?.addExcludedMesh(skull);
+      slab("tricornJaw", d * 0.56, d * 0.36, 0, P.at * wallTall - d * 0.38, P.proud, 0, bone);
+      for (const e of [-1, 1]) slab("tricornEye", d * 0.22, d * 0.22, e * d * 0.2, P.at * wallTall + d * 0.06, P.proud + P.thick, 0, hole);
     }
     return crown;
   }
