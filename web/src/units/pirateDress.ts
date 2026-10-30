@@ -981,7 +981,7 @@ export function harpoonerPants(scene: Scene, body: ArticulatedBody): Mesh[] {
  * a brass buckle .buckle of the tongue across on its face. Self-lit .glow.
  */
 const HARPOONER_SHOES = {
-  sockFrom: 0.38, sockTo: 0.66, sockOut: 1.22, skinOut: 1.1, cuffAt: 0.55, tongue: 0.55, tongueTall: 0.3, tongueLean: 0.25, buckle: 0.6,
+  sockFrom: 0.34, sockTo: 0.82, sockOut: 1.22, skinOut: 1.1, cuffAt: 0.55, tongue: 0.55, tongueTall: 0.3, tongueLean: 0.25, buckle: 0.6,
   brown: new Color3(0.4, 0.2, 0.13), grey: new Color3(0.45, 0.4, 0.34), brass: new Color3(0.8, 0.6, 0.25), glow: 0.12,
 };
 
