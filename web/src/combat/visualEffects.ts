@@ -64,6 +64,11 @@ const SMOKE_LIFE = 2.4;
  * core cone .core across at the mouth widening to .coreFar at the far end, inside an orange shell .shell -> .shellFar, half see-through, both
  * flickering .flicker of their width; .puffs faceted orange flame lumps tumbling out along it; all fading over the last .fade s.
  */
+/** [S] 419 a man on fire (spawnBodyFlames): heights over his feet, m. */
+const BODY_FLAMES = {
+  tongues: 9, spread: 0.2, low: 0.55, high: 1.35, tall: 0.42, wide: 0.17, flicker: 13, fade: 0.5, smokeEvery: 0.3,
+  orange: new Color3(1, 0.45, 0.08), yellow: new Color3(1, 0.88, 0.3), smoke: new Color3(0.35, 0.33, 0.32),
+};
 /** [S] 419 the hwacha's launch smoke (spawnLaunchSmoke). */
 const LAUNCH_SMOKE = { puffs: 14, wide: 1.2, tall: 0.6, from: 0.15, to: 0.6, drift: 0.9, rise: 0.4, stagger: 0.45, seconds: 1.6, fade: 0.4, alpha: 0.9, glow: 0.35, white: new Color3(0.93, 0.93, 0.9) };
 /** [S] 418 the Firework Arrow's burst (spawnFireworkBurst): spark ball .radius m (half the card's 2.5 m blast each way), .lift up off the ground. */
@@ -146,6 +151,70 @@ export class VisualEffects {
         this._effects.splice(i, 1);
       }
     }
+  }
+
+  /**
+   * [S] 419 a man on fire (BODY_FLAMES; dynasty.dragon card: the Dragon's breath sets its targets alight): .tongues unlit flame cones, orange outside a
+   * yellow core, standing on his shoulders, chest and hips (`at` follows him; null when he is gone), each flickering in height on its own beat, and a
+   * grey smoke puff rising off him every .smokeEvery s; it burns .seconds and dies down over the last .fade.
+   */
+  spawnBodyFlames(at: () => Vector3 | null, seconds: number): void {
+    const F = BODY_FLAMES;
+    const root = new TransformNode("bodyFlames", this._scene);
+    const glow = this._scene.getGlowLayerByName("glow");
+    const unlit = (c: Color3, alpha: number): StandardMaterial => {
+      const m = new StandardMaterial("bodyFlameMat", this._scene);
+      m.disableLighting = true;
+      m.emissiveColor = c;
+      m.diffuseColor = c;
+      m.alpha = alpha;
+      return m;
+    };
+    const outer = unlit(F.orange, 0.9), inner = unlit(F.yellow, 0.95);
+    const tongues: { m: Mesh; core: Mesh; beat: number; tall: number }[] = [];
+    for (let i = 0; i < F.tongues; i++) {
+      const a = (i / F.tongues) * Math.PI * 2;
+      const r = F.spread * (i % 2 ? 1 : 0.55);
+      const y = F.low + (F.high - F.low) * ((i * 0.618034) % 1);
+      const tall = F.tall * (0.7 + 0.6 * ((i * 0.381966) % 1));
+      const m = MeshBuilder.CreateCylinder("bodyFlame", { height: 1, diameterTop: 0, diameterBottom: F.wide, tessellation: 5 }, this._scene);
+      m.parent = root;
+      m.position.set(Math.cos(a) * r, y, Math.sin(a) * r);
+      m.material = outer;
+      m.isPickable = false;
+      const core = MeshBuilder.CreateCylinder("bodyFlameCore", { height: 0.6, diameterTop: 0, diameterBottom: F.wide * 0.55, tessellation: 5 }, this._scene);
+      core.parent = m;
+      core.position.y = -0.15;
+      core.material = inner;
+      core.isPickable = false;
+      glow?.addExcludedMesh(m);
+      glow?.addExcludedMesh(core);
+      tongues.push({ m, core, beat: i * 1.7, tall });
+    }
+    let clock = 0, smokeClock = 0;
+    this._effects.push({
+      root,
+      remaining: seconds,
+      update: (dt, remaining) => {
+        const where = at();
+        if (!where) { root.setEnabled(false); return; }
+        root.position.copyFrom(where);
+        clock += dt;
+        const k = Math.min(1, remaining / F.fade);
+        for (const t of tongues) {
+          const h = t.tall * k * (0.75 + 0.35 * Math.sin(clock * F.flicker + t.beat));
+          t.m.scaling.set(1, Math.max(0.01, h), 1);
+          t.m.position.y = (t.m.position.y - (t.m.metadata ?? 0)) + h / 2;
+          t.m.metadata = h / 2;
+        }
+        smokeClock += dt;
+        if (smokeClock >= F.smokeEvery && remaining > F.fade) {
+          smokeClock = 0;
+          this.spawnSmokePuff(where.add(new Vector3(0, F.high + F.tall, 0)), F.smoke);
+        }
+      },
+      dispose: () => { outer.dispose(); inner.dispose(); },
+    });
   }
 
   /**

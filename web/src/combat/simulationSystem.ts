@@ -70,7 +70,8 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
 // Throwers whose missile is the prop in their hand (vfx tier 3, units/tribal.spear_thrower, pirate.bomb_thrower, tribal.stoner): it leaves the fist at the throw's let-go, not at the swing's start
 // [S] ...and the potionseller's bottle (341; card Weapons: Potion Throw, a lobbed potion): the glass ball in her right hand is what flies, on the bomb's high lob
 /** [S] 416 the Dragon's breath: the jet lasts .seconds, from .ahead of his scale in front of his head and .down under it, onto the man's chest (.chest m up). */
-const DRAGON_BREATH = { seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
+// .burn: how long the man it reaches burns (visualEffects BODY_FLAMES), s
+const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
  * [S] planted full-draw loose (354; medieval.archer.jpg: feet set, bow arm out, string at the cheek as the arrow leaves; card shoot delay 1.2 s). A bowman here
@@ -2410,6 +2411,9 @@ export class SimulationSystem {
           };
           const man = (): Vector3 | null => (target.isDead ? null : target.position.add(new Vector3(0, DRAGON_BREATH.chest, 0)));
           this.visualEffects.spawnFlameJet(mouth, man, DRAGON_BREATH.seconds);
+          // [S] 419 the man the jet reaches catches fire: flames stand on his body while he burns (visualEffects BODY_FLAMES; audit c.2 "the knight shows no fire")
+          const burning = target;
+          this.visualEffects.spawnBodyFlames(() => (burning.isDead && !burning.body.root.isEnabled() ? null : burning.position.clone()), DRAGON_BREATH.burn);
           this._logAbility(attacker, "breath", now);
           this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
         } else if (harpoonMuzzleOf(attacker)) {
