@@ -596,6 +596,16 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
       }
       dressCatapultCrew(scene, body);
     });
+  // [S] 440 the skeleton's skull is bone like the rest of him: wrapAsBody clones the head's material as the team-tinted skin and moves every mesh
+  // sharing it (all his bones) onto that clone, so he hands it a hidden anchor in the skull with a material of its own instead
+  let headMesh = operator.headMesh;
+  if (options.spooky) {
+    headMesh = MeshBuilder.CreateBox("skeletonCrewSkullAnchor", { size: 0.02 }, scene);
+    headMesh.material = new PBRMetallicRoughnessMaterial("skeletonCrewSkullAnchor", scene);
+    headMesh.parent = operator.headMesh;
+    headMesh.isVisible = false;
+    headMesh.isPickable = false;
+  }
 
   const vehicleSockets: VehicleSocketSet = {
     // The shot leaves where the bucket is when the arm stands upright at the end of its swing (CATAPULT_ARM.thrown)
@@ -608,7 +618,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     root,
     axle,
     allMeshes,
-    operator.headMesh,
+    headMesh,
     makeBodyMetrics(operator.headTopY * CATAPULT_SCALE, 0.8 * CATAPULT_SCALE, 0.45 * CATAPULT_SCALE, 0.8 * CATAPULT_SCALE),
     vehicleSockets,
   );
