@@ -30,7 +30,7 @@ drop a lesson once it is a comment at the code it describes.
 - `capture.mjs --units` takes a comma list (no spaces); an iter-N capture clears probe swatches: render them after it (402). No python (429). 4+ units run past 10 min: background it (433).
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 - Logged at the swing start / let-go, not the landing: a preset's instant "slam" (use the pending blow, 426); a special logged as a missile leaves owns that missile (427 queen). A status logged at the cast (fire_dot) makes _struck precede the missile: an on-landing mechanic needs ABILITY_PREF (435 candlehead).
-- The _ability shot is the log tick itself, before RuntimeUnit.update runs: a body swap set at the log shows only in _ability_after (437 vampire bat).
+- The _ability/_release shots are the log tick itself, before RuntimeUnit.update: a swap or pose set at the log shows only after (437 bat); log a latch's hit later (438 bite).
 - A crewman moved behind a vehicle hides behind the near wheel at the .6 rad idle swing: re-aim it in the same iteration (428 cannon, .25).
 
 ## Rig and dress

@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-433 | [R] MONKEY_SHORTS leg cut off the knee joint, team shin + boot, orange knee band + anklet on a low shoe (d21e71e8, 890391e8) | dynasty.monkey_king.a | approved
-433 | CAPTAIN_TRICORN peaked walls + raised crown (1543b25e) | pirate.captain.a | approved
-433 | CAPTAIN_FRONT white laced shirt, tan V vest, team sash (5033a559) | pirate.captain.a | approved
-433 | HARPOONER_SHOES brown foot, grey sock, skin strip, tongue + buckle (ad0be350, 17ca01c7) | pirate.harpooner.a | approved
-433 | QUEEN_SKIRT frontDrop, trousers as pale leg meshes (c521e5f2) | pirate.pirate_queen.a | approved
-433 | QUEEN_SHIRT team trunk + yoke, puffy sleeves, laced V (c9dcb0cd, c4ad8740) | pirate.pirate_queen.a | approved
 434 | HARPOONER_SHOES shoe shell to .62 over the grass line, sock to the top (10346a0f, 8c62322b) | pirate.harpooner.a | approved
 434 | QUEEN_DREADS spray up out of a tan wrap, bead-tipped side locks (2f1f2b92) | pirate.pirate_queen.a | approved
 434 | VAMPIRE_CLAWS empty clawed hands, no weapon (b8e42cdb) | spooky.vampire.b | approved
@@ -47,6 +41,13 @@ for 25 iterations.
 437 | [R] HARPOON_BREECH carry: team drum main mass, short fat grey muzzle, long bar, both fists (0799890a) | pirate.harpooner.b | approved
 437 | VAMPIRE_BAT bat form during the swoop (2c02833c) | spooky.vampire.c | approved
 437 | RIB_CRADLE bone ribs + spine round a carved jack-o'-lantern (3c42103f) | spooky.pumpkin_catapult.b | approved
+438 | HARPOON grip settled onto the carry bar (da4b3767) | pirate.harpooner.b | approved
+438 | VAMPIRE_HAIR slicked-back cap, swept ridge, widow's peak (16a75717) | spooky.vampire.a | approved
+438 | VAMPIRE_BITE latch, BITE_POSE, BLOOD_DRAIN (29201909, e6949b0d) | spooky.vampire.c | dropped
+438 | CANDLE_TOWER wax cap + drips, lumpy column, cyan flame (584ca625) | spooky.candlehead.a | approved
+438 | BONE_FRAME bone arm + lashed crossbones, bone crossbars (757d7237) | spooky.pumpkin_catapult.b | approved
+438 | CATAPULT_BANNER team pennants off the low bone (9dbd09aa) | spooky.pumpkin_catapult.a | approved
+438 | SKELETON_BELT no skirt, belt + team tassels (c24646b8) | spooky.skeleton_archer.a | approved
 
 ## Spent (never retry as [P])
 
@@ -96,6 +97,11 @@ propBuilder.ts:HARPOON_BREECH [R] 437 (long, wide, flat, hang, nozzle, bore, rin
 spookyDress.ts:SWORDCASTER_SKIRT (top, hem, out, flare, deep, stripe, stripeAt, shade, dark) | .12, .8, 1.1, 1.5, 1.25, .12, .5, .6, .3 | 437 | approved | hem .55 flare 1.32 team shade (437.1); none (before 437)
 spookyDress.ts:STIFFY_HELMET (out, clear, crown, cap, cheek, jaw, front, splay, neck, nape, kick) | 1.16, .06, .14, .82, .2, .22, .62, .08, .22, -.85, .3 | 437 | approved | dressSkeleton round hood (before 437)
 spookyDress.ts:SKELETON_HOOD (out, jaw, crown, open, side, peak, lean, collar, cape, drop, tatters) | 1.18, .3, .16, .55, .2, .5, .55, .4, 1.12, .24, 7 | 437 | approved | dressSkeleton round hood (before 437)
-pirateDress.ts:QUEEN_FRAME (trunk, deep, shoulders, pelvis, hips) | .7, .85, .78, .75, .72 | 437 | approved | full-width body (before 437)
+pirateDress.ts:QUEEN_FRAME (trunk, deep, shoulders, pelvis, hips, tall) | .7, .85, .78, .75, .72, .85 | 438 | approved | tall 1 (437); full-width body (before 437)
 spookyDress.ts:VAMPIRE_BAT (at, body, head, ear, span, fingers, dark, beat, lift, rate) | .55, .3, .2, .1, .7, 3, .35, .75, .25, 20 | 437 | approved | no bat form (before 437)
 vehicleBuilder.ts:RIB_CRADLE (ribs, step, bone, open, out, taper, size, squash, lobes) | 4, .12, .035, .75, 1.12, .85, .5, .82, 8 | 437 | approved | wooden bucket + plain sphere .45 (before 437)
+spookyDress.ts:VAMPIRE_HAIR (out, clear, crown, sweep, lean, back, peak, peakDrop, side, sideTo, front, nape) | 1.12, .04, .12, .42, .4, .25, .5, .3, .14, .5, .35, -.7 | 438 | approved | bald (before 438)
+spookyDress.ts:CANDLE_TOWER (cap, capFoot, crown, drips, drip, lumps, tall, base, tip, wobble, wick, flame, flat, core) | 1.2, .35, .12, 7, .28, 5, 1.45, .82, .5, .06, .1, 1.15, .92, .45 | 438 | approved | wick + yellow ball (before 438)
+vehicleBuilder.ts:BONE_FRAME (arm, cross, crossAt, bar, big, lowAt, past, knob, lobe, cord) | .11, .62, [.5,.15], .12, .15, .62, .12, 1.35, .32, .025 | 438 | approved | timber arm + crossbar (before 438)
+vehicleBuilder.ts:CATAPULT_BANNER (cord, wide, tall, thick, sway, tail, shade, glow) | .06, .24, .46, .025, .06, .12, .8, .18 | 438 | approved | none (before 438)
+spookyDress.ts:SKELETON_BELT (belt, out, at, buckle, tabs, tab, long, taper, flare) | .16, 1.12, .8, .2, 4, .24, .42, .55, .18 | 438 | approved | dressSkeleton skirt (before 438)
