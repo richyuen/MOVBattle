@@ -128,6 +128,13 @@ const TPOSE = { lift: 0.04, ahead: 0.12, rate: 8, perch: 0.07, a: 0.5, after: 0.
  */
 const HOVER = { lift: 0.13, bob: 0.025, rate: 2.4, beat: 0.28, rateIn: 3 };
 /*
+ * [S] 439 the Reaper's hover (spooky.reaper a.2: "legs short grey stumps on the ground under a wide robe - TABS: long thin cream bone legs dangling
+ * below the robe hem, hovering"; card Abilities "Hover"). A body marked with a "reaperHover" node under its hip (spookyDress REAPER_LEGS) is held
+ * REAPER_HOVER.lift of his height off the ground, bobbing .bob at .rate, from his first frame (LESSONS 25); walking, idle or swinging, his legs hang
+ * loose under him: each thigh eased .hang of the way back to straight down (a .sway rad swing, the legs out of step), the knee .knee rad bent.
+ */
+const REAPER_HOVER = { lift: 0.15, bob: 0.02, rate: 1.8, hang: 0.85, sway: 0.12, knee: 0.12 };
+/*
  * [S] the Valkyrie's flight (392 re-run 393; viking.valkyrie.png, card Characteristics "flies": she hangs above the ground, the boots drawn up under her,
  * and beats the big pale wings once a second or so; critic 392: no flight/leap event and both boots planted in every shot). A body marked `valkyrieFly`
  * on the torso (propBuilder, the valkyrie's own wing build) stands .lift of its height off the ground, bobbing .bob, its thighs drawn up .thigh and its
@@ -2251,6 +2258,7 @@ export class ProceduralAnimator {
     this._holdSlab();
     this._lungeLegs();
     this._holdTPose(dt);
+    this._reaperHover(dt);
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
@@ -3167,6 +3175,27 @@ export class ProceduralAnimator {
     for (const wing of F.wings) {
       const side = Math.sign(wing.node.position.x) || 1;
       wing.node.rotation.z = wing.rest + side * FLY.beat * Math.cos(F.t) * F.w;
+    }
+  }
+
+  // The Reaper's hover (REAPER_HOVER): whether this body is marked for it (read once), and the bob's clock
+  private _reaperHoverOn: boolean | undefined;
+  private _reaperHoverT = 0;
+  /** The Reaper held off the ground with his legs hanging loose (spec at REAPER_HOVER). */
+  private _reaperHover(dt: number): void {
+    const b = this._body;
+    this._reaperHoverOn ??= b.hip.getChildren().some((n) => n.name === "reaperHover");
+    if (!this._reaperHoverOn || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
+    const R = REAPER_HOVER;
+    this._reaperHoverT += dt * R.rate;
+    const t = this._reaperHoverT;
+    this._hipRest ??= b.hip.position.y;
+    // the hip is set from its rest every frame (update), so the lift is laid on afresh each frame, as the scarecrow's
+    b.hip.position.y += b.metrics.overallHeight * (R.lift + R.bob * Math.sin(t));
+    for (const [hip, knee, phase] of [[b.leftHip, b.leftKnee, 0], [b.rightHip, b.rightKnee, Math.PI * 0.7]] as const) {
+      hip.rotation.x += (R.sway * Math.sin(t + phase) - hip.rotation.x) * R.hang;
+      hip.rotation.z *= 1 - R.hang;
+      knee.rotation.x += (R.knee - knee.rotation.x) * R.hang;
     }
   }
 

@@ -1115,3 +1115,24 @@ export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Co
   }
   return out;
 }
+
+/*
+ * [S] 439 the Reaper's hover (audit 434 reaper a.2: "legs in unit_spooky.reaper_idle are short grey stumps on the ground under a wide robe - TABS: long
+ * thin cream bone legs dangling below the robe hem, hovering"; spooky.reaper.red.png, card Abilities "Hover": he floats off the ground, two long thin
+ * cream bone legs hanging loose and straight out of the robe's hem, the bone feet pointing down well clear of the ground). REAPER_LEGS: the thin bone
+ * legs and feet in a cream bone self-lit .glow (the plain lit bone reads grey, LESSONS 13); a "reaperHover" node under the hip marks him for the
+ * animator, which lifts him and lets the legs hang (proceduralAnimation REAPER_HOVER).
+ */
+const REAPER_LEGS = { bone: new Color3(1.0, 0.86, 0.6), glow: 0.3 };
+export const REAPER_HOVER_NODE = "reaperHover";
+
+/** Cream bone legs and feet, and the hover marker under the hip (spec at REAPER_LEGS). */
+export function reaperLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const L = REAPER_LEGS;
+  const bone = getMaterialFactory().get("cloth", L.bone, { emissive: L.bone.scale(L.glow) });
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) if (leg) leg.material = bone;
+  for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) m.material = bone;
+  const mark = new TransformNode(REAPER_HOVER_NODE, scene);
+  mark.parent = body.hip;
+  return [];
+}
