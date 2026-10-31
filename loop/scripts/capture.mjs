@@ -418,6 +418,8 @@ async function main() {
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
     window.reseed = () => { s = SEED; };
+    // [tools 439] replays render their setup steps at 1/8 size (same engine path, ~1/4 the swiftshader cost); renderWhenReady restores full size for the shot
+    window.__setupScale = 8;
   });
 
   try {

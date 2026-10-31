@@ -123,6 +123,7 @@ const btnTouchCameraUpEl = document.getElementById("btnTouchCameraUp") as HTMLBu
 
 // ─── Engine & Scene ───
 const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+const BASE_SCALE = engine.getHardwareScalingLevel();
 const scene = new Scene(engine);
 scene.clearColor = new Color4(0.14, 0.62, 0.46, 1);
 
@@ -2056,6 +2057,10 @@ function advanceSimulationTime(ms: number): void {
     camCtrl.advanceTransition(1 / 60);
     tick(1 / 60, worldTimeSeconds);
   }
+  // The loop capture sets __setupScale: its replays render each step at a fraction of the size (the same engine path, a quarter of the
+  // swiftshader cost); renderWhenReady restores the full size before the shot
+  const setup = (window as any).__setupScale as number | undefined;
+  if (setup && engine.getHardwareScalingLevel() !== setup) engine.setHardwareScalingLevel(setup);
   scene.render();
 }
 
@@ -3793,6 +3798,7 @@ const gameApi = {
   },
   // Resolves with what still was not ready, so a capture can say which meshes a shot may miss.
   renderWhenReady: async () => {
+    if (engine.getHardwareScalingLevel() !== BASE_SCALE) engine.setHardwareScalingLevel(BASE_SCALE);
     let renders = 0;
     let ready = false;
     for (let i = 0; i < 40; i++) {
