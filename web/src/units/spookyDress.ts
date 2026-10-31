@@ -1276,15 +1276,41 @@ export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Co
  * legs and feet in a cream bone self-lit .glow (the plain lit bone reads grey, LESSONS 13); a "reaperHover" node under the hip marks him for the
  * animator, which lifts him and lets the legs hang (proceduralAnimation REAPER_HOVER).
  */
-const REAPER_LEGS = { bone: new Color3(1.0, 0.86, 0.6), glow: 0.3 };
+/*
+ * [S] 440 (439 reaper a.2: "only two boxy feet show under the hem, no shins"; spooky.reaper.red.png: the legs below the hem are as long as the robe is
+ * tall, thin as the bone arms): the leg chain is stretched .long times - thigh and shin meshes, the knee joint and the foot on it - and thinned to .thin
+ * in x and z; the foot box shrunk to .foot so it reads as a bone foot; the hip raised by the length added, so the hover keeps the feet off the ground and
+ * the whole stretch shows under the robe.
+ */
+const REAPER_LEGS = { bone: new Color3(1.0, 0.86, 0.6), glow: 0.3, long: 1.6, thin: 0.5, foot: 0.75 };
 export const REAPER_HOVER_NODE = "reaperHover";
 
-/** Cream bone legs and feet, and the hover marker under the hip (spec at REAPER_LEGS). */
+/** Long thin cream bone legs and feet, and the hover marker under the hip (spec at REAPER_LEGS). */
 export function reaperLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
   const L = REAPER_LEGS;
   const bone = getMaterialFactory().get("cloth", L.bone, { emissive: L.bone.scale(L.glow) });
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) if (leg) leg.material = bone;
   for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) m.material = bone;
+  let added = 0;
+  for (const [thigh, knee, shin] of [[body.leftUpperLeg, body.leftKnee, body.leftLowerLeg], [body.rightUpperLeg, body.rightKnee, body.rightLowerLeg]] as const) {
+    // the foot mesh's sole is baked in its vertices one shin under the knee (bodyBuilder foot), so it moves down by the shin's added length
+    const feet = knee.getChildMeshes(true).filter((m) => /_[lr]FootM$/.test(m.name));
+    const shinLen = Math.abs(shin.position.y) * 2;
+    added = Math.max(added, (Math.abs(knee.position.y) + shinLen) * (L.long - 1));
+    for (const m of [thigh, shin]) {
+      m.scaling.y *= L.long;
+      m.position.y *= L.long;
+      m.scaling.x *= L.thin;
+      m.scaling.z *= L.thin;
+    }
+    knee.position.y *= L.long;
+    for (const f of feet) {
+      f.position.y -= shinLen * (L.long - 1);
+      f.scaling.x *= L.foot;
+      f.scaling.z *= L.foot;
+    }
+  }
+  body.hip.position.y += added;
   const mark = new TransformNode(REAPER_HOVER_NODE, scene);
   mark.parent = body.hip;
   return [];
