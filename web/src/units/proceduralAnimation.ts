@@ -668,8 +668,9 @@ const THROW_SWING = 0.55;
 // trunk rocked back `kick` rad at the release
 const HARPOON_HIP = { raise: 0.25, out: 0.1, elbow: -0.3, offRaise: -0.55, offIn: 0.4, offElbow: -1.0, kick: 0.12 };
 // [S] 436 the harpoon gun carried at rest (see _restHarpoon): the weapon fist .drop of his height under its shoulder, .ahead and .out of it, the barrel
-// .dip rad below level toward his front
-const HARPOON_REST = { drop: 0.27, ahead: 0.05, out: 0.07, dip: 0.95 };
+// .dip rad below level toward his front. [R] 437 (propBuilder HARPOON_BREECH spec): the drum hung out beside the thigh, not in it (out .07 -> .09), the
+// muzzle forward and down rather than at the ground (dip .95 -> .7), and the off fist back on the carry bar beside the weapon fist (Two-handed)
+const HARPOON_REST = { drop: 0.27, ahead: 0.06, out: 0.09, dip: 0.7 };
 /*
  * [S] 436 the Pirate Queen's upright rest stance (critic 435 queen a.1: "torso and skirt a wide hunched block ... clearly taller and broader than the
  * captain - TABS: slim long-limbed build, about the captain's height"; pirate.pirate_queen.red.png: she stands tall and square on long straight legs, the
@@ -3408,7 +3409,8 @@ export class ProceduralAnimator {
       gun.rotationQuaternion = null;
       return;
     }
-    if (this._restHarpoon(gun, w)) return;
+    // [R] 437 at rest too: both fists on the carry bar (Two-handed)
+    this._restHarpoon(gun, w);
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = grip; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
@@ -3420,7 +3422,8 @@ export class ProceduralAnimator {
    * at hip height, held by its top handle, muzzle down and forward"; pirate.harpooner.red.png: the weapon arm hangs near straight, the fist on the
    * A-frame handle at the hip, the block under it and the nozzle pointing down and ahead toward the ground, the off arm free at his side).
    * Standing or walking, the weapon fist is solved onto HARPOON_REST's seat under the weapon shoulder and the gun's barrel (+y) laid .dip rad below
-   * his front, its handle side (+z) up; the off hand lets go. In a shot (or dead) the gun takes back its built attitude. Returns true while resting.
+   * his front, its handle side (+z) up; the off fist then takes the bar beside it ([R] 437). In a shot (or dead) the gun takes back its built attitude.
+   * Returns true while resting.
    */
   private _restHarpoon(gun: TransformNode, w: number): boolean {
     const s = this._state;

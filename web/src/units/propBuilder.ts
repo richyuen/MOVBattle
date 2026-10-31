@@ -3203,7 +3203,19 @@ const JAVELIN_ROPE = new Color3(0.74, 0.6, 0.42);
  * In prop units (s): the block .long along the barrel (+y) and .wide across, squashed .flat across x; it hangs .hang below the fist on -z (in his
  * shoulder carry +z is up); nozzle .nozzle long, .bore of the block across, ringed .rings; the harpoon leaves from the node named HARPOON_MUZZLE.
  */
-const HARPOON_BREECH = { long: 0.2, wide: 0.19, flat: 0.86, hang: 0.9, nozzle: 0.17, bore: 0.52, rings: [0.25, 0.55, 0.85], handle: 0.07, offGrip: 0.42 };
+/*
+ * [R] 437 the harpoon gun's carry (plateau b; CONFIRM 434 + 436: "a long pale ribbed cylinder runs from the hip to the ground and dominates, with only a
+ * small dark team box at the belt - TABS: a big team-coloured octagonal drum body is the main mass, with a short, fat grey ribbed muzzle at its end";
+ * "off hand hangs free at the side - TABS: Weapon Type Two-handed, both hands on the gun"). Spec read off pirate.harpooner.blue.png and .red.png:
+ *  - drum: an eight-sided team prism about as long as his thigh and nearly as fat as it is long, the gun's main mass, hung under the handle
+ *    (long .2 -> .26, wide .19 -> .27, hang .9 -> .72 of its width under the fist).
+ *  - muzzle: a short fat mid-grey tube, about half the drum across and well under half its length, two raised rings and a lipped mouth (nozzle
+ *    .17 -> .1, bore .52 -> .56, rings at .3 and .7, grey (.55,.56,.58) -> (.3,.31,.33): the pale grey read as white bone).
+ *  - handle: a grey A-frame over the drum's top, its bar long enough for two fists side by side along the barrel (handle .07 -> .15): the weapon
+ *    fist at its back half, the off fist on its front half (HARPOON_OFF_GRIP .offGrip of the bar forward), both arms down to it at the hip.
+ *  - the spike bayonet stays (card Appearance), under the muzzle.
+ */
+const HARPOON_BREECH = { long: 0.26, wide: 0.27, flat: 0.86, hang: 0.72, nozzle: 0.1, bore: 0.56, rings: [0.3, 0.7], handle: 0.15, barAt: 0.25, offGrip: 0.78 };
 export const HARPOON_MUZZLE = "harpoonMuzzle";
 export const HARPOON_OFF_GRIP = "harpoonOffGrip";
 /** [S] 429 the harpoon gun's sword-bayonet (spec at the "harpoon" case). */
@@ -3805,7 +3817,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // [S] 423 rebuilt to the spec at HARPOON_BREECH: the root "harpoonGun" sits at the fist on the carry handle; the team block hangs under it
       const H = HARPOON_BREECH;
       const team = mat(scene, teamColor ?? accent, 0.1, "cloth");
-      const grey = mat(scene, new Color3(0.55, 0.56, 0.58), 0.2, "cloth");
+      const grey = mat(scene, new Color3(0.3, 0.31, 0.33), 0.2, "cloth");
       const dark = mat(scene, new Color3(0.2, 0.2, 0.22), 0.04, "cloth");
       const body = new Mesh("harpoonGun", scene);
       const hang = -H.wide * H.hang * s;
@@ -3826,12 +3838,13 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const topZ = hang + H.wide * 0.5 * s;
       for (const k of [-1, 1]) {
         const leg = MeshBuilder.CreateBox("harpoonHandle", { width: 0.022 * s, height: 0.022 * s, depth: Math.abs(topZ) * 1.15 + 0.01 * s }, scene);
-        leg.position.set(0, k * H.handle * 0.5 * s, topZ * 0.5);
+        leg.position.set(0, (H.barAt + k * 0.5) * H.handle * s, topZ * 0.5);
         leg.rotation.x = -k * 0.45;
         leg.material = grey;
         leg.parent = body;
       }
       const bar = MeshBuilder.CreateBox("harpoonHandleBar", { width: 0.03 * s, height: H.handle * 0.9 * s, depth: 0.03 * s }, scene);
+      bar.position.y = H.barAt * H.handle * s;
       bar.material = grey;
       bar.parent = body;
       // The fat grey nozzle out of the block's front, three raised rings and a lipped mouth
@@ -3867,9 +3880,9 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       muzzle.position.set(0, front + H.nozzle * s + 0.03 * s, hang);
       muzzle.parent = body;
       // [S] 424 where the off fist holds it (pirate.harpooner.jpg: the second hand on the block's top toward its front, both hands low at the hip):
-      // a mark .offGrip of the block's length forward of the carry bar, on the block's top face; ProceduralAnimator._gripHarpoon solves the off arm to it
+      // [R] 437: on the carry bar's front half, .offGrip of the bar forward, beside the weapon fist; ProceduralAnimator._gripHarpoon solves the off arm to it
       const offGrip = new TransformNode(HARPOON_OFF_GRIP, scene);
-      offGrip.position.set(0, H.long * H.offGrip * s, topZ);
+      offGrip.position.set(0, (H.barAt + H.offGrip - 0.5) * H.handle * s, 0);
       offGrip.parent = body;
       // [S] 435 the spike bayonet under the barrel (CONFIRM 434 b.1: "a broad sword blade jutting past the muzzle, longer than the whole gun - TABS: a thin
       // spike bayonet under the barrel, about as long as the barrel"; pirate.harpooner.red.png: a dark-grey needle, round and pencil-thin, out of a
