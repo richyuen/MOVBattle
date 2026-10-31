@@ -1063,8 +1063,9 @@ export function candleRobe(scene: Scene, body: ArticulatedBody, teamColor: Color
  * from straight back, each a flat wedge .wide of h wide at its root, .tall[i] of h tall, leaning .lean rad out; tops kept under the head's top + .3 h
  * (LESSONS 27). Team self-lit .glow, the spikes in .shade of it so they part from the cape.
  */
+// 439 look: the first fan (ring .26, tall .8-1.15 h) stood inside the head and hair and never showed: the ring is wider and the spikes taller
 const VAMPIRE_COLLAR = {
-  sides: 6, capeTop: 0.08, capeDrop: 0.55, capeIn: 0.45, capeOut: 1.22, deep: 0.85, spikes: 5, ring: 0.26, arc: [-1.2, 1.2], wide: 0.42, tall: [1.15, 0.95, 0.8, 0.95, 1.15],
+  sides: 6, capeTop: 0.08, capeDrop: 0.55, capeIn: 0.45, capeOut: 1.22, deep: 0.85, spikes: 5, ring: 0.42, arc: [-1.25, 1.25], wide: 0.5, tall: [1.5, 1.3, 1.15, 1.3, 1.5],
   lean: 0.32, back: 0.18, thick: 0.06, glow: 0.14, shade: 0.85,
 };
 
@@ -1104,7 +1105,7 @@ export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Co
     const tall = h * V.tall[i % V.tall.length];
     const pivot = new TransformNode("vampireCollarSpike", scene);
     pivot.parent = torso;
-    pivot.position.set(Math.sin(a) * S * V.ring, capeTop - drop * 0.15, neck.z - Math.cos(a) * S * V.ring * 0.8);
+    pivot.position.set(Math.sin(a) * S * V.ring, capeTop - drop * 0.15, neck.z - Math.cos(a) * S * V.ring);
     pivot.rotation.y = -a;
     pivot.rotation.x = -V.back;
     pivot.rotation.z = Math.sin(a) * -V.lean;
