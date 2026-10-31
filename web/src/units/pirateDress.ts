@@ -786,9 +786,19 @@ const QUEEN_BOOTS = { from: 0.12, shaft: 1.35, top: 1.7, topTall: 0.14, band: 1.
  */
 // [P] 438 (critic 437 fallout: "still a head taller" than the captain in lineup_pirate): the trunk cut to .tall of its height from its foot, the
 // neck, shoulders, yoke and cape lowered with its top
-const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72, tall: 0.85 };
+/*
+ * [R] 440 QUEEN_BUILD: her height (plateau a.1, CONFIRM 431 and 434 failed a, standing after 435-439: "body bulk clearly taller and broader than the
+ * captain in lineup_pirate - TABS: slim long-limbed build, about the captain's height"; factions/pirate.jpg: her crown level with the captain's, her
+ * legs no longer than his; pirate.pirate_queen.red.png: a head about a seventh of her height). Measured before (probe, both at rest, world m): captain
+ * head top 1.87, hip .91, neck 1.49; queen head top 2.31, hip 1.17, neck 1.84, head block .47 tall - her legs 1.29x his, trunk 1.16x, head 1.2x, at
+ * scale 1.2 against his 1.35 (the scale row is spent, so the build is cut in her body, not the row). The spec, all before her dress is fitted (the
+ * boots, skirt, shirt and sash are fitted to the cut body): the leg chain - thigh and shin meshes, knee joints, the feet on them - .legs of its length,
+ * the hip lowered by what that takes off so she stands on the ground; the trunk .tall of its height (was .85); the head is left (her bandana and
+ * hair are seated on it). Target: head top ~1.95 (the captain's 1.87 plus her hair), hip ~.9.
+ */
+const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72, tall: 0.76, legs: 0.74 };
 
-/** Cuts the Pirate Queen's body narrow before her dress is fitted (spec at QUEEN_FRAME). */
+/** Cuts the Pirate Queen's body narrow and down to the captain's height before her dress is fitted (spec at QUEEN_FRAME, QUEEN_BUILD). */
 export function queenFrame(body: ArticulatedBody): void {
   const F = QUEEN_FRAME;
   body.torsoMesh.scaling.x *= F.trunk;
@@ -804,6 +814,21 @@ export function queenFrame(body: ArticulatedBody): void {
   for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name)) m.scaling.x *= F.pelvis;
   body.leftHip.position.x *= F.hips;
   body.rightHip.position.x *= F.hips;
+  // [R] 440 the leg chain cut to .legs: the thigh and shin meshes and the knee joint scale with it; the foot's sole is baked one shin under the knee
+  // (bodyBuilder foot), so the foot moves up by what the shin loses; the hip comes down by the whole cut
+  let lost = 0;
+  for (const [thigh, knee, shin] of [[body.leftUpperLeg, body.leftKnee, body.leftLowerLeg], [body.rightUpperLeg, body.rightKnee, body.rightLowerLeg]] as const) {
+    const shinLen = Math.abs(shin.position.y) * 2;
+    lost = Math.max(lost, (Math.abs(knee.position.y) + shinLen) * (1 - F.legs));
+    for (const m of [thigh, shin]) {
+      m.scaling.y *= F.legs;
+      m.position.y *= F.legs;
+      m.refreshBoundingInfo();
+    }
+    knee.position.y *= F.legs;
+    for (const foot of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(foot.name)) foot.position.y += shinLen * (1 - F.legs);
+  }
+  body.hip.position.y -= lost;
 }
 
 /** The Pirate Queen's knee-high red-brown boots with a team band (spec at QUEEN_BOOTS, in the [R] 435 build spec). */
