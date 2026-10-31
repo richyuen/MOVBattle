@@ -660,7 +660,7 @@ export function skeletonArcherBelt(scene: Scene, body: ArticulatedBody, teamColo
  * .ragLong of K long (every other one shorter). The belt in the hip frame round the pelvis box: .belt of its width tall, .beltOut of it across, its top at
  * the pelvis top. Team and leather self-lit .glow.
  */
-const STIFFY_SHORTS = { top: 0.16, hem: 0.86, out: 3.6, flare: 1.15, deep: 0.88, sides: 7, rags: 6, rag: 0.7, ragLong: 0.2, belt: 0.2, beltOut: 1.3, glow: 0.14, leather: new Color3(0.4, 0.17, 0.07) };
+const STIFFY_SHORTS = { top: 0.16, hem: 0.72, out: 3.6, flare: 1.15, deep: 0.88, sides: 7, rags: 6, rag: 0.7, ragLong: 0.2, belt: 0.2, beltOut: 1.3, glow: 0.14, leather: new Color3(0.4, 0.17, 0.07) };
 
 /** Baggy team shorts to the knee with rag-point hems and a brown belt, over the bone legs (spec at STIFFY_SHORTS). */
 export function stiffyShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -721,7 +721,17 @@ export function stiffyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
  * .foot in width and height so it reads as a bare bone foot, not a boot box. Team self-lit .glow, a shade (.shade) darker than the shorts.
  */
 // 440 look: from -.04 in the shorts' team shade the greave ran on out of the shorts' hem as one column: it starts under the knee, a bone strip between, darker
-const STIFFY_GREAVES = { from: 0.14, to: 0.84, across: 3.4, flare: 0.82, deep: 1.0, sides: 7, knee: 1.12, kneeSquash: 0.75, foot: 0.72, shade: 0.55, glow: 0.14 };
+/*
+ * [S] 441 the bare bone knee (440 skeleton_warrior a.5: "legs are one team column from the belt to the ankle, no bare bone between the shorts' hem and
+ * the greave"; spooky.skeleton_warrior.blue.png: the shorts' rag hem ends just over the knee, then a knobbly bone knee and the top third of the bone shin
+ * stand bare before the greave's rounded team top). The greave now starts .from of the shin down (its dome rides that top); a cream bone knee knob
+ * (.patella of the greave's width across, .patellaSquash in y, a little proud .patellaProud of it in front) sits on the knee joint between the shorts'
+ * hem (STIFFY_SHORTS.hem raised to .72 of the thigh) and the greave, in the shared bone (SKELETON_BONE).
+ */
+const STIFFY_GREAVES = {
+  from: 0.34, to: 0.88, across: 3.4, flare: 0.82, deep: 1.0, sides: 7, knee: 1.12, kneeSquash: 0.75, foot: 0.72, shade: 0.55, glow: 0.14,
+  patella: 0.62, patellaSquash: 1.2, patellaProud: 0.25,
+};
 
 /** Team greaves from the knee down the shin over bare bone feet (spec at STIFFY_GREAVES). */
 export function stiffyGreaves(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -742,9 +752,13 @@ export function stiffyGreaves(scene: Scene, body: ArticulatedBody, teamColor: Co
     const cap = MeshBuilder.CreateSphere("stiffyGreaveKnee", { diameter: r * 2 * G.knee, segments: 3 }, scene);
     cap.scaling.y = G.kneeSquash;
     cap.position.set(cx, y0, cz + r * 0.08);
-    for (const m of [tube, cap]) {
+    // the bare bone knee over the greave's top, on the joint itself
+    const patella = MeshBuilder.CreateSphere("stiffyKneeBone", { diameter: r * 2 * G.patella, segments: 3 }, scene);
+    patella.scaling.y = G.patellaSquash;
+    patella.position.set(cx, 0, cz + r * G.patellaProud);
+    for (const m of [tube, cap, patella]) {
       m.parent = knee;
-      m.material = team;
+      m.material = m === patella ? skeletonBone() : team;
       m.convertToFlatShadedMesh();
       m.isPickable = false;
       out.push(m);
