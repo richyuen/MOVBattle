@@ -1284,10 +1284,7 @@ export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Co
   };
   // the cape over the shoulders, its six points out past them
   const capeTop = Math.max(trunkTop, neck.y - h * 0.1) + h * V.capeTop, drop = h * V.capeDrop;
-  // [S] 442 open down the front over the white V (VAMPIRE_VEST.capeGap): the arc's gap, which Babylon cuts from +x round toward +z, turned to face +z
-  const gap = VAMPIRE_VEST.capeGap;
-  const cape = put(MeshBuilder.CreateCylinder("vampireCape", { height: drop, diameterTop: S * V.capeIn, diameterBottom: S * V.capeOut, tessellation: V.sides, arc: 1 - gap, enclose: true }, scene), team);
-  cape.rotation.y = Math.PI * gap - Math.PI / 2;
+  const cape = put(MeshBuilder.CreateCylinder("vampireCape", { height: drop, diameterTop: S * V.capeIn, diameterBottom: S * V.capeOut, tessellation: V.sides }, scene), team);
   cape.scaling.z = Math.max(V.deep, (D * 1.2) / (S * V.capeOut));
   cape.position.set(0, capeTop - drop / 2, 0);
   // the spikes on an arc behind the neck, each a flat wedge standing up and leaning out
@@ -1318,11 +1315,8 @@ export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Co
  * .vLong of H, .vThick thick, its back face .proud in front of the trunk's foremost face (yoke included); the belt a .sides-sided band in the hip frame
  * .belt of W tall, .beltOut of the pelvis across, its top at the pelvis top, dark (.dark self-lit .glow).
  */
-// [S] 442 (critic 441: the V lay inside the collar cape, too narrow and short to read past the forearm across his chest): the collar cape is cut open
-// down the front, a .capeGap share of its round missing over the V (vampireCollar), and the V is a thicker slab .vWide of W across from the cape's
-// top down .vLong of H to the belt, standing .proud off the chest.
 const VAMPIRE_VEST = {
-  shirt: new Color3(0.86, 0.84, 0.78), shirtGlow: 0.3, vWide: 0.64, vTop: -0.06, vLong: 0.86, vThick: 0.035, proud: 0.015, capeGap: 0.2,
+  shirt: new Color3(0.86, 0.84, 0.78), shirtGlow: 0.3, vWide: 0.46, vTop: -0.02, vLong: 0.5, vThick: 0.02, proud: 0.008,
   belt: 0.16, beltOut: 1.14, sides: 8, dark: new Color3(0.07, 0.06, 0.07), glow: 0.12,
 };
 
