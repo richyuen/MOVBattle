@@ -304,14 +304,17 @@ function inFrameOf(n: TransformNode, frame: TransformNode): Vector3 {
  * a four-sided frustum from .top of the trunk's height over its foot down .hem of the way from there to the knees, .out of W across at the top and
  * .flare of that at the hem, .deep of D deep; .stripes stripes each side of the middle at .stripeAt of the half width, .stripe of W wide, a darker
  * team (.dark of it) standing .proud off the faces, front and back. Team cloth self-lit .glow.
+ * 437 look: the skirt in the body's own team shade read as the pale legs and hid behind the lockbox: the cloth is now a mid team shade (.shade of it),
+ * longer (.hem .55 -> .8) and wider at the hem (.flare 1.32 -> 1.5) so it stands out past the box's sides and below it.
  */
-const SWORDCASTER_SKIRT = { top: 0.12, hem: 0.55, out: 1.1, flare: 1.32, deep: 1.25, stripes: 1, stripeAt: 0.5, stripe: 0.12, dark: 0.42, proud: 0.025, glow: 0.14 };
+const SWORDCASTER_SKIRT = { top: 0.12, hem: 0.8, out: 1.1, flare: 1.5, deep: 1.25, stripes: 1, stripeAt: 0.5, stripe: 0.12, shade: 0.6, dark: 0.3, proud: 0.025, glow: 0.14 };
 
 /** A flared team tunic skirt from the waist to mid-thigh with dark stripes down it (spec at SWORDCASTER_SKIRT). */
 export function swordcasterSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const S = SWORDCASTER_SKIRT;
   const f = getMaterialFactory();
-  const cloth = f.get("cloth", teamColor, { emissive: teamColor.scale(S.glow) });
+  const midC = teamColor.scale(S.shade);
+  const cloth = f.get("cloth", midC, { emissive: midC.scale(S.glow) });
   const darkC = teamColor.scale(S.dark);
   const dark = f.get("cloth", darkC, { emissive: darkC.scale(S.glow) });
   const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
