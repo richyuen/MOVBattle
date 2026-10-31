@@ -16,6 +16,7 @@ import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils, candleArms, candleTower, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood, skeletonArcherBelt, stiffyShorts, skeletonArcherKit, candleRobe, vampireCollar, reaperLegs } from "./spookyDress";
 import { stiffyGreaves } from "./spookyDress";
+import { candleBoots } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -656,6 +657,8 @@ export class UnitFactory {
     if (definition.id === "spooky.candlehead" && !shouldUseVehicleBody) propMeshes.push(...candleTower(this._scene, body));
     // [S] 439 the Candlehead's square team robe to mid-thigh, a dark hem band and a gold-edged white V bib (spookyDress CANDLE_ROBE)
     if (definition.id === "spooky.candlehead" && !shouldUseVehicleBody) propMeshes.push(...candleRobe(this._scene, body, teamColor));
+    // [S] 440 ...and dark team boots to the knee with two gold rings at the top (spookyDress CANDLE_BOOTS)
+    if (definition.id === "spooky.candlehead" && !shouldUseVehicleBody) propMeshes.push(...candleBoots(this._scene, body, teamColor));
     // [S] 435 the Swordcaster's black bowl cut round his bare face in place of the closed hood (spookyDress SWORDCASTER_BOWL)
     if (definition.id === "spooky.swordcaster" && !shouldUseVehicleBody) propMeshes.push(...swordcasterBowl(this._scene, body));
     // [S] 436 the Swordcaster's charcoal locked cuirass, team studs and a chained grey padlock on the chest (spookyDress SWORDCASTER_CUIRASS)

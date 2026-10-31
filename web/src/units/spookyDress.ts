@@ -1101,6 +1101,52 @@ export function candleRobe(scene: Scene, body: ArticulatedBody, teamColor: Color
 }
 
 /*
+ * [S] 440 the Candlehead's boots (434 candlehead a.4: "lower legs plain team - TABS: dark team boots to the knee with gold bands";
+ * spooky.candlehead.red.png: from the foot up to just under the knee a dark team boot a little wider than the leg, its top two thin gold rings close
+ * together a hand under the knee; the thigh above stays the robe's team). CANDLE_BOOTS, in each knee joint's frame (the shin running down -y, S its
+ * length): the shin and foot meshes in .dark of the team (LESSONS 48); a six-sided dark shaft from .from of S under the knee down to .to of S, .across
+ * of the shin's half width across, .flare wider at the top; two gold rings at .rings of S, each .ring of S tall and .ringOut of the shaft's top across.
+ * Self-lit .glow so the dark reads team, not black, in the idle shade.
+ */
+const CANDLE_BOOTS = { dark: 0.5, from: 0.04, to: 1.02, across: 1.28, flare: 1.08, rings: [0.1, 0.2], ring: 0.055, ringOut: 1.08, glow: 0.18 };
+
+/** Dark team boots to the knee with two gold rings at the top (spec at CANDLE_BOOTS). */
+export function candleBoots(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const B = CANDLE_BOOTS;
+  const f = getMaterialFactory();
+  const darkC = teamColor.scale(B.dark);
+  const dark = f.get("cloth", darkC, { emissive: darkC.scale(B.glow) });
+  const gold = f.get("cloth", CANDLE_ROBE.gold, { emissive: CANDLE_ROBE.gold.scale(B.glow) });
+  const out: Mesh[] = [];
+  for (const [knee, shin] of [[body.leftKnee, body.leftLowerLeg], [body.rightKnee, body.rightLowerLeg]] as const) {
+    shin.material = dark;
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = dark;
+    const b = shin.getBoundingInfo().boundingBox;
+    const half = b.extendSize.y * shin.scaling.y, mid = shin.position.y + b.center.y * shin.scaling.y, S = half * 2;
+    const r = Math.max(b.extendSize.x * shin.scaling.x, b.extendSize.z * shin.scaling.z) * B.across;
+    const cx = shin.position.x + b.center.x * shin.scaling.x, cz = shin.position.z + b.center.z * shin.scaling.z;
+    const y0 = mid + half - B.from * S, y1 = mid + half - B.to * S;
+    const shaft = MeshBuilder.CreateCylinder("candleBoot", { height: y0 - y1, diameterTop: r * 2 * B.flare, diameterBottom: r * 2, tessellation: 6 }, scene);
+    shaft.position.set(cx, (y0 + y1) / 2, cz);
+    shaft.material = dark;
+    const pieces: Mesh[] = [shaft];
+    for (const at of B.rings) {
+      const ring = MeshBuilder.CreateCylinder("candleBootBand", { height: B.ring * S, diameter: r * 2 * B.flare * B.ringOut, tessellation: 6 }, scene);
+      ring.position.set(cx, mid + half - at * S, cz);
+      ring.material = gold;
+      pieces.push(ring);
+    }
+    for (const m of pieces) {
+      m.parent = knee;
+      m.convertToFlatShadedMesh();
+      m.isPickable = false;
+      out.push(m);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 439 the Vampire's high collar and cape (audit 434 vampire a.3: "collar is a small dark-red wedge on the shoulders - TABS: tall spiked team collar
  * rising behind the head over a short shoulder cape"; spooky.vampire.red.png, card Appearance "a high collar, and a small cape": a short faceted team
  * cape over both shoulders, its hem cut in points out past the shoulders; out of its back edge a fan of tall flat team spikes standing up behind and
