@@ -275,15 +275,6 @@ const HALFLING_JUMP = { from: 0.6, reach: 4, cooldown: 8, rise: 6.5, short: 0.3 
  * the crowd solver, wherever the man is pushed, walks or is thrown. He keeps hold of a dead man for .afterDeath s, then drops off. Logged "grab".
  */
 const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
-/**
- * [S] 438 the Vampire Bite (spooky.vampire c.2: "bite in unit_spooky.vampire_release is an overhead swing of a star - TABS: latches onto the enemy and
- * sucks blood"; card Characteristics "They suck the enemy's blood, disregarding the exact place that they are drawing blood from or if another Unit is
- * beating them up"). When his blow goes up he latches on: for VAMPIRE_BITE.hold s he is pinned on the man's front, .off of their two body radii from
- * the man's middle, facing him, out of the crowd solver, his trunk over the man and his mouth on the man's neck, both claws on his shoulders
- * (ProceduralAnimator.biteAt / BITE_POSE); blood wells out of the bite the whole time (visualEffects BLOOD_DRAIN). The blow itself lands as before
- * (the bite's damage) .sink s into the latch. Lets go when the hold runs out or either of them dies. Logged "bite".
- */
-const VAMPIRE_BITE = { hold: 1.4, off: 0.8, neckUp: 0.02, sink: 0.25 };
 /*
  * [S] the charge seen (363; critic 360: "same pose and place, no lunge, no dust"; tribal.mammoth.jpg): every MAMMOTH_DUST.every s of the run a dust puff
  * (sprite discs .size times the kick dust) goes up at a pair of its feet, alternating front-left/back-right and front-right/back-left (feet given as [ahead, across] in body radii), and the animator
@@ -513,8 +504,6 @@ export class SimulationSystem {
   private _strikeReadyAt = new Map<RuntimeUnit, number>();
   // Halflings holding on to their man (HALFLING_CLING): the man, the side he hangs on, when he lets go (set once the man is dead)
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
-  // Vampires latched on a man (VAMPIRE_BITE): the man, when the bite lets go
-  private _bites = new Map<RuntimeUnit, { target: RuntimeUnit; until: number }>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
   // Mammoth Charge (MAMMOTH_CHARGE): the charger's target and heading, the men it has trampled this run, and when it may charge again
   private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit>; spec: ChargeSpec; end: Vector3 | null }>();
@@ -675,8 +664,6 @@ export class SimulationSystem {
     this._fearHits.clear();
     this._pendingBlows = [];
     this._clings.clear();
-    for (const v of this._bites.keys()) { v.animator.biteAt(null); v.holdHeading(null); }
-    this._bites.clear();
     this._pendingThrows = [];
     this._pendingLaunches = [];
     this._closingFrom.clear();
@@ -764,7 +751,6 @@ export class SimulationSystem {
     this._firstLunges(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
-    if (this._bites.size > 0) this._holdBites(now);
     if (this._charges.size > 0) this._trampleCharges(now);
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
     if (this._butts.size > 0) this._landButts(now);
@@ -920,53 +906,8 @@ export class SimulationSystem {
     }
   }
 
-  /** The man's neck, a world point a little over his neck joint (his chain settled first). */
-  private _neckOf(man: RuntimeUnit): Vector3 {
-    const chain: TransformNode[] = [];
-    for (let n: Node | null = man.body.neck; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
-    for (const n of chain) n.computeWorldMatrix(true);
-    return man.body.neck.getAbsolutePosition().add(new Vector3(0, VAMPIRE_BITE.neckUp * man.body.metrics.overallHeight * man.body.root.scaling.y, 0));
-  }
-
-  /** A vampire's blow going up latches him on the man (spec at VAMPIRE_BITE). */
-  private _startBite(unit: RuntimeUnit, man: RuntimeUnit, now: number): void {
-    this._bites.set(unit, { target: man, until: now + VAMPIRE_BITE.hold });
-    this._pinBite(unit, man);
-    this._logAbility(unit, "bite", now, man.position);
-    this.visualEffects?.spawnBloodDrain(() => (this._bites.get(unit)?.target === man && !man.isDead ? this._neckOf(man) : null), VAMPIRE_BITE.hold);
-  }
-
-  /** Pins a latched vampire on his man's front, facing him, his bite pose on the man's neck. */
-  private _pinBite(unit: RuntimeUnit, man: RuntimeUnit): void {
-    const away = new Vector3(unit.position.x - man.position.x, 0, unit.position.z - man.position.z);
-    if (away.lengthSquared() < 1e-6) away.set(Math.sin(man.body.root.rotation.y), 0, Math.cos(man.body.root.rotation.y));
-    away.normalize();
-    const at = man.position.add(away.scale((man.collisionBodyRadius + unit.collisionBodyRadius) * VAMPIRE_BITE.off));
-    at.y = unit.position.y;
-    unit.stopMoving();
-    unit.teleportTo(at);
-    // [S] 439 his heading is held at the man from the pin point itself (faceTarget read the root's stale spot and could leave him facing away, 438),
-    // so whatever the swing or the step would turn him to, his chest and mouth stay on the man
-    unit.holdHeading(Math.atan2(man.position.x - at.x, man.position.z - at.z));
-    unit.animator.biteAt(this._neckOf(man));
-  }
-
-  /** Holds each latched vampire on his man until the bite lets go (spec at VAMPIRE_BITE). */
-  private _holdBites(now: number): void {
-    for (const [unit, bite] of this._bites) {
-      const man = bite.target;
-      if (unit.isDead || man.isDead || now >= bite.until || man.body.root.isDisposed()) {
-        unit.animator.biteAt(null);
-        unit.holdHeading(null);
-        this._bites.delete(unit);
-        continue;
-      }
-      this._pinBite(unit, man);
-    }
-  }
-
   private _resolveLivingCollisions(): void {
-    const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent && !this._clings.has(unit) && !this._bites.has(unit));
+    const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent && !this._clings.has(unit));
     if (roots.length < 2) return;
 
     for (let pass = 0; pass < this.collisionResolutionPasses; pass++) {
@@ -2659,13 +2600,6 @@ export class SimulationSystem {
       return;
     }
 
-    // [S] 438 a vampire's blow is a bite: he latches on the man first (VAMPIRE_BITE)
-    // ...and the bite's blow lands .sink s into the latch, his mouth already on the neck (it struck on the latch's own tick, before his pose was laid on)
-    if (attacker.definition.id === "spooky.vampire" && !attacker.isDead && !this._bites.has(attacker)) {
-      this._startBite(attacker, target, now);
-      this._pendingBlows.push({ attacker, target, damage, splashRadius, knockback, landAt: now + VAMPIRE_BITE.sink });
-      return;
-    }
     // A swing has only gone up: it is struck at this man, and he takes the blow when it comes down on him
     const landIn = attacker.blowLandsIn();
     if (landIn > 0) {

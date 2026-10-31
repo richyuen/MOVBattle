@@ -678,8 +678,6 @@ const HARPOON_HIP = { raise: 0.25, out: 0.1, elbow: -0.3, offRaise: -0.55, offIn
 // .dip rad below level toward his front. [R] 437 (propBuilder HARPOON_BREECH spec): the drum hung out beside the thigh, not in it (out .07 -> .09), the
 // muzzle forward and down rather than at the ground (dip .95 -> .7), and the off fist back on the carry bar beside the weapon fist (Two-handed)
 const HARPOON_REST = { drop: 0.27, ahead: 0.06, out: 0.09, dip: 0.7 };
-// [S] 438 the Vampire Bite's latched pose (see _holdBite)
-const BITE_POSE = { lean: 0.45, head: 0.5, across: 0.11, below: 0.06 };
 /*
  * [S] 436 the Pirate Queen's upright rest stance (critic 435 queen a.1: "torso and skirt a wide hunched block ... clearly taller and broader than the
  * captain - TABS: slim long-limbed build, about the captain's height"; pirate.pirate_queen.red.png: she stands tall and square on long straight legs, the
@@ -2261,7 +2259,6 @@ export class ProceduralAnimator {
     this._lungeLegs();
     this._holdTPose(dt);
     this._reaperHover(dt);
-    this._holdBite();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
@@ -3807,37 +3804,6 @@ export class ProceduralAnimator {
     const held = new Vector3(0, len * (0.5 - D.fistAt), 0);
     held.rotateByQuaternionToRef(turn, held);
     shaft.position.copyFrom(held);
-  }
-
-  // [S] 438 the Vampire Bite's hold (simulationSystem VAMPIRE_BITE): the man's neck, a world point, while he is latched on; null when not
-  private _biteNeck: Vector3 | null = null;
-  /** Latches the Vampire Bite's pose onto a world neck point (null lets go); read every step until cleared. */
-  biteAt(neck: Vector3 | null): void {
-    this._biteNeck = neck ? neck.clone() : null;
-  }
-  /**
-   * [S] 438 the Vampire Bite (spooky.vampire c.2: "bite in unit_spooky.vampire_release is an overhead swing of a star - TABS: latches onto the enemy and
-   * sucks blood"; card Characteristics "They suck the enemy's blood, disregarding the exact place that they are drawing blood from"). The very last pose
-   * before the flinch: his trunk leant BITE_POSE.lean rad in over the man, his head .head more down onto the neck, both clawed fists on the man's
-   * shoulders (.across of his height either side of the neck, .below it), whatever the swing would have done.
-   */
-  private _holdBite(): void {
-    const neck = this._biteNeck;
-    if (!neck || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
-    const b = this._body;
-    const P = BITE_POSE;
-    b.torso.rotation.set(P.lean, 0, 0);
-    b.neck.rotation.set(P.head, 0, 0);
-    b.root.computeWorldMatrix(true);
-    const right = Vector3.TransformNormal(new Vector3(1, 0, 0), b.root.getWorldMatrix());
-    right.y = 0;
-    if (right.lengthSquared() > 1e-6) right.normalize();
-    const height = b.metrics.overallHeight * b.root.scaling.y;
-    for (const [shoulder, elbow, hand, side] of [[b.rightShoulder, b.rightElbow, b.rightHand, 1], [b.leftShoulder, b.leftElbow, b.leftHand, -1]] as const) {
-      const sx = Math.sign(shoulder.position.x) || side;
-      const grip = neck.add(right.scale(sx * P.across * height)).addInPlace(new Vector3(0, -P.below * height, 0));
-      this._armTo(shoulder, elbow, hand, grip, 1, 2);
-    }
   }
 
   /** The off arm solved onto a world point: shoulder swing and elbow fold, the elbow out to his free side and down, eased in by `w`. */
