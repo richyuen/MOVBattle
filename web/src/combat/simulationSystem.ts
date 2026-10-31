@@ -281,10 +281,10 @@ const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
  * any weak Units and hang them as an effigy, and will continuously impale the weakling"; spooky.reaper.jpg: a knight hangs high beside his shoulder on a
  * tendril). A blow of his on a man whose max health is under .weak of his own does not cut: a tendril (spookyDress reaperSpear) runs from his upper back,
  * .rootUp of his height up and .rootBack behind, through the man's middle and .through of the man's height past him, and the man is lifted and hung, feet
- * .up of the Reaper's height off the ground, .side of it out to his off side and .back behind, limp, facing him, stabbed again every .every s for .bite of
+ * .up of the Reaper's height (his head top at the stab) off the ground, .side of it out to his off side and .back behind, limp, facing him, stabbed again every .every s for .bite of
  * his max health. Dead, he hangs on .afterDeath s and drops. One man per Reaper. Logged "impale" (the capture's ability pair).
  */
-const REAPER_IMPALE = { units: new Set(["spooky.reaper"]), weak: 0.15, up: 0.5, side: 0.42, back: 0.12, rootUp: 0.72, rootBack: 0.1, through: 0.3, every: 0.6, bite: 0.18, afterDeath: 2.5 };
+const REAPER_IMPALE = { units: new Set(["spooky.reaper"]), weak: 0.15, up: 0.6, side: 0.3, back: 0.1, rootUp: 0.66, rootBack: 0.08, through: 0.3, every: 0.6, bite: 0.18, afterDeath: 2.5 };
 /*
  * [S] the charge seen (363; critic 360: "same pose and place, no lunge, no dust"; tribal.mammoth.jpg): every MAMMOTH_DUST.every s of the run a dust puff
  * (sprite discs .size times the kick dust) goes up at a pair of its feet, alternating front-left/back-right and front-right/back-left (feet given as [ahead, across] in body radii), and the animator
@@ -515,7 +515,7 @@ export class SimulationSystem {
   // Halflings holding on to their man (HALFLING_CLING): the man, the side he hangs on, when he lets go (set once the man is dead)
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
   // Men hung on a Reaper's tendril (REAPER_IMPALE): who holds him, when he drops (set once he is dead), his next stab, the tendril mesh
-  private _impales = new Map<RuntimeUnit, { holder: RuntimeUnit; until: number; next: number; spear: Mesh }>();
+  private _impales = new Map<RuntimeUnit, { holder: RuntimeUnit; until: number; next: number; spear: Mesh; yaw: number; tall: number }>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
   // Mammoth Charge (MAMMOTH_CHARGE): the charger's target and heading, the men it has trampled this run, and when it may charge again
   private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit>; spec: ChargeSpec; end: Vector3 | null }>();
@@ -927,7 +927,10 @@ export class SimulationSystem {
     if (!I.units.has(attacker.definition.id) || attacker.isDead || target.isDead || target.linkedParent || isVehicleUnit(target.definition.id)) return false;
     if (target.maxHealth >= attacker.maxHealth * I.weak || this._impales.has(target) || this._clings.has(target)) return false;
     for (const imp of this._impales.values()) if (imp.holder === attacker) return false;
-    const imp = { holder: attacker, until: Infinity, next: now + I.every, spear: reaperSpear(attacker.body.root.getScene()) };
+    // his heading and head height at the stab: the man hangs off those, so he does not swing round the Reaper as the Reaper turns to him
+    worldMatrixChain(attacker.body.headTop);
+    const tall = Math.max(attacker.body.metrics.overallHeight, attacker.body.headTop.getAbsolutePosition().y - Math.max(0, attacker.position.y));
+    const imp = { holder: attacker, until: Infinity, next: now + I.every, spear: reaperSpear(attacker.body.root.getScene()), yaw: attacker.body.root.rotation.y, tall };
     this._impales.set(target, imp);
     this._hangImpaled(target, imp, now);
     target.applyDamage(target.maxHealth * I.bite, Vector3.Zero());
@@ -936,9 +939,9 @@ export class SimulationSystem {
   }
 
   /** Hangs the man where the Reaper holds him and runs the tendril from the Reaper's back through his middle (spec at REAPER_IMPALE). */
-  private _hangImpaled(man: RuntimeUnit, imp: { holder: RuntimeUnit; spear: Mesh }, now: number): void {
-    const I = REAPER_IMPALE, h = imp.holder, H = h.body.metrics.overallHeight;
-    const yaw = h.body.root.rotation.y;
+  private _hangImpaled(man: RuntimeUnit, imp: { holder: RuntimeUnit; spear: Mesh; yaw: number; tall: number }, now: number): void {
+    const I = REAPER_IMPALE, h = imp.holder, H = imp.tall;
+    const yaw = imp.yaw;
     const fwd = new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
     const right = new Vector3(fwd.z, 0, -fwd.x);
     const off = -(Math.sign(h.body.rightShoulder.position.x) || 1);
