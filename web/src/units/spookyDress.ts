@@ -720,7 +720,8 @@ export function stiffyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
  * .flare narrower at its foot, .deep as deep as wide; a knee dome .knee of the tube across, squashed .kneeSquash in y, at the knee; the foot mesh shrunk to
  * .foot in width and height so it reads as a bare bone foot, not a boot box. Team self-lit .glow, a shade (.shade) darker than the shorts.
  */
-const STIFFY_GREAVES = { from: -0.04, to: 0.8, across: 3.4, flare: 0.82, deep: 1.0, sides: 7, knee: 1.12, kneeSquash: 0.75, foot: 0.72, shade: 0.8, glow: 0.14 };
+// 440 look: from -.04 in the shorts' team shade the greave ran on out of the shorts' hem as one column: it starts under the knee, a bone strip between, darker
+const STIFFY_GREAVES = { from: 0.14, to: 0.84, across: 3.4, flare: 0.82, deep: 1.0, sides: 7, knee: 1.12, kneeSquash: 0.75, foot: 0.72, shade: 0.55, glow: 0.14 };
 
 /** Team greaves from the knee down the shin over bare bone feet (spec at STIFFY_GREAVES). */
 export function stiffyGreaves(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
