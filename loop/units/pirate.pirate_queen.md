@@ -1,5 +1,5 @@
 # pirate.pirate_queen
-Status: open   Audited: 422, 426 (RE-AUDIT c), 431 (CONFIRM: failed a), 434 (CONFIRM: failed a)   Done: -
+Status: open   Audited: 422, 426 (RE-AUDIT c), 431 (CONFIRM: passed b, c; failed a), 434 (CONFIRM: passed b, c; failed a)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
 a FAIL (2 since 434; the CONFIRM 434 list; [R] 435 approved, struck 2; struck 3 at 436; width clause of 1 struck at 437)
  1. body bulk in unit_pirate.pirate_queen_idle — clearly taller and broader than the captain in lineup_pirate — TABS: slim long-limbed build, about the captain's height (ref: pirate.pirate_queen.red.png, factions/pirate.jpg)
