@@ -1,5 +1,5 @@
 # Loop state (v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 438   Batch: pirate+spooky (10/19)   Consecutive empty: 0   Done: 55/139   Parked: 0
+Iteration: 439   Batch: pirate+spooky (10/19)   Consecutive empty: 0   Done: 56/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -10,7 +10,7 @@ medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight +
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur ++++ D | zeus ++++ D
 viking: headbutter ++++ D | ice_archer ++++ D | brawler ++++ D | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl ++++ D
 dynasty: samurai ++++ D | firework_archer ++++ D | monk ++++ D | ninja ++++ D | dragon ++++ D | hwacha ++++ D | monkey_king ++++ D
-pirate: flintlock ++++ D | blunderbuss ++++ D | bomb_thrower ++++ D | harpooner ++++ o | cannon ++++ D | captain ++++ D | pirate_queen -+++ o
+pirate: flintlock ++++ D | blunderbuss ++++ D | bomb_thrower ++++ D | harpooner ++++ D | cannon ++++ D | captain ++++ D | pirate_queen -+++ o
 spooky: skeleton_warrior -+++ o | skeleton_archer -+++ o | candlehead -+++ o | vampire -+-+ o | pumpkin_catapult -+++ o | swordcaster ++++ D | reaper -+-+ o
 wild_west: dynamite_thrower ???? q | miner ???? q | cactus ???? q | gunslinger ???? q | lasso ???? q | deadeye ???? q | quick_draw ???? q
 legacy_1: peasant ???? q | banner_bearer ???? q | poacher ???? q | blowdarter ???? q | pike ???? q | barrel_roller ???? q | boxer ???? q | flag_bearer ???? q
@@ -23,23 +23,24 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
+439 (BASE eb4676ee; no evidence commit): [S] skeleton_warrior a.3 shorts (e3336ba6) struck 3 | [S] skeleton_archer a.4 bracers + boots (bc447f44) struck 4, added 5 | [S] pumpkin_catapult a.3 skeleton operator (6e88e2f5) no strike | [S] candlehead a.2 robe + V bib (b10d272a) struck 2 | [S] vampire a.3 collar (09b87480, 3cdade49) struck 3 | [S] reaper a.2 hover legs (e97d690a) no strike | [S] vampire c.2 bite (65a0e9f5, 94797a8b) dropped (reverted 0ec49d76, a2a6e6db) | [P] queen a.1 scale 1.2 (65339e86) no strike | harpooner CONFIRM b passed -> D - 7/8, 4 struck
 438 (BASE 21b12f07; no evidence commit): [S] harpooner b.1 off fist on the bar (da4b3767) struck 1, b PASS | [S] vampire a.1 slicked hair (16a75717) struck 1 | [S] vampire c.2 bite latch (29201909, e6949b0d) dropped (pose not in _release; reverted b4b1c75c, d41514a2) | [S] candlehead a.1 candle tower (584ca625) struck 1 | [S] pumpkin_catapult b.1 bone arm + crossbars (757d7237) struck 1, b PASS | [S] pumpkin_catapult a.2 banners (9dbd09aa) struck 2 | [S] skeleton_archer a.2 no skirt, belt + tassels (c24646b8) struck 2 | [P] queen a.1 QUEEN_FRAME tall .85 (2a71c0b0) no strike - 7/8, 6 struck
-437 (BASE 204abad4; no evidence commit): [S] swordcaster a.3 skirt (20cb7a7d, f6be7769) struck 3, a PASS, CONFIRM 4/4 -> D | [S] skeleton_warrior a.1 Roman helmet (ac15ce9c) struck 1 | [S] skeleton_archer a.1 hood + capelet (a3202b9b) struck 1 | [S] queen a.1 QUEEN_FRAME narrow (b5120813) width clause of 1 struck | [R] harpooner b gun carry (0799890a) struck 2 | [S] vampire c.1 bat form (2c02833c) struck 1 | [S] pumpkin_catapult b.2 rib cradle (3c42103f) struck 2 - 7/7, 7 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] pirate.harpooner (da4b3767) VERDICT: APPROVE CRITERION: pirate.harpooner.b PASS   (previous: FAIL)
-- GAP: [S] spooky.vampire (16a75717) VERDICT: APPROVE CRITERION: spooky.vampire.a FAIL   (previous: FAIL)
-- GAP: [S] spooky.candlehead (584ca625) VERDICT: APPROVE CRITERION: spooky.candlehead.a FAIL   (previous: FAIL)
-- GAP: [S] spooky.pumpkin_catapult (757d7237) VERDICT: APPROVE CRITERION: spooky.pumpkin_catapult.b PASS   (previous: FAIL)
-- GAP: [S] spooky.pumpkin_catapult (9dbd09aa) VERDICT: APPROVE CRITERION: spooky.pumpkin_catapult.a FAIL   (previous: FAIL)
-- GAP: [S] spooky.skeleton_archer (c24646b8) VERDICT: APPROVE CRITERION: spooky.skeleton_archer.a FAIL   (previous: FAIL)
-- GAP: [P] pirate.pirate_queen (2a71c0b0) VERDICT: APPROVE CRITERION: pirate.pirate_queen.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.skeleton_warrior (e3336ba6) VERDICT: APPROVE CRITERION: spooky.skeleton_warrior.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.skeleton_archer (bc447f44) VERDICT: APPROVE CRITERION: spooky.skeleton_archer.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.pumpkin_catapult (6e88e2f5) VERDICT: APPROVE CRITERION: spooky.pumpkin_catapult.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.candlehead (b10d272a) VERDICT: APPROVE CRITERION: spooky.candlehead.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.vampire (09b87480, 3cdade49) VERDICT: APPROVE CRITERION: spooky.vampire.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.reaper (e97d690a) VERDICT: APPROVE CRITERION: spooky.reaper.a FAIL   (previous: FAIL)
+- GAP: [P] pirate.pirate_queen (65339e86) VERDICT: APPROVE CRITERION: pirate.pirate_queen.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
+- CONFIRM pirate.harpooner: a PASS b PASS c PASS d PASS (4/4)
 ## Notes for next iteration (max 5 lines)
-- v6 review: harpooner a restored to PASS from its 434 CONFIRM (436 re-failed the same pose); he is proposed done: touch him in 439's step 5 capture and CONFIRM b alone (a, c confirmed). Queen a: the [P] on her unitVisuals scale 1.45 is pickable (438 DEFECTS name it the root; wiki size 1.4).
-- Vampire c bite dropped at 438 (sim latch worked, the pose did not show: he leaned back facing away); see its unit Notes and git show 29201909 before retrying.
-- Starving: reaper a at 441 and c at 442 (last 435/436); skeleton_warrior a.3 shorts and a.4 greaves still open from 437.
-- [P] fallouts open: pumpkin_catapult a.1 near-black frame, skeleton_archer a.3 cream bone (critic 438, fallout of 438 [S]).
-- Captures run ~5 s a shot since the 438-439 tools (6 units ~5 min, a batch ~9 min); with 6+ units run in the background, wait with an until-loop.
+- Queen a is plateau (CONFIRM failed a at 431 and 434): her next pick is one [R] on height and build (queenFrame torso and leg chain to the captain's height); the scale row spent its exception at 439.
+- Vampire c bite dropped twice in a row (438, 439; attempts 2 counted as dropped): read its unit Notes and probe yaw/pitch before any third try.
+- Shared fix worth first: cream self-lit bone in dressSkeleton clears warrior a.2 and archer a.3; the catapult operator's bones render team (re-tint after addOperator's callback).
+- Starving: reaper c at 442 (last 436); its named shot _flight may need an evidence commit first.
+- Captures run ~5 s a shot (8 units ~7 min): background them and wait with a node poll on the output file.
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
 # <unitId>

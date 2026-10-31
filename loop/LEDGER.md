@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-434 | HARPOONER_SHOES shoe shell to .62 over the grass line, sock to the top (10346a0f, 8c62322b) | pirate.harpooner.a | approved
-434 | QUEEN_DREADS spray up out of a tan wrap, bead-tipped side locks (2f1f2b92) | pirate.pirate_queen.a | approved
-434 | VAMPIRE_CLAWS empty clawed hands, no weapon (b8e42cdb) | spooky.vampire.b | approved
-434 | STIFFY_SHIELD studded team board on the off arm (d65f38af) | spooky.skeleton_warrior.b | approved
-434 | PUMPKIN_SHOT jack-o-lantern projectile (008ebd5c) | spooky.pumpkin_catapult.c | approved
-434 | FIRE_ARROW flame tongues round the arrow head (9c6221b2) | spooky.skeleton_archer.c | approved
-434 | SPIRIT_FIRE cyan spirit-fire ball (7ae6e9c8) | spooky.candlehead.c | approved
 435 | BURN status: flames on trunk/head/arms, tick + spread (d50527c4) | spooky.skeleton_archer.c | approved
 435 | SPIRIT_LIFT knock-up on a spirit_fire hit (a575da38) | spooky.candlehead.c | approved
 435 | STIFFY_FEAR purple skull + flee (c989b05a) | spooky.skeleton_warrior.c | approved
@@ -48,6 +41,13 @@ for 25 iterations.
 438 | BONE_FRAME bone arm + lashed crossbones, bone crossbars (757d7237) | spooky.pumpkin_catapult.b | approved
 438 | CATAPULT_BANNER team pennants off the low bone (9dbd09aa) | spooky.pumpkin_catapult.a | approved
 438 | SKELETON_BELT no skirt, belt + team tassels (c24646b8) | spooky.skeleton_archer.a | approved
+439 | STIFFY_SHORTS baggy team shorts to the knee, rag hems, brown belt, no skirt (e3336ba6) | spooky.skeleton_warrior.a | approved
+439 | ARCHER_KIT team forearm bracers, brown boot boxes + shin cuffs (bc447f44) | spooky.skeleton_archer.a | approved
+439 | SKELETON_CREW catapult operator stripped to bone, ribs, team rags (6e88e2f5) | spooky.pumpkin_catapult.a | approved
+439 | CANDLE_ROBE square team robe, dark hem band, gold-edged white V bib (b10d272a) | spooky.candlehead.a | approved
+439 | VAMPIRE_COLLAR pointed team cape + spike fan behind the head (09b87480, 3cdade49) | spooky.vampire.a | approved
+439 | REAPER_LEGS cream bone legs + REAPER_HOVER lift, legs hanging (e97d690a) | spooky.reaper.a | approved
+439 | VAMPIRE_BITE retry: heading held on the man, pitch flipped (65a0e9f5, 94797a8b) | spooky.vampire.c | dropped
 
 ## Spent (never retry as [P])
 
@@ -67,14 +67,11 @@ pirate 423-424 rows (PISTOL + PISTOL_AIM, HARPOON_BREECH, CANNON_BARREL, TRICORN
 pirate 427-428 rows (BOMB_SPIN + _POSE, BLUNDERBUSS_BLAST, PLANK_HAT, LAUNCH.cannonball, DRAGON_PISTOL, QUEEN_BANDANA, DRAGON_BLAST, CAPTAIN_COAT, QUEEN_SASH, BARREL_BRACERS, CANNON_HANDLES, CANNON_SHIRT) | compacted 430 | 428 | approved | values: git show 28adb4e4:loop/LEDGER.md
 pirate.bomb_thrower done 429-431 rows (PIRATE_SOCKS, BOMB_SASH, PIRATE_BELT) | compacted 432 | 431 | approved | values: git show 67890443:loop/LEDGER.md
 pirate.flintlock + blunderbuss + captain done 429-433 rows (PIRATE_HAIR, FLINTLOCK_LOCKS, PLAIN_SOCKS, CANNON_BANDANNA, BLUNDERBUSS_HAIR, BLUNDERBUSS, BARREL_GREAVES, CAPTAIN_PARROTS/BEARD/LEGS/TRICORN/FRONT) | compacted 435 | 433 | approved | values: git show b90a44ee:loop/LEDGER.md
-propBuilder.ts:HARPOON_BAYONET [S] 435 (long of gun, thick, point, at, lug, below; steel) | 1, .014, .3, .85, .03, .01; (.2,.21,.23) | 435 | approved | flat blade .5 long, .04 wide, .012 thin, at .5; (.36,.37,.4) (429-434)
+pirate.harpooner done 431-438 rows (HARPOON_BAYONET, scale 1.3, HARPOONER_PANTS, HARPOONER_SHOES, HARPOON_REST, HARPOON_BREECH [R]) | compacted 439 | 438 | approved | values: git show eb4676ee:loop/LEDGER.md
 pirateDress.ts:QUEEN_DREADS (wrap, rootY, spray, thick, rise, lean, tip, droop, falls, drop, splay, bead) | .42, 1, 7, .2, 1.05, .8, .75, 1, 3, -1.9, .12, .26 | 434 | approved | QUEEN_HAIR pirateHair slabs + curl lumps side .36 drop -2 (430-433)
 propBuilder.ts:QUEEN_CUTLASS (long, wide, taper, curve, segs, cup) | .66, .1, .5, .24, 7, 4.2 | 430 | approved | CUTLASS .5, .05, .55, .13, 6, 3.4 (425-429); CUTLASS bowl .38, rim .32 (431, bowl guard replaces the frustum cup)
 pirateDress.ts:QUEEN_SKIRT (top, knee, out, flare, deep, slant, frontDrop, beads, bead, pale; flapWide, flapFoot, flapX, flapLong, flapProud, flapLean) | .14, 1.08, 1.04, 1.22, 1.1, .6, .4, 7, .11, .18; .6, .22, -.25, 1.3, .06, .12 | 435 | approved | out 1.06 flare 1.45 deep 1.25 (433-434); no frontDrop (431-432)
 proceduralAnimation.ts:QUEEN_GUARD (out, ahead, drop, cross, lean, stagger) | .05, .14, .3, .6, .2, .04 | 431 | approved | blades held point-first, end-on (before 431)
-unitVisuals.ts:pirate.harpooner scale | 1.3 | 431 | approved | 1.05 (before 431)
-pirateDress.ts:HARPOONER_PANTS (beige, cuff; legs take the head skin) | (.78,.66,.5), .82 | 432 | approved | (.5,.43,.33) (432.3, taupe); team legs (before 432)
-pirateDress.ts:HARPOONER_SHOES (shellTo, shellOut, shellLong, sockFrom, sockTo, tongue, buckle; brown, grey) | .62, 1.25, 1.12, .62, 1 (no skin ring), .55, .6; (.4,.2,.13), (.55,.48,.38) | 434 | approved | shell .45 (434.1); no shell, sock .34-.82, grey (.45,.4,.34) (433)
 pirateDress.ts:QUEEN_SHIRT (shoulderOut, puff, puffAt, to, cuffOut, vee, veeLong, laces) | 1.2, 1.6, .3, .62, 1.1, .28, .34, 2 | 435 | approved | 1.45, 1.95, cuff 1.25 (433-434); bare arms (before 433)
 
 spooky.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 434 | stats | values: git show 33bb56af
@@ -84,8 +81,7 @@ spooky c mechanics 434-435 rows (PUMPKIN_SHOT, FIRE_ARROW, SPIRIT_FIRE, BURN + B
 
 spookyDress.ts:SWORDCASTER_BOWL (out, clear, crown, side, sideTo, front, back, nape) | 1.14, .05, .16, .16, .15, .45, .16, -.75 | 435 | approved | hood (before 435)
 spookyDress.ts:REAPER_TENDRILS (rootX, rootY, long, out, back, rise, wave, waves, thick, tip) | .3, .55, 4.6, .88, .45, [.24,.04,-.16], .22, 1.6, .1, .18 | 435 | approved | none (before 435)
-pirateDress.ts:QUEEN_BOOTS [R] (from, shaft, top, topTall, band, bandTall, bandAt; leather) + unitVisuals queen (scale, bulk) + QUEEN_SASH (wide, thick, proud, bomb, seat) | .12, 1.35, 1.7, .14, 1.42, .1, .34; (.45,.16,.1); 1.45, .85; .27, .1, .12, .25, .95 | 435 | approved | pale shins; 1.6, 1.2; sash .17, .08, .03, .2, .75 (428-434)
-proceduralAnimation.ts:HARPOON_REST (drop, ahead, out, dip; off fist on the bar) [R] 437 | .27, .06, .09, .7 | 437 | approved | .27, .05, .07, .95, off hand free (436); idle carry across the chest (before 436)
+pirateDress.ts:QUEEN_BOOTS [R] (from, shaft, top, topTall, band, bandTall, bandAt; leather) + unitVisuals queen (scale, bulk) + QUEEN_SASH (wide, thick, proud, bomb, seat) | .12, 1.35, 1.7, .14, 1.42, .1, .34; (.45,.16,.1); 1.2 (439 [P], root exception spent), .85; .27, .1, .12, .25, .95 | 439 | approved | scale 1.45 (435-438); pale shins; 1.6, 1.2; sash .17, .08, .03, .2, .75 (428-434)
 propBuilder.ts:STIFFY_SWORD (long, base, belly, bellyAt, thick, point, guard, grip; steel) | .26, .03, .05, .55, .25, .22, 3.2, 1.6; (.42,.43,.45) | 436 | approved | slab sword .46 (before 436)
 propBuilder.ts:BONE_BOW (long, thick, bow, knob, knobOut, wrapAt, wrap, grip; bone) | 1.15, .05, .025, .065, .026, .66, .06, .09; (1,.8,.48) | 436 | approved | plain brown bow .4 (before 436)
 spookyDress.ts:CANDLE_ARMS (top, long, lumps, wide, wobble, swell, wick, flame; wax, fire) | .12, 2.2, 6, .78, .08, .18, .12, .48; (1,.84,.58), (.35,1.1,1.3) | 436 | approved | torch stick (before 436)
@@ -93,7 +89,6 @@ spookyDress.ts:SWORDCASTER_CUIRASS (out, deep, top, foot, ridge, proud, studs, s
 visualEffects.ts:REAPER_BURST (ring0, thick, dome0, dome, domeAlpha, shards, shard, out, up, life, fade) | 1.6, .22, 1.2, 4.2, .7, 8, .55, 3, 4.5, .9, .4 | 436 | approved | spark only (before 436)
 proceduralAnimation.ts:QUEEN_UPRIGHT (tilt, stride, lean, chin) | .07, .08, .02, 0 | 436 | approved | hashed stance (before 436)
 
-propBuilder.ts:HARPOON_BREECH [R] 437 (long, wide, flat, hang, nozzle, bore, rings, handle, barAt, offGrip; grey) | .26, .27, .86, .72, .1, .56, [.3,.7], .15, .25, .78; (.3,.31,.33) | 437 | approved | .2, .19, .86, .9, .17, .52, 3 rings, .07, -, .42 of the block; (.55,.56,.58) (423-436)
 spookyDress.ts:SWORDCASTER_SKIRT (top, hem, out, flare, deep, stripe, stripeAt, shade, dark) | .12, .8, 1.1, 1.5, 1.25, .12, .5, .6, .3 | 437 | approved | hem .55 flare 1.32 team shade (437.1); none (before 437)
 spookyDress.ts:STIFFY_HELMET (out, clear, crown, cap, cheek, jaw, front, splay, neck, nape, kick) | 1.16, .06, .14, .82, .2, .22, .62, .08, .22, -.85, .3 | 437 | approved | dressSkeleton round hood (before 437)
 spookyDress.ts:SKELETON_HOOD (out, jaw, crown, open, side, peak, lean, collar, cape, drop, tatters) | 1.18, .3, .16, .55, .2, .5, .55, .4, 1.12, .24, 7 | 437 | approved | dressSkeleton round hood (before 437)
@@ -105,3 +100,10 @@ spookyDress.ts:CANDLE_TOWER (cap, capFoot, crown, drips, drip, lumps, tall, base
 vehicleBuilder.ts:BONE_FRAME (arm, cross, crossAt, bar, big, lowAt, past, knob, lobe, cord) | .11, .62, [.5,.15], .12, .15, .62, .12, 1.35, .32, .025 | 438 | approved | timber arm + crossbar (before 438)
 vehicleBuilder.ts:CATAPULT_BANNER (cord, wide, tall, thick, sway, tail, shade, glow) | .06, .24, .46, .025, .06, .12, .8, .18 | 438 | approved | none (before 438)
 spookyDress.ts:SKELETON_BELT (belt, out, at, buckle, tabs, tab, long, taper, flare) | .16, 1.12, .8, .2, 4, .24, .42, .55, .18 | 438 | approved | dressSkeleton skirt (before 438)
+
+spookyDress.ts:STIFFY_SHORTS (top, hem, out, flare, deep, rags, rag, ragLong, belt, beltOut) | .16, .86, 3.6, 1.15, .88, 6, .7, .2, .2, 1.3 | 439 | approved | dressSkeleton skirt (before 439)
+spookyDress.ts:ARCHER_KIT (bracerFrom, bracerTo, bracer, bootTo, bootOut, bootLong, cuffFrom, cuff; leather) | .12, .6, 3.2, 1, 1.25, 1.1, .72, 3.6; (.4,.17,.07) | 439 | approved | bare bone (before 439)
+spookyDress.ts:SKELETON_CREW (limb, spine, ribs, ragTop, ragLong, ragOut, ragFlare, tatters, band, boneGlow) | .42, .16, 4, .4, .85, 1.05, 1.3, 7, .3, .3 | 439 | approved | dressCannonCrew (before 439)
+spookyDress.ts:CANDLE_ROBE (top, hem, out, flare, deep, band, dark, bib, bibTall, rim, proud) | .02, .5, 1.12, 1.22, 1.25, .12, .55, .92, .5, 1.14, .05 | 439 | approved | bare team body (before 439)
+spookyDress.ts:VAMPIRE_COLLAR (capeTop, capeDrop, capeIn, capeOut, spikes, ring, arc, wide, tall, lean) | .08, .55, .45, 1.22, 5, .42, 1.25, .5, [1.5,1.3,1.15], .32 | 439 | approved | ring .26 tall .8-1.15 (439.5, inside the head); propBuilder vampire_collar wedge (before 439)
+spookyDress.ts:REAPER_LEGS + proceduralAnimation.ts:REAPER_HOVER (glow; lift, bob, rate, hang, sway, knee) | .3; .15, .02, 1.8, .85, .12, .12 | 439 | approved | grey legs on the ground (before 439)
