@@ -962,3 +962,93 @@ export function reaperTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/** A closed triangular slab, point down, in the x-y plane: `w` across its top edge, `h` tall, `t` thick (both faces outward, flat shaded). */
+function triSlab(scene: Scene, name: string, w: number, h: number, t: number): Mesh {
+  const p = [[-w / 2, h / 2], [w / 2, h / 2], [0, -h / 2]];
+  const positions: number[] = [];
+  for (const z of [t / 2, -t / 2]) for (const [x, y] of p) positions.push(x, y, z);
+  // front (+z) and back faces, then the three sides as quads
+  const indices = [0, 2, 1, 3, 4, 5];
+  for (let i = 0; i < 3; i++) {
+    const j = (i + 1) % 3;
+    indices.push(i, j, j + 3, i, j + 3, i + 3);
+  }
+  // each face both ways round: whichever copy faces the camera is drawn, the other culled (no winding to get wrong)
+  for (let k = 0, n = indices.length; k < n; k += 3) indices.push(indices[k], indices[k + 2], indices[k + 1]);
+  const m = new Mesh(name, scene);
+  const vd = new VertexData();
+  vd.positions = positions;
+  vd.indices = indices;
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  vd.normals = normals;
+  vd.applyToMesh(m);
+  m.convertToFlatShadedMesh();
+  return m;
+}
+
+/*
+ * [S] 439 the Candlehead's robe (audit 434 candlehead a.2: "body bare team skin - TABS: team robe to mid-thigh with a white V collar edged in gold";
+ * spooky.candlehead.red.png, card Appearance "wears a robe": a straight team robe from the shoulders to about mid-thigh, square in section and a little
+ * wider at the hem than at the chest, a deeper team band round its hem; on the chest a big white V bib from shoulder to shoulder down to a point at
+ * mid-chest, edged all round in gold). CANDLE_ROBE, in the torso joint's frame (W, D the trunk's width and depth, H its height): a four-sided frustum
+ * from .top of H over the trunk's top down to .hem of the way from the trunk's foot to the knees, .out of W across at the top and .flare of that at the
+ * hem, .deep of D deep; a hem band .band of the robe's length in .dark of the team; the bib a white triangle .bib of the top width across and .bibTall of
+ * H tall on the front face, a gold triangle .rim larger behind it, both standing .proud of W off the face. Team, white and gold self-lit .glow.
+ */
+const CANDLE_ROBE = {
+  top: 0.02, hem: 0.5, out: 1.12, flare: 1.22, deep: 1.25, band: 0.12, dark: 0.55, bib: 0.92, bibTall: 0.5, rim: 1.14, proud: 0.05, glow: 0.14,
+  white: new Color3(1, 0.97, 0.9), gold: new Color3(1, 0.62, 0.16),
+};
+
+/** A square team robe to mid-thigh with a dark hem band and a gold-edged white V bib on the chest (spec at CANDLE_ROBE). */
+export function candleRobe(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const R = CANDLE_ROBE;
+  const f = getMaterialFactory();
+  const team = f.get("cloth", teamColor, { emissive: teamColor.scale(R.glow) });
+  const darkC = teamColor.scale(R.dark);
+  const dark = f.get("cloth", darkC, { emissive: darkC.scale(R.glow) });
+  const white = f.get("cloth", R.white, { emissive: R.white.scale(0.3) });
+  const gold = f.get("cloth", R.gold, { emissive: R.gold.scale(R.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const frame = tm.parent as TransformNode;
+  const kneeY = (inFrameOf(body.leftKnee, frame).y + inFrameOf(body.rightKnee, frame).y) / 2;
+  const foot = cy - H / 2;
+  const top = cy + H / 2 + H * R.top, hem = foot - (foot - kneeY) * R.hem, long = top - hem;
+  const xTop = (W * R.out) / 2, xHem = xTop * R.flare, zTop = (D * R.deep) / 2, zHem = zTop * R.flare;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof team): Mesh => {
+    m.parent = frame;
+    m.material = mat;
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  const frustum = (name: string, y0: number, y1: number, k0: number, k1: number, mat: typeof team): Mesh => {
+    const m = MeshBuilder.CreateCylinder(name, { height: y1 - y0, diameterTop: xTop * 2 * Math.SQRT2 * k1, diameterBottom: xTop * 2 * Math.SQRT2 * k0, tessellation: 4 }, scene);
+    m.rotation.y = Math.PI / 4;
+    m.bakeCurrentTransformIntoVertices();
+    m.scaling.z = zTop / xTop;
+    m.convertToFlatShadedMesh();
+    m.position.set(cx, (y0 + y1) / 2, cz);
+    return put(m, mat);
+  };
+  // the robe, and its deeper hem band a hair proud of it
+  frustum("candleRobe", hem, top, R.flare, 1, team);
+  const bandTop = hem + long * R.band, kBand = R.flare - (R.flare - 1) * R.band;
+  frustum("candleRobeHem", hem - long * 0.01, bandTop, R.flare * 1.03, kBand * 1.03, dark);
+  // the bib on the front face at the top, leaning out with the flare
+  const lean = Math.atan2(zHem - zTop, long);
+  const bibW = xTop * 2 * R.bib, bibH = H * R.bibTall, bibY = top - bibH / 2 - H * 0.02;
+  const faceZ = cz + zTop + (zHem - zTop) * ((top - bibY) / long);
+  const rim = put(triSlab(scene, "candleRobeBibRim", bibW * R.rim, bibH * R.rim, W * 0.03), gold);
+  rim.position.set(cx, top - (bibH * R.rim) / 2 - H * 0.01, faceZ + W * R.proud * 0.5);
+  rim.rotation.x = -lean;
+  const bib = put(triSlab(scene, "candleRobeBib", bibW, bibH, W * 0.03), white);
+  bib.position.set(cx, bibY, faceZ + W * R.proud);
+  bib.rotation.x = -lean;
+  return out;
+}
