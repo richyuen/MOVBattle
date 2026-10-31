@@ -1307,6 +1307,55 @@ export const REAPER_HOVER_NODE = "reaperHover";
  */
 const SKELETON_BONE = { color: new Color3(1.0, 0.86, 0.6), glow: 0.3 };
 
+/*
+ * [S] 441 the Reaper's narrow robe (434 reaper a.4: "robe is a wide squat bell - TABS: narrow tall tattered robe with ragged hem at the thigh";
+ * spooky.reaper.red.png: from the shoulders a straight maroon coat no wider than his shoulders falls past the waist to mid-thigh, barely flaring, its
+ * hem torn into a row of long and short rag points; the long bone legs hang out under it). REAPER_ROBE replaces dressReaper's bell bodice and skirt: in
+ * the torso frame a .sides-sided coat from the chest's top to its foot, .across of the chest width (W) wide and .deep of its depth (D) deep; in the hip
+ * frame the skirt from the pelvis top down .long thighs (the thigh before the hover stretch), .across of W at its top flaring .flare at the hem; .rags
+ * rag points round the hem, each .rag of the hem's girth wide and .ragLong (every third .ragShort) thighs long, set .ragIn inside the rim.
+ */
+const REAPER_ROBE = { across: 1.08, deep: 1.25, sides: 8, long: 0.85, flare: 1.12, rags: 10, rag: 0.13, ragLong: 0.32, ragShort: 0.16, ragIn: 0.94 };
+
+/** A straight narrow robe from the shoulders to mid-thigh with a torn hem (spec at REAPER_ROBE). */
+export function reaperRobe(scene: Scene, body: ArticulatedBody, robe: NonNullable<Mesh["material"]>): Mesh[] {
+  const R = REAPER_ROBE;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, parent: TransformNode): Mesh => {
+    m.parent = parent;
+    m.material = robe;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const coat = put(MeshBuilder.CreateCylinder("reaperRobeCoat", { height: H * 1.04, diameter: W * R.across, tessellation: R.sides }, scene), body.torso);
+  coat.scaling.z = (D * R.deep) / (W * R.across);
+  coat.position.set(0, chest.position.y, 0);
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  if (!pelvis) return out;
+  const pb = pelvis.getBoundingInfo().boundingBox, pe = pb.extendSize;
+  const thigh = body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2 * body.leftUpperLeg.scaling.y;
+  const long = thigh * R.long;
+  const top = W * R.across, hem = top * R.flare;
+  const ptop = pelvis.position.y + (pb.center.y + pe.y) * pelvis.scaling.y;
+  const skirt = put(MeshBuilder.CreateCylinder("reaperRobeSkirt", { height: long, diameterTop: top, diameterBottom: hem, tessellation: R.sides }, scene), body.hip);
+  skirt.scaling.z = (D * R.deep) / top;
+  skirt.position.y = ptop - long / 2;
+  for (let i = 0; i < R.rags; i++) {
+    const a = ((i + 0.5) / R.rags) * Math.PI * 2;
+    const drop = thigh * (i % 3 === 2 ? R.ragShort : R.ragLong) * (0.85 + 0.15 * ((i * 7) % 4) / 3);
+    const rag = put(MeshBuilder.CreateCylinder("reaperRobeRag", { height: drop, diameterTop: hem * Math.PI * R.rag, diameterBottom: 0, tessellation: 3 }, scene), skirt);
+    rag.scaling.z = 0.3;
+    rag.rotation.y = a;
+    rag.position.set(Math.sin(a) * hem * 0.5 * R.ragIn, -long / 2 - drop / 2 + thigh * 0.01, Math.cos(a) * hem * 0.5 * R.ragIn);
+  }
+  return out;
+}
+
 /** The shared cream self-lit Stiffy bone (spec at SKELETON_BONE). */
 export function skeletonBone() {
   return getMaterialFactory().get("cloth", SKELETON_BONE.color, { emissive: SKELETON_BONE.color.scale(SKELETON_BONE.glow) });

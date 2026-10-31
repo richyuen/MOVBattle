@@ -19,6 +19,7 @@ import { stiffyGreaves } from "./spookyDress";
 import { candleBoots } from "./spookyDress";
 import { vampireBeard } from "./spookyDress";
 import { skeletonBone } from "./spookyDress";
+import { reaperRobe } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -173,10 +174,7 @@ const REAPER_HOOD_OPEN = 0.46;
 const REAPER_HOOD_FORWARD = -0.24;
 const REAPER_JAW = 0.5;
 const REAPER_JAW_LONG = 0.5;
-const REAPER_ROBE = 1.3;
-const REAPER_SKIRT = 0.85;
-const REAPER_HEM = 2.1;
-const REAPER_TATTERS = 7;
+// 441: bodice, skirt, hem and tatters are spookyDress REAPER_ROBE (was ROBE 1.3, SKIRT .85, HEM 2.1, TATTERS 7)
 const REAPER_SLEEVE = 1.35;
 const REAPER_CLOTH = new Color3(0.3, 0.06, 0.09);
 const REAPER_TEAM = 0.4;
@@ -2906,17 +2904,11 @@ function dressReaper(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
     leg.scaling.z *= SKELETON_LIMB;
     leg.material = bone;
   }
-  // Bodice: the robe round the chest from the shoulders to the waist, wider than the chest
+  // [S] 441 the robe is a straight narrow coat to mid-thigh with a torn hem, not a bell (spookyDress REAPER_ROBE)
   const chest = body.torsoMesh;
   const ext = chest.getBoundingInfo().boundingBox.extendSize;
   const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
-  const bodice = MeshBuilder.CreateCylinder(`${chest.name}_robe`, { height: H * 1.04, diameterTop: W * 1.08, diameterBottom: W * REAPER_ROBE, tessellation: 8 }, scene);
-  bodice.scaling.z = (D * 1.25) / W;
-  bodice.position.set(0, chest.position.y, 0);
-  bodice.material = robe;
-  bodice.convertToFlatShadedMesh();
-  bodice.parent = body.torso;
-  added.push(bodice);
+  added.push(...reaperRobe(scene, body, robe));
   // Skull in the cowl: the head goes bone, the cowl shell round it opens wide to the face (the giant stands side-on in the lineup, so the bone face must clear the cowl in profile), its crown pulled up into a peak
   body.headMesh.material = bone;
   const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
@@ -2946,39 +2938,13 @@ function dressReaper(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
   peak.convertToFlatShadedMesh();
   peak.parent = body.headMesh;
   added.push(peak);
-  const mantle = MeshBuilder.CreateCylinder(`${body.headMesh.name}_mantle`, { height: headSize * 0.5, diameterTop: headSize * 1.1, diameterBottom: W * 1.25, tessellation: 8 }, scene);
+  const mantle = MeshBuilder.CreateCylinder(`${body.headMesh.name}_mantle`, { height: headSize * 0.5, diameterTop: headSize * 1.1, diameterBottom: W * 1.14, tessellation: 8 }, scene);
   mantle.position.set(0, chest.position.y + H * 0.48, -D * 0.05);
-  mantle.scaling.z = (D * 1.35) / (W * 1.25);
+  mantle.scaling.z = (D * 1.35) / (W * 1.14);
   mantle.material = robe;
   mantle.convertToFlatShadedMesh();
   mantle.parent = body.torso;
   added.push(mantle);
-  // Skirt from the waist to mid-shin, flaring, the hem torn into rags
-  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
-  if (pelvis) {
-    const pExt = pelvis.getBoundingInfo().boundingBox.extendSize;
-    const thigh = body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2 * body.leftUpperLeg.scaling.y;
-    const long = thigh * REAPER_SKIRT;
-    const top = Math.max(pExt.x * 2.3, W * REAPER_ROBE * 0.95), hem = pExt.x * 2 * REAPER_HEM;
-    const skirt = MeshBuilder.CreateCylinder(`${pelvis.name}_robeSkirt`, { height: long, diameterTop: top, diameterBottom: Math.max(hem, top * 1.15), tessellation: 9 }, scene);
-    skirt.scaling.z = (pExt.z * 2.6) / top + 0.25;
-    skirt.position.y = pelvis.position.y + pExt.y * 1.5 - long / 2;
-    skirt.material = robe;
-    skirt.convertToFlatShadedMesh();
-    skirt.parent = body.hip;
-    added.push(skirt);
-    const rim = Math.max(hem, top * 1.15);
-    for (let i = 0; i < REAPER_TATTERS; i++) {
-      const a = ((i + 0.5) / REAPER_TATTERS) * Math.PI * 2;
-      const drop = long * (0.13 + 0.12 * ((i * 5) % 3) / 2);
-      const tatter = MeshBuilder.CreateCylinder(`${pelvis.name}_robeRag`, { height: drop, diameterTop: rim * 0.34, diameterBottom: 0, tessellation: 3 }, scene);
-      tatter.position.set(Math.sin(a) * rim * 0.4, -long / 2 - drop / 2, Math.cos(a) * rim * 0.4);
-      tatter.rotation.y = a;
-      tatter.material = robe;
-      tatter.parent = skirt;
-      added.push(tatter);
-    }
-  }
   return added;
 }
 
