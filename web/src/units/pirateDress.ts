@@ -737,8 +737,16 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  * (.pantsOut 1.14 of the leg) poke out through it. The hem now drops .frontDrop of the skirt's length toward its front (none at the sides and back),
  * the beads riding it, and the trousers are the leg meshes themselves in the pale team shade, no shells, so nothing bulges at the knee.
  */
+/*
+ * [S] 442 the wrap's cut hem (critic 441 a.2: "legs are short stumps, the boots start at the skirt hem and no thigh shows - TABS: long slim legs, bare
+ * thigh between the skirt's front hem and the knee boots"; pirate.pirate_queen.red.png: the wrap is cut away over her right front, its hem there at
+ * mid-thigh, so her pale thigh shows down to the boot top at the knee; on her left the flap still hangs below the knee). Probe 442: the hem sat at
+ * the knee all round (~.56 m) and dropped to .26 at the front, the boot top at .59, so no thigh showed. The flat front drop is gone; the hem is
+ * lifted round its front by .wrapRise of the skirt's length times cos^2 of the angle off .wrapAt (rad round from her right, +x, toward the front,
+ * +z), zero past a right angle, on top of the old left-low .slant. The beads ride the new hem.
+ */
 const QUEEN_SKIRT = {
-  top: 0.14, knee: 1.08, out: 1.04, flare: 1.22, deep: 1.1, slant: 0.6, frontDrop: 0.4, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
+  top: 0.14, knee: 1.08, out: 1.04, flare: 1.22, deep: 1.1, slant: 0.6, frontDrop: 0, wrapRise: 0.55, wrapAt: 1.0, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
   flapWide: 0.6, flapFoot: 0.22, flapX: -0.25, flapLong: 1.3, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
 };
 
@@ -933,7 +941,9 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   const pos = skirt.getVerticesData(VertexBuffer.PositionKind)!;
   // ...and drops toward its front (+z) so it still reaches the knee when the thighs come forward in the crouch
   const drop = (z: number): number => Q.frontDrop * long * Math.max(0, z / rHem);
-  for (let i = 0; i < pos.length; i += 3) if (pos[i + 1] < 0) pos[i + 1] += Q.slant * long * 0.5 * (pos[i] / rHem) - drop(pos[i + 2]);
+  // [S] 442 ...and is cut up over her right front (spec at QUEEN_SKIRT .wrapRise)
+  const wrap = (x: number, z: number): number => { const c = Math.cos(Math.atan2(z, x) - Q.wrapAt); return c > 0 ? Q.wrapRise * long * c * c : 0; };
+  for (let i = 0; i < pos.length; i += 3) if (pos[i + 1] < 0) pos[i + 1] += Q.slant * long * 0.5 * (pos[i] / rHem) - drop(pos[i + 2]) + wrap(pos[i], pos[i + 2]);
   skirt.setVerticesData(VertexBuffer.PositionKind, pos);
   skirt.refreshBoundingInfo();
   skirt.convertToFlatShadedMesh();
@@ -960,7 +970,7 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
     const x = Math.cos(a) * rHem, z = Math.sin(a) * rHem * zs;
     const bead = MeshBuilder.CreateIcoSphere("queenSkirtBead", { radius: W * Q.bead / 2, subdivisions: 1, flat: true }, scene);
     bead.parent = frame;
-    bead.position.set(cx + x, hem + Q.slant * long * 0.5 * (x / rHem) - drop(Math.sin(a) * rHem) + W * Q.bead * 0.2, cz + z + W * Q.bead * 0.3);
+    bead.position.set(cx + x, hem + Q.slant * long * 0.5 * (x / rHem) - drop(Math.sin(a) * rHem) + wrap(x, Math.sin(a) * rHem) + W * Q.bead * 0.2, cz + z + W * Q.bead * 0.3);
     bead.material = green;
     out.push(bead);
   }
