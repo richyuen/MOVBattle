@@ -148,6 +148,8 @@ export class RuntimeUnit {
 
   // Hit stagger
   private _staggerTimer = 0;
+  // Hung on the Reaper's tendril till then (simulationSystem REAPER_IMPALE): limp, pinned by hangAt
+  private _hungUntil = 0;
   private _crowdPressure = 0;
   private _balancePressure = 0;
   private _balanceDirection = new Vector3(0, 0, 1);
@@ -699,6 +701,30 @@ export class RuntimeUnit {
   }
 
   /**
+   * [S] 442 held aloft on the Reaper's tendril (simulationSystem REAPER_IMPALE): pinned at `pos` alive or dead, no fall, no tumble, limp and out of
+   * his own fight till `until` (re-pinned every step while he hangs).
+   */
+  hangAt(pos: Vector3, until: number): void {
+    this.body.root.position.copyFrom(pos);
+    this._velocity.setAll(0);
+    this._grounded = false;
+    this._deathSpinX = 0;
+    this._deathSpinY = 0;
+    this._hungUntil = until;
+    if (!this._isDead) {
+      this.stopMoving();
+      this._staggerTimer = Math.max(this._staggerTimer, 0.25);
+    }
+  }
+
+  /** Let go off the tendril: he falls from where he hangs (a corpse's fall wakes its death physics). */
+  dropFromHang(): void {
+    this._hungUntil = 0;
+    this._grounded = false;
+    if (this._isDead) this._physicsActive = true;
+  }
+
+  /**
    * A leap (simulationSystem HALFLING_JUMP): thrown off the ground at `rise` m/s up and along flat `dir` fast enough that, under gravity (22) and the
    * air drag of the physics step (1.5 per second), he comes down `dist` metres on. Only from the ground.
    */
@@ -1103,7 +1129,7 @@ export class RuntimeUnit {
     this._tendBalloons(now);
     // Animate
     // A blasted body stays limp for its whole flight, not just until the topple clock runs out mid-air.
-    this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0);
+    this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0 || now < this._hungUntil);
     const flung = !this._grounded && this.position.y > 0.35;
     this.animator.setAirborne(flung);
     // the live-air shape is only for a jump-charge arc (the leap pose), not for a hop back or a blasted body (that one is limp and takes its own)

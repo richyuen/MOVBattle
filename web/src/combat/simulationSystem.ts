@@ -1,5 +1,5 @@
-import { Color3, Mesh, Node, TransformNode, Vector3 } from "@babylonjs/core";
-import { CREW_FIGHT, flyLongshipHull, heaveLongshipCrew, landedOarsmenAt, landLongshipCrew, poseWheelbarrowCrew, swingLongshipCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
+import { Color3, Mesh, Node, Quaternion, TransformNode, Vector3 } from "@babylonjs/core";
+import { CREW_FIGHT, flyLongshipHull, heaveLongshipCrew, isVehicleUnit, landedOarsmenAt, landLongshipCrew, poseWheelbarrowCrew, swingLongshipCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
 import { RuntimeUnit } from "../units/runtimeUnit";
 import { AnimState } from "../units/proceduralAnimation";
 import {
@@ -14,6 +14,7 @@ import type { LinkedRelation, RuntimeSpawnRole } from "../units/runtimeUnit";
 import type { UnitVisualConfig } from "../units/unitVisuals";
 import { HARPOON_MUZZLE, launchRingSword } from "../units/propBuilder";
 import { buildGroundSnake, type GroundSnake } from "../units/ancientDress";
+import { reaperSpear } from "../units/spookyDress";
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
 import type { PlacementZone } from "../map/placementValidator";
@@ -276,6 +277,15 @@ const HALFLING_JUMP = { from: 0.6, reach: 4, cooldown: 8, rise: 6.5, short: 0.3 
  */
 const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
 /*
+ * [S] 442 Reaper impale (audit 434 reaper c.2: "missing: tendrils impaling and hanging a weak unit"; card Characteristics: "Their tentacles will impale
+ * any weak Units and hang them as an effigy, and will continuously impale the weakling"; spooky.reaper.jpg: a knight hangs high beside his shoulder on a
+ * tendril). A blow of his on a man whose max health is under .weak of his own does not cut: a tendril (spookyDress reaperSpear) runs from his upper back,
+ * .rootUp of his height up and .rootBack behind, through the man's middle and .through of the man's height past him, and the man is lifted and hung, feet
+ * .up of the Reaper's height off the ground, .side of it out to his off side and .back behind, limp, facing him, stabbed again every .every s for .bite of
+ * his max health. Dead, he hangs on .afterDeath s and drops. One man per Reaper. Logged "impale" (the capture's ability pair).
+ */
+const REAPER_IMPALE = { units: new Set(["spooky.reaper"]), weak: 0.15, up: 0.5, side: 0.42, back: 0.12, rootUp: 0.72, rootBack: 0.1, through: 0.3, every: 0.6, bite: 0.18, afterDeath: 2.5 };
+/*
  * [S] the charge seen (363; critic 360: "same pose and place, no lunge, no dust"; tribal.mammoth.jpg): every MAMMOTH_DUST.every s of the run a dust puff
  * (sprite discs .size times the kick dust) goes up at a pair of its feet, alternating front-left/back-right and front-right/back-left (feet given as [ahead, across] in body radii), and the animator
  * drops its head into the run (ProceduralAnimator.setCharging, CHARGE_POSE).
@@ -504,6 +514,8 @@ export class SimulationSystem {
   private _strikeReadyAt = new Map<RuntimeUnit, number>();
   // Halflings holding on to their man (HALFLING_CLING): the man, the side he hangs on, when he lets go (set once the man is dead)
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
+  // Men hung on a Reaper's tendril (REAPER_IMPALE): who holds him, when he drops (set once he is dead), his next stab, the tendril mesh
+  private _impales = new Map<RuntimeUnit, { holder: RuntimeUnit; until: number; next: number; spear: Mesh }>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
   // Mammoth Charge (MAMMOTH_CHARGE): the charger's target and heading, the men it has trampled this run, and when it may charge again
   private _charges = new Map<RuntimeUnit, { target: RuntimeUnit; dir: Vector3; trampled: Set<RuntimeUnit>; spec: ChargeSpec; end: Vector3 | null }>();
@@ -664,6 +676,8 @@ export class SimulationSystem {
     this._fearHits.clear();
     this._pendingBlows = [];
     this._clings.clear();
+    for (const imp of this._impales.values()) imp.spear.dispose();
+    this._impales.clear();
     this._pendingThrows = [];
     this._pendingLaunches = [];
     this._closingFrom.clear();
@@ -751,6 +765,7 @@ export class SimulationSystem {
     this._firstLunges(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
+    if (this._impales.size > 0) this._holdImpales(now);
     if (this._charges.size > 0) this._trampleCharges(now);
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
     if (this._butts.size > 0) this._landButts(now);
@@ -906,8 +921,65 @@ export class SimulationSystem {
     }
   }
 
+  /** Starts a Reaper's impale on a weak man (spec at REAPER_IMPALE); false when this blow is an ordinary cut. */
+  private _tryImpale(attacker: RuntimeUnit, target: RuntimeUnit, now: number): boolean {
+    const I = REAPER_IMPALE;
+    if (!I.units.has(attacker.definition.id) || attacker.isDead || target.isDead || target.linkedParent || isVehicleUnit(target.definition.id)) return false;
+    if (target.maxHealth >= attacker.maxHealth * I.weak || this._impales.has(target) || this._clings.has(target)) return false;
+    for (const imp of this._impales.values()) if (imp.holder === attacker) return false;
+    const imp = { holder: attacker, until: Infinity, next: now + I.every, spear: reaperSpear(attacker.body.root.getScene()) };
+    this._impales.set(target, imp);
+    this._hangImpaled(target, imp, now);
+    target.applyDamage(target.maxHealth * I.bite, Vector3.Zero());
+    this._logAbility(attacker, "impale", now, target.position);
+    return true;
+  }
+
+  /** Hangs the man where the Reaper holds him and runs the tendril from the Reaper's back through his middle (spec at REAPER_IMPALE). */
+  private _hangImpaled(man: RuntimeUnit, imp: { holder: RuntimeUnit; spear: Mesh }, now: number): void {
+    const I = REAPER_IMPALE, h = imp.holder, H = h.body.metrics.overallHeight;
+    const yaw = h.body.root.rotation.y;
+    const fwd = new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+    const right = new Vector3(fwd.z, 0, -fwd.x);
+    const off = -(Math.sign(h.body.rightShoulder.position.x) || 1);
+    const at = h.position.add(right.scale(off * I.side * H)).subtract(fwd.scale(I.back * H));
+    at.y = Math.max(0, h.position.y) + I.up * H;
+    man.hangAt(at, now + 0.3);
+    man.faceTarget(h.position);
+    const root = h.position.add(right.scale(off * 0.08 * H)).subtract(fwd.scale(I.rootBack * H));
+    root.y = Math.max(0, h.position.y) + I.rootUp * H;
+    const mid = at.add(new Vector3(0, man.body.metrics.overallHeight * 0.5, 0));
+    const dir = mid.subtract(root);
+    const len = dir.length() + man.body.metrics.overallHeight * I.through;
+    dir.normalize();
+    imp.spear.position.copyFrom(root);
+    imp.spear.rotationQuaternion = imp.spear.rotationQuaternion ?? new Quaternion();
+    Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, imp.spear.rotationQuaternion);
+    imp.spear.scaling.set(1, len, 1);
+  }
+
+  /** Keeps each impaled man hung and stabbed; drops him .afterDeath s after he dies, or when his Reaper dies (spec at REAPER_IMPALE). */
+  private _holdImpales(now: number): void {
+    const I = REAPER_IMPALE;
+    for (const [man, imp] of this._impales) {
+      const gone = imp.holder.isDead || !this._units.includes(imp.holder) || man.body.root.isDisposed();
+      if (!gone && man.isDead && imp.until === Infinity) imp.until = now + I.afterDeath;
+      if (gone || now >= imp.until) {
+        imp.spear.dispose();
+        this._impales.delete(man);
+        if (!man.body.root.isDisposed()) man.dropFromHang();
+        continue;
+      }
+      if (!man.isDead && now >= imp.next) {
+        imp.next = now + I.every;
+        man.applyDamage(man.maxHealth * I.bite, Vector3.Zero());
+      }
+      this._hangImpaled(man, imp, now);
+    }
+  }
+
   private _resolveLivingCollisions(): void {
-    const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent && !this._clings.has(unit));
+    const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent && !this._clings.has(unit) && !this._impales.has(unit));
     if (roots.length < 2) return;
 
     for (let pass = 0; pass < this.collisionResolutionPasses; pass++) {
@@ -2748,7 +2820,9 @@ export class SimulationSystem {
     attacker.animator.blowStruck();
     if (HOP_BACK[attacker.definition.id]) this._landedAt.set(attacker, now);
     if (attacker.definition.id === "renaissance.fencer" && !attacker.isDead && !this._recovers.has(attacker)) this._startRecover(attacker, target, now);
-    const heavy = attacker.animator.defaultAttackMotion === "heavy_swing";
+    // [S] 442 a weak man is speared on a tendril and hung, not cut (REAPER_IMPALE)
+    const impaled = this._tryImpale(attacker, target, now);
+    const heavy = !impaled && attacker.animator.defaultAttackMotion === "heavy_swing";
     // A heavy blow that leaves him standing dwells on him (BLOW_DWELL): the push is withheld from the damage step and fired with the throw; the crowd
     // around him still takes the blow's shock now
     const dwells = heavy && target.currentHealth > damage;
@@ -2758,7 +2832,7 @@ export class SimulationSystem {
     if (dwells) target.holdFlinch(BLOW_DWELL);
     // ...and he buckles under it on this same step (struck-man buckle, r2c3: knees give, head down, arms out of his guard) till the throw takes him
     if (dwells) target.animator.buckleUnder();
-    this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
+    if (!impaled) this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
     // A halfling's first blow that lands takes hold of the man (HALFLING_CLING)
     if (attacker.definition.id === "farmer.halfling" && !this._clings.has(attacker) && !attacker.isDead) {
       this._clings.set(attacker, { target, side: attacker.runtimeId % 2 === 0 ? 1 : -1, until: Infinity });
@@ -2785,7 +2859,7 @@ export class SimulationSystem {
       this._logAbility(attacker, "knockback", now, target.position);
     }
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
-    target.reposeNow();
+    if (!impaled) target.reposeNow();
     // ...and under a heavy weapon he is thrown back off his feet as hard as the blow pushed, whether it was held for the drop or struck at once from a swing the
     // walk cut short: after the dwell with the club head on him, or at once when the blow killed him
     if (dwells) this._pendingLaunches.push({ target, from: attacker.position.clone(), knockback: knockback.length(), at: now + BLOW_DWELL });
@@ -2804,7 +2878,7 @@ export class SimulationSystem {
       this.visualEffects.spawnTrampleRing(new Vector3(target.position.x, attacker.position.y, target.position.z), Math.max(2, splashRadius));
     }
     // [S] 436 the Reaper's scythe bursts a dark magic shockwave where it lands (card Characteristics; visualEffects REAPER_BURST), out to its splash
-    if (this.visualEffects && attacker.definition.id === "spooky.reaper") {
+    if (this.visualEffects && attacker.definition.id === "spooky.reaper" && !impaled) {
       this.visualEffects.spawnReaperBurst(new Vector3(target.position.x, target.position.y, target.position.z), Math.max(2, splashRadius));
     }
     // A painter's brush throws its paint as it lands (card Appearance): blobs of the tuft's own paint leave its point, on along the swing

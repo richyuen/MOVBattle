@@ -1083,6 +1083,29 @@ export function reaperTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/**
+ * [S] 442 the tendril a weak man hangs on (simulationSystem REAPER_IMPALE): one more REAPER_TENDRILS tube, 1 long up its local +y from its root at the
+ * origin, .thick across at the root tapering to a point, a slight S bend; the sim seats it from his back through the man and stretches it.
+ */
+const REAPER_SPEAR = { thick: 0.16, tip: 0.12, bend: 0.06, steps: 10 };
+
+/** The impaling tendril, root at the origin, 1 long up +y (spec at REAPER_SPEAR); the caller places, aims and stretches it. */
+export function reaperSpear(scene: Scene): Mesh {
+  const R = REAPER_TENDRILS, S = REAPER_SPEAR;
+  const path: Vector3[] = [];
+  for (let k = 0; k <= S.steps; k++) {
+    const t = k / S.steps;
+    path.push(new Vector3(Math.sin(t * Math.PI * 2) * S.bend, t, 0));
+  }
+  const tube = MeshBuilder.CreateTube("reaperSpear", {
+    path, tessellation: 6, cap: Mesh.CAP_ALL,
+    radiusFunction: (k: number) => S.thick * 0.5 * (1 - (1 - S.tip) * (k / S.steps)) * (k === S.steps ? 0.05 : 1),
+  }, scene);
+  tube.material = getMaterialFactory().get("cloth", R.color, { emissive: R.color.scale(R.glow) });
+  tube.isPickable = false;
+  return tube;
+}
+
 /** A closed triangular slab, point down, in the x-y plane: `w` across its top edge, `h` tall, `t` thick (both faces outward, flat shaded). */
 function triSlab(scene: Scene, name: string, w: number, h: number, t: number): Mesh {
   const p = [[-w / 2, h / 2], [w / 2, h / 2], [0, -h / 2]];
