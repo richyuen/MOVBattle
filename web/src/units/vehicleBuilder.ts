@@ -280,6 +280,15 @@ const RIB_CRADLE = {
   ribs: 4, step: 0.12, bone: 0.035, open: 0.75, out: 1.12, taper: 0.85, size: 0.5, squash: 0.82, lobes: 8, glow: 0.2,
   boneColor: new Color3(1.0, 0.86, 0.6), orange: new Color3(0.9, 0.38, 0.08), stem: new Color3(0.25, 0.3, 0.1), face: new Color3(1, 0.8, 0.2),
 };
+/*
+ * [S] 438 the Pumpkin Catapult's bones (audit 434 pumpkin_catapult b.1: "crossbars are timber - TABS: cream bones lashed as the arm and crossbars";
+ * spooky.pumpkin_catapult.red.png, card Appearance "predominantly black with bones": the throwing arm is one long cream bone with knobbed ends, two
+ * short bones lashed across it with dark cord in an X; a cream bone lies across the uprights' tops, run out past them, and a bigger one across their
+ * fronts lower down, its knobbed ends standing out past the frame each side). BONE_FRAME (rig units): the arm .arm thick, crossbones .cross long at
+ * .crossAt of the long end out from the pivot; the top bar .bar thick, run .past out each side; the low bone .big thick at .lowAt of the uprights'
+ * height, run .past * 1.5 out; each end two knobs .knob of its thickness across, .lobe of it apart; cords .cord thick in BF.lash. RIB_CRADLE's bone.
+ */
+const BONE_FRAME = { arm: 0.11, cross: 0.62, crossAt: [0.5, 0.15], bar: 0.12, big: 0.15, lowAt: 0.62, past: 0.12, knob: 1.35, lobe: 0.32, cord: 0.025, lash: new Color3(0.14, 0.08, 0.06) };
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
   const rig = new TransformNode("catapult_rig", scene);
@@ -369,7 +378,48 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     }
     beam("frameBrace", F.beam * 0.8, F.beam * 0.8, F.spread * 1.05, side * F.half, F.railY + (topY - F.railY) * 0.45, 0);
   }
-  beam("crossbar", F.half * 2 + F.beam, F.beam, F.beam, 0, topY, 0);
+  // [S] 438 the pumpkin catapult's crossbars are bones (spec at BONE_FRAME)
+  const BF = BONE_FRAME;
+  const boneMat = options.spooky ? getMaterialFactory().get("cloth", RIB_CRADLE.boneColor, { emissive: RIB_CRADLE.boneColor.scale(RIB_CRADLE.glow) }) : null;
+  const lashMat = options.spooky ? getMaterialFactory().get("cloth", BF.lash, { emissive: BF.lash.scale(0.1) }) : null;
+  // a bone along local x (`long` m, `thick` across) with two knob condyles at each end, under `parent`
+  const boneBar = (name: string, parent: TransformNode, long: number, thick: number, at: Vector3, alongZ = false): void => {
+    const shaft = MeshBuilder.CreateCylinder(name, { height: long, diameter: thick, tessellation: 7 }, scene);
+    if (alongZ) shaft.rotation.x = Math.PI / 2; else shaft.rotation.z = Math.PI / 2;
+    shaft.position.copyFrom(at);
+    shaft.parent = parent; shaft.material = boneMat; allMeshes.push(shaft);
+    for (const end of [-1, 1]) {
+      for (const lobe of [-1, 1]) {
+        const knob = MeshBuilder.CreateSphere(`${name}Knob`, { diameter: thick * BF.knob, segments: 4 }, scene);
+        const off = end * (long / 2 - thick * 0.25);
+        knob.position.set(at.x + (alongZ ? lobe * thick * BF.lobe : off), at.y + (alongZ ? 0 : lobe * thick * BF.lobe), at.z + (alongZ ? off : 0));
+        knob.parent = parent; knob.material = boneMat; allMeshes.push(knob);
+      }
+    }
+  };
+  // dark cord lashed in an X where two bones cross, square to `normal` (x, y or z) at `at`
+  const lashing = (parent: TransformNode, at: Vector3, size: number, normal: "y" | "z"): void => {
+    for (const k of [-1, 1]) {
+      // a flat band `size` long, a fifth of it wide, cord-thin along the normal, turned 45 deg either way about it
+      const cord = normal === "z"
+        ? MeshBuilder.CreateBox("boneLashing", { width: size, height: size * 0.2, depth: BF.cord }, scene)
+        : MeshBuilder.CreateBox("boneLashing", { width: size, height: BF.cord, depth: size * 0.2 }, scene);
+      cord.position.copyFrom(at);
+      if (normal === "z") cord.rotation.z = k * Math.PI / 4; else cord.rotation.y = k * Math.PI / 4;
+      cord.parent = parent; cord.material = lashMat; allMeshes.push(cord);
+    }
+  };
+  if (options.spooky) {
+    // the top crossbar a bone run out past the uprights' caps
+    boneBar("crossbar", rig, F.half * 2 + F.beam + BF.past * 2, BF.bar, new Vector3(0, topY, 0));
+    // and a big bone across the uprights' fronts lower down, lashed to each leg
+    const lowY = F.railY + (topY - F.railY) * BF.lowAt;
+    const lowZ = F.spread * (1 - BF.lowAt) / 2 + F.beam * 0.75;
+    boneBar("crossbarLow", rig, F.half * 2 + F.beam + BF.past * 3, BF.big, new Vector3(0, lowY, lowZ));
+    for (const side of [-1, 1]) lashing(rig, new Vector3(side * F.half, lowY, lowZ + BF.big * 0.4), BF.big * 1.5, "z");
+  } else {
+    beam("crossbar", F.half * 2 + F.beam, F.beam, F.beam, 0, topY, 0);
+  }
   for (const side of [-1, 1]) beam("frameCap", F.cap, F.cap, F.cap, side * (F.half + F.beam * 0.25), topY + 0.04, 0);
 
   // Throwing arm on its pivot at the crossbar (CATAPULT_ARM; swung by RuntimeUnit's catapult throw). Built along -Z from the pivot (bucket end back), the
@@ -379,9 +429,19 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   pivot.position.set(0, CATAPULT_ARM.pivotY, 0);
   pivot.rotation.x = -CATAPULT_ARM.cocked;
   const L = CATAPULT_ARM.long;
-  const arm = MeshBuilder.CreateBox("arm", { width: 0.16, height: 0.16, depth: L + CATAPULT_ARM.short }, scene);
-  arm.position.set(0, 0, (CATAPULT_ARM.short - L) / 2);
-  arm.parent = pivot; arm.material = wood; allMeshes.push(arm);
+  if (options.spooky) {
+    // [S] 438 the throwing arm a long bone, two short crossbones lashed across it (BONE_FRAME)
+    boneBar("arm", pivot, L + CATAPULT_ARM.short, BF.arm, new Vector3(0, 0, (CATAPULT_ARM.short - L) / 2), true);
+    for (const at of BF.crossAt) {
+      const z = -L * at;
+      boneBar("armCrossbone", pivot, BF.cross, BF.arm * 0.8, new Vector3(0, BF.arm * 0.2, z));
+      lashing(pivot, new Vector3(0, BF.arm * 0.75, z), BF.arm * 1.6, "y");
+    }
+  } else {
+    const arm = MeshBuilder.CreateBox("arm", { width: 0.16, height: 0.16, depth: L + CATAPULT_ARM.short }, scene);
+    arm.position.set(0, 0, (CATAPULT_ARM.short - L) / 2);
+    arm.parent = pivot; arm.material = wood; allMeshes.push(arm);
+  }
 
   // Spoon bucket on the long end (CATAPULT_BUCKET): an open flared cup sat on the arm, rim ring round its mouth, the shot sunk in it
   const B = CATAPULT_BUCKET;
