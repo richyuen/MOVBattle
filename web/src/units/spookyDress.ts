@@ -1052,3 +1052,66 @@ export function candleRobe(scene: Scene, body: ArticulatedBody, teamColor: Color
   bib.rotation.x = -lean;
   return out;
 }
+
+/*
+ * [S] 439 the Vampire's high collar and cape (audit 434 vampire a.3: "collar is a small dark-red wedge on the shoulders - TABS: tall spiked team collar
+ * rising behind the head over a short shoulder cape"; spooky.vampire.red.png, card Appearance "a high collar, and a small cape": a short faceted team
+ * cape over both shoulders, its hem cut in points out past the shoulders; out of its back edge a fan of tall flat team spikes standing up behind and
+ * either side of the head to about the crown, leaning out, the outer ones tallest). VAMPIRE_COLLAR, in the torso joint's frame (S the shoulder span,
+ * N the neck joint, h the head block's height): the cape a .sides-sided frustum from .capeTop of h over the trunk's top down .capeDrop of h, .capeIn of S
+ * across at the neck flaring to .capeOut of S, .deep as deep; .spikes spikes on an arc behind the neck .ring of S out, from .arc[0] to .arc[1] rad round
+ * from straight back, each a flat wedge .wide of h wide at its root, .tall[i] of h tall, leaning .lean rad out; tops kept under the head's top + .3 h
+ * (LESSONS 27). Team self-lit .glow, the spikes in .shade of it so they part from the cape.
+ */
+const VAMPIRE_COLLAR = {
+  sides: 6, capeTop: 0.08, capeDrop: 0.55, capeIn: 0.45, capeOut: 1.22, deep: 0.85, spikes: 5, ring: 0.26, arc: [-1.2, 1.2], wide: 0.42, tall: [1.15, 0.95, 0.8, 0.95, 1.15],
+  lean: 0.32, back: 0.18, thick: 0.06, glow: 0.14, shade: 0.85,
+};
+
+/** A short pointed team cape over the shoulders and a fan of tall team spikes standing up behind the head (spec at VAMPIRE_COLLAR). */
+export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const V = VAMPIRE_COLLAR;
+  const f = getMaterialFactory();
+  const team = f.get("cloth", teamColor, { emissive: teamColor.scale(V.glow) });
+  const spikeC = teamColor.scale(V.shade);
+  const spikeMat = f.get("cloth", spikeC, { emissive: spikeC.scale(V.glow) });
+  const torso = body.torso;
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const trunkTop = tm.position.y + tb.center.y * ts.y + H / 2;
+  const S = Math.abs(body.rightShoulder.position.x - body.leftShoulder.position.x) || tb.extendSize.x * 2 * ts.x;
+  const hb = body.headMesh.getBoundingInfo().boundingBox;
+  const h = hb.extendSize.y * 2 * body.headMesh.scaling.y;
+  const neck = inFrameOf(body.neck, torso);
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof team): Mesh => {
+    m.parent = torso;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  // the cape over the shoulders, its six points out past them
+  const capeTop = Math.max(trunkTop, neck.y - h * 0.1) + h * V.capeTop, drop = h * V.capeDrop;
+  const cape = put(MeshBuilder.CreateCylinder("vampireCape", { height: drop, diameterTop: S * V.capeIn, diameterBottom: S * V.capeOut, tessellation: V.sides }, scene), team);
+  cape.scaling.z = Math.max(V.deep, (D * 1.2) / (S * V.capeOut));
+  cape.position.set(0, capeTop - drop / 2, 0);
+  // the spikes on an arc behind the neck, each a flat wedge standing up and leaning out
+  for (let i = 0; i < V.spikes; i++) {
+    const k = V.spikes > 1 ? i / (V.spikes - 1) : 0.5;
+    const a = V.arc[0] + (V.arc[1] - V.arc[0]) * k;
+    const tall = h * V.tall[i % V.tall.length];
+    const pivot = new TransformNode("vampireCollarSpike", scene);
+    pivot.parent = torso;
+    pivot.position.set(Math.sin(a) * S * V.ring, capeTop - drop * 0.15, neck.z - Math.cos(a) * S * V.ring * 0.8);
+    pivot.rotation.y = -a;
+    pivot.rotation.x = -V.back;
+    pivot.rotation.z = Math.sin(a) * -V.lean;
+    const spike = put(MeshBuilder.CreateCylinder("vampireCollarSpike", { height: tall, diameterTop: 0, diameterBottom: h * V.wide, tessellation: 4 }, scene), spikeMat);
+    spike.parent = pivot;
+    spike.scaling.z = V.thick / V.wide;
+    spike.position.set(0, tall / 2, 0);
+  }
+  return out;
+}
