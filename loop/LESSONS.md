@@ -27,10 +27,11 @@ drop a lesson once it is a comment at the code it describes.
 - The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of it (420: the dragon's head was out of frame from 417; the monkey king's tail pulls his frame back): a new tall prop re-frames every shot, so a RE-AUDIT follows.
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).
 - A wide side-by-side stance reads as a fore-aft stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a pose gap on "stride"; the fix may be the camera (403 halfling: feet .015 m apart fore-aft).
-- `capture.mjs --units` takes a comma list (no spaces); an iter-N capture clears probe swatches; render them after it (402). No python (429).
+- `capture.mjs --units` takes a comma list (no spaces); an iter-N capture clears probe swatches: render them after it (402). No python (429). 4+ units run past 10 min: background it (433).
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 - Logged at the swing start / let-go, not the landing: a preset's instant "slam" (use the pending blow, 426); a special logged as a missile leaves owns that missile (427 queen). A status logged at the cast (fire_dot) makes _struck precede the missile: an on-landing mechanic needs ABILITY_PREF (435 candlehead).
-- A crewman moved behind a vehicle hides behind the near wheel at the .6 rad idle swing: re-aim it in the same iteration (428 cannon, .25). An --iter capture of 4+ units runs past 10 min: background it.
+- The _ability shot is the log tick itself, before RuntimeUnit.update runs: a body swap set at the log shows only in _ability_after (437 vampire bat).
+- A crewman moved behind a vehicle hides behind the near wheel at the .6 rad idle swing: re-aim it in the same iteration (428 cannon, .25).
 
 ## Rig and dress
 - A hunched idle can be _buildIdlePose's hashed sunk stance: a per-unit stance override fixed what scale/bulk did not (436 QUEEN_UPRIGHT).
@@ -52,4 +53,3 @@ drop a lesson once it is a comment at the code it describes.
 - bakeCurrentTransformIntoVertices on a parented mesh bakes the parent's world transform in too: bake, then parent (407 jarl flaps stood over his head).
 - A leg-length change reads only if the dress over the leg scales with it: brawlerLegs' boots and cuffs kept the visible belt-to-sole at 41% while the probe hip rose to 52% (406 headbutter). Measure the shot, not the bone.
 - A closed trapezoid plate is a 4-tessellation frustum cylinder squashed in z (KABUTO plate): facet skirts, blades and crests come from it; arc cylinders are one-sided ribbons SSAO greys, their opening an angle to get wrong (421).
-- A frill disc lying in a horizontal band's plane vanishes edge-on from the lineup's eye-level camera: stand edge ornaments square to the band (421 dragon scallops).
