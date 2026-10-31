@@ -289,6 +289,15 @@ const RIB_CRADLE = {
  * .crossAt of the long end out from the pivot; the top bar .bar thick, run .past out each side; the low bone .big thick at .lowAt of the uprights'
  * height, run .past * 1.5 out; each end two knobs .knob of its thickness across, .lobe of it apart; cords .cord thick in BF.lash. RIB_CRADLE's bone.
  */
+/*
+ * [S] 442 the Pumpkin Catapult's upright posts (CONFIRM 441 pumpkin_catapult a.3: "the side frames are triangular A-frames - TABS: two tall upright square
+ * posts rise from the chassis rails, joined by a crossbeam"; spooky.pumpkin_catapult.blue.png: on each rail a pair of thick square timber posts stands
+ * straight up, side by side along the rail, to the top crossbar, a block collar round them low down). PUMPKIN_POSTS, in frame beams (F.beam): per rail
+ * two posts .thick beams square, their centres .apart beams fore and aft of the pivot, from the rail to .over beams above the crossbar line; a collar
+ * .collar of a post wide and .collarTall beams tall at .collarAt of the rise; a cleat block at their foot. The A-frame legs and brace are the medieval's
+ * alone; the low bone crosses the posts' fronts.
+ */
+const PUMPKIN_POSTS = { thick: 1.35, apart: 0.75, over: 0.3, collar: 1.3, collarTall: 1.4, collarAt: 0.28 };
 const BONE_FRAME = { arm: 0.11, cross: 0.62, crossAt: [0.5, 0.15], bar: 0.12, big: 0.15, lowAt: 0.62, past: 0.12, knob: 1.35, lobe: 0.32, cord: 0.025, lash: new Color3(0.14, 0.08, 0.06) };
 /*
  * [S] 438 the Pumpkin Catapult's team banners (audit 434 pumpkin_catapult a.2: "banners absent - TABS: small team banners hanging on both sides of the
@@ -383,7 +392,20 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   // A-frame uprights: on each rail two legs lean in from its front and back to meet under the crossbar, braced across at half height; the crossbar over
   // both, a block cap at each end of it
   const topY = CATAPULT_ARM.pivotY - 0.12;
-  for (const side of [-1, 1]) {
+  // [S] 442 the pumpkin catapult stands on upright posts, not A-frames (spec at PUMPKIN_POSTS)
+  const PP = PUMPKIN_POSTS;
+  if (options.spooky) {
+    for (const side of [-1, 1]) {
+      const x = side * F.half;
+      for (const end of [-1, 1]) {
+        beam("framePost", F.beam * PP.thick, topY - F.railY + F.beam * PP.over, F.beam * PP.thick, x, (topY + F.railY + F.beam * PP.over) / 2, end * F.beam * PP.apart);
+      }
+      // a block collar round both posts low down, and a cleat block where they meet the rail
+      beam("postCollar", F.beam * PP.thick * PP.collar, F.beam * PP.collarTall, F.beam * (PP.apart * 2 + PP.thick * PP.collar), x, F.railY + (topY - F.railY) * PP.collarAt, 0);
+      beam("postCleat", F.beam * PP.thick * PP.collar, F.beam * 0.9, F.beam * (PP.apart * 2 + PP.thick) * 1.35, x, F.railY + F.beam * 0.9, 0);
+    }
+  }
+  for (const side of options.spooky ? [] : [-1, 1]) {
     for (const end of [-1, 1]) {
       const footZ = end * F.spread, rise = topY - F.railY;
       const len = Math.hypot(rise, footZ);
@@ -428,7 +450,8 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     boneBar("crossbar", rig, F.half * 2 + F.beam + BF.past * 2, BF.bar, new Vector3(0, topY, 0));
     // and a big bone across the uprights' fronts lower down, lashed to each leg
     const lowY = F.railY + (topY - F.railY) * BF.lowAt;
-    const lowZ = F.spread * (1 - BF.lowAt) / 2 + F.beam * 0.75;
+    // [S] 442 across the posts' fronts (PUMPKIN_POSTS), not the A-frame legs'
+    const lowZ = F.beam * (PP.apart + PP.thick / 2) + BF.big * 0.6;
     boneBar("crossbarLow", rig, F.half * 2 + F.beam + BF.past * 3, BF.big, new Vector3(0, lowY, lowZ));
     for (const side of [-1, 1]) lashing(rig, new Vector3(side * F.half, lowY, lowZ + BF.big * 0.4), BF.big * 1.5, "z");
     // [S] 438 a small team banner hung by a cord off each end of the low bone, down the frame's flank (spec at CATAPULT_BANNER)
