@@ -20,6 +20,7 @@ import { candleBoots } from "./spookyDress";
 import { vampireBeard } from "./spookyDress";
 import { skeletonBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
+import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -652,6 +653,8 @@ export class UnitFactory {
     if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireCollar(this._scene, body, teamColor));
     // [S] 440 ...a dark brown beard round the jaw with a goatee point and two white fangs at the mouth (spookyDress VAMPIRE_BEARD)
     if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireBeard(this._scene, body));
+    // [S] 441 ...white shirt sleeves, a white V at the chest under the team vest, a dark belt (spookyDress VAMPIRE_VEST)
+    if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireVest(this._scene, body));
     // [S] 436 the Candlehead's forearms sheathed in lumpy cream candles with cyan flames at the foot, the torch stick hidden (spookyDress CANDLE_ARMS)
     if (definition.id === "spooky.candlehead" && !shouldUseVehicleBody) propMeshes.push(...candleArms(this._scene, body));
     // [S] 438 the Candlehead's melted cream wax cap and candle tower over the head, a big cyan flame on top (spookyDress CANDLE_TOWER)

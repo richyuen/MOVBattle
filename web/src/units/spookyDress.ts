@@ -1284,6 +1284,79 @@ export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Co
 }
 
 /*
+ * [S] 441 the Vampire's vest and shirt (434 vampire a.4: "torso and arms plain team - TABS: team sleeveless vest with a V neck, white sleeves, dark
+ * belt"; spooky.vampire.red.png, card Appearance "a sleeveless vest": the trunk stays the team vest; both arms, shoulder to wrist, are a pale shirt's
+ * sleeves, the hands team skin; a white V of shirt shows from the collar down to about mid-chest, its point down; a dark belt band round the waist where
+ * the vest meets the trousers). VAMPIRE_VEST: the upper and lower arm meshes in the shirt (.shirt self-lit .shirtGlow, LESSONS 13); the V a closed
+ * triangular slab in the torso frame, .vWide of the chest width (W) across at the top, from .vTop of the chest height (H) under the trunk's top down
+ * .vLong of H, .vThick thick, its back face .proud in front of the trunk's foremost face (yoke included); the belt a .sides-sided band in the hip frame
+ * .belt of W tall, .beltOut of the pelvis across, its top at the pelvis top, dark (.dark self-lit .glow).
+ */
+const VAMPIRE_VEST = {
+  shirt: new Color3(0.86, 0.84, 0.78), shirtGlow: 0.3, vWide: 0.46, vTop: -0.02, vLong: 0.5, vThick: 0.02, proud: 0.008,
+  belt: 0.16, beltOut: 1.14, sides: 8, dark: new Color3(0.07, 0.06, 0.07), glow: 0.12,
+};
+
+/** White shirt sleeves, a white V at the chest under the team vest, a dark belt (spec at VAMPIRE_VEST). */
+export function vampireVest(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const V = VAMPIRE_VEST;
+  const f = getMaterialFactory();
+  const shirt = f.get("cloth", V.shirt, { emissive: V.shirt.scale(V.shirtGlow) });
+  const dark = f.get("cloth", V.dark, { emissive: V.dark.scale(V.glow) });
+  for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) if (arm) arm.material = shirt;
+  const out: Mesh[] = [];
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y;
+  const trunkTop = tm.position.y + (tb.center.y + tb.extendSize.y) * ts.y;
+  // the trunk's foremost face, the chest block and its yoke hull both
+  let front = tm.position.z + (tb.center.z + tb.extendSize.z) * ts.z;
+  for (const m of body.torso.getChildMeshes(true)) {
+    if (!(m instanceof Mesh) || !/_yoke/.test(m.name) || !m.isEnabled()) continue;
+    const b = m.getBoundingInfo().boundingBox;
+    front = Math.max(front, m.position.z + (b.center.z + b.extendSize.z) * m.scaling.z);
+  }
+  const y0 = trunkTop - H * V.vTop, y1 = y0 - H * V.vLong, half = (W * V.vWide) / 2, z0 = front + V.proud, z1 = z0 + V.vThick;
+  // a closed slab (LESSONS 40): front and back triangles and the three sides
+  const pts = [new Vector3(-half, y0, z0), new Vector3(half, y0, z0), new Vector3(0, y1, z0), new Vector3(-half, y0, z1), new Vector3(half, y0, z1), new Vector3(0, y1, z1)];
+  const positions = pts.flatMap((p) => [p.x, p.y, p.z]);
+  let indices = [0, 1, 2, 3, 5, 4, 0, 3, 4, 0, 4, 1, 1, 4, 5, 1, 5, 2, 2, 5, 3, 2, 3, 0];
+  // wind the slab so its faces point out: the back triangle (3,5,4) must face +z, the camera's side, by Babylon's own normal rule
+  const probe: number[] = [];
+  VertexData.ComputeNormals(positions, [3, 5, 4], probe);
+  if (probe[3 * 3 + 2] < 0) indices = indices.map((_, i, a) => a[i - (i % 3) + (2 - (i % 3))]);
+  const vee = new Mesh("vampireVestV", scene);
+  const vd = new VertexData();
+  vd.positions = positions;
+  vd.indices = indices;
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  vd.normals = normals;
+  vd.applyToMesh(vee);
+  vee.parent = body.torso;
+  vee.material = shirt;
+  vee.convertToFlatShadedMesh();
+  vee.isPickable = false;
+  out.push(vee);
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name)) as Mesh | undefined;
+  if (pelvis) {
+    const pb = pelvis.getBoundingInfo().boundingBox, pe = pb.extendSize;
+    const PW = pe.x * 2 * pelvis.scaling.x, PD = pe.z * 2 * pelvis.scaling.z;
+    const ptop = pelvis.position.y + (pb.center.y + pe.y) * pelvis.scaling.y;
+    const tall = W * V.belt;
+    const belt = MeshBuilder.CreateCylinder("vampireVestBelt", { height: tall, diameter: PW * V.beltOut, tessellation: V.sides }, scene);
+    belt.scaling.z = PD / PW;
+    belt.rotation.y = Math.PI / V.sides;
+    belt.position.set(pelvis.position.x + pb.center.x * pelvis.scaling.x, ptop - tall * 0.3, pelvis.position.z + pb.center.z * pelvis.scaling.z);
+    belt.parent = body.hip;
+    belt.material = dark;
+    belt.convertToFlatShadedMesh();
+    belt.isPickable = false;
+    out.push(belt);
+  }
+  return out;
+}
+
+/*
  * [S] 439 the Reaper's hover (audit 434 reaper a.2: "legs in unit_spooky.reaper_idle are short grey stumps on the ground under a wide robe - TABS: long
  * thin cream bone legs dangling below the robe hem, hovering"; spooky.reaper.red.png, card Abilities "Hover": he floats off the ground, two long thin
  * cream bone legs hanging loose and straight out of the robe's hem, the bone feet pointing down well clear of the ground). REAPER_LEGS: the thin bone
