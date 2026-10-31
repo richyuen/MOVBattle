@@ -300,6 +300,76 @@ export function stiffyHelmet(scene: Scene, body: ArticulatedBody, teamColor: Col
 }
 
 /*
+ * [S] 437 the Skeleton Archer's hood (audit 434 skeleton_archer a.1: "headgear is a round blue skullcap - TABS: team hood around the whole skull with a
+ * short shoulder capelet"; spooky.skeleton_archer.red.png, card Appearance "a rugged Archer hood with a tattered cape": a team hood closed round the
+ * whole skull, over the crown to a soft point at the back of the top, its sides down past the jaw framing the face, the face and bead eyes bare in its
+ * opening; from its foot a short flared team capelet over the shoulders, a ragged pentagon from collarbone to shoulder tips). SKELETON_HOOD, in the
+ * head block's box (e its half sizes): the shell .out of the head wide and deep, from .jaw of e.y under the head's foot to .crown over its top, the
+ * face opening a gap from .open of e.z forward; a back peak .peak of e.y tall leaning .lean rad back; the capelet in the torso joint's frame a
+ * .sides-sided frustum from the neck at the trunk's top, .collar of the shoulder span across, flaring to .cape of it, .drop of the trunk's height
+ * long, with .tatters points round its hem. Team cloth self-lit .glow.
+ */
+const SKELETON_HOOD = {
+  out: 1.18, jaw: 0.3, crown: 0.16, open: 0.55, side: 0.2, peak: 0.5, lean: 0.55, sides: 7, collar: 0.4, cape: 1.12, drop: 0.24, tatters: 7, tatter: 0.12, glow: 0.14,
+};
+
+/** A team hood closed round the skull with a short ragged capelet over the shoulders (spec at SKELETON_HOOD). */
+export function skeletonArcherHood(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const R = SKELETON_HOOD;
+  hideSkeletonHood(body);
+  const team = getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(R.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox, e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const X = e.x * R.out, Z = e.z * R.out;
+  const top = bb.maximum.y + e.y * R.crown, foot = bb.minimum.y - e.y * R.jaw;
+  const out: Mesh[] = [];
+  const add = (m: Mesh, parent: TransformNode): Mesh => {
+    m.parent = parent;
+    m.material = team;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  const slab = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number): Mesh => {
+    const m = add(MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene), head);
+    m.position.set(c.x + (x0 + x1) / 2, (y0 + y1) / 2, c.z + (z0 + z1) / 2);
+    return m;
+  };
+  // the crown over the eyes, the brow forward of the face like a hood's lip
+  const brow = span[1] + e.y * 0.08;
+  slab("skeletonHoodCrown", -X, X, brow, top, -Z, Z * 1.06);
+  // the sides from the crown down past the jaw, framing the face, and the back
+  slab("skeletonHoodSide", -X, -X + e.x * R.side, foot, brow, -Z, Z * R.open + e.z * 0.35);
+  slab("skeletonHoodSide", X - e.x * R.side, X, foot, brow, -Z, Z * R.open + e.z * 0.35);
+  slab("skeletonHoodBack", -X, X, foot, brow, -Z, -Z + e.z * 0.3);
+  // the soft point at the back of the top
+  const peak = add(MeshBuilder.CreateCylinder("skeletonHoodPeak", { height: e.y * R.peak * 2, diameterTop: 0, diameterBottom: X * 1.2, tessellation: 4 }, scene), head);
+  peak.rotation.set(-R.lean, Math.PI / 4, 0);
+  peak.scaling.z = 0.8;
+  peak.position.set(c.x, top + e.y * R.peak * 0.55, c.z - Z * 0.45);
+  // the capelet: a ragged frustum over the shoulders from the neck
+  const torso = body.torso;
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox;
+  const H = tb.extendSize.y * 2 * tm.scaling.y, topY = tm.position.y + tb.center.y * tm.scaling.y + H / 2;
+  const span2 = Math.abs(body.rightShoulder.position.x - body.leftShoulder.position.x) || H * 0.8;
+  const capeTop = Math.max(body.leftShoulder.position.y, body.rightShoulder.position.y, topY) + H * 0.04;
+  const drop = H * R.drop;
+  const cape = add(MeshBuilder.CreateCylinder("skeletonCapelet", { height: drop, diameterTop: span2 * R.collar, diameterBottom: span2 * R.cape, tessellation: R.sides }, scene), torso);
+  cape.position.set(0, capeTop - drop / 2, 0);
+  cape.scaling.z = 0.8;
+  for (let i = 0; i < R.tatters; i++) {
+    const a = ((i + 0.5) / R.tatters) * Math.PI * 2;
+    const long = drop * (0.6 + 0.35 * ((i * 5) % 3) / 2);
+    const t = add(MeshBuilder.CreateCylinder("skeletonCapeletTatter", { height: long, diameterTop: span2 * R.tatter * 2, diameterBottom: 0, tessellation: 3 }, scene), torso);
+    t.position.set(Math.sin(a) * span2 * R.cape * 0.46, capeTop - drop - long / 2 + drop * 0.05, Math.cos(a) * span2 * R.cape * 0.46 * 0.8);
+    t.rotation.y = a;
+  }
+  return out;
+}
+
+/*
  * [S] 436 the Candlehead's candle arms (audit 434 candlehead b.1: "main hand holds a dark stick - TABS: both forearms sheathed in huge melted cream
  * candles with cyan flames at the bottom"; spooky.candlehead.red.png, card Main/Off Hand "Candle Fire", Appearance "flaming cierges on its ... hands":
  * each forearm swallowed from the elbow down by a fat lumpy cream wax column, about three arms thick, running on past the fist to mid-thigh, melted
