@@ -596,6 +596,88 @@ export function candleArms(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 438 the Candlehead's candle tower (audit 434 candlehead a.1: "head is a plain team head with a tiny wick and a yellow glow - TABS: a tall stacked
+ * cream-wax candle tower over the head topped by a big cyan flame"; spooky.candlehead.red.png, card Appearance "flaming cierges on its head": a melted
+ * cream cap over the crown, wider than the head, its rim run down the sides to about the eyes' top in drips, and from it a lumpy wax column standing
+ * about a head and a half tall, narrowing as it rises, its lumps nudged off the line, a short wick at its top and a big round pale-cyan flame over it,
+ * wider than the column's top, a darker cyan core in it). CANDLE_TOWER, in the head's own box (e its half sizes, H the head's height): the cap .cap of
+ * the head wide and deep from .capFoot of e.y down the sides to .crown of H over the top, .drips drips round its rim each .drip of H long; the column
+ * .lumps lumps over .tall of H, .base of the head's width across at the foot narrowing to .tip of it, every other one .wobble of H off the line;
+ * the wick .wick of H; the flame .flame of the head's width across, squashed .flat, and a core .core of it inside. CANDLE_ARMS's wax and fire.
+ * The old wick and yellow flame on the head (propBuilder candle_flame) are hidden.
+ */
+const CANDLE_TOWER = { cap: 1.2, capFoot: 0.35, crown: 0.12, drips: 7, drip: 0.28, lumps: 5, tall: 1.45, base: 0.82, tip: 0.5, wobble: 0.06, wick: 0.1, flame: 1.15, flat: 0.92, core: 0.45 };
+
+/** A melted cream wax cap and lumpy candle tower over the head with a big cyan flame on it (spec at CANDLE_TOWER). */
+export function candleTower(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = CANDLE_TOWER, C = CANDLE_ARMS;
+  const f = getMaterialFactory();
+  const wax = f.get("cloth", C.wax, { emissive: C.wax.scale(C.glow) });
+  const wickMat = f.get("cloth", C.wickDark, { emissive: C.wickDark.scale(0.1) });
+  const fire = f.get("unlit", C.fire, { emissive: C.fire });
+  const coreC = new Color3(0.05, 0.75, 1.0);
+  const core = f.get("unlit", coreC, { emissive: coreC });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const H = e.y * 2, Wd = e.x * 2;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof wax, flat = true): Mesh => {
+    m.parent = head;
+    m.material = mat;
+    if (flat) m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  // the cap: a squat melted dome over the crown, its rim run down the sides
+  const capTop = bb.maximum.y + H * T.crown, capFoot = c.y + e.y * T.capFoot;
+  const capH = capTop - capFoot;
+  const cap = MeshBuilder.CreateCylinder("candleTowerCap", { height: capH, diameterTop: Wd * T.cap * 0.85, diameterBottom: Wd * T.cap, tessellation: 9 }, scene);
+  cap.scaling.z = (e.z * 2 * T.cap) / (Wd * T.cap);
+  cap.position.set(c.x, capFoot + capH / 2, c.z);
+  put(cap, wax);
+  for (let i = 0; i < T.drips; i++) {
+    const a = ((i + 0.3) / T.drips) * Math.PI * 2;
+    const long = H * T.drip * (0.6 + 0.4 * ((i * 5) % 3) / 2);
+    const drip = MeshBuilder.CreateCylinder("candleTowerDrip", { height: long, diameterTop: H * 0.11, diameterBottom: H * 0.05, tessellation: 5 }, scene);
+    drip.position.set(c.x + Math.sin(a) * e.x * T.cap * 0.95, capFoot - long / 2 + H * 0.03, c.z + Math.cos(a) * e.z * T.cap * 0.95);
+    put(drip, wax);
+  }
+  // the column: lumps stacked up off the cap, narrowing as it rises
+  const step = (H * T.tall) / T.lumps;
+  let y = capTop - step * 0.2;
+  for (let i = 0; i < T.lumps; i++) {
+    const k = i / Math.max(1, T.lumps - 1);
+    const across = Wd * (T.base + (T.tip - T.base) * k) * (1 + 0.08 * (((i * 7) % 3) - 1));
+    const lump = MeshBuilder.CreateSphere("candleTowerWax", { diameterX: across, diameterY: step * 1.55, diameterZ: across * 0.92, segments: 4 }, scene);
+    lump.position.set(c.x + (i % 2 ? 1 : -1) * H * T.wobble, y + step / 2, c.z + ((i % 3) - 1) * H * T.wobble * 0.6);
+    lump.rotation.y = i * 0.9;
+    put(lump, wax);
+    y += step;
+  }
+  const wick = MeshBuilder.CreateCylinder("candleTowerWick", { height: H * T.wick, diameter: H * 0.05, tessellation: 5 }, scene);
+  wick.position.set(c.x, y + H * T.wick * 0.3, c.z);
+  put(wick, wickMat, false);
+  const flameD = Wd * T.flame;
+  const flame = MeshBuilder.CreateSphere("candleTowerFlame", { diameter: flameD, segments: 4 }, scene);
+  flame.scaling.y = T.flat;
+  flame.position.set(c.x, y + H * T.wick * 0.5 + flameD * T.flat * 0.45, c.z);
+  put(flame, fire);
+  const heart = MeshBuilder.CreateSphere("candleTowerFlameCore", { diameter: flameD * T.core, segments: 4 }, scene);
+  heart.scaling.set(1, 0.6, 1);
+  heart.position.set(c.x, flame.position.y - flameD * 0.05, c.z + flameD * 0.32);
+  put(heart, core);
+  // the old wick and yellow flame on the head
+  for (const n of body.headTop.getChildMeshes(false)) {
+    if (n.name !== "candleWick" && n.name !== "candleFlame") continue;
+    n.isVisible = false;
+    n.setEnabled(false);
+  }
+  return out;
+}
+
+/*
  * [S] 435 the Reaper Wings (audit 434 reaper a.1: "tendrils in unit_spooky.reaper_idle absent - TABS: six long dark tendrils fanning behind the
  * shoulders, three each side"; spooky.reaper.red.png, card Abilities "a pair of six dark tendrils that looms behind their host; three on the left, three
  * on their right": thin near-black navy tentacles out of the upper back, each running out sideways and a little back for several of his own widths,
