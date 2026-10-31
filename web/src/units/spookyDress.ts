@@ -734,24 +734,25 @@ export function skeletonArcherKit(scene: Scene, body: ArticulatedBody, teamColor
     out.push(m);
   };
   for (const arm of [body.leftLowerArm, body.rightLowerArm]) sleeve("archerBracer", arm, K.bracerFrom, K.bracerTo, K.bracer, K.bracerFlare, team);
-  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) sleeve("archerBootCuff", shin, K.cuffFrom, 1, K.cuff, 1.1, leather);
+  // [S] 440 (439 skeleton_archer a.5: "boots are one low wide brown slab under both feet that reads as a plinth - TABS: tall narrow brown boots to mid-shin
+  // with a turned cuff, each on its own foot"): no box over the feet. Each shin gets a narrow brown shaft (BOOT_SHAFT) from mid-shin down past the ankle into
+  // the foot, a wider turned cuff round its top, and the foot itself is the boot's toe, narrowed to .toe of its width so the two feet stand apart.
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    sleeve("archerBootShaft", shin, BOOT_SHAFT.from, BOOT_SHAFT.to, BOOT_SHAFT.across, 1.08, leather);
+    sleeve("archerBootCuff", shin, BOOT_SHAFT.cuffFrom, BOOT_SHAFT.cuffTo, BOOT_SHAFT.cuff, 0.92, leather);
+  }
   for (const knee of [body.leftKnee, body.rightKnee]) {
     for (const foot of knee.getChildMeshes(true)) {
       if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
       foot.material = leather;
-      const fb = foot.getBoundingInfo().boundingBox, ex = fb.extendSize;
-      const tall = ex.y * 2 * K.bootTo;
-      const boot = MeshBuilder.CreateBox("archerBoot", { width: ex.x * 2 * K.bootOut, height: tall, depth: ex.z * 2 * K.bootLong }, scene);
-      boot.parent = foot;
-      boot.position.set(fb.center.x, fb.minimum.y + tall / 2, fb.center.z + ex.z * (K.bootLong - 1) * 0.5);
-      boot.material = leather;
-      boot.convertToFlatShadedMesh();
-      boot.isPickable = false;
-      out.push(boot);
+      foot.scaling.x *= BOOT_SHAFT.toe;
     }
   }
   return out;
 }
+
+/** The archer's boot, in shin lengths from the knee: shaft .from-.to, .across of the bone's half width; cuff .cuffFrom-.cuffTo, .cuff across; toe width share. */
+const BOOT_SHAFT = { from: 0.48, to: 1.06, across: 2.5, cuffFrom: 0.42, cuffTo: 0.56, cuff: 3.3, toe: 0.78 };
 
 /*
  * [S] 439 the Pumpkin Catapult's skeleton operator (audit 434 pumpkin_catapult a.3: "operator is a blue soldier - TABS: skeleton in tattered team
