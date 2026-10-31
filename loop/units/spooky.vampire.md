@@ -1,17 +1,17 @@
 # spooky.vampire
 Status: open   Audited: 434   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (3 since 434)
-  (struck 1 at 438, 3 at 439, 2 at 440)
- 4. torso and arms in unit_spooky.vampire_idle plain team — TABS: team sleeveless vest with a V neck, white sleeves, dark belt (ref: spooky.vampire.red.png)
+a FAIL (4 since 434)
+  (struck 1 at 438, 3 at 439, 2 at 440; 4's arms clause at 441)
+ 4. torso in unit_spooky.vampire_idle plain team — TABS: team sleeveless vest with a V neck, white sleeves, dark belt (ref: spooky.vampire.red.png)
 b PASS (434)
 c FAIL (1 since 434)
   (struck 1 at 437)
  2. bite in unit_spooky.vampire_release is an overhead swing of a star — TABS: latches onto the enemy and sucks blood (ref: card Characteristics, Vampire Bite)
-d PASS (cost 200, hp 3.05x, cd 2.50x; 440 stats)
+d PASS (cost 200, hp 3.05x, cd 2.50x; 441 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a vest - blocker 4: VAMPIRE_VEST white sleeve material on the arms, a V-neck white wedge at the chest, a dark belt band at the waist - ref: spooky.vampire.red.png - ours: unit_spooky.vampire_idle (critic 440)
-2. [S] c latch bite - blocker 2: latch onto the target, mouth at the neck, drain - ref: card Characteristics - ours: unit_spooky.vampire_release (attempts 2: not pickable; see Notes)
+1. [S] a white V - blocker 4: vampireVest's V wider (.6-.7 of W), longer (to the belt), proud of the cape and yoke, not inside the collar cape; check it shows past the hand-to-face rest pose - ref: spooky.vampire.red.png - ours: unit_spooky.vampire_idle (critic 441)
+2. [S] c latch bite - blocker 2: latch onto the man and drain, a new approach - ref: card Characteristics - ours: unit_spooky.vampire_release (attempts 2: not pickable; starves at 444)
 ## Attempts (iter | gap | criterion | verdict)
 434 | VAMPIRE_CLAWS empty clawed hands, no weapon (b8e42cdb) | b | approved (struck 1; b PASS)
 437 | VAMPIRE_BAT bat form during the swoop (2c02833c) | c | approved (struck 1)
@@ -20,7 +20,8 @@ d PASS (cost 200, hp 3.05x, cd 2.50x; 440 stats)
 439 | VAMPIRE_COLLAR pointed team cape + spike fan behind the head (09b87480, 3cdade49) | a | approved (struck 3)
 439 | VAMPIRE_BITE retry: holdHeading on the man, pitch flipped (65a0e9f5, 94797a8b) | c | dropped (reverted 0ec49d76, a2a6e6db)
 440 | VAMPIRE_BEARD jaw band, sideburns, goatee, two white fangs (c4c3d64f) | a | approved (struck 2)
+441 | VAMPIRE_VEST white self-lit sleeves, white V slab, dark belt (76405fb2) | a | approved (4's arms clause struck)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Bite c: 2 dropped attempts (attempts 2, not pickable as [S]; it starves at 444 and then takes a slot). 439: +.45 pitch reared him back; -.45 folded him away from the man. Probe root yaw vs the man and torso world pitch at the hit first (git show 29201909, 65a0e9f5).
-- 439 critic: collar spikes thin slivers edge-on (minor). Collar vampireCollar; beard vampireBeard; hair VAMPIRE_HAIR; bat VAMPIRE_BAT, RuntimeUnit startBatForm/_tendBatForm.
+- Bite c: 2 dropped attempts (not pickable as [S]; starves at 444, then takes a slot). 439: +.45 pitch reared him back; -.45 folded him away from the man. Probe root yaw vs the man and torso world pitch at the hit first (git show 29201909, 65a0e9f5).
+- 441: the idle rest pose puts a hand to the face, the forearm across the chest; the V must clear it. Collar vampireCollar; beard vampireBeard; vest vampireVest; hair VAMPIRE_HAIR; bat VAMPIRE_BAT.

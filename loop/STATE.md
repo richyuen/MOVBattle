@@ -1,5 +1,5 @@
 # Loop state (v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 440   Batch: pirate+spooky (10/19)   Consecutive empty: 0   Done: 57/139   Parked: 0
+Iteration: 441   Batch: pirate+spooky (10/19)   Consecutive empty: 0   Done: 57/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -23,24 +23,23 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
+441 (BASE a46e87b8; no evidence commit): [S] skeleton_archer a.3 shared SKELETON_BONE (00099cf7) rejected-kept (revert conflicted) | [S] skeleton_warrior a.5 knee bone (c2ca5852) struck 5 | [S] pumpkin_catapult a.1 PUMPKIN_TIMBER (fcb568a7) struck 1, a PASS | [S] reaper a.4 REAPER_ROBE (0d48da55) struck 4 | [S] vampire a.4 VAMPIRE_VEST (76405fb2) 4's arms clause struck | [S] queen a.2 legs + skirt cut (72e9e80d, 52d68fdd) rejected (reverted 6f6d8b79, f7540111) | pumpkin CONFIRM failed a (3 new blockers), passed b, c - 4/6, 4 struck
 440 (BASE 93103dfd; no evidence commit): [S] pumpkin_catapult a.3 operator skull anchor (bc704fe0) struck 3 | [S] skeleton_warrior a.4 greaves (7c68a9f4, 1cdbda83) struck 4, added 5 | [S] skeleton_archer a.5 boot shafts (335a51ae) struck 5 | [S] candlehead a.4 knee boots (29284d0d) struck 4, 3 (lineup), a PASS | [S] vampire a.2 beard + fangs (c4c3d64f) struck 2 | [S] reaper a.2 long legs (b0c472fa) struck 2 | [R] queen a.1 QUEEN_BUILD (fba5bc29) struck 1, added 2 | candlehead CONFIRM passed a, b, c -> D - 7/7, 8 struck
-439 (BASE eb4676ee; no evidence commit): [S] skeleton_warrior a.3 shorts (e3336ba6) struck 3 | [S] skeleton_archer a.4 bracers + boots (bc447f44) struck 4, added 5 | [S] pumpkin_catapult a.3 skeleton operator (6e88e2f5) no strike | [S] candlehead a.2 robe + V bib (b10d272a) struck 2 | [S] vampire a.3 collar (09b87480, 3cdade49) struck 3 | [S] reaper a.2 hover legs (e97d690a) no strike | [S] vampire c.2 bite (65a0e9f5, 94797a8b) dropped (reverted 0ec49d76, a2a6e6db) | [P] queen a.1 scale 1.2 (65339e86) no strike | harpooner CONFIRM b passed -> D - 7/8, 4 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] spooky.pumpkin_catapult (bc704fe0) VERDICT: APPROVE CRITERION: spooky.pumpkin_catapult.a FAIL   (previous: FAIL)
-- GAP: [S] spooky.skeleton_warrior (7c68a9f4, 1cdbda83) VERDICT: APPROVE CRITERION: spooky.skeleton_warrior.a FAIL   (previous: FAIL)
-- GAP: [S] spooky.skeleton_archer (335a51ae) VERDICT: APPROVE CRITERION: spooky.skeleton_archer.a FAIL   (previous: FAIL)
-- GAP: [S] spooky.candlehead (29284d0d) VERDICT: APPROVE CRITERION: spooky.candlehead.a PASS   (previous: FAIL)
-- GAP: [S] spooky.vampire (c4c3d64f) VERDICT: APPROVE CRITERION: spooky.vampire.a FAIL   (previous: FAIL)
-- GAP: [S] spooky.reaper (b0c472fa) VERDICT: APPROVE CRITERION: spooky.reaper.a FAIL   (previous: FAIL)
-- GAP: [R] pirate.pirate_queen (fba5bc29) VERDICT: APPROVE CRITERION: pirate.pirate_queen.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.skeleton_archer (00099cf7) VERDICT: REJECT CRITERION: spooky.skeleton_archer.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.skeleton_warrior (c2ca5852) VERDICT: APPROVE CRITERION: spooky.skeleton_warrior.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.pumpkin_catapult (fcb568a7) VERDICT: APPROVE CRITERION: spooky.pumpkin_catapult.a PASS   (previous: FAIL)
+- GAP: [S] spooky.reaper (0d48da55) VERDICT: APPROVE CRITERION: spooky.reaper.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.vampire (76405fb2) VERDICT: APPROVE CRITERION: spooky.vampire.a FAIL   (previous: FAIL)
+- GAP: [S] pirate.pirate_queen (72e9e80d, 52d68fdd) VERDICT: REJECT CRITERION: pirate.pirate_queen.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM spooky.candlehead: a PASS b PASS c PASS d PASS (4/4)
+- CONFIRM spooky.pumpkin_catapult: a FAIL b PASS c PASS d PASS (3/4)
 ## Notes for next iteration (max 5 lines)
-- Shared cream bone in dressSkeleton (SKELETON_BONE self-lit, as REAPER_LEGS) clears warrior a.2 and archer a.3: pick it on one, the other is judged in the same capture.
-- Queen a.2 (stubby legs, added 440): restore legs toward .9 and take the height from trunk/head; probe head top/hip/neck vs the captain (1.87 m) before and after.
-- Starving: reaper c at 442 (last 436); the capture squire survives his blow, so the impale needs a low-HP rule the capture meets (evidence first if not). Vampire c (attempts 2) starves at 444.
-- Pumpkin frame black: its own timber material; the axle stays the wrapAsBody body source (LESSONS 14).
-- Captures run ~5 s a shot (7 units ~8 min): background them and wait with a node poll on the log file.
+- Bone colour (archer a.3, warrior a.2, reaper a.3) is one fix in spookyDress SKELETON_BONE / skeletonBone() (kept, rejected-kept 441): the cloth self-lit (1,.86,.6) swatched grey; try "unlit" or a saturated warm value off palette.png's right wall, judge on the --noglow swatch (target shins ~220/195/160).
+- Reaper c starves NOW (442, last 436): weak = target max hp < ~.15 of his (squire 189 vs 1939, no evidence commit); a held-aloft state is new code (applyBlastLaunch only throws). Vampire c (attempts 2) starves at 444.
+- Queen a.2: the critic wants a pale thigh shell hip-to-knee and the boot top seated on the knee joint; QUEEN_FRAME legs/tall are a 440 approved row (re-tuning them read as a ledger reversal).
+- Pumpkin a (CONFIRM 441 list): upright posts for the A-frame, drop the cw cube, wheels dark; all gated on options.spooky (medieval catapult is D).
+- Captures run ~5 s a shot (6 units ~7 min): background them and wait with a Monitor until-loop on the log.
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
 # <unitId>
