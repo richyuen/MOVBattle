@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3 } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, type Node } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { eyeSpanInHead } from "./dynastyDress";
@@ -175,6 +175,72 @@ export function swordcasterCuirass(scene: Scene, body: ArticulatedBody, teamColo
     bar.position.copyFrom(from.add(to).scale(0.5));
     bar.rotation.z = -Math.atan2(d.x, d.y);
     bar.rotation.x = Math.atan2(d.z, Math.hypot(d.x, d.y));
+  }
+  return out;
+}
+
+/** A node's position read into another node's frame (world matrices settled up both chains first). */
+function inFrameOf(n: TransformNode, frame: TransformNode): Vector3 {
+  for (const leaf of [n, frame]) {
+    const chain: Node[] = [];
+    for (let k: Node | null = leaf; k; k = k.parent) chain.unshift(k);
+    for (const k of chain) if (k instanceof TransformNode) k.computeWorldMatrix(true);
+  }
+  return Vector3.TransformCoordinates(n.getAbsolutePosition(), frame.getWorldMatrix().clone().invert());
+}
+
+/*
+ * [S] 437 the Swordcaster's tunic skirt (audit 434 swordcaster a.3: "hips bare - TABS: team tunic skirt with dark stripes to mid-thigh";
+ * spooky.swordcaster.blue.png, .red.png, card Appearance "fantasy prison clothes": under the cuirass's foot a team tunic skirt flares out like a short
+ * four-sided bell, from the waist to about the middle of the thigh, a little wider than the hips at the hem, two darker team stripes running down its
+ * front and its back either side of the middle). SWORDCASTER_SKIRT, in the torso joint's frame (W, D the trunk's width and depth before any cuirass):
+ * a four-sided frustum from .top of the trunk's height over its foot down .hem of the way from there to the knees, .out of W across at the top and
+ * .flare of that at the hem, .deep of D deep; .stripes stripes each side of the middle at .stripeAt of the half width, .stripe of W wide, a darker
+ * team (.dark of it) standing .proud off the faces, front and back. Team cloth self-lit .glow.
+ */
+const SWORDCASTER_SKIRT = { top: 0.12, hem: 0.55, out: 1.1, flare: 1.32, deep: 1.25, stripes: 1, stripeAt: 0.5, stripe: 0.12, dark: 0.42, proud: 0.025, glow: 0.14 };
+
+/** A flared team tunic skirt from the waist to mid-thigh with dark stripes down it (spec at SWORDCASTER_SKIRT). */
+export function swordcasterSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = SWORDCASTER_SKIRT;
+  const f = getMaterialFactory();
+  const cloth = f.get("cloth", teamColor, { emissive: teamColor.scale(S.glow) });
+  const darkC = teamColor.scale(S.dark);
+  const dark = f.get("cloth", darkC, { emissive: darkC.scale(S.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const frame = tm.parent as TransformNode;
+  const kneeY = (inFrameOf(body.leftKnee, frame).y + inFrameOf(body.rightKnee, frame).y) / 2;
+  const top = cy - H / 2 + H * S.top, hem = top - (top - kneeY) * S.hem, long = top - hem;
+  // half widths of the four flat faces at the top and the hem
+  const xTop = W * S.out / 2, xHem = xTop * S.flare, zTop = D * S.deep / 2, zHem = zTop * S.flare;
+  const out: Mesh[] = [];
+  const skirt = MeshBuilder.CreateCylinder("swordcasterSkirt", { height: long, diameterTop: xTop * 2 * Math.SQRT2, diameterBottom: xHem * 2 * Math.SQRT2, tessellation: 4 }, scene);
+  skirt.rotation.y = Math.PI / 4;
+  skirt.bakeCurrentTransformIntoVertices();
+  skirt.scaling.z = zTop / xTop;
+  skirt.convertToFlatShadedMesh();
+  skirt.parent = frame;
+  skirt.position.set(cx, (top + hem) / 2, cz);
+  skirt.material = cloth;
+  skirt.isPickable = false;
+  out.push(skirt);
+  // the stripes lie on the front and back faces, leaning out with the flare
+  const lean = Math.atan2(zHem - zTop, long);
+  for (const face of [-1, 1]) {
+    for (let i = 0; i < S.stripes; i++) for (const side of [-1, 1]) {
+      const at = side * S.stripeAt * (i + 1) / S.stripes;
+      const stripe = MeshBuilder.CreateBox("swordcasterSkirtStripe", { width: W * S.stripe, height: long / Math.cos(lean) * 0.98, depth: W * S.proud * 2 }, scene);
+      stripe.parent = frame;
+      stripe.position.set(cx + at * (xTop + xHem) / 2, (top + hem) / 2, cz + face * ((zTop + zHem) / 2 + W * S.proud * 0.6));
+      stripe.rotation.x = face * lean;
+      stripe.rotation.z = -at * Math.atan2(xHem - xTop, long);
+      stripe.material = dark;
+      stripe.convertToFlatShadedMesh();
+      stripe.isPickable = false;
+      out.push(stripe);
+    }
   }
   return out;
 }
