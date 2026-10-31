@@ -184,7 +184,7 @@ const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // the firework archer: her burn is logged as she shoots, so her rocket's burst where it lands is the ability shot (evidence 418)
 // [evidence 435] the candlehead's ability pair is the spirit fire's knock-up where it lands on the man (audit 434 c.2), not the burn logged as he casts
 // [evidence 426] the harpooner's ability pair is his Pirate Kick on the reeled man (audit 422 c.2), not the reel (struck at 425; its haul shows in _struck)
-const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst", "pirate.harpooner": "kick", "spooky.candlehead": "knockup" };
+const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst", "pirate.harpooner": "kick", "spooky.candlehead": "knockup", "spooky.reaper": "impale" };
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
 // swatches between a squire of each team (the skin reference): the left wall "cloth" with emissive = colour x PALETTE_GLOW (the dress
