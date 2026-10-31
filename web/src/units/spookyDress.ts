@@ -593,6 +593,68 @@ export function skeletonArcherBelt(scene: Scene, body: ArticulatedBody, teamColo
 }
 
 /*
+ * [S] 439 the Skeleton Warrior's ragged shorts (audit 434 skeleton_warrior a.3: "shorts are a straight blue skirt block hung from the ribs - TABS: baggy
+ * team shorts to the knee with a brown belt at the pelvis and ragged hems around each leg"; spooky.skeleton_warrior.red.png, card Appearance "ragged
+ * shorts": two wide team trouser legs from the hips to just over the knee, each a loose faceted tube far wider than the thin bone thigh and a little
+ * wider at the hem, its hem cut into hanging rag points; a brown belt round the top at the pelvis). unitFactory's dressSkeleton builds no skirt for him.
+ * STIFFY_SHORTS, in each hip joint's frame (r the bone thigh's half width, K the knee's depth under the joint): a .sides-sided tube .out of r across
+ * from .top of K over the joint down .hem of K, .flare wider at the hem, .deep as deep as wide; .rags rag points round its hem, each .rag of r wide and
+ * .ragLong of K long (every other one shorter). The belt in the hip frame round the pelvis box: .belt of its width tall, .beltOut of it across, its top at
+ * the pelvis top. Team and leather self-lit .glow.
+ */
+const STIFFY_SHORTS = { top: 0.16, hem: 0.86, out: 3.6, flare: 1.15, deep: 0.88, sides: 7, rags: 6, rag: 0.7, ragLong: 0.2, belt: 0.2, beltOut: 1.3, glow: 0.14, leather: new Color3(0.4, 0.17, 0.07) };
+
+/** Baggy team shorts to the knee with rag-point hems and a brown belt, over the bone legs (spec at STIFFY_SHORTS). */
+export function stiffyShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = STIFFY_SHORTS;
+  const f = getMaterialFactory();
+  const team = f.get("cloth", teamColor, { emissive: teamColor.scale(S.glow) });
+  const leather = f.get("cloth", S.leather, { emissive: S.leather.scale(S.glow) });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, parent: TransformNode, mat: typeof team): Mesh => {
+    m.parent = parent;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  for (const [joint, thigh, knee] of [[body.leftHip, body.leftUpperLeg, body.leftKnee], [body.rightHip, body.rightUpperLeg, body.rightKnee]] as const) {
+    const tb = thigh.getBoundingInfo().boundingBox;
+    const r = Math.max(tb.extendSize.x * thigh.scaling.x, tb.extendSize.z * thigh.scaling.z) * S.out;
+    const cx = thigh.position.x + tb.center.x * thigh.scaling.x, cz = thigh.position.z + tb.center.z * thigh.scaling.z;
+    const K = Math.abs(inFrameOf(knee, joint).y) || tb.extendSize.y * 2 * thigh.scaling.y;
+    const top = K * S.top, hem = -K * S.hem, long = top - hem;
+    const leg = put(MeshBuilder.CreateCylinder("stiffyShortsLeg", { height: long, diameterTop: r * 2, diameterBottom: r * 2 * S.flare, tessellation: S.sides }, scene), joint, team);
+    leg.scaling.z = S.deep;
+    leg.position.set(cx, (top + hem) / 2, cz);
+    const rh = r * S.flare;
+    for (let i = 0; i < S.rags; i++) {
+      const a = ((i + 0.5) / S.rags) * Math.PI * 2;
+      const drop = K * S.ragLong * (i % 2 ? 0.6 : 1);
+      const rag = put(MeshBuilder.CreateCylinder("stiffyShortsRag", { height: drop, diameterTop: rh * S.rag, diameterBottom: 0, tessellation: 3 }, scene), joint, team);
+      rag.scaling.z = 0.35;
+      rag.rotation.y = a;
+      rag.position.set(cx + Math.sin(a) * rh * 0.9, hem - drop / 2 + K * 0.01, cz + Math.cos(a) * rh * 0.9 * S.deep);
+    }
+  }
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name)) as Mesh | undefined;
+  if (pelvis) {
+    pelvis.material = team;
+    const pb = pelvis.getBoundingInfo().boundingBox, pe = pb.extendSize;
+    const W = pe.x * 2 * pelvis.scaling.x, D = pe.z * 2 * pelvis.scaling.z, PH = pe.y * 2 * pelvis.scaling.y;
+    const cx = pelvis.position.x + pb.center.x * pelvis.scaling.x, cz = pelvis.position.z + pb.center.z * pelvis.scaling.z;
+    const ptop = pelvis.position.y + (pb.center.y + pe.y) * pelvis.scaling.y;
+    const tall = Math.min(W * S.belt, PH * 0.45);
+    const belt = put(MeshBuilder.CreateCylinder("stiffyShortsBelt", { height: tall, diameter: W * S.beltOut, tessellation: 8 }, scene), body.hip, leather);
+    belt.scaling.z = (D * S.beltOut) / (W * S.beltOut);
+    belt.rotation.y = Math.PI / 8;
+    belt.position.set(cx, ptop - tall / 2, cz);
+  }
+  return out;
+}
+
+/*
  * [S] 436 the Candlehead's candle arms (audit 434 candlehead b.1: "main hand holds a dark stick - TABS: both forearms sheathed in huge melted cream
  * candles with cyan flames at the bottom"; spooky.candlehead.red.png, card Main/Off Hand "Candle Fire", Appearance "flaming cierges on its ... hands":
  * each forearm swallowed from the elbow down by a fat lumpy cream wax column, about three arms thick, running on past the fist to mid-thigh, melted

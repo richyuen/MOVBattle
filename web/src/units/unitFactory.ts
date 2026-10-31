@@ -14,7 +14,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils, candleArms, candleTower, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood, skeletonArcherBelt } from "./spookyDress";
+import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils, candleArms, candleTower, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood, skeletonArcherBelt, stiffyShorts } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -657,6 +657,8 @@ export class UnitFactory {
     if (definition.id === "spooky.swordcaster" && !shouldUseVehicleBody) propMeshes.push(...swordcasterSkirt(this._scene, body, teamColor));
     // [S] 437 the Skeleton Warrior's team Roman helmet with cheek guards to the jaw, in place of the round hood (spookyDress STIFFY_HELMET)
     if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyHelmet(this._scene, body, teamColor));
+    // [S] 439 ...and baggy team shorts to the knee with rag-point hems and a brown belt, in place of the skirt (spookyDress STIFFY_SHORTS)
+    if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyShorts(this._scene, body, teamColor));
     // [S] 437 the Skeleton Archer's team hood round the skull with a ragged shoulder capelet (spookyDress SKELETON_HOOD)
     if (definition.id === "spooky.skeleton_archer" && !shouldUseVehicleBody) propMeshes.push(...skeletonArcherHood(this._scene, body, teamColor));
     // [S] 438 ...and no skirt: a brown belt round his bare bone pelvis, small team tassels hung off it (spookyDress SKELETON_BELT)
@@ -1061,6 +1063,8 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3, u
   const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
   // [S] 438 not on the Skeleton Archer: a bare bone pelvis under his belt and tassels (spookyDress SKELETON_BELT)
   if (pelvis && unitId === "spooky.skeleton_archer") pelvis.material = bone;
+  // [S] 439 not on the Skeleton Warrior either: he wears two-legged shorts (spookyDress STIFFY_SHORTS)
+  else if (pelvis && unitId === "spooky.skeleton_warrior") pelvis.material = cloth;
   else if (pelvis) {
     pelvis.material = cloth;
     const pExt = pelvis.getBoundingInfo().boundingBox.extendSize;
