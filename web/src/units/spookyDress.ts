@@ -708,6 +708,77 @@ export function skeletonArcherKit(scene: Scene, body: ArticulatedBody, teamColor
 }
 
 /*
+ * [S] 439 the Pumpkin Catapult's skeleton operator (audit 434 pumpkin_catapult a.3: "operator is a blue soldier - TABS: skeleton in tattered team
+ * clothing"; card Appearance "The operator has been replaced by a skeleton ... clad in a tattered clothing of the appropriate team color"): the crewman
+ * stripped to cream bone - thin bone limbs, a bone skull, the chest a thin spine inside rib hoops - in a ragged team rag tunic from the ribs' foot to
+ * mid-thigh with rag points round its hem, and a team rag tied round the skull. SKELETON_CREW, on the operator's own body: limbs thinned to .limb in
+ * x and z, every flesh, cloth and foot mesh in .bone (the catapult's own bone, self-lit .boneGlow so it reads cream like the arm); the chest block thinned
+ * to .spine with .ribs hoops from .ribTop to .ribLow of its height; the rag a .sides-sided team frustum from .ragTop of the chest height down .ragLong of
+ * it, .ragOut of the chest width across flaring .ragFlare, .tatters points under it; a head rag .band of the head tall round its crown. Team self-lit .glow.
+ */
+const SKELETON_CREW = {
+  limb: 0.42, spine: 0.16, ribs: 4, ribTop: 0.86, ribLow: 0.45, ragTop: 0.4, ragLong: 0.85, ragOut: 1.05, ragFlare: 1.3, sides: 7, tatters: 7, band: 0.3,
+  bone: new Color3(1.0, 0.86, 0.6), boneGlow: 0.3, glow: 0.14,
+};
+
+/** Strips a vehicle crewman to cream bone and hangs tattered team rags on him (spec at SKELETON_CREW). */
+export function skeletonCrew(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = SKELETON_CREW;
+  const f = getMaterialFactory();
+  const bone = f.get("cloth", C.bone, { emissive: C.bone.scale(C.boneGlow) });
+  const team = f.get("cloth", teamColor, { emissive: teamColor.scale(C.glow) });
+  const out: Mesh[] = [];
+  for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+    if (!limb) continue;
+    limb.scaling.x *= C.limb;
+    limb.scaling.z *= C.limb;
+  }
+  // every body part goes bone but the bead eyes; the shoulder yoke (the trunk's hull) goes, the ribs stand in for it
+  for (const mesh of [...body.allMeshes, ...body.leftElbow.getChildMeshes(false), ...body.rightElbow.getChildMeshes(false), ...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
+    if (mesh instanceof Mesh && !/eye|pupil/i.test(mesh.name)) mesh.material = bone;
+  }
+  for (const mesh of body.torso.getChildMeshes(true)) if (/_yoke/.test(mesh.name)) mesh.setEnabled(false);
+  const put = (m: Mesh, parent: TransformNode, mat: typeof team): Mesh => {
+    m.parent = parent;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  const chest = body.torsoMesh;
+  const cb = chest.getBoundingInfo().boundingBox, ext = cb.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
+  const foot = chest.position.y + cb.center.y * chest.scaling.y - H / 2;
+  chest.scaling.x *= C.spine;
+  chest.scaling.z *= C.spine * 2;
+  for (let i = 0; i < C.ribs; i++) {
+    const k = i / (C.ribs - 1);
+    const across = W * (0.95 - 0.3 * k);
+    const rib = put(MeshBuilder.CreateTorus("skeletonCrewRib", { diameter: across, thickness: W * 0.08, tessellation: 8 }, scene), body.torso, bone);
+    rib.scaling.z = (D * 0.9) / across;
+    rib.position.set(0, foot + H * (C.ribTop - (C.ribTop - C.ribLow) * k), D * 0.05);
+  }
+  const ragTop = foot + H * C.ragTop, ragLong = H * C.ragLong;
+  const rag = put(MeshBuilder.CreateCylinder("skeletonCrewRag", { height: ragLong, diameterTop: W * C.ragOut, diameterBottom: W * C.ragOut * C.ragFlare, tessellation: C.sides }, scene), body.torso, team);
+  rag.scaling.z = (D * 1.1) / (W * C.ragOut);
+  rag.position.set(0, ragTop - ragLong / 2, 0);
+  const hemR = (W * C.ragOut * C.ragFlare) / 2;
+  for (let i = 0; i < C.tatters; i++) {
+    const a = ((i + 0.5) / C.tatters) * Math.PI * 2;
+    const drop = ragLong * (0.3 + 0.15 * (i % 3));
+    const t = put(MeshBuilder.CreateCylinder("skeletonCrewTatter", { height: drop, diameterTop: hemR * 0.55, diameterBottom: 0, tessellation: 3 }, scene), body.torso, team);
+    t.scaling.z = 0.4;
+    t.rotation.y = a;
+    t.position.set(Math.sin(a) * hemR * 0.9, ragTop - ragLong - drop / 2 + H * 0.01, Math.cos(a) * hemR * 0.9 * ((D * 1.1) / (W * C.ragOut)));
+  }
+  const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, he = hb.extendSize;
+  const band = put(MeshBuilder.CreateBox("skeletonCrewHeadRag", { width: he.x * 2.12, height: he.y * 2 * C.band, depth: he.z * 2.12 }, scene), head, team);
+  band.position.set(hb.center.x, hb.maximum.y - he.y * 2 * C.band * 0.5 + he.y * 0.04, hb.center.z);
+  return out;
+}
+
+/*
  * [S] 436 the Candlehead's candle arms (audit 434 candlehead b.1: "main hand holds a dark stick - TABS: both forearms sheathed in huge melted cream
  * candles with cyan flames at the bottom"; spooky.candlehead.red.png, card Main/Off Hand "Candle Fire", Appearance "flaming cierges on its ... hands":
  * each forearm swallowed from the elbow down by a fat lumpy cream wax column, about three arms thick, running on past the fist to mid-thigh, melted

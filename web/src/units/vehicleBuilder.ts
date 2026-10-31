@@ -9,6 +9,7 @@ import { jitterVertices } from "./tribalDress";
 import { dressBallistaCrew } from "./ancientDress";
 import { longshipCarrierDress } from "./vikingDress";
 import { cannonBandanna, cannonShirt } from "./pirateDress";
+import { skeletonCrew } from "./spookyDress";
 import { buildFacetedBoulder } from "./propBuilder";
 import { getUnit } from "../data/unitDefinitions";
 
@@ -584,7 +585,8 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   // Dressed as a gun crewman: bare, he was a washed mannequin beside the machine
   const operator = options.spooky
     ? addOperator(scene, rig, allMeshes, 0.4, 0.72, -0.5, color, (body) => {
-      dressCannonCrew(scene, body, color);
+      // [S] 439 a skeleton in tattered team rags, not a gun crewman (spookyDress SKELETON_CREW)
+      allMeshes.push(...skeletonCrew(scene, body, color));
     })
     : addOperator(scene, rig, allMeshes, 0, CATAPULT_CREW.y, CATAPULT_CREW.z, color, (body) => {
       body.root.rotation.y = Math.PI;
