@@ -976,6 +976,9 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   }
   // the pale trousers under it: the leg meshes themselves, slim, no shells
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) if (leg) leg.material = pants;
+  // [S] 442 ...and the pelvis box, which hangs to just over the knee in the dark body shade and read as a dark block over the thighs where the wrap is
+  // cut away (probe 442: pelvis .63-1.01 m, knee .59): it is the trousers' seat, in their pale shade
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name)) m.material = pants;
   return out;
 }
 
