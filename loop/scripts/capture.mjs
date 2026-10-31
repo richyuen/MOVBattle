@@ -279,8 +279,8 @@ function pruneOld() {
   const parent = path.dirname(outDir);
   if (!fs.existsSync(parent)) return;
   // [tools 438] a test number far past the newest iteration (iter-9438) would prune every real one: prune only from the loop's own next iteration
-  const newest = Math.max(0, ...fs.readdirSync(parent).map((n) => /^iter-(\d+)$/.exec(n)).filter(Boolean).map((m) => Number(m[1])).filter((n) => n !== iter));
-  if (iter > newest + 1) { log(`no prune: iter ${iter} is past the newest iteration ${newest}`); return; }
+  const stateIter = Number(/^Iteration:\s*(\d+)/m.exec(fs.readFileSync(path.join(root, "loop", "STATE.md"), "utf8"))?.[1] ?? 0);
+  if (iter > stateIter + 1) { log(`no prune: iter ${iter} is past STATE's next iteration ${stateIter + 1}`); return; }
   let pruned = 0;
   for (const name of fs.readdirSync(parent)) {
     const m = /^iter-(\d+)$/.exec(name);
@@ -383,6 +383,8 @@ async function main() {
   // [tools 420] a --regression-only run (the batch checkpoint) keeps the iteration folder: its shots and the saved critic transcripts stay beside the summary
   // [tools 438] --add (a gap dropped after step 5's capture) re-shoots its units into the folder and merges the summary
   if (!flag("--regression-only") && !flag("--add")) fs.rmSync(outDir, { recursive: true, force: true });
+  // ...and drops the re-shot units' old shots first, so a pair the reverted code made (an ability it no longer has) does not stay on disk
+  if (flag("--add") && fs.existsSync(outDir)) for (const f of fs.readdirSync(outDir)) if (unitIds.some((id) => f.startsWith(`unit_${id}_`))) fs.rmSync(path.join(outDir, f));
   fs.mkdirSync(outDir, { recursive: true });
 
   build();
