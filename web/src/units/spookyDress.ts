@@ -1400,8 +1400,11 @@ export const REAPER_HOVER_NODE = "reaperHover";
  * spooky.skeleton_archer.red.png: warm cream-tan bone, pale even where it is in shade). SKELETON_BONE: the warm cream self-lit .glow, the recipe the
  * reaper's legs were approved cream with at 439 (plain lit bone reads grey in shade, LESSONS 13). Shared by unitFactory's dressSkeleton and dressReaper,
  * the reaper's legs and the warrior's knee bones.
+ * [S] 442 (critic 441: the self-lit cloth swatched neutral grey 166/161/156, TABS ~222/195/165): the bone is a flat "unlit" cream, its colour all
+ * emissive (.color, a deep warm code value: ACES lifts it pale, palette.png right wall between tan and gold x1), and every bone mesh is taken out of
+ * the glow layer (unglowBone, after the dress) so it reads as flat cream, neither shaded grey nor haloed.
  */
-const SKELETON_BONE = { color: new Color3(1.0, 0.86, 0.6), glow: 0.3 };
+const SKELETON_BONE = { color: new Color3(1.1, 0.78, 0.4) };
 
 /*
  * [S] 441 the Reaper's narrow robe (434 reaper a.4: "robe is a wide squat bell - TABS: narrow tall tattered robe with ragged hem at the thigh";
@@ -1452,9 +1455,16 @@ export function reaperRobe(scene: Scene, body: ArticulatedBody, robe: NonNullabl
   return out;
 }
 
-/** The shared cream self-lit Stiffy bone (spec at SKELETON_BONE). */
+/** The shared flat cream Stiffy bone (spec at SKELETON_BONE). */
 export function skeletonBone() {
-  return getMaterialFactory().get("cloth", SKELETON_BONE.color, { emissive: SKELETON_BONE.color.scale(SKELETON_BONE.glow) });
+  return getMaterialFactory().get("unlit", SKELETON_BONE.color, { emissive: SKELETON_BONE.color });
+}
+
+/** Takes every mesh under the root in the shared bone out of the glow layer (spec at SKELETON_BONE). */
+export function unglowBone(scene: Scene, root: TransformNode): void {
+  const bone = skeletonBone(), glow = scene.getGlowLayerByName("glow");
+  if (!glow) return;
+  for (const m of root.getChildMeshes(false)) if (m.material === bone) glow.addExcludedMesh(m as Mesh);
 }
 
 /** Long thin cream bone legs and feet, and the hover marker under the hip (spec at REAPER_LEGS). */

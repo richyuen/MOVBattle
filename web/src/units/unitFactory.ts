@@ -18,7 +18,7 @@ import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils,
 import { stiffyGreaves } from "./spookyDress";
 import { candleBoots } from "./spookyDress";
 import { vampireBeard } from "./spookyDress";
-import { skeletonBone } from "./spookyDress";
+import { skeletonBone, unglowBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
@@ -681,6 +681,8 @@ export class UnitFactory {
     if (definition.id === "spooky.skeleton_archer" && !shouldUseVehicleBody) propMeshes.push(...skeletonArcherBelt(this._scene, body, teamColor));
     // [S] 439 ...team bracers round his forearms and low brown boots with turned cuffs (spookyDress ARCHER_KIT)
     if (definition.id === "spooky.skeleton_archer" && !shouldUseVehicleBody) propMeshes.push(...skeletonArcherKit(this._scene, body, teamColor));
+    // [S] 442 the shared bone is flat unlit cream: every bone mesh out of the glow layer (spookyDress SKELETON_BONE)
+    if (/^spooky\.(skeleton_warrior|skeleton_archer|reaper)$/.test(definition.id) && !shouldUseVehicleBody) unglowBone(this._scene, body.root);
     // [S] 437 the Pirate Queen's body cut narrow before her dress is fitted to it: trunk, yoke, shoulders, pelvis, hips (pirateDress QUEEN_FRAME)
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) queenFrame(body);
     // [S] 427 the Pirate Queen's team bandana, its flap down over her left eye (pirateDress QUEEN_BANDANA)
