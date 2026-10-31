@@ -297,6 +297,7 @@ const BONE_FRAME = { arm: 0.11, cross: 0.62, crossAt: [0.5, 0.15], bar: 0.12, bi
  * tails). CATAPULT_BANNER (rig units): the cord .cord long; the cloth a slab .wide along the firing axis, .tall, .thick, set .back of the bone, swung
  * .sway rad; two tails .tail long; a dark rod across its head. Team (.shade of it) self-lit .glow.
  */
+const PUMPKIN_TIMBER = { color: new Color3(0.1, 0.055, 0.05), glow: 0.14 };
 const CATAPULT_BANNER = { cord: 0.06, wide: 0.24, tall: 0.46, thick: 0.025, back: 0.0, sway: 0.06, tail: 0.12, shade: 0.8, glow: 0.18 };
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
@@ -309,12 +310,16 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   // CATAPULT_PAINT.wood (self-lit .woodGlow); on each long beam two team streaks (.team self-lit .paintGlow): one .long of the beam down two opposite faces, the
   // other .short of it down the other two, set off-centre in opposite directions (.shift) so the paint reads as worn streaks, not bands. The pumpkin keeps its own.
   const P = CATAPULT_PAINT;
-  const wood = options.spooky
-    ? getMaterialFactory().get("wood", new Color3(0.36, 0.13, 0.09), { emissive: new Color3(0.08, 0.04, 0.035) }) // the cannon carriage's dark red-brown timber
-    : getMaterialFactory().get("wood", P.wood, { emissive: P.wood.scale(P.woodGlow) });
+  // [S] 441 the Pumpkin Catapult's black timber (434 pumpkin_catapult a.1: "frame is the medieval reddish-brown timber A-frame - TABS: near-black timber
+  // frame"; spooky.pumpkin_catapult.red.png, card Appearance "predominantly black with bones": rails, legs, crossbeams, caps, wheels and the deck all one
+  // near-black plum-brown timber, its faces just told apart by the light). PUMPKIN_TIMBER: its own "cloth" material (the "wood" preset lifts a dark value
+  // to grey-taupe), the code value off output/loop/palette.png's brown row at x .12-.18, self-lit .glow; it dresses the frame, the arm's wood, the wheel
+  // faces and the counterweight. The axle stays the team body source (LESSONS 14).
+  const pumpkinTimber = options.spooky ? getMaterialFactory().get("cloth", PUMPKIN_TIMBER.color, { emissive: PUMPKIN_TIMBER.color.scale(PUMPKIN_TIMBER.glow) }) : null;
+  const wood = pumpkinTimber ?? getMaterialFactory().get("wood", P.wood, { emissive: P.wood.scale(P.woodGlow) });
   const paint = options.spooky ? null : getMaterialFactory().get("wood", color, { emissive: color.scale(P.paintGlow) });
   const metal = makeMat(scene, new Color3(0.45, 0.45, 0.5));
-  const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09)); // the cannon's dark wheel timber, so the wheels stand off the frame
+  const wheelWood = pumpkinTimber ?? makeMat(scene, new Color3(0.2, 0.14, 0.09)); // the cannon's dark wheel timber, so the wheels stand off the frame
 
   // Box trestle (CATAPULT_FRAME): no slab bed. Two side rails along the firing axis tied by a front, a middle and a back crossbeam, a block cap on each
   // rail end, two bolts through the front beam; a short plank deck at the back for the crewman to stand on.
@@ -355,7 +360,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
 
   // Wheels (CATAPULT_WHEEL): a short faceted timber drum on a grey iron tyre at each rail end, tucked in beside the corner caps
   const W = CATAPULT_WHEEL;
-  const wheelTimber = getMaterialFactory().get("wood", W.tone, { emissive: W.tone.scale(0.18) });
+  const wheelTimber = pumpkinTimber ?? getMaterialFactory().get("wood", W.tone, { emissive: W.tone.scale(0.18) });
   const iron = makeMat(scene, W.iron);
   for (const side of [-1, 1]) {
     for (const end of [-1, 1]) {
