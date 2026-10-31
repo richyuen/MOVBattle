@@ -14,7 +14,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils, candleArms, candleTower, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood } from "./spookyDress";
+import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils, candleArms, candleTower, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood, skeletonArcherBelt } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -517,7 +517,7 @@ export class UnitFactory {
     }
 
     if (SKELETON_UNITS.has(definition.id) && !shouldUseVehicleBody) {
-      propMeshes.push(...dressSkeleton(this._scene, body, teamColor));
+      propMeshes.push(...dressSkeleton(this._scene, body, teamColor, definition.id));
     }
     if (definition.id === "spooky.reaper" && !shouldUseVehicleBody) {
       propMeshes.push(...dressReaper(this._scene, body, teamColor));
@@ -659,6 +659,8 @@ export class UnitFactory {
     if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyHelmet(this._scene, body, teamColor));
     // [S] 437 the Skeleton Archer's team hood round the skull with a ragged shoulder capelet (spookyDress SKELETON_HOOD)
     if (definition.id === "spooky.skeleton_archer" && !shouldUseVehicleBody) propMeshes.push(...skeletonArcherHood(this._scene, body, teamColor));
+    // [S] 438 ...and no skirt: a brown belt round his bare bone pelvis, small team tassels hung off it (spookyDress SKELETON_BELT)
+    if (definition.id === "spooky.skeleton_archer" && !shouldUseVehicleBody) propMeshes.push(...skeletonArcherBelt(this._scene, body, teamColor));
     // [S] 437 the Pirate Queen's body cut narrow before her dress is fitted to it: trunk, yoke, shoulders, pelvis, hips (pirateDress QUEEN_FRAME)
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) queenFrame(body);
     // [S] 427 the Pirate Queen's team bandana, its flap down over her left eye (pirateDress QUEEN_BANDANA)
@@ -1004,7 +1006,7 @@ export class UnitFactory {
 }
 
 /** Strips a skeleton's body to bone (see SKELETON_*): thin bone limbs, a spine and rib hoops for the chest, a skull under a team hood, a ragged team skirt. */
-function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3, unitId = ""): Mesh[] {
   const added: Mesh[] = [];
   const bone = getMaterialFactory().getCloth(SKELETON_BONE);
   const cloth = getMaterialFactory().getCloth(teamColor.scale(SKELETON_CLOTH));
@@ -1057,7 +1059,9 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3): 
   added.push(hood);
   // Ragged skirt from the pelvis to the knees, tatters hanging off the hem
   const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
-  if (pelvis) {
+  // [S] 438 not on the Skeleton Archer: a bare bone pelvis under his belt and tassels (spookyDress SKELETON_BELT)
+  if (pelvis && unitId === "spooky.skeleton_archer") pelvis.material = bone;
+  else if (pelvis) {
     pelvis.material = cloth;
     const pExt = pelvis.getBoundingInfo().boundingBox.extendSize;
     const thigh = body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2 * body.leftUpperLeg.scaling.y;

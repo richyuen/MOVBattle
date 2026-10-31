@@ -538,6 +538,61 @@ export function skeletonArcherHood(scene: Scene, body: ArticulatedBody, teamColo
 }
 
 /*
+ * [S] 438 the Skeleton Archer's belt (audit 434 skeleton_archer a.2: "blue skirt block from the ribs to mid-thigh - TABS: no skirt; bare pelvis with a
+ * belt and small team tassels"; spooky.skeleton_archer.blue.png, card Appearance "... and a belt": the bone hips bare, a brown leather belt slung round
+ * them with a small buckle in front, and a few short team cloth tabs hanging off it over the hips and the front, the bone thighs bare below).
+ * unitFactory's dressSkeleton leaves his pelvis bone and builds no skirt. SKELETON_BELT, in the hip joint's frame (P the pelvis box, its width W):
+ * the belt a band .belt of W tall, .out of the pelvis wide and deep, its top .at of the pelvis's height over the pelvis foot; a buckle .buckle of W;
+ * .tabs team tassels round it at .tabAt rad from the front, each .tab of W wide and .long of W long, tapering to .taper of its width, swung .flare rad
+ * out. Leather and team self-lit .glow.
+ */
+const SKELETON_BELT = { belt: 0.16, out: 1.12, at: 0.8, buckle: 0.2, tabs: 4, tabAt: [-0.5, 0.5, -1.6, 1.6], tab: 0.24, long: 0.42, taper: 0.55, flare: 0.18, glow: 0.14, leather: new Color3(0.3, 0.15, 0.07), brass: new Color3(0.7, 0.55, 0.2) };
+
+/** A brown belt slung round the bare bone pelvis with short team tassels hung off it (spec at SKELETON_BELT). */
+export function skeletonArcherBelt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const B = SKELETON_BELT;
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name)) as Mesh | undefined;
+  if (!pelvis) return [];
+  const f = getMaterialFactory();
+  const leather = f.get("cloth", B.leather, { emissive: B.leather.scale(B.glow) });
+  const brass = f.get("cloth", B.brass, { emissive: B.brass.scale(B.glow) });
+  const team = f.get("cloth", teamColor, { emissive: teamColor.scale(B.glow) });
+  const pb = pelvis.getBoundingInfo().boundingBox, pe = pb.extendSize;
+  const W = pe.x * 2 * pelvis.scaling.x, D = pe.z * 2 * pelvis.scaling.z, PH = pe.y * 2 * pelvis.scaling.y;
+  const cx = pelvis.position.x + pb.center.x * pelvis.scaling.x, cz = pelvis.position.z + pb.center.z * pelvis.scaling.z;
+  const foot = pelvis.position.y + (pb.center.y - pe.y) * pelvis.scaling.y;
+  const y = foot + PH * B.at - W * B.belt / 2;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof team): Mesh => {
+    m.parent = body.hip;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  const belt = put(MeshBuilder.CreateCylinder("skeletonBelt", { height: W * B.belt, diameter: W * B.out, tessellation: 8 }, scene), leather);
+  belt.scaling.z = (D * B.out) / (W * B.out);
+  belt.rotation.y = Math.PI / 8;
+  belt.position.set(cx, y, cz);
+  const buckle = put(MeshBuilder.CreateBox("skeletonBeltBuckle", { width: W * B.buckle, height: W * B.belt * 1.25, depth: W * 0.04 }, scene), brass);
+  buckle.position.set(cx, y, cz + (D * B.out) / 2 + W * 0.015);
+  const rx = (W * B.out) / 2, rz = (D * B.out) / 2;
+  for (let i = 0; i < B.tabs; i++) {
+    const a = B.tabAt[i % B.tabAt.length];
+    const long = W * B.long * (0.85 + 0.15 * (i % 2));
+    const tab = put(MeshBuilder.CreateCylinder("skeletonBeltTassel", { height: long, diameterTop: W * B.tab, diameterBottom: W * B.tab * B.taper, tessellation: 4 }, scene), team);
+    tab.scaling.z = 0.22;
+    tab.rotation.y = a;
+    const hang = new Vector3(Math.sin(a) * rx * 1.04, y - W * B.belt * 0.3 - long / 2, Math.cos(a) * rz * 1.04);
+    tab.position.set(cx + hang.x, hang.y, cz + hang.z);
+    tab.rotation.x = B.flare * Math.cos(a);
+    tab.rotation.z = -B.flare * Math.sin(a);
+  }
+  return out;
+}
+
+/*
  * [S] 436 the Candlehead's candle arms (audit 434 candlehead b.1: "main hand holds a dark stick - TABS: both forearms sheathed in huge melted cream
  * candles with cyan flames at the bottom"; spooky.candlehead.red.png, card Main/Off Hand "Candle Fire", Appearance "flaming cierges on its ... hands":
  * each forearm swallowed from the elbow down by a fat lumpy cream wax column, about three arms thick, running on past the fist to mid-thigh, melted
