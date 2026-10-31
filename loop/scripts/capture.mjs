@@ -2,6 +2,7 @@
 //   node loop/scripts/capture.mjs --iter N --units a,b | --batch <name>   loop v2: each unit's shot set (idle, windup, release, flight, struck,
 //       ability pair when one fires) in a seeded one-on-one against a squire, plus lineup_<faction> once per faction; no scenarios
 //   node loop/scripts/capture.mjs --units a,b | --batch <name>             the same as a look, to output/loop/look/
+//   node loop/scripts/capture.mjs --iter N --units a --add                 re-shoot a into iter-N, keeping the other units' shots; summary.json merged
 //   node loop/scripts/capture.mjs --iter N --regression-only               the scenario suite alone (loop v2 batch checkpoint)
 //   node loop/scripts/capture.mjs --palette                                 output/loop/palette.png alone (every --units/--batch run writes it too)
 //   node loop/scripts/capture.mjs --iter N [--showcase-only]               loop v1's showcase set (kept for reference)
@@ -277,6 +278,9 @@ function pruneOld() {
   if (iter <= 0 || only.length > 0) return;
   const parent = path.dirname(outDir);
   if (!fs.existsSync(parent)) return;
+  // [tools 438] a test number far past the newest iteration (iter-9438) would prune every real one: prune only from the loop's own next iteration
+  const newest = Math.max(0, ...fs.readdirSync(parent).map((n) => /^iter-(\d+)$/.exec(n)).filter(Boolean).map((m) => Number(m[1])).filter((n) => n !== iter));
+  if (iter > newest + 1) { log(`no prune: iter ${iter} is past the newest iteration ${newest}`); return; }
   let pruned = 0;
   for (const name of fs.readdirSync(parent)) {
     const m = /^iter-(\d+)$/.exec(name);
@@ -377,7 +381,8 @@ async function main() {
     summary.notes.push("working tree was dirty during iter 0 capture");
   }
   // [tools 420] a --regression-only run (the batch checkpoint) keeps the iteration folder: its shots and the saved critic transcripts stay beside the summary
-  if (!flag("--regression-only")) fs.rmSync(outDir, { recursive: true, force: true });
+  // [tools 438] --add (a gap dropped after step 5's capture) re-shoots its units into the folder and merges the summary
+  if (!flag("--regression-only") && !flag("--add")) fs.rmSync(outDir, { recursive: true, force: true });
   fs.mkdirSync(outDir, { recursive: true });
 
   build();
@@ -1225,7 +1230,18 @@ async function main() {
   summary.passed = failed.length === 0 && summary.pageErrors.length === 0;
   summary.failedScenarios = failed.map((s) => s.name);
   summary.finishedAt = new Date().toISOString();
-  fs.writeFileSync(path.join(outDir, "summary.json"), JSON.stringify(summary, null, 2));
+  const prevFile = path.join(outDir, "summary.json");
+  if (flag("--add") && unitMode && fs.existsSync(prevFile)) {
+    // keep the earlier run's units, notes and shots, minus the re-shot units'; errors are this run's
+    const prev = JSON.parse(fs.readFileSync(prevFile, "utf8"));
+    const mine = (s) => unitIds.some((id) => s.startsWith(`unit_${id}_`) || s.startsWith(`unit_${id}:`) || s.startsWith(`unit_${id}.`));
+    summary.startedAt = prev.startedAt;
+    summary.units = { ...prev.units, ...summary.units };
+    summary.notes = [...(prev.notes ?? []).filter((n) => !mine(n)), ...summary.notes];
+    summary.screenshots = [...new Set([...(prev.screenshots ?? []).filter((s) => !mine(s)), ...summary.screenshots])];
+    summary.notes.push(`--add: re-shot ${unitIds.join(", ")} at ${summary.finishedAt}`);
+  }
+  fs.writeFileSync(prevFile, JSON.stringify(summary, null, 2));
   fs.writeFileSync(path.join(outDir, "full-state.json"), JSON.stringify(full, null, 2));
   const verdict = summary.passed ? "GREEN" : "RED";
   log(`${verdict}: ${summary.scenarios.length - failed.length}/${summary.scenarios.length} scenarios passed, ${summary.pageErrors.length} page errors, ${summary.screenshots.length} screenshots -> ${path.relative(root, outDir)}`);

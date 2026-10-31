@@ -3799,7 +3799,8 @@ const gameApi = {
       scene.render();
       renders++;
       await new Promise((resolve) => setTimeout(resolve, 50));
-      if (i >= 5 && scene.isReady() && engine.areAllEffectsReady()) {
+      // [tools 438] no floor of 5 renders: a warm swiftshader frame costs ~1.3 s and the shot is the same once the scene is ready
+      if (scene.isReady() && engine.areAllEffectsReady()) {
         ready = true;
         break;
       }
