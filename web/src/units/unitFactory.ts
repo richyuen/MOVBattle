@@ -18,6 +18,7 @@ import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils,
 import { stiffyGreaves } from "./spookyDress";
 import { candleBoots } from "./spookyDress";
 import { vampireBeard } from "./spookyDress";
+import { skeletonBone } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -149,8 +150,7 @@ const HIDE_CAPE_COLOR = new Color3(0.38, 0.23, 0.14);
  *   chest height, narrowing from the chest's width; skirt SKELETON_SKIRT of the thigh long, its hem SKELETON_HEM pelvis widths across, SKELETON_TATTERS tatters.
  */
 const SKELETON_UNITS = new Set(["spooky.skeleton_warrior", "spooky.skeleton_archer"]);
-// Warm cream: a paler bone went lavender-grey in the shade under the teal sky
-const SKELETON_BONE = new Color3(1.0, 0.86, 0.6);
+// Bone: spookyDress SKELETON_BONE (441: shared, self-lit)
 const SKELETON_LIMB = 0.42;
 const SKELETON_SPINE = 0.16;
 const SKELETON_RIBS = 4;
@@ -1027,7 +1027,8 @@ export class UnitFactory {
 /** Strips a skeleton's body to bone (see SKELETON_*): thin bone limbs, a spine and rib hoops for the chest, a skull under a team hood, a ragged team skirt. */
 function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3, unitId = ""): Mesh[] {
   const added: Mesh[] = [];
-  const bone = getMaterialFactory().getCloth(SKELETON_BONE);
+  // [S] 441 the shared cream self-lit bone (spookyDress SKELETON_BONE)
+  const bone = skeletonBone();
   const cloth = getMaterialFactory().getCloth(teamColor.scale(SKELETON_CLOTH));
   const flesh = new Set<Material | null>([body.bodyMaterial, body.skinMaterial]);
   for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
@@ -2886,8 +2887,8 @@ function dressCactus(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
 /** Dresses the reaper as a robed skeleton (see REAPER_*): bone skull, hands, shins and feet; a deep forward cowl; a robe with wide sleeves and a ragged hem. */
 function dressReaper(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const added: Mesh[] = [];
-  const bone = getMaterialFactory().getCloth(SKELETON_BONE);
-  const robe = getMaterialFactory().getCloth(Color3.Lerp(REAPER_CLOTH, teamColor.scale(0.45), REAPER_TEAM));
+  const bone = skeletonBone();
+  const robe =getMaterialFactory().getCloth(Color3.Lerp(REAPER_CLOTH, teamColor.scale(0.45), REAPER_TEAM));
   const flesh = new Set<Material | null>([body.bodyMaterial, body.skinMaterial]);
   // Everything the body wore goes robe, hands and feet go bone
   for (const mesh of [...body.allMeshes, ...body.leftElbow.getChildMeshes(false), ...body.rightElbow.getChildMeshes(false), ...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {

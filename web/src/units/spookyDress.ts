@@ -1282,13 +1282,26 @@ export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Co
  * in x and z; the foot box shrunk to .foot so it reads as a bone foot; the hip raised by the length added, so the hover keeps the feet off the ground and
  * the whole stretch shows under the robe.
  */
-const REAPER_LEGS = { bone: new Color3(1.0, 0.86, 0.6), glow: 0.3, long: 1.6, thin: 0.5, foot: 0.75 };
+const REAPER_LEGS = { long: 1.6, thin: 0.5, foot: 0.75 };
 export const REAPER_HOVER_NODE = "reaperHover";
+
+/*
+ * [S] 441 one cream bone for every Stiffy (434 skeleton_archer a.3 "bone colour is grey - TABS: cream bone", skeleton_warrior a.2, reaper a.3;
+ * spooky.skeleton_archer.red.png: warm cream-tan bone, pale even where it is in shade). SKELETON_BONE: the warm cream self-lit .glow, the recipe the
+ * reaper's legs were approved cream with at 439 (plain lit bone reads grey in shade, LESSONS 13). Shared by unitFactory's dressSkeleton and dressReaper,
+ * the reaper's legs and the warrior's knee bones.
+ */
+const SKELETON_BONE = { color: new Color3(1.0, 0.86, 0.6), glow: 0.3 };
+
+/** The shared cream self-lit Stiffy bone (spec at SKELETON_BONE). */
+export function skeletonBone() {
+  return getMaterialFactory().get("cloth", SKELETON_BONE.color, { emissive: SKELETON_BONE.color.scale(SKELETON_BONE.glow) });
+}
 
 /** Long thin cream bone legs and feet, and the hover marker under the hip (spec at REAPER_LEGS). */
 export function reaperLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
   const L = REAPER_LEGS;
-  const bone = getMaterialFactory().get("cloth", L.bone, { emissive: L.bone.scale(L.glow) });
+  const bone = skeletonBone();
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) if (leg) leg.material = bone;
   for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) m.material = bone;
   let added = 0;
