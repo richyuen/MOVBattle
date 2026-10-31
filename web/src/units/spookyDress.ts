@@ -655,6 +655,59 @@ export function stiffyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
 }
 
 /*
+ * [S] 439 the Skeleton Archer's bracers and boots (audit 434 skeleton_archer a.4: "limbs bare grey to grey boxy feet - TABS: team bracers on the forearms
+ * and brown boots on the feet"; spooky.skeleton_archer.red.png: a wide team cuff round each forearm from just under the elbow to past its middle, far
+ * thicker than the bone; low dark-brown faceted boots over the feet, their tops a turned-down cuff round the foot of the shin). ARCHER_KIT, in each elbow
+ * joint's frame: the bracer a six-sided team sleeve from .bracerFrom to .bracerTo of the forearm, .bracer of the bone's half width across, flaring
+ * .bracerFlare at its foot. In each knee's frame: the foot mesh brown, a brown box over it to .bootTo of the foot box (over the grass line, LESSONS 46),
+ * .bootOut wide and .bootLong long; a turned cuff round the shin's foot from .cuffFrom of the shin down, .cuff of its half width across. Self-lit .glow.
+ */
+const ARCHER_KIT = {
+  bracerFrom: 0.12, bracerTo: 0.6, bracer: 3.2, bracerFlare: 1.12, bootTo: 1.0, bootOut: 1.25, bootLong: 1.1, cuffFrom: 0.72, cuff: 3.6, glow: 0.14,
+  leather: new Color3(0.4, 0.17, 0.07),
+};
+
+/** Team bracers round the forearms and low brown boots with turned cuffs (spec at ARCHER_KIT). */
+export function skeletonArcherKit(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const K = ARCHER_KIT;
+  const f = getMaterialFactory();
+  const team = f.get("cloth", teamColor, { emissive: teamColor.scale(K.glow) });
+  const leather = f.get("cloth", K.leather, { emissive: K.leather.scale(K.glow) });
+  const out: Mesh[] = [];
+  const sleeve = (name: string, limb: Mesh, from: number, to: number, across: number, flare: number, mat: typeof team): void => {
+    const b = limb.getBoundingInfo().boundingBox;
+    const half = b.extendSize.y * limb.scaling.y, mid = limb.position.y + b.center.y * limb.scaling.y;
+    const r = Math.max(b.extendSize.x * limb.scaling.x, b.extendSize.z * limb.scaling.z) * across;
+    const y0 = mid + half - from * half * 2, y1 = mid + half - to * half * 2;
+    const m = MeshBuilder.CreateCylinder(name, { height: y0 - y1, diameterTop: r * 2, diameterBottom: r * 2 * flare, tessellation: 6 }, scene);
+    m.parent = limb.parent;
+    m.position.set(limb.position.x + b.center.x * limb.scaling.x, (y0 + y1) / 2, limb.position.z + b.center.z * limb.scaling.z);
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+  };
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) sleeve("archerBracer", arm, K.bracerFrom, K.bracerTo, K.bracer, K.bracerFlare, team);
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) sleeve("archerBootCuff", shin, K.cuffFrom, 1, K.cuff, 1.1, leather);
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) {
+      if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
+      foot.material = leather;
+      const fb = foot.getBoundingInfo().boundingBox, ex = fb.extendSize;
+      const tall = ex.y * 2 * K.bootTo;
+      const boot = MeshBuilder.CreateBox("archerBoot", { width: ex.x * 2 * K.bootOut, height: tall, depth: ex.z * 2 * K.bootLong }, scene);
+      boot.parent = foot;
+      boot.position.set(fb.center.x, fb.minimum.y + tall / 2, fb.center.z + ex.z * (K.bootLong - 1) * 0.5);
+      boot.material = leather;
+      boot.convertToFlatShadedMesh();
+      boot.isPickable = false;
+      out.push(boot);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 436 the Candlehead's candle arms (audit 434 candlehead b.1: "main hand holds a dark stick - TABS: both forearms sheathed in huge melted cream
  * candles with cyan flames at the bottom"; spooky.candlehead.red.png, card Main/Off Hand "Candle Fire", Appearance "flaming cierges on its ... hands":
  * each forearm swallowed from the elbow down by a fat lumpy cream wax column, about three arms thick, running on past the fist to mid-thigh, melted
