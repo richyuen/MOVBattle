@@ -95,6 +95,7 @@ const FLAME_JET = {
   blobs: 12, near: 0.4, far: 1.4, farPer: 0.19, swell: 0.35, lobes: 3, lobe: 0.5, lobeOff: 0.68, flicker: 0.14, fade: 0.2,
   white: new Color3(1, 0.97, 0.85), yellow: new Color3(1, 0.78, 0.04),
 };
+const BLOOD_DRAIN = { every: 0.07, drop: 0.07, spurt: 0.9, up: 1.6, life: 0.7, stain: 0.16, red: new Color3(1.1, 0.03, 0.02), dark: new Color3(0.6, 0.02, 0.02) };
 const HEAL_BEAM = { core: 0.12, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: new Color3(1, 0.82, 0.25), glow: new Color3(1, 0.7, 0.15) };
 /*
  * [S] banjo music notes (354; medieval.bard.blue.png, card Appearance "Notes will appear above the Bard's head"): orange eighth notes over his head while he
@@ -499,6 +500,58 @@ export class VisualEffects {
         haloMat.alpha = HEAL_BEAM.haloAlpha * k;
       },
       dispose: () => { coreMat.dispose(); haloMat.dispose(); },
+    });
+  }
+
+  /**
+   * [S] 438 the Vampire Bite's drain (spooky.vampire c.2: "latches onto the enemy and sucks blood"): for `seconds`, blood drops well up out of the
+   * bite at `neck()` (read every frame), a new one every BLOOD_DRAIN.every s, a few thrown out .spurt m/s off it and up, falling back under gravity
+   * for .life s; a dark red stain .stain m across sits on the bite. Self-lit red (r > 1, b near 0, so ACES keeps it red).
+   */
+  spawnBloodDrain(neck: () => Vector3 | null, seconds: number): void {
+    const B = BLOOD_DRAIN;
+    const root = new TransformNode("bloodDrain", this._scene);
+    const mat = this._fxMat(B.red, B.red);
+    const stainMat = this._fxMat(B.dark, B.dark);
+    const stain = MeshBuilder.CreateSphere("bloodStain", { diameter: B.stain, segments: 4 }, this._scene);
+    stain.material = stainMat;
+    stain.parent = root;
+    stain.isPickable = false;
+    const drops: { mesh: Mesh; v: Vector3; age: number }[] = [];
+    let since = 0, n = 0;
+    this._effects.push({
+      root,
+      remaining: seconds,
+      update: (dt) => {
+        const at = neck();
+        if (at) {
+          stain.setEnabled(true);
+          stain.position.copyFrom(at);
+          since += dt;
+          while (since >= B.every) {
+            since -= B.every;
+            const a = n * 2.4;
+            n++;
+            const mesh = MeshBuilder.CreateSphere("bloodDrop", { diameter: B.drop * (0.7 + 0.3 * ((n * 7) % 3) / 2), segments: 3 }, this._scene);
+            mesh.material = mat;
+            mesh.parent = root;
+            mesh.isPickable = false;
+            mesh.position.copyFrom(at);
+            drops.push({ mesh, v: new Vector3(Math.cos(a) * B.spurt, B.up, Math.sin(a) * B.spurt), age: 0 });
+          }
+        } else stain.setEnabled(false);
+        for (let i = drops.length - 1; i >= 0; i--) {
+          const d = drops[i];
+          d.age += dt;
+          d.v.y -= 9.8 * dt;
+          d.mesh.position.addInPlace(d.v.scale(dt));
+          if (d.age >= B.life || d.mesh.position.y < 0.02) {
+            d.mesh.dispose();
+            drops.splice(i, 1);
+          }
+        }
+      },
+      dispose: () => { mat.dispose(); stainMat.dispose(); },
     });
   }
 
