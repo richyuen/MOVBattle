@@ -1,4 +1,4 @@
-# Loop state (v5: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
+# Loop state (v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
 Iteration: 438   Batch: pirate+spooky (10/19)   Consecutive empty: 0   Done: 55/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
@@ -10,7 +10,7 @@ medieval: bard ++++ D | squire ++++ D | archer ++++ D | healer ++++ D | knight +
 ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer ++++ D | ballista ++++ D | minotaur ++++ D | zeus ++++ D
 viking: headbutter ++++ D | ice_archer ++++ D | brawler ++++ D | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl ++++ D
 dynasty: samurai ++++ D | firework_archer ++++ D | monk ++++ D | ninja ++++ D | dragon ++++ D | hwacha ++++ D | monkey_king ++++ D
-pirate: flintlock ++++ D | blunderbuss ++++ D | bomb_thrower ++++ D | harpooner -+++ o | cannon ++++ D | captain ++++ D | pirate_queen -+++ o
+pirate: flintlock ++++ D | blunderbuss ++++ D | bomb_thrower ++++ D | harpooner ++++ o | cannon ++++ D | captain ++++ D | pirate_queen -+++ o
 spooky: skeleton_warrior -+++ o | skeleton_archer -+++ o | candlehead -+++ o | vampire -+-+ o | pumpkin_catapult -+++ o | swordcaster ++++ D | reaper -+-+ o
 wild_west: dynamite_thrower ???? q | miner ???? q | cactus ???? q | gunslinger ???? q | lasso ???? q | deadeye ???? q | quick_draw ???? q
 legacy_1: peasant ???? q | banner_bearer ???? q | poacher ???? q | blowdarter ???? q | pike ???? q | barrel_roller ???? q | boxer ???? q | flag_bearer ???? q
@@ -35,11 +35,11 @@ secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade
 - GAP: [P] pirate.pirate_queen (2a71c0b0) VERDICT: APPROVE CRITERION: pirate.pirate_queen.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
 ## Notes for next iteration (max 5 lines)
-- Harpooner a is plateau and starves at 440 (no a attempt since 434): one [R] from every CONFIRM a list (spec in its Ranked gaps).
+- v6 review: harpooner a restored to PASS from its 434 CONFIRM (436 re-failed the same pose); he is proposed done: touch him in 439's step 5 capture and CONFIRM b alone (a, c confirmed). Queen a: the [P] on her unitVisuals scale 1.45 is pickable (438 DEFECTS name it the root; wiki size 1.4).
 - Vampire c bite dropped at 438 (sim latch worked, the pose did not show: he leaned back facing away); see its unit Notes and git show 29201909 before retrying.
 - Starving: reaper a at 441 and c at 442 (last 435/436); skeleton_warrior a.3 shorts and a.4 greaves still open from 437.
 - [P] fallouts open: pumpkin_catapult a.1 near-black frame, skeleton_archer a.3 cream bone (critic 438, fallout of 438 [S]).
-- Captures with 4+ units run 15-25 min: run in the background, wait with an until-loop.
+- Captures run ~10 s a shot since the 438 tools (6 units ~10 min); with 4+ units run in the background, wait with an until-loop.
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
 # <unitId>
