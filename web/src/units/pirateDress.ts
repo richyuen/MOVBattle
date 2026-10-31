@@ -738,8 +738,9 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  * the beads riding it, and the trousers are the leg meshes themselves in the pale team shade, no shells, so nothing bulges at the knee.
  */
 const QUEEN_SKIRT = {
-  top: 0.14, knee: 1.08, out: 1.04, flare: 1.22, deep: 1.1, slant: 0.6, frontDrop: 0.4, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
-  flapWide: 0.6, flapFoot: 0.22, flapX: -0.25, flapLong: 1.3, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
+  // [S] 441: .front < 0 cuts the front hem up to mid-thigh (was frontDrop .4 down); the flap out on her left side (was flapX -.25, flapWide .6)
+  top: 0.14, knee: 1.08, out: 1.04, flare: 1.22, deep: 1.1, slant: 0.6, front: -0.5, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
+  flapWide: 0.42, flapFoot: 0.22, flapX: -0.78, flapLong: 1.3, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
 };
 
 /*
@@ -796,7 +797,16 @@ const QUEEN_BOOTS = { from: 0.12, shaft: 1.35, top: 1.7, topTall: 0.14, band: 1.
  * the hip lowered by what that takes off so she stands on the ground; the trunk .tall of its height (was .85); the head is left (her bandana and
  * hair are seated on it). Target: head top ~1.95 (the captain's 1.87 plus her hair), hip ~.9.
  */
-const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72, tall: 0.76, legs: 0.74 };
+/*
+ * [S] 441 the long legs (440 pirate_queen a.2: "legs are short stumps, the boots start at the skirt hem and no thigh shows - TABS: long slim legs,
+ * bare thigh between the skirt's front hem and the knee boots"; pirate.pirate_queen.red.png: her legs about half her height, the head about a
+ * seventh; the wrap skirt open at the front, its front hem at mid-thigh, the pale thighs showing down to the boot tops under the knee, the long
+ * point of the wrap on her left). Measured before (probe_bbox, root frame): head .40 of a 1.95 total (a fifth), hip 1.0, skirt front hem at .14.
+ * The leg chain back to .legs .9 of its length; the height that adds is taken from the head and trunk: the neck joint scaled .head (head, eyes,
+ * bandana and hair all hang under it, so they shrink together), the trunk .tall .66. QUEEN_SKIRT's front hem is cut up (.front) instead of dropped,
+ * and the wrap flap moved out to her left side (.flapX, .flapWide).
+ */
+const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72, tall: 0.66, legs: 0.9, head: 0.82 };
 
 /** Cuts the Pirate Queen's body narrow and down to the captain's height before her dress is fitted (spec at QUEEN_FRAME, QUEEN_BUILD). */
 export function queenFrame(body: ArticulatedBody): void {
@@ -829,6 +839,8 @@ export function queenFrame(body: ArticulatedBody): void {
     for (const foot of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(foot.name)) foot.position.y += shinLen * (1 - F.legs);
   }
   body.hip.position.y -= lost;
+  // [S] 441 the head (and all the neck carries) shrunk at the neck joint
+  body.neck.scaling.scaleInPlace(F.head);
 }
 
 /** The Pirate Queen's knee-high red-brown boots with a team band (spec at QUEEN_BOOTS, in the [R] 435 build spec). */
@@ -931,8 +943,8 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   const skirt = MeshBuilder.CreateCylinder("queenSkirt", { height: long, diameterTop: rTop * 2, diameterBottom: rHem * 2, tessellation: Q.sides }, scene);
   // the hem slants down toward her left (-x)
   const pos = skirt.getVerticesData(VertexBuffer.PositionKind)!;
-  // ...and drops toward its front (+z) so it still reaches the knee when the thighs come forward in the crouch
-  const drop = (z: number): number => Q.frontDrop * long * Math.max(0, z / rHem);
+  // ...and rises toward its front (+z) when .front < 0 (441: the wrap open on the thighs; before, it dropped to the knee for the old crouch)
+  const drop = (z: number): number => Q.front * long * Math.max(0, z / rHem);
   for (let i = 0; i < pos.length; i += 3) if (pos[i + 1] < 0) pos[i + 1] += Q.slant * long * 0.5 * (pos[i] / rHem) - drop(pos[i + 2]);
   skirt.setVerticesData(VertexBuffer.PositionKind, pos);
   skirt.refreshBoundingInfo();
