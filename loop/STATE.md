@@ -39,7 +39,7 @@ secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade
 - Vampire c bite dropped at 438 (sim latch worked, the pose did not show: he leaned back facing away); see its unit Notes and git show 29201909 before retrying.
 - Starving: reaper a at 441 and c at 442 (last 435/436); skeleton_warrior a.3 shorts and a.4 greaves still open from 437.
 - [P] fallouts open: pumpkin_catapult a.1 near-black frame, skeleton_archer a.3 cream bone (critic 438, fallout of 438 [S]).
-- Captures run ~10 s a shot since the 438 tools (6 units ~10 min); with 4+ units run in the background, wait with an until-loop.
+- Captures run ~5 s a shot since the 438-439 tools (6 units ~5 min, a batch ~9 min); with 6+ units run in the background, wait with an until-loop.
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
 # <unitId>
