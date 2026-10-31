@@ -171,6 +171,64 @@ export function vampireBatBeat(t: number): number {
 }
 
 /*
+ * [S] 438 the Vampire's slicked-back hair (audit 434 vampire a.1: "head is bald team - TABS: dark brown slicked-back hair"; spooky.vampire.red.png,
+ * card Appearance "slicked back hair": a dark brown cap from just over the bead eyes up over the crown, standing well above the head and swept back
+ * into a ridge that runs down the back of the skull to the nape, a widow's peak pointing down onto the brow between the eyes, the temples covered
+ * behind the eyes). VAMPIRE_HAIR, in the head's own box (e its half sizes): the cap .out of the head wide and deep from .clear over the eyes' top to
+ * .crown of e.y over the head's top; on it the swept mass .sweep of e.y tall, leaning back .lean rad and set .back of e.z behind the middle; the peak
+ * a three-sided point .peak of e.x wide hanging .peakDrop of e.y down the brow, standing .proud off the face; temples .side of e.x thick from the
+ * fringe down to .sideTo of the eye span, from the back to .front of e.z; the back panel down to .nape of e.y. The bat's dark brown, self-lit .glow.
+ */
+const VAMPIRE_HAIR = { out: 1.12, clear: 0.04, crown: 0.12, sweep: 0.42, lean: 0.4, back: 0.25, peak: 0.5, peakDrop: 0.3, proud: 0.04, side: 0.14, sideTo: 0.5, front: 0.35, nape: -0.7, glow: 0.12 };
+
+/** Dark brown slicked-back hair on the man, as on his bat (spec at VAMPIRE_HAIR). */
+export function vampireHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const V = VAMPIRE_HAIR;
+  const hair = getMaterialFactory().get("cloth", VAMPIRE_BAT.hair, { emissive: VAMPIRE_BAT.hair.scale(V.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const X = e.x * V.out, Z = e.z * V.out;
+  const fringe = span[1] + e.y * V.clear, top = bb.maximum.y + e.y * V.crown;
+  const out: Mesh[] = [];
+  const put = (m: Mesh): Mesh => {
+    m.parent = head;
+    m.material = hair;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  const slab = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene);
+    m.position.set(c.x + (x0 + x1) / 2, (y0 + y1) / 2, c.z + (z0 + z1) / 2);
+    return put(m);
+  };
+  // the cap over the crown, its front edge the hairline just over the eyes
+  slab("vampireHairCap", -X, X, fringe, top, -Z, Z);
+  // the swept mass: a tall ridge on the crown leaning back off the brow, narrower than the cap
+  const sweepH = e.y * V.sweep;
+  const sweep = MeshBuilder.CreateBox("vampireHairSweep", { width: X * 1.7, height: sweepH, depth: Z * 1.5 }, scene);
+  sweep.position.set(c.x, top + sweepH * 0.3, c.z - e.z * V.back);
+  sweep.rotation.x = -V.lean;
+  put(sweep);
+  // the widow's peak: a point down onto the brow between the eyes
+  const peak = MeshBuilder.CreateCylinder("vampireHairPeak", { height: e.y * V.peakDrop, diameterTop: e.x * V.peak, diameterBottom: 0, tessellation: 3 }, scene);
+  peak.scaling.z = 0.35;
+  peak.rotation.y = Math.PI;
+  peak.position.set(c.x, fringe - e.y * V.peakDrop * 0.4, c.z + Z + e.z * V.proud);
+  put(peak);
+  // the temples behind the eyes
+  const sideFoot = fringe - (span[1] - span[0]) * V.sideTo;
+  slab("vampireHairSide", -X, -X + e.x * V.side, sideFoot, fringe, -Z, e.z * V.front);
+  slab("vampireHairSide", X - e.x * V.side, X, sideFoot, fringe, -Z, e.z * V.front);
+  // the back down to the nape
+  slab("vampireHairBack", -X, X, c.y + e.y * V.nape, fringe, -Z, -Z + e.z * 0.32);
+  return out;
+}
+
+/*
  * [S] 435 the Swordcaster's bowl haircut (audit 434 swordcaster a.1: "head is a closed purple dome with a spike, no face - TABS: team face with two
  * bead eyes under a black bowl haircut"; spooky.swordcaster.red.png: a glossy black bowl over the crown, its fringe cut straight across the brow just
  * over the bead eyes, the sides down past the eyes to about the jaw's top, the back down to the nape; the face and eyes bare team skin). SWORDCASTER_BOWL,

@@ -14,7 +14,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { vampireClaws, vampireBat, swordcasterBowl, reaperTendrils, candleArms, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood } from "./spookyDress";
+import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils, candleArms, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -643,6 +643,8 @@ export class UnitFactory {
     if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireClaws(this._scene, body));
     // [S] 437 the Vampire's bat form, built hidden, swapped in for him while his swoop flies (spookyDress VAMPIRE_BAT, RuntimeUnit._tendBatForm)
     if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireBat(this._scene, body, teamColor));
+    // [S] 438 the Vampire's dark brown slicked-back hair with a widow's peak, as on his bat (spookyDress VAMPIRE_HAIR)
+    if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireHair(this._scene, body));
     // [S] 436 the Candlehead's forearms sheathed in lumpy cream candles with cyan flames at the foot, the torch stick hidden (spookyDress CANDLE_ARMS)
     if (definition.id === "spooky.candlehead" && !shouldUseVehicleBody) propMeshes.push(...candleArms(this._scene, body));
     // [S] 435 the Swordcaster's black bowl cut round his bare face in place of the closed hood (spookyDress SWORDCASTER_BOWL)
