@@ -10,7 +10,7 @@ drop a lesson once it is a comment at the code it describes.
 - Flat colour that survives ACES: an "unlit" material's colour comes from its EMISSIVE only (baseColor alone renders black), excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
 - ACES lifts a mid code value toward pale, so an unlit plate keeps a deep value (zeus's gold emblem is (0.62,0.26,0.03), 400); the same for timber: an IBL-lit mid albedo reads beige, so a brown hull wants (.2,.11,.055) with a small self-light (400).
 - "metal" renders near black under swiftshader: use "cloth" with a small emissive instead.
-- Lit cloth in shadow reads grey however white or warm: self-light it or go unlit; cream wants the unlit cut (400 headbutter; 441: cloth (1,.86,.6) self-lit .3 swatched grey 166/161/156).
+- Lit cloth in shade reads grey however white or warm: cream wants the flat unlit cut out of the glow (442 bone (1.1,.78,.4) swatched 215/199/164; self-lit cloth stayed grey 441).
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it (a vehicle's `bodyMaterial` IS the team colour: timber, iron, leather need their own; 392), and the head's as skin: a bone crewman needs a hidden anchor head (440 pumpkin operator).
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 
@@ -21,13 +21,13 @@ drop a lesson once it is a comment at the code it describes.
 - A flat plate on a dress ribbon needs 7+ cm of stand-off, not 3: the ribbon's chords dip inside the rim sampled for its surface, so a bolt 3.5 cm proud read as a ghost (398/399 zeus).
 - Sim reads of joint positions must settle world matrices first (computeWorldMatrix(true) up the parent chain, as capture's __wp does).
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
-- A two-stage mechanic that logs its special at the take-off and a plain hit at the impact gets its ability pair shot on the first half and its release pair on the second: use that to show both halves of one throw (396 longship: `hurl` at 2117 ms, `ship_crash` + the hit at 2967 ms).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - A "haxe" weapon rests via _restHalberd and a bow with the carry mark via _restIceBow (a bare marked stave rides it since 420): world poses, so carry attitudes do nothing.
 - The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of it (420: the dragon's head was out of frame from 417; the monkey king's tail pulls his frame back): a new tall prop re-frames every shot, so a RE-AUDIT follows.
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).
 - A wide stance reads as a stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a "stride" pose gap (403).
-- `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches: render them after it (402). No python. 4+ units: background it.
+- `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches: render them after it. No python (pixel values: a playwright canvas getImageData). 4+ units: background it.
+- A dress change aimed at the idle must clear the rest pose: probe what covers that band first (442 queen: the hem-to-knee band sat behind her sword guards, two commits dropped). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 - Logged at the swing start / let-go, not the landing: a preset's instant "slam" (use the pending blow, 426); a special logged as a missile leaves owns that missile (427 queen). A status logged at the cast (fire_dot) makes _struck precede the missile: an on-landing mechanic needs ABILITY_PREF (435 candlehead).
 - The _ability/_release shots are the log tick itself, before RuntimeUnit.update: a swap or pose set at the log shows only after (437 bat); log a latch's hit later (438 bite).
