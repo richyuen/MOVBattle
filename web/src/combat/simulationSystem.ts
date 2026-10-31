@@ -281,9 +281,9 @@ const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
  * beating them up"). When his blow goes up he latches on: for VAMPIRE_BITE.hold s he is pinned on the man's front, .off of their two body radii from
  * the man's middle, facing him, out of the crowd solver, his trunk over the man and his mouth on the man's neck, both claws on his shoulders
  * (ProceduralAnimator.biteAt / BITE_POSE); blood wells out of the bite the whole time (visualEffects BLOOD_DRAIN). The blow itself lands as before
- * (the bite's damage). Lets go when the hold runs out or either of them dies. Logged "bite".
+ * (the bite's damage) .sink s into the latch. Lets go when the hold runs out or either of them dies. Logged "bite".
  */
-const VAMPIRE_BITE = { hold: 1.4, off: 0.8, neckUp: 0.02 };
+const VAMPIRE_BITE = { hold: 1.4, off: 0.8, neckUp: 0.02, sink: 0.25 };
 /*
  * [S] the charge seen (363; critic 360: "same pose and place, no lunge, no dust"; tribal.mammoth.jpg): every MAMMOTH_DUST.every s of the run a dust puff
  * (sprite discs .size times the kick dust) goes up at a pair of its feet, alternating front-left/back-right and front-right/back-left (feet given as [ahead, across] in body radii), and the animator
@@ -2657,7 +2657,12 @@ export class SimulationSystem {
     }
 
     // [S] 438 a vampire's blow is a bite: he latches on the man first (VAMPIRE_BITE)
-    if (attacker.definition.id === "spooky.vampire" && !attacker.isDead && !this._bites.has(attacker)) this._startBite(attacker, target, now);
+    // ...and the bite's blow lands .sink s into the latch, his mouth already on the neck (it struck on the latch's own tick, before his pose was laid on)
+    if (attacker.definition.id === "spooky.vampire" && !attacker.isDead && !this._bites.has(attacker)) {
+      this._startBite(attacker, target, now);
+      this._pendingBlows.push({ attacker, target, damage, splashRadius, knockback, landAt: now + VAMPIRE_BITE.sink });
+      return;
+    }
     // A swing has only gone up: it is struck at this man, and he takes the blow when it comes down on him
     const landIn = attacker.blowLandsIn();
     if (landIn > 0) {
