@@ -1387,6 +1387,8 @@ export class SimulationSystem {
       if (unit.leap(dir, leapDist, flies ? JUMP_CHARGE.swoopRise : JUMP_CHARGE.rise)) {
         this._clearPathState(unit);
         unit.setAttackCooldown(now, attackProfile.cooldown * 0.35);
+        // [S] 437 the Vampire flies it as a bat (spookyDress VAMPIRE_BAT, RuntimeUnit.startBatForm)
+        if (unit.definition.id === "spooky.vampire") unit.startBatForm();
         this._logAbility(unit, flies ? "swoop" : "leap", now);
         return;
       }

@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, type Node } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, VertexData, type Node } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { eyeSpanInHead } from "./dynastyDress";
@@ -61,6 +61,113 @@ export function vampireClaws(scene: Scene, body: ArticulatedBody): Mesh[] {
     }
   }
   return out;
+}
+
+/*
+ * [S] 437 the Vampire's Bat Transformation (audit 434 vampire c.1: "swoop in unit_spooky.vampire_ability is the man running with stars in his hands -
+ * TABS: turns into a bat with his hairstyle and flies to the enemy"; card Abilities "it transforms into a bat with the same hairstyle, and flies towards
+ * the nearest enemy (much like the Scarecrow's crows). Once close to the enemy, it transforms back"). A bat built hidden on his root; RuntimeUnit
+ * swaps it in for his whole body while a swoop carries him (startBatForm, cleared on landing) and beats its wings. VAMPIRE_BAT, in the root's frame
+ * (h his height, +z his front): a team body .body of h long at .at of h up, a team head .head of h across ahead of it with two pointed ears .ear of h
+ * tall, his dark brown slicked hair a swept cap over the head's crown and back, two white bead eyes with dark pupils; each wing a membrane .span of h
+ * out from the shoulder, its trailing edge scalloped between .fingers finger bones, in dark team (.dark of it), flapping .beat rad about .lift.
+ */
+const VAMPIRE_BAT = {
+  at: 0.55, body: 0.3, head: 0.2, ear: 0.1, span: 0.7, fingers: 3, dark: 0.35, glow: 0.16, beat: 0.75, lift: 0.25, rate: 20,
+  hair: new Color3(0.12, 0.065, 0.035), eye: new Color3(0.95, 0.95, 0.92), pupil: new Color3(0.03, 0.03, 0.03),
+};
+export const VAMPIRE_BAT_NODE = "vampireBat";
+export const VAMPIRE_BAT_WING = "vampireBatWing";
+
+/** The Vampire's bat form, built hidden on his root (spec at VAMPIRE_BAT); RuntimeUnit shows it during a swoop. */
+export function vampireBat(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const V = VAMPIRE_BAT;
+  const f = getMaterialFactory();
+  const team = f.get("cloth", teamColor, { emissive: teamColor.scale(V.glow) });
+  const darkC = teamColor.scale(V.dark);
+  const wingMat = f.get("cloth", darkC, { emissive: darkC.scale(V.glow) });
+  const hairMat = f.get("cloth", V.hair, { emissive: V.hair.scale(0.12) });
+  const eyeMat = f.get("unlit", V.eye, { emissive: V.eye });
+  const pupilMat = f.get("cloth", V.pupil, { emissive: V.pupil });
+  const h = body.metrics.overallHeight;
+  const bat = new TransformNode(VAMPIRE_BAT_NODE, scene);
+  bat.parent = body.root;
+  bat.position.y = h * V.at;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, parent: TransformNode, mat: typeof team, flat = true): Mesh => {
+    m.parent = parent;
+    m.material = mat;
+    if (flat) m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  const trunk = put(MeshBuilder.CreateSphere("vampireBatBody", { diameterX: h * V.body * 0.6, diameterY: h * V.body * 0.55, diameterZ: h * V.body, segments: 4 }, scene), bat, team);
+  trunk.position.z = -h * V.body * 0.1;
+  const head = put(MeshBuilder.CreateSphere("vampireBatHead", { diameter: h * V.head, segments: 4 }, scene), bat, team);
+  head.position.set(0, h * V.head * 0.25, h * V.body * 0.45);
+  for (const side of [-1, 1]) {
+    const ear = put(MeshBuilder.CreateCylinder("vampireBatEar", { height: h * V.ear, diameterTop: 0, diameterBottom: h * V.ear * 0.6, tessellation: 4 }, scene), head, team);
+    ear.position.set(side * h * V.head * 0.28, h * V.head * 0.5, -h * V.head * 0.05);
+    ear.rotation.z = -side * 0.35;
+    const eye = put(MeshBuilder.CreateSphere("vampireBatEye", { diameter: h * V.head * 0.36, segments: 6 }, scene), head, eyeMat, false);
+    eye.position.set(side * h * V.head * 0.2, h * V.head * 0.08, h * V.head * 0.4);
+    const pupil = put(MeshBuilder.CreateSphere("vampireBatPupil", { diameter: h * V.head * 0.14, segments: 4 }, scene), head, pupilMat, false);
+    pupil.position.set(side * h * V.head * 0.2, h * V.head * 0.08, h * V.head * 0.57);
+  }
+  // his slicked-back hair: a swept cap over the crown, running back off the head
+  const hair = put(MeshBuilder.CreateSphere("vampireBatHair", { diameterX: h * V.head * 1.04, diameterY: h * V.head * 0.55, diameterZ: h * V.head * 1.25, segments: 4 }, scene), head, hairMat);
+  hair.position.set(0, h * V.head * 0.32, -h * V.head * 0.12);
+  hair.rotation.x = -0.25;
+  // the wings: a scalloped membrane between finger bones, hinged at the shoulder
+  for (const side of [-1, 1]) {
+    const hinge = new TransformNode(VAMPIRE_BAT_WING, scene);
+    hinge.parent = bat;
+    hinge.position.set(side * h * V.body * 0.22, h * V.body * 0.12, 0);
+    const S = h * V.span;
+    // the outline in the hinge's frame (x out along the wing, z its front): the leading edge, then the scalloped trailing edge back in
+    const pts: [number, number][] = [[0, h * 0.04], [S * 0.45, h * 0.1], [S, h * 0.02]];
+    for (let k = V.fingers; k >= 1; k--) {
+      const x = S * (k / (V.fingers + 1) + 0.12);
+      pts.push([x, -h * 0.2], [x - S * 0.12, -h * 0.12]);
+    }
+    pts.push([0, -h * 0.1]);
+    const pos: number[] = [], idx: number[] = [];
+    // two faces a little apart (a thin closed slab, not one double-sided sheet)
+    for (const [face, dy] of [[1, h * 0.006], [-1, -h * 0.006]] as const) {
+      const base = pos.length / 3;
+      pos.push(0, dy, -h * 0.03);
+      for (const [x, z] of pts) pos.push(side * x, dy, z);
+      for (let i = 1; i < pts.length; i++) {
+        const a = base, b = base + i, c = base + i + 1;
+        if ((face * side) > 0) idx.push(a, c, b); else idx.push(a, b, c);
+      }
+    }
+    const wing = new Mesh("vampireBatMembrane", scene);
+    const vd = new VertexData();
+    vd.positions = pos;
+    vd.indices = idx;
+    const normals: number[] = [];
+    VertexData.ComputeNormals(pos, idx, normals);
+    vd.normals = normals;
+    vd.applyToMesh(wing);
+    put(wing, hinge, wingMat);
+    for (let k = 1; k <= V.fingers; k++) {
+      const x = S * (k / (V.fingers + 1) + 0.12);
+      const len = Math.hypot(x, h * 0.2);
+      const bone = put(MeshBuilder.CreateBox("vampireBatFinger", { width: len, height: h * 0.018, depth: h * 0.018 }, scene), hinge, team);
+      bone.position.set(side * x / 2, 0, -h * 0.08);
+      bone.rotation.y = side * Math.atan2(h * 0.2, x) * 0.6;
+    }
+    hinge.rotation.z = side * V.lift;
+  }
+  bat.setEnabled(false);
+  return out;
+}
+
+/** The bat's wing beat at `t` seconds (rad about the shoulder hinge, signed per side by the caller). */
+export function vampireBatBeat(t: number): number {
+  return VAMPIRE_BAT.lift + VAMPIRE_BAT.beat * Math.sin(t * VAMPIRE_BAT.rate);
 }
 
 /*

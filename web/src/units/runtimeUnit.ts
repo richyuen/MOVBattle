@@ -1,6 +1,7 @@
 import { Vector3, Mesh, MeshBuilder, Color3, Quaternion, Scene, ParticleSystem, TransformNode, type Material } from "@babylonjs/core";
 import { createFxAmbient } from "../combat/particleFactory";
 import { getMaterialFactory } from "./materialFactory";
+import { VAMPIRE_BAT_NODE, VAMPIRE_BAT_WING, vampireBatBeat } from "./spookyDress";
 
 /*
  * [S] spin while firing (330; card Characteristics "During battle, the machine spins around, launching cannonballs from the cannons"; renaissance.da_vinci_tank.jpg).
@@ -136,6 +137,11 @@ export class RuntimeUnit {
   landings = 0;
   // [S] 392 the last leap was a jump-charge (Super Jump): only that leap takes the live-air pose, not a hop back or a halfling's vault
   private _leapAir = false;
+  // [S] 437 the Vampire's bat form (spookyDress VAMPIRE_BAT): set by his swoop, shown while he is off the ground, cleared on landing
+  private _batForm = false;
+  private _batOn = false;
+  private _batNode: TransformNode | null | undefined = undefined;
+  private _batHidden: Mesh[] = [];
 
   // Death physics
   private _physicsActive = false;
@@ -707,6 +713,38 @@ export class RuntimeUnit {
     return true;
   }
 
+  /** [S] 437 the Vampire turns into a bat for this flight (his swoop); he turns back when he lands. */
+  startBatForm(): void {
+    if (!this._isDead) this._batForm = true;
+  }
+
+  get inBatForm(): boolean { return this._batOn; }
+
+  /** Swaps the bat (spookyDress VAMPIRE_BAT) in for the whole body while the bat form flies, and beats its wings. */
+  private _tendBatForm(now: number): void {
+    if (this._batNode === undefined) this._batNode = (this.body.root.getChildren().find((n) => n.name === VAMPIRE_BAT_NODE) as TransformNode | undefined) ?? null;
+    const bat = this._batNode;
+    if (!bat) return;
+    const on = this._batForm && !this._grounded && !this._isDead;
+    if (on !== this._batOn) {
+      this._batOn = on;
+      if (on) {
+        this._batHidden = this.body.root.getChildMeshes(false).filter((m): m is Mesh => m instanceof Mesh && m.isVisible && !m.isDescendantOf(bat));
+        for (const m of this._batHidden) m.isVisible = false;
+      } else {
+        for (const m of this._batHidden) m.isVisible = true;
+        this._batHidden = [];
+      }
+      bat.setEnabled(on);
+    }
+    if (!on) return;
+    for (const n of bat.getChildren()) {
+      if (n.name !== VAMPIRE_BAT_WING) continue;
+      const side = Math.sign((n as TransformNode).position.x) || 1;
+      (n as TransformNode).rotation.z = side * vampireBatBeat(now);
+    }
+  }
+
   faceTarget(target: Vector3): void {
     const dx = target.x - this.body.root.position.x;
     const dz = target.z - this.body.root.position.z;
@@ -1070,6 +1108,7 @@ export class RuntimeUnit {
     this.animator.setAirborne(flung);
     // the live-air shape is only for a jump-charge arc (the leap pose), not for a hop back or a blasted body (that one is limp and takes its own)
     this.animator.setLeapAir(this._leapAir && !this._grounded);
+    this._tendBatForm(now);
     // A flung body is drawn over the blast it is thrown through (FLUNG_RENDER_GROUP: after the fire and smoke sprites, still depth-tested against the solid
     // scene), so it stays a dark, solid figure against the fireball and the smoke instead of being lit pale by the additive fire in front of it
     if (flung !== this._drawnFlung) {
@@ -1143,6 +1182,7 @@ export class RuntimeUnit {
           if (!this._grounded) this.landings += 1;
           this._grounded = true;
           this._leapAir = false;
+          this._batForm = false;
           if (this._pendingBlastSprawlSeconds > 0 && !this._isDead) {
             // The topple clocks ran out mid-flight: restart the downed window where the body comes to rest.
             const now = RuntimeUnit.timeNowSeconds();

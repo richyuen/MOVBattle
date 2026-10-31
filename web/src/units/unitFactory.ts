@@ -14,7 +14,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { vampireClaws, swordcasterBowl, reaperTendrils, candleArms, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood } from "./spookyDress";
+import { vampireClaws, vampireBat, swordcasterBowl, reaperTendrils, candleArms, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -641,6 +641,8 @@ export class UnitFactory {
     if (definition.id === "pirate.harpooner" && !shouldUseVehicleBody) propMeshes.push(...pirateBeard(this._scene, body));
     // [S] 434 the Vampire's empty clawed Hungry Hands (spookyDress VAMPIRE_CLAWS)
     if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireClaws(this._scene, body));
+    // [S] 437 the Vampire's bat form, built hidden, swapped in for him while his swoop flies (spookyDress VAMPIRE_BAT, RuntimeUnit._tendBatForm)
+    if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireBat(this._scene, body, teamColor));
     // [S] 436 the Candlehead's forearms sheathed in lumpy cream candles with cyan flames at the foot, the torch stick hidden (spookyDress CANDLE_ARMS)
     if (definition.id === "spooky.candlehead" && !shouldUseVehicleBody) propMeshes.push(...candleArms(this._scene, body));
     // [S] 435 the Swordcaster's black bowl cut round his bare face in place of the closed hood (spookyDress SWORDCASTER_BOWL)
