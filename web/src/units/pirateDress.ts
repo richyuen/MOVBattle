@@ -784,15 +784,21 @@ const QUEEN_BOOTS = { from: 0.12, shaft: 1.35, top: 1.7, topTall: 0.14, band: 1.
  * all follow: QUEEN_FRAME scales the trunk mesh .trunk across and .deep in depth, the shoulder yoke and the back cape .trunk across, draws the
  * shoulder joints in to .shoulders of their spread, the pelvis .pelvis across and the hip joints in to .hips of theirs.
  */
-const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72 };
+// [P] 438 (critic 437 fallout: "still a head taller" than the captain in lineup_pirate): the trunk cut to .tall of its height from its foot, the
+// neck, shoulders, yoke and cape lowered with its top
+const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72, tall: 0.85 };
 
 /** Cuts the Pirate Queen's body narrow before her dress is fitted (spec at QUEEN_FRAME). */
 export function queenFrame(body: ArticulatedBody): void {
   const F = QUEEN_FRAME;
   body.torsoMesh.scaling.x *= F.trunk;
   body.torsoMesh.scaling.z *= F.deep;
+  const cut = body.torsoMesh.getBoundingInfo().boundingBox.extendSize.y * 2 * body.torsoMesh.scaling.y * (1 - F.tall);
+  body.torsoMesh.scaling.y *= F.tall;
+  body.torsoMesh.position.y -= cut / 2;
   body.torsoMesh.refreshBoundingInfo();
-  for (const m of body.torso.getChildMeshes(true)) if (/_yoke$/.test(m.name) || m.name === "cape") m.scaling.x *= F.trunk;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke$/.test(m.name) || m.name === "cape") { m.scaling.x *= F.trunk; m.position.y -= cut; }
+  for (const j of [body.neck, body.leftShoulder, body.rightShoulder]) j.position.y -= cut;
   body.leftShoulder.position.x *= F.shoulders;
   body.rightShoulder.position.x *= F.shoulders;
   for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name)) m.scaling.x *= F.pelvis;
