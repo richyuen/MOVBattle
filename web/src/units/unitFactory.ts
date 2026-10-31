@@ -15,6 +15,7 @@ import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils, candleArms, candleTower, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood, skeletonArcherBelt, stiffyShorts, skeletonArcherKit, candleRobe, vampireCollar, reaperLegs } from "./spookyDress";
+import { stiffyGreaves } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -665,6 +666,8 @@ export class UnitFactory {
     if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyHelmet(this._scene, body, teamColor));
     // [S] 439 ...and baggy team shorts to the knee with rag-point hems and a brown belt, in place of the skirt (spookyDress STIFFY_SHORTS)
     if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyShorts(this._scene, body, teamColor));
+    // [S] 440 ...and team greaves from the knee down the shin over slim bare bone feet (spookyDress STIFFY_GREAVES)
+    if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyGreaves(this._scene, body, teamColor));
     // [S] 437 the Skeleton Archer's team hood round the skull with a ragged shoulder capelet (spookyDress SKELETON_HOOD)
     if (definition.id === "spooky.skeleton_archer" && !shouldUseVehicleBody) propMeshes.push(...skeletonArcherHood(this._scene, body, teamColor));
     // [S] 438 ...and no skirt: a brown belt round his bare bone pelvis, small team tassels hung off it (spookyDress SKELETON_BELT)

@@ -655,6 +655,52 @@ export function stiffyShorts(scene: Scene, body: ArticulatedBody, teamColor: Col
 }
 
 /*
+ * [S] 440 the Skeleton Warrior's greaves (434 skeleton_warrior a.4: "greaves are grey boot boxes on the feet - TABS: team-coloured greaves over knee and
+ * shin, bare bone feet below"; spooky.skeleton_warrior.blue.png: under the shorts' rag hem a fat team tube from the knee to a hand above the ankle, about
+ * three bones thick, its top a rounded knee cap; the thin bone ankle and a slim bone foot show under it). STIFFY_GREAVES, in each knee joint's frame (the
+ * shin running down -y, S its length): a .sides-sided team tube from .from of S over the knee down to .to of S, .across of the bone's half width across,
+ * .flare narrower at its foot, .deep as deep as wide; a knee dome .knee of the tube across, squashed .kneeSquash in y, at the knee; the foot mesh shrunk to
+ * .foot in width and height so it reads as a bare bone foot, not a boot box. Team self-lit .glow, a shade (.shade) darker than the shorts.
+ */
+const STIFFY_GREAVES = { from: -0.04, to: 0.8, across: 3.4, flare: 0.82, deep: 1.0, sides: 7, knee: 1.12, kneeSquash: 0.75, foot: 0.72, shade: 0.8, glow: 0.14 };
+
+/** Team greaves from the knee down the shin over bare bone feet (spec at STIFFY_GREAVES). */
+export function stiffyGreaves(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const G = STIFFY_GREAVES;
+  const tint = teamColor.scale(G.shade);
+  const team = getMaterialFactory().get("cloth", tint, { emissive: tint.scale(G.glow) });
+  const out: Mesh[] = [];
+  for (const [knee, shin] of [[body.leftKnee, body.leftLowerLeg], [body.rightKnee, body.rightLowerLeg]] as const) {
+    const b = shin.getBoundingInfo().boundingBox;
+    const half = b.extendSize.y * shin.scaling.y, mid = shin.position.y + b.center.y * shin.scaling.y;
+    const S = half * 2;
+    const r = Math.max(b.extendSize.x * shin.scaling.x, b.extendSize.z * shin.scaling.z) * G.across;
+    const cx = shin.position.x + b.center.x * shin.scaling.x, cz = shin.position.z + b.center.z * shin.scaling.z;
+    const y0 = mid + half - G.from * S, y1 = mid + half - G.to * S;
+    const tube = MeshBuilder.CreateCylinder("stiffyGreave", { height: y0 - y1, diameterTop: r * 2, diameterBottom: r * 2 * G.flare, tessellation: G.sides }, scene);
+    tube.scaling.z = G.deep;
+    tube.position.set(cx, (y0 + y1) / 2, cz);
+    const cap = MeshBuilder.CreateSphere("stiffyGreaveKnee", { diameter: r * 2 * G.knee, segments: 3 }, scene);
+    cap.scaling.y = G.kneeSquash;
+    cap.position.set(cx, y0, cz + r * 0.08);
+    for (const m of [tube, cap]) {
+      m.parent = knee;
+      m.material = team;
+      m.convertToFlatShadedMesh();
+      m.isPickable = false;
+      out.push(m);
+    }
+    for (const foot of knee.getChildMeshes(true)) {
+      if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) {
+        foot.scaling.x *= G.foot;
+        foot.scaling.y *= G.foot;
+      }
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 439 the Skeleton Archer's bracers and boots (audit 434 skeleton_archer a.4: "limbs bare grey to grey boxy feet - TABS: team bracers on the forearms
  * and brown boots on the feet"; spooky.skeleton_archer.red.png: a wide team cuff round each forearm from just under the elbow to past its middle, far
  * thicker than the bone; low dark-brown faceted boots over the feet, their tops a turned-down cuff round the foot of the shin). ARCHER_KIT, in each elbow
