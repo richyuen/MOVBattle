@@ -1,25 +1,25 @@
 # spooky.reaper
 Status: open   Audited: 434   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (2 since 434)
-  (struck 1 at 435)
- 2. legs in unit_spooky.reaper_idle are short grey stumps on the ground under a wide robe — TABS: long thin cream bone legs dangling below the robe hem, hovering (ref: spooky.reaper.red.png, card Abilities Hover)
+a FAIL (3 since 434)
+  (struck 1 at 435, 2 at 440)
  3. skull in unit_spooky.reaper_idle is grey — TABS: cream bone skull (ref: spooky.reaper.jpg)
  4. robe in unit_spooky.reaper_idle is a wide squat bell — TABS: narrow tall tattered robe with ragged hem at the thigh (ref: spooky.reaper.red.png)
 b PASS (434)
 c FAIL (1 since 434)
   (struck 1 at 436)
  2. missing: tendrils impaling and hanging a weak unit (ref: spooky.reaper.jpg, card Characteristics)
-d PASS (cost 2500, hp 16.72x, dmg 3.33x, cd 1.24x; 439 stats)
+d PASS (cost 2500, hp 16.72x, dmg 3.33x, cd 1.24x; 440 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a long dangling legs - blocker 2: in reaperLegs lengthen and thin the leg chain (thigh and shin ~1.6x long, ~.5x thick, knee and foot joints moved) so the bone shins hang well below the hem; keep the REAPER_HOVER lift - ref: spooky.reaper.red.png - ours: unit_spooky.reaper_idle (critic 439)
-2. [S] c tendril impale - blocker 2: on a hit on a low-HP target, drive the tendril tips onto it and hold it up off the ground as an effigy - ref: spooky.reaper.jpg - ours: unit_spooky.reaper_flight (critic 436; starving at 442)
+1. [S] a narrow robe - blocker 4: dressReaper robe rebuilt narrow and straight from shoulder to mid-thigh with a ragged hem - ref: spooky.reaper.red.png - ours: unit_spooky.reaper_idle (critic 440)
+2. [S] c tendril impale - blocker 2: on a hit on a low-HP target drive the tendril tips onto it and hold it up off the ground - ref: spooky.reaper.jpg - ours: unit_spooky.reaper_ability (critic 440; starving at 442)
 ## Attempts (iter | gap | criterion | verdict)
 435 | REAPER_TENDRILS six dark tubes off the upper back (ae92e8fa) | a | approved (struck 1)
 436 | REAPER_BURST violet ring + dark dome + shards at the scythe hit (30c492bd) | c | approved (struck 1)
-439 | REAPER_LEGS cream bone legs + REAPER_HOVER lift, legs hanging (e97d690a) | a | approved (no strike: hovering cleared, legs still short stubs)
+439 | REAPER_LEGS cream bone legs + REAPER_HOVER lift, legs hanging (e97d690a) | a | approved (no strike: legs still stubs)
+440 | REAPER_LEGS leg chain x1.6, thin .5, hip raised (b0c472fa) | a | approved (struck 2)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 439 critic: hovering cleared (shadow detached), feet now cream; only two boxy feet show under the hem, no shins.
+- c impale: the capture's target survives the blow (target hurt at 1000 ms): the effigy needs a kill or a low-HP threshold the capture's squire meets; check before building (evidence commit first if not).
 - Dress: unitFactory dressReaper + spookyDress reaperTendrils, reaperLegs ("reaperHover" node marks the animator's REAPER_HOVER). Burst: visualEffects REAPER_BURST.
 - Existing "fear" ability logs status:fear on his blow (the ability pair shows the burst too). 435: tendrils thin wisps (TABS thick tubes arching over the head).
