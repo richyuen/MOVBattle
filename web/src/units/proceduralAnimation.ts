@@ -3826,9 +3826,8 @@ export class ProceduralAnimator {
     if (!neck || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
     const b = this._body;
     const P = BITE_POSE;
-    // 439: a positive pitch leans this rig BACK (438 and 439 shots: he reared away from the man): the bite pitches forward
-    b.torso.rotation.set(-P.lean, 0, 0);
-    b.neck.rotation.set(-P.head, 0, 0);
+    b.torso.rotation.set(P.lean, 0, 0);
+    b.neck.rotation.set(P.head, 0, 0);
     b.root.computeWorldMatrix(true);
     const right = Vector3.TransformNormal(new Vector3(1, 0, 0), b.root.getWorldMatrix());
     right.y = 0;
