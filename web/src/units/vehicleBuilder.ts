@@ -267,6 +267,19 @@ const CATAPULT_FRAME = { long: 1.6, half: 0.42, railY: 0.42, beam: 0.16, cap: 0.
 const CATAPULT_WHEEL = { across: 0.56, face: 0.8, tyreWide: 0.13, proud: 0.015, hub: 0.22, facets: 10, tone: new Color3(0.6, 0.3, 0.13), iron: new Color3(0.42, 0.43, 0.46) };
 const CATAPULT_PAINT = { wood: new Color3(0.66, 0.32, 0.14), woodGlow: 0.16, paintGlow: 0.12, long: 0.62, short: 0.4, strip: 0.5, shift: 0.14 };
 const CATAPULT_BUCKET = { bottom: 0.4, top: 0.68, deep: 0.28, rim: 0.06, sink: 0.45, tone: new Color3(0.55, 0.26, 0.12) };
+/*
+ * [S] 437 the Pumpkin Catapult's rib cage (audit 434 pumpkin_catapult b.2: "payload holder in unit_spooky.pumpkin_catapult_windup is a wooden cup - TABS:
+ * a bone rib cage cradling a jack-o'-lantern"; spooky.pumpkin_catapult.red.png, card Appearance "the boulder holder for a rib cage": at the arm's end a
+ * cream spine lies along it and curved cream ribs rise either side of it round the underside and flanks of a big orange jack-o'-lantern, open at the
+ * top, the carved face glowing). RIB_CRADLE, in the arm pivot's frame (rig units): .ribs ribs .step apart along the arm about the cup's place, each a
+ * bone tube .bone thick swept round the pumpkin's foot from .open rad off its top on one flank to the same on the other, .out of the pumpkin's radius
+ * from its middle, the end ribs .taper smaller; a spine along their feet with a knob at each end; the jack-o'-lantern .size across, squashed
+ * .squash, .lobes ribbed lobes, a stem and a glowing carved face (two triangle eyes, a toothed mouth) on each flank. Bone cream self-lit .glow.
+ */
+const RIB_CRADLE = {
+  ribs: 4, step: 0.12, bone: 0.035, open: 0.75, out: 1.12, taper: 0.85, size: 0.5, squash: 0.82, lobes: 8, glow: 0.2,
+  boneColor: new Color3(1.0, 0.86, 0.6), orange: new Color3(0.9, 0.38, 0.08), stem: new Color3(0.25, 0.3, 0.1), face: new Color3(1, 0.8, 0.2),
+};
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
   const rig = new TransformNode("catapult_rig", scene);
@@ -284,7 +297,6 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   const paint = options.spooky ? null : getMaterialFactory().get("wood", color, { emissive: color.scale(P.paintGlow) });
   const metal = makeMat(scene, new Color3(0.45, 0.45, 0.5));
   const wheelWood = makeMat(scene, new Color3(0.2, 0.14, 0.09)); // the cannon's dark wheel timber, so the wheels stand off the frame
-  const pumpkinMat = makeMat(scene, new Color3(0.88, 0.42, 0.12));
 
   // Box trestle (CATAPULT_FRAME): no slab bed. Two side rails along the firing axis tied by a front, a middle and a back crossbeam, a block cap on each
   // rail end, two bolts through the front beam; a short plank deck at the back for the crewman to stand on.
@@ -375,23 +387,83 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   const B = CATAPULT_BUCKET;
   const cupY = 0.08 + B.deep / 2;
   const cupZ = -L + 0.06;
-  const bucketWood = makeMat(scene, B.tone);
-  const bucket = MeshBuilder.CreateCylinder("bucket", {
-    height: B.deep, diameterBottom: B.bottom, diameterTop: B.top, tessellation: 8, cap: Mesh.CAP_START, sideOrientation: Mesh.DOUBLESIDE,
-  }, scene);
-  bucket.position.set(0, cupY, cupZ);
-  bucket.parent = pivot; bucket.material = bucketWood; allMeshes.push(bucket);
-  const bucketRim = MeshBuilder.CreateTorus("bucketRim", { diameter: B.top, thickness: B.rim, tessellation: 8 }, scene);
-  bucketRim.position.set(0, cupY + B.deep / 2, cupZ);
-  bucketRim.parent = pivot; bucketRim.material = wood; allMeshes.push(bucketRim);
+  if (!options.spooky) {
+    const bucketWood = makeMat(scene, B.tone);
+    const bucket = MeshBuilder.CreateCylinder("bucket", {
+      height: B.deep, diameterBottom: B.bottom, diameterTop: B.top, tessellation: 8, cap: Mesh.CAP_START, sideOrientation: Mesh.DOUBLESIDE,
+    }, scene);
+    bucket.position.set(0, cupY, cupZ);
+    bucket.parent = pivot; bucket.material = bucketWood; allMeshes.push(bucket);
+    const bucketRim = MeshBuilder.CreateTorus("bucketRim", { diameter: B.top, thickness: B.rim, tessellation: 8 }, scene);
+    bucketRim.position.set(0, cupY + B.deep / 2, cupZ);
+    bucketRim.parent = pivot; bucketRim.material = wood; allMeshes.push(bucketRim);
+  }
   const payloadY = cupY + B.deep / 2 - B.sink * CATAPULT_BOULDER + CATAPULT_BOULDER / 2;
 
   if (options.spooky) {
-    const pumpkin = MeshBuilder.CreateSphere("pumpkinPayload", { diameter: 0.45, segments: 8 }, scene);
-    pumpkin.position.set(0, payloadY - 0.1, cupZ);
+    // [S] 437 a bone rib cage cradling a jack-o'-lantern in place of the wooden cup (spec at RIB_CRADLE)
+    const R = RIB_CRADLE;
+    const bone = getMaterialFactory().get("cloth", R.boneColor, { emissive: R.boneColor.scale(R.glow) });
+    const orange = getMaterialFactory().get("cloth", R.orange, { emissive: R.orange.scale(0.14) });
+    const rad = R.size / 2, midY = 0.08 + R.bone * 2 + rad * R.squash * R.out;
+    for (let k = 0; k < R.ribs; k++) {
+      const t = k / (R.ribs - 1) - 0.5;
+      const r = rad * R.out * (Math.abs(t) > 0.4 ? R.taper : 1);
+      const path: Vector3[] = [];
+      for (let i = 0; i <= 12; i++) {
+        // round the foot from one flank to the other: 0 straight down, +-(pi - open) up the flanks
+        const a = (i / 12 - 0.5) * 2 * (Math.PI - R.open);
+        path.push(new Vector3(Math.sin(a) * r, midY - Math.cos(a) * r * R.squash, cupZ + t * R.step * (R.ribs - 1)));
+      }
+      const rib = MeshBuilder.CreateTube("ribCradleRib", { path, radius: R.bone, tessellation: 6, cap: Mesh.CAP_ALL }, scene);
+      rib.parent = pivot; rib.material = bone; allMeshes.push(rib);
+      for (const end of [path[0], path[path.length - 1]]) {
+        const knob = MeshBuilder.CreateSphere("ribCradleKnob", { diameter: R.bone * 2.6, segments: 4 }, scene);
+        knob.position.copyFrom(end);
+        knob.parent = pivot; knob.material = bone; allMeshes.push(knob);
+      }
+    }
+    const spineLong = R.step * (R.ribs - 1) + R.bone * 6;
+    const spine = MeshBuilder.CreateCylinder("ribCradleSpine", { height: spineLong, diameter: R.bone * 3.2, tessellation: 6 }, scene);
+    spine.rotation.x = Math.PI / 2;
+    spine.position.set(0, midY - rad * R.out * R.squash, cupZ);
+    spine.parent = pivot; spine.material = bone; allMeshes.push(spine);
+    for (const end of [-1, 1]) {
+      const knob = MeshBuilder.CreateSphere("ribCradleKnob", { diameter: R.bone * 4.4, segments: 4 }, scene);
+      knob.position.set(0, spine.position.y, cupZ + end * spineLong / 2);
+      knob.parent = pivot; knob.material = bone; allMeshes.push(knob);
+    }
+    // the jack-o'-lantern sat in it: a squat ribbed pumpkin, a stem, a glowing carved face on each flank
+    const pumpkin = new TransformNode("pumpkinPayload", scene);
+    pumpkin.position.set(0, midY, cupZ);
     pumpkin.parent = pivot;
-    pumpkin.material = pumpkinMat;
-    allMeshes.push(pumpkin);
+    const core = MeshBuilder.CreateSphere("pumpkinPayloadCore", { diameter: R.size, segments: 6 }, scene);
+    core.scaling.y = R.squash;
+    core.parent = pumpkin; core.material = orange; allMeshes.push(core);
+    for (let i = 0; i < R.lobes; i++) {
+      const a = (i / R.lobes) * Math.PI * 2;
+      const lobe = MeshBuilder.CreateSphere("pumpkinPayloadLobe", { diameter: R.size * 0.5, segments: 4 }, scene);
+      lobe.scaling.set(1, R.squash * 1.9, 1);
+      lobe.position.set(Math.cos(a) * R.size * 0.27, 0, Math.sin(a) * R.size * 0.27);
+      lobe.parent = pumpkin; lobe.material = orange; allMeshes.push(lobe);
+    }
+    const stem = MeshBuilder.CreateCylinder("pumpkinPayloadStem", { height: R.size * 0.22, diameterTop: R.size * 0.07, diameterBottom: R.size * 0.12, tessellation: 5 }, scene);
+    stem.position.y = R.size * R.squash * 0.5 + R.size * 0.06;
+    stem.rotation.z = 0.25;
+    stem.parent = pumpkin; stem.material = getMaterialFactory().get("cloth", R.stem, { emissive: R.stem.scale(0.1) }); allMeshes.push(stem);
+    const glow = getMaterialFactory().get("unlit", R.face, { emissive: R.face.scale(1.1) });
+    for (const side of [-1, 1]) {
+      const x = side * (R.size * 0.5 + R.size * 0.02);
+      for (const ez of [-1, 1]) {
+        const eye = MeshBuilder.CreateCylinder("pumpkinPayloadEye", { height: R.size * 0.04, diameter: R.size * 0.2, tessellation: 3 }, scene);
+        eye.rotation.z = Math.PI / 2;
+        eye.position.set(x, R.size * 0.09, ez * R.size * 0.14);
+        eye.parent = pumpkin; eye.material = glow; allMeshes.push(eye);
+      }
+      const mouth = MeshBuilder.CreateBox("pumpkinPayloadMouth", { width: R.size * 0.04, height: R.size * 0.08, depth: R.size * 0.4 }, scene);
+      mouth.position.set(x, -R.size * 0.11, 0);
+      mouth.parent = pumpkin; mouth.material = glow; allMeshes.push(mouth);
+    }
   } else {
     // The faceted grey-brown boulder (BOULDER in propBuilder), the same rock the shot flies as; wider than the tray it lies in
     const boulder = buildFacetedBoulder(scene, "boulderPayload", CATAPULT_BOULDER);
