@@ -739,7 +739,7 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  */
 const QUEEN_SKIRT = {
   // [S] 441: .front < 0 cuts the front hem up to mid-thigh (was frontDrop .4 down); the flap out on her left side (was flapX -.25, flapWide .6)
-  top: 0.14, knee: 1.08, out: 1.04, flare: 1.22, deep: 1.1, slant: 0.6, front: -0.85, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
+  top: 0.14, knee: 1.08, out: 1.04, flare: 1.22, deep: 1.1, slant: 0.6, front: -0.5, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
   flapWide: 0.42, flapFoot: 0.22, flapX: -0.78, flapLong: 1.3, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
 };
 
@@ -806,7 +806,7 @@ const QUEEN_BOOTS = { from: 0.12, shaft: 1.35, top: 1.7, topTall: 0.14, band: 1.
  * bandana and hair all hang under it, so they shrink together), the trunk .tall .66. QUEEN_SKIRT's front hem is cut up (.front) instead of dropped,
  * and the wrap flap moved out to her left side (.flapX, .flapWide).
  */
-const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72, tall: 0.66, legs: 0.9, head: 0.82, seat: 0.5 };
+const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72, tall: 0.66, legs: 0.9, head: 0.82 };
 
 /** Cuts the Pirate Queen's body narrow and down to the captain's height before her dress is fitted (spec at QUEEN_FRAME, QUEEN_BUILD). */
 export function queenFrame(body: ArticulatedBody): void {
@@ -821,14 +821,7 @@ export function queenFrame(body: ArticulatedBody): void {
   for (const j of [body.neck, body.leftShoulder, body.rightShoulder]) j.position.y -= cut;
   body.leftShoulder.position.x *= F.shoulders;
   body.rightShoulder.position.x *= F.shoulders;
-  for (const m of body.hip.getChildMeshes(true)) {
-    if (!/_pelvis$/.test(m.name)) continue;
-    m.scaling.x *= F.pelvis;
-    // [S] 441b the pelvis block hung to .79 over a knee at .69 and hid the thigh: cut to .seat of its height, its top kept
-    const ph = m.getBoundingInfo().boundingBox.extendSize.y * 2 * m.scaling.y;
-    m.scaling.y *= F.seat;
-    m.position.y += (ph * (1 - F.seat)) / 2;
-  }
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name)) m.scaling.x *= F.pelvis;
   body.leftHip.position.x *= F.hips;
   body.rightHip.position.x *= F.hips;
   // [R] 440 the leg chain cut to .legs: the thigh and shin meshes and the knee joint scale with it; the foot's sole is baked one shin under the knee
