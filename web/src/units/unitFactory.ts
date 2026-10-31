@@ -17,6 +17,7 @@ import { getLinkedActorPreset } from "./linkedActorPresets";
 import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils, candleArms, candleTower, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood, skeletonArcherBelt, stiffyShorts, skeletonArcherKit, candleRobe, vampireCollar, reaperLegs } from "./spookyDress";
 import { stiffyGreaves } from "./spookyDress";
 import { candleBoots } from "./spookyDress";
+import { vampireBeard } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -651,6 +652,8 @@ export class UnitFactory {
     if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireHair(this._scene, body));
     // [S] 439 the Vampire's short pointed team cape and a fan of tall team spikes standing up behind his head (spookyDress VAMPIRE_COLLAR)
     if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireCollar(this._scene, body, teamColor));
+    // [S] 440 ...a dark brown beard round the jaw with a goatee point and two white fangs at the mouth (spookyDress VAMPIRE_BEARD)
+    if (definition.id === "spooky.vampire" && !shouldUseVehicleBody) propMeshes.push(...vampireBeard(this._scene, body));
     // [S] 436 the Candlehead's forearms sheathed in lumpy cream candles with cyan flames at the foot, the torch stick hidden (spookyDress CANDLE_ARMS)
     if (definition.id === "spooky.candlehead" && !shouldUseVehicleBody) propMeshes.push(...candleArms(this._scene, body));
     // [S] 438 the Candlehead's melted cream wax cap and candle tower over the head, a big cyan flame on top (spookyDress CANDLE_TOWER)

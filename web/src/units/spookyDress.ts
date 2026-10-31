@@ -229,6 +229,64 @@ export function vampireHair(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 440 the Vampire's beard and fangs (434 vampire a.2: "face bare - TABS: dark beard with two white fangs"; spooky.vampire.red.png: a dark brown
+ * beard wrapping the jaw from ear to ear, sideburns up the cheeks to the eyes' foot, its front a short pointed goatee hanging under the chin; just over
+ * it at the mouth two white fangs pointing down, a fang's width apart, as long as the eyes are tall). VAMPIRE_BEARD, in the head's own box (e its half
+ * sizes, eyes the bead eyes' span): the mouth line .mouth of e.y under the eyes' foot; sideburns .side of e.x thick on each cheek from the eyes' foot
+ * down, from .back of e.z to the face; a jaw band round the front from .under of e.y under the head's foot up to .jawTop of e.y under the mouth line,
+ * .proud of e.z off the face; the goatee a three-sided point .goatee of e.x wide hanging .drop of e.y under the band. Fangs: white cones .fang of e.x
+ * across at the root, .fangLong of e.y long, .fangGap of e.x either side of the middle, .fangProud of e.z in front of the band. Hair brown self-lit .glow.
+ */
+const VAMPIRE_BEARD = { mouth: 0.42, side: 0.16, back: -0.1, under: 0.18, jawTop: 0.12, proud: 0.08, goatee: 0.6, drop: 0.4, fang: 0.17, fangLong: 0.34, fangGap: 0.22, fangProud: 0.14, glow: 0.12, white: new Color3(1, 0.98, 0.94) };
+
+/** A dark brown beard round the jaw with a goatee point, two white fangs at the mouth (spec at VAMPIRE_BEARD). */
+export function vampireBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const V = VAMPIRE_BEARD;
+  const f = getMaterialFactory();
+  const hair = f.get("cloth", VAMPIRE_BAT.hair, { emissive: VAMPIRE_BAT.hair.scale(V.glow) });
+  const white = f.get("cloth", V.white, { emissive: V.white.scale(0.35) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const X = e.x * 1.06, front = bb.maximum.z;
+  const mouth = span[0] - e.y * V.mouth;
+  const foot = bb.minimum.y - e.y * V.under;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: typeof hair): Mesh => {
+    m.parent = head;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  const slab = (name: string, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: x1 - x0, height: y1 - y0, depth: z1 - z0 }, scene);
+    m.position.set(c.x + (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    return put(m, hair);
+  };
+  // sideburns down each cheek from the eyes' foot, and the jaw band round the front under the mouth
+  const bandFront = front + e.z * V.proud;
+  slab("vampireBeardSide", -X, -X + e.x * V.side, foot, span[0], c.z + e.z * V.back, bandFront);
+  slab("vampireBeardSide", X - e.x * V.side, X, foot, span[0], c.z + e.z * V.back, bandFront);
+  slab("vampireBeardJaw", -X, X, foot, mouth - e.y * V.jawTop, front - e.z * 0.5, bandFront);
+  // the goatee: a point hanging under the chin
+  const goatee = MeshBuilder.CreateCylinder("vampireBeardGoatee", { height: e.y * V.drop, diameterTop: e.x * V.goatee, diameterBottom: 0, tessellation: 3 }, scene);
+  goatee.scaling.z = 0.5;
+  goatee.rotation.y = Math.PI;
+  goatee.position.set(c.x, foot - e.y * V.drop * 0.5, bandFront - e.z * 0.2);
+  put(goatee, hair);
+  // two white fangs at the mouth line, pointing down in front of the band
+  for (const s of [-1, 1]) {
+    const fang = MeshBuilder.CreateCylinder("vampireFang", { height: e.y * V.fangLong, diameterTop: e.x * V.fang, diameterBottom: 0, tessellation: 4 }, scene);
+    fang.position.set(c.x + s * e.x * V.fangGap, mouth - e.y * V.fangLong * 0.5 + e.y * 0.06, bandFront + e.z * (V.fangProud - V.proud));
+    put(fang, white);
+  }
+  return out;
+}
+
+/*
  * [S] 435 the Swordcaster's bowl haircut (audit 434 swordcaster a.1: "head is a closed purple dome with a spike, no face - TABS: team face with two
  * bead eyes under a black bowl haircut"; spooky.swordcaster.red.png: a glossy black bowl over the crown, its fringe cut straight across the brow just
  * over the bead eyes, the sides down past the eyes to about the jaw's top, the back down to the nape; the face and eyes bare team skin). SWORDCASTER_BOWL,
