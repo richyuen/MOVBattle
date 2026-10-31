@@ -3409,12 +3409,13 @@ export class ProceduralAnimator {
       gun.rotationQuaternion = null;
       return;
     }
-    // [R] 437 at rest too: both fists on the carry bar (Two-handed)
+    // [R] 437 at rest too: both fists on the carry bar (Two-handed). [S] 438 settled twice: the plain solve, reaching across his body to the
+    // weapon side, left the off fist ~.23 m above and off the bar at his chest (critic 437 harpooner b.1)
     this._restHarpoon(gun, w);
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = grip; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
-    this._offArmTo(grip.getAbsolutePosition().clone(), w);
+    this._offArmTo(grip.getAbsolutePosition().clone(), w, 2);
   }
 
   /**
