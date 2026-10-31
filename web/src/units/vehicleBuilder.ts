@@ -289,6 +289,14 @@ const RIB_CRADLE = {
  * height, run .past * 1.5 out; each end two knobs .knob of its thickness across, .lobe of it apart; cords .cord thick in BF.lash. RIB_CRADLE's bone.
  */
 const BONE_FRAME = { arm: 0.11, cross: 0.62, crossAt: [0.5, 0.15], bar: 0.12, big: 0.15, lowAt: 0.62, past: 0.12, knob: 1.35, lobe: 0.32, cord: 0.025, lash: new Color3(0.14, 0.08, 0.06) };
+/*
+ * [S] 438 the Pumpkin Catapult's team banners (audit 434 pumpkin_catapult a.2: "banners absent - TABS: small team banners hanging on both sides of the
+ * frame"; spooky.pumpkin_catapult.red.png, card Appearance "Team distinction comes in the form of small banners at both sides of the catapult": off each
+ * knobbed end of the low crossbone a dark cord drops to a narrow team pennant hanging down the frame's flank to about the rails, its foot cut in two
+ * tails). CATAPULT_BANNER (rig units): the cord .cord long; the cloth a slab .wide along the firing axis, .tall, .thick, set .back of the bone, swung
+ * .sway rad; two tails .tail long; a dark rod across its head. Team (.shade of it) self-lit .glow.
+ */
+const CATAPULT_BANNER = { cord: 0.06, wide: 0.24, tall: 0.46, thick: 0.025, back: 0.0, sway: 0.06, tail: 0.12, shade: 0.8, glow: 0.18 };
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
   const rig = new TransformNode("catapult_rig", scene);
@@ -417,6 +425,32 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     const lowZ = F.spread * (1 - BF.lowAt) / 2 + F.beam * 0.75;
     boneBar("crossbarLow", rig, F.half * 2 + F.beam + BF.past * 3, BF.big, new Vector3(0, lowY, lowZ));
     for (const side of [-1, 1]) lashing(rig, new Vector3(side * F.half, lowY, lowZ + BF.big * 0.4), BF.big * 1.5, "z");
+    // [S] 438 a small team banner hung by a cord off each end of the low bone, down the frame's flank (spec at CATAPULT_BANNER)
+    const CB = CATAPULT_BANNER;
+    const flag = getMaterialFactory().get("cloth", color.scale(CB.shade), { emissive: color.scale(CB.shade * CB.glow) });
+    const endX = (F.half * 2 + F.beam + BF.past * 3) / 2 - BF.big * 0.4;
+    for (const side of [-1, 1]) {
+      const x = side * endX;
+      const cord = MeshBuilder.CreateBox("bannerCord", { width: BF.cord, height: CB.cord, depth: BF.cord }, scene);
+      cord.position.set(x, lowY - CB.cord / 2, lowZ);
+      cord.parent = rig; cord.material = lashMat; allMeshes.push(cord);
+      const top = lowY - CB.cord;
+      const cloth = MeshBuilder.CreateBox("banner", { width: CB.thick, height: CB.tall, depth: CB.wide }, scene);
+      cloth.position.set(x, top - CB.tall / 2, lowZ - CB.back);
+      cloth.rotation.x = CB.sway * side;
+      cloth.parent = rig; cloth.material = flag; allMeshes.push(cloth);
+      // its foot cut into two swallow tails
+      for (const tail of [-1, 1]) {
+        const t = MeshBuilder.CreateCylinder("bannerTail", { height: CB.tail, diameterTop: CB.wide * 0.5, diameterBottom: 0, tessellation: 4 }, scene);
+        t.scaling.x = CB.thick / (CB.wide * 0.5) * 1.4;
+        t.position.set(0, -CB.tall / 2 - CB.tail / 2 + 0.005, tail * CB.wide * 0.25);
+        t.parent = cloth; t.material = flag; allMeshes.push(t);
+      }
+      // a dark rod across its head
+      const rod = MeshBuilder.CreateBox("bannerRod", { width: CB.thick * 2, height: BF.cord * 1.6, depth: CB.wide * 1.15 }, scene);
+      rod.position.set(0, CB.tall / 2, 0);
+      rod.parent = cloth; rod.material = lashMat; allMeshes.push(rod);
+    }
   } else {
     beam("crossbar", F.half * 2 + F.beam, F.beam, F.beam, 0, topY, 0);
   }
