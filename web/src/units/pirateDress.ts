@@ -776,6 +776,30 @@ const QUEEN_SHIRT = {
  */
 const QUEEN_BOOTS = { from: 0.12, shaft: 1.35, top: 1.7, topTall: 0.14, band: 1.42, bandTall: 0.1, bandAt: 0.34, leather: new Color3(0.45, 0.16, 0.1), glow: 0.12 };
 
+/*
+ * [S] 437 the Pirate Queen's narrow frame (CONFIRM 434 a.1, standing after the [R] 435: "torso and skirt a wide hunched block, about twice a pirate's
+ * width, and clearly taller and broader than the captain in lineup_pirate - TABS: slim long-limbed build"; pirate.pirate_queen.red.png: her trunk about
+ * one and a half heads across, her shoulders under twice the head's width, the arms hanging close by the trunk, the legs close together under a
+ * narrow skirt). The scale/bulk row stays; the body itself is cut narrow, before any dress is fitted to it, so the shirt, sash, skirt and boots
+ * all follow: QUEEN_FRAME scales the trunk mesh .trunk across and .deep in depth, the shoulder yoke and the back cape .trunk across, draws the
+ * shoulder joints in to .shoulders of their spread, the pelvis .pelvis across and the hip joints in to .hips of theirs.
+ */
+const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72 };
+
+/** Cuts the Pirate Queen's body narrow before her dress is fitted (spec at QUEEN_FRAME). */
+export function queenFrame(body: ArticulatedBody): void {
+  const F = QUEEN_FRAME;
+  body.torsoMesh.scaling.x *= F.trunk;
+  body.torsoMesh.scaling.z *= F.deep;
+  body.torsoMesh.refreshBoundingInfo();
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke$/.test(m.name) || m.name === "cape") m.scaling.x *= F.trunk;
+  body.leftShoulder.position.x *= F.shoulders;
+  body.rightShoulder.position.x *= F.shoulders;
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name)) m.scaling.x *= F.pelvis;
+  body.leftHip.position.x *= F.hips;
+  body.rightHip.position.x *= F.hips;
+}
+
 /** The Pirate Queen's knee-high red-brown boots with a team band (spec at QUEEN_BOOTS, in the [R] 435 build spec). */
 export function queenBoots(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const B = QUEEN_BOOTS;
