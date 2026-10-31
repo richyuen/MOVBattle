@@ -245,6 +245,60 @@ export function swordcasterSkirt(scene: Scene, body: ArticulatedBody, teamColor:
   return out;
 }
 
+/** The skeleton's built-in round hood (unitFactory dressSkeleton), hidden when a unit wears its own headgear. */
+function hideSkeletonHood(body: ArticulatedBody): void {
+  for (const m of body.headMesh.getChildMeshes(true)) if (/_hood$/.test(m.name)) { m.isVisible = false; m.setEnabled(false); }
+}
+
+/*
+ * [S] 437 the Skeleton Warrior's Roman helmet (audit 434 skeleton_warrior a.1: "helmet is a small round skullcap on top of the skull - TABS: Roman-style
+ * team helmet whose cheek guards hang down both sides of the skull to the jaw"; spooky.skeleton_warrior.red.png, card Appearance "a Roman-style helmet":
+ * a team bowl over the whole crown down to a brow line just over the bead eyes, a long cheek guard each side hanging from it past the eye sockets to
+ * below the jaw, a little flared and forward to the cheekbones, and a short neck guard flaring out behind). STIFFY_HELMET, in the head block's box
+ * (e its half sizes): the bowl .out of the head wide and deep from .clear over the eyes' top to .crown over the head's top, its top a smaller .cap
+ * block; cheek guards .cheek of e.x thick from the brow down to .jaw of e.y under the head's foot, from the back to .front of e.z, splayed .splay rad;
+ * the neck guard .neck of e.z thick at the back down to .nape of e.y, kicked out .kick rad. Team cloth self-lit .glow.
+ */
+const STIFFY_HELMET = { out: 1.16, clear: 0.06, crown: 0.14, cap: 0.82, cheek: 0.2, jaw: 0.22, front: 0.62, splay: 0.08, neck: 0.22, nape: -0.85, kick: 0.3, glow: 0.14 };
+
+/** A team Roman helmet: a bowl to the brow, cheek guards to the jaw, a flared neck guard (spec at STIFFY_HELMET). */
+export function stiffyHelmet(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const R = STIFFY_HELMET;
+  hideSkeletonHood(body);
+  const team = getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(R.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox, e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body) ?? [c.y - e.y * 0.2, c.y + e.y * 0.3];
+  const X = e.x * R.out, Z = e.z * R.out;
+  const brow = span[1] + e.y * R.clear, top = bb.maximum.y + e.y * R.crown;
+  const out: Mesh[] = [];
+  const slab = (name: string, w: number, h: number, d: number, x: number, y: number, z: number): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(c.x + x, y, c.z + z);
+    m.parent = head;
+    m.material = team;
+    m.convertToFlatShadedMesh();
+    m.isPickable = false;
+    out.push(m);
+    return m;
+  };
+  // the bowl over the crown, and a narrower cap on it
+  slab("stiffyHelmetBowl", X * 2, top - brow, Z * 2, 0, (top + brow) / 2, 0);
+  const capH = (top - brow) * 0.35;
+  slab("stiffyHelmetCap", X * 2 * R.cap, capH, Z * 2 * R.cap, 0, top + capH / 2, 0);
+  // the cheek guards hang from the brow past the eyes to under the jaw
+  const foot = bb.minimum.y - e.y * R.jaw, depth = Z + e.z * R.front;
+  for (const side of [-1, 1]) {
+    const g = slab("stiffyHelmetCheek", e.x * R.cheek, brow - foot, depth, side * (X - e.x * R.cheek / 2), (brow + foot) / 2, (e.z * R.front - Z) / 2);
+    g.rotation.z = side * R.splay;
+  }
+  // the neck guard down the back, kicked out at its foot
+  const nape = c.y + e.y * R.nape;
+  const n = slab("stiffyHelmetNeck", X * 2, brow - nape, e.z * R.neck, 0, (brow + nape) / 2, -Z + e.z * R.neck / 2);
+  n.rotation.x = -R.kick;
+  return out;
+}
+
 /*
  * [S] 436 the Candlehead's candle arms (audit 434 candlehead b.1: "main hand holds a dark stick - TABS: both forearms sheathed in huge melted cream
  * candles with cyan flames at the bottom"; spooky.candlehead.red.png, card Main/Off Hand "Candle Fire", Appearance "flaming cierges on its ... hands":

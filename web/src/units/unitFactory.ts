@@ -14,7 +14,7 @@ import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
 import { getLinkedActorPreset } from "./linkedActorPresets";
-import { vampireClaws, swordcasterBowl, reaperTendrils, candleArms, swordcasterCuirass, swordcasterSkirt } from "./spookyDress";
+import { vampireClaws, swordcasterBowl, reaperTendrils, candleArms, swordcasterCuirass, swordcasterSkirt, stiffyHelmet } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -649,6 +649,8 @@ export class UnitFactory {
     if (definition.id === "spooky.swordcaster" && !shouldUseVehicleBody) propMeshes.push(...swordcasterCuirass(this._scene, body, teamColor));
     // [S] 437 the Swordcaster's flared team tunic skirt to mid-thigh with dark stripes (spookyDress SWORDCASTER_SKIRT)
     if (definition.id === "spooky.swordcaster" && !shouldUseVehicleBody) propMeshes.push(...swordcasterSkirt(this._scene, body, teamColor));
+    // [S] 437 the Skeleton Warrior's team Roman helmet with cheek guards to the jaw, in place of the round hood (spookyDress STIFFY_HELMET)
+    if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyHelmet(this._scene, body, teamColor));
     // [S] 427 the Pirate Queen's team bandana, its flap down over her left eye (pirateDress QUEEN_BANDANA)
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) propMeshes.push(...queenBandana(this._scene, body, teamColor));
     // [S] 428 the Pirate Queen's brown bomb sash from her right shoulder to her left hip, four black bombs on it (pirateDress QUEEN_SASH)
