@@ -194,6 +194,35 @@ function harpoonMuzzleOf(unit: RuntimeUnit): TransformNode | null {
   return null;
 }
 
+/*
+ * [S] 462 a short legacy shooter's missile leaves what shoots it (audit 457 poacher c.1: "the shaft leaves from the hat at head height while the bow
+ * hangs at the hip - TABS: the arrow leaves the drawn bow"; blowdarter c.1: "the shaft leaves from the hat and no pipe is at the mouth - TABS: the
+ * dart leaves the blowgun"). The default origin is a fixed 1 m over the feet: on a man a little over 1 m tall that is his hat. HAND_LAUNCH: "bow"
+ * launches from the fist that holds the bow (the hand with a mesh named bow* under it), "mouth" from the front of the head (.mouthAhead of its depth
+ * ahead of its middle, .mouthDrop of its height under it), both at their world height (originLift 0).
+ */
+const HAND_LAUNCH: Record<string, "bow" | "mouth"> = { "legacy.poacher": "bow", "legacy.blowdarter": "mouth" };
+const MOUTH_LAUNCH = { mouthAhead: 1.1, mouthDrop: 0.3 };
+
+/** Where a HAND_LAUNCH shooter's missile leaves: his bow fist or his mouth, in world space; null when he has neither. */
+function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
+  const how = HAND_LAUNCH[unit.definition.id];
+  if (!how) return null;
+  const b = unit.body;
+  if (how === "bow") {
+    const hand = [b.leftHand, b.rightHand].find((h) => h?.getDescendants(false, (n) => /^bow/i.test(n.name)).length);
+    if (!hand) return null;
+    worldMatrixChain(hand);
+    return hand.getAbsolutePosition().clone();
+  }
+  const head = b.headMesh;
+  if (!head) return null;
+  worldMatrixChain(head);
+  const box = head.getBoundingInfo().boundingBox;
+  const local = box.center.add(new Vector3(0, -box.extendSize.y * MOUTH_LAUNCH.mouthDrop, box.extendSize.z * MOUTH_LAUNCH.mouthAhead));
+  return Vector3.TransformCoordinates(local, head.getWorldMatrix());
+}
+
 /** Zeus's thrown bolt is back in his fist this share of the cooldown after the throw (384; until then the fist is empty). */
 const ZEUS_REARM = 0.6;
 // [S] 386 Zeus's lightning chain (card Characteristics: the thunderbolt "will conduct to nearby units"): from the struck man the bolt hops to the nearest
@@ -3015,9 +3044,10 @@ export class SimulationSystem {
             for (let n: Node | null = loadedBolt; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
             for (const n of chain) n.computeWorldMatrix(true);
           }
+          const launchAt = handLaunchPoint(attacker);
           this.projectileSystem.spawnProjectile(
             resolveProjectileShape(attacker, attackProfile) ?? "arrow",
-            attackOrigin,
+            launchAt ?? attackOrigin,
             target,
             damage,
             knockback,
@@ -3026,7 +3056,7 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), fireArrow: FIRE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined },
+            { originLift: launchAt ? 0 : originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), fireArrow: FIRE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined },
           );
           if (loadedBolt?.isEnabled()) {
             loadedBolt.setEnabled(false);
@@ -3433,6 +3463,7 @@ export class SimulationSystem {
       const attackOriginInfo = attacker.getAttackOrigin();
       const smokeOriginInfo = attacker.getSmokeOrigin();
       const attackOrigin = attackOriginInfo.position;
+      const launchAt = handLaunchPoint(attacker); // [S] 462 HAND_LAUNCH: the bow fist or the mouth
       if (this.projectileSystem && !isFirearmUnit(attacker)) {
         if (shouldSpawnProjectileMuzzleFx(projectileShape) && smokeOriginInfo.source === "vehicle-socket") {
           const dir = target.position.subtract(attackOrigin).normalize();
@@ -3446,7 +3477,7 @@ export class SimulationSystem {
         const offset = new Vector3((Math.random() - 0.5) * 0.25, Math.random() * 0.2, (Math.random() - 0.5) * 0.15);
         this.projectileSystem.spawnProjectile(
           projectileShape,
-          attackOrigin,
+          launchAt ?? attackOrigin,
           target,
           perShotDamage,
           knockback.scale(0.4),
@@ -3455,7 +3486,7 @@ export class SimulationSystem {
           this._units,
           offset,
           i * 0.04,
-          { originLift: originLiftForSource(attackOriginInfo.source) },
+          { originLift: launchAt ? 0 : originLiftForSource(attackOriginInfo.source) },
         );
       } else {
         if (this.projectileSystem && isFirearmUnit(attacker)) {
