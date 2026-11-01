@@ -3726,6 +3726,7 @@ export class SimulationSystem {
     }
     if (abilities.has("poison")) {
       target.applyDamage(6, Vector3.Zero());
+      target.poison(); // [S] 467 green and slowly dying (RuntimeUnit POISON)
       this._logAbility(attacker, "status:poison", now, target.position);
     }
     if (abilities.has("fear") && this.visualEffects) {

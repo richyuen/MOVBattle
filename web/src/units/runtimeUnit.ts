@@ -38,6 +38,12 @@ const DRUNK = { green: new Color3(0.35, 0.85, 0.2), dye: 0.8, glow: 0.35, roll: 
  * [S] gilded (351; medieval.healer card Appearance: "a golden beam connects to the unit the healer is curing, turning them gold for a moment"). While a
  * healer's beam is on him (gild) his skin is GILD.dye of the way to GILD.gold and lit .glow of it, his clothes lit .6 of that; no roll, no slow.
  */
+/*
+ * [S] 467 poisoned by a blow dart (audit 457 legacy.blowdarter c.3: "status:poison is recorded but the target shows no tint or effect - TABS: the hit unit
+ * is poisoned and slowly dies"; card Characteristics). For POISON.seconds after a dart his skin is dyed .dye of the way to .tint and lit .glow of it (his
+ * clothes .6 of that), without the drunk totter, and every .tick s he loses .dps x .tick health.
+ */
+export const POISON = { tint: new Color3(0.45, 0.9, 0.12), dye: 0.7, glow: 0.45, seconds: 6, dps: 4, tick: 0.5 };
 const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45, coat: new Color3(0.95, 0.62, 0.08), coatGlow: 0.22 };
 /*
  * [S] the ice crust a freeze leaves on its target (395, see _applyFrostCrust): shards of pale ice on the trunk, head, arms and thighs.
@@ -188,6 +194,9 @@ export class RuntimeUnit {
   // Drunk from a potion's splash (getDrunk, DRUNK): until when, and whether his skin is dyed green now
   private _drunkUntil = 0;
   private _drunkDyed = false;
+  // Poisoned by a blow dart (poison, POISON): until when, and the next damage tick
+  private _poisonUntil = 0;
+  private _poisonTickAt = 0;
   // Gilded by a healer's beam (gild, GILD): until when
   private _gildUntil = 0;
   private _dyedWith: Color3 | null = null;
@@ -1107,6 +1116,18 @@ export class RuntimeUnit {
     this.applySlow(DRUNK.slow, seconds, now);
   }
 
+  /** Struck by a blow dart (POISON): green and losing health for POISON.seconds. */
+  poison(): void {
+    if (this._isDead) return;
+    const now = RuntimeUnit.timeNowSeconds();
+    if (now >= this._poisonUntil) this._poisonTickAt = now + POISON.tick;
+    this._poisonUntil = now + POISON.seconds;
+  }
+
+  get isPoisoned(): boolean {
+    return !this._isDead && RuntimeUnit.timeNowSeconds() < this._poisonUntil;
+  }
+
   /** Under a healer's beam (GILD): gold for `seconds`. */
   gild(seconds: number): void {
     if (this._isDead) return;
@@ -1175,6 +1196,11 @@ export class RuntimeUnit {
 
   update(dt: number, now: number): void {
     this._tendBalloons(now);
+    // a poisoned man slowly dies (POISON)
+    if (this.isPoisoned && now >= this._poisonTickAt) {
+      this._poisonTickAt = now + POISON.tick;
+      this.applyDamage(POISON.dps * POISON.tick, Vector3.Zero());
+    }
     // Animate
     // A blasted body stays limp for its whole flight, not just until the topple clock runs out mid-air.
     this.animator.setLimp(this.isToppled || this.isDowned || this._pendingBlastSprawlSeconds > 0 || now < this._hungUntil);
@@ -1952,13 +1978,15 @@ export class RuntimeUnit {
   private _applyDrunk(now: number): boolean {
     const drunk = this.isDrunk;
     // A healer's beam gilds him (GILD) the same way, gold and lit, without the totter; drunk wins when both hold
-    const gilded = !drunk && this.isGilded;
+    // a blow dart's poison dyes him green the same way (POISON), without the totter; drunk wins, then poison, then gild
+    const poisoned = !drunk && this.isPoisoned;
+    const gilded = !drunk && !poisoned && this.isGilded;
     this._gildMeshes(gilded);
-    const tint = drunk ? DRUNK.green : GILD.gold;
-    const dye = drunk ? DRUNK.dye : GILD.dye;
-    const glow = drunk ? DRUNK.glow : GILD.glow;
+    const tint = drunk ? DRUNK.green : poisoned ? POISON.tint : GILD.gold;
+    const dye = drunk ? DRUNK.dye : poisoned ? POISON.dye : GILD.dye;
+    const glow = drunk ? DRUNK.glow : poisoned ? POISON.glow : GILD.glow;
     const skin = this.body.skinMaterial;
-    const dyed = drunk || gilded;
+    const dyed = drunk || poisoned || gilded;
     if (dyed && (!this._drunkDyed || this._dyedWith !== tint)) {
       if (!this._drunkDyed) this._skinBase = skin.baseColor.clone();
       skin.baseColor = Color3.Lerp(this._skinBase ?? skin.baseColor, tint, dye);
@@ -1972,7 +2000,7 @@ export class RuntimeUnit {
     if (!dyed) return false;
     skin.emissiveColor = this._skinGlow.add(tint.scale(glow));
     this.body.bodyMaterial.emissiveColor = tint.scale(glow * 0.6);
-    if (gilded) return true;
+    if (gilded || poisoned) return true;
     const b = this.body;
     b.torso.rotation.z += Math.sin(now * DRUNK.rate) * DRUNK.roll;
     b.neck.rotation.z -= Math.sin(now * DRUNK.rate + 0.8) * DRUNK.roll * 1.4;
@@ -2199,6 +2227,7 @@ export class RuntimeUnit {
   resetToSpawn(): void {
     this._isDead = false;
     this._drunkUntil = 0;
+    this._poisonUntil = 0;
     this._gildUntil = 0;
     this._auraUntil = 0;
     this._auraKind = null;
