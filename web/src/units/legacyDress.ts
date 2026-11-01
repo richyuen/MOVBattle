@@ -579,3 +579,40 @@ export function peasantLegs(scene: Scene, body: ArticulatedBody, teamColor: Colo
   return out;
 }
 
+/*
+ * [S] 461 the Peasant's fringe (critic 460 a.3: "hair, none - TABS: dark shaggy fringe hanging out of the hood over the eyes"; legacy.peasant.red.png:
+ * dark brown-black hair in long ragged locks hanging from under the hood's front edge over the brow and down both cheeks to the jaw, the eyes showing
+ * between them). PEASANT_FRINGE in the head box (half sizes e, centre c, +z the face): .locks thin faceted locks along the front from side to side,
+ * each .lockW e.x wide and .thick e.z deep, from .top e.y over the centre down to .foot e.y under it (the side ones longer by .sideLong), .proud e.z in
+ * front of the face plane; the middle .gap e.x left open over the eyes. Near-black brown .color, self-lit .glow.
+ */
+const PEASANT_FRINGE = { locks: 6, lockW: 0.22, thick: 0.12, top: 0.92, foot: 0.18, sideLong: 0.75, proud: 0.04, gap: 0.5, color: new Color3(0.07, 0.05, 0.04), glow: 0.1 };
+
+/** The Peasant's dark shaggy fringe hanging out of the hood over the brow (spec at PEASANT_FRINGE), hung on the head. */
+export function peasantFringe(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = PEASANT_FRINGE;
+  const hair = getMaterialFactory().get("cloth", P.color, { emissive: P.color.scale(P.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const out: Mesh[] = [];
+  const per = P.locks / 2;
+  for (const s of [-1, 1]) {
+    for (let k = 0; k < per; k++) {
+      // from beside the eyes out to the cheek: the outer locks hang longest, down the sides of the face
+      const u = (k + 0.5) / per;
+      const x = s * e.x * (P.gap / 2 + (1 - P.gap / 2) * u);
+      const foot = P.foot + P.sideLong * u * u;
+      const tall = e.y * (P.top + foot);
+      const lock = MeshBuilder.CreateBox("peasantFringe", { width: e.x * P.lockW, height: tall, depth: e.z * P.thick }, scene);
+      lock.position.set(c.x + x, c.y + e.y * (P.top - foot) / 2, c.z + e.z * (1 + P.proud) - e.z * P.thick * 0.5 - e.z * 0.25 * u);
+      lock.rotation.z = s * 0.12 * (k % 2 ? 1 : 0.4);
+      lock.material = hair;
+      lock.parent = head;
+      lock.convertToFlatShadedMesh();
+      out.push(lock);
+    }
+  }
+  return out;
+}
+
