@@ -12,7 +12,7 @@ import { getMaterialFactory } from "./materialFactory";
  * across at the seat, .flare of that at the top, standing from the seat to .tall H over the head top; dome .dome H high; brim .brim W across, .thick H,
  * its sides curled up .curl H at the rim; a band .band H tall just above the brim; felt the team colour times .shade, the band times .bandShade.
  */
-const BOWLER = { sides: 12, crown: 1.14, flare: 1.06, tall: 0.18, dome: 0.32, brim: 1.62, thick: 0.035, curl: 0.12, band: 0.08, shade: 0.42, bandShade: 0.18 };
+const BOWLER = { sides: 12, crown: 1.14, flare: 1.06, tall: 0.18, dome: 0.32, brim: 1.62, thick: 0.035, curl: 0.12, band: 0.08, shade: 0.25, bandShade: 0.12 };
 
 /**
  * The bowler (spec at BOWLER), in the hat's own units (`unit` per metre of the neck frame). `seat` is the hat's seat (negative: under the head
