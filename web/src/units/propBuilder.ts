@@ -6392,7 +6392,7 @@ function buildLongPike(scene: Scene, s: number): Mesh {
  * rope wraps .wrap long, .wrapOut of the stave across, at +-.wrapAt of the half-length; nock bands at +-.nockAt. Names "bow" and "string" kept (the
  * bow seat finds them); carried across the front like the ice bow (the iceBowCarry mark, _restIceBow).
  */
-const POACHER_BOW = { long: 0.62, thick: 0.085, taper: 0.55, bow: 0.06, wrap: 0.09, wrapOut: 1.18, wrapAt: [0.1, 0.26], nockAt: 0.86, nock: 0.05, wood: new Color3(0.85, 0.5, 0.25), rope: new Color3(1.0, 0.78, 0.45), dark: new Color3(0.25, 0.13, 0.06) };
+const POACHER_BOW = { long: 0.62, thick: 0.085, taper: 0.55, bow: 0.06, grip: 0.1, wrap: 0.09, wrapOut: 1.18, wrapAt: [0.1, 0.26], nockAt: 0.86, nock: 0.05, wood: new Color3(0.85, 0.5, 0.25), rope: new Color3(1.0, 0.78, 0.45), dark: new Color3(0.25, 0.13, 0.06) };
 function buildPoacherBow(scene: Scene, s: number, stand: number): Mesh {
   const B = POACHER_BOW;
   const L = stand * B.long;
@@ -6415,6 +6415,9 @@ function buildPoacherBow(scene: Scene, s: number, stand: number): Mesh {
   };
   const rope = mat(scene, B.rope, 0.12, "cloth");
   for (const at of B.wrapAt) for (const side of [1, -1]) band("bowWrap", at * side, B.wrap, B.wrapOut, rope);
+  // [S] 464 the grip wrap at the middle, named "bowGrip": the rest carry (_restIceBow) slides the stave so this lands in his weapon fist (critic 463
+  // poacher b.1: "the bow is strapped across him, not held"; legacy.poacher.red.png: the near fist closed on the bow between its wraps)
+  band("bowGrip", 0, B.grip, B.wrapOut, rope);
   const dark = mat(scene, B.dark, 0.08, "cloth");
   for (const side of [1, -1]) band("bowNock", B.nockAt * side, B.nock, B.wrapOut, dark);
   const string = MeshBuilder.CreateCylinder("string", { height: L * 0.97, diameter: 0.006 * L, tessellation: 4 }, scene);
