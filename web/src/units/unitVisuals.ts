@@ -670,7 +670,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "wild_west.lasso": vis(
-    { scale: 1.28, bulk: 1.02, armLength: 1.06 }, "whip", "cowboy_hat", "none", "mount_horse", "#8B6A3D", undefined, {
+    { scale: 1.28, bulk: 1.02, armLength: 1.06 }, "whip", "flat_hat", "none", "mount_horse", "#8B6A3D", undefined, {
+      // [S] 448 a small team flat-crown hat (wildWestDress FLAT_HAT; critic 447 lasso a.3), not the brown tall-crown hat three heads wide
       posePreset: "mounted",
       materialPreset: "wildwest_leather",
     },
