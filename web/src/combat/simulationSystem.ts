@@ -310,7 +310,8 @@ const BULLET_RAIN = { units: new Set(["wild_west.gunslinger"]), hold: 1.1, raise
  * When his pick comes down on the man (the landed blow), it blows up there: a fireball with dark rock clods thrown clear (spawnExplosionBurst at
  * .scale) on the ground where the man stands, and the blow's harm reaches every foe within .radius m. Logged "blast" at the blow.
  */
-const MINER_BLAST = { units: new Set(["wild_west.miner"]), radius: 2.5, scale: 0.85 };
+// [P] 448 scale .85 -> .5: the burst whited out half the _flight frame and the miner (critic 447 c defect 1)
+const MINER_BLAST = { units: new Set(["wild_west.miner"]), radius: 2.5, scale: 0.5 };
 const QUICK_FAN = { units: new Set(["wild_west.quick_draw"]), shots: 6, every: 0.2, flash: 0.6, damage: 1.18, push: 1.2 };
 const VAMPIRE_LATCH = { round: 0.7, off: 0.75, up: 0.2, first: 0.3, every: 0.35, afterDeath: 0.5, blood: 12 };
 /**
