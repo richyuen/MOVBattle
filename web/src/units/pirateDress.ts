@@ -737,9 +737,29 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  * (.pantsOut 1.14 of the leg) poke out through it. The hem now drops .frontDrop of the skirt's length toward its front (none at the sides and back),
  * the beads riding it, and the trousers are the leg meshes themselves in the pale team shade, no shells, so nothing bulges at the knee.
  */
+/*
+ * [R] 450 QUEEN_LEGLINE (plateau a, blocker 2: "legs in unit_pirate.pirate_queen_idle are short stumps, the boots start at the skirt hem and no thigh
+ * shows - TABS: long slim legs, bare thigh between the skirt's front hem and the knee boots"; the 441, 444 and 449 attempts cut the pelvis and the
+ * skirt's front and left the hem's sides, the boot cuff and the sword guards where they were). Measured before (probes 450, root frame, m; head top
+ * 1.95): hip joint .89 (.46 of her height), knees .47 (.24), no crouch (knees .1-.17 rad, hip sink 0); skirt hem .18 at its lowest and ~.5 at its
+ * front (.09-.26), its beads riding it down to the boots; the turned boot tops .41-.58 (to .3) and 1.7 of the shin wide, above the knee; the generic
+ * tunicSkirt .76-1.04 and the pelvis box .61-1.03 in the dark body shade round the hips; the sword guards .49-.90, the weapon-side one in the idle
+ * camera's line to the near thigh. Spec read off pirate.pirate_queen.red.png, in shares of her height (sole to head top): belt .50; the skirt's hem
+ * high across the front at ~.42, falling to ~.38 on her left and to ~.33 on her right where the wrap's loose end hangs on, its point at ~.27 over the
+ * outer front of the right thigh; bare pale-pink trousers from the hem to the boot tops at ~.24, just under the knee (.25); slim red-brown boots a
+ * little wider than the shin with a modest turned top; the fists at the hips (~.45), the guards beside them above the thighs. So, in the frame cut
+ * (QUEEN_FRAME): the leg chain .legs (.74 -> .815) so the hip joint rises to ~.98 (.50), the trunk .tall (.76 -> .65) by the same so the neck and
+ * head stay where they were (head top ~1.95, the 440 height kept); the pelvis box keeps its top and is cut to .pelvisCut of its height, its foot
+ * off the thighs, in the trousers' shade (queenSkirt). The skirt (QUEEN_SKIRT): the belt .top above the trunk's foot, the hem .knee of the way to the
+ * knees (1.08 -> .5), slanting .slant down toward her RIGHT (+x; was her left), rising .frontRise of its length toward the front (the 433 frontDrop
+ * removed); the wrap's loose end on her right front (.flapX +.8 of W/2) down .flapLong to the knee, narrow, leaning out; the beads ride the new hem;
+ * trousers .pale lighter. The boots (QUEEN_BOOTS): the shaft 1.2 of the shin from just under the knee (.from .38 of the shin mesh, whose calf cap tops out above the joint), the turned top 1.32 wide and .1 tall, the band
+ * under it. unitFactory: no generic tunicSkirt on her. proceduralAnimation QUEEN_GUARD.drop .3 -> .22: the fists at the hips (the drop is a share
+ * of metrics.overallHeight, 2.41, the pre-cut height), the guards above the thigh band, the blades still crossed in their X (b untouched).
+ */
 const QUEEN_SKIRT = {
-  top: 0.14, knee: 1.08, out: 1.04, flare: 1.22, deep: 1.1, slant: 0.6, frontDrop: 0.4, sides: 8, beads: 7, bead: 0.11, pale: 0.18,
-  flapWide: 0.6, flapFoot: 0.22, flapX: -0.25, flapLong: 1.3, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
+  top: 0.06, knee: 0.5, out: 1.04, flare: 1.22, deep: 1.1, slant: 0.2, frontRise: 0.42, sides: 8, beads: 7, bead: 0.11, pale: 0.3,
+  flapWide: 0.5, flapFoot: 0.12, flapX: 0.8, flapLong: 1.45, flapProud: 0.06, flapLean: 0.12, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
 };
 
 /*
@@ -774,7 +794,9 @@ const QUEEN_SHIRT = {
  * QUEEN_BOOTS, per shin (limbShell, 0 its top): the shaft .shaft of the shin from .from to the foot, the turned top .top wide and .topTall tall from
  * .from, the team band .band wide and .bandTall tall at .bandAt; red-brown .leather (the foot mesh too), self-lit .glow.
  */
-const QUEEN_BOOTS = { from: 0.12, shaft: 1.35, top: 1.7, topTall: 0.14, band: 1.42, bandTall: 0.1, bandAt: 0.34, leather: new Color3(0.45, 0.16, 0.1), glow: 0.12 };
+// [R] 450 QUEEN_LEGLINE (spec at QUEEN_SKIRT): slim shafts from just under the knee, a modest turned top (was from .12, shaft 1.35, top 1.7 x .14 tall, band 1.42 at .34)
+// (.from is a share of the shin MESH, whose calf cap tops out ~.11 m above the knee joint: .38 puts the turned top a hand under the knee, at ~.22 of her height, probe 450)
+const QUEEN_BOOTS = { from: 0.38, shaft: 1.2, top: 1.32, topTall: 0.1, band: 1.26, bandTall: 0.1, bandAt: 0.52, leather: new Color3(0.45, 0.16, 0.1), glow: 0.12 };
 
 /*
  * [S] 437 the Pirate Queen's narrow frame (CONFIRM 434 a.1, standing after the [R] 435: "torso and skirt a wide hunched block, about twice a pirate's
@@ -796,7 +818,8 @@ const QUEEN_BOOTS = { from: 0.12, shaft: 1.35, top: 1.7, topTall: 0.14, band: 1.
  * the hip lowered by what that takes off so she stands on the ground; the trunk .tall of its height (was .85); the head is left (her bandana and
  * hair are seated on it). Target: head top ~1.95 (the captain's 1.87 plus her hair), hip ~.9.
  */
-const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72, tall: 0.76, legs: 0.74 };
+// [R] 450 QUEEN_LEGLINE (spec at QUEEN_SKIRT): legs .74 -> .815 and tall .76 -> .65 (the hip to .50 of her height, the head top kept); .pelvisCut and .legSlim (thigh and shin meshes narrowed, the boots fitted to them after) new
+const QUEEN_FRAME = { trunk: 0.7, deep: 0.85, shoulders: 0.78, pelvis: 0.75, hips: 0.72, tall: 0.65, legs: 0.815, pelvisCut: 0.5, legSlim: 0.82 };
 
 /** Cuts the Pirate Queen's body narrow and down to the captain's height before her dress is fitted (spec at QUEEN_FRAME, QUEEN_BUILD). */
 export function queenFrame(body: ArticulatedBody): void {
@@ -811,7 +834,15 @@ export function queenFrame(body: ArticulatedBody): void {
   for (const j of [body.neck, body.leftShoulder, body.rightShoulder]) j.position.y -= cut;
   body.leftShoulder.position.x *= F.shoulders;
   body.rightShoulder.position.x *= F.shoulders;
-  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name)) m.scaling.x *= F.pelvis;
+  for (const m of body.hip.getChildMeshes(true)) {
+    if (!/_pelvis$/.test(m.name) || !(m instanceof Mesh)) continue;
+    m.scaling.x *= F.pelvis;
+    // [R] 450 the pelvis box keeps its top and is cut to .pelvisCut of its height, its foot up off the thighs (QUEEN_LEGLINE)
+    const tall = m.getBoundingInfo().boundingBox.extendSize.y * 2 * m.scaling.y;
+    m.scaling.y *= F.pelvisCut;
+    m.position.y += (tall * (1 - F.pelvisCut)) / 2;
+    m.refreshBoundingInfo();
+  }
   body.leftHip.position.x *= F.hips;
   body.rightHip.position.x *= F.hips;
   // [R] 440 the leg chain cut to .legs: the thigh and shin meshes and the knee joint scale with it; the foot's sole is baked one shin under the knee
@@ -822,6 +853,8 @@ export function queenFrame(body: ArticulatedBody): void {
     lost = Math.max(lost, (Math.abs(knee.position.y) + shinLen) * (1 - F.legs));
     for (const m of [thigh, shin]) {
       m.scaling.y *= F.legs;
+      m.scaling.x *= F.legSlim; // [R] 450 slim legs (QUEEN_LEGLINE)
+      m.scaling.z *= F.legSlim;
       m.position.y *= F.legs;
       m.refreshBoundingInfo();
     }
@@ -929,11 +962,11 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   const rTop = W * Q.out / 2, rHem = rTop * Q.flare, zs = D * Q.deep / W;
   const out: Mesh[] = [];
   const skirt = MeshBuilder.CreateCylinder("queenSkirt", { height: long, diameterTop: rTop * 2, diameterBottom: rHem * 2, tessellation: Q.sides }, scene);
-  // the hem slants down toward her left (-x)
+  // [R] 450 the hem slants down toward her right (+x), where the wrap's loose end hangs on, and rises toward its front (+z), open over the
+  // thighs (QUEEN_LEGLINE): hemAt gives the hem's offset at a hem vertex
   const pos = skirt.getVerticesData(VertexBuffer.PositionKind)!;
-  // ...and drops toward its front (+z) so it still reaches the knee when the thighs come forward in the crouch
-  const drop = (z: number): number => Q.frontDrop * long * Math.max(0, z / rHem);
-  for (let i = 0; i < pos.length; i += 3) if (pos[i + 1] < 0) pos[i + 1] += Q.slant * long * 0.5 * (pos[i] / rHem) - drop(pos[i + 2]);
+  const hemAt = (x: number, z: number): number => -Q.slant * long * 0.5 * (x / rHem) + Q.frontRise * long * Math.max(0, z / rHem) ** 1.5;
+  for (let i = 0; i < pos.length; i += 3) if (pos[i + 1] < 0) pos[i + 1] += hemAt(pos[i], pos[i + 2]);
   skirt.setVerticesData(VertexBuffer.PositionKind, pos);
   skirt.refreshBoundingInfo();
   skirt.convertToFlatShadedMesh();
@@ -942,7 +975,7 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   skirt.position.set(cx, (top + hem) / 2, cz);
   skirt.material = cloth;
   out.push(skirt);
-  // the wrap's loose end hanging over the front from the waist on her left to a point below the knee
+  // the wrap's loose end hanging over the outer front of her right thigh from the waist to a point at the knee ([R] 450: was on her left)
   const flapLong = long * Q.flapLong, flapZ = cz + (rTop + (rHem - rTop) * 0.5) * zs + W * Q.flapProud;
   const flap = MeshBuilder.CreateCylinder("queenSkirtFlap", { height: flapLong, diameterTop: W * Q.flapWide, diameterBottom: W * Q.flapFoot, tessellation: 4 }, scene);
   flap.rotation.y = Math.PI / 4;
@@ -951,7 +984,7 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   flap.convertToFlatShadedMesh();
   flap.parent = frame;
   flap.position.set(cx + W / 2 * Q.flapX, top - flapLong / 2, flapZ);
-  flap.rotation.set(-0.08, 0, -Q.flapLean);
+  flap.rotation.set(-0.08, 0, Q.flapLean); // the point leans out to +x, her right
   flap.material = cloth;
   out.push(flap);
   // the green beads round the front of the hem
@@ -960,12 +993,14 @@ export function queenSkirt(scene: Scene, body: ArticulatedBody, teamColor: Color
     const x = Math.cos(a) * rHem, z = Math.sin(a) * rHem * zs;
     const bead = MeshBuilder.CreateIcoSphere("queenSkirtBead", { radius: W * Q.bead / 2, subdivisions: 1, flat: true }, scene);
     bead.parent = frame;
-    bead.position.set(cx + x, hem + Q.slant * long * 0.5 * (x / rHem) - drop(Math.sin(a) * rHem) + W * Q.bead * 0.2, cz + z + W * Q.bead * 0.3);
+    bead.position.set(cx + x, hem + hemAt(x, Math.sin(a) * rHem) + W * Q.bead * 0.2, cz + z + W * Q.bead * 0.3);
     bead.material = green;
     out.push(bead);
   }
-  // the pale trousers under it: the leg meshes themselves, slim, no shells
+  // the pale trousers under it: the leg meshes themselves, slim, no shells; [R] 450 the cut pelvis box in the same shade, so whatever shows
+  // under the hem reads as the trousers' seat, not a dark block
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) if (leg) leg.material = pants;
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name)) m.material = pants;
   return out;
 }
 
