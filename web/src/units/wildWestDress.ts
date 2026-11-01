@@ -1018,7 +1018,7 @@ export function westernBraid(scene: Scene, body: ArticulatedBody, side: number):
  * DYNAMITE_SHIRT.shade, self-lit .glow; sleeves over both arms to the wrist in the same cloth times .sleeveShade, .upperOut of the upper arm round,
  * .lowerOut of the forearm.
  */
-const DYNAMITE_SHIRT = { shade: 0.85, sleeveShade: 0.7, glow: 0.12, upperOut: 1.22, lowerOut: 1.2 };
+const DYNAMITE_SHIRT = { shade: 0.85, sleeveShade: 0.35, glow: 0.12, upperOut: 1.22, lowerOut: 1.2 }; // [S] 455 sleeveShade .7 read the shirt's own pale team colour (455 look)
 
 /** The Dynamite Thrower's team shirt with full sleeves to the wrist (spec at DYNAMITE_SHIRT). */
 export function dynamiteShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
