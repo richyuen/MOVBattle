@@ -739,7 +739,7 @@ export class UnitFactory {
     // [S] 460 the Poacher's tan belt with a grey buckle at the coat's waist (legacyDress POACHER_BELT)
     if (definition.id === "legacy.poacher" && !shouldUseVehicleBody) propMeshes.push(...poacherBelt(this._scene, body));
     // [S] 459 the Flag and Banner Bearers' team aura ring on the ground (legacyDress BEARER_RING)
-    if ((definition.id === "legacy.flag_bearer" || definition.id === "legacy.banner_bearer") && !shouldUseVehicleBody) propMeshes.push(...bearerRing(this._scene, body, teamColor));
+    if ((definition.id === "legacy.flag_bearer" || definition.id === "legacy.banner_bearer") && !shouldUseVehicleBody) propMeshes.push(...bearerRing(this._scene, body, teamColor, definition.id));
     // [S] 448 the Miner's overalls: lighter team shirt, dark braces, team trousers' waist (wildWestDress MINER_OVERALLS)
     if (definition.id === "wild_west.miner" && !shouldUseVehicleBody) propMeshes.push(...minerOveralls(this._scene, body, teamColor));
     // [S] 449 the Miner's black handlebar moustache (wildWestDress MINER_MOUSTACHE)

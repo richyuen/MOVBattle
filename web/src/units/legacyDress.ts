@@ -131,6 +131,8 @@ export function poacherHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  * wide, .lift H over the soles (the root's y 0), .sides-sided; the team colour self-lit .glow so it reads on the grass.
  */
 const BEARER_RING = { radius: 1.6, band: 0.05, flat: 0.012, lift: 0.02, sides: 40, glow: 0.45 };
+// [P] 460 one colour per bearer for both teams, not the team's (critic 459 flag c.3: legacy.flag_bearer red and blue renders an orange ring; the banner's cyan)
+const BEARER_RING_COLOR: Record<string, Color3> = { "legacy.flag_bearer": new Color3(0.95, 0.6, 0.2), "legacy.banner_bearer": new Color3(0.25, 0.75, 0.95) };
 
 /** How far the bearer's ring reaches from his feet (BEARER_RING.radius of his height): his aura holds the allies inside it (simulationSystem). */
 export function bearerReach(body: ArticulatedBody): number {
@@ -138,12 +140,13 @@ export function bearerReach(body: ArticulatedBody): number {
 }
 
 /** A flat team ring on the ground round the bearer (spec at BEARER_RING), hung on the body root at the soles. */
-export function bearerRing(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+export function bearerRing(scene: Scene, body: ArticulatedBody, teamColor: Color3, unitId?: string): Mesh[] {
   const R = BEARER_RING, H = body.metrics.overallHeight;
   const ring = MeshBuilder.CreateTorus("bearerRing", { diameter: R.radius * H * 2, thickness: R.band * H, tessellation: R.sides }, scene);
   ring.scaling.y = R.flat / R.band;
   ring.position.y = R.lift * H;
-  ring.material = getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(R.glow) });
+  const c = (unitId && BEARER_RING_COLOR[unitId]) || teamColor;
+  ring.material = getMaterialFactory().get("cloth", c, { emissive: c.scale(R.glow) });
   ring.isPickable = false;
   ring.parent = body.root;
   return [ring];
