@@ -29,8 +29,8 @@ const REAPER_BURST = {
 // The pumpkin landing (see spawnPumpkinBurst): rind shards and their size, bouncing lanterns and their size (m), out and up speed (m/s), bounce keep, seconds
 const PUMPKIN_BURST = { shards: 8, rind: 0.2, lanterns: 4, lantern: 0.32, out: 3.4, up: 5.5, keep: 0.62, last: 2.4, orange: new Color3(0.9, 0.38, 0.08), face: new Color3(1, 0.8, 0.2), stem: new Color3(0.25, 0.3, 0.1) };
 // [S] 445 the Cactus Explosion's needles (see spawnCactusNeedles): needles, length and thickness (m), speed out (m/s), seconds, rise share of the rows;
-// pale tan self-lit spikes flying straight out of the body in every direction, point first
-const CACTUS_NEEDLES = { count: 26, long: 0.42, thick: 0.05, speed: 8, life: 0.55, rise: 0.45, color: new Color3(0.95, 0.78, 0.42) };
+// tan-brown spikes, self-lit .glow, flying straight out of the body in every direction, point first ([P] 446: (.95,.78,.42) at .6 read as pale glowing slivers, critic 445)
+const CACTUS_NEEDLES = { count: 26, long: 0.42, thick: 0.05, speed: 8, life: 0.55, rise: 0.45, color: new Color3(0.5, 0.33, 0.17), glow: 0.12 };
 // Paint flung off the painter's brush (see spawnPaintSplotches): blobs, size (m), speed along the swing, spread across it and up (m/s), seconds
 const PAINT_SPLOTCH = { count: 5, size: 0.09, speed: 3.4, spread: 1.6, up: 2.2, last: 1.0 };
 const GEAR_TOSS_MIN = 0.6;
@@ -1564,7 +1564,7 @@ export class VisualEffects {
     const root = new TransformNode("cactusNeedles", this._scene);
     root.position = position.clone();
     const needleMat = getMaterialFactory().createUnique("cloth", N.color);
-    needleMat.emissiveColor = N.color.scale(0.6);
+    needleMat.emissiveColor = N.color.scale(N.glow);
     const needles: { mesh: Mesh; velocity: Vector3 }[] = [];
     const rows = 3;
     for (let i = 0; i < N.count; i++) {
