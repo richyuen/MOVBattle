@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteBoots, dynamiteShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerShoes, gunslingerSideburns, gunslingerSuit, lassoMoustache, minerBoots, minerLegs, minerMoustache, minerSleeves, minerOveralls, quickDrawShirt, quickDrawVest, westernBraid, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteBoots, dynamiteShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerShoes, gunslingerSideburns, gunslingerSuit, lassoMoustache, lassoShirt, minerBoots, minerLegs, minerMoustache, minerSleeves, minerOveralls, quickDrawShirt, quickDrawVest, westernBraid, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -733,6 +733,8 @@ export class UnitFactory {
     if (definition.id === "wild_west.miner" && !shouldUseVehicleBody) propMeshes.push(...minerBoots(this._scene, body));
     // [S] 453 the Dynamite Thrower's black boots with a folded cuff (wildWestDress DYNAMITE_BOOTS)
     if (definition.id === "wild_west.dynamite_thrower" && !shouldUseVehicleBody) propMeshes.push(...dynamiteBoots(this._scene, body));
+    // [S] 456 the Lasso rider's team shirt and trousers, short dark team sleeves (wildWestDress LASSO_SHIRT)
+    if (definition.id === "wild_west.lasso" && !shouldUseVehicleBody) propMeshes.push(...lassoShirt(this._scene, body, teamColor));
     // [S] 455 the Lasso rider's dark curled moustache (wildWestDress LASSO_MOUSTACHE)
     if (definition.id === "wild_west.lasso" && !shouldUseVehicleBody) propMeshes.push(...lassoMoustache(this._scene, body));
     // [S] 432 the Captain's tan pants tucked into black knee boots with brass buckles (pirateDress CAPTAIN_LEGS)
