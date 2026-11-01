@@ -3489,7 +3489,7 @@ function buildPriestStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  */
 const CHARGE_FLAG = { long: 1.55, thick: 0.022, grip: 0.3, ball: 0.07, wide: 0.48, tall: 0.36, slab: 0.012, edge: 0.03, proud: 1.8, emblem: 0.1, glow: 0.15 };
 const LEGACY_GOLD = new Color3(0.95, 0.66, 0.16);
-const TEAM_GLOVE = { wide: 0.11, squash: 0.92, band: 0.025, glow: 0.15 }; // 457b: wide .17 swallowed the forearm, its white band a disc to the camera
+const TEAM_GLOVE = { wide: 0.11, squash: 0.92, band: 0.025, glow: 0.06, shade: 0.5 }; // 458 [P]: the team colour x .5, glow .06 (critic 457: the mitt read near-white; glow .15, x1 before) // 457b: wide .17 swallowed the forearm, its white band a disc to the camera
 const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
 function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const F = CHARGE_FLAG, H = fit.stand, L = F.long * H, r = F.thick * H;
@@ -4205,7 +4205,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         const G = TEAM_GLOVE;
         const glove = MeshBuilder.CreateIcoSphere("teamGlove", { radius: G.wide * s / 2, subdivisions: 1 }, scene);
         glove.scaling.set(1, G.squash, 1.12);
-        glove.material = mat(scene, teamColor ?? accent, G.glow, "cloth");
+        glove.material = mat(scene, (teamColor ?? accent).scale(G.shade), G.glow, "cloth");
         glove.convertToFlatShadedMesh();
         const band = MeshBuilder.CreateCylinder("teamGloveBand", { height: G.band * s, diameter: G.wide * s * 0.62, tessellation: 8 }, scene);
         band.position.y = -G.wide * s * G.squash * 0.42;
