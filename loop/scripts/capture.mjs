@@ -584,6 +584,9 @@ async function main() {
           }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
           if (on === 4) { window.game.frameCamera({ x: pt.x, y: pt.y + 0.55 * s + 0.85, z: pt.z }, 5.2 * s, Math.atan2(fx, -fz), Math.PI / 2.1); return; }
+          // [evidence 446] 5: a sidestep off a missile's line runs across that line, toward a side-on camera: the unit from .9 rad behind his side,
+          // so the step reads across the frame (critic 445 quick_draw c.1)
+          if (on === 5) { window.game.frameCamera({ x: pa.x, y: 0.55 * s + 0.45, z: pa.z }, 4.6 * s, Math.atan2(fx, -fz) + 0.9, Math.PI / 2.2); return; }
           const c = on === 1 ? { x: pa.x, z: pa.z } : on === 2 ? { x: pt.x, z: pt.z } : on === 3 ? { x: pa.x + fx * 1.4 * s, z: pa.z + fz * 1.4 * s } : { x: (pa.x + pt.x) / 2, z: (pa.z + pt.z) / 2 };
           // the mammoth's motion shots cropped his back and hump (evidence 376): pulled back and aimed higher, so the whole topline is in frame
           const pull = a.definition.id === "tribal.mammoth" && on !== 2 ? 1.5 : 1;
@@ -659,12 +662,17 @@ async function main() {
           ? `unit_${id}: release = ${release.kind} at ${ms(release)} ms${ability ? `; ability ${ability.kind} at ${ms(ability)} ms` : ""}${impact ? `; target hurt at ${ms(impact)} ms` : "; target never hurt within the window"} (rig ${det.rig.toFixed(2)} m, d ${d.toFixed(1)} m)`
           : `unit_${id}: nothing within 9 s (rig ${det.rig.toFixed(2)} m, d ${d.toFixed(1)} m)`);
         if (det.error) continue;
-        const take = async (name, ticks, on) => {
-          const ok = await page.evaluate(({ id, d, support, ticks, on, s }) => {
-            const r = ticks === null ? window.__unitPlace(id, d, support) : window.__unitAt(id, d, support, ticks);
+        // [evidence 446] `hold`: the camera is framed at that tick and kept there while the scene runs on to `ticks` (a pair that shows a
+        // displacement, not a re-frame on the moved man); `clean`: smoke particle systems are left out of the frame
+        const take = async (name, ticks, on, { hold = null, clean = false } = {}) => {
+          const ok = await page.evaluate(({ id, d, support, ticks, on, s, hold, clean }) => {
+            const from = hold ?? ticks;
+            const r = from === null ? window.__unitPlace(id, d, support) : window.__unitAt(id, d, support, from);
             if (r) window.__unitFrame(on, s);
+            if (r && hold !== null && ticks > hold) window.advanceTime((ticks - hold) * 1000 / 60);
+            if (r && clean) for (const p of window.__ua.body.root.getScene().particleSystems) p.layerMask = 0;
             return r;
-          }, { id, d, support, ticks, on, s });
+          }, { id, d, support, ticks, on, s, hold, clean });
           if (ok) await shot(page, name);
           else summary.notes.push(`${name}: spawn failed`);
         };
@@ -698,8 +706,12 @@ async function main() {
           // [evidence 436] the skeleton archer's fire arrow sets the struck man alight 7 m off (critic 435): his burn is framed on him
           const burnOnMan = id === "spooky.skeleton_archer" && ability.kind === "status:fire";
           const onMan = snake || burnOnMan || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup";
-          await take(`unit_${id}_ability`, ability.tick, slow ? 4 : onMan ? 2 : far);
-          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), slow ? 4 : onMan ? 2 : far);
+          // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
+          // blanketed him and the re-framed camera hid the step)
+          const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
+          const pair = dodge ? { hold: ability.tick, clean: true } : {};
+          await take(`unit_${id}_ability`, ability.tick, dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
         }
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
