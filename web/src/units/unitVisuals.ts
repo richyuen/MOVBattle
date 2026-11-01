@@ -164,6 +164,8 @@ export interface UnitVisualConfig {
   weaponGripPreset?: WeaponGripPreset;
   locomotionBiasPreset?: LocomotionBiasPreset;
   releaseTimingPreset?: ReleaseTimingPreset;
+  /** [S] 452 a thrower's windup cap in s (the card's warm-up): the windup is otherwise a share of the cooldown, ~18 s at the Dynamite Thrower's cd */
+  throwWindupCap?: number;
   weaponPositionOffset?: PresentationOffset3;
   weaponRotationOffset?: PresentationOffset3;
   /** A unit's own cut of a shared weapon (the balloon archer's light-grey longbow is still a "bow") */
@@ -638,6 +640,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ WILD WEST ═══════════════════════
   "wild_west.dynamite_thrower": vis(
     { scale: 1.0, bulk: 0.96 }, "dynamite", "peak_hat", "none", "none", "#B75C21", undefined, {
+      // [S] 452 her throw on the card's 1 s warm-up (THROW_WINDUP_CAP), not 36% of her 99 s cooldown
+      throwWindupCap: 1,
       posePreset: "support",
       materialPreset: "secret_bandit",
       attachmentPreset: "bomb_lit",

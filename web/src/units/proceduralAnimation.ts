@@ -720,6 +720,17 @@ const LOCKBOX_CARRY = { raise: 0.15, out: 0.6, turn: 0.6, elbow: -1.85 };
  * the side) and the forearms come back in round the box, so what is solved onto each end face is the MITT's middle (the palm), not the wrist joint above
  * it: the palm sits LOCKBOX_PALM_OUT of a mitt's width out past the end, the mitt cupping the end face, the forearm never running on past the box.
  */
+/*
+ * [S] 451 the Dynamite Thrower's two-handed bundle (critic 449 b.1: "bundle horizontal on the shoulder, one hand - TABS: upright bundle in front of the belly in
+ * both hands"; card Weapon Type Two-handed). Spec read off wild_west.dynamite_thrower.red.png: the bundle stands upright, fuse wires up, before her belly a
+ * little to her right of the centreline, its top at the bottom of the chest, its foot at the top of the thigh; her right hand holds its outer side at the
+ * lower band, her left forearm comes across the belly and the left hand lies on its front over the middle. In the trunk's frame (of the shoulder height up
+ * the trunk): the bundle's middle .side across to the right, .up the trunk, .front out before the belly. The right palm sits .lowGrip of the half length
+ * below the middle, the left .highGrip above it, on its front face .across of its half width toward her right, the palm .palmOff of a mitt off it;
+ * each arm solved from its start (raise, turn, elbow). Held, the block is .size of the thrown one. The throw itself runs on her card's 1 s warm-up
+ * (unitVisuals throwWindupCap; critic 451: on 36% of her 99 s cooldown the toss took 18 s and never showed).
+ */
+const DYNAMITE_HOLD = { size: 0.78, side: 0.2, up: 0.06, front: 0.36, lowGrip: 0.45, highGrip: 0.1, across: 0.1, palmOff: 0.2, right: { raise: -0.3, turn: 0.15, elbow: -1.2 }, left: { raise: -0.45, turn: 1.15, elbow: -1.9 } };
 // [S] 451 the Lasso's held-up coil (see _raiseLassoCoil): lean out off his side, back toward the tail, turn of the loop's face, in rad
 const LASSO_RAISE = { out: 0.45, back: 0.15, face: -0.6 };
 const LOCKBOX_NAVEL = 0.35;
@@ -2291,6 +2302,7 @@ export class ProceduralAnimator {
     this._raiseGuns(dt);
     this._hangFlasks();
     this._carryBoulder();
+    this._holdDynamite();
     this._raiseLassoCoil();
     this._holdPalette();
     this._couchLance();
@@ -3009,6 +3021,68 @@ export class ProceduralAnimator {
   }
 
   /**
+   * [S] 451 the Dynamite Thrower's two-handed hold (DYNAMITE_HOLD; critic 449 b.1). Off the throw (idle, walk, hit) the bundle stands upright before her belly,
+   * fixed to the trunk; both palms are reached onto it by the lockbox solve. In the throw it goes back to the fist seat it was strapped on with, so the overhand
+   * one-handed toss and its thrown copy are unchanged.
+   */
+  private _dynamiteRest: { pos: Vector3; rot: Vector3 } | null | undefined = undefined;
+  private _holdDynamite(): void {
+    const b = this._body;
+    if (this._dynamiteRest === null) return;
+    const stick = b.rightHand.getChildren().find((n): n is Mesh => n.name === "dynamite" && n instanceof Mesh);
+    if (!stick) { this._dynamiteRest = null; return; }
+    this._dynamiteRest ??= { pos: stick.position.clone(), rot: stick.rotation.clone() };
+    const rest = this._dynamiteRest;
+    const w = 1 - Math.min(1, this._limp);
+    const throwing = this._state === AnimState.Attacking && this._attackMotion === "throw";
+    if (throwing || this._state === AnimState.Dead || w <= 0 || !stick.isEnabled()) {
+      if (stick.rotationQuaternion) {
+        stick.rotationQuaternion = null;
+        stick.rotation.copyFrom(rest.rot);
+        stick.position.copyFrom(rest.pos);
+        stick.scaling.setAll(1);
+      }
+      return;
+    }
+    const H = DYNAMITE_HOLD;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.torso; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const height = Math.abs(b.rightShoulder.position.y);
+    const torsoM = b.torso.getWorldMatrix();
+    const sr = Math.sign(b.rightShoulder.position.x) || 1;
+    const mid = Vector3.TransformCoordinates(new Vector3(sr * height * H.side, height * H.up, height * H.front), torsoM);
+    const across = Vector3.TransformNormal(new Vector3(1, 0, 0), torsoM).normalize();
+    const up = Vector3.TransformNormal(new Vector3(0, 1, 0), torsoM).normalize();
+    const ahead = Vector3.TransformNormal(new Vector3(0, 0, 1), torsoM).normalize();
+    stick.scaling.setAll(H.size);
+    stick.computeWorldMatrix(true);
+    const ext = stick.getBoundingInfo().boundingBox.extendSize;
+    const sc = Math.abs(stick.absoluteScaling.x);
+    // The root box is the block's core: the sticks stand out past it by their radius (~1.06 of the pitch)
+    const halfW = ext.x * 1.53 * sc, halfD = ext.z * 2.3 * sc, halfL = ext.y * sc;
+    const mitt = (b.metrics.hand?.width ?? 0.06) * Math.max(0.001, b.root.absoluteScaling.y);
+    // The right palm on the bundle's outer side at the low band; the left across the belly onto its front, over the middle
+    const rightAt = mid.add(across.scale(sr * (halfW + mitt * 0.35))).add(up.scale(-halfL * H.lowGrip));
+    // [S] 452 (critic 451 defect 2: the left hand sat at the bundle's side) the left palm on its front face over the middle, the forearm across the belly
+    const leftAt = mid.add(ahead.scale(halfD + mitt * H.palmOff)).add(across.scale(sr * halfW * H.across)).add(up.scale(halfL * H.highGrip));
+    this._reachPalm(b.rightShoulder, b.rightElbow, b.rightHand, rightAt, [H.right.raise, -sr * H.right.turn, H.right.elbow], halfW, w);
+    this._reachPalm(b.leftShoulder, b.leftElbow, b.leftHand, leftAt, [H.left.raise, sr * H.left.turn, H.left.elbow], halfW, w);
+    // Upright and square to her trunk whatever the wrist's turn, its middle on the anchor, in the right hand's space
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
+    stick.position.copyFrom(Vector3.TransformCoordinates(mid, Matrix.Invert(b.rightHand.getWorldMatrix())));
+    const handQ = new Quaternion();
+    const torsoQ = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, handQ);
+    b.torso.getWorldMatrix().decompose(undefined, torsoQ);
+    const local = Matrix.Identity();
+    torsoQ.toRotationMatrix(local);
+    const handM = Matrix.Identity();
+    handQ.toRotationMatrix(handM);
+    stick.rotationQuaternion = Quaternion.FromRotationMatrix(local.multiply(handM.transpose()));
+  }
+
+  /**
    * [S] 451 the Lasso's rope held up (LASSO_RAISE; critic 446-447 lasso b.1: "coiled tan rope loop held up in the rider's hand"; wild_west.lasso.red.png:
    * from his fist the rope runs up and out to the big open loop, which stands over the fist beside his shoulder, never hanging below it). The fist's +y
    * points down and out (probe_axes 447), so the coil built up its +y hung its loop under the hand and its small coils up by his chin: here the coil is
@@ -3072,6 +3146,50 @@ export class ProceduralAnimator {
     const hand = Matrix.Identity();
     handRot.toRotationMatrix(hand);
     p.node.rotationQuaternion = Quaternion.Slerp(p.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+  }
+
+  /** One arm's palm onto a world point by the lockbox solve (shoulder raise, shoulder turn, elbow bend from `start`), blended in by `w`. */
+  private _reachPalm(shoulder: TransformNode, elbow: TransformNode, hand: TransformNode, target: Vector3, start: number[], size: number, w: number): void {
+    const keep = [shoulder.rotation.x, shoulder.rotation.y, elbow.rotation.x];
+    const p = start.slice();
+    const palm = hand.getChildMeshes(true).find((m) => /HandM$/.test(m.name));
+    const at = (q: number[]) => {
+      shoulder.rotation.x = q[0];
+      shoulder.rotation.y = q[1];
+      elbow.rotation.x = q[2];
+      shoulder.computeWorldMatrix(true);
+      elbow.computeWorldMatrix(true);
+      hand.computeWorldMatrix(true);
+      return palm ? Vector3.TransformCoordinates(palm.position, hand.getWorldMatrix()) : hand.getAbsolutePosition().clone();
+    };
+    const det = (m: number[][]) => m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+    for (let it = 0; it < LOCKBOX_IK_STEPS; it++) {
+      const f = at(p);
+      const e = target.subtract(f);
+      if (e.length() < size * 0.02) break;
+      const J = [0, 1, 2].map((i) => {
+        const q = p.slice();
+        q[i] += 1e-3;
+        return at(q).subtract(f).scale(1e3);
+      });
+      const A = J.map((a) => J.map((c) => Vector3.Dot(a, c)));
+      const damp = 0.01 * (A[0][0] + A[1][1] + A[2][2]);
+      for (let i = 0; i < 3; i++) A[i][i] += damp;
+      const g = J.map((a) => Vector3.Dot(a, e));
+      const D = det(A);
+      if (Math.abs(D) < 1e-12) break;
+      for (let i = 0; i < 3; i++) {
+        const Ai = A.map((row, r) => row.map((v, c) => (c === i ? g[r] : v)));
+        p[i] += det(Ai) / D;
+      }
+      p[2] = Math.max(-2.6, Math.min(-0.1, p[2]));
+    }
+    shoulder.rotation.x = keep[0] + (p[0] - keep[0]) * w;
+    shoulder.rotation.y = keep[1] + (p[1] - keep[1]) * w;
+    elbow.rotation.x = keep[2] + (p[2] - keep[2]) * w;
+    shoulder.computeWorldMatrix(true);
+    elbow.computeWorldMatrix(true);
+    hand.computeWorldMatrix(true);
   }
 
   /**

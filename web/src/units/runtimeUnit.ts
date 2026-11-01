@@ -2537,7 +2537,7 @@ export class RuntimeUnit {
       case "thrust_extend":
         return Math.max(0.14, cooldown * 0.32);
       case "throw_release":
-        return Math.max(0.16, cooldown * 0.36);
+        return Math.max(0.16, Math.min(cooldown * 0.36, this.visualConfig.throwWindupCap ?? Infinity));
       case "melee_commit":
         return Math.max(0.12, cooldown * 0.3);
       default:
