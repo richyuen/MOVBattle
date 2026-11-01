@@ -1111,7 +1111,9 @@ export class SimulationSystem {
     man.faceTarget(h.position);
     worldMatrixChain(h.body.rightHand);
     const fist = h.body.rightHand.getAbsolutePosition().clone();
-    const chest = l.at.add(new Vector3(0, man.body.metrics.overallHeight * man.body.root.scaling.y * 0.6, 0));
+    // the rope ends on his drawn chest (a toppled man lies away from his root), not over the root
+    worldMatrixChain(man.body.torso);
+    const chest = man.body.torso.getAbsolutePosition().clone();
     const dir = chest.subtract(fist);
     const len = dir.length();
     dir.normalize();
