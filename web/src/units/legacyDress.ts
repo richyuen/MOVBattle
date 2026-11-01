@@ -258,3 +258,40 @@ export function poacherCoat(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 459 the Banner Bearer's shako (audit 457 a.1: "headgear, bald head - TABS: a tall team shako with a gold front plate and a plume";
+ * legacy.banner_bearer.red.png: a tall team cylinder a little wider at the top, standing about a head over the head, a short dark peak over the brow,
+ * a gold plate on its front, a gold band round its top and a white plume standing up from the front of the crown). SHAKO, in the head's W and H:
+ * the body .wide W across at the seat, .flare of that at its top, .tall H over the head top; a dark peak .peak W out over the brow, .peakThick H thick;
+ * a gold plate .plate W wide and .plateTall H tall on the front, .proud W off it; a gold band .band H at the top; a white plume, a cone .plume H tall,
+ * .plumeWide W across, on the front of the top. Team colour times .shade, self-lit .glow.
+ */
+const SHAKO = { sides: 10, wide: 1.02, flare: 1.12, tall: 0.95, peak: 0.42, peakThick: 0.04, plate: 0.42, plateTall: 0.34, proud: 0.03, band: 0.08, plume: 0.42, plumeWide: 0.22, shade: 0.85, glow: 0.12 };
+const SHAKO_GOLD = new Color3(0.95, 0.66, 0.16);
+
+/** The Banner Bearer's tall team shako (spec at SHAKO), in the hat's units; `seat` under the head top. Returns the body. */
+export function buildShako(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
+  const S = SHAKO;
+  const u = (v: number) => v / unit;
+  const mf = getMaterialFactory();
+  const t = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(S.shade);
+  const felt = mf.get("cloth", t, { emissive: t.scale(S.glow) });
+  const gold = mf.get("cloth", SHAKO_GOLD, { emissive: SHAKO_GOLD.scale(0.2) });
+  const dark = mf.get("cloth", new Color3(0.06, 0.05, 0.05), {});
+  const white = mf.get("cloth", new Color3(0.95, 0.94, 0.92), { emissive: new Color3(0.2, 0.2, 0.2) });
+  const tall = -seat + S.tall * H;
+  const shako = MeshBuilder.CreateCylinder("shako", { height: u(tall), diameterBottom: u(S.wide * W), diameterTop: u(S.wide * W * S.flare), tessellation: S.sides }, scene);
+  shako.position.y = u(seat + tall / 2);
+  shako.material = felt;
+  shako.convertToFlatShadedMesh();
+  const part = (m: Mesh, x: number, y: number, z: number, material: Material): Mesh => {
+    m.position.set(u(x), u(y), u(z)); m.material = material; m.parent = shako; m.convertToFlatShadedMesh(); return m;
+  };
+  const front = S.wide * W / 2;
+  part(MeshBuilder.CreateBox("shakoPeak", { width: u(S.wide * W * 0.9), height: u(S.peakThick * H), depth: u(S.peak * W) }, scene), 0, -tall / 2 + S.peakThick * H / 2, front * 0.8 + S.peak * W / 2 - front * 0.4, dark);
+  part(MeshBuilder.CreateBox("shakoPlate", { width: u(S.plate * W), height: u(S.plateTall * H), depth: u(S.proud * W) }, scene), 0, 0, front * 1.04, gold);
+  part(MeshBuilder.CreateCylinder("shakoBand", { height: u(S.band * H), diameter: u(S.wide * W * S.flare * 1.03), tessellation: S.sides }, scene), 0, tall / 2 - S.band * H / 2, 0, gold);
+  part(MeshBuilder.CreateCylinder("shakoPlume", { height: u(S.plume * H), diameterTop: 0, diameterBottom: u(S.plumeWide * W), tessellation: 6 }, scene), 0, tall / 2 + S.plume * H / 2, front * 0.6, white);
+  return shako;
+}

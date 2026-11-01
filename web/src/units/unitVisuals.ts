@@ -21,7 +21,7 @@ export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap" | "peak_hat"
-  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood" | "boxer_headgear"
+  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood" | "boxer_headgear" | "shako"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
@@ -703,7 +703,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { materialPreset: "legacy_toy" },
   ),
   "legacy.banner_bearer": vis(
-    { scale: 1.0, bulk: 0.9 }, "staff", "none", "none", "banner_back", "#D74A4A", undefined, {
+    // [S] 459 a tall team shako with a gold plate and a white plume (legacyDress SHAKO; audit 457 a.1)
+    { scale: 1.0, bulk: 0.9 }, "staff", "shako", "none", "banner_back", "#D74A4A", undefined, {
       weaponVariant: "stay_banner", // [S] 457 two team banners on a gold cross-beam (propBuilder STAY_BANNER; audit 457 b.1)
       posePreset: "support",
       materialPreset: "legacy_toy",
