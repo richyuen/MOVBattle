@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusSleeves, gunslingerJacket, gunslingerSideburns, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusSleeves, gunslingerJacket, gunslingerSideburns, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -326,7 +326,7 @@ const SACK_ROPE = new Color3(0.78, 0.64, 0.4);
  *   sleeves CACTUS_SLEEVE thick; CACTUS_SPINES spines on the robe, CACTUS_SLEEVE_SPINES per arm segment, CACTUS_HOOD_SPINES on the hood, each CACTUS_SPINE heads tall.
  */
 const CACTUS_ROBE = 1.55;
-const CACTUS_LONG = 0.86;
+const CACTUS_LONG = 0.5; // [S] 448 to the knee (critic 447 a.2; was .86, to the ankle), boots below (wildWestDress CACTUS_BOOTS)
 const CACTUS_HOOD = 1.6;
 const CACTUS_HOOD_OPEN = 0.26;
 const CACTUS_SLEEVE = 1.4;
@@ -2801,6 +2801,7 @@ function dressCactus(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
   }
   // [S] 447 fat spiked cactus sleeves over the forearms, past the hands (wildWestDress CACTUS_SLEEVE)
   added.push(...cactusSleeves(scene, body, green, spineMat));
+  added.push(...cactusBoots(scene, body));
   // Bodice over the chest, wider than it, into the robe skirt to the ankle
   const chest = body.torsoMesh;
   const ext = chest.getBoundingInfo().boundingBox.extendSize;

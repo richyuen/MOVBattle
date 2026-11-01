@@ -312,6 +312,34 @@ export function gunslingerSideburns(scene: Scene, body: ArticulatedBody): Mesh[]
 }
 
 /*
+ * [S] 448 the Cactus's boots (critic 447 cactus a.2: "robe length: hem to the ground, legs hidden - TABS: robe to the knee, team shins and dark brown
+ * boots below"; wild_west.cactus.red.png: under the knee-length robe a short band of team shin, then dark brown boots from mid-shin to the foot, their
+ * tops a little wider, the toes rounded). CACTUS_BOOTS in the shin's own box: a 6-sided shell .out of its half-width round it from .from to .to of its
+ * length, a cuff .cuff round from .cuffFrom to .from; the foot in the same leather, .toe of its width. Dark brown, self-lit .glow. The robe is cut to the
+ * knee by unitFactory CACTUS_LONG.
+ */
+const CACTUS_BOOTS = { from: 0.42, to: 1.04, out: 2.1, cuffFrom: 0.34, cuff: 2.5, toe: 0.85, color: new Color3(0.13, 0.07, 0.045), glow: 0.1 };
+
+/** Dark brown boots from mid-shin to the foot (spec at CACTUS_BOOTS). */
+export function cactusBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = CACTUS_BOOTS;
+  const leather = getMaterialFactory().get("cloth", B.color, { emissive: B.color.scale(B.glow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "cactusBoot", shin, B.from, B.to, B.out, leather));
+    out.push(limbShell(scene, "cactusBootCuff", shin, B.cuffFrom, B.from + 0.02, B.cuff, leather));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) {
+      if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
+      foot.material = leather;
+      foot.scaling.x *= B.toe;
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 447 the Cactus's sleeves (critic 446 cactus a.1: "bare team arms shoulder to hand - TABS: thick green spiked cactus sleeves over the forearms";
  * wild_west.cactus.red.png: each forearm cased from the elbow past the hand in a fat green cactus pad, about three arms across, its end rounded like a
  * mitten, the hand hidden in it; tan pyramid spikes in regular rows round it). CACTUS_SLEEVE in the forearm's own box: a 6-sided shell .out of its
