@@ -1315,14 +1315,18 @@ export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Co
  * triangular slab in the torso frame, .vWide of the chest width (W) across at the top, from .vTop of the chest height (H) under the trunk's top down
  * .vLong of H, .vThick thick, its back face .proud in front of the trunk's foremost face (yoke included); the belt a .sides-sided band in the hip frame
  * .belt of W tall, .beltOut of the pelvis across, its top at the pelvis top, dark (.dark self-lit .glow).
+ * [S] 443 (critic 442 NEXT, a.4 "torso plain team"): the vest is its own team slab proud of the trunk (.vestWide of W across, from .vestTop of H under
+ * the trunk top down to the trunk foot, .vestThick thick, .vestProud in front of the foremost face, the team cloth saturated: the unit leaves the pale
+ * secret_ghost preset, unitVisuals), and the white V is a SHORT notch on it: .vWide of W across its top, .vLong of H deep, its point at the upper chest.
  */
 const VAMPIRE_VEST = {
-  shirt: new Color3(0.86, 0.84, 0.78), shirtGlow: 0.3, vWide: 0.46, vTop: -0.02, vLong: 0.5, vThick: 0.02, proud: 0.008,
+  shirt: new Color3(0.86, 0.84, 0.78), shirtGlow: 0.3, vWide: 0.5, vTop: -0.02, vLong: 0.28, vThick: 0.02, proud: 0.008,
+  vestWide: 0.96, vestTop: 0.02, vestThick: 0.03, vestProud: 0.006,
   belt: 0.16, beltOut: 1.14, sides: 8, dark: new Color3(0.07, 0.06, 0.07), glow: 0.12,
 };
 
 /** White shirt sleeves, a white V at the chest under the team vest, a dark belt (spec at VAMPIRE_VEST). */
-export function vampireVest(scene: Scene, body: ArticulatedBody): Mesh[] {
+export function vampireVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const V = VAMPIRE_VEST;
   const f = getMaterialFactory();
   const shirt = f.get("cloth", V.shirt, { emissive: V.shirt.scale(V.shirtGlow) });
@@ -1339,6 +1343,16 @@ export function vampireVest(scene: Scene, body: ArticulatedBody): Mesh[] {
     const b = m.getBoundingInfo().boundingBox;
     front = Math.max(front, m.position.z + (b.center.z + b.extendSize.z) * m.scaling.z);
   }
+  // the team vest slab over the chest front, from under the trunk top to the trunk foot (the belt covers its lower edge)
+  const trunkFoot = tm.position.y + (tb.center.y - tb.extendSize.y) * ts.y;
+  const vestTop = trunkTop - H * V.vestTop;
+  const vest = MeshBuilder.CreateBox("vampireVestSlab", { width: W * V.vestWide, height: vestTop - trunkFoot, depth: V.vestThick }, scene);
+  vest.position.set(tm.position.x + tb.center.x * ts.x, (vestTop + trunkFoot) / 2, front + V.vestProud + V.vestThick / 2);
+  vest.parent = body.torso;
+  vest.material = f.get("cloth", team);
+  vest.isPickable = false;
+  out.push(vest);
+  front += V.vestProud + V.vestThick;
   const y0 = trunkTop - H * V.vTop, y1 = y0 - H * V.vLong, half = (W * V.vWide) / 2, z0 = front + V.proud, z1 = z0 + V.vThick;
   // a closed slab (LESSONS 40): front and back triangles and the three sides
   const pts = [new Vector3(-half, y0, z0), new Vector3(half, y0, z0), new Vector3(0, y1, z0), new Vector3(-half, y0, z1), new Vector3(half, y0, z1), new Vector3(0, y1, z1)];

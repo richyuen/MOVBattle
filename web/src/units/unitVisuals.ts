@@ -608,9 +608,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "spooky.vampire": vis(
     // [S] 434 Hungry Hands, unarmed: no weapon in either hand, clawed fists (spookyDress VAMPIRE_CLAWS)
     // [S] 439 no shared vampire_collar wedge: his own spiked collar and cape (spookyDress VAMPIRE_COLLAR)
+    // [S] 443 not the pale see-through secret_ghost cloth: his vest is the saturated team colour (spookyDress VAMPIRE_VEST)
     { scale: 1.08, bulk: 0.92, headSize: 1.04, armLength: 1.1 }, "none", "none", "none", "none", "#7A2131", undefined, {
       posePreset: "duelist",
-      materialPreset: "secret_ghost",
       attachmentPreset: "ghost_trail",
       fxPreset: "spectral",
       stateVariants: { moving: ["ghost_stream"], "ability-active": ["ghost_stream"] },
