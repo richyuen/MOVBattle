@@ -147,7 +147,11 @@ export function buildPeakHat(scene: Scene, W: number, H: number, seatAt: number,
 // second from left). Spec: the brim a wide lampshade (PEAK_HAT's cut) .sides-sided from .crown W at the seat out and down to .brim W, .slope H deep; the
 // crown a frustum narrowing hard from .crown W to .top of that at .tall H over the head top, then a faceted cap from .top to .cap of the crown's width,
 // .capTall H more, so the top reads rounded-to-a-blunt-peak and never as a flat stovepipe lid; the hat tipped back .tilt rad. Team colour x .shade.
-const MINER_HAT = { sides: 8, crown: 1.16, brim: 2.2, slope: 0.3, top: 0.62, tall: 0.5, cap: 0.32, capTall: 0.16, tilt: 0.1, shade: 0.9, glow: 0.12 };
+// [R] 459 MINER_LOOK (CONFIRM 458 a.1: "two bead eyes hidden under the hat brim, only the mustache shows below it"; a.2: "chest between the straps
+// near-white, lighter than the face skin - TABS: plain team skin"): the whole hat lifted .lift H so the brim's lower rim rides just over the eye tops
+// (the rim was .3 - .06 = .24 H under the seat, across the eyes), the lampshade a little shallower (slope .22); the shirt at the skin's team colour
+// (MINER_OVERALLS.lift 0, was .35 toward white)
+const MINER_HAT = { sides: 8, crown: 1.16, brim: 2.2, slope: 0.22, top: 0.62, tall: 0.5, cap: 0.32, capTall: 0.16, tilt: 0.1, shade: 0.9, glow: 0.12, lift: 0.2 };
 
 /** The miner's slouched team hat: a lampshade brim, a tapered faceted crown with a blunt cap (spec at MINER_HAT), in the hat's units; `seat` under the head top. Returns the brim. */
 export function buildMinerCap(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
@@ -156,7 +160,7 @@ export function buildMinerCap(scene: Scene, W: number, H: number, seat: number, 
   const team = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(C.shade);
   const felt = getMaterialFactory().get("cloth", team, { emissive: team.scale(C.glow) });
   const brim = MeshBuilder.CreateCylinder("minerHatBrim", { height: u(C.slope * H), diameterTop: u(C.crown * W), diameterBottom: u(C.brim * W), tessellation: C.sides }, scene);
-  brim.position.y = u(seat - C.slope * H * 0.5 + 0.06 * H);
+  brim.position.y = u(seat + C.lift * H - C.slope * H * 0.5 + 0.06 * H);
   brim.rotation.x = -C.tilt;
   brim.material = felt;
   brim.convertToFlatShadedMesh();
@@ -408,7 +412,7 @@ export function deadeyeShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
  * .waist H tall round the trunk's foot, .over of its width and depth. Dark brown straps; all self-lit .glow. The tunic skirt is not hung (unitFactory).
  */
 // [R] 457 MINER_BUILD: the waist band flush with the trunk (.over 1.01), not a ledge proud of it (CONFIRM 455 a.1 "a protruding waist slab")
-const MINER_OVERALLS = { lift: 0.35, strap: 0.1, apart: 0.22, proud: 0.04, waist: 0.22, over: 1.01, strapColor: new Color3(0.1, 0.06, 0.04), glow: 0.12 };
+const MINER_OVERALLS = { lift: 0, strap: 0.1, apart: 0.22, proud: 0.04, waist: 0.22, over: 1.01, strapColor: new Color3(0.1, 0.06, 0.04), glow: 0.12 };
 
 /** The Miner's lighter team shirt, two dark braces and the overall trousers' waist (spec at MINER_OVERALLS). */
 export function minerOveralls(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
