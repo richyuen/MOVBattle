@@ -720,7 +720,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.blowdarter": vis(
-    { scale: 0.95, bulk: 0.8, armLength: 1.08 }, "blowgun", "hood", "none", "none", "#6E8A5A", undefined, {
+    // [S] 462 bare-headed under a dark brown bob (legacyDress BLOWDARTER_HAIR; audit 457 a.1), not the dark hood
+    { scale: 0.95, bulk: 0.8, armLength: 1.08 }, "blowgun", "none", "none", "none", "#6E8A5A", undefined, {
       posePreset: "archer",
       materialPreset: "secret_nature",
     },
