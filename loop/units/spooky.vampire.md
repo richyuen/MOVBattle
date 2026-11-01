@@ -1,27 +1,19 @@
 # spooky.vampire
-Status: open   Audited: 434   Done: -
+Status: done   Audited: 434, 444 (CONFIRM: passed a, b, c)   Done: 444
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (5 since 434)
-  (struck 1 at 438, 3 at 439, 2 at 440; 4's arms clause at 441)
- 4. torso in unit_spooky.vampire_idle plain team — TABS: team sleeveless vest with a V neck, white sleeves, dark belt (ref: spooky.vampire.red.png)
-b PASS (434)
-c FAIL (1 since 434)
-  (struck 1 at 437)
- 2. bite in unit_spooky.vampire_release is an overhead swing of a star — TABS: latches onto the enemy and sucks blood (ref: card Characteristics, Vampire Bite)
-d PASS (cost 200, hp 3.05x, cd 2.50x; 443 stats)
+a PASS (444: team vest with a white V at mid-chest, white sleeves, dark belt band before the vest; hair, beard, fangs, spiked collar; CONFIRM 444)
+b PASS (434: empty clawed Hungry Hands; CONFIRM 444)
+c PASS (444: jumps onto the man and hangs at his neck drinking, blood welling; bat form for far men; CONFIRM 444)
+d PASS (cost 200, hp 3.05x, cd 2.50x; 444 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a vest belt + V - blocker 4: the dark belt band seated proud of the vest slab front (front + vestThick) so it shows across the waist; the white V deepened below the collar yoke to mid-chest (vTop from the yoke's lower edge, not the trunk top) - ref: spooky.vampire.red.png - ours: unit_spooky.vampire_idle (critic 443)
-2. [S] c latch bite - blocker 2: hold on the man at the neck, drain over time, logged "bite", a new approach - ref: card Characteristics - ours: unit_spooky.vampire_release (attempts 2: not pickable; starves at 444)
 ## Attempts (iter | gap | criterion | verdict)
-434 | VAMPIRE_CLAWS empty clawed hands, no weapon (b8e42cdb) | b | approved (struck 1; b PASS)
+434 | VAMPIRE_CLAWS empty clawed hands (b8e42cdb) | b | approved (b PASS)
 437 | VAMPIRE_BAT bat form during the swoop (2c02833c) | c | approved (struck 1)
-438-440 | VAMPIRE_HAIR, VAMPIRE_COLLAR, VAMPIRE_BEARD | a | approved (struck 1, 3, 2)
-438-439 | VAMPIRE_BITE latch + BITE_POSE, retry (29201909, 65a0e9f5) | c | dropped x2 (pose not visible in _release)
-441 | VAMPIRE_VEST white self-lit sleeves, white V slab, dark belt (76405fb2) | a | approved (4's arms clause struck)
-442 | cape cut open down the front (arc gap, enclose), V .64 wide to the belt (8e29a2cb) | a | rejected (reverted 9ef221d0)
-443 | VAMPIRE_VEST team vest slab, short white V .5/.28, off the pale secret_ghost cloth (67ad1643) | a | approved (no strike: V hidden under the yoke, belt behind the slab)
+438-443 | VAMPIRE_HAIR, VAMPIRE_COLLAR, VAMPIRE_BEARD, VAMPIRE_VEST x2; cape gap rejected 442 | a | approved (struck 1, 3, 2)
+438-439 | VAMPIRE_BITE latch + BITE_POSE x2 | c | dropped x2 (pose not visible in _release)
+444 | VAMPIRE_LATCH jump onto the man, pinned at his neck, draughts + BLOOD_DRAIN (9e904930) | c | approved (struck 2; c PASS)
+444 | VAMPIRE_VEST V .12 under the trunk top to mid-chest, torso-frame belt band (681b8603, d1b8f3f4) | a | approved (struck 4; a PASS)
 ## Rejected (last 4)
-- white V [S] [1] - 442: cape arc gap + V .64 of W, .86 of H - chest reads as a white shirt in an open jacket; TABS a short V notch a quarter down on a team vest; team wedge (cape cut faces) in the neck opening
+- white V [S] [1] - 442: cape arc gap + V .64 of W - chest read as a white shirt in an open jacket
 ## Notes (max 3 lines)
-- Bite c: 2 dropped attempts (not pickable as [S]; starves at 444, then takes a slot). 439: +.45 pitch reared him back; -.45 folded him away from the man. Probe root yaw vs the man and torso world pitch at the hit first (git show 29201909, 65a0e9f5).
-- 441: the idle rest pose puts a hand to the face, the forearm across the chest; the V must clear it. Collar vampireCollar (cape: CreateCylinder arc opens from +x toward +z; rotation.y = PI*gap - PI/2 put it at the front, 442); vest vampireVest.
+- Latch fallout (critic 444): his head rides above the man's head, not at the neck; his right arm stays up in the claw pose. Belt fallout: V a small floating triangle (vUnder .06, vWide .6 would meet the collar).

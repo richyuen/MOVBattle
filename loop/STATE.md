@@ -1,5 +1,5 @@
 # Loop state (v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 443   Batch: pirate+spooky (12/19)   Consecutive empty: 0   Done: 59/139   Parked: 0
+Iteration: 444   Batch: pirate+wild_west (6/14)   Consecutive empty: 0   Done: 62/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -11,8 +11,8 @@ ancient: shield_bearer ++++ D | sarissa ++++ D | hoplite ++++ D | snake_archer +
 viking: headbutter ++++ D | ice_archer ++++ D | brawler ++++ D | berserker ++++ D | valkyrie ++++ D | longship ++++ D | jarl ++++ D
 dynasty: samurai ++++ D | firework_archer ++++ D | monk ++++ D | ninja ++++ D | dragon ++++ D | hwacha ++++ D | monkey_king ++++ D
 pirate: flintlock ++++ D | blunderbuss ++++ D | bomb_thrower ++++ D | harpooner ++++ D | cannon ++++ D | captain ++++ D | pirate_queen -+++ o
-spooky: skeleton_warrior ++++ D | skeleton_archer ++++ D | candlehead ++++ D | vampire -+-+ o | pumpkin_catapult -+++ o | swordcaster ++++ D | reaper ++-+ o
-wild_west: dynamite_thrower ???? q | miner ???? q | cactus ???? q | gunslinger ???? q | lasso ???? q | deadeye ???? q | quick_draw ???? q
+spooky: skeleton_warrior ++++ D | skeleton_archer ++++ D | candlehead ++++ D | vampire ++++ D | pumpkin_catapult ++++ D | swordcaster ++++ D | reaper ++++ D
+wild_west: dynamite_thrower --++ o | miner ---+ o | cactus -+-+ o | gunslinger --++ o | lasso ---+ o | deadeye --++ o | quick_draw ---+ o
 legacy_1: peasant ???? q | banner_bearer ???? q | poacher ???? q | blowdarter ???? q | pike ???? q | barrel_roller ???? q | boxer ???? q | flag_bearer ???? q
 legacy_2: pharaoh ???? q | wizard ???? q | chariot ???? q | thor ???? q | tank ???? q | super_boxer ???? q | dark_peasant ???? q | super_peasant ???? q
 good: devout_gauntlet ???? q | celestial_aegis ???? q | radiant_glaive ???? q | righteous_paladin ???? q | divine_arbiter ???? q | sacred_elephant ???? q | chronomancer ???? q
@@ -23,22 +23,22 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
-443 (BASE dd2f8916; no evidence commit; queen [R] deferred to 444): [S] warrior b.1 STIFFY_UPRIGHT (a18d0a6f) struck 1, b PASS | [S] archer b.1 DRAWS_BEFORE_LOOSE (3471ec43) struck 1, b PASS | [S] pumpkin a.2 no cw box (1992ee2c) struck 2 | [S] reaper c.3 hang high, not targeted, spear .22 (b111a980) struck 3, c PASS | [S] vampire a.4 vest slab + short V, off secret_ghost (67ad1643) approved, no strike | CONFIRM warrior, archer passed all (D); reaper passed a, b, failed c (burst) - 5/5, 4 struck
-442 (BASE 100f6660; evidence fd81737e reaper ABILITY_PREF impale): [S] reaper c.2 REAPER_IMPALE (c350e411, 56eae583) struck 2, added 3 | [S] SKELETON_BONE unlit cream (21f0bc9a) archer a.3, warrior a.2, reaper a.3 struck, all three a PASS | [S] pumpkin a.3 PUMPKIN_POSTS (4a2e5f3b) struck 3 | [S] vampire a.4 cape gap + long V (8e29a2cb) rejected (reverted 9ef221d0) | [S] queen a.2 wrap hem + pale pelvis (af6e49fd, 6eb18db0) dropped (hidden behind the guards) | CONFIRM archer, warrior passed a, c; failed b - 5/7, 5 struck
+444 (BASE 43d77906; tail overlap: wild_west audited, stats 7aee94dc d 7/7): [S] reaper c.1 burst on the impale (49fad4e0) struck 1, c PASS | [S] vampire c.2 VAMPIRE_LATCH (9e904930) struck 2, c PASS | [S] vampire a.4 V + belt band (681b8603, d1b8f3f4) struck 4, a PASS | [S] pumpkin a.1 black wheels (d50fe07b) struck 1, a PASS | [R] queen a.2 QUEEN_LEGLINE (c71c375a, 9e30f921, c4daf42f) rejected (reverted 4732b8ca, 7dcec775, cfaefef5) | [S] gunslinger c.1 BULLET_RAIN (0e73eb2a) struck 1, c PASS | CONFIRM vampire, reaper, pumpkin passed all (D); spooky checkpoint 12/12 GREEN - 5/6, 5 struck
+443 (BASE dd2f8916): [S] warrior b.1 (a18d0a6f) struck 1 | [S] archer b.1 (3471ec43) struck 1 | [S] pumpkin a.2 (1992ee2c) struck 2 | [S] reaper c.3 (b111a980) struck 3 | [S] vampire a.4 (67ad1643) approved | CONFIRM warrior, archer D - 5/5, 4 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] spooky.skeleton_warrior (a18d0a6f) VERDICT: APPROVE CRITERION: spooky.skeleton_warrior.b PASS   (previous: FAIL)
-- GAP: [S] spooky.skeleton_archer (3471ec43) VERDICT: APPROVE CRITERION: spooky.skeleton_archer.b PASS   (previous: FAIL)
-- GAP: [S] spooky.pumpkin_catapult (1992ee2c) VERDICT: APPROVE CRITERION: spooky.pumpkin_catapult.a FAIL   (previous: FAIL)
-- GAP: [S] spooky.reaper (b111a980) VERDICT: APPROVE CRITERION: spooky.reaper.c PASS   (previous: FAIL)
-- GAP: [S] spooky.vampire (67ad1643) VERDICT: APPROVE CRITERION: spooky.vampire.a FAIL   (previous: FAIL)
+- GAP: [S] spooky.reaper (49fad4e0) VERDICT: APPROVE CRITERION: spooky.reaper.c PASS   (previous: FAIL)
+- GAP: [S] spooky.vampire (9e904930) VERDICT: APPROVE CRITERION: spooky.vampire.c PASS   (previous: FAIL)
+- GAP: [S] spooky.vampire (681b8603, d1b8f3f4) VERDICT: APPROVE CRITERION: spooky.vampire.a PASS   (previous: FAIL)
+- GAP: [S] spooky.pumpkin_catapult (d50fe07b) VERDICT: APPROVE CRITERION: spooky.pumpkin_catapult.a PASS   (previous: FAIL)
+- GAP: [R] pirate.pirate_queen (c71c375a, 9e30f921, c4daf42f) VERDICT: REJECT CRITERION: pirate.pirate_queen.a FAIL   (previous: FAIL)
+- GAP: [S] wild_west.gunslinger (0e73eb2a) VERDICT: APPROVE CRITERION: wild_west.gunslinger.c PASS   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM spooky.skeleton_warrior: a PASS b PASS c PASS d PASS (4/4); spooky.skeleton_archer: a PASS b PASS c PASS d PASS (4/4); spooky.reaper: a PASS b PASS c FAIL d PASS (3/4)
+- CONFIRM spooky.vampire: a PASS b PASS c PASS d PASS (4/4); spooky.reaper: a PASS b PASS c PASS d PASS (4/4); spooky.pumpkin_catapult: a PASS b PASS c PASS d PASS (4/4)
 ## Notes for next iteration (max 5 lines)
-- Queen a plateau: 444 takes its [R] (starves 448): hem to mid-thigh, boot top under the knee, pelvis pale, QUEEN_GUARD lifted clear of the .6-.8 m band; probe_bbox the guard meshes first (unit Notes).
-- Vampire c (attempts 2) starves at 444 and takes a slot: a new latch approach (unit Notes). Vampire a.4 NEXT: belt proud of the vest slab, V deepened below the yoke.
-- Reaper c (CONFIRM 443): the capture pair is the impale blow, which skips REAPER_BURST; burst on it too (or re-aim). His motion shots now see him from behind.
-- Pumpkin a.1 last blocker: spooky wheel tyre + hub in PUMPKIN_TIMBER (vehicleBuilder wheels), a swatch for the critic (colour-only).
-- Captures run ~5 s a shot (5 units ~7 min): background them and wait with an until-loop on the log.
+- Queen a plateau, [R] rejected once (444): the next [R] (one more reject parks a) rebuilds the leg chain per the 444 critic NEXT in her unit file: pelvis foot up, legs ~1, knee ~.3 of height, boots at the knee, skirt to ~.55; probe_bbox first.
+- wild_west audited 444 (audit at output/loop/iter-444/audit.md): pick from the unit files' Ranked gaps (lasso c grab, cactus c needles, quick_draw c dodge, miner b pickaxe lead).
+- 444: a revert that conflicts only on an adjacent context line was resolved by hand (proceduralAnimation GUNS_UP beside QUEEN_GUARD), not kept.
+- Captures run ~5 s a shot: background 4+ units and wait with an until-loop on the log; never end the turn while waiting on a background agent.
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
 # <unitId>

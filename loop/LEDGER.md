@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-439 | STIFFY_SHORTS baggy team shorts to the knee, rag hems, brown belt, no skirt (e3336ba6) | spooky.skeleton_warrior.a | approved
-439 | ARCHER_KIT team forearm bracers, brown boot boxes + shin cuffs (bc447f44) | spooky.skeleton_archer.a | approved
-439 | SKELETON_CREW catapult operator stripped to bone, ribs, team rags (6e88e2f5) | spooky.pumpkin_catapult.a | approved
-439 | CANDLE_ROBE square team robe, dark hem band, gold-edged white V bib (b10d272a) | spooky.candlehead.a | approved
-439 | VAMPIRE_COLLAR pointed team cape + spike fan behind the head (09b87480, 3cdade49) | spooky.vampire.a | approved
-439 | REAPER_LEGS cream bone legs + REAPER_HOVER lift, legs hanging (e97d690a) | spooky.reaper.a | approved
-439 | VAMPIRE_BITE retry: heading held on the man, pitch flipped (65a0e9f5, 94797a8b) | spooky.vampire.c | dropped
 440 | operator skull anchor: wrapAsBody skin clone off the bones (bc704fe0) | spooky.pumpkin_catapult.a | approved
 440 | STIFFY_GREAVES team knee dome + shin tube, slim bone feet (7c68a9f4, 1cdbda83) | spooky.skeleton_warrior.a | approved
 440 | BOOT_SHAFT per-foot brown shafts to mid-shin + cuffs, no slab (335a51ae) | spooky.skeleton_archer.a | approved
@@ -42,6 +35,12 @@ for 25 iterations.
 443 | no counterweight box on the spooky catapult (1992ee2c) | spooky.pumpkin_catapult.a | approved
 443 | REAPER_IMPALE hung high beside the shoulder, not targeted; REAPER_SPEAR thicker (b111a980) | spooky.reaper.c | approved
 443 | VAMPIRE_VEST team vest slab + short V .5/.28, off secret_ghost (67ad1643) | spooky.vampire.a | approved
+444 | reaper burst on the impaling blow too (49fad4e0) | spooky.reaper.c | approved
+444 | VAMPIRE_LATCH jump onto the man, pinned at his neck, draughts + BLOOD_DRAIN (9e904930) | spooky.vampire.c | approved
+444 | VAMPIRE_VEST V .12 under the trunk top to mid-chest, torso-frame belt band (681b8603, d1b8f3f4) | spooky.vampire.a | approved
+444 | spooky wheel tyre + hub in PUMPKIN_TIMBER (d50fe07b) | spooky.pumpkin_catapult.a | approved
+444 | [R] QUEEN_LEGLINE hem flipped/raised, pale pelvis, no tunic skirt, guards out (c71c375a, 9e30f921, c4daf42f) | pirate.pirate_queen.a | rejected
+444 | BULLET_RAIN arms up, guns fired skyward, 3 bullets fall with blasts (0e73eb2a) | wild_west.gunslinger.c | approved
 
 ## Spent (never retry as [P])
 
@@ -64,6 +63,9 @@ pirateDress.ts:QUEEN_SKIRT (top, knee, out, flare, deep, slant, frontDrop, beads
 proceduralAnimation.ts:QUEEN_GUARD (out, ahead, drop, cross, lean, stagger) | .05, .14, .3, .6, .2, .04 | 431 | approved | blades held point-first, end-on (before 431)
 pirateDress.ts:QUEEN_SHIRT (shoulderOut, puff, puffAt, to, cuffOut, vee, veeLong, laces) | 1.2, 1.6, .3, .62, 1.1, .28, .34, 2 | 435 | approved | 1.45, 1.95, cuff 1.25 (433-434); bare arms (before 433)
 
+wild_west.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 444 | stats | values: git show 7aee94dc
+simulationSystem.ts:VAMPIRE_LATCH (round, off, up, first, every, afterDeath, blood) + visualEffects BLOOD_DRAIN | .7, .75, .2, .3, .35, .5, 12 | 444 | approved | swing + star (before 444)
+simulationSystem.ts:BULLET_RAIN (hold, raise, up, fall, count, every, spread, splash, blast) + GUNS_UP (reach, out) | 1.1, .3, 22, .55, 3, .4, .9, 2.5, .6; .95, .2 | 444 | approved | level burst (before 444)
 spooky.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 434 | stats | values: git show 33bb56af
 spooky b props 434-436 rows (VAMPIRE_CLAWS, STIFFY_SHIELD, STIFFY_SWORD, BONE_BOW, CANDLE_ARMS; b PASS) | compacted 440 | 436 | approved | values: git show 93103dfd:loop/LEDGER.md
 spooky c mechanics 434-435 rows (PUMPKIN_SHOT, FIRE_ARROW, SPIRIT_FIRE, BURN + BURN_STATUS, SPIRIT_LIFT, FEAR_SKULL + STIFFY_FEAR, PUMPKIN_BURST) | compacted 436 | 435 | approved | values: git show e1126012:loop/LEDGER.md
@@ -93,9 +95,9 @@ spookyDress.ts:REAPER_LEGS + proceduralAnimation.ts:REAPER_HOVER (glow, long, th
 spookyDress.ts:STIFFY_GREAVES + knee (from, to, across, flare, knee, kneeSquash, foot, shade; patella, pSquash, pProud) | .34, .88, 3.4, .82, 1.12, .75, .72, .55; .62, 1.2, .25 | 441 | approved | from .14 to .84 (440)
 spookyDress.ts:BOOT_SHAFT (from, to, across, cuffFrom, cuffTo, cuff, toe) | .48, 1.06, 2.5, .42, .56, 3.3, .78 | 440 | approved ARCHER_KIT boot box bootOut 1.25 (439)
 spookyDress.ts:SKELETON_BONE (color, unlit + unglowBone) | (1.1,.78,.4) unlit emissive, out of glow | 442 | approved | cloth (1,.86,.6) glow .3 grey 166/161/156 (441); getCloth unlit-glow (before 441)
-vehicleBuilder.ts:PUMPKIN_TIMBER (color, glow) | (.1,.055,.05), .14 (cw box removed 443) | 443 | approved | "wood" (.36,.13,.09) red-brown + wheel tone (before 441)
+vehicleBuilder.ts:PUMPKIN_TIMBER (color, glow, rim) | (.1,.055,.05), .14, .7 (cw box removed 443; spooky tyre/hub 444) | 444 | approved | "wood" (.36,.13,.09) red-brown + wheel tone (before 441)
 spookyDress.ts:REAPER_ROBE (across, deep, sides, long, flare, rags, rag, ragLong, ragShort, ragIn) | 1.08, 1.25, 8, .85, 1.12, 10, .13, .32, .16, .94 | 441 | approved | unitFactory bell: ROBE 1.3, SKIRT .85, HEM 2.1, TATTERS 7
-spookyDress.ts:VAMPIRE_VEST (shirt, shirtGlow, vWide, vTop, vLong, ...; vestWide, vestTop, vestThick, vestProud) + no secret_ghost | (.86,.84,.78), .3, .5, -.02, .28; .96, .02, .03, .006 | 443 | approved | vWide .46 vLong .5 (441); 442 V .64/.86 rejected; plain team (before 441)
+spookyDress.ts:VAMPIRE_VEST (shirt, shirtGlow, vWide, vTop, vLong, ...; vestWide, vestTop, vestThick, vestProud; vUnder, vFoot, beltWide, beltProud, beltUp) + no secret_ghost | (.86,.84,.78), .3, .5, -.02, .28; .96, .02, .03, .006; .12, .5, 1.04, .02, .1 | 444 | approved | vWide .46 vLong .5 (441); 442 V .64/.86 rejected; plain team (before 441)
 spookyDress.ts:VAMPIRE_BEARD (mouth, side, back, under, jawTop, proud, goatee, drop, fang, fangLong, fangGap, fangProud) | .42, .16, -.1, .18, .12, .08, .6, .4, .17, .34, .22, .14 | 440 | approved bare face (before 440)
 simulationSystem.ts:REAPER_IMPALE (weak, up, side, back, rootUp, rootBack, through, every, bite, afterDeath) + spookyDress REAPER_SPEAR (thick, tip) | .15, .8, .45, .1, .66, .08, .3, .6, .18, 2.5; .22, .12 | 443 | approved | up .6 side .3 thick .16 (442); none (before 442)
 vehicleBuilder.ts:PUMPKIN_POSTS (thick, apart, over, collar, collarTall, collarAt) | 1.35, .75, .3, 1.3, 1.4, .28 | 442 | approved | A-frame legs + brace (before 442)

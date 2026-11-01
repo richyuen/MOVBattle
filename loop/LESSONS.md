@@ -27,17 +27,16 @@ drop a lesson once it is a comment at the code it describes.
 - The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of it (420: the dragon's head was out of frame from 417; the monkey king's tail pulls his frame back): a new tall prop re-frames every shot, so a RE-AUDIT follows.
 - A bowman at the ready turns his chest up to .95 rad and the head again off it: aim such a unit's idle from the head block's own world facing (alpha = atan2(fz, fx) - swing); the root rule's yaw - pi/2 equals that only for the -x facing the idle is shot at (402 ice archer).
 - A wide stance reads as a stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a "stride" pose gap (403).
-- `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches: render them after it. No python (pixel values: a playwright canvas getImageData). 4+ units: background it.
+- `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches: render them after it. 4+ units: background it.
 - A dress change aimed at the idle must clear the rest pose: probe what covers that band first (442 queen: the hem-to-knee band sat behind her sword guards, two commits dropped). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
 - Logged at the swing start / let-go, not the landing: a preset's instant "slam" (use the pending blow, 426); a special logged as a missile leaves owns that missile (427 queen). A status logged at the cast (fire_dot) makes _struck precede the missile: an on-landing mechanic needs ABILITY_PREF (435 candlehead).
-- The _ability/_release shots are the log tick itself, before RuntimeUnit.update: a swap or pose set at the log shows only after (437 bat); log a latch's hit later (438 bite).
-- A crewman moved behind a vehicle hides behind the near wheel at the .6 rad idle swing: re-aim it the same iteration (428 cannon).
+- The _ability/_release shots are the log tick itself, before RuntimeUnit.update: a swap or pose set at the log shows only after (437 bat). A latch reads in _release when it pins at the decision and its plain hits come from the draughts .3 s on (444 vampire).
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
 ## Rig and dress
 - A hunched idle can be _buildIdlePose's hashed sunk stance: a per-unit stance override fixed what scale/bulk did not (436 QUEEN_UPRIGHT).
-- aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
+- aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen). The `_yoke` hull spans the whole trunk, not a collar: never anchor a chest piece to its foot (444).
 - Flipping a flat disc or ribbon one-sided by its summed normal (faceFront) can turn it away from the camera (390 halfling V vanished): build small flat dress pieces as thin closed slabs instead.
 - A hood or cap over the block head needs a superellipsoid profile (exponent about 3, 1.2 of the head) to clear the chamfered corners.
 - A shared prop that marks its mechanic by the style OBJECT (`style === VALKYRIE_WINGS`) loses the mechanic the moment one unit gets its own style: key the marker on a flag in the style (`fly: true`) so a per-unit fork keeps the flight/beat (394 valkyrie wings).

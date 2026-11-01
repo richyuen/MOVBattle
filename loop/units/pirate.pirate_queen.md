@@ -1,23 +1,24 @@
 # pirate.pirate_queen
 Status: open   Audited: 422, 426 (RE-AUDIT c), 431 (CONFIRM: passed b, c; failed a), 434 (CONFIRM: passed b, c; failed a)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (0 since 440) plateau (442: the thigh gap spent, attempts 2 - next pick one [R] at the legs/skirt/sword-rest; plateau from CONFIRM 431/434 spent by the [R] 440)
+a FAIL (0 since 440) plateau ([R] 444 QUEEN_LEGLINE rejected once; one more rejected [R] parks a)
   (struck 1 at 440)
  2. legs in unit_pirate.pirate_queen_idle are short stumps, the boots start at the skirt hem and no thigh shows — TABS: long slim legs, bare thigh between the skirt's front hem and the knee boots (ref: pirate.pirate_queen.red.png)
 b PASS (431: both blades crossed in an X at rest, the big cutlass and the jewelled sabre; CONFIRM 431, 434)
 c PASS (427: Bomb Spin - arms out, seven bombs out round her, she rises; CONFIRM 431, 434)
-d PASS (cost 2500, hp 36.57x, dmg 2.68x, cd 0.76x; 441 stats)
+d PASS (cost 2500, hp 36.57x, dmg 2.68x, cd 0.76x; 444 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [R] a long legs, bare thigh - blocker 2: one rebuild of hem, pelvis seat and boot top together, AND the crossed-blade rest (QUEEN_GUARD) lifted so the hem-to-knee band is not behind the guards in the idle; QUEEN_FRAME legs/tall untouched - ref: pirate.pirate_queen.red.png - ours: unit_pirate.pirate_queen_idle (worker 442)
+1. [R] a leg line rebuild - blocker 2: pelvis box bottom up to ~.85 of the hip height, leg chain longer (legs .74 -> ~1) so the knee lands at ~.3 of her height, boot tops at the knee, skirt from the waist to ~.55 of her height; probe_bbox before the capture - ref: pirate.pirate_queen.red.png - ours: unit_pirate.pirate_queen_idle (critic 444)
 ## Attempts (iter | gap | criterion | verdict)
-425-434 | CUTLASS, CUTLASS_SLASH, BOMB_SPIN, QUEEN_BANDANA, QUEEN_SASH, QUEEN_HAIR, QUEEN_CUTLASS, QUEEN_GUARD, QUEEN_SKIRT, QUEEN_SHIRT, QUEEN_DREADS | a,b,c | approved (b, c PASS; CONFIRM 431, 434 failed a)
-435-439 | [R] QUEEN_BOOTS build; QUEEN_UPRIGHT; QUEEN_FRAME; [P] tall .85; [P] scale 1.2 | a | approved
-440 | [R] QUEEN_BUILD leg chain .74, trunk .76: head top 2.31 -> 1.96 m vs captain 1.87 (fba5bc29) | a | approved (struck 1; added 2)
-441 | legs .9, neck x.82, trunk .66, skirt front cut up, pelvis cut .5 (72e9e80d, 52d68fdd) | a | rejected (reverted 6f6d8b79, f7540111)
-442 | QUEEN_SKIRT wrap hem cut up over her right front + pelvis in the pale trousers (af6e49fd, 6eb18db0) | a | dropped (reverted 6e37a0f6, bd2a59f2: band hidden behind the sword guards in _idle, smoke in the side shots)
+425-439 | CUTLASS ... QUEEN_DREADS; [R] QUEEN_BOOTS; QUEEN_UPRIGHT; QUEEN_FRAME; [P] tall, scale | a,b,c | approved (b, c PASS; CONFIRM 431, 434 failed a)
+440 | [R] QUEEN_BUILD leg chain .74, trunk .76 (fba5bc29) | a | approved (struck 1; added 2)
+441 | legs .9, neck x.82, trunk .66, skirt front cut, pelvis cut (72e9e80d, 52d68fdd) | a | rejected
+442 | QUEEN_SKIRT wrap hem cut + pale pelvis (af6e49fd, 6eb18db0) | a | dropped (hidden behind the guards)
+444 | [R] QUEEN_LEGLINE hem slant flipped (short on her left), wrap end on her right, pale pelvis, no tunic skirt, guards out .12/.24 (c71c375a, 9e30f921, c4daf42f) | a | rejected (reverted 4732b8ca, 7dcec775, cfaefef5)
 ## Rejected (last 4)
-- long legs [S] [1] - 441: legs .9 + head/trunk cut + skirt front cut - boot tops still reach the pelvis, no thigh shows; legs/tall a ledger reversal of 440's QUEEN_BUILD
+- long legs [S] [1] - 441: legs .9 + head/trunk cut + skirt front cut - boot tops still reach the pelvis; legs/tall a ledger reversal of 440
+- leg line [R] [1] - 444: QUEEN_LEGLINE - no leg length between hem and boots: pelvis box foot .61, knee/boot top .56-.59, so the thigh sits inside pelvis and skirt; TABS hip at ~half her height, thighs ~25% of it
 ## Notes (max 3 lines)
-- 442 probe (root frame): skirt .14-1.0 m all round (hem ~.56, front-left .26), pelvis box .63-1.01 in the dark body shade, knee .59, boot top .59, thighs already pale (QUEEN_SKIRT pants). The cut wrap + pale pelvis changed nothing in _idle: her bowl guards sit over that band.
-- 443: the [R] deferred to 444 (starves 448). It needs all four at once: hem up to mid-thigh, boot top under the knee, pelvis box pale, QUEEN_GUARD lifted so the guards clear the .6-.8 m band in _idle; probe_bbox the guard meshes (root frame) before geometry.
-- Spec of the [R]s at pirateDress QUEEN_BOOTS, QUEEN_FRAME (QUEEN_BUILD 440); queenFrame runs before her dress in unitFactory; stance QUEEN_UPRIGHT, guard QUEEN_GUARD. The scale row is spent.
+- 444 probe (root frame): pelvis .62-1.01, thighs .34-1.0, knee .59, boot tops .40-.57; guards at out .12/drop .24 sat x +-.44..-.86 (clear of the legs). A close noglow shot showed a thin pale band only.
+- The next [R] must change QUEEN_FRAME's leg chain (440's legs .74), justified by the 444 critic's NEXT (not a [P] reversal); keep her head top near the captain's by cutting the trunk instead.
+- Spec of the [R]s at pirateDress QUEEN_BOOTS, QUEEN_FRAME (QUEEN_BUILD 440); stance QUEEN_UPRIGHT, guard QUEEN_GUARD.
