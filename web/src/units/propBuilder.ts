@@ -3524,8 +3524,10 @@ const STAY_BANNER = { long: 1.5, thick: 0.022, grip: 0.3, beam: 0.62, bar: 0.03,
 function buildStayBanner(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const B = STAY_BANNER, H = fit.stand, L = B.long * H, r = B.thick * H;
   const gold = mat(scene, LEGACY_GOLD, B.glow, "cloth"), cloth = mat(scene, team, B.glow, "cloth");
-  const pole = MeshBuilder.CreateCylinder("bannerPole", { height: L, diameter: r, tessellation: 6 }, scene);
+  // Stood upright at his side like the Charge flag (named "staff", "uprightPole" marker; 457b)
+  const pole = MeshBuilder.CreateCylinder("staff", { height: L, diameter: r, tessellation: 6 }, scene);
   pole.id = "stayBanner";
+  new TransformNode("uprightPole", scene).parent = pole;
   pole.material = mat(scene, LEGACY_POLE, 0.08);
   const part = (m: Mesh, x: number, y: number, z: number, material: PBRMetallicRoughnessMaterial): Mesh => {
     m.position.set(x, y, z); m.parent = pole; m.material = material; m.convertToFlatShadedMesh(); return m;
