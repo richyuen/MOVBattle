@@ -690,6 +690,8 @@ const HARPOON_REST = { drop: 0.27, ahead: 0.06, out: 0.09, dip: 0.7 };
  * tilt .tilt, a short .stride, no crouch, chest lean .lean, chin .chin (_buildIdlePose).
  */
 const QUEEN_UPRIGHT = { tilt: 0.07, stride: 0.08, lean: 0.02, chin: 0 };
+// [R] 451 the Cactus's upright idle stance (see _buildIdlePose): hip tilt, stride, chest lean (rad)
+const CACTUS_UPRIGHT = { tilt: 0.05, stride: 0.06, lean: 0.04 };
 const THROW_LET_GO = 0.5;
 /*
  * Two-hand boulder (vfx.k; units/tribal.stoner). Spec read off the reference: the boulder, about .38 of his height across, is held in front of the belly in both
@@ -4258,10 +4260,14 @@ export class ProceduralAnimator {
     // [S] 436 the Pirate Queen stands tall (QUEEN_UPRIGHT)
     const queen = this._queenArmed();
     if (queen) Object.assign(stance, { tilt: QUEEN_UPRIGHT.tilt, stride: QUEEN_UPRIGHT.stride, crouch: 0, chin: QUEEN_UPRIGHT.chin, cock: 0 });
+    // [R] 451 the Cactus stands tall in his robe (CACTUS_UPRIGHT; wild_west.cactus.red.png: straight legs under the knee-length robe): a crouch put his
+    // bent knee through the robe's front and tipped his boot tops up to the hem (probe 451: knee bend .66-.91, chest pitched .4)
+    const cactus = this._body.torso.getChildMeshes(true).some((m) => /_cactusRobe$/.test(m.name));
+    if (cactus) Object.assign(stance, { tilt: CACTUS_UPRIGHT.tilt, stride: CACTUS_UPRIGHT.stride, crouch: 0, chin: 0, cock: 0 });
     return {
       square,
       wide,
-      lean: queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
+      lean: cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,

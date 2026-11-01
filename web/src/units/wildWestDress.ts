@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, VertexBuffer, type Material } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, Vector3, VertexBuffer, type Material, type TransformNode } from "@babylonjs/core";
 import { getMaterialFactory } from "./materialFactory";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { limbBox, limbShell } from "./medievalDress";
@@ -574,9 +574,9 @@ export function minerMoustache(scene: Scene, body: ArticulatedBody): Mesh[] {
  * boots below"; wild_west.cactus.red.png: under the knee-length robe a short band of team shin, then dark brown boots from mid-shin to the foot, their
  * tops a little wider, the toes rounded). CACTUS_BOOTS in the shin's own box: a 6-sided shell .out of its half-width round it from .from to .to of its
  * length, a cuff .cuff round from .cuffFrom to .from; the foot in the same leather, .toe of its width. Dark brown, self-lit .glow. The robe is cut to the
- * knee by unitFactory CACTUS_LONG.
+ * knee by CACTUS_ROBE.hem. [R] 451: slim (the 448 fat boots, out 2.1 cuff 2.5, read as a second skirt), from .55 of the shin so a band of team shin shows under the hem.
  */
-const CACTUS_BOOTS = { from: 0.42, to: 1.04, out: 2.1, cuffFrom: 0.34, cuff: 2.5, toe: 0.85, color: new Color3(0.13, 0.07, 0.045), glow: 0.1 };
+const CACTUS_BOOTS = { from: 0.55, to: 1.04, out: 1.35, cuffFrom: 0.49, cuff: 1.6, toe: 0.85, color: new Color3(0.13, 0.07, 0.045), glow: 0.1 };
 
 /** Dark brown boots from mid-shin to the foot (spec at CACTUS_BOOTS). */
 export function cactusBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
@@ -594,6 +594,127 @@ export function cactusBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
       foot.scaling.x *= B.toe;
     }
   }
+  return out;
+}
+
+/*
+ * [R] 451 the Cactus's robe, spike grid, flowers and boots (plateau a: critic 447-449 a.2 "hem to the ground, legs hidden - TABS: robe to the knee, team
+ * shins and dark brown boots below", a.3 "about fifteen scattered small spikes - TABS: dense regular grid of tan pyramid spikes over robe, hood, sleeves",
+ * a.4 "one small flower at the hem, a tiny one on the hood - TABS: large flower on the hood top, one on the shoulder, one on the hem"). Probe 451 (idle,
+ * root-relative): hip .77, knee .41, the old hem .25 and the old boot cuffs .52, so the boots ran up inside the robe and no shin showed.
+ * Spec read off wild_west.cactus.red.png (height from sole to hood top 1): a green A-line robe from the shoulders, a little wider than them at the chest
+ * and flaring to about one and a half chest widths at the hem, the hem level with the knee (.25 of the height); under it a band of bare team shin; then
+ * slim dark brown boots from just below the knee (.22) to the sole, a shin and a third across with a slightly wider turned cuff at the top. Spikes: tan
+ * four-sided pyramids with broad bases, in regular staggered rings, about eight round the robe per ring, two rings over the chest and three down the
+ * skirt, each about .4 of a head tall. Flowers: salmon-pink, eight broad flat petals round a yellow eye, one about a head across on the hood's crown, one
+ * about .7 of a head on the right shoulder's front, one about .8 low on the skirt's front to the left.
+ * CACTUS_ROBE in the chest box (W H D): bodice .bodice W across at the top to .waist W at its foot, .tall H tall, depth .deep of W; skirt from .rise H over
+ * the hip joint to the hem, .hem of the hip-to-knee drop down (the knee joint in the hip frame, LESSONS: anchor to knee.position.y), .flare W across at
+ * the hem. Spike rings: .chestRings on the bodice and .skirtRings on the skirt, .ring spikes each, alternate rings turned half a step; spikes .spike of
+ * the head tall, .base of that across. Flowers .petals petals, sizes .hoodFlower, .shoulderFlower, .hemFlower of the head; petal and eye colours.
+ * CACTUS_BOOTS (below) are the slim boots; the hands are hidden inside the mitten sleeves (a team-blue hand showed under the sleeve at the hip).
+ */
+export const CACTUS_ROBE = {
+  bodice: 1.12, waist: 1.24, tall: 1.04, deep: 1.3, rise: 0.08, hem: 0.9, flare: 1.5,
+  chestRings: 2, skirtRings: 3, ring: 8, spike: 0.42, base: 0.95,
+  petals: 8, hoodFlower: 1.05, shoulderFlower: 0.72, hemFlower: 0.82,
+  petal: new Color3(1, 0.36, 0.3), eye: new Color3(1, 0.8, 0.2), glow: 0.18,
+};
+
+/** A four-sided tan spike on `parent` at `at` (its frame), pointing along unit `out` (spec at CACTUS_ROBE). */
+function cactusSpike(scene: Scene, parent: TransformNode, at: Vector3, out: Vector3, tall: number, mat: Material): Mesh {
+  const s = MeshBuilder.CreateCylinder("cactusSpine", { height: tall, diameterTop: 0, diameterBottom: tall * CACTUS_ROBE.base, tessellation: 4 }, scene);
+  s.parent = parent;
+  s.position.copyFrom(at.add(out.scale(tall * 0.38)));
+  s.rotation.set(Math.acos(Math.max(-1, Math.min(1, out.y))), Math.atan2(out.x, out.z), 0);
+  s.material = mat;
+  s.convertToFlatShadedMesh();
+  return s;
+}
+
+/** A salmon-pink cactus flower of `size` across on `parent` at `at`, its face turned up by `pitch` off facing +y (spec at CACTUS_ROBE). */
+export function cactusFlower(scene: Scene, parent: TransformNode, at: Vector3, pitch: number, size: number): Mesh[] {
+  const R = CACTUS_ROBE;
+  const mf = getMaterialFactory();
+  const petal = mf.get("cloth", R.petal, { emissive: R.petal.scale(R.glow) });
+  const eye = mf.get("cloth", R.eye, { emissive: R.eye.scale(R.glow * 1.5) });
+  const holder = new Mesh("cactusFlower", scene);
+  holder.parent = parent;
+  holder.position.copyFrom(at);
+  holder.rotation.x = pitch;
+  const out: Mesh[] = [holder];
+  for (let i = 0; i < R.petals; i++) {
+    const a = (i / R.petals) * Math.PI * 2;
+    const p = MeshBuilder.CreateBox("cactusPetal", { width: size * 0.2, height: size * 0.05, depth: size * 0.42 }, scene);
+    p.rotation.set(-0.12, a, 0);
+    p.position.set(Math.sin(a) * size * 0.26, 0, Math.cos(a) * size * 0.26);
+    p.material = petal;
+    p.parent = holder;
+    p.convertToFlatShadedMesh();
+    out.push(p);
+  }
+  const c = MeshBuilder.CreateCylinder("cactusFlowerEye", { height: size * 0.08, diameter: size * 0.24, tessellation: 6 }, scene);
+  c.position.y = size * 0.03;
+  c.material = eye;
+  c.parent = holder;
+  out.push(c);
+  return out;
+}
+
+/** The Cactus's robe to the knee with its spike grid and the shoulder and hem flowers, the hands hidden (spec at CACTUS_ROBE). */
+export function cactusRobe(scene: Scene, body: ArticulatedBody, green: Material, spineMat: Material): Mesh[] {
+  const R = CACTUS_ROBE;
+  const out: Mesh[] = [];
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y;
+  const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
+  const tall = headSize * R.spike;
+  const top = W * R.bodice, waist = W * R.waist, hem = W * R.flare, deep = R.deep * (ext.z * chest.scaling.z) / Math.max(1e-4, ext.x * chest.scaling.x);
+  const bodiceH = H * R.tall;
+  const bodice = MeshBuilder.CreateCylinder(`${chest.name}_cactusRobe`, { height: bodiceH, diameterTop: top, diameterBottom: waist, tessellation: 8 }, scene);
+  bodice.scaling.z = deep;
+  bodice.position.set(0, chest.position.y, 0);
+  bodice.material = green;
+  bodice.convertToFlatShadedMesh();
+  bodice.parent = body.torso;
+  out.push(bodice);
+  // The skirt: from just over the hip joint to the hem at the knee (the knee joint in the hip frame)
+  const skirtTop = H * R.rise;
+  const hemY = body.leftHip.position.y + body.leftKnee.position.y * R.hem;
+  const long = skirtTop - hemY;
+  const skirt = MeshBuilder.CreateCylinder(`${chest.name}_cactusSkirt`, { height: long, diameterTop: waist, diameterBottom: hem, tessellation: 9 }, scene);
+  skirt.scaling.z = deep;
+  skirt.position.y = (skirtTop + hemY) / 2;
+  skirt.material = green;
+  skirt.convertToFlatShadedMesh();
+  skirt.parent = body.hip;
+  out.push(skirt);
+  // Regular staggered rings of spikes: on the bodice (torso frame) and down the skirt (hip frame)
+  const ringOf = (parent: TransformNode, y: number, r: number, k: number): void => {
+    for (let i = 0; i < R.ring; i++) {
+      const a = ((i + (k % 2) * 0.5) / R.ring) * Math.PI * 2;
+      const dir = new Vector3(Math.sin(a), 0, Math.cos(a) * deep).normalize();
+      out.push(cactusSpike(scene, parent, new Vector3(Math.sin(a) * r, y, Math.cos(a) * r * deep), dir, tall, spineMat));
+    }
+  };
+  for (let k = 0; k < R.chestRings; k++) {
+    const u = (k + 0.5) / R.chestRings;
+    ringOf(body.torso, chest.position.y + bodiceH * (0.32 - 0.64 * u), (top + (waist - top) * (0.18 + 0.64 * u)) / 2, k);
+  }
+  for (let k = 0; k < R.skirtRings; k++) {
+    const u = (k + 0.5) / R.skirtRings;
+    ringOf(body.hip, skirtTop - long * (0.08 + 0.84 * u), (waist + (hem - waist) * (0.08 + 0.84 * u)) / 2, k + R.chestRings);
+  }
+  // Flowers: the right shoulder's front (torso frame) and low on the skirt's front to the left (hip frame)
+  const side = Math.sign(body.rightShoulder.position.x) || 1;
+  const shoulderY = chest.position.y + bodiceH * 0.36;
+  const rS = (top + (waist - top) * 0.14) / 2;
+  out.push(...cactusFlower(scene, body.torso, new Vector3(side * W * 0.32, shoulderY, Math.sqrt(Math.max(0, rS * rS - (W * 0.32) ** 2)) * deep + headSize * 0.03), Math.PI / 2 - 0.25, headSize * R.shoulderFlower));
+  const hemFlowerY = skirtTop - long * 0.78, rH = (waist + (hem - waist) * 0.78) / 2;
+  out.push(...cactusFlower(scene, body.hip, new Vector3(-side * hem * 0.16, hemFlowerY, Math.sqrt(Math.max(0, rH * rH - (hem * 0.16) ** 2)) * deep + headSize * 0.03), Math.PI / 2 - 0.1, headSize * R.hemFlower));
+  // The hands are inside the mitten sleeves
+  for (const elbow of [body.leftElbow, body.rightElbow]) for (const m of elbow.getChildMeshes(false)) if (/_[lr]HandM$/.test(m.name)) m.isVisible = false;
   return out;
 }
 
