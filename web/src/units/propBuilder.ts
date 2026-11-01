@@ -4470,6 +4470,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return gun;
     }
     case "musket": {
+      // [S] 448 the Deadeye's Winchester (WINCHESTER)
+      if (variant === "winchester") return buildWinchester(scene, fit.stand);
       // [S] 369 the matchlock, built to the spec at MATCHLOCK: barrel, stock and butt along +y from the fist; the wood lies on the barrel's +z side
       const M = MATCHLOCK;
       const L = fit.stand * M.long;
@@ -5865,6 +5867,71 @@ function buildRevolver(scene: Scene, stand: number, pair = false): Mesh {
     twin.rotation.z = -R.pairSplay;
   }
   return holder;
+}
+
+/*
+ * [S] 448 the Deadeye's Winchester (audit 444 deadeye b.1: "silver musket barrel, long pale stock, dark muzzle cap - TABS: dark Winchester, lever loop
+ * under the receiver, short dark wooden stock"; card Main Hand Winchester; wild_west.deadeye.red.png: a dark gunmetal rifle, a slim barrel with a
+ * magazine tube under it, a squared receiver at the fist, the lever's loop hanging under it, a short dark-brown stock behind the hand and a short
+ * wooden forend under the barrel). WINCHESTER in his standing height, built as the musket is (the fist at the origin, the barrel up +y, the wood on the
+ * +z side): length .long, the fist .grip of it from the butt; barrel .bore of the length across, a tube .tube under it; receiver .rcv of the length
+ * long, .rcvDeep bores deep; lever loop .loop bores across under the receiver; forend .fore of the front long; butt deepening to .butt of the length
+ * at the heel. Gunmetal and dark brown wood, self-lit .glow. The mouth is the "musketMuzzle" node (the shot's origin).
+ */
+const WINCHESTER = {
+  long: 1.12, grip: 0.3, bore: 0.03, tube: 0.75, rcv: 0.14, rcvDeep: 2.2, loop: 2.6, fore: 0.32, butt: 0.12, tilt: -0.2,
+  metal: new Color3(0.13, 0.13, 0.15), wood: new Color3(0.28, 0.14, 0.08), glow: 0.08,
+};
+
+/** The Deadeye's Winchester (spec at WINCHESTER). */
+function buildWinchester(scene: Scene, stand: number): Mesh {
+  const W = WINCHESTER;
+  const L = stand * W.long;
+  const back = W.grip * L, front = (1 - W.grip) * L;
+  const metal = mat(scene, W.metal, W.glow, "cloth");
+  const wood = mat(scene, W.wood, W.glow, "cloth");
+  const bore = W.bore * L;
+  const barrel = MeshBuilder.CreateCylinder("barrel", { height: front, diameter: bore, tessellation: 8 }, scene);
+  barrel.position.y = front * 0.5;
+  barrel.material = metal;
+  barrel.convertToFlatShadedMesh();
+  const lift = barrel.position.y;
+  const put = (m: Mesh, x: number, y: number, z: number, material = metal): Mesh => {
+    m.position.set(x, y - lift, z);
+    m.material = material;
+    m.convertToFlatShadedMesh();
+    m.parent = barrel;
+    return m;
+  };
+  // the magazine tube under the barrel, most of its length
+  put(MeshBuilder.CreateCylinder("winchesterTube", { height: front * 0.82, diameter: bore * W.tube, tessellation: 8 }, scene), 0, front * 0.41, bore * 0.85);
+  // the squared receiver at the fist
+  const rcvLong = W.rcv * L;
+  put(MeshBuilder.CreateBox("winchesterReceiver", { width: bore * 1.3, height: rcvLong, depth: bore * W.rcvDeep }, scene), 0, rcvLong * 0.35, bore * 0.6);
+  // the lever's loop under the receiver, just behind the fist
+  const loop = put(MeshBuilder.CreateTorus("winchesterLever", { diameter: bore * W.loop, thickness: bore * 0.32, tessellation: 10 }, scene), 0, -rcvLong * 0.15, bore * (W.rcvDeep * 0.5 + 0.6 + W.loop * 0.45));
+  loop.rotation.z = Math.PI / 2;
+  // the short wooden forend under the barrel ahead of the receiver
+  const foreLong = W.fore * front;
+  put(MeshBuilder.CreateBox("winchesterFore", { width: bore * 1.1, height: foreLong, depth: bore * 1.6 }, scene), 0, rcvLong * 0.85 + foreLong * 0.5, bore * 0.9, wood);
+  // the short dark stock: from the receiver's depth at the wrist to a deep heel behind the hand
+  const heel = W.butt * L, deep = bore * W.rcvDeep;
+  const butt = MeshBuilder.CreateBox("winchesterButt", { width: bore * 1.2, height: back, depth: 1 }, scene);
+  const bp = butt.getVerticesData(VertexBuffer.PositionKind)!;
+  for (let i = 0; i < bp.length; i += 3) {
+    const k = 0.5 - bp[i + 1] / back;
+    bp[i + 2] = bp[i + 2] > 0 ? bore * 0.2 + deep + (heel - deep) * k : bore * 0.2;
+  }
+  butt.setVerticesData(VertexBuffer.PositionKind, bp);
+  butt.refreshBoundingInfo();
+  put(butt, 0, -back * 0.5 - rcvLong * 0.1, 0, wood);
+  // The mouth of the barrel, where the shot leaves (RuntimeUnit.getSmokeOrigin, simulationSystem _pistolBells)
+  const muzzle = new TransformNode("musketMuzzle", scene);
+  muzzle.position.y = front - lift;
+  muzzle.parent = barrel;
+  barrel.setPivotPoint(new Vector3(0, -lift, 0));
+  barrel.rotation.x = W.tilt;
+  return barrel;
 }
 
 /*
