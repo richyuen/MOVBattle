@@ -203,7 +203,8 @@ function harpoonMuzzleOf(unit: RuntimeUnit): TransformNode | null {
  * ahead of its middle, .mouthDrop of its height under it), both at their world height (originLift 0).
  */
 // 462: the blowdarter's "mouth" was rejected (critic 462: the dart still left at crown height, the pipe on his back): his launch waits for the blowgun hold
-const HAND_LAUNCH: Record<string, "bow" | "mouth"> = { "legacy.poacher": "bow" };
+// [S] 463/464 now he holds the blowgun at his mouth (proceduralAnimation BLOWGUN_HOLD): "muzzle" launches from the blowgun's tip, its "blowgunMuzzle" node
+const HAND_LAUNCH: Record<string, "bow" | "mouth" | "muzzle"> = { "legacy.poacher": "bow", "legacy.blowdarter": "muzzle" };
 const MOUTH_LAUNCH = { mouthAhead: 1.1, mouthDrop: 0.3 };
 
 /** Where a HAND_LAUNCH shooter's missile leaves: his bow fist or his mouth, in world space; null when he has neither. */
@@ -216,6 +217,12 @@ function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
     if (!hand) return null;
     worldMatrixChain(hand);
     return hand.getAbsolutePosition().clone();
+  }
+  if (how === "muzzle") {
+    const muzzle = b.root.getDescendants(false, (n) => n.name === "blowgunMuzzle")[0] as TransformNode | undefined;
+    if (!muzzle) return null;
+    worldMatrixChain(muzzle);
+    return muzzle.getAbsolutePosition().clone();
   }
   const head = b.headMesh;
   if (!head) return null;
