@@ -1088,6 +1088,8 @@ export class SimulationSystem {
     for (const l of this._lassos.values()) if (l.rider === attacker) return true;
     if (attacker.isDead || target.isDead || target.linkedParent || isVehicleUnit(target.definition.id) || this._impales.has(target) || this._lassos.has(target)) return false;
     const { rope, loop } = lassoRope(attacker.body.root.getScene());
+    // [S] 446 the rope at the ready in his fist is the one he throws: it hides while the thrown rope is out
+    this._showLassoCoil(attacker, false);
     const at = target.position.clone();
     at.y = D.low;
     const lasso = { rider: attacker, rope, loop, at, last: now, next: now + D.first, hit: damage * (D.every / Math.max(D.every, cooldown)), blow: damage * D.trample, end: now + D.most };
@@ -1095,6 +1097,12 @@ export class SimulationSystem {
     this._haulLasso(target, lasso, now);
     this._logAbility(attacker, "lasso", now, target.position);
     return true;
+  }
+
+  /** [S] 446 shows or hides the rider's rope at the ready (wildWestDress LASSO_COIL, the "lassoCoil" node in his right fist). */
+  private _showLassoCoil(rider: RuntimeUnit, on: boolean): void {
+    if (rider.body.root.isDisposed()) return;
+    for (const n of rider.body.rightHand.getDescendants(false, (c) => c.name === "lassoCoil")) n.setEnabled(on);
   }
 
   /** Pulls a lassoed man a step toward the horse, low and limp, and runs the rope from the rider's fist to his chest (spec at LASSO_DRAG). */
@@ -1134,6 +1142,7 @@ export class SimulationSystem {
       if (gone || close || now >= l.end) {
         l.rope.dispose();
         l.loop.dispose();
+        this._showLassoCoil(h, true);
         this._lassos.delete(man);
         if (man.body.root.isDisposed()) continue;
         man.dropFromHang();

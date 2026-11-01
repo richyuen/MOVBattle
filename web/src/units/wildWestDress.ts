@@ -89,6 +89,39 @@ export function lassoRope(scene: Scene): { rope: Mesh; loop: Mesh } {
 }
 
 /*
+ * [S] 446 the Lasso's rope at the ready (critic 445 lasso b.1: "rein hand holds a short dark stick, grey loop at the horse's flank away from the hand -
+ * TABS: coiled tan rope loop held up in the rider's hand"; wild_west.lasso.jpg, .red.png: a big open tan loop held up on his right, the rope running from
+ * it down into his fist, where a few small coils hang). LASSO_COIL in the prop's units s (the fist at the origin, +y up the arm's line): a rope .rise
+ * long up from the fist to the big loop, .loop across and .loopThick thick, standing on edge over the fist and tipped .tip rad back; .coils small
+ * hanging coils .coil across round the fist, .coilStep apart. Tan LASSO_ROPE rope. Hidden while the thrown rope is out (simulationSystem _tryLasso).
+ */
+const LASSO_COIL = { rise: 0.22, loop: 0.62, loopThick: 0.035, tip: 0.35, coils: 3, coil: 0.24, coilThick: 0.03, coilStep: 0.035 };
+
+/** The rope at the ready in the rider's fist (spec at LASSO_COIL): a node named "lassoCoil". */
+export function lassoCoil(scene: Scene, s: number): Mesh {
+  const C = LASSO_COIL, R = LASSO_ROPE;
+  const tan = getMaterialFactory().get("cloth", R.color, { emissive: R.color.scale(R.glow) });
+  const root = new Mesh("lassoCoil", scene);
+  const rope = MeshBuilder.CreateCylinder("lassoCoilRope", { height: C.rise * s, diameter: C.loopThick * s, tessellation: 6 }, scene);
+  rope.position.y = C.rise * s * 0.5;
+  rope.material = tan;
+  rope.parent = root;
+  const loop = MeshBuilder.CreateTorus("lassoCoilLoop", { diameter: C.loop * s, thickness: C.loopThick * s, tessellation: 16 }, scene);
+  loop.rotation.set(Math.PI / 2 - C.tip, 0, 0);
+  loop.position.y = (C.rise + C.loop * 0.5) * s;
+  loop.material = tan;
+  loop.parent = root;
+  for (let i = 0; i < C.coils; i++) {
+    const coil = MeshBuilder.CreateTorus("lassoCoilRing", { diameter: (C.coil - i * 0.02) * s, thickness: C.coilThick * s, tessellation: 12 }, scene);
+    coil.rotation.set(0, 0, Math.PI / 2);
+    coil.position.set(i * C.coilStep * s, -C.coil * 0.42 * s, 0);
+    coil.material = tan;
+    coil.parent = root;
+  }
+  return root;
+}
+
+/*
  * [S] 446 the Gunslinger's suit jacket (critic 445 a.2: "short vest block, bare team arms - TABS: long-sleeved team suit jacket with lapels over a
  * buttoned waistcoat"; wild_west.gunslinger.red.png: the jacket's sleeves run from the shoulder to the wrist, a little loose, a beige shirt cuff showing
  * at each wrist; its fronts turn back in two broad lapels from the collar to mid-chest, a lighter shirt V between them; its skirts hang to mid-thigh).

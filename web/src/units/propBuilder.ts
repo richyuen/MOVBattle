@@ -10,7 +10,7 @@ import { inferWeaponGripPreset, inferWeaponPresentationFamily } from "./unitVisu
 import { getMaterialFactory, type MatCategory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
 import { featherClump } from "./renaissanceDress";
-import { buildBowler } from "./wildWestDress";
+import { buildBowler, lassoCoil } from "./wildWestDress";
 
 /*
  * [S] the catapult's boulder (352; medieval.catapult.blue.png: a grey-brown rock of flat facets lying in the bucket, the same rock in flight). An ico rock
@@ -6844,8 +6844,8 @@ const HORSE_WIDE = 0.85;
  * The pinto (units/wild_west.lasso: the lasso rides a bare paint horse, no barding): the same horse body, its coat a warm orange broken by big cream
  * patches, each about a tenth of the barrel (PINTO_PATCHES directions, a face cream within PINTO_PATCH of one, ragged by PINTO_RAGGED), cream socks on two
  * legs and a cream blaze down the face; a big white eye with a black pupil on each side of the head (PINTO_EYE of H), long ears PINTO_EAR of H with pink
- * insides, a pink muzzle, and a dark mane in tufts down the top of the neck. No chanfron, plume or caparison. The rider carries a coiled rope loop in his
- * off hand (PINTO_LOOP of his scale across).
+ * insides, a pink muzzle, and a dark mane in tufts down the top of the neck. No chanfron, plume or caparison. The rider holds his rope up in his right
+ * fist (446, wildWestDress LASSO_COIL).
  */
 const PINTO_COAT = new Color3(0.95, 0.42, 0.1);
 const PINTO_CREAM = new Color3(1, 0.93, 0.78);
@@ -6864,7 +6864,6 @@ const PINTO_EAR = 0.5;
  * the head's length, nostrils .nostril across; ears PINTO_EAR tall, .earWide at the root, flattened to .earFlat, splayed .earSplay rad; eyes PINTO_EYE.
  */
 const PINTO_HEAD = { wide: 0.36, long: 0.92, deep: 0.34, muzzle: 0.32, muzzleAt: 0.9, nostril: 0.08, earWide: 0.18, earFlat: 0.45, earSplay: 0.35 };
-const PINTO_LOOP = 0.42;
 type HorseStyle = "barded" | "pinto";
 /*
  * [S] chanfron (336; renaissance.jouster.red.png: the horse's face is cased in a grey faceted plate from the poll to above the nostrils, the brown muzzle
@@ -6915,7 +6914,7 @@ function buildChanfron(scene: Scene, head: Mesh, headLong: number, H: number, pa
     pupil.position.set(ex + x * H * C.eye * 0.5 * Math.cos(C.eyeTurn), at + H * C.eye * 0.2, ez - H * C.eye * 0.5 * Math.sin(C.eyeTurn));
   }
 }
-function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: HorseStyle = "barded"): Mesh {
+function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: HorseStyle = "barded", s = 1): Mesh {
   const pinto = style === "pinto";
   const H = body.hip.position.y;
   // Up on the horse: the animator keeps this as the hip's rest height (it is read once, on the first tick after the build)
@@ -7149,12 +7148,13 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     for (const m of knee.getChildMeshes(false)) m.isVisible = false;
   }
   if (pinto) {
-    // The lasso: a coiled rope loop hanging from his off hand
-    const loop = MeshBuilder.CreateTorus("lassoLoop", { diameter: H * PINTO_LOOP * 2, thickness: H * 0.035, tessellation: 12 }, scene);
-    loop.parent = body.leftHand;
-    loop.position.set(0, -H * PINTO_LOOP * 0.9, H * 0.02);
-    loop.rotation.z = Math.PI / 2;
-    loop.material = mat(scene, new Color3(0.86, 0.74, 0.52));
+    // [S] 446 no rope loop at the off hand by the flank: the rope is held up in his right fist (wildWestDress LASSO_COIL), on the whip's grip in
+    // place of the whip stick (the weapon is built before the mount, so its node is there to take over)
+    const whip = body.rightHand.getChildren().find((n) => n.name === "whip");
+    if (whip) {
+      for (const c of whip.getChildren()) c.dispose();
+      lassoCoil(scene, s * 1.25).parent = whip;
+    }
     return barrel;
   }
   // The caparison (HORSE_CAPARISON): a drape over the barrel from behind the shoulder to over the rump, rounded in plan, domed over the back (HORSE_DRAPE)
@@ -7323,7 +7323,7 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       return mammoth;
     }
     case "mount_horse":
-      return buildHorse(scene, body, teamColor ?? accent, horse);
+      return buildHorse(scene, body, teamColor ?? accent, horse, s);
     case "catapult_arm": {
       const base = MeshBuilder.CreateBox("catbase", { width: 0.6 * s, height: 0.2 * s, depth: 0.4 * s }, scene);
       base.position.set(0, -0.1 * s, 0.1 * s);
