@@ -926,8 +926,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       return vis({ scale: 1.08, bulk: 0.94, armLength: 1.12 }, "flintlock", "captain_hat", "none", "cape", "#a56c34", undefined, {
         // [S] 446 the gun is the long dark revolver (propBuilder REVOLVER; card "Colt Navy M1851 Revolver"; critic 445 b.2), not the flintlock cut
         weaponVariant: "revolver",
-        posePreset: "duelist", materialPreset: "secret_bandit", attachmentPreset: "quickdraw_smoke",
-        stateVariants: { attacking: ["quickdraw_smoke"] },
+        // [S] 447 no smoke ball at the fist: each shot's own small flash (simulationSystem QUICK_FAN; critic 446 c.2)
+        posePreset: "duelist", materialPreset: "secret_bandit",
       });
     case "iconic_chronomancer":
       return vis({ scale: 1.3, bulk: 0.96, headSize: 1.1 }, "staff", "laurel", "none", "halo", "#b8e6ff", undefined, {

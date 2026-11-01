@@ -297,6 +297,14 @@ const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
  * falls: a streak from .up m over the spot to the ground, then a small blast (.blast) that deals the attack's damage out to .splash m.
  */
 const BULLET_RAIN = { units: new Set(["wild_west.gunslinger"]), hold: 1.1, raise: 0.3, up: 22, fall: 0.55, count: 3, every: 0.4, spread: 0.9, splash: 2.5, blast: 0.6 };
+/**
+ * [S] 447 Quick Draw's rapid fire (critic 446 quick_draw c.2: "both pistols fire one burst with a big smoke puff - TABS: rapid one-handed revolver
+ * shots, arm extended"; card Weapons Revolver Quickdraw: cooldown 0.2 s, count 1, projectile speed 100; wild_west.quick_draw.jpg: one arm out, one
+ * revolver, no smoke cloud). An attack is .shots single shots .every s apart, the first at the decision, each from the one revolver's mouth: a small
+ * flash and puff (.flash of a pistol's) and a ball streaking to the man's chest (spawnPistolShot), each dealing 1/.shots of the attack's harm (times
+ * .damage) and push (times .push). It replaces the one-tick burst whose six stacked muzzle clouds read as one white ball. Logged "burst" at the first.
+ */
+const QUICK_FAN = { units: new Set(["wild_west.quick_draw"]), shots: 6, every: 0.2, flash: 0.6, damage: 1.18, push: 1.2 };
 const VAMPIRE_LATCH = { round: 0.7, off: 0.75, up: 0.2, first: 0.3, every: 0.35, afterDeath: 0.5, blood: 12 };
 /**
  * [S] 445 the Lasso's grab (audit 444 lasso c.1: "missing: lasso throw that grabs and drags the target"; card Characteristics "uses a lasso to grab
@@ -558,6 +566,8 @@ export class SimulationSystem {
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
   // Gunslingers' volleys into the sky and the bullets coming down (BULLET_RAIN): when the guns fire up, then each bullet's spot and landing time
   private _rains: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; splash: number; upAt: number; drops: { at: Vector3; lands: number; shown: boolean }[] }[] = [];
+  /** [S] 447 Quick Draw's shots still to fire this attack (QUICK_FAN). */
+  private _fans: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; splash: number; nextAt: number; left: number }[] = [];
   // Vampires hanging on a man's neck (VAMPIRE_LATCH): the man, his side, the next draught and its damage, when he lets go (set once the man is dead)
   private _latches = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; next: number; draught: number; until: number }>();
   // Lassoed men being hauled in (LASSO_DRAG): the rider, the rope, the next drag hit and its damage, when the horse runs him over at the latest
@@ -729,6 +739,7 @@ export class SimulationSystem {
     for (const v of this._latches.keys()) v.holdHeading(null);
     this._latches.clear();
     this._rains = [];
+    this._fans = [];
     for (const imp of this._impales.values()) imp.spear.dispose();
     this._impales.clear();
     for (const l of this._lassos.values()) { l.rope.dispose(); l.loop.dispose(); }
@@ -823,6 +834,7 @@ export class SimulationSystem {
     if (this._clings.size > 0) this._holdClings(now);
     if (this._latches.size > 0) this._holdLatches(now);
     if (this._rains.length > 0) this._stepRains(now);
+    if (this._fans.length > 0) this._stepFans(now);
     if (this._impales.size > 0) this._holdImpales(now);
     if (this._lassos.size > 0) this._haulLassos(now);
     this._cactusExplosions(now);
@@ -978,6 +990,24 @@ export class SimulationSystem {
       unit.stopMoving();
       unit.teleportTo(at);
       unit.faceTarget(man.position);
+    }
+  }
+
+  /** [S] 447 Fires each Quick Draw's due shots, one revolver shot at a time (spec at QUICK_FAN). */
+  private _stepFans(now: number): void {
+    const F = QUICK_FAN;
+    for (let k = this._fans.length - 1; k >= 0; k--) {
+      const fan = this._fans[k];
+      if (fan.attacker.isDead || fan.target.isDead || fan.left <= 0) { this._fans.splice(k, 1); continue; }
+      if (now < fan.nextAt) continue;
+      fan.left -= 1;
+      fan.nextAt = now + F.every;
+      fan.attacker.faceTarget(fan.target.position);
+      const chest = this._chestOf(fan.target);
+      const bells = this._pistolBells(fan.attacker);
+      if (bells.length === 0) bells.push(fan.attacker.body.rightHand.getAbsolutePosition().clone());
+      this.projectileSystem?.spawnPistolShot(bells.slice(0, 1), chest, F.flash);
+      this._applyDirectOrSplash(fan.target, Math.max(1, Math.ceil(fan.damage / F.shots)), fan.splash, fan.attacker.team, fan.knockback.scale(1 / F.shots));
     }
   }
 
@@ -2748,6 +2778,14 @@ export class SimulationSystem {
         spreadZ: 0,
         delayStep: 0,
       });
+      return;
+    }
+
+    if (QUICK_FAN.units.has(attacker.definition.id)) {
+      if (this._fans.some((f) => f.attacker === attacker)) return;
+      this._fans.push({ attacker, target, damage: damage * QUICK_FAN.damage, knockback: knockback.scale(QUICK_FAN.push), splash: splashRadius, nextAt: now, left: QUICK_FAN.shots });
+      this._logAbility(attacker, "burst", now, target.position);
+      this._stepFans(now);
       return;
     }
 
