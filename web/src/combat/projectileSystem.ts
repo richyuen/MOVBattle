@@ -73,7 +73,17 @@ const FIRE_ARROW = { burn: 5, tongues: 4, long: 0.38, wide: 0.11, splay: 0.28, f
  */
 const BARREL_SHOT = { wide: 0.42, long: 0.6, staves: 10, hoop: 0.05, hoopAt: 0.7, hoopOut: 1.06, wood: new Color3(0.9, 0.48, 0.2), iron: new Color3(0.38, 0.38, 0.4) };
 const PUMPKIN_SHOT = { size: 0.55, squash: 0.8, lobes: 8, orange: new Color3(0.9, 0.38, 0.08), stem: new Color3(0.25, 0.3, 0.1), face: new Color3(1, 0.8, 0.2) };
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel";
+/**
+ * [S] 465 the Poacher's Small Arrow (card Weapons, Poacher Bow): a short shaft, a small head and fletch, under two thirds of an arrow's length
+ * (audit 457 poacher c.2: "a long dark javelin-length shaft").
+ */
+const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, fletch: 0.07 };
+/**
+ * [S] 465 the Blowdarter's Blow Dart (card Weapons): a slim needle dart, a bright tuft of fluff at its tail, a quarter of an arrow long
+ * (audit 457 blowdarter c.2: the dart flew as a full arrow).
+ */
+const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
+export type ProjectileShape = "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -377,6 +387,8 @@ export class ProjectileSystem {
     let arcHeight: number;
     switch (shape) {
       case "arrow":   speed = 35; arcHeight = dist * 0.08; break;
+      case "small_arrow": speed = 35; arcHeight = dist * 0.08; break;
+      case "blowdart": speed = 32; arcHeight = dist * 0.04; break;
       case "bolt":    speed = 30; arcHeight = dist * 0.06; break;
       case "spear":   speed = 18; arcHeight = dist * 0.15; break;
       case "bomb":    speed = 12; arcHeight = dist * 0.35; break;
@@ -859,9 +871,9 @@ export class ProjectileSystem {
    * the part it struck. One whose mark is already down comes to earth where the mark stood and stands planted in the turf, steep, its head buried and its tail in the air.
    */
   private _leaveAsLitter(p: ActiveProjectile, struck: boolean): boolean {
-    if (p.shape !== "arrow" && p.shape !== "bolt" && p.shape !== "spear") return false;
+    if (p.shape !== "arrow" && p.shape !== "bolt" && p.shape !== "spear" && p.shape !== "small_arrow" && p.shape !== "blowdart") return false;
     const mesh = p.mesh;
-    const half = p.half ?? (p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.4 : 0.24); // from the shaft's middle to the root of its head
+    const half = p.half ?? (p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.4 : p.shape === "small_arrow" ? SMALL_ARROW.long / 2 : p.shape === "blowdart" ? BLOW_DART.long / 2 : 0.24); // from the shaft's middle to the root of its head
     const vary = (salt: number): number => {
       const v = Math.sin((p.origin.x + p.origin.z * 1.7 + this._litter.length) * 12.9898 + salt * 78.233) * 43758.5453;
       return v - Math.floor(v);
@@ -1206,6 +1218,43 @@ export class ProjectileSystem {
     const root = new TransformNode("proj", this._scene);
 
     switch (shape) {
+      case "small_arrow": {
+        const A = SMALL_ARROW;
+        const shaft = MeshBuilder.CreateCylinder("shaft", { height: A.long, diameter: A.thick, tessellation: 4 }, this._scene);
+        shaft.rotation.x = Math.PI / 2;
+        shaft.material = this._getMat("wood_shaft", WOOD_SHAFT_COLOR);
+        shaft.parent = root;
+        const tip = MeshBuilder.CreateCylinder("tip", { height: A.head, diameterTop: 0, diameterBottom: A.headWide, tessellation: 4 }, this._scene);
+        tip.rotation.x = Math.PI / 2;
+        tip.position.z = A.long / 2 + A.head / 2;
+        tip.material = this._getMat(`arrow_tip_${attackerTeam}`, palette.bright);
+        tip.parent = root;
+        const fletch = MeshBuilder.CreateBox("fletch", { width: A.fletch * 1.2, height: 0.008, depth: A.fletch }, this._scene);
+        fletch.position.z = -A.long / 2 + A.fletch / 2;
+        fletch.material = this._getMat(`fletch_${attackerTeam}`, palette.primary);
+        fletch.parent = root;
+        this._addStreak(root, A.long / 2, 1.2);
+        break;
+      }
+      case "blowdart": {
+        const D = BLOW_DART;
+        const shaft = MeshBuilder.CreateCylinder("shaft", { height: D.long, diameter: D.thick, tessellation: 4 }, this._scene);
+        shaft.rotation.x = Math.PI / 2;
+        shaft.material = this._getMat("wood_shaft", WOOD_SHAFT_COLOR);
+        shaft.parent = root;
+        const tip = MeshBuilder.CreateCylinder("tip", { height: D.needle, diameterTop: 0, diameterBottom: D.thick, tessellation: 4 }, this._scene);
+        tip.rotation.x = Math.PI / 2;
+        tip.position.z = D.long / 2 + D.needle / 2;
+        tip.material = this._getMat("blowdart_steel", D.steel);
+        tip.parent = root;
+        const tuft = MeshBuilder.CreateCylinder("tuft", { height: D.tuftLong, diameterTop: D.thick, diameterBottom: D.tuft, tessellation: 6 }, this._scene);
+        tuft.rotation.x = -Math.PI / 2;
+        tuft.position.z = -D.long / 2 + D.tuftLong / 2;
+        tuft.material = this._getMat(`fletch_${attackerTeam}`, palette.primary);
+        tuft.parent = root;
+        this._addStreak(root, D.long / 2, 0.9);
+        break;
+      }
       case "arrow": {
         const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.75, diameter: 0.035, tessellation: 4 }, this._scene); // at 0.5 by 0.025 a shaft left standing in a body did not show across the field
         shaft.rotation.x = Math.PI / 2;

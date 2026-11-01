@@ -47,6 +47,8 @@ function hasAbility(unit: RuntimeUnit, ability: string): boolean {
 function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): ProjectileShape | null {
   switch (unit.definition.projectileHint) {
     case "arrow": return "arrow";
+    case "small_arrow": return "small_arrow"; // [S] 465 the Poacher's Small Arrow (projectileSystem SMALL_ARROW)
+    case "blowdart": return "blowdart"; // [S] 465 the Blowdarter's Blow Dart (projectileSystem BLOW_DART)
     case "bolt": return "bolt";
     case "bomb": return "bomb";
     case "pumpkin": return "pumpkin";
