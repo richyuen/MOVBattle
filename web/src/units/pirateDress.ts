@@ -746,8 +746,8 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  * and runs down across her front to a point just below the knee on her right, where the wrap's loose end hangs; pale-pink trousers show from that
  * hem to the boot tops at the knee on her left, and between the boots and the pointed end on her right; her fists hang low OUTSIDE the hips, the
  * guards beside the thighs and not before them, the blades rising from there to cross before the chest. So, all four at once:
- *  - hem: no front drop; the mean hem .knee (.5) of the way from the skirt top to the knees, slanting .slant (1) of the length DOWN toward her
- *    right (+x): high on the thigh on her left, near the knee on her right; the beads ride it; the trousers .pale .35 so they part from the skirt.
+ *  - hem: no front drop; the mean hem .knee (.4) of the way from the skirt top to the knees, slanting .slant (1) of the length DOWN toward her
+ *    right (+x): high on the thigh on her left, near the knee on her right; the beads ride it; the trousers .pale .55 so they part from the skirt.
  *  - wrap end: the flap moves to her right front (.flapX +.4 of W/2), .flapLong of the skirt's length so its point falls just under the knee.
  *  - pelvis: the pelvis box in the pale trouser shade (under a hem at mid-thigh it would read as a dark block between the thighs); the generic
  *    tunic skirt is not hung on her (unitFactory).
@@ -756,8 +756,8 @@ export function queenBandana(scene: Scene, body: ArticulatedBody, teamColor: Col
  * QUEEN_FRAME's legs/tall and the boots stay as they are (440's QUEEN_BUILD).
  */
 const QUEEN_SKIRT = {
-  top: 0.14, knee: 0.5, out: 1.04, flare: 1.22, deep: 1.1, slant: 1.0, frontDrop: 0, sides: 8, beads: 7, bead: 0.11, pale: 0.35,
-  flapWide: 0.5, flapFoot: 0.16, flapX: 0.4, flapLong: 2.0, flapProud: 0.06, flapLean: -0.1, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
+  top: 0.14, knee: 0.4, out: 1.04, flare: 1.22, deep: 1.1, slant: 1.0, frontDrop: 0, sides: 8, beads: 7, bead: 0.11, pale: 0.55,
+  flapWide: 0.5, flapFoot: 0.16, flapX: 0.4, flapLong: 2.4, flapProud: 0.06, flapLean: -0.1, green: new Color3(0.12, 0.55, 0.3), glow: 0.12,
 };
 
 /*
