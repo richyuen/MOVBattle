@@ -154,6 +154,8 @@ function solveLowArc(from: Vector3, to: Vector3, v: number, g: number): { flight
 const MUZZLE_PUFFS = 7;
 // [S] 426 a pistol's shot (spawnPistolShot): flash across (m) and life (s), puff size (m) and life (s), the ball's streak long and thick (m), speed (m/s)
 const PISTOL_SHOT = { flash: 0.16, flashLife: 0.12, puff: 0.32, puffLife: 1.4, streak: 0.3, thick: 0.035, speed: 65 };
+// [S] 455 a rifle's tracer (spawnTracer): the white line's thickness (m), seconds held full, whole life (s)
+const RIFLE_TRACER = { thick: 0.035, hold: 0.12, life: 0.3 };
 
 interface TrailPuff {
   mesh: Mesh;
@@ -547,6 +549,27 @@ export class ProjectileSystem {
     }
   }
 
+  /** [S] 455 Rifle tracers in the air (spawnTracer): the streak, seconds left and its whole life. */
+  private _tracers: { mesh: Mesh; left: number; life: number }[] = [];
+
+  /**
+   * [S] 455 the Winchester's tracer (critic 454 deadeye c.3: "no projectile/tracer visible in the flight frame, only a muzzle smoke ball - TABS: a long
+   * white streak from the muzzle to the target"; wild_west.deadeye.png, upper right: a long thin white line running from the muzzle out to the man).
+   * RIFLE_TRACER: a thin white bar .thick m square from `from` (the muzzle, world) to `to` (the man's chest), held full for .hold s and thinning out
+   * over the rest of its .life s. Flat white, out of the light.
+   */
+  spawnTracer(from: Vector3, to: Vector3): void {
+    const T = RIFLE_TRACER;
+    const dist = Vector3.Distance(from, to);
+    if (dist < 0.05) return;
+    const bar = MeshBuilder.CreateBox("rifleTracer", { width: T.thick, height: T.thick, depth: dist }, this._scene);
+    bar.material = this._getMat("rifleTracer", new Color3(1, 1, 0.96), 1);
+    bar.position = Vector3.Lerp(from, to, 0.5);
+    bar.lookAt(to);
+    bar.isPickable = false;
+    this._tracers.push({ mesh: bar, left: T.life, life: T.life });
+  }
+
   spawnMuzzleFlash(origin: Vector3, direction: Vector3, scale = 1, options: MuzzleFlashOptions = {}): void {
     const flash = MeshBuilder.CreateSphere("flash", { diameter: 0.4 * scale, segments: 6 }, this._scene);
     flash.position = origin.clone();
@@ -772,6 +795,18 @@ export class ProjectileSystem {
       q.mesh.visibility = u < 0.2 ? 0.85 : 0.85 * (1 - (u - 0.2) / 0.8) * (1 - (u - 0.2) / 0.8);
     }
 
+    // Rifle tracers (spawnTracer): held, then thinning to nothing
+    for (let i = this._tracers.length - 1; i >= 0; i--) {
+      const tr = this._tracers[i];
+      tr.left -= dt;
+      if (tr.left <= 0) {
+        tr.mesh.dispose();
+        this._tracers.splice(i, 1);
+        continue;
+      }
+      const fade = Math.min(1, tr.left / Math.max(0.001, tr.life - RIFLE_TRACER.hold));
+      tr.mesh.scaling.x = tr.mesh.scaling.y = fade;
+    }
     // Pistol balls (spawnPistolShot): on along the line from the bell, gone at the man
     for (let i = this._bullets.length - 1; i >= 0; i--) {
       const b = this._bullets[i];
@@ -1690,6 +1725,8 @@ export class ProjectileSystem {
     for (const f of this._flashes) f.mesh.dispose();
     for (const b of this._bullets) b.mesh.dispose();
     this._bullets.length = 0;
+    for (const tr of this._tracers) tr.mesh.dispose();
+    this._tracers.length = 0;
     for (const w of this._tows) w.rope.dispose();
     this._tows.length = 0;
     for (const l of this._litter) l.mesh.dispose();

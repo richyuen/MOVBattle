@@ -2893,6 +2893,11 @@ export class SimulationSystem {
             1,
             { originLift: originLiftForSource(smokeOriginInfo.source) },
           );
+          // [S] 455 the Deadeye's Winchester leaves a long white tracer from the muzzle to the man's chest (projectileSystem RIFLE_TRACER)
+          if (attacker.definition.id === "wild_west.deadeye") {
+            const muzzle = smokeOriginInfo.position.add(new Vector3(0, originLiftForSource(smokeOriginInfo.source), 0));
+            this.projectileSystem.spawnTracer(muzzle, this._chestOf(target));
+          }
           this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
           const fling = GUN_FLING[attacker.definition.weaponHint ?? ""];
           if (fling && !target.isDead) {
