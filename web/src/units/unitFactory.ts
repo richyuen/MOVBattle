@@ -701,15 +701,17 @@ export class UnitFactory {
     // [S] 448 black bushy sideburns (wildWestDress GUNSLINGER_SIDEBURNS)
     if (definition.id === "wild_west.gunslinger" && !shouldUseVehicleBody) propMeshes.push(...gunslingerSideburns(this._scene, body));
     // [S] 451 a dark gun belt with a holster on each hip (wildWestDress GUN_BELT)
-    if (definition.id === "wild_west.gunslinger" && !shouldUseVehicleBody) propMeshes.push(...gunBelt(this._scene, body, [1, -1], false));
+    if (definition.id === "wild_west.gunslinger" && !shouldUseVehicleBody) propMeshes.push(...gunBelt(this._scene, body, [1, -1], []));
     // [S] 448 the Quick Draw's beige shirt, sleeves rolled past the elbow (wildWestDress QUICK_DRAW_SHIRT)
     if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...quickDrawShirt(this._scene, body));
     // [S] 451 a dark gun belt, a holster on the gun hip and a slanting ammo pouch on the other (wildWestDress GUN_BELT)
-    if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...gunBelt(this._scene, body, [1], true));
+    if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...gunBelt(this._scene, body, [1], [-1]));
     // [S] 452 the Quick Draw's buttoned team vest: team cloth for the bandit-tinted body cloth, grey buttons (wildWestDress QUICK_DRAW_VEST)
     if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...quickDrawVest(this._scene, body, teamColor));
     // [S] 451 the Deadeye's off-white puffy shirt: full sleeves to the wrist, collar V (wildWestDress DEADEYE_SHIRT)
     if (definition.id === "wild_west.deadeye" && !shouldUseVehicleBody) propMeshes.push(...deadeyeShirt(this._scene, body));
+    // [S] 452 the Deadeye's belt with a brass-studded cartridge pouch on each hip (wildWestDress GUN_BELT)
+    if (definition.id === "wild_west.deadeye" && !shouldUseVehicleBody) propMeshes.push(...gunBelt(this._scene, body, [], [1, -1]));
     // [S] 448 the Miner's overalls: lighter team shirt, dark braces, team trousers' waist (wildWestDress MINER_OVERALLS)
     if (definition.id === "wild_west.miner" && !shouldUseVehicleBody) propMeshes.push(...minerOveralls(this._scene, body, teamColor));
     // [S] 449 the Miner's black handlebar moustache (wildWestDress MINER_MOUSTACHE)

@@ -546,7 +546,8 @@ export function dynamiteSkirtTrim(scene: Scene, skirt: Mesh): Mesh[] {
  * other hip carries a short pouch slanting up across the belt to the back, a row of brass cartridge heads along it). GUN_BELT on the trunk (torso
  * frame, W H D its box): the belt .band H tall round the trunk's foot, .over of its width and depth; a holster .holster W wide, .holsterLong H long,
  * .holsterDeep D deep, its middle .holsterOut W out from the trunk's middle, splayed .splay rad off the leg; the pouch .pouch W long, .pouchTall H tall,
- * at .pouchOut W out on the far hip, slanted .slant rad, .shells brass heads along it. Belt and pouch brown, holsters a darker grey-brown; self-lit .glow.
+ * at .pouchOut W out on its hip, slanted .slant rad, .shells brass heads along it. [S] 452 the Deadeye wears a cartridge pouch on each hip
+ * (critic 449-451 deadeye a.3: "dark brown cartridge belts with bullet loops on both hips"; wild_west.deadeye.red.png), no holster. Belt and pouch brown, holsters a darker grey-brown; self-lit .glow.
  */
 const GUN_BELT = {
   band: 0.13, over: 1.07, holster: 0.17, holsterLong: 0.42, holsterDeep: 0.42, holsterOut: 0.58, splay: 0.12,
@@ -554,8 +555,8 @@ const GUN_BELT = {
   leather: new Color3(0.17, 0.1, 0.06), holsterColor: new Color3(0.1, 0.085, 0.07), brass: new Color3(0.75, 0.5, 0.15), glow: 0.12,
 };
 
-/** A dark gun belt round the hips with holsters on the `holsters` sides (+1 the weapon side) and, if asked, a slanting ammo pouch on the other (spec at GUN_BELT). */
-export function gunBelt(scene: Scene, body: ArticulatedBody, holsters: number[], pouch: boolean): Mesh[] {
+/** A dark gun belt round the hips with holsters on the `holsters` sides and slanting ammo pouches on the `pouches` sides (+1 the weapon side; spec at GUN_BELT). */
+export function gunBelt(scene: Scene, body: ArticulatedBody, holsters: number[], pouches: number[]): Mesh[] {
   const G = GUN_BELT;
   const mf = getMaterialFactory();
   const leather = mf.get("cloth", G.leather, { emissive: G.leather.scale(G.glow) });
@@ -583,8 +584,8 @@ export function gunBelt(scene: Scene, body: ArticulatedBody, holsters: number[],
     const holster = MeshBuilder.CreateBox("gunHolster", { width: W * G.holster, height: long, depth: D * G.holsterDeep }, scene);
     put(holster, side * W * G.holsterOut, beltY + H * G.band / 2 - long / 2, cz, dark, side * G.splay);
   }
-  if (pouch) {
-    const side = -weapon;
+  for (const p of pouches) {
+    const side = p * weapon;
     const bag = MeshBuilder.CreateBox("gunPouch", { width: W * G.pouch, height: H * G.pouchTall, depth: D * 0.12 }, scene);
     const px = side * W * G.pouchOut, pz = cz + D * G.over / 2 + D * 0.06;
     put(bag, px, beltY + H * G.band * 0.4, pz, leather, side * G.slant);
