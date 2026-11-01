@@ -343,13 +343,7 @@ const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25
  * off palm on the forend. The aim snaps up as the attack starts (.up per s, the shot leaves at its first step) and is held through the attack and
  * while she stands in range of her man between shots (readyAim, the card's warm-up), then eases back to the shoulder carry at .down per s.
  */
-/*
- * [S] 455 at the hip, level (critic 454 deadeye c.1: "a shoulder-height raised point, barrel climbing ~15°, the stock poking out behind her shoulder - TABS:
- * the barrel horizontal at her middle, stock tucked under the forearm at the hip"). Probe 455: the barrel was solved level, then RuntimeUnit's gunner
- * pose overlay turned the shoulder and elbow after it (barrel 16-20° up, fist .15 m over the hip); the overlay now stands off by levelledGun. The fist
- * drops .26 of her height under the shoulder (just over the hip joint) and stands .28 before it, so the short stock lies under the forearm.
- */
-const WINCHESTER_AIM = { ahead: 0.28, inward: 0.06, drop: 0.26, kick: 0.12, settle: 8, up: 60, down: 2.5 };
+const WINCHESTER_AIM = { ahead: 0.2, inward: 0.06, drop: 0.2, kick: 0.12, settle: 8, up: 60, down: 2.5 };
 // [S] 425 the blunderbuss held low in both hands (see _aimBlunderbuss): the weapon fist's seat in shares of his height from the hip joint (ahead, out to
 // the weapon side, down), the barrel's droop below level and its turn in across his front (rad), the muzzle's kick up at the shot (rad)
 const BLUNDERBUSS_AIM = { ahead: 0.13, out: 0.07, drop: 0.0, droop: 0.22, across: 0.3, kick: 0.45 };
@@ -3617,10 +3611,6 @@ export class ProceduralAnimator {
   /** The Deadeye's Winchester levelled at her middle for the shot, both hands on it (spec at WINCHESTER_AIM). */
   private _winchester: { node: Mesh; rest: Quaternion; fore: Mesh } | null | undefined = undefined;
   private _winchesterAim = 0;
-  /** How far the Winchester is levelled (0-1): RuntimeUnit's gunner overlay stands off its arm by this much. */
-  get levelledGun(): number {
-    return this._winchester ? this._winchesterAim * (1 - Math.min(1, this._limp)) : 0;
-  }
   private _aimWinchester(dt: number): void {
     if (this._winchester === undefined) {
       const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "winchesterFore"));
