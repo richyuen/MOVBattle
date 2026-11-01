@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-460 | BANNER_COATEE team coat, gold epaulettes, white cross-belt and waist belt (16dedb8c) | legacy.banner_bearer.a | approved (struck 2)
-460 | FLAG_HELMET white crown, gold band and plate, team crest (53a654d8) | legacy.flag_bearer.a | approved (struck 1)
-460 | BOXER_SHORTS dark-team thigh shells, gold striped waistband (37bcb6d4) | legacy.boxer.a | approved (struck 3)
-460 | PEASANT_BELT 12 cream lumps, twisted by turns (9012c361) | legacy.peasant.a | approved (none struck: spaced shards)
-460 | POACHER_BELT tan band, grey buckle (59057417) | legacy.poacher.a | approved (none struck: inside the coat)
-460 | BEARER_AURA haste / stay on allies in the ring, a ring at their feet, in place of the heal (f1ecb6fc) | legacy.flag_bearer.c + legacy.banner_bearer.c | approved (none struck: not seen in the pair; evidence first)
 461 | BANNER_CUFFS white wrist cuffs (e0b0812b) | legacy.banner_bearer.a | approved (struck 3, a PASS)
 461 | BOXER_BOOTS team shafts, white crossed laces (66d5aaff) | legacy.boxer.a | approved (struck 4)
 461 | FLAG_JACKET team coat, gold placket and collar (a397cd1f) | legacy.flag_bearer.a | approved (struck 2)
@@ -47,23 +41,24 @@ for 25 iterations.
 464 | CHARGE_PENNANT narrow pennant, saltire, rings (c0cb4ef3) | legacy.flag_bearer.b | approved (struck 4)
 464 | BEARER_HOLD pole plumb in both fists (70924ac8) | legacy.banner_bearer.b + legacy.flag_bearer.b | approved (struck 3 each; b PASS both)
 464 | [P] POACHER_BOW wood (e968d1a0) | legacy.poacher.b | approved (root exception; row spent for [P])
+465 | polearm_melee blow, BEARER_PULSE aura on its own clock, stats knobs (545192dc; evidence 2b229594) | legacy.banner_bearer.d + legacy.flag_bearer.d | approved (d PASS both)
+465 | SMALL_ARROW short shaft (ec355f73) | legacy.poacher.c | approved (struck 2)
+465 | BLOW_DART needle and team tuft (ec355f73) | legacy.blowdarter.c | approved (struck 2)
+465 | PIKE_VEST cream vest, team half-disc (ab5eacbe) | legacy.pike.a | approved (struck 2)
+465 | BARREL_VEST team vest, white shirt V (ab5eacbe) | legacy.barrel_roller.a | approved (struck 4)
+465 | lanky 1.08x build, MINER_BUILD cut (af84fde5) | legacy.boxer.a | approved (struck 1; a PASS)
+465 | lanky 1.00x build, MINER_BUILD cut (af84fde5) | legacy.peasant.a | approved (struck 1; a PASS)
 
 ## Spent (never retry as [P])
 
 ## Rows
 
-wild_west done 448-453 rows (MINER_BLAST, GUNSLINGER_SIDEBURNS/SUIT/REST/SHOES, CACTUS_ROBE [R] + boots/spines, QUICK_DRAW_SHIRT/VEST, GUN_BELT; cactus, gunslinger, quick_draw D) | compacted 455 | 453 | approved | values: git show fa4523ed:loop/LEDGER.md
+wild_west done 444-459 rows (all dress, props, mechanics and stats; all D 459) | compacted 465 | 459 | approved | values: git show 44da9220:loop/LEDGER.md (it points to the earlier compactions)
 pirate.pirate_queen done 450 rows (QUEEN_SKIRT/BOOTS/FRAME [R], QUEEN_GUARD; D) | compacted 464 | 450 | approved | values: git log -- web/src/units/pirateDress.ts
 
-wild_west.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 444 | stats | values: git show 7aee94dc
 spooky done 435-444 rows (reaper, stiffy, skeleton, vampire, candlehead, catapult dress and props; all D) | compacted 463 | 444 | approved | values: git log -- web/src/units/spookyDress.ts
-wild_west 444-447 rows (BULLET_RAIN, REVOLVER, BOWLER, LASSO_DRAG/ROPE, CACTUS_EXPLOSION/NEEDLES, MINER_PICK, GUNSLINGER_JACKET, PINTO_HEAD, LASSO_COIL, POLE_GRIP.minerHaft, QUICK_FAN, MINER_CAP, GUNSLINGER_TIE, CACTUS_SLEEVE) | compacted 451 | 447 | approved | values: git show 3ac8ee79:loop/LEDGER.md
-wild_west done 448-456 rows (FLAT_HAT, PEAK_HAT, WINCHESTER(_AIM), RIFLE_TRACER, DYNAMITE_WIRES/HOLD/SKIRT/BOOTS/SHIRT/LOOK [R], WESTERN_BRAID, DEADEYE_SHIRT, LASSO_RAISE/MOUSTACHE/SHIRT, PINTO_LEGS/HEAD/COAT; dynamite, deadeye, lasso D 456) | compacted 457 | 456 | approved | values: git show 7f5ee168:loop/LEDGER.md
-wild_west.miner done 447-459 rows (MINER_OVERALLS/MOUSTACHE/BOOTS/UPRIGHT/HAT [R]/LEGS/SLEEVES/BUILD [R], PICK_SHOULDER; 459 hat lift .2 slope .22, shirt lift 0; miner D 459, wild_west all D) | compacted 459 | 459 | approved | values: git show 44da9220:loop/LEDGER.md
 
-
-
-legacy_1 stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 8 units) | d PASS 6/8 (bearers deal no damage: an [S]) | 457 | stats | values: git show 5d6b5d24
+legacy_1 stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 8 units) | d PASS 8/8 (bearers polearm_melee 465: hp .68/.17, dmg .63, cd 2.31) | 465 | stats | values: git show 5d6b5d24
 propBuilder.ts:CHARGE_FLAG (long, thick, grip, ball, wide, tall, slab, edge, proud, emblem, glow) + LEGACY_GOLD, LEGACY_POLE | 1.55, .022, .3, .07, .48, .36, .012, .03, 1.8, .1, .15 | 457 | approved | staff log + orb (before 457)
 propBuilder.ts:STAY_BANNER (long, grip, beam, bar, knob, spike, wide, tall, inset, edge, tower) | 1.5, .3, 1.0, .03, .05, .09, .27, .42, .02, .025, .08 | 458 | approved | beam .62, banners .03 apart at the pole (457); staff log + orb (before 457)
 proceduralAnimation.ts:uprightPole marker -> PRIEST_HOLD + POLE_GRIP.bearerPole (off fist span) | Healer's planted hold; [.06, .24] | 458 | approved | one hand, the other raised (457); staff slant (before 457)
@@ -108,3 +103,10 @@ simulationSystem.ts:PIKE_DROP (ahead, up, spin, ready) | .6, -2.4, 3, .6 | 464 |
 propBuilder.ts:CHARGE_PENNANT (wide, tall, bar, ring, ringOut, ringGap) | .15, .46, .02, .025, 1.9, .07 | 464 | approved | CHARGE_FLAG sheet .48 x .36 (before 464)
 proceduralAnimation.ts:BEARER_HOLD (ahead, out, high, low) | .42, .22, .72, .3 | 464 | approved | PRIEST_HOLD at the side (before 464)
 unitVisuals.ts:legacy.barrel_roller hat | tricorn | 464 | approved | none (before 464)
+simulationSystem.ts:BEARER_PULSE (every, holds) | 3, 3.5 | 465 | approved | aura on the support cooldown 2 x 1.5, holds +.5 (before 465)
+projectileSystem.ts:SMALL_ARROW (long, thick, head, headWide, fletch) | .46, .03, .07, .045, .07 | 465 | approved | the .75 arrow (before 465)
+projectileSystem.ts:BLOW_DART (long, thick, needle, tuft, tuftLong) | .2, .014, .07, .06, .07 | 465 | approved | the .75 arrow (before 465)
+legacyDress.ts:PIKE_VEST (rim, rimOut, emblem, proud, emblemAt, cream, glow) | .1, 1.06, .62, .04, -.05, (.9,.76,.52), .18 | 465 | approved | cream (1,.9,.7) glow .25 (465 look, near white)
+legacyDress.ts:BARREL_VEST (shade, glow, vWide, vDeep, proud) | .7, .12, .62, .62, .03 | 465 | approved | none (before 465)
+unitVisuals.ts:legacy.boxer build (scale, bulk, torsoWidth, headSize, legLength) | 1.08, .84, .92, 1.12, 1.16 | 465 | approved | .68, .94, -, 1.32, - (before 465)
+unitVisuals.ts:legacy.peasant build (scale, bulk, torsoWidth, headSize, legLength) | 1.0, .82, .92, 1.1, 1.16 | 465 | approved | .62, .78, -, 1.44, .74 (before 465)

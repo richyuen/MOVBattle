@@ -1,5 +1,5 @@
 # Loop state (v7: a look list holds 6 blockers with the build first, the tail overlaps below 7 picks, a plateau [R] goes next, CONFIRM runs beside the critic; v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 464   Batch: legacy_1 (8/14)   Consecutive empty: 0   Done: 70/139   Parked: 0
+Iteration: 465   Batch: legacy_1 (9/14)   Consecutive empty: 0   Done: 70/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -13,7 +13,7 @@ dynasty: samurai ++++ D | firework_archer ++++ D | monk ++++ D | ninja ++++ D | 
 pirate: flintlock ++++ D | blunderbuss ++++ D | bomb_thrower ++++ D | harpooner ++++ D | cannon ++++ D | captain ++++ D | pirate_queen ++++ D
 spooky: skeleton_warrior ++++ D | skeleton_archer ++++ D | candlehead ++++ D | vampire ++++ D | pumpkin_catapult ++++ D | swordcaster ++++ D | reaper ++++ D
 wild_west: dynamite_thrower ++++ D | miner ++++ D | cactus ++++ D | gunslinger ++++ D | lasso ++++ D | deadeye ++++ D | quick_draw ++++ D
-legacy_1: peasant -+++ o | banner_bearer +++- o | poacher -+-+ o | blowdarter -+-+ o | pike -+++ o | barrel_roller -+-+ o | boxer -+++ o | flag_bearer -++- o
+legacy_1: peasant -+++ o | banner_bearer +-++ o | poacher -+-+ o | blowdarter -+-+ o | pike -+++ o | barrel_roller -+-+ o | boxer --++ o | flag_bearer -+++ o
 legacy_2: pharaoh ???? q | wizard ???? q | chariot ???? q | thor ???? q | tank ???? q | super_boxer ???? q | dark_peasant ???? q | super_peasant ???? q
 good: devout_gauntlet ???? q | celestial_aegis ???? q | radiant_glaive ???? q | righteous_paladin ???? q | divine_arbiter ???? q | sacred_elephant ???? q | chronomancer ???? q
 evil: shadow_walker ???? q | exiled_sentinel ???? q | mad_mechanic ???? q | void_cultist ???? q | tempest_lich ???? q | death_bringer ???? q | void_monarch ???? q
@@ -23,25 +23,26 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
+465 (BASE 1bacaa78; evidence 2b229594 bearer spars his squire with the hurt ally in the ring): [S] banner_bearer + flag_bearer d polearm_melee blow, BEARER_PULSE (545192dc) d PASS both | [S] poacher c.2 SMALL_ARROW (ec355f73) struck 2 | [S] blowdarter c.2 BLOW_DART (ec355f73) struck 2 | [S] pike a.2 PIKE_VEST (ab5eacbe) struck 2 | [S] barrel_roller a.4 BARREL_VEST (ab5eacbe) struck 4 | [S] boxer a.1 build 1.08 (af84fde5) struck 1, a PASS | [S] peasant a.1 build 1.00 (af84fde5) struck 1, a PASS; CONFIRM failed banner b (3 new), peasant a (1 new), boxer a, b (1 each) - 7/7, 6 struck
 464 (BASE 64552e98): [S] blowdarter c.1 HAND_LAUNCH muzzle (b42e6e1c) struck 1 | [S] boxer c.2 HOP_BACK dodge (f5c1b38a) struck 2, c PASS | [S] pike c.2 PIKE_DROP (d57603bb, fa8827d7) struck 2, c PASS | [S] barrel_roller a.2 tricorn (38bca2d8) struck 2 | [S] poacher b.1 bowGrip (99c8103c) struck 1, b PASS | [S] flag_bearer b.4 CHARGE_PENNANT (c0cb4ef3) struck 4 | [S] banner_bearer b.3 BEARER_HOLD (70924ac8, shared) struck 3 + flag b.3, b PASS both | [P] poacher b.1 POACHER_BOW wood (e968d1a0) - 8/8, 8 struck
 463 (BASE 8716ab17): [S] pike b.1 LONG_PIKE (55c1c679) struck 1, 2, 3, b PASS | [S] pike c.1 levelsPike (cf35fc1b) struck 1 | [S] blowdarter b.1 BLOWGUN + BLOWGUN_HOLD (67888276) struck 1, 2, b PASS | [S] poacher b.1 POACHER_BOW (7e2eb586) none struck (no fist on it) | [S] boxer c.1 BOXER_JAB (523ab3d2, 578ed136) struck 1 | [S] barrel_roller b.1 BARREL_RIDE (e3458425) struck 1, 2, b PASS | [S] barrel_roller c.1 BARREL_SHOT (7089b8e7) struck 1 | [P] pike a.1 PIKE_PLUME tan (87ab1edc) struck 1 - 8/8, 11 struck
-462 (BASE a76273ed; evidence a76273ed lineup spacingZ 1.85): [S] blowdarter a.1 BLOWDARTER_HAIR (918046b8) struck 1, 4, 5 | [S] pike a.1 cavalier_hat (9708312a) none struck (plume team) | [S] poacher b.2 quiver_back (8e47a5ac) struck 2 | [S] poacher c.1 HAND_LAUNCH (2f129417) none struck (bow not drawn at release) | [S] blowdarter c.1 MOUTH_LAUNCH (2f129417 half) REJECT, reverted 24f067a4 | [P] flag_bearer + banner_bearer c.1 BEARER_RING radius 2.2, root exception (d9f8f8c5) struck 1 each, c PASS both; lineup RE-AUDIT frames both ends - 6/7, 6 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] legacy.blowdarter (b42e6e1c) VERDICT: APPROVE CRITERION: legacy.blowdarter.c FAIL   (previous: FAIL)
-- GAP: [S] legacy.boxer (f5c1b38a) VERDICT: APPROVE CRITERION: legacy.boxer.c PASS   (previous: FAIL)
-- GAP: [S] legacy.pike (d57603bb + fa8827d7) VERDICT: APPROVE CRITERION: legacy.pike.c PASS   (previous: FAIL)
-- GAP: [S] legacy.barrel_roller (38bca2d8) VERDICT: APPROVE CRITERION: legacy.barrel_roller.a FAIL   (previous: FAIL)
-- GAP: [S] legacy.poacher (99c8103c) VERDICT: APPROVE CRITERION: legacy.poacher.b PASS   (previous: FAIL)
-- GAP: [S] legacy.flag_bearer (c0cb4ef3) VERDICT: APPROVE CRITERION: legacy.flag_bearer.b FAIL   (previous: FAIL)
-- GAP: [S] legacy.banner_bearer (70924ac8) VERDICT: APPROVE CRITERION: legacy.banner_bearer.b PASS   (previous: FAIL); legacy.flag_bearer.b PASS   (previous: FAIL)
-- GAP: [P] legacy.poacher (e968d1a0) VERDICT: APPROVE CRITERION: legacy.poacher.b PASS   (previous: FAIL)
+- GAP: [S] legacy.banner_bearer (545192dc) VERDICT: APPROVE CRITERION: legacy.banner_bearer.d PASS   (previous: FAIL)
+- GAP: [S] legacy.flag_bearer (545192dc) VERDICT: APPROVE CRITERION: legacy.flag_bearer.d PASS   (previous: FAIL)
+- GAP: [S] legacy.poacher (ec355f73) VERDICT: APPROVE CRITERION: legacy.poacher.c FAIL   (previous: FAIL)
+- GAP: [S] legacy.blowdarter (ec355f73) VERDICT: APPROVE CRITERION: legacy.blowdarter.c FAIL   (previous: FAIL)
+- GAP: [S] legacy.pike (ab5eacbe) VERDICT: APPROVE CRITERION: legacy.pike.a FAIL   (previous: FAIL)
+- GAP: [S] legacy.barrel_roller (ab5eacbe) VERDICT: APPROVE CRITERION: legacy.barrel_roller.a FAIL   (previous: FAIL)
+- GAP: [S] legacy.boxer (af84fde5) VERDICT: APPROVE CRITERION: legacy.boxer.a PASS   (previous: FAIL)
+- GAP: [S] legacy.peasant (af84fde5) VERDICT: APPROVE CRITERION: legacy.peasant.a PASS   (previous: FAIL)
 - REGRESSIONS: none
+- CONFIRM 465: legacy.banner_bearer a PASS b FAIL c PASS d PASS; legacy.peasant a FAIL b PASS c PASS d PASS; legacy.boxer a FAIL b FAIL c PASS d PASS
 ## Notes for next iteration (max 5 lines)
-- Banner bearer: a, b, c PASS; d (dmg 0) is the last criterion - a plain Stay Banner blow logged as a melee hit ([S], simulationSystem), then CONFIRM. Same blow for the flag bearer's d.
-- Poacher c.1: keep the bow in the weapon fist while walking (it hangs on his back in _windup) and drawn at release; c.2 a short arrow shape.
-- Barrel roller c.2: roll the ridden barrel under his feet into the enemy and burst it there, in place of the lob.
-- Starvation at 465: peasant a (last 461) takes a slot; poacher a (461) next.
-- Boxer a.1 build: the critic offers a [P] scale .68 -> 1.08 under the root exception (fallout of f5c1b38a).
+- Banner bearer: only b is open (CONFIRM 465: banner ray fan, crenellated arch emblem, thick gold-fitted pole); a, c, d confirmed.
+- Peasant (a: tan undersleeves) and boxer (a: bare team chest; b: big team gloves) are one blocker each from a second CONFIRM.
+- Both bearers' blow is a lunge with the pole plumb (BEARER_HOLD): a swung chop is a CONFIRM watch for the flag bearer.
+- Poacher c.1: keep the bow in the weapon fist on the march and drawn at release. Barrel roller c.2: roll the ridden barrel into the enemy.
+- Starvation at 467: poacher a (last 461) if not picked at 466.
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
 # <unitId>
