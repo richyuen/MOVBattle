@@ -21,7 +21,7 @@ export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap" | "peak_hat"
-  | "miner_hat" | "dynamite_hat"
+  | "miner_hat" | "dynamite_hat" | "poacher_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
@@ -709,7 +709,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.poacher": vis(
-    { scale: 0.94, bulk: 0.84, armLength: 1.1 }, "bow", "hood", "none", "none", "#6F7D43", undefined, {
+    // [S] 457 the dark wide-brim hat with a team band above the eyes (legacyDress POACHER_HAT), not the hood dome over the face (audit 457 a.1)
+    { scale: 0.94, bulk: 0.84, armLength: 1.1 }, "bow", "poacher_hat", "none", "none", "#6F7D43", undefined, {
       posePreset: "archer",
       materialPreset: "legacy_toy",
       attachmentPreset: "bow_ready",
