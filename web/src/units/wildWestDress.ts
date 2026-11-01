@@ -1059,3 +1059,30 @@ export function minerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3
   for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = cloth;
   return out;
 }
+
+/*
+ * [S] 455 the Miner's sleeves and gloves (CONFIRM 452 miner a.4: "bare skin arms - TABS: dark team-colour sleeves ending in tan glove cuffs";
+ * wild_west.miner.red.png: dark team sleeves from the shoulder down the forearm, then tan leather work gloves with a wide flared cuff over the wrist).
+ * MINER_SLEEVES: the upper arm .upperOut of its half-width round its whole length and the forearm .lowerOut round to .cuffFrom of it, in the dark team
+ * cloth (MINER_LEGS.shade); a glove cuff .cuffOut round from .cuffFrom to the wrist and the hands in tan leather .glove, self-lit .glow.
+ */
+const MINER_SLEEVES = { upperOut: 1.22, lowerOut: 1.18, cuffFrom: 0.55, cuffOut: 1.55, glove: new Color3(0.72, 0.5, 0.26), glow: 0.15 };
+
+/** The Miner's dark team sleeves ending in tan glove cuffs, tan gloved hands (spec at MINER_SLEEVES). */
+export function minerSleeves(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = MINER_SLEEVES;
+  const mf = getMaterialFactory();
+  const c = teamColor.scale(MINER_LEGS.shade);
+  const cloth = mf.get("cloth", c, { emissive: c.scale(MINER_LEGS.glow) });
+  const glove = mf.get("cloth", S.glove, { emissive: S.glove.scale(S.glow) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "minerSleeve", arm, 0, 1, S.upperOut, cloth));
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "minerSleeve", arm, 0, S.cuffFrom + 0.02, S.lowerOut, cloth));
+    out.push(limbShell(scene, "minerGloveCuff", arm, S.cuffFrom, 1, S.cuffOut, glove));
+  }
+  for (const hand of [body.leftHand, body.rightHand]) {
+    for (const m of hand.getChildMeshes(true)) if (m instanceof Mesh && /_[lr]HandM$/.test(m.name)) m.material = glove;
+  }
+  return out;
+}
