@@ -2913,13 +2913,17 @@ export class SimulationSystem {
   }
   private _blockReadyAt = new Map<RuntimeUnit, number>();
 
-  /** Painter Dodge (PAINTER_DODGE): each ready painter with a missile about to reach him sidesteps off its line, and it comes down on air. */
+  /**
+   * Painter Dodge (PAINTER_DODGE): each ready painter with a missile about to reach him sidesteps off its line, and it comes down on air.
+   * [S] 445 the Quick Draw has the same instinct (card "Quickdraw Projectile Dodge ... sidestep away when faced with projectiles"; audit 444 c.1).
+   */
   private _painterDodges(now: number): void {
     const D = PAINTER_DODGE;
     const missiles = this.projectileSystem;
     if (!missiles) return;
     for (const unit of this._units) {
-      if (unit.definition.id !== "renaissance.painter" || unit.isDead || unit.isToppled || unit.isDowned || this._recovers.has(unit)) continue;
+      const id = unit.definition.id;
+      if ((id !== "renaissance.painter" && id !== "wild_west.quick_draw") || unit.isDead || unit.isToppled || unit.isDowned || this._recovers.has(unit)) continue;
       if (now < (this._dodgeReadyAt.get(unit) ?? 0)) continue;
       const incoming = missiles.incomingAt(unit, D.warn);
       if (!incoming) continue;
