@@ -488,3 +488,42 @@ export function bannerCuffs(scene: Scene, body: ArticulatedBody): Mesh[] {
   return [body.leftLowerArm, body.rightLowerArm].map((arm) => limbShell(scene, "bannerCuff", arm, C.from, C.to, C.out, white));
 }
 
+/*
+ * [S] 461 the Boxer's laced boots (critic 460 a.4: "boots, team feet - TABS: tall laced boots"; legacy.boxer.red.png: team boots from mid-shin to the sole,
+ * the shaft wider than the shin, a white lace crossed in .laces bars up its front, the foot a team block). BOXER_BOOTS in the shin's box: a 6-sided team
+ * shell .out of its half-width round it from .from to .to of its length, the foot in the same cloth; up the shaft's front .laces white bars .lace of the
+ * shell across, .bar of its length tall, tipped .tilt rad by turns (the crossing), .proud off it. Team times .shade, white self-lit .whiteGlow.
+ */
+const BOXER_BOOTS = { from: 0.5, to: 1.04, out: 1.45, laces: 4, lace: 1.5, bar: 0.035, tilt: 0.35, proud: 0.015, shade: 0.85, glow: 0.12, whiteGlow: 0.3 };
+
+/** The Boxer's tall team boots with white crossed laces (spec at BOXER_BOOTS). */
+export function boxerBoots(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const B = BOXER_BOOTS;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(B.shade);
+  const team = mf.get("cloth", t, { emissive: t.scale(B.glow) });
+  const white = mf.get("cloth", BANNER_COATEE.white, { emissive: BANNER_COATEE.white.scale(B.whiteGlow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const shell = limbShell(scene, "boxerBoot", shin, B.from, B.to, B.out, team);
+    out.push(shell);
+    const bb = shin.getBoundingInfo().boundingBox, half = bb.extendSize.y * shin.scaling.y, mid = shin.position.y + bb.center.y * shin.scaling.y;
+    const r = Math.max(bb.extendSize.x * shin.scaling.x, bb.extendSize.z * shin.scaling.z) * B.out;
+    const front = r * shell.scaling.z;
+    for (let k = 0; k < B.laces; k++) {
+      const y = mid + half - (B.from + (0.85 - B.from) * (k + 0.5) / B.laces) * half * 2;
+      const lace = MeshBuilder.CreateBox("boxerLace", { width: r * B.lace, height: half * 2 * B.bar, depth: r * 0.12 }, scene);
+      lace.position.set(0, y, front + B.proud); // limbShell's shell sits on the joint's axis
+      lace.rotation.z = k % 2 ? B.tilt : -B.tilt;
+      lace.material = white;
+      lace.parent = shin.parent;
+      lace.convertToFlatShadedMesh();
+      out.push(lace);
+    }
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = team;
+  }
+  return out;
+}
+
