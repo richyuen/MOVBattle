@@ -306,7 +306,7 @@ const BONE_FRAME = { arm: 0.11, cross: 0.62, crossAt: [0.5, 0.15], bar: 0.12, bi
  * tails). CATAPULT_BANNER (rig units): the cord .cord long; the cloth a slab .wide along the firing axis, .tall, .thick, set .back of the bone, swung
  * .sway rad; two tails .tail long; a dark rod across its head. Team (.shade of it) self-lit .glow.
  */
-const PUMPKIN_TIMBER = { color: new Color3(0.1, 0.055, 0.05), glow: 0.14 };
+const PUMPKIN_TIMBER = { color: new Color3(0.1, 0.055, 0.05), glow: 0.14, rim: 0.7 };
 const CATAPULT_BANNER = { cord: 0.06, wide: 0.24, tall: 0.46, thick: 0.025, back: 0.0, sway: 0.06, tail: 0.12, shade: 0.8, glow: 0.18 };
 function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("catapult_root", scene);
@@ -370,7 +370,11 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   // Wheels (CATAPULT_WHEEL): a short faceted timber drum on a grey iron tyre at each rail end, tucked in beside the corner caps
   const W = CATAPULT_WHEEL;
   const wheelTimber = pumpkinTimber ?? getMaterialFactory().get("wood", W.tone, { emissive: W.tone.scale(0.18) });
-  const iron = makeMat(scene, W.iron);
+  // [S] 444 the pumpkin catapult's wheels are its black timber through (CONFIRM 441 a.1: "wheel rims a light slate blue - TABS: the same near-black
+  // wood as the frame"): on the spooky build the tyre band is the timber a shade darker (PUMPKIN_TIMBER.rim) so it still reads round the face, the hub
+  // the timber itself; the medieval wheels keep the grey iron
+  const iron = options.spooky ? getMaterialFactory().get("cloth", PUMPKIN_TIMBER.color.scale(PUMPKIN_TIMBER.rim), { emissive: PUMPKIN_TIMBER.color.scale(PUMPKIN_TIMBER.rim * PUMPKIN_TIMBER.glow) }) : makeMat(scene, W.iron);
+  const hubMat = pumpkinTimber ?? iron;
   for (const side of [-1, 1]) {
     for (const end of [-1, 1]) {
       const x = side * (F.half + F.cap / 2 + W.tyreWide / 2 + 0.01), z = end * (F.long / 2 - F.cap / 2), y = W.across / 2;
@@ -385,7 +389,7 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
       face.parent = rig; face.material = wheelTimber; allMeshes.push(face);
       const hub = MeshBuilder.CreateCylinder("wheelHub", { height: W.tyreWide + W.proud * 4, diameter: W.across * W.hub, tessellation: 6 }, scene);
       hub.position.set(x, y, z); hub.rotation.z = Math.PI / 2;
-      hub.parent = rig; hub.material = iron; allMeshes.push(hub);
+      hub.parent = rig; hub.material = hubMat; allMeshes.push(hub);
     }
   }
 
