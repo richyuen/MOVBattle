@@ -329,7 +329,7 @@ const legacy = makeFaction(FactionId.Legacy, "legacy", [
   ["poacher", "Poacher", 120, "archer", { weaponHint: "bow", projectileHint: "small_arrow", healthMultiplier: 0.5, damageMultiplier: 0.66 }],
   ["blowdarter", "Blowdarter", 220, "rapid_ranged", { abilities: ["poison", "rapid_fire"], weaponHint: "staff", projectileHint: "blowdart", healthMultiplier: 0.64, damageMultiplier: 0.15, cooldownMultiplier: 0.82 }],
   ["pike", "Pike", 300, "polearm_melee", { weaponHint: "spear", engageRangeOverride: 3.1, healthMultiplier: 0.12, damageMultiplier: 0.7 }],
-  ["barrel_roller", "Barrel Roller", 350, "thrower", { weaponHint: "bomb", projectileHint: "barrel", size: "large", healthMultiplier: 0.11, damageMultiplier: 0.12, cooldownMultiplier: 0.34 }],
+  ["barrel_roller", "Barrel Roller", 350, "thrower", { weaponHint: "bomb", projectileHint: "barrel", engageRangeOverride: 1.6, size: "large", healthMultiplier: 0.11, damageMultiplier: 0.12, cooldownMultiplier: 0.34 }],
   ["boxer", "Boxer", 450, "tiny_melee", { size: "tiny", healthMultiplier: 1.37, cooldownMultiplier: 0.6 }],
   ["flag_bearer", "Flag Bearer", 500, "polearm_melee", { weaponHint: "staff", healthMultiplier: 0.17, damageMultiplier: 0.63, cooldownMultiplier: 2.31 }],
   ["pharaoh", "Pharaoh", 750, "special_magic", { abilities: ["fear"], hatHint: "pharaoh", weaponHint: "staff", healthMultiplier: 0.09, damageMultiplier: 0.53, cooldownMultiplier: 0.56 }],

@@ -213,7 +213,14 @@ function harpoonMuzzleOf(unit: RuntimeUnit): TransformNode | null {
  */
 // 462: the blowdarter's "mouth" was rejected (critic 462: the dart still left at crown height, the pipe on his back): his launch waits for the blowgun hold
 // [S] 463/464 now he holds the blowgun at his mouth (proceduralAnimation BLOWGUN_HOLD): "muzzle" launches from the blowgun's tip, its "blowgunMuzzle" node
-const HAND_LAUNCH: Record<string, "bow" | "mouth" | "muzzle"> = { "legacy.poacher": "bow", "legacy.blowdarter": "muzzle" };
+const HAND_LAUNCH: Record<string, "bow" | "mouth" | "muzzle" | "barrel"> = { "legacy.poacher": "bow", "legacy.blowdarter": "muzzle", "legacy.barrel_roller": "barrel" };
+/*
+ * [S] 468 the Barrel Roller rolls his barrel into the enemy (audit 457 c.2: "the blast arrives by a throw from 6 m while he stands - TABS: he walks the
+ * barrel forward under his feet into the enemy"; card Appearance "to move towards his destination, the Barrel Roller walks forward"). He closes on the
+ * barrel to melee reach (rosterManifest engageRangeOverride), and his barrel shot leaves from the ridden barrel's core ("barrel": the barrelBody mesh)
+ * and runs along the ground at the man, an arc of BARREL_ROLL.arc of the distance, bursting where it meets him.
+ */
+const BARREL_ROLL = { arc: 0.02 };
 const MOUTH_LAUNCH = { mouthAhead: 1.1, mouthDrop: 0.3 };
 
 /** Where a HAND_LAUNCH shooter's missile leaves: his bow fist or his mouth, in world space; null when he has neither. */
@@ -226,6 +233,12 @@ function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
     if (!hand) return null;
     worldMatrixChain(hand);
     return hand.getAbsolutePosition().clone();
+  }
+  if (how === "barrel") {
+    const core = b.root.getDescendants(false, (n) => n.name === "barrelBody")[0] as TransformNode | undefined;
+    if (!core) return null;
+    worldMatrixChain(core);
+    return core.getAbsolutePosition().clone();
   }
   if (how === "muzzle") {
     const muzzle = b.root.getDescendants(false, (n) => n.name === "blowgunMuzzle")[0] as TransformNode | undefined;
@@ -3401,6 +3414,14 @@ export class SimulationSystem {
         continue;
       }
       if (t.fromStaff) continue;
+      // [S] 468 the Barrel Roller's barrel rolls from under his feet along the ground into the man (BARREL_ROLL)
+      const rolledFrom = HAND_LAUNCH[attacker.definition.id] === "barrel" ? handLaunchPoint(attacker) : null;
+      if (rolledFrom) {
+        this.projectileSystem.spawnProjectile(
+          t.shape, rolledFrom, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: 0, arc: BARREL_ROLL.arc, targetLift: 0.3 },
+        );
+        continue;
+      }
       const prop = attacker.animator.heldThrowProp();
       // The pose was set this step: bring the hand's chain up to it before reading where the prop is
       const chain: TransformNode[] = [];
