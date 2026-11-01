@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -730,7 +730,10 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     // [S] 462 a wide-brimmed team hat with a plume (the cavalier's, propBuilder CAVALIER; audit 457 a.1), not the bucket great-helm
     { scale: 1.14, bulk: 1.12, armLength: 1.3 }, "spear", "cavalier_hat", "none", "none", "#B5B5B5",
     undefined,
-    { materialPreset: "legacy_toy" },
+    {
+      weaponVariant: "long_pike", // [S] 463 an orange pike four times his height, a long hooked steel blade (propBuilder LONG_PIKE; audit 457 b.1, b.2)
+      materialPreset: "legacy_toy",
+    },
   ),
   "legacy.barrel_roller": vis(
     // [S] 458 a lanky slim pirate at card Size 1.00x (audit 457 a.1: "bulky slab torso and thick limbs (size 1.24) - TABS: a lanky slim pirate"; the

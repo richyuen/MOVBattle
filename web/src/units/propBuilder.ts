@@ -4106,6 +4106,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return shaft;
     }
     case "spear": {
+      if (variant === "long_pike") return buildLongPike(scene, s);
       // Half as tall again as the unit and no more: body height is ~1.3 at scale 1 and s carries the 1.25 exaggeration under the 1.6 prop oversize, so a 1.3 shaft stood twice a man and a rank of them was a forest of poles
       // A stick with a small point: a head 0.09 across and 0.22 long was as big as a torso once oversized, and a 0.036 shaft a pole as thick as its own point.
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.0 * s, diameter: 0.024 * s, tessellation: 6 }, scene);
@@ -6326,6 +6327,37 @@ function buildBoneBow(scene: Scene, s: number, stand: number, team: Color3): Mes
   stave.position.y = 0.1 * s;
   new TransformNode("iceBowCarry", scene).parent = stave;
   return stave;
+}
+/*
+ * [S] 463 the Pike's pike (audit 457 pike b.1: "a thin spear about 1.3x the man's height - TABS: a pike many times the man's height (range 8.5)"; b.2:
+ * "a small leaf point - TABS: a long steel blade with a side hook"; legacy.pike.red.png: an orange shaft four or five times his height, a steel collar
+ * under a long flat steel blade with a small hook off one side). LONG_PIKE in s: the shaft .long, .thick across, .wood; the collar .collar long, .collarOut
+ * of the shaft across; the blade .blade long, .bladeWide across at its foot, .bladeThin deep, tapering to a point; the hook .hook long, .hookThick, off one
+ * side .hookAt up the blade, raked .hookRake rad up. Named "shaft" (the levelled hold, PIKE_LEVEL, finds it), gripped .grip of its length up from the butt.
+ */
+const LONG_PIKE = { long: 2.8, thick: 0.03, collar: 0.08, collarOut: 1.5, blade: 0.34, bladeWide: 0.07, bladeThin: 0.018, hook: 0.09, hookThick: 0.022, hookAt: 0.18, hookRake: 0.6, grip: 0.12, wood: new Color3(0.7, 0.3, 0.08), steel: new Color3(0.62, 0.62, 0.66) };
+function buildLongPike(scene: Scene, s: number): Mesh {
+  const P = LONG_PIKE;
+  const L = P.long * s;
+  const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: P.thick * s, tessellation: 6 }, scene);
+  shaft.material = mat(scene, P.wood, 0.1, "cloth");
+  shaft.convertToFlatShadedMesh();
+  const steel = mat(scene, P.steel, 0.14, "cloth");
+  const collar = MeshBuilder.CreateCylinder("pikeCollar", { height: P.collar * s, diameter: P.thick * P.collarOut * s, tessellation: 6 }, scene);
+  collar.position.y = L * 0.5 + P.collar * s * 0.5;
+  const blade = MeshBuilder.CreateCylinder("pikeBlade", { height: P.blade * s, diameterTop: 0, diameterBottom: P.bladeWide * s, tessellation: 4 }, scene);
+  blade.scaling.z = P.bladeThin / P.bladeWide;
+  blade.position.y = L * 0.5 + P.collar * s + P.blade * s * 0.5;
+  const hook = MeshBuilder.CreateBox("pikeHook", { width: P.hook * s, height: P.hookThick * s, depth: P.bladeThin * s }, scene);
+  hook.position.set(P.bladeWide * s * 0.35 + P.hook * s * 0.4, L * 0.5 + P.collar * s + P.blade * s * P.hookAt, 0);
+  hook.rotation.z = P.hookRake;
+  for (const m of [collar, blade, hook]) {
+    m.material = steel;
+    m.convertToFlatShadedMesh();
+    m.parent = shaft;
+  }
+  shaft.position.y = L * (0.5 - P.grip);
+  return shaft;
 }
 /** The medieval archer's longbow colours (352; medieval.archer.red.png): brown wood, a pale leather wrap at the grip */
 const BROWN_LONGBOW = { long: 1.4, wood: new Color3(0.45, 0.27, 0.14), wrap: new Color3(0.86, 0.78, 0.62) };
