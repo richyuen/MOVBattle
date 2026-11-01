@@ -285,8 +285,11 @@ const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
  * .rootUp of his height up and .rootBack behind, through the man's middle and .through of the man's height past him, and the man is lifted and hung, feet
  * .up of the Reaper's height (his head top at the stab) off the ground, .side of it out to his off side and .back behind, limp, facing him, stabbed again every .every s for .bite of
  * his max health. Dead, he hangs on .afterDeath s and drops. One man per Reaper. Logged "impale" (the capture's ability pair).
+ * [S] 443 (critic 442 c.3: "hangs at chest height in front of the Reaper, against his sleeve - TABS: high beside his shoulder, head above the hood"):
+ * hung higher and further out (up .6 -> .8, side .3 -> .45), and the Reaper no longer takes the man on his own tendril for his target
+ * (_selectEnemyTarget): he had turned to face him and so swung the effigy round in front of his chest. The tendril is thicker (REAPER_SPEAR).
  */
-const REAPER_IMPALE = { units: new Set(["spooky.reaper"]), weak: 0.15, up: 0.6, side: 0.3, back: 0.1, rootUp: 0.66, rootBack: 0.08, through: 0.3, every: 0.6, bite: 0.18, afterDeath: 2.5 };
+const REAPER_IMPALE = { units: new Set(["spooky.reaper"]), weak: 0.15, up: 0.8, side: 0.45, back: 0.1, rootUp: 0.66, rootBack: 0.08, through: 0.3, every: 0.6, bite: 0.18, afterDeath: 2.5 };
 /*
  * [S] the charge seen (363; critic 360: "same pose and place, no lunge, no dust"; tribal.mammoth.jpg): every MAMMOTH_DUST.every s of the run a dust puff
  * (sprite discs .size times the kick dust) goes up at a pair of its feet, alternating front-left/back-right and front-right/back-left (feet given as [ahead, across] in body radii), and the animator
@@ -3891,6 +3894,8 @@ export class SimulationSystem {
 
     for (const candidate of this._units) {
       if (candidate.isDead || candidate.team === requester.team || !candidate.isTargetable) continue;
+      // the man on his own tendril is stabbed by it, not faced (REAPER_IMPALE)
+      if (this._impales.get(candidate)?.holder === requester) continue;
       const score = this._scoreCandidate(requester, candidate, aiProfile.targetPriority);
       if (score < bestScore) {
         bestScore = score;

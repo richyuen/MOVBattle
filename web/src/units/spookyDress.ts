@@ -1087,7 +1087,8 @@ export function reaperTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
  * [S] 442 the tendril a weak man hangs on (simulationSystem REAPER_IMPALE): one more REAPER_TENDRILS tube, 1 long up its local +y from its root at the
  * origin, .thick across at the root tapering to a point, a slight S bend; the sim seats it from his back through the man and stretches it.
  */
-const REAPER_SPEAR = { thick: 0.16, tip: 0.12, bend: 0.06, steps: 10 };
+// [S] 443 thick .16 -> .22: it read as part of his sleeve (critic 442 c.3)
+const REAPER_SPEAR = { thick: 0.22, tip: 0.12, bend: 0.06, steps: 10 };
 
 /** The impaling tendril, root at the origin, 1 long up +y (spec at REAPER_SPEAR); the caller places, aims and stretches it. */
 export function reaperSpear(scene: Scene): Mesh {
