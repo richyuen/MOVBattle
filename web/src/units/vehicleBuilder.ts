@@ -595,13 +595,9 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
     allMeshes.push(boulder);
   }
 
-  // Counterweight on the short end, hung under the arm: a big dark block of the wheels' timber (the pumpkin catapult's; the medieval one has none, 354: it read as a
-  // black cube hiding the crewman)
-  if (options.spooky) {
-    const cw = MeshBuilder.CreateBox("cw", { width: 0.36, height: 0.44, depth: 0.4 }, scene);
-    cw.position.set(0, -0.3, CATAPULT_ARM.short - 0.2);
-    cw.parent = pivot; cw.material = wheelWood; allMeshes.push(cw);
-  }
+  // No counterweight block on either build: the medieval one lost it at 354 (a black cube hiding the crewman), the pumpkin catapult at 443 (CONFIRM 441
+  // a.2: "a large dark cube on top of the right side of the frame - TABS: no box; two posts and a crossbar with the bone-cross arm before them";
+  // spooky.pumpkin_catapult.red.png): the short end is the bare bone arm
 
   // Axle under the deck: the body mesh that takes the team tint, as on the cannon, so the timber keeps its own colours
   const axle = MeshBuilder.CreateCylinder("axle", { height: 1.1, diameter: 0.08, tessellation: 6 }, scene);
