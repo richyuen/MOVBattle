@@ -278,6 +278,16 @@ const HALFLING_JUMP = { from: 0.6, reach: 4, cooldown: 8, rise: 6.5, short: 0.3 
  * the crowd solver, wherever the man is pushed, walks or is thrown. He keeps hold of a dead man for .afterDeath s, then drops off. Logged "grab".
  */
 const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
+/**
+ * [S] 444 the Vampire Bite as a latch (434 vampire c.2: "bite in unit_spooky.vampire_release is an overhead swing of a star - TABS: latches onto the
+ * enemy and sucks blood"; card Characteristics "They suck the enemy's blood, disregarding the exact place that they are drawing blood from or if another
+ * Unit is beating them up"). His attack is never a swing: when it comes up he jumps onto the man and hangs on him, carried wherever the man goes, out of
+ * the crowd solver: pinned each step VAMPIRE_LATCH.round rad round from the man's front to his own hashed side, .off of the man's body radius out from his
+ * middle and .up of the man's height off the ground, so his head rides at the man's neck and shoulder, his heading held on the man. From .first s on he
+ * drinks every .every s (the attack's damage spread over its cooldown), each draught a hit in the hit log, blood welling out of the man's neck the whole
+ * time (visualEffects BLOOD_DRAIN). He drops off .afterDeath s after the man dies, or when he dies. Logged "bite" at the jump.
+ */
+const VAMPIRE_LATCH = { round: 0.7, off: 0.75, up: 0.2, first: 0.3, every: 0.35, afterDeath: 0.5, blood: 12 };
 /*
  * [S] 442 Reaper impale (audit 434 reaper c.2: "missing: tendrils impaling and hanging a weak unit"; card Characteristics: "Their tentacles will impale
  * any weak Units and hang them as an effigy, and will continuously impale the weakling"; spooky.reaper.jpg: a knight hangs high beside his shoulder on a
@@ -519,6 +529,8 @@ export class SimulationSystem {
   private _strikeReadyAt = new Map<RuntimeUnit, number>();
   // Halflings holding on to their man (HALFLING_CLING): the man, the side he hangs on, when he lets go (set once the man is dead)
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
+  // Vampires hanging on a man's neck (VAMPIRE_LATCH): the man, his side, the next draught and its damage, when he lets go (set once the man is dead)
+  private _latches = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; next: number; draught: number; until: number }>();
   // Men hung on a Reaper's tendril (REAPER_IMPALE): who holds him, when he drops (set once he is dead), his next stab, the tendril mesh
   private _impales = new Map<RuntimeUnit, { holder: RuntimeUnit; until: number; next: number; spear: Mesh; yaw: number; tall: number }>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
@@ -681,6 +693,8 @@ export class SimulationSystem {
     this._fearHits.clear();
     this._pendingBlows = [];
     this._clings.clear();
+    for (const v of this._latches.keys()) v.holdHeading(null);
+    this._latches.clear();
     for (const imp of this._impales.values()) imp.spear.dispose();
     this._impales.clear();
     this._pendingThrows = [];
@@ -770,6 +784,7 @@ export class SimulationSystem {
     this._firstLunges(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
+    if (this._latches.size > 0) this._holdLatches(now);
     if (this._impales.size > 0) this._holdImpales(now);
     if (this._charges.size > 0) this._trampleCharges(now);
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
@@ -926,6 +941,61 @@ export class SimulationSystem {
     }
   }
 
+  /** The man's neck, a world point at his neck joint (his chain settled first). */
+  private _neckOf(man: RuntimeUnit): Vector3 {
+    worldMatrixChain(man.body.neck);
+    return man.body.neck.getAbsolutePosition().clone();
+  }
+
+  /** A vampire's attack: he jumps onto the man (spec at VAMPIRE_LATCH); false for anyone else, and while he already hangs on someone (true). */
+  private _tryLatch(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, cooldown: number, now: number): boolean {
+    if (attacker.definition.id !== "spooky.vampire") return false;
+    if (this._latches.has(attacker)) return true;
+    if (attacker.isDead || target.isDead || target.linkedParent || isVehicleUnit(target.definition.id) || this._impales.has(target)) return false;
+    const L = VAMPIRE_LATCH;
+    const latch = { target, side: attacker.runtimeId % 2 === 0 ? 1 : -1, next: now + L.first, draught: damage * (L.every / Math.max(L.every, cooldown)), until: Infinity };
+    this._latches.set(attacker, latch);
+    this._pinLatch(attacker, latch);
+    this._logAbility(attacker, "bite", now, target.position);
+    this.visualEffects?.spawnBloodDrain(() => (this._latches.get(attacker)?.target === target && !target.isDead ? this._neckOf(target) : null), L.blood);
+    return true;
+  }
+
+  /** Hangs a vampire on his man's neck, facing him (spec at VAMPIRE_LATCH). */
+  private _pinLatch(unit: RuntimeUnit, latch: { target: RuntimeUnit; side: number }): void {
+    const L = VAMPIRE_LATCH, man = latch.target;
+    const yaw = man.body.root.rotation.y + latch.side * L.round;
+    const out = man.collisionBodyRadius * L.off;
+    const at = man.position.add(new Vector3(Math.sin(yaw) * out, 0, Math.cos(yaw) * out));
+    at.y = Math.max(0, man.position.y) + man.body.metrics.overallHeight * man.body.root.scaling.y * L.up;
+    unit.stopMoving();
+    unit.teleportTo(at);
+    unit.holdHeading(Math.atan2(man.position.x - at.x, man.position.z - at.z));
+  }
+
+  /** Keeps each vampire on his man and drinks (spec at VAMPIRE_LATCH); drops him .afterDeath s after the man dies, or when he dies. */
+  private _holdLatches(now: number): void {
+    const L = VAMPIRE_LATCH;
+    for (const [unit, latch] of this._latches) {
+      const man = latch.target;
+      if (!unit.isDead && !man.body.root.isDisposed() && man.isDead && latch.until === Infinity) latch.until = now + L.afterDeath;
+      if (unit.isDead || man.body.root.isDisposed() || now >= latch.until) {
+        unit.holdHeading(null);
+        this._latches.delete(unit);
+        continue;
+      }
+      this._pinLatch(unit, latch);
+      if (man.isDead || now < latch.next) continue;
+      latch.next += L.every;
+      man.applyDamage(latch.draught, Vector3.Zero());
+      if (this.hitLog.length >= 200) this.hitLog.shift();
+      const neck = this._neckOf(man);
+      worldMatrixChain(man.body.headTop);
+      const head = man.body.headTop.getAbsolutePosition();
+      this.hitLog.push({ t: now, attackerUnit: unit.definition.id, targetUnit: man.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
+    }
+  }
+
   /** Starts a Reaper's impale on a weak man (spec at REAPER_IMPALE); false when this blow is an ordinary cut. */
   private _tryImpale(attacker: RuntimeUnit, target: RuntimeUnit, now: number): boolean {
     const I = REAPER_IMPALE;
@@ -987,7 +1057,7 @@ export class SimulationSystem {
   }
 
   private _resolveLivingCollisions(): void {
-    const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent && !this._clings.has(unit) && !this._impales.has(unit));
+    const roots = this._units.filter((unit) => !unit.isDead && !unit.linkedParent && !this._clings.has(unit) && !this._latches.has(unit) && !this._impales.has(unit));
     if (roots.length < 2) return;
 
     for (let pass = 0; pass < this.collisionResolutionPasses; pass++) {
@@ -2248,6 +2318,8 @@ export class SimulationSystem {
 
     // [S] a longship hurls itself instead of swinging (LONGSHIP_HURL)
     if (this._tryHurlLongship(attacker, target, damage, now)) return;
+    // [S] 444 a vampire does not swing: he jumps onto the man's neck and drinks (VAMPIRE_LATCH)
+    if (this._tryLatch(attacker, target, damage, attackProfile.cooldown * cooldownMultiplier, now)) return;
 
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
     if (abilities.has("push_force")) {
