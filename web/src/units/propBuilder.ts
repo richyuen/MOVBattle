@@ -3384,6 +3384,17 @@ const PISTOL = {
  */
 const DRAGON_PISTOL = { ...PISTOL, long: 0.36, bore: 0.12, bell: 0.26, mouth: 4.2 };
 /*
+ * [S] 445 the Gunslinger's revolver (audit 444 b.1: "silver flared-muzzle flintlock pistol - TABS: long dark-grey revolver with a cylinder";
+ * wild_west.gunslinger.red.png: a long thin dark barrel ending at a plain mouth, a fat drum before the fist, a hammer standing up behind it, a wooden
+ * grip raked down and back). The pistol's cut (weaponVariant "revolver"), in the gun's length L = .long of his height: barrel .bore of L across from the
+ * drum to the mouth; drum .drum of L across, .drumLong of L along, its back at the fist; frame .tail of L behind the fist; hammer .hammer of L tall;
+ * grip .grip of L, raked .gripRake. Dark steel the shade of the reference, not the pistol's pale silver.
+ */
+const REVOLVER = {
+  long: 0.36, bore: 0.075, drum: 0.2, drumLong: 0.18, drumSides: 6, tail: 0.1, over: 0.15, hammer: 0.1, grip: 0.36, gripRake: 0.55, gripWide: 0.1,
+  steel: new Color3(0.2, 0.2, 0.22), glow: 0.05, wood: new Color3(0.4, 0.2, 0.09),
+};
+/*
  * [S] 425 the Blunderbuss (pirate.blunderbuss.red.png: a short heavy gun held low across the belly in both hands, a deep tan-brown stock, a pale grey
  * octagonal barrel and a wide flared bell with a dark mouth; card Main Hand Blunderbuss, Two-handed). In the man's standing heights (fit.stand): .long
  * from butt to muzzle, the fist .grip of it from the butt; barrel .bore of the gun across; the bell the front .bell of it flaring to .mouth of the bore;
@@ -4520,6 +4531,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "flintlock": {
       // [S] 423 the flintlock pistol, built to the spec at PISTOL: the fist at the origin on the grip, the barrel above it along +y
       // [S] 427 ...or the Captain's dragon pistol (DRAGON_PISTOL)
+      if (variant === "revolver") return buildRevolver(scene, fit.stand);
       const dragon = variant === "dragon_pistol";
       const P = dragon ? DRAGON_PISTOL : PISTOL, M = MATCHLOCK;
       const L = fit.stand * P.long;
@@ -5771,6 +5783,67 @@ const SNAKE_BOW = {
   long: 0.95, thick: 0.06, taper: 0.55, bow: 0.07, panelFrom: 0.18, panelTo: 0.88, panel: 0.8, grip: 0.1, head: 0.075, hold: 1.1,
   green: new Color3(0.24, 0.47, 0.26), white: new Color3(0.9, 0.92, 0.88), wrap: new Color3(0.42, 0.26, 0.14), tongue: new Color3(0.85, 0.12, 0.1),
 };
+/** [S] 445 the revolver (REVOLVER): the fist at the origin on the grip, the barrel along +y above it (-z), as the flintlock is held. */
+function buildRevolver(scene: Scene, stand: number): Mesh {
+  const R = REVOLVER;
+  const L = stand * R.long;
+  const steel = mat(scene, R.steel, R.glow, "cloth");
+  const wood = mat(scene, R.wood, 0.08, "cloth");
+  const up = -R.over * L, bore = R.bore * L, back = -R.tail * L;
+  const holder = new Mesh("flintlock", scene);
+  // The grip: a wooden slab from the fist down and back, a rounded butt at its foot
+  const grip = MeshBuilder.CreateBox("revolverGrip", { width: R.gripWide * L, height: R.gripWide * 1.3 * L, depth: R.grip * L }, scene);
+  grip.setPivotPoint(new Vector3(0, 0, -R.grip * L * 0.5));
+  grip.position.set(0, back * 0.5, up + R.grip * L * 0.5);
+  grip.rotation.x = R.gripRake;
+  grip.material = wood;
+  grip.parent = holder;
+  const butt = MeshBuilder.CreateCylinder("revolverButt", { height: R.gripWide * 1.1 * L, diameter: R.gripWide * 1.5 * L, tessellation: 8 }, scene);
+  butt.rotation.z = Math.PI / 2;
+  butt.position.set(0, 0, R.grip * L * 0.5);
+  butt.material = wood;
+  butt.parent = grip;
+  // The frame behind the drum, from the grip's top to the drum's back
+  const frame = MeshBuilder.CreateBox("revolverFrame", { width: bore * 1.1, height: -back, depth: R.drum * L * 0.9 }, scene);
+  frame.position.set(0, back * 0.5, up + R.drum * L * 0.15);
+  frame.material = steel;
+  frame.parent = holder;
+  // The hammer standing up and back off the frame's tail
+  const hammer = MeshBuilder.CreateBox("revolverHammer", { width: bore * 0.6, height: bore * 0.8, depth: R.hammer * L }, scene);
+  hammer.position.set(0, back, up - R.drum * L * 0.45);
+  hammer.rotation.x = 0.6;
+  hammer.material = steel;
+  hammer.parent = holder;
+  // The fat drum before the fist, six flat sides along the barrel
+  const drum = MeshBuilder.CreateCylinder("revolverDrum", { height: R.drumLong * L, diameter: R.drum * L, tessellation: R.drumSides }, scene);
+  drum.position.set(0, R.drumLong * L * 0.5, up);
+  drum.material = steel;
+  drum.convertToFlatShadedMesh();
+  drum.parent = holder;
+  // The long thin barrel from the drum to the mouth, and the ejector rod under it
+  const barrelLong = L * (1 - R.tail - R.drumLong);
+  const barrel = MeshBuilder.CreateCylinder("revolverBarrel", { height: barrelLong, diameter: bore, tessellation: 8 }, scene);
+  barrel.position.set(0, R.drumLong * L + barrelLong * 0.5, up);
+  barrel.material = steel;
+  barrel.convertToFlatShadedMesh();
+  barrel.parent = holder;
+  const rod = MeshBuilder.CreateCylinder("revolverRod", { height: barrelLong * 0.45, diameter: bore * 0.55, tessellation: 6 }, scene);
+  rod.position.set(0, R.drumLong * L + barrelLong * 0.225, up + bore * 0.8);
+  rod.material = steel;
+  rod.parent = holder;
+  // The trigger guard: a small ring under the frame
+  const guard = MeshBuilder.CreateTorus("revolverGuard", { diameter: R.gripWide * 1.4 * L, thickness: bore * 0.3, tessellation: 10 }, scene);
+  guard.rotation.z = Math.PI / 2;
+  guard.position.set(0, back * 0.2 + R.drumLong * L * 0.3, up + R.drum * L * 0.55);
+  guard.material = steel;
+  guard.parent = holder;
+  // The mouth, where the shot's smoke leaves (RuntimeUnit.getSmokeOrigin)
+  const muzzle = new TransformNode("musketMuzzle", scene);
+  muzzle.position.set(0, R.drumLong * L + barrelLong + 0.02 * L, up);
+  muzzle.parent = holder;
+  return holder;
+}
+
 function buildSnakeBow(scene: Scene, s: number, stand: number): Mesh {
   const B = SNAKE_BOW;
   const L = stand * B.long;
