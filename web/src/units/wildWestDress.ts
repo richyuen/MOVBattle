@@ -439,6 +439,44 @@ export function minerOveralls(scene: Scene, body: ArticulatedBody, teamColor: Co
 }
 
 /*
+ * [S] 452 the Quick Draw's team vest (CONFIRM 451 quick_draw a.1: "vest a desaturated brown (~115,83,75), not the team red the pants show - TABS:
+ * buttoned team-colour vest, a saturated crimson matching the hat and pants"; card Appearance "a buttoned team color vest"; wild_west.quick_draw.red.png:
+ * the vest the hat's crimson, four small grey buttons down its front from the collar V to the belt). The secret_bandit body cloth blends the team colour
+ * toward brown and the clothed recolour shifts it warm (LESSONS 449), so every body-cloth mesh but the face and hands wears an explicit team cloth,
+ * the team colour times QUICK_DRAW_VEST.shade, self-lit .glow; the tunic hem below the belt takes it too (unitFactory). Buttons: .buttons grey studs
+ * .button of the trunk's width across, down the front's middle from .from to .to of the trunk's height (top 0), .proud of its depth off it.
+ */
+const QUICK_DRAW_VEST = { shade: 0.9, glow: 0.12, buttons: 4, button: 0.07, from: 0.4, to: 0.88, proud: 0.05, buttonColor: new Color3(0.45, 0.45, 0.47) };
+
+/** The Quick Draw's team cloth (spec at QUICK_DRAW_VEST); cached by colour, so the hung tunic hem shares it. */
+export function quickDrawCloth(teamColor: Color3): Material {
+  const c = teamColor.scale(QUICK_DRAW_VEST.shade);
+  return getMaterialFactory().get("cloth", c, { emissive: c.scale(QUICK_DRAW_VEST.glow) });
+}
+
+/** The Quick Draw's buttoned team vest: the body cloth swapped for team cloth, grey buttons down the front (spec at QUICK_DRAW_VEST). */
+export function quickDrawVest(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const V = QUICK_DRAW_VEST;
+  const cloth = quickDrawCloth(teamColor);
+  for (const m of body.allMeshes) if (m.material === body.bodyMaterial && m !== body.headMesh && !/Hand/.test(m.name)) m.material = cloth;
+  const grey = getMaterialFactory().get("cloth", V.buttonColor, { emissive: V.buttonColor.scale(0.15) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  for (let i = 0; i < V.buttons; i++) {
+    const t = V.from + (V.to - V.from) * (i / Math.max(1, V.buttons - 1));
+    const b = MeshBuilder.CreateBox("quickDrawButton", { width: W * V.button, height: W * V.button, depth: D * V.proud }, scene);
+    b.position.set(cx, cy + H / 2 - H * t, cz + D / 2 + D * V.proud / 2);
+    b.rotation.copyFrom(tm.rotation);
+    b.material = grey;
+    b.parent = tm.parent;
+    out.push(b);
+  }
+  return out;
+}
+
+/*
  * [S] 452 the Dynamite Thrower's skirt (critic 449-451 dynamite_thrower a.2: "short dark tunic hem at the hip, no stripes - TABS: knee-length team skirt
  * with vertical gold stripes and a gold hem band"; card Appearance "a team color skirt with gold lines on it"; wild_west.dynamite_thrower.red.png: a team
  * skirt from the waist to just above the knee, a little flared, pale gold stripes running straight down it about a hand apart, a pale gold band round the

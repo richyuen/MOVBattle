@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawShirt, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawCloth, quickDrawShirt, quickDrawVest, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -706,6 +706,8 @@ export class UnitFactory {
     if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...quickDrawShirt(this._scene, body));
     // [S] 451 a dark gun belt, a holster on the gun hip and a slanting ammo pouch on the other (wildWestDress GUN_BELT)
     if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...gunBelt(this._scene, body, [1], true));
+    // [S] 452 the Quick Draw's buttoned team vest: team cloth for the bandit-tinted body cloth, grey buttons (wildWestDress QUICK_DRAW_VEST)
+    if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...quickDrawVest(this._scene, body, teamColor));
     // [S] 451 the Deadeye's off-white puffy shirt: full sleeves to the wrist, collar V (wildWestDress DEADEYE_SHIRT)
     if (definition.id === "wild_west.deadeye" && !shouldUseVehicleBody) propMeshes.push(...deadeyeShirt(this._scene, body));
     // [S] 448 the Miner's overalls: lighter team shirt, dark braces, team trousers' waist (wildWestDress MINER_OVERALLS)
@@ -983,6 +985,9 @@ export class UnitFactory {
               : definition.id === "wild_west.gunslinger"
                 ? hangSkirt(this._scene, body, "tunicSkirt", GUNSLINGER_JACKET.skirt, GUNSLINGER_JACKET.skirtFlare, gunslingerSuit(teamColor))
               // [S] 452 the Dynamite Thrower's team skirt to the knee (wildWestDress DYNAMITE_SKIRT; gold stripes and hem band below)
+              // [S] 452 the Quick Draw's tunic hem in his team cloth (wildWestDress QUICK_DRAW_VEST)
+              : definition.id === "wild_west.quick_draw"
+                ? hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, quickDrawCloth(teamColor))
               : definition.id === "wild_west.dynamite_thrower"
                 ? hangSkirt(this._scene, body, "tunicSkirt", DYNAMITE_SKIRT.long, DYNAMITE_SKIRT.flare, dynamiteSkirtCloth(teamColor))
               : definition.id === "viking.ice_archer"
