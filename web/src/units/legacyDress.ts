@@ -551,3 +551,31 @@ export function flagJacket(scene: Scene, body: ArticulatedBody, teamColor: Color
   return out;
 }
 
+/*
+ * [S] 461 the Peasant's pants, socks and shoes (critic 460 a.6: "lower legs, team legs to the feet - TABS: cuffed team pants above tan socks and brown
+ * shoes"; legacy.peasant.red.png: team pants from the dress hem to mid-shin, a turned cuff a little wider at their foot, under it a tan sock down into a
+ * low brown shoe). PEASANT_LEGS in the shin's box: the pant leg a team shell .pantOut round from the knee to .pantTo, a cuff .cuffOut round over
+ * .cuff of the shin above .pantTo, a tan sock .sockOut round from .pantTo to .sockTo; each foot block in brown leather. Self-lit .glow.
+ */
+const PEASANT_LEGS = { pantOut: 1.35, pantTo: 0.55, cuff: 0.1, cuffOut: 1.55, sockOut: 1.2, sockTo: 1.0, shade: 0.8, tan: new Color3(0.8, 0.6, 0.35), brown: new Color3(0.3, 0.16, 0.08), glow: 0.14 };
+
+/** The Peasant's cuffed team pants to mid-shin, tan socks and brown shoes (spec at PEASANT_LEGS). */
+export function peasantLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const P = PEASANT_LEGS;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(P.shade);
+  const pants = mf.get("cloth", t, { emissive: t.scale(P.glow) });
+  const tan = mf.get("cloth", P.tan, { emissive: P.tan.scale(P.glow) });
+  const brown = mf.get("cloth", P.brown, { emissive: P.brown.scale(P.glow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "peasantPants", shin, 0, P.pantTo, P.pantOut, pants));
+    out.push(limbShell(scene, "peasantPantsCuff", shin, P.pantTo - P.cuff, P.pantTo, P.cuffOut, pants));
+    out.push(limbShell(scene, "peasantSock", shin, P.pantTo, P.sockTo, P.sockOut, tan));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = brown;
+  }
+  return out;
+}
+
