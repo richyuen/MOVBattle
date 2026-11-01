@@ -304,6 +304,13 @@ const BULLET_RAIN = { units: new Set(["wild_west.gunslinger"]), hold: 1.1, raise
  * flash and puff (.flash of a pistol's) and a ball streaking to the man's chest (spawnPistolShot), each dealing 1/.shots of the attack's harm (times
  * .damage) and push (times .push). It replaces the one-tick burst whose six stacked muzzle clouds read as one white ball. Logged "burst" at the first.
  */
+/**
+ * [S] 447 the Miner's exploding pick (critic 446 miner c.1: "AoE blast: target knocked back, no burst at the impact - TABS: the pick strike explodes,
+ * radius 2.5, throws rocks"; card Weapons Pick Axe: explosion radius 2.5; Characteristics "deals AoE damage with its pick"; wild_west.miner.png).
+ * When his pick comes down on the man (the landed blow), it blows up there: a fireball with dark rock clods thrown clear (spawnExplosionBurst at
+ * .scale) on the ground where the man stands, and the blow's harm reaches every foe within .radius m. Logged "blast" at the blow.
+ */
+const MINER_BLAST = { units: new Set(["wild_west.miner"]), radius: 2.5, scale: 0.85 };
 const QUICK_FAN = { units: new Set(["wild_west.quick_draw"]), shots: 6, every: 0.2, flash: 0.6, damage: 1.18, push: 1.2 };
 const VAMPIRE_LATCH = { round: 0.7, off: 0.75, up: 0.2, first: 0.3, every: 0.35, afterDeath: 0.5, blood: 12 };
 /**
@@ -3167,6 +3174,13 @@ export class SimulationSystem {
     if (dwells) target.holdFlinch(BLOW_DWELL);
     // ...and he buckles under it on this same step (struck-man buckle, r2c3: knees give, head down, arms out of his guard) till the throw takes him
     if (dwells) target.animator.buckleUnder();
+    // [S] 447 the Miner's pick blows up where it lands (MINER_BLAST): its harm out to the explosion's radius
+    const blast = MINER_BLAST.units.has(attacker.definition.id);
+    if (blast) {
+      splashRadius = Math.max(splashRadius, MINER_BLAST.radius);
+      this.visualEffects?.spawnExplosionBurst(new Vector3(target.position.x, Math.max(0, target.position.y), target.position.z), MINER_BLAST.scale);
+      this._logAbility(attacker, "blast", now, target.position);
+    }
     if (!impaled) this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
     // A halfling's first blow that lands takes hold of the man (HALFLING_CLING)
     if (attacker.definition.id === "farmer.halfling" && !this._clings.has(attacker) && !attacker.isDead) {
