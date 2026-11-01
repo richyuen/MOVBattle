@@ -511,6 +511,9 @@ const SARISSA_KEEP = { near: 0.85, pace: 0.7 };
  */
 const HOP_BACK: Record<string, { afterLand?: number; close?: number; dist: number; rise: number; cooldown: number; kind: string }> = {
   "renaissance.halberd": { close: 0.75, dist: 1.9, rise: 2.6, cooldown: 3, kind: "dash_back" },
+  // [S] 464 the Boxer's Backwards Dodge (audit 457 boxer c.2: "missing: Backwards Dodge - TABS: backs away 1-5 on a 3 s cooldown"; card Weapons ability):
+  // .afterLand s after a jab lands he hops back off the man, still facing him, .dist m, on the card's 3 s cooldown
+  "legacy.boxer": { afterLand: 0.2, dist: 2.6, rise: 2.2, cooldown: 3, kind: "dodge" },
 };
 /*
  * [S] Fencer recover (370; card Characteristics "thrusts forward to attack with its foil then steps back"; renaissance.fencer.png; critic 369: the 369
