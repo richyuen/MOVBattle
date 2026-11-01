@@ -671,3 +671,15 @@ export function blowdarterHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   put(MeshBuilder.CreateBox("blowdarterBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, midY, c.z - e.z * B.back + t / 2);
   return out;
 }
+
+/*
+ * [P] 463 the Pike's plume tan (critic 462 pike a.1: "the plume over his brim is team red, not tan"; legacy.pike.jpg, .red.png: a tan feather plume
+ * on the team hat). The cavalier hat's plume lumps (propBuilder featherClump, named featherHatPlume) take PIKE_PLUME.color, self-lit .glow.
+ */
+const PIKE_PLUME = { color: new Color3(1.0, 0.72, 0.32), glow: 0.08 };
+
+/** Recolours the Pike's cavalier plume tan (spec at PIKE_PLUME); the hat is already on the head. */
+export function pikePlume(body: ArticulatedBody): void {
+  const tan = getMaterialFactory().get("cloth", PIKE_PLUME.color, { emissiveIntensity: PIKE_PLUME.glow });
+  for (const m of body.root.getChildMeshes(false, (n) => n.name === "featherHatPlume")) m.material = tan;
+}
