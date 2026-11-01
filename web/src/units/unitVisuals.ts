@@ -21,7 +21,7 @@ export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap" | "peak_hat"
-  | "miner_hat"
+  | "miner_hat" | "dynamite_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
@@ -639,7 +639,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ WILD WEST ═══════════════════════
   "wild_west.dynamite_thrower": vis(
-    { scale: 1.0, bulk: 0.96 }, "dynamite", "peak_hat", "none", "none", "#B75C21", undefined, {
+    // [R] 456 her peaked hat lifted off the eyes (wildWestDress DYNAMITE_LOOK)
+    { scale: 1.0, bulk: 0.96 }, "dynamite", "dynamite_hat", "none", "none", "#B75C21", undefined, {
       // [S] 452 her throw on the card's 1 s warm-up (THROW_WINDUP_CAP), not 36% of her 99 s cooldown
       throwWindupCap: 1,
       posePreset: "support",

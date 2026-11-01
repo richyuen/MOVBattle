@@ -114,9 +114,10 @@ export function buildFlatHat(scene: Scene, W: number, H: number, seat: number, u
  */
 const PEAK_HAT = { sides: 8, crown: 1.12, brim: 2.25, slope: 0.3, peak: 0.22, tall: 0.6, shade: 0.9, glow: 0.12 };
 
-/** The team peaked hat with a sloped lampshade brim (spec at PEAK_HAT), in the hat's units; `seat` under the head top. Returns the brim. */
-export function buildPeakHat(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
+/** The team peaked hat with a sloped lampshade brim (spec at PEAK_HAT), in the hat's units; `seat` under the head top, raised `lift` H. Returns the brim. */
+export function buildPeakHat(scene: Scene, W: number, H: number, seatAt: number, unit: number, teamColor?: Color3, lift = 0): Mesh {
   const P = PEAK_HAT;
+  const seat = seatAt + lift * H;
   const u = (v: number) => v / unit;
   const team = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(P.shade);
   const felt = getMaterialFactory().get("cloth", team, { emissive: team.scale(P.glow) });
@@ -1147,5 +1148,46 @@ export function lassoShirt(scene: Scene, body: ArticulatedBody, teamColor: Color
   for (const m of body.allMeshes) if (m.material === body.bodyMaterial && m !== body.headMesh && !/Hand/.test(m.name)) m.material = cloth;
   const out: Mesh[] = [];
   for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "lassoSleeve", arm, 0, S.sleeveTo, S.out, dark));
+  return out;
+}
+
+/*
+ * [R] 456 the Dynamite Thrower's look (plateau: CONFIRM 454 a: "team shirt olive-brown", "bare skin arms" - cleared 455 by DYNAMITE_SHIRT; CONFIRM 455
+ * a.1: "hat brim seated down over the eyes, face reads blank - TABS: conical hat sits above the face, two big bead eyes clearly visible under the brim";
+ * a.2: "neck bandanna absent - TABS: a lighter team-colour bandanna triangle over the collar and upper chest"; card Appearance "a bandanna around its
+ * neck"). Spec read off wild_west.dynamite_thrower.blue.png and the faction render: the peaked hat's brim sits on the forehead, its lower rim level with
+ * the eye tops, so both bead eyes show whole under it from the front three-quarter (DYNAMITE_LOOK.hatLift H over the peak hat's seat, unitVisuals
+ * hat "dynamite_hat"); round the neck a scarf in the team colour lifted .lift toward white: a collar band .band H tall round the trunk's top, .collar of its
+ * width and depth, and on the chest a triangle from .wide W across at the collar down to a point .long H down, .proud D off the shirt. Self-lit .glow.
+ * The shirt, sleeves, braid, skirt and boots stay as they are (DYNAMITE_SHIRT, WESTERN_BRAID, DYNAMITE_SKIRT, DYNAMITE_BOOTS).
+ */
+export const DYNAMITE_LOOK = { hatLift: 0.24, lift: 0.45, band: 0.1, collar: 1.06, wide: 0.92, long: 0.42, proud: 0.07, glow: 0.15 };
+
+/** The Dynamite Thrower's lighter team bandanna: a collar band and a triangle over the upper chest (spec at DYNAMITE_LOOK). */
+export function dynamiteBandanna(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const L = DYNAMITE_LOOK;
+  const c = Color3.Lerp(teamColor, new Color3(1, 1, 1), L.lift);
+  const scarf = getMaterialFactory().get("cloth", c, { emissive: c.scale(L.glow) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const topY = cy + H / 2;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, y: number, z: number): void => {
+    m.position.set(cx, y, z);
+    m.rotation.copyFrom(tm.rotation);
+    m.material = scarf;
+    m.parent = tm.parent;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  };
+  const band = MeshBuilder.CreateBox("dynamiteScarfBand", { width: W * L.collar * 0.7, height: H * L.band, depth: D * L.collar }, scene);
+  put(band, topY - H * L.band * 0.4, cz);
+  const long = H * L.long;
+  const tri = MeshBuilder.CreateCylinder("dynamiteScarf", { height: long, diameterTop: W * L.wide * Math.SQRT2, diameterBottom: 0.002, tessellation: 4 }, scene);
+  tri.rotation.y = Math.PI / 4;
+  tri.bakeCurrentTransformIntoVertices();
+  tri.scaling.z = (D * L.proud) / (W * L.wide);
+  put(tri, topY - long / 2, cz + D / 2 + D * L.proud / 2);
   return out;
 }
