@@ -486,6 +486,31 @@ export function dynamiteBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 453 the Gunslinger's shoes (CONFIRM 448 gunslinger a.4: "chunky blue-grey cuffed boots in the trouser tone - TABS: small black shoes under straight
+ * trouser legs"; card Appearance "black shoes"; wild_west.gunslinger.blue.png: the trouser leg runs straight to the ankle, under it a small low black shoe,
+ * no shaft). GUNSLINGER_SHOES: each foot block in black leather, cut to .foot of its size (it read as a chunky boot in the suit cloth), and a low shoe
+ * top round the ankle, a 6-sided ring .out of the shin's half-width from .from to .to of the shin's length, in the same leather. Self-lit .glow.
+ */
+const GUNSLINGER_SHOES = { foot: 0.82, from: 0.9, to: 1.04, out: 1.12, color: new Color3(0.05, 0.045, 0.05), glow: 0.1 };
+
+/** Small black shoes on both feet (spec at GUNSLINGER_SHOES). */
+export function gunslingerShoes(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = GUNSLINGER_SHOES;
+  const leather = getMaterialFactory().get("cloth", S.color, { emissive: S.color.scale(S.glow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "gunslingerShoe", shin, S.from, S.to, S.out, leather));
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) {
+      if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
+      foot.material = leather;
+      foot.scaling.x *= S.foot;
+      foot.scaling.y *= S.foot;
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 452 the Quick Draw's team vest (CONFIRM 451 quick_draw a.1: "vest a desaturated brown (~115,83,75), not the team red the pants show - TABS:
  * buttoned team-colour vest, a saturated crimson matching the hat and pants"; card Appearance "a buttoned team color vest"; wild_west.quick_draw.red.png:
  * the vest the hat's crimson, four small grey buttons down its front from the collar V to the belt). The secret_bandit body cloth blends the team colour
