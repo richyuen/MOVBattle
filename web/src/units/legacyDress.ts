@@ -428,7 +428,7 @@ export function boxerShorts(scene: Scene, body: ArticulatedBody, teamColor: Colo
  * faceted lumps on an ellipse .out of the trunk's half width and depth at .at of H/2 under its middle, each .lump W long along the rope and .fat of
  * that thick, leaning .twist rad by turns. Cream .cream, self-lit .glow (lit cream in shade reads grey).
  */
-const PEASANT_BELT = { lumps: 12, out: 1.12, at: -0.42, lump: 0.36, fat: 0.42, twist: 0.6, cream: new Color3(1, 0.95, 0.8), glow: 0.32 };
+const PEASANT_BELT = { lumps: 14, out: 1.12, at: -0.42, lump: 0.5, fat: 0.8, twist: 0.6, cream: new Color3(1, 0.95, 0.8), glow: 0.32 };
 
 /** The Peasant's cream braided rope belt round the dress's waist (spec at PEASANT_BELT). */
 export function peasantBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
