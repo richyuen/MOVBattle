@@ -1,7 +1,7 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteBandanna, dynamiteBoots, dynamiteShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerShoes, gunslingerSideburns, gunslingerSuit, lassoMoustache, lassoShirt, lassoShirtCloth, minerBoots, minerLegs, minerMoustache, minerSleeves, minerOveralls, quickDrawShirt, quickDrawVest, westernBraid, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
-import { bearerRing, peasantDress, peasantDressCloth, peasantDressPoint, poacherHair, PEASANT_DRESS } from "./legacyDress";
+import { bearerRing, peasantDress, peasantDressCloth, peasantDressPoint, poacherCoat, poacherCoatCloth, poacherHair, PEASANT_DRESS, POACHER_COAT } from "./legacyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -726,6 +726,8 @@ export class UnitFactory {
     if (definition.id === "wild_west.dynamite_thrower" && !shouldUseVehicleBody) propMeshes.push(...westernBraid(this._scene, body, -1));
     // [S] 458 the Poacher's pale side locks and braids under the brim (legacyDress POACHER_HAIR)
     if (definition.id === "legacy.poacher" && !shouldUseVehicleBody) propMeshes.push(...poacherHair(this._scene, body));
+    // [S] 459 the Poacher's brown sleeveless coat and white fur collar (legacyDress POACHER_COAT; its skirt hangs below)
+    if (definition.id === "legacy.poacher" && !shouldUseVehicleBody) propMeshes.push(...poacherCoat(this._scene, body));
     // [S] 459 the Peasant's team dress body and short sleeves (legacyDress PEASANT_DRESS; its skirt hangs below)
     if (definition.id === "legacy.peasant" && !shouldUseVehicleBody) propMeshes.push(...peasantDress(this._scene, body, teamColor));
     // [S] 459 the Flag and Banner Bearers' team aura ring on the ground (legacyDress BEARER_RING)
@@ -1024,6 +1026,9 @@ export class UnitFactory {
               : definition.id === "wild_west.lasso"
                 ? hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, lassoShirtCloth(teamColor))
               // [S] 459 the Peasant's dress skirt to the knee in the dress cloth, a point hung on its front (legacyDress PEASANT_DRESS)
+              // [S] 459 the Poacher's coat skirt to mid-thigh in its leather (legacyDress POACHER_COAT)
+              : definition.id === "legacy.poacher"
+                ? hangSkirt(this._scene, body, "tunicSkirt", POACHER_COAT.long, POACHER_COAT.flare, poacherCoatCloth())
               : definition.id === "legacy.peasant"
                 ? hangSkirt(this._scene, body, "tunicSkirt", PEASANT_DRESS.long, PEASANT_DRESS.flare, peasantDressCloth(teamColor))
               : definition.id === "viking.ice_archer"

@@ -219,3 +219,42 @@ export function peasantDressPoint(scene: Scene, body: ArticulatedBody, skirt: Me
   return [flap];
 }
 
+/*
+ * [S] 459 the Poacher's coat (audit 457 a.3: "torso, plain team body - TABS: a brown sleeveless coat with a white fur collar"; legacy.poacher.red.png:
+ * a brown leather jerkin over the team body, sleeveless so the team arms show, a shaggy white fur collar round the neck and shoulders, the coat's skirt
+ * to mid-thigh). POACHER_COAT: the trunk, its yoke and the pelvis in brown leather .leather; the coat skirt hung by unitFactory in the same leather
+ * (.long, .flare); a fur collar of .tufts white faceted lumps .tuft W across ringing the trunk's top at .ring of its width and depth. Self-lit .glow.
+ */
+export const POACHER_COAT = { leather: new Color3(0.36, 0.2, 0.1), fur: new Color3(0.95, 0.94, 0.9), glow: 0.14, long: 0.6, flare: 1.45, tufts: 10, tuft: 0.24, ring: 0.5, furGlow: 0.25 };
+
+/** The Poacher's leather (spec at POACHER_COAT). */
+export function poacherCoatCloth(): Material {
+  const P = POACHER_COAT;
+  return getMaterialFactory().get("cloth", P.leather, { emissive: P.leather.scale(P.glow) });
+}
+
+/** The Poacher's brown sleeveless coat body and white fur collar (spec at POACHER_COAT); the coat skirt is hung by unitFactory. */
+export function poacherCoat(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = POACHER_COAT;
+  const leather = poacherCoatCloth();
+  const fur = getMaterialFactory().get("cloth", P.fur, { emissive: P.fur.scale(P.furGlow) });
+  const tm = body.torsoMesh;
+  tm.material = leather;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = leather;
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = leather;
+  const tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, top = tm.position.y + (tb.center.y + tb.extendSize.y) * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  for (let k = 0; k < P.tufts; k++) {
+    const a = (k / P.tufts) * Math.PI * 2;
+    const tuft = MeshBuilder.CreateIcoSphere("poacherFur", { radius: P.tuft * W / 2, subdivisions: 1, flat: true }, scene);
+    tuft.position.set(cx + Math.sin(a) * W * P.ring, top - H * 0.04, cz + Math.cos(a) * D * P.ring * 1.15);
+    tuft.scaling.set(1, 0.75, 1);
+    tuft.rotation.set(a * 0.7, a, 0);
+    tuft.material = fur;
+    tuft.parent = tm.parent;
+    out.push(tuft);
+  }
+  return out;
+}
