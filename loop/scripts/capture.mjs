@@ -684,7 +684,10 @@ async function main() {
         // A support unit's enemy stands far off: frame the unit and the ally beside it; a ranged unit: the unit and its missile's first metres
         // [evidence 425] the blunderbuss stands 4.5 m off (engageRange 7.5): the midpoint frame (radius 5.5) put both men past its edges and his
         // windup/release/flight showed an empty field (audit 422 c.1, c.3): he is framed as a ranged unit, the man and his shot's first metres
-        const far = support ? 1 : d >= 6 || id === "pirate.blunderbuss" ? 3 : 0;
+        // [evidence 461] a bearer's aura lies on the ally inside his ring (BEARER_AURA: a ring at the ally's feet, haste or stay): his motion shots
+        // frame that ally head to foot, the feet and aura ring in frame (critic 460 flag_bearer c.1, banner_bearer c.1: the ally's feet were cut off)
+        const bearer = id === "legacy.flag_bearer" || id === "legacy.banner_bearer";
+        const far = bearer ? 2 : support ? 1 : d >= 6 || id === "pirate.blunderbuss" ? 3 : 0;
         await take(`unit_${id}_idle`, null, 1);
         if (release) {
           // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
