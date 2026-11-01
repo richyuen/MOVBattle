@@ -924,6 +924,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "iconic_quick_draw":
       // [S] 445 one revolver, the off hand empty (card Off Hand N/A; wild_west.quick_draw.red.png; audit 444 b.1)
       return vis({ scale: 1.08, bulk: 0.94, armLength: 1.12 }, "flintlock", "captain_hat", "none", "cape", "#a56c34", undefined, {
+        // [S] 446 the gun is the long dark revolver (propBuilder REVOLVER; card "Colt Navy M1851 Revolver"; critic 445 b.2), not the flintlock cut
+        weaponVariant: "revolver",
         posePreset: "duelist", materialPreset: "secret_bandit", attachmentPreset: "quickdraw_smoke",
         stateVariants: { attacking: ["quickdraw_smoke"] },
       });
