@@ -690,6 +690,13 @@ const HARPOON_REST = { drop: 0.27, ahead: 0.06, out: 0.09, dip: 0.7 };
  * tilt .tilt, a short .stride, no crouch, chest lean .lean, chin .chin (_buildIdlePose).
  */
 const QUEEN_UPRIGHT = { tilt: 0.07, stride: 0.08, lean: 0.02, chin: 0 };
+/*
+ * [S] 452 the Gunslinger's rest (critic 449-451 gunslinger a.2: "both arms held straight out to the sides at shoulder height, scarecrow-like - TABS: the
+ * arms hang down, a little out from the hips, with the revolvers held low beside the thighs"; wild_west.gunslinger.red.png: each fist by the top of its
+ * thigh, a hand out from the hip, the revolvers pointing forward and down about 45 deg). Standing or walking, _aimPistol seats each fist .out of his
+ * height out from its shoulder, .ahead before it and .drop below it, the barrel tipped .dip rad below level; firing and Bullet Rain keep their own holds.
+ */
+const GUNSLINGER_REST = { out: 0.07, ahead: 0.06, drop: 0.36, dip: 0.75 };
 // [R] 451 the Cactus's upright idle stance (see _buildIdlePose): hip tilt, stride, chest lean (rad)
 const CACTUS_UPRIGHT = { tilt: 0.05, stride: 0.06, lean: 0.04 };
 const THROW_LET_GO = 0.5;
@@ -3789,12 +3796,15 @@ export class ProceduralAnimator {
     const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
     const height = b.metrics.overallHeight * b.root.scaling.y;
     const kick = firing ? PISTOL_AIM.kick * Math.min(1, this._attackTimer * 30) * Math.exp(-this._attackTimer * MUSKET_AIM.settle) : 0;
+    // [S] 452 the Gunslinger at rest (GUNSLINGER_REST): off the attack his twin revolvers hang low beside his thighs, barrels tipped down ahead
+    const lowRest = (this._state === AnimState.Idle || this._state === AnimState.Walking) && Boolean(gun?.node.getChildren().some((c) => c.name === "revolverTwin"));
+    const seat = lowRest ? GUNSLINGER_REST : PISTOL_AIM;
     // one arm: the fist solved onto the seat off its shoulder, the pistol's barrel (+y) along his front and its grip (+z) down
     const hold = (shoulderJ: TransformNode, elbowJ: TransformNode, handJ: TransformNode, g: { node: Mesh; rest: Quaternion }, kicked: number): void => {
       shoulderJ.computeWorldMatrix(true);
       const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(shoulderJ.position.x) || 1, 0, 0), rootM));
-      const fist = shoulderJ.getAbsolutePosition().add(outward.scale(PISTOL_AIM.out * height))
-        .addInPlace(fwd.scale(PISTOL_AIM.ahead * height)).addInPlace(new Vector3(0, -PISTOL_AIM.drop * height, 0));
+      const fist = shoulderJ.getAbsolutePosition().add(outward.scale(seat.out * height))
+        .addInPlace(fwd.scale(seat.ahead * height)).addInPlace(new Vector3(0, -seat.drop * height, 0));
       this._armTo(shoulderJ, elbowJ, handJ, fist, w, 2);
       const y = fwd.scale(Math.cos(kicked)).addInPlace(new Vector3(0, Math.sin(kicked), 0)).normalize();
       const z = Vector3.Cross(y, outward).normalize();
@@ -3809,8 +3819,8 @@ export class ProceduralAnimator {
       handRot.toRotationMatrix(hand);
       g.node.rotationQuaternion = Quaternion.Slerp(g.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
     };
-    if (gun) hold(b.rightShoulder, b.rightElbow, b.rightHand, gun, kick);
-    if (this._offPistol) hold(b.leftShoulder, b.leftElbow, b.leftHand, this._offPistol, gun ? 0 : kick);
+    if (gun) hold(b.rightShoulder, b.rightElbow, b.rightHand, gun, lowRest ? -GUNSLINGER_REST.dip : kick);
+    if (this._offPistol) hold(b.leftShoulder, b.leftElbow, b.leftHand, this._offPistol, lowRest ? -GUNSLINGER_REST.dip : gun ? 0 : kick);
     if (gun) this._aimWeight = Math.max(this._aimWeight, w);
   }
 
