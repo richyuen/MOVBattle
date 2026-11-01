@@ -2,6 +2,7 @@ import { Scene, Color3, Mesh, MeshBuilder, VertexBuffer, type Material } from "@
 import { getMaterialFactory } from "./materialFactory";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { limbBox, limbShell } from "./medievalDress";
+import { eyeSpanInHead } from "./dynastyDress";
 
 /*
  * Wild West dress (units/wild_west.*): per-unit hats, cloth, hair and ornaments. Sized off the body's own joints and meshes.
@@ -275,6 +276,40 @@ export function gunslingerJacket(scene: Scene, body: ArticulatedBody, teamColor:
  * W at its end .long H down; both .proud D off the shirt V; violet cloth (palette purple x .7), self-lit .glow.
  */
 const GUNSLINGER_TIE = { knot: 0.17, knotTall: 0.07, top: 0.15, foot: 0.24, long: 0.32, proud: 0.06, color: new Color3(0.42, 0.14, 0.63), glow: 0.12 };
+
+/*
+ * [S] 448 the Gunslinger's sideburns (critic 447 a.4: "sideburns: none - TABS: black bushy sideburns"; wild_west.gunslinger.red.png: a thick
+ * black-grey tuft down each side of the face from under the bowler's brim, beside the eyes, to the jaw, standing out from the cheek and ragged at its
+ * edge). GUNSLINGER_SIDEBURNS in the head's own box (e its half sizes, c its centre): on each side .lumps faceted lumps, each .lump of e.x across, in a
+ * column from the eyes' top (or .top of e.y over the centre) down to .foot of e.y under it, standing .out of e.x off the head's side, set .ahead of
+ * e.z forward, alternately .jag of e.z fore and aft so the edge reads bushy; near black, self-lit .glow.
+ */
+const GUNSLINGER_SIDEBURNS = { lumps: 4, lump: 0.42, top: 0.35, foot: -0.75, out: 0.12, ahead: 0.18, jag: 0.12, color: new Color3(0.06, 0.055, 0.05), glow: 0.1 };
+
+/** Black bushy sideburns down both cheeks (spec at GUNSLINGER_SIDEBURNS). */
+export function gunslingerSideburns(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = GUNSLINGER_SIDEBURNS;
+  const hair = getMaterialFactory().get("cloth", S.color, { emissive: S.color.scale(S.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const span = eyeSpanInHead(body);
+  const top = span ? span[1] : c.y + e.y * S.top, foot = c.y + e.y * S.foot;
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < S.lumps; i++) {
+      const t = i / (S.lumps - 1);
+      const r = e.x * S.lump * (1 - 0.25 * t);
+      const m = MeshBuilder.CreateIcoSphere("gunslingerSideburn", { radius: r, subdivisions: 1, flat: true }, scene);
+      m.scaling.set(0.6, 1.25, 1);
+      m.position.set(c.x + side * (e.x + e.x * S.out), top - (top - foot) * t, c.z + e.z * (S.ahead + (i % 2 ? S.jag : -S.jag)));
+      m.material = hair;
+      m.parent = head;
+      out.push(m);
+    }
+  }
+  return out;
+}
 
 /*
  * [S] 447 the Cactus's sleeves (critic 446 cactus a.1: "bare team arms shoulder to hand - TABS: thick green spiked cactus sleeves over the forearms";

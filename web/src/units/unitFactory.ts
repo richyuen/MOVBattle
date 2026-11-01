@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusSleeves, gunslingerJacket, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusSleeves, gunslingerJacket, gunslingerSideburns, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -702,6 +702,8 @@ export class UnitFactory {
     if (definition.id === "pirate.captain" && !shouldUseVehicleBody) propMeshes.push(...captainCoat(this._scene, body, teamColor));
     // [S] 446 the Gunslinger's team suit jacket: full sleeves, beige cuffs, shirt V and lapels; its skirts are the tunic skirt to mid-thigh (wildWestDress GUNSLINGER_JACKET)
     if (definition.id === "wild_west.gunslinger" && !shouldUseVehicleBody) propMeshes.push(...gunslingerJacket(this._scene, body, teamColor));
+    // [S] 448 black bushy sideburns (wildWestDress GUNSLINGER_SIDEBURNS)
+    if (definition.id === "wild_west.gunslinger" && !shouldUseVehicleBody) propMeshes.push(...gunslingerSideburns(this._scene, body));
     // [S] 432 the Captain's tan pants tucked into black knee boots with brass buckles (pirateDress CAPTAIN_LEGS)
     if (definition.id === "pirate.captain" && !shouldUseVehicleBody) propMeshes.push(...captainLegs(this._scene, body));
     // [S] 431 the Captain's long brown beard with a moustache under the eyes, run down onto his chest (pirateDress CAPTAIN_BEARD)
