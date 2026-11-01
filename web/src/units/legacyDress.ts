@@ -1,4 +1,5 @@
-import { Scene, Color3, Mesh, MeshBuilder } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, type Material } from "@babylonjs/core";
+import { limbShell } from "./medievalDress";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -174,3 +175,47 @@ export function buildBoxerHeadgear(scene: Scene, W: number, H: number, unit: num
   }
   return shell;
 }
+
+/*
+ * [S] 459 the Peasant's dress (audit 457 a.4: "torso, plain team body block - TABS: a knee-length team dress with short sleeves and a pointed hem";
+ * legacy.peasant.blue.png: a team tunic a shade darker than the skin from the neck to the knee, short sleeves to mid upper arm, the hem cut to a point in
+ * front). PEASANT_DRESS: the trunk and pelvis in the dress cloth (the team colour times .shade, self-lit .glow); a short sleeve .sleeveOut of each upper
+ * arm's half-width round it to .sleeveTo of its length; the skirt hung by unitFactory (hangSkirt .long of the hip-to-knee drop, flaring .flare) in the
+ * same cloth, and on its front a pointed flap: a 4-sided cone .point W wide hanging .pointLong H of the trunk below the skirt's foot.
+ */
+export const PEASANT_DRESS = { shade: 0.72, glow: 0.12, sleeveOut: 1.3, sleeveTo: 0.5, long: 1.0, flare: 1.35, point: 0.5, pointLong: 0.22, proud: 0.02 };
+
+/** The team dress cloth (spec at PEASANT_DRESS). */
+export function peasantDressCloth(teamColor: Color3): Material {
+  const c = teamColor.scale(PEASANT_DRESS.shade);
+  return getMaterialFactory().get("cloth", c, { emissive: c.scale(PEASANT_DRESS.glow) });
+}
+
+/** The Peasant's dress body and short sleeves (spec at PEASANT_DRESS); the skirt is hung by unitFactory, its point by peasantDressPoint. */
+export function peasantDress(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const P = PEASANT_DRESS;
+  const cloth = peasantDressCloth(teamColor);
+  body.torsoMesh.material = cloth;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = cloth;
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = cloth;
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "peasantSleeve", arm, 0, P.sleeveTo, P.sleeveOut, cloth));
+  return out;
+}
+
+/** The pointed front flap under the hung skirt's hem (spec at PEASANT_DRESS). */
+export function peasantDressPoint(scene: Scene, body: ArticulatedBody, skirt: Mesh, teamColor: Color3): Mesh[] {
+  const P = PEASANT_DRESS;
+  const bb = skirt.getBoundingInfo().boundingBox;
+  const tb = body.torsoMesh.getBoundingInfo().boundingBox;
+  const W = tb.extendSize.x * 2 * body.torsoMesh.scaling.x, H = tb.extendSize.y * 2 * body.torsoMesh.scaling.y;
+  const flap = MeshBuilder.CreateCylinder("peasantDressPoint", { height: P.pointLong * H, diameterTop: P.point * W, diameterBottom: 0, tessellation: 4 }, scene);
+  flap.scaling.z = 0.25;
+  flap.rotation.y = Math.PI / 4;
+  flap.position.set(bb.center.x, bb.minimum.y - P.pointLong * H / 2 + 0.01, bb.maximum.z - P.proud);
+  flap.material = peasantDressCloth(teamColor);
+  flap.parent = skirt;
+  flap.convertToFlatShadedMesh();
+  return [flap];
+}
+
