@@ -972,3 +972,127 @@ export function barrelWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 468 the Blowdarter's feathered scarf (audit 457 a.2: "chest, plain team torso - TABS: a tan feathered scarf in a V with white feathers hanging";
+ * legacy.blowdarter.blue.png, card Appearance "a feathery scarf-type accessory": a tan band from each shoulder meeting in a V on the chest, white feathers
+ * hanging from it). BLOWDARTER_SCARF on the trunk: two tan bands .band W wide and .proud D off the front, from the shoulders' tops to a point .deep H
+ * under the trunk's top; .feathers white blades .feather H long and .featherWide W across hanging from points along the V. Tan .tan, white .white.
+ */
+const BLOWDARTER_SCARF = { band: 0.2, proud: 0.12, deep: 0.5, feathers: 5, feather: 0.22, featherWide: 0.09, tan: new Color3(0.85, 0.55, 0.25), white: new Color3(0.95, 0.94, 0.9), glow: 0.2 };
+
+/** The Blowdarter's tan feathered V scarf with white feathers hanging (spec at BLOWDARTER_SCARF). */
+export function blowdarterScarf(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = BLOWDARTER_SCARF;
+  const mf = getMaterialFactory();
+  const tan = mf.get("cloth", B.tan, { emissive: B.tan.scale(B.glow) });
+  const white = mf.get("cloth", B.white, { emissive: B.white.scale(0.3) });
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const z = D / 2 + D * B.proud / 2, top = H / 2, tip = top - H * B.deep, half = W * 0.42;
+  const run = Math.hypot(half, top - tip), tilt = Math.atan2(half, top - tip);
+  for (const s of [-1, 1]) {
+    const band = lay(MeshBuilder.CreateBox("blowdarterScarf", { width: W * B.band, height: run, depth: D * B.proud }, scene), s * half / 2, (top + tip) / 2, z, tan);
+    band.rotation.z += s * tilt;
+  }
+  for (let k = 0; k < B.feathers; k++) {
+    const u = k / (B.feathers - 1) * 2 - 1;
+    const x = u * half * 0.8, y = tip + Math.abs(u) * (top - tip) * 0.8 - H * B.feather / 2;
+    const f = lay(MeshBuilder.CreateCylinder("blowdarterFeather", { height: H * B.feather, diameterTop: W * B.featherWide, diameterBottom: W * B.featherWide * 0.25, tessellation: 4 }, scene), x, y, z + D * 0.04, white);
+    f.scaling.z = 0.35;
+  }
+  return out;
+}
+
+/*
+ * [S] 468 the Blowdarter's pants (audit 457 a.3: "legs, team legs to the feet - TABS: brown knee-length pants with a fringed team-band hem";
+ * legacy.blowdarter.red.png: brown pants from the waist to the knee, a team band round each hem with a fringe of short tabs below it, bare team shins).
+ * BLOWDARTER_PANTS: the pelvis brown, a brown shell .out round each thigh to its end; a team band .bandOut round from .bandFrom to the end; .tabs team
+ * tabs .tab of the thigh long hanging from the band's foot round the leg. Brown .brown self-lit .glow.
+ */
+const BLOWDARTER_PANTS = { out: 1.4, bandFrom: 0.84, bandOut: 1.55, tabs: 6, tab: 0.16, brown: new Color3(0.42, 0.22, 0.1), glow: 0.14 };
+
+/** The Blowdarter's brown knee pants with a fringed team hem (spec at BLOWDARTER_PANTS). */
+export function blowdarterPants(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const P = BLOWDARTER_PANTS;
+  const mf = getMaterialFactory();
+  const brown = mf.get("cloth", P.brown, { emissive: P.brown.scale(P.glow) });
+  const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(0.12) });
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = brown;
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    out.push(limbShell(scene, "blowdarterPants", thigh, 0, 1.0, P.out, brown));
+    const band = limbShell(scene, "blowdarterPantsHem", thigh, P.bandFrom, 1.0, P.bandOut, team);
+    out.push(band);
+    const bb = thigh.getBoundingInfo().boundingBox;
+    const r = Math.max(bb.extendSize.x * thigh.scaling.x, bb.extendSize.z * thigh.scaling.z) * P.bandOut;
+    const long = bb.extendSize.y * 2 * thigh.scaling.y * P.tab;
+    const footY = band.position.y - (band.getBoundingInfo().boundingBox.extendSize.y);
+    for (let k = 0; k < P.tabs; k++) {
+      const a = (k / P.tabs) * Math.PI * 2;
+      const tab = MeshBuilder.CreateBox("blowdarterFringe", { width: r * 0.45, height: long, depth: r * 0.12 }, scene);
+      tab.parent = thigh.parent;
+      tab.position.set(Math.sin(a) * r * 0.92, footY - long / 2, Math.cos(a) * r * 0.92 * band.scaling.z);
+      tab.rotation.y = a;
+      tab.material = team;
+      tab.convertToFlatShadedMesh();
+      out.push(tab);
+    }
+  }
+  return out;
+}
+
+/*
+ * [S] 468 the Barrel Roller's hair (audit 457 a.3: "hair, none - TABS: white hair"; legacy.barrel_roller.red.png: white hair puffing out under the
+ * tricorn's brim over the ears and at the nape). BARREL_HAIR in the head box (as PIKE_HAIR): a side lock each side .side e.x thick from .top e.y over
+ * the centre to .foot e.y under it, .back to .front e.z; a back sheet the same height. White .color, self-lit .glow.
+ */
+const BARREL_HAIR = { side: 0.26, top: 0.3, foot: 0.55, back: 1.05, front: 0.1, color: new Color3(0.93, 0.93, 0.9), glow: 0.28 };
+
+/** The Barrel Roller's white hair under the tricorn (spec at BARREL_HAIR), hung on the head. */
+export function barrelHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = BARREL_HAIR;
+  const hair = getMaterialFactory().get("cloth", P.color, { emissive: P.color.scale(P.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const t = e.x * P.side, tall = e.y * (P.top + P.foot), midY = c.y + e.y * (P.top - P.foot) / 2;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, z: number): void => {
+    m.position.set(x, midY, z);
+    m.material = hair;
+    m.parent = head;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  };
+  for (const s of [-1, 1]) put(MeshBuilder.CreateBox("barrelHair", { width: t, height: tall, depth: e.z * (P.back + P.front) }, scene), c.x + s * (e.x + t / 2), c.z + e.z * (P.front - P.back) / 2);
+  put(MeshBuilder.CreateBox("barrelBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, c.z - e.z * P.back + t / 2);
+  return out;
+}
+
+/*
+ * [S] 468 the Barrel Roller's legs (audit 457 a.6: "legs, team legs to blocky feet - TABS: baggy team pants, cream socks, tan shoes";
+ * legacy.barrel_roller.blue.png: loose team pants to below the knee, cream socks to the ankle, tan shoes). BARREL_LEGS: a team shell .pantOut round each
+ * thigh and on down the shin to .pantTo; a cream sock shell .sockOut round the shin from .pantTo to its end; the foot blocks tan.
+ */
+const BARREL_LEGS = { pantOut: 1.45, shinPantOut: 1.4, pantTo: 0.35, sockOut: 1.2, cream: new Color3(0.95, 0.9, 0.75), tan: new Color3(0.7, 0.42, 0.18), glow: 0.22, shade: 0.85 };
+
+/** The Barrel Roller's baggy team pants, cream socks and tan shoes (spec at BARREL_LEGS). */
+export function barrelLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const L = BARREL_LEGS;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(L.shade);
+  const team = mf.get("cloth", t, { emissive: t.scale(0.12) });
+  const cream = mf.get("cloth", L.cream, { emissive: L.cream.scale(L.glow) });
+  const tan = mf.get("cloth", L.tan, { emissive: L.tan.scale(0.16) });
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(limbShell(scene, "barrelPants", thigh, 0, 1.0, L.pantOut, team));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "barrelPants", shin, 0, L.pantTo, L.shinPantOut, team));
+    out.push(limbShell(scene, "barrelSock", shin, L.pantTo, 1.0, L.sockOut, cream));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = tan;
+  }
+  return out;
+}
