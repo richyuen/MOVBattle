@@ -343,7 +343,15 @@ const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25
  * off palm on the forend. The aim snaps up as the attack starts (.up per s, the shot leaves at its first step) and is held through the attack and
  * while she stands in range of her man between shots (readyAim, the card's warm-up), then eases back to the shoulder carry at .down per s.
  */
-const WINCHESTER_AIM = { ahead: 0.2, inward: 0.06, drop: 0.2, kick: 0.12, settle: 8, up: 60, down: 2.5 };
+/*
+ * [S] 456 at the hip, level, the receiver in the fist (critic 455 deadeye c.1: "the fist at belt height but the barrel still climbs ~13° to the muzzle,
+ * above the dead-level tracer"; 454: "a shoulder-height raised point, barrel climbing ~15°, the stock poking out behind her shoulder - TABS:
+ * the barrel horizontal at her middle, stock tucked under the forearm at the hip"). Probe 455: the barrel was solved level, then RuntimeUnit's gunner
+ * pose overlay turned the shoulder and elbow after it (barrel 16-20° up, fist .15 m over the hip); the overlay now stands off by levelledGun. The fist
+ * drops .26 of her height under the shoulder (just over the hip joint) and stands .28 before it, so the short stock lies under the forearm. Probe 456:
+ * the rifle still hung ~.27 m over and behind the fist (the carry's offset in the hand), so its receiver is seated .seat of her height over the wrist.
+ */
+const WINCHESTER_AIM = { ahead: 0.28, inward: 0.06, drop: 0.26, kick: 0.12, settle: 8, up: 60, down: 2.5, seat: 0.02 };
 // [S] 425 the blunderbuss held low in both hands (see _aimBlunderbuss): the weapon fist's seat in shares of his height from the hip joint (ahead, out to
 // the weapon side, down), the barrel's droop below level and its turn in across his front (rad), the muzzle's kick up at the shot (rad)
 const BLUNDERBUSS_AIM = { ahead: 0.13, out: 0.07, drop: 0.0, droop: 0.22, across: 0.3, kick: 0.45 };
@@ -3609,16 +3617,21 @@ export class ProceduralAnimator {
   private _musketAim = 1;
   /** The shouldered aim (see MUSKET_AIM): the weapon fist ahead of the shoulder, the musket level along his front, held in every living state. */
   /** The Deadeye's Winchester levelled at her middle for the shot, both hands on it (spec at WINCHESTER_AIM). */
-  private _winchester: { node: Mesh; rest: Quaternion; fore: Mesh } | null | undefined = undefined;
+  private _winchester: { node: Mesh; rest: Quaternion; restPos: Vector3; fore: Mesh } | null | undefined = undefined;
   private _winchesterAim = 0;
+  /** How far the Winchester is levelled (0-1): RuntimeUnit's gunner overlay stands off its arm by this much. */
+  get levelledGun(): number {
+    return this._winchester ? this._winchesterAim * (1 - Math.min(1, this._limp)) : 0;
+  }
   private _aimWinchester(dt: number): void {
     if (this._winchester === undefined) {
       const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "winchesterFore"));
       const fore = node?.getChildren().find((c): c is Mesh => c instanceof Mesh && c.name === "winchesterFore");
-      this._winchester = node && fore ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), fore } : null;
+      this._winchester = node && fore ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), restPos: node.position.clone(), fore } : null;
     }
     const gun = this._winchester;
     if (!gun) return;
+    gun.node.position.copyFrom(gun.restPos);
     const A = WINCHESTER_AIM;
     const firing = this._state === AnimState.Attacking;
     this._aimReadyTimer -= dt;
@@ -3652,6 +3665,14 @@ export class ProceduralAnimator {
     const hand = Matrix.Identity();
     handRot.toRotationMatrix(hand);
     gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    // [S] 456 the receiver seated on the fist: turned about its pivot, the rifle kept the carry's offset in the hand and hung ~.27 m over and behind
+    // the fist (probe 456), so the fist-to-muzzle line read ~13° up although the barrel was level. The pivot (the barrel's foot, the receiver) is
+    // moved to .seat of her height over the wrist joint, the move put back into the hand's frame.
+    gun.node.computeWorldMatrix(true);
+    const pivot = Vector3.TransformCoordinates(gun.node.getPivotPoint(), gun.node.getWorldMatrix());
+    const seatAt = b.rightHand.getAbsolutePosition().add(new Vector3(0, A.seat * height, 0));
+    const handInv = b.rightHand.getWorldMatrix().clone().invert();
+    gun.node.position.addInPlace(Vector3.TransformNormal(seatAt.subtract(pivot).scaleInPlace(w), handInv));
     // the off palm under the forend
     gun.node.computeWorldMatrix(true);
     gun.fore.computeWorldMatrix(true);
