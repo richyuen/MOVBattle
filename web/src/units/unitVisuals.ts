@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -735,6 +735,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "legacy.boxer": vis(
     { scale: 0.68, bulk: 0.94, headSize: 1.32, armLength: 1.08 }, "boxing_glove", "none", "none", "none", "#C54A4A", "boxing_glove", {
+      weaponVariant: "team_glove", offhandVariant: "team_glove", // [S] 457 team mitts on the fists (propBuilder TEAM_GLOVE; audit 457 b.2)
       posePreset: "boxer",
       materialPreset: "legacy_toy",
     },
