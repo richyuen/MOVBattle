@@ -738,3 +738,57 @@ export function barrelRide(scene: Scene, body: ArticulatedBody): Mesh {
   mark.parent = body.hip;
   return core;
 }
+
+/*
+ * [S] 465 the Pike's armour vest (audit 457 a.2: "torso, plain team body - TABS: a cream armour vest with a half-circle team emblem"; legacy.pike.jpg:
+ * a pale cream cuirass over the trunk, a team half-disc on its chest, flat edge down). PIKE_VEST: the trunk in cream (self-lit .glow); a rim .rim H tall
+ * at its foot, .rimOut of the trunk and a shade darker; the emblem a team half-disc .emblem W across, .proud D in front of the chest, its flat edge
+ * .emblemAt of H/2 above the middle.
+ */
+const PIKE_VEST = { rim: 0.1, rimOut: 1.06, emblem: 0.62, proud: 0.04, emblemAt: -0.05, cream: new Color3(0.9, 0.76, 0.52), glow: 0.18, rimShade: 0.82, teamGlow: 0.15 };
+
+/** The Pike's cream armour vest with a team half-disc on the chest (spec at PIKE_VEST). */
+export function pikeVest(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const V = PIKE_VEST;
+  const mf = getMaterialFactory();
+  const cream = mf.get("cloth", V.cream, { emissive: V.cream.scale(V.glow) });
+  const rimC = V.cream.scale(V.rimShade);
+  const rim = mf.get("cloth", rimC, { emissive: rimC.scale(V.glow) });
+  const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(V.teamGlow) });
+  body.torsoMesh.material = cream;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = cream;
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  lay(MeshBuilder.CreateBox("pikeVestRim", { width: W * V.rimOut, height: H * V.rim, depth: D * V.rimOut }, scene), 0, -H / 2 + H * V.rim / 2, 0, rim);
+  const emblem = MeshBuilder.CreateDisc("pikeVestEmblem", { radius: W * V.emblem / 2, arc: 0.5, tessellation: 20, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  lay(emblem, 0, H / 2 * V.emblemAt, D / 2 + D * V.proud, team);
+  return out;
+}
+
+/*
+ * [S] 465 the Barrel Roller's vest (audit 457 a.4: "shirt, plain team body - TABS: a team vest over a white open shirt"; legacy.barrel_roller.blue.png:
+ * a dark team waistcoat, a white shirt showing in a deep V down the chest from the collar). BARREL_VEST: the trunk in team times .shade (self-lit
+ * .glow); the shirt a white down-pointing triangle .vWide W across its top edge at the collar, reaching .vDeep of H down, .proud D in front of the chest;
+ * white self-lit .whiteGlow.
+ */
+const BARREL_VEST = { shade: 0.7, glow: 0.12, vWide: 0.62, vDeep: 0.62, proud: 0.03, white: new Color3(0.95, 0.94, 0.9), whiteGlow: 0.3 };
+
+/** The Barrel Roller's team vest over a white open shirt V (spec at BARREL_VEST). */
+export function barrelVest(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const V = BARREL_VEST;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(V.shade);
+  const vest = mf.get("cloth", t, { emissive: t.scale(V.glow) });
+  const white = mf.get("cloth", V.white, { emissive: V.white.scale(V.whiteGlow) });
+  body.torsoMesh.material = vest;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = vest;
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  // a three-sided disc, one corner turned straight down: the flat top edge at the collar, the point down the chest
+  const top = W * V.vWide, r = top / Math.sqrt(3);
+  const shirt = MeshBuilder.CreateDisc("barrelVestShirt", { radius: r, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  shirt.rotation.z = -Math.PI / 2;
+  shirt.scaling.x = (H * V.vDeep) / (1.5 * r); // the point runs along the disc's own x, turned down
+  lay(shirt, 0, H / 2 - (r / 2) * shirt.scaling.x, D / 2 + D * V.proud, white);
+  return out;
+}
