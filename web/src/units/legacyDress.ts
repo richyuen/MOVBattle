@@ -351,3 +351,37 @@ export function bannerCoatee(scene: Scene, body: ArticulatedBody, teamColor: Col
   return out;
 }
 
+/*
+ * [S] 460 the Flag Bearer's helmet (audit 457 a.1: "headgear, bald - TABS: a white-and-gold helmet with a team crest"; legacy.flag_bearer.red.png:
+ * a white round helmet a little wider than the head, sitting on the brow with the eyes clear under it, a gold band round its foot, a gold plate up its
+ * front and a team-coloured crest standing up along the top from front to back). FLAG_HELMET, in the head's W and H: a white crown .wide W across from
+ * the seat to .tall H over the head top, a dome .dome H on it; a gold band .band H at its foot, .bandOut of the crown; a gold front plate .plate W wide
+ * up the crown; a team crest .crest H tall, .crestLong W long and .crestThin W thin, on the dome's top. White self-lit .whiteGlow.
+ */
+const FLAG_HELMET = { sides: 10, wide: 1.08, tall: 0.18, dome: 0.3, band: 0.12, bandOut: 1.05, plate: 0.22, crest: 0.42, crestLong: 0.8, crestThin: 0.14, white: new Color3(0.95, 0.94, 0.9), whiteGlow: 0.25, glow: 0.12 };
+
+/** The Flag Bearer's white helmet with a gold band and a team crest (spec at FLAG_HELMET), in the hat's units; `seat` under the head top. */
+export function buildFlagHelmet(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
+  const F = FLAG_HELMET;
+  const u = (v: number) => v / unit;
+  const mf = getMaterialFactory();
+  const white = mf.get("cloth", F.white, { emissive: F.white.scale(F.whiteGlow) });
+  const gold = mf.get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(0.2) });
+  const t = teamColor ?? new Color3(0.5, 0.5, 0.55);
+  const team = mf.get("cloth", t, { emissive: t.scale(F.glow) });
+  const tall = -seat + F.tall * H, D = F.wide * W;
+  const crown = MeshBuilder.CreateCylinder("flagHelmet", { height: u(tall), diameter: u(D), tessellation: F.sides }, scene);
+  crown.position.y = u(seat + tall / 2);
+  crown.material = white;
+  crown.convertToFlatShadedMesh();
+  const part = (m: Mesh, x: number, y: number, z: number, material: Material): Mesh => {
+    m.position.set(u(x), u(y), u(z)); m.material = material; m.parent = crown; m.convertToFlatShadedMesh(); return m;
+  };
+  const dome = part(MeshBuilder.CreateSphere("flagHelmetDome", { diameter: u(D), segments: 5, slice: 0.5 }, scene), 0, tall / 2, 0, white);
+  dome.scaling.y = (F.dome * H) / (D / 2);
+  part(MeshBuilder.CreateCylinder("flagHelmetBand", { height: u(F.band * H), diameter: u(D * F.bandOut), tessellation: F.sides }, scene), 0, -tall / 2 + F.band * H / 2, 0, gold);
+  part(MeshBuilder.CreateBox("flagHelmetPlate", { width: u(F.plate * W), height: u(tall + F.dome * H * 0.6), depth: u(0.04 * W) }, scene), 0, F.dome * H * 0.3, D / 2 * 1.02, gold);
+  part(MeshBuilder.CreateBox("flagHelmetCrest", { width: u(F.crestThin * W), height: u(F.crest * H), depth: u(F.crestLong * W) }, scene), 0, tall / 2 + F.dome * H + F.crest * H * 0.25, 0, team);
+  return crown;
+}
+

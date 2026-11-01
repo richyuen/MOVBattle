@@ -21,7 +21,7 @@ export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap" | "peak_hat"
-  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood" | "boxer_headgear" | "shako"
+  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood" | "boxer_headgear" | "shako" | "flag_helmet"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
@@ -748,7 +748,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "legacy.flag_bearer": vis(
     // [S] 459 a normal 1.00x man (audit 457 a.5: "a large bulky man (size 1.34) - TABS: a normal 1.00x man", card Size), not the 1.34 / 1.08 bulk
-    { scale: 1.0, bulk: 0.92, headSize: 1.05 }, "staff", "none", "none", "banner_back", "#5C79D4", undefined, {
+    // [S] 460 a white helmet with a gold band and a team crest (legacyDress FLAG_HELMET; audit 457 a.1)
+    { scale: 1.0, bulk: 0.92, headSize: 1.05 }, "staff", "flag_helmet", "none", "banner_back", "#5C79D4", undefined, {
       weaponVariant: "charge_flag", // [S] 457 the team flag on a slim pole under a gold ball (propBuilder CHARGE_FLAG; audit 457 b.1)
       posePreset: "support",
       materialPreset: "legacy_toy",
