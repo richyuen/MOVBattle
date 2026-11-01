@@ -3114,6 +3114,14 @@ const DYNAMITE_LONG = 0.38;
 const DYNAMITE_BAND = 0.17;
 const DYNAMITE_SPARK = 0.075; // lit-fuse spark core, of s; rays 2.2x as long
 const DYNAMITE_SPARK_RAYS = 6;
+/*
+ * [S] 449 the bundle's fuse wires (audit 444 dynamite_thrower b.2: "no fuse wires on the bundle top - TABS: black curled fuse wires rising from it";
+ * wild_west.dynamite_thrower.red.png: a black wire out of the top of every stick, rising and drawing together into a bunch a stick's length over the
+ * block, one of them running on and curling over to the side). DYNAMITE_WIRES in s: each wire .thick across, a first leg .rise long up out of its
+ * stick's top leaning in .lean rad toward the bunch, a second leg .bend long on from its end, turned .curl rad out over the side; the long one (the
+ * front middle stick's) runs .tail long further, curling over. Black; the lit fuse keeps its spark.
+ */
+const DYNAMITE_WIRES = { thick: 0.012, rise: 0.08, lean: 0.35, bend: 0.06, curl: 1.1, tail: 0.09 };
 // The stoner's boulder (units/tribal.stoner), in prop units (x s, the man about .67 s tall): across, its height and depth as shares of that, colour
 const BOULDER_WIDE = 0.3;
 const BOULDER_SQUASH = { y: 0.88, z: 0.94 };
@@ -4669,8 +4677,33 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const fuse = MeshBuilder.CreateCylinder("fuse", { height: 0.06 * s, diameter: 0.014 * s, tessellation: 5 }, scene);
       fuse.position.y = long / 2 + 0.03 * s;
       fuse.rotation.z = 0.35;
-      fuse.material = mat(scene, new Color3(0.85, 0.72, 0.45), 0.2);
+      fuse.material = black;
       fuse.parent = root;
+      // [S] 449 a black wire out of every stick's top, drawing in to a bunch, the ends curling out (DYNAMITE_WIRES)
+      const DW = DYNAMITE_WIRES;
+      for (let c = 0; c < DYNAMITE_COLS; c++) {
+        for (let r = 0; r < DYNAMITE_ROWS; r++) {
+          const x = (c - (DYNAMITE_COLS - 1) / 2) * pitch, z = (r - (DYNAMITE_ROWS - 1) / 2) * pitch;
+          const yaw = Math.atan2(-x, -z || 1e-3);
+          const pivot = new TransformNode("dynamiteWire", scene);
+          pivot.parent = root;
+          pivot.position.set(x, long / 2, z);
+          pivot.rotation.set(0, yaw, 0);
+          const leg1 = MeshBuilder.CreateCylinder("dynamiteWireLeg", { height: DW.rise * s, diameter: DW.thick * s, tessellation: 4 }, scene);
+          leg1.material = black;
+          leg1.parent = pivot;
+          leg1.rotation.x = Math.hypot(x, z) > 1e-4 ? DW.lean : 0;
+          leg1.position.set(0, Math.cos(leg1.rotation.x) * DW.rise * s * 0.5, Math.sin(leg1.rotation.x) * DW.rise * s * 0.5);
+          const tipY = Math.cos(leg1.rotation.x) * DW.rise * s, tipZ = Math.sin(leg1.rotation.x) * DW.rise * s;
+          const tail = c === 1 && r === 0;
+          const len = (DW.bend + (tail ? DW.tail : 0)) * s;
+          const leg2 = MeshBuilder.CreateCylinder("dynamiteWireLeg", { height: len, diameter: DW.thick * s, tessellation: 4 }, scene);
+          leg2.material = black;
+          leg2.parent = pivot;
+          leg2.rotation.x = -DW.curl * (tail ? 1.3 : 1);
+          leg2.position.set(0, tipY + Math.cos(leg2.rotation.x) * len * 0.5, tipZ + Math.sin(leg2.rotation.x) * len * 0.5);
+        }
+      }
       // The lit fuse (units/wild_west.dynamite_thrower): an unlit white-hot core in an orange burst of DYNAMITE_SPARK_RAYS short spikes on the fuse tip.
       // A child of the fuse, so the thrown copy carries it burning through the air.
       const spark = MeshBuilder.CreateIcoSphere("dynamiteSpark", { radius: DYNAMITE_SPARK * 0.5 * s, subdivisions: 1 }, scene);
