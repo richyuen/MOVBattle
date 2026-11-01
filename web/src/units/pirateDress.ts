@@ -831,6 +831,9 @@ export function queenFrame(body: ArticulatedBody): void {
   body.torsoMesh.position.y -= cut / 2;
   body.torsoMesh.refreshBoundingInfo();
   for (const m of body.torso.getChildMeshes(true)) if (/_yoke$/.test(m.name) || m.name === "cape") { m.scaling.x *= F.trunk; m.position.y -= cut; }
+  // [R] 450 no cape (pirate.pirate_queen.red.png shows none): the generic magenta accent panel on her back showed under the sash once the
+  // tunicSkirt that hid its foot was off (critic 450 DEFECTS 3, unit_pirate.pirate_queen_ability_after)
+  for (const m of body.torso.getChildMeshes(true)) if (m.name === "cape") m.setEnabled(false);
   for (const j of [body.neck, body.leftShoulder, body.rightShoulder]) j.position.y -= cut;
   body.leftShoulder.position.x *= F.shoulders;
   body.rightShoulder.position.x *= F.shoulders;
