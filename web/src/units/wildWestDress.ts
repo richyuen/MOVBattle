@@ -478,7 +478,7 @@ export function minerMoustache(scene: Scene, body: ArticulatedBody): Mesh[] {
  * length, a cuff .cuff round from .cuffFrom to .from; the foot in the same leather, .toe of its width. Dark brown, self-lit .glow. The robe is cut to the
  * knee by unitFactory CACTUS_LONG.
  */
-const CACTUS_BOOTS = { from: 0.55, to: 1.04, out: 1.15, cuffFrom: 0.5, cuff: 1.35, toe: 0.85, color: new Color3(0.13, 0.07, 0.045), glow: 0.1 };
+const CACTUS_BOOTS = { from: 0.42, to: 1.04, out: 2.1, cuffFrom: 0.34, cuff: 2.5, toe: 0.85, color: new Color3(0.13, 0.07, 0.045), glow: 0.1 };
 
 /** Dark brown boots from mid-shin to the foot (spec at CACTUS_BOOTS). */
 export function cactusBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
