@@ -30,9 +30,10 @@ const BALLOON_FLOAT = { seconds: 3, rise: 1.4, top: 3.2, per: 3, most: 9, size: 
  */
 /*
  * [S] 460 a bearer's aura on the men inside his ring (applyAura; the Flag Bearer's speeds them up, the Banner Bearer's holds them still): a hastened man
- * walks .haste times his pace; a ring .ring of his height across and .band thick lies at his feet while it holds.
+ * walks .haste times his pace; a ring .ring of his height across and .band thick rides .lift of his height up his shins while it holds (461: at
+ * .03 the grass hid it, critic 460 "nothing on the ally marks the haste").
  */
-const BEARER_AURA = { haste: 1.5, ring: 0.5, band: 0.035 };
+const BEARER_AURA = { haste: 1.5, ring: 0.6, band: 0.05, lift: 0.14 };
 const DRUNK = { green: new Color3(0.35, 0.85, 0.2), dye: 0.8, glow: 0.35, roll: 0.22, rate: 4.5, slow: 0.55 };
 /*
  * [S] gilded (351; medieval.healer card Appearance: "a golden beam connects to the unit the healer is curing, turning them gold for a moment"). While a
@@ -1079,8 +1080,8 @@ export class RuntimeUnit {
     if (!this._auraRing) {
       const H = this.body.metrics.overallHeight;
       const ring = MeshBuilder.CreateTorus("auraRing", { diameter: BEARER_AURA.ring * H, thickness: BEARER_AURA.band * H, tessellation: 24 }, this.body.root.getScene());
-      ring.scaling.y = 0.25;
-      ring.position.y = 0.03 * H;
+      ring.scaling.y = 0.4;
+      ring.position.y = BEARER_AURA.lift * H;
       ring.isPickable = false;
       ring.parent = this.body.root;
       this._auraRing = ring;
