@@ -402,6 +402,67 @@ export function minerOveralls(scene: Scene, body: ArticulatedBody, teamColor: Co
 }
 
 /*
+ * [S] 451 the gun belt (critic 449 gunslinger a.3: "no belt or holsters at the waist - TABS: a dark brown belt with two dark holsters on the hips, just
+ * below the jacket's buttons"; quick_draw a.3: "none - TABS: dark belt with a holster and a diagonal ammo pouch"; wild_west.gunslinger.red.png,
+ * wild_west.quick_draw.red.png: a broad dark brown belt round the hips at the foot of the trunk, a little wider than it; a holster a dark grey-brown
+ * block hung from it on the hip's side, its top at the belt, down to about a third of the thigh, standing a little out from the leg; the Quick Draw's
+ * other hip carries a short pouch slanting up across the belt to the back, a row of brass cartridge heads along it). GUN_BELT on the trunk (torso
+ * frame, W H D its box): the belt .band H tall round the trunk's foot, .over of its width and depth; a holster .holster W wide, .holsterLong H long,
+ * .holsterDeep D deep, its middle .holsterOut W out from the trunk's middle, splayed .splay rad off the leg; the pouch .pouch W long, .pouchTall H tall,
+ * at .pouchOut W out on the far hip, slanted .slant rad, .shells brass heads along it. Belt and pouch brown, holsters a darker grey-brown; self-lit .glow.
+ */
+const GUN_BELT = {
+  band: 0.13, over: 1.07, holster: 0.17, holsterLong: 0.42, holsterDeep: 0.42, holsterOut: 0.58, splay: 0.12,
+  pouch: 0.36, pouchTall: 0.1, pouchOut: 0.3, slant: 0.55, shells: 4,
+  leather: new Color3(0.17, 0.1, 0.06), holsterColor: new Color3(0.1, 0.085, 0.07), brass: new Color3(0.75, 0.5, 0.15), glow: 0.12,
+};
+
+/** A dark gun belt round the hips with holsters on the `holsters` sides (+1 the weapon side) and, if asked, a slanting ammo pouch on the other (spec at GUN_BELT). */
+export function gunBelt(scene: Scene, body: ArticulatedBody, holsters: number[], pouch: boolean): Mesh[] {
+  const G = GUN_BELT;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", G.leather, { emissive: G.leather.scale(G.glow) });
+  const dark = mf.get("cloth", G.holsterColor, { emissive: G.holsterColor.scale(G.glow) });
+  const brass = mf.get("cloth", G.brass, { emissive: G.brass.scale(0.3) });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const weapon = Math.sign(body.rightShoulder.position.x) || 1;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, y: number, z: number, mat: Material, roll = 0): void => {
+    m.position.set(cx + x, y, z);
+    m.rotation.copyFrom(tm.rotation);
+    m.rotation.z += roll;
+    m.material = mat;
+    m.parent = tm.parent;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  };
+  const beltY = cy - H / 2 + H * G.band / 2;
+  put(MeshBuilder.CreateBox("gunBelt", { width: W * G.over, height: H * G.band, depth: D * G.over }, scene), 0, beltY, cz, leather);
+  for (const s of holsters) {
+    const side = s * weapon;
+    const long = H * G.holsterLong;
+    const holster = MeshBuilder.CreateBox("gunHolster", { width: W * G.holster, height: long, depth: D * G.holsterDeep }, scene);
+    put(holster, side * W * G.holsterOut, beltY + H * G.band / 2 - long / 2, cz, dark, side * G.splay);
+  }
+  if (pouch) {
+    const side = -weapon;
+    const bag = MeshBuilder.CreateBox("gunPouch", { width: W * G.pouch, height: H * G.pouchTall, depth: D * 0.12 }, scene);
+    const px = side * W * G.pouchOut, pz = cz + D * G.over / 2 + D * 0.06;
+    put(bag, px, beltY + H * G.band * 0.4, pz, leather, side * G.slant);
+    // brass cartridge heads along its face, in the bag's slant
+    for (let i = 0; i < G.shells; i++) {
+      const t = (i + 0.5) / G.shells - 0.5;
+      const head = MeshBuilder.CreateBox("gunPouchShell", { width: W * 0.035, height: H * 0.05, depth: D * 0.05 }, scene);
+      const along = t * W * G.pouch * 0.85;
+      put(head, px + along * Math.cos(side * G.slant), beltY + H * G.band * 0.4 + along * Math.sin(side * G.slant), pz + D * 0.07, brass, side * G.slant);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 448 the Gunslinger's sideburns (critic 447 a.4: "sideburns: none - TABS: black bushy sideburns"; wild_west.gunslinger.red.png: a thick
  * black-grey tuft down each side of the face from under the bowler's brim, beside the eyes, to the jaw, standing out from the cheek and ragged at its
  * edge). GUNSLINGER_SIDEBURNS in the head's own box (e its half sizes, c its centre): on each side .lumps faceted lumps, each .lump of e.x across, in a

@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusSleeves, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawShirt, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusSleeves, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawShirt, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -704,6 +704,8 @@ export class UnitFactory {
     if (definition.id === "wild_west.gunslinger" && !shouldUseVehicleBody) propMeshes.push(...gunslingerJacket(this._scene, body, teamColor));
     // [S] 448 black bushy sideburns (wildWestDress GUNSLINGER_SIDEBURNS)
     if (definition.id === "wild_west.gunslinger" && !shouldUseVehicleBody) propMeshes.push(...gunslingerSideburns(this._scene, body));
+    // [S] 451 a dark gun belt with a holster on each hip (wildWestDress GUN_BELT)
+    if (definition.id === "wild_west.gunslinger" && !shouldUseVehicleBody) propMeshes.push(...gunBelt(this._scene, body, [1, -1], false));
     // [S] 448 the Quick Draw's beige shirt, sleeves rolled past the elbow (wildWestDress QUICK_DRAW_SHIRT)
     if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...quickDrawShirt(this._scene, body));
     // [S] 448 the Miner's overalls: lighter team shirt, dark braces, team trousers' waist (wildWestDress MINER_OVERALLS)
