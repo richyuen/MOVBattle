@@ -847,3 +847,128 @@ export function flagCuffs(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 467 the Flag Bearer's boots (audit 457 a.4: "boots, team feet - TABS: white boots with gold tops"; legacy.flag_bearer.blue.png: white boot
+ * shafts from below the knee to the sole, a gold band round the top, white feet). FLAG_BOOTS on each shin: a white shell .out round from .from to .to,
+ * a gold band .band of the shin tall and .bandOut round at its top; the foot block white.
+ */
+const FLAG_BOOTS = { from: 0.42, to: 1.04, out: 1.4, band: 0.09, bandOut: 1.62 };
+
+/** The Flag Bearer's white boots with gold tops (spec at FLAG_BOOTS). */
+export function flagBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = FLAG_BOOTS;
+  const mf = getMaterialFactory();
+  const white = mf.get("cloth", BANNER_COATEE.white, { emissive: BANNER_COATEE.white.scale(BANNER_COATEE.whiteGlow) });
+  const gold = mf.get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(0.2) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "flagBoot", shin, B.from, B.to, B.out, white));
+    out.push(limbShell(scene, "flagBootTop", shin, B.from - 0.02, B.from + B.band, B.bandOut, gold));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = white;
+  }
+  return out;
+}
+
+/*
+ * [S] 467 the Pike's belt and trousers (audit 457 a.4: "waist, none - TABS: a dark belt over baggy team trousers"; legacy.pike.jpg: a dark brown belt
+ * round the foot of the cream vest with a small gold buckle, loose team trousers below it). PIKE_BELT: a belt .tall H high, .out of W and D, its middle
+ * .at of H/2 under the trunk's middle, dark .leather; a gold buckle .buckle W wide on its front; baggy team shells .thighOut round each thigh to .thighTo.
+ */
+const PIKE_BELT = { tall: 0.11, out: 1.14, at: -0.78, buckle: 0.16, thighOut: 1.5, thighTo: 0.85, leather: new Color3(0.2, 0.11, 0.05), glow: 0.12, teamShade: 0.85 };
+
+/** The Pike's dark belt with a gold buckle and baggy team trousers (spec at PIKE_BELT). */
+export function pikeBelt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const P = PIKE_BELT;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", P.leather, { emissive: P.leather.scale(P.glow) });
+  const gold = mf.get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(0.2) });
+  const t = teamColor.scale(P.teamShade);
+  const team = mf.get("cloth", t, { emissive: t.scale(0.12) });
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const y = H / 2 * P.at;
+  lay(MeshBuilder.CreateBox("pikeBelt", { width: W * P.out, height: H * P.tall, depth: D * P.out }, scene), 0, y, 0, leather);
+  lay(MeshBuilder.CreateBox("pikeBeltBuckle", { width: W * P.buckle, height: H * P.tall * 1.2, depth: D * 0.06 }, scene), 0, y, D * P.out / 2 + D * 0.02, gold);
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(limbShell(scene, "pikeTrousers", thigh, 0, P.thighTo, P.thighOut, team));
+  return out;
+}
+
+/*
+ * [S] 467 the Pike's hair (audit 457 a.3: "hair, hidden or none - TABS: brown hair below the hat brim"; legacy.pike.jpg: brown hair falling from under
+ * the brim over the ears and the nape). PIKE_HAIR in the head box (half sizes e, centre c, +z the face): a side lock each side .side e.x thick from
+ * .top e.y over the centre to .foot e.y under it, from .back e.z behind to .front e.z ahead; a back sheet the same height. Brown .color, self-lit .glow.
+ */
+const PIKE_HAIR = { side: 0.22, top: 0.35, foot: 0.7, back: 1.05, front: 0.15, color: new Color3(0.32, 0.16, 0.06), glow: 0.14 };
+
+/** The Pike's brown hair under the hat's brim (spec at PIKE_HAIR), hung on the head. */
+export function pikeHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = PIKE_HAIR;
+  const hair = getMaterialFactory().get("cloth", P.color, { emissive: P.color.scale(P.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const t = e.x * P.side, tall = e.y * (P.top + P.foot), midY = c.y + e.y * (P.top - P.foot) / 2;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, z: number): void => {
+    m.position.set(x, midY, z);
+    m.material = hair;
+    m.parent = head;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  };
+  for (const s of [-1, 1]) put(MeshBuilder.CreateBox("pikeHair", { width: t, height: tall, depth: e.z * (P.back + P.front) }, scene), c.x + s * (e.x + t / 2), c.z + e.z * (P.front - P.back) / 2);
+  put(MeshBuilder.CreateBox("pikeBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, c.z - e.z * P.back + t / 2);
+  return out;
+}
+
+/*
+ * [S] 467 the Poacher's knee caps (audit 457 a.4: "knees, bare team legs - TABS: tan knee caps"; legacy.poacher.blue.png, card Appearance "knee caps":
+ * a rounded tan leather cap over the front of each knee). POACHER_KNEES: a faceted cap .size of the shin's width across, squashed .flat front to back,
+ * .ahead of the shin's half-depth in front of the knee joint, .drop of the shin's length under it. Tan .color, self-lit .glow.
+ */
+const POACHER_KNEES = { size: 1.5, flat: 0.6, ahead: 1.15, drop: 0.04, color: new Color3(0.82, 0.5, 0.22), glow: 0.16 };
+
+/** The Poacher's tan knee caps (spec at POACHER_KNEES). */
+export function poacherKnees(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = POACHER_KNEES;
+  const tan = getMaterialFactory().get("cloth", K.color, { emissive: K.color.scale(K.glow) });
+  return [body.leftLowerLeg, body.rightLowerLeg].map((shin) => {
+    const bb = shin.getBoundingInfo().boundingBox;
+    const wide = bb.extendSize.x * 2 * shin.scaling.x, half = bb.extendSize.z * shin.scaling.z, long = bb.extendSize.y * 2 * shin.scaling.y;
+    const cap = MeshBuilder.CreateIcoSphere("poacherKnee", { radius: wide * K.size / 2, subdivisions: 1 }, scene);
+    cap.scaling.z = K.flat;
+    cap.parent = shin.parent;
+    cap.position.set(0, -long * K.drop, half * K.ahead);
+    cap.material = tan;
+    cap.convertToFlatShadedMesh();
+    return cap;
+  });
+}
+
+/*
+ * [S] 467 the Barrel Roller's arm wraps (audit 457 a.5: "arms, bare - TABS: brown arm wraps"; legacy.barrel_roller.red.png, card Appearance "arm wraps":
+ * brown cloth bound round each forearm from below the elbow to the wrist). BARREL_WRAPS on each forearm: a brown shell .out round from .from to .to, and
+ * .bands darker turns .bandOut round, .band of the forearm tall, spread down it. Brown .color, self-lit .glow.
+ */
+const BARREL_WRAPS = { from: 0.25, to: 0.96, out: 1.3, bands: 3, band: 0.07, bandOut: 1.42, color: new Color3(0.45, 0.25, 0.11), glow: 0.14 };
+
+/** The Barrel Roller's brown forearm wraps (spec at BARREL_WRAPS). */
+export function barrelWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = BARREL_WRAPS;
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", B.color, { emissive: B.color.scale(B.glow) });
+  const darkC = B.color.scale(0.7);
+  const dark = mf.get("cloth", darkC, { emissive: darkC.scale(B.glow) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "barrelWrap", arm, B.from, B.to, B.out, cloth));
+    for (let k = 0; k < B.bands; k++) {
+      const at = B.from + (B.to - B.from) * (k + 0.5) / B.bands;
+      out.push(limbShell(scene, "barrelWrapTurn", arm, at - B.band / 2, at + B.band / 2, B.bandOut, dark));
+    }
+  }
+  return out;
+}
