@@ -1,26 +1,26 @@
 # wild_west.dynamite_thrower
 Status: open   Audited: 444   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (1 since 444)
-  (struck 1 at 449)
- 2. skirt in unit_wild_west.dynamite_thrower_idle: short dark tunic hem at the hip, no stripes — TABS: knee-length team skirt with vertical gold stripes and a gold hem band (ref: red.png; card Appearance)
+a FAIL (2 since 444)
+  (struck 1 at 449; 2 at 452)
  3. braided hair in unit_wild_west.dynamite_thrower_idle: none — TABS: brown braid over the off shoulder (ref: red.png)
  4. boots in unit_wild_west.dynamite_thrower_idle: plain team feet — TABS: black knee boots with a folded cuff (ref: red.png; card Appearance)
-b FAIL (1 since 444)
-  (struck 2 at 449)
- 1. dynamite grip in unit_wild_west.dynamite_thrower_idle: bundle horizontal on the shoulder, one hand — TABS: upright bundle in front of the belly in both hands (ref: red.png; card Two-handed)
-c PASS (444: lit bundle thrown one-handed, blast flash and debris, the knight flung)
-d PASS (cost 100, hp 0.63x, dmg 0.22x, cd 49.5x; 451 stats)
+b PASS (452: upright bundle at the belly in both hands, released for the 1 s throw; DYNAMITE_HOLD + throwWindupCap)
+c PASS (444: lit bundle thrown one-handed, blast flash and debris, the knight flung; 452 throw at 1150 ms)
+d PASS (cost 100, hp 0.63x, dmg 0.22x, cd 49.5x; 452 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] b two-handed hold resubmit - blocker 1: _holdDynamite released across the whole ranged attack (warm-up to spawn) so the overhand toss returns - ref: red.png - ours: unit_wild_west.dynamite_thrower_release (critic 451)
-2. [S] a striped skirt - blocker 2: wildWestDress knee-length team skirt with vertical gold stripes and a gold hem band - ref: red.png - ours: unit_wild_west.dynamite_thrower_idle (critic 449, 451)
+1. [S] a boots - blocker 4: black knee-boot shells with a folded cuff plus black feet (limbShell, as MINER_BOOTS) - ref: red.png - ours: unit_wild_west.dynamite_thrower_idle (critic 452)
+2. [S] a braid - blocker 3: brown segmented braid from under the hat over the off shoulder - ref: red.png - ours: unit_wild_west.dynamite_thrower_idle (critic 452)
+3. [P] a skirt shade (fallout of d87b2f79) - DYNAMITE_SKIRT.teamGlow .12 -> 0 so the skirt reads saturated team colour - ref: red.png - ours: lineup_wild_west far left (critic 452)
 ## Attempts (iter | gap | criterion | verdict)
 449 | DYNAMITE_WIRES black two-leg wire per stick, fuse black (3adeea7c) | b | approved (struck 2)
 449 | PEAK_HAT (wildWestDress, shared with the deadeye) hat "peak_hat" (221f3f5a) | a | approved (struck 1)
 451 | DYNAMITE_HOLD _holdDynamite upright bundle at the belly, palms by the lockbox solve, size .78, fist seat only in Attacking+throw (c3d7f4df) | b | rejected (reverted 8a086de6 by hand, conflict)
+452 | DYNAMITE_HOLD resubmit, released on Attacking+throw; throwWindupCap 1 s in runtimeUnit throw_release (8326af8e) | b | approved (struck 1; b PASS)
+452 | DYNAMITE_SKIRT knee skirt, 6-face cylinder, gold stripe pair per face, gold hem band (d87b2f79) | a | approved (struck 2)
 ## Rejected (last 4)
 - two-handed hold [S] [1] - 451: _holdDynamite, released only on Attacking && motion "throw" - the hold stayed through the fire event, no throw in release/flight (c regression); second hand at the bundle's side, not across its front
 ## Notes (max 3 lines)
-- Her throw windup is cooldown x .36 (runtimeUnit _resolvePrimaryAttackWindup, throw_release) and her cd is 49.5x: ~30 s, so release = "fire" at 383 ms and the bundle never leaves inside the capture window ("target never hurt", 449 and 451). The hold resubmit must key off the fire/warm-up, and the throw needs its own short windup (card warm-up 1 s) to read.
-- 449 evidence item (bundle across her head in the idle): the 451 hold cleared it; with the hold reverted it is back - the resubmit clears it again, else an evidence commit first.
+- Her throw windup was cooldown x .36 (~30 s at cd 49.5x); visualConfig.throwWindupCap 1 caps it (452), so the capture sees the throw at 1150 ms.
+- 452 critic: the held bundle is squat, chest-foot to hip (TABS chest to upper thigh; DYNAMITE_HOLD.size .78 -> .95 [P]); the trunk reads a dark brown vest, TABS a team V-neck shirt (not a blocker).
 - 449 critic: wires splay like a whisk, the curled tail does not read (not a blocker).

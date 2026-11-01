@@ -1,25 +1,26 @@
 # wild_west.miner
-Status: open   Audited: 444   Done: -
+Status: open   Audited: 444, 452 (CONFIRM: passed c; failed a, b)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
-a FAIL (3 since 444)
-  (struck 1 at 447; 3 at 448; 2 at 449)
- 4. boots in unit_wild_west.miner_idle: plain team feet — TABS: dark brown knee boots (ref: red.png)
-b PASS (446: long pick, both fists on the haft)
-c PASS (451: the iron head comes down in front of him onto the man, blast after; _aimPick)
-d PASS (cost 200, hp 2.72x, dmg 1.07x, cd 3.49x; 451 stats)
+a FAIL (0 since 452; CONFIRM list)
+ 1. hat in unit_wild_west.miner_idle: a rounded skullcap with a short front bill — TABS: a tall faceted team-colour crown with a wide brim all round (ref: wild_west.miner.red.png, wild_west.miner.blue.png)
+ 2. trouser legs in unit_wild_west.miner_idle: bare team skin from a thin navy waistband down to the boots — TABS: dark team-shade overall legs running into the boots (ref: wild_west.miner.blue.png)
+ 3. face in unit_wild_west.miner_idle: no bead eyes readable; the camera gets the back of the head and the strap-crossed pale torso, the mustache only a dark curve at the collar — TABS: two white bead eyes over a black handlebar mustache facing out (ref: wild_west.miner.blue.png, card Appearance)
+ 4. sleeves in unit_wild_west.miner_idle: bare skin arms — TABS: dark team-colour sleeves ending in tan glove cuffs (ref: wild_west.miner.red.png)
+b FAIL (0 since 452; CONFIRM list)
+ 1. pickaxe carry in unit_wild_west.miner_idle: held one-handed low at the hip, the shaft trailing out diagonally to the left with the head at head height away from the body — TABS: gripped two-handed and shouldered, the shaft upright past the head (ref: wild_west.miner.red.png, card Characteristics "over its shoulder")
+c PASS (451: the iron head comes down in front of him onto the man, blast after; _aimPick; CONFIRM 452)
+d PASS (cost 200, hp 2.72x, dmg 1.07x, cd 3.49x; 452 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] a knee boots - blocker 4: wildWestDress minerBoots, dark brown knee boots shell on the shins and feet (CACTUS_BOOTS limbShell pattern) - ref: red.png - ours: unit_wild_west.miner_idle (critic 449, 451)
-10. [P] a MINER_OVERALLS.lift .35 -> .15, waist band to team (fallout of dbef099f) - ref: red.png - ours: unit_wild_west.miner_idle trunk (critic 448)
+1. [S] a face - blocker 3: evidence first - the idle/lineup show his back; find why he faces away (heading or pose) before any look gap - ours: lineup_wild_west, unit_wild_west.miner_idle (CONFIRM 452)
+2. [S] b shouldered pick - blocker 1: idle carry two-handed on the shoulder, haft upright past the head (the _windup grip held at rest) - ref: red.png - ours: unit_wild_west.miner_idle (CONFIRM 452)
+3. [S] a trousers - blocker 2: dark team-shade overall legs into the boots (limbShell on the thighs/shins) - ref: blue.png (CONFIRM 452)
 ## Attempts (iter | gap | criterion | verdict)
-445-446 | MINER_PICK long haft + POLE_GRIP.minerHaft (47f7fe76, 83e52a4f) | b | approved (b PASS)
-447 | MINER_CAP wildWestDress team cap, dome .72 of the head, front peak (e7018233, b579c896) | a | approved (struck 1)
-447 | MINER_BLAST spawnExplosionBurst .85 at the landed blow, splash 2.5 (1796e237) | c | approved (struck 1)
-448 | MINER_OVERALLS lighter team shirt, two dark braces, waist band, no tunic skirt (dbef099f) | a | approved (struck 3)
-448 | [P] MINER_BLAST.scale .85 -> .5 (a0f3a4b7) | c | approved (further moves are a ledger reversal)
-449 | MINER_MOUSTACHE black handlebar bars + tip lumps, long .8 thick .28 (85c21cb8) | a | approved (struck 2)
-451 | _aimPick lays the "pickaxe" holder's haft along _aimBlow's _aimTip while the blow is aimed, points in the swing plane, before _twoHandPole (1a48b2d8) | c | approved (struck 2; c PASS)
+445-446 | MINER_PICK long haft + POLE_GRIP.minerHaft | b | approved (b PASS)
+447-449 | MINER_CAP, MINER_OVERALLS, MINER_MOUSTACHE | a | approved (struck 1, 3, 2)
+447-448 | MINER_BLAST burst at the landed blow, scale .5 | c | approved
+451 | _aimPick haft along _aimBlow's _aimTip while aimed (1a48b2d8) | c | approved (struck 2; c PASS)
+452 | MINER_BOOTS dark brown knee boots, turned top, dark feet (e0e391fd) | a | approved (struck 4; a PASS, then CONFIRM failed a, b)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 451 probe: at the logged hit _aimBlow had the fist ~2.7 rad overhead and the pick (not in _carryProp's node regex) rode it pointing back; _aimPick fixes the attitude only.
+- 452 critic: boots chunky, about twice the shin's width (MINER_BOOTS.out 1.25 -> 1.1 [P]); shirt reads pale lilac-white, a short olive hem at the waist over bare thighs.
 - 451 critic: the haft passes through his cap with the fists above and behind the head (TABS fists before the chest) - not a blocker.
-- 448 critic: the waist band renders shirt-pale, the braces thin and black (TABS a darker team shade).
