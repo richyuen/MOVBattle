@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusSleeves, gunslingerJacket, gunslingerSideburns, quickDrawShirt, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusSleeves, gunslingerJacket, gunslingerSideburns, minerOveralls, quickDrawShirt, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -706,6 +706,8 @@ export class UnitFactory {
     if (definition.id === "wild_west.gunslinger" && !shouldUseVehicleBody) propMeshes.push(...gunslingerSideburns(this._scene, body));
     // [S] 448 the Quick Draw's beige shirt, sleeves rolled past the elbow (wildWestDress QUICK_DRAW_SHIRT)
     if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...quickDrawShirt(this._scene, body));
+    // [S] 448 the Miner's overalls: lighter team shirt, dark braces, team trousers' waist (wildWestDress MINER_OVERALLS)
+    if (definition.id === "wild_west.miner" && !shouldUseVehicleBody) propMeshes.push(...minerOveralls(this._scene, body, teamColor));
     // [S] 432 the Captain's tan pants tucked into black knee boots with brass buckles (pirateDress CAPTAIN_LEGS)
     if (definition.id === "pirate.captain" && !shouldUseVehicleBody) propMeshes.push(...captainLegs(this._scene, body));
     // [S] 431 the Captain's long brown beard with a moustache under the eyes, run down onto his chest (pirateDress CAPTAIN_BEARD)
@@ -961,7 +963,7 @@ export class UnitFactory {
         : bareSkinned && (wearsHideDress(definition.id) || definition.id === "tribal.spear_thrower")
         ? null
         // [R] 430 no tunic skirt on the Monkey King: his waist wrap sits straight on the puffy shorts, and the skirt was the maroon panel (MONKEY_ROBE)
-        : definition.id === "dynasty.monkey_king"
+        : definition.id === "dynasty.monkey_king" || definition.id === "wild_west.miner" // [S] 448 the Miner's overalls hang no skirt (MINER_OVERALLS)
         ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)

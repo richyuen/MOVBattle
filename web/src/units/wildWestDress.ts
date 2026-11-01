@@ -315,6 +315,50 @@ export function quickDrawShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 448 the Miner's overalls (critic 447 miner a.3: "overalls: dark team vest block, no braces - TABS: team overall trousers, two dark braces over a
+ * lighter team shirt"; card Appearance "team colored overalls"; wild_west.miner.red.png: the trunk a lighter team shirt, two dark straps running
+ * straight down its front and back from the shoulders into the waist of the team trousers, no tunic skirt; the trousers come up over the hips).
+ * MINER_OVERALLS on the trunk (torso frame, W H D its box): the trunk and its shoulder yoke in the shirt (the team colour lifted .lift toward white);
+ * a strap .strap W wide each side, .apart W from the middle, .proud D off the front and back, from the top to the foot; the trousers' waist a team band
+ * .waist H tall round the trunk's foot, .over of its width and depth. Dark brown straps; all self-lit .glow. The tunic skirt is not hung (unitFactory).
+ */
+const MINER_OVERALLS = { lift: 0.35, strap: 0.1, apart: 0.22, proud: 0.04, waist: 0.22, over: 1.06, strapColor: new Color3(0.1, 0.06, 0.04), glow: 0.12 };
+
+/** The Miner's lighter team shirt, two dark braces and the overall trousers' waist (spec at MINER_OVERALLS). */
+export function minerOveralls(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const O = MINER_OVERALLS;
+  const mf = getMaterialFactory();
+  const shirtColor = Color3.Lerp(teamColor, new Color3(1, 1, 1), O.lift);
+  const shirt = mf.get("cloth", shirtColor, { emissive: shirtColor.scale(O.glow) });
+  const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(O.glow) });
+  const strap = mf.get("cloth", O.strapColor, { emissive: O.strapColor.scale(O.glow) });
+  const tm = body.torsoMesh;
+  tm.material = shirt;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = shirt;
+  const tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, y: number, z: number, mat: Material): void => {
+    m.position.set(cx + x, y, z);
+    m.rotation.copyFrom(tm.rotation);
+    m.material = mat;
+    m.parent = tm.parent;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  };
+  for (const side of [-1, 1]) {
+    for (const face of [-1, 1]) {
+      const b = MeshBuilder.CreateBox("minerBrace", { width: W * O.strap, height: H, depth: D * O.proud }, scene);
+      put(b, side * W * O.apart, cy, cz + face * (D / 2 + D * O.proud / 2), strap);
+    }
+  }
+  const waist = MeshBuilder.CreateBox("minerWaist", { width: W * O.over, height: H * O.waist, depth: D * O.over + D * O.proud * 2 }, scene);
+  put(waist, 0, cy - H / 2 + H * O.waist / 2, cz, team);
+  return out;
+}
+
+/*
  * [S] 448 the Gunslinger's sideburns (critic 447 a.4: "sideburns: none - TABS: black bushy sideburns"; wild_west.gunslinger.red.png: a thick
  * black-grey tuft down each side of the face from under the bowler's brim, beside the eyes, to the jaw, standing out from the cheek and ragged at its
  * edge). GUNSLINGER_SIDEBURNS in the head's own box (e its half sizes, c its centre): on each side .lumps faceted lumps, each .lump of e.x across, in a
