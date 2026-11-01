@@ -441,3 +441,27 @@ export function peasantBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 460 the Poacher's belt (critic 459 a.6: "belt, none - TABS: a tan belt with a buckle"; legacy.poacher.jpg: a light tan leather belt round the
+ * waist where the coat meets the legs, a square dark-grey buckle frame on its front). POACHER_BELT, on the trunk: a band .tall of H tall at .at of H/2
+ * under the middle, .out of W and D; a square buckle frame .buckle W across of bars .bar of it, .proud W off the band. Tan .tan, buckle .grey.
+ */
+const POACHER_BELT = { tall: 0.16, at: -0.84, out: 1.14, buckle: 0.3, bar: 0.24, proud: 0.05, tan: new Color3(0.85, 0.55, 0.25), grey: new Color3(0.32, 0.32, 0.34), glow: 0.16 };
+
+/** The Poacher's tan belt with a grey square buckle at the coat's waist (spec at POACHER_BELT). */
+export function poacherBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = POACHER_BELT;
+  const mf = getMaterialFactory();
+  const tan = mf.get("cloth", P.tan, { emissive: P.tan.scale(P.glow) });
+  const grey = mf.get("cloth", P.grey, { emissive: P.grey.scale(P.glow) });
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const y = H / 2 * P.at;
+  lay(MeshBuilder.CreateBox("poacherBelt", { width: W * P.out, height: H * P.tall, depth: D * P.out }, scene), 0, y, 0, tan);
+  const s = W * P.buckle, bar = s * P.bar, z = D * P.out / 2 + W * P.proud / 2;
+  for (const side of [-1, 1]) {
+    lay(MeshBuilder.CreateBox("poacherBuckle", { width: bar, height: s, depth: W * P.proud }, scene), side * (s - bar) / 2, y, z, grey);
+    lay(MeshBuilder.CreateBox("poacherBuckle", { width: s, height: bar, depth: W * P.proud }, scene), 0, y + side * (s - bar) / 2, z, grey);
+  }
+  return out;
+}
