@@ -5844,6 +5844,10 @@ function buildRevolver(scene: Scene, stand: number): Mesh {
   const muzzle = new TransformNode("musketMuzzle", scene);
   muzzle.position.set(0, R.drumLong * L + barrelLong + 0.02 * L, up);
   muzzle.parent = holder;
+  // the mark the pistol code finds a pistol by (_aimPistol, GUN_TOSS): seats it in the fist and holds it out
+  const mark = new TransformNode("pistolBell", scene);
+  mark.position.copyFrom(muzzle.position);
+  mark.parent = holder;
   return holder;
 }
 
