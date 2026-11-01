@@ -326,6 +326,9 @@ const POLE_GRIP = {
   // [S] 446 the miner's pick: the off fist on the haft just under the weapon fist, both hands together over the shoulder (wild_west.miner.red.png;
   // card Two-handed; critic 445 b.2)
   minerHaft: [-0.14, -0.06],
+  // [S] 458 the Flag and Banner Bearers' poles: the off fist on the shaft above the weapon fist, both fists on the upright pole at the chest
+  // (legacy.flag_bearer.jpg, legacy.banner_bearer.jpg; audit 457 flag_bearer b.3, banner_bearer b.3)
+  bearerPole: [0.06, 0.24],
 } as const;
 /*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the

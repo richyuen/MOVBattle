@@ -3498,6 +3498,7 @@ function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const pole = MeshBuilder.CreateCylinder("staff", { height: L, diameter: r, tessellation: 6 }, scene);
   pole.id = "chargeFlag";
   new TransformNode("uprightPole", scene).parent = pole;
+  new TransformNode("bearerPole", scene).parent = pole; // 458: the off fist rides the shaft too (proceduralAnimation POLE_GRIP.bearerPole)
   pole.material = mat(scene, LEGACY_POLE, 0.08);
   const part = (m: Mesh, x: number, y: number, z: number, material: PBRMetallicRoughnessMaterial): Mesh => {
     m.position.set(x, y, z); m.parent = pole; m.material = material; m.convertToFlatShadedMesh(); return m;
@@ -3530,6 +3531,7 @@ function buildStayBanner(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const pole = MeshBuilder.CreateCylinder("staff", { height: L, diameter: r, tessellation: 6 }, scene);
   pole.id = "stayBanner";
   new TransformNode("uprightPole", scene).parent = pole;
+  new TransformNode("bearerPole", scene).parent = pole; // 458: the off fist rides the shaft too (proceduralAnimation POLE_GRIP.bearerPole)
   pole.material = mat(scene, LEGACY_POLE, 0.08);
   const part = (m: Mesh, x: number, y: number, z: number, material: PBRMetallicRoughnessMaterial): Mesh => {
     m.position.set(x, y, z); m.parent = pole; m.material = material; m.convertToFlatShadedMesh(); return m;
