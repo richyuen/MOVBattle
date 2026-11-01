@@ -1932,6 +1932,7 @@ export class RuntimeUnit {
         break;
       }
       case "support":
+        if (this.animator.holdingBearerPole) break; // [S] 464 the bearer's two-hand pole hold (BEARER_HOLD) solved the arms onto the pole
         body.leftShoulder.rotation.z -= 0.18;
         body.rightShoulder.rotation.z += 0.18;
         body.leftElbow.rotation.x -= 0.1;

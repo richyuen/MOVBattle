@@ -551,6 +551,15 @@ const DORY_THRUST = { ahead: 0.35, out: 0.6, up: -0.05, tilt: -0.06, reach: 0.75
  * its time): drawn back .cock of the way by .cockAt, driven out by .drivenAt, held to .heldTo, home by 1. The trunk leans .lean forward with the drive.
  * The gloves take turns, a new blow on the other fist.
  */
+/*
+ * [S] 464 the bearer's pole held upright before him in both fists (audit 457 banner_bearer b.3: "one hand on the pole and the other raised and waving -
+ * TABS: both fists on the pole at the chest"; flag_bearer b.3 "both fists on the upright pole"; legacy.banner_bearer.jpg, legacy.flag_bearer.blue.png:
+ * the pole plumb in front of his weapon side, its butt on the ground by his feet, the weapon fist on it at the chest, the off fist stacked under it at the
+ * belly, both elbows bent in). In u, his shoulder's height over his hip: the pole's line .ahead before the hip and .out to the weapon side; the weapon
+ * fist .high over the hip, the off fist .low; the pole plumb, its butt on the ground (the fist's share up it follows), its cloth to his weapon side.
+ * Stood and marching; the blow keeps its own swing. Found by the pole's "uprightPole" mark (propBuilder CHARGE_FLAG / STAY_BANNER).
+ */
+const BEARER_HOLD = { ahead: 0.42, out: 0.22, high: 0.72, low: 0.3 };
 const BOXER_JAB = { guardAhead: 0.45, guardUp: 0.12, guardIn: 0.2, reach: 0.95, jabUp: -0.05, cock: 0.15, cockAt: 0.12, drivenAt: 0.3, heldTo: 0.78, lean: 0.12 };
 const BLOWGUN_HOLD = { mouthAhead: 1.05, mouthDrop: 0.3, side: 0.18, tilt: 0.1, near: 0.07, far: 0.42 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
@@ -2373,6 +2382,7 @@ export class ProceduralAnimator {
     this._levelPike();
     this._holdBlowgun();
     this._boxerJab();
+    this._holdBearerPole();
     this._carryDory();
     this._applyBullFists();
     this._raiseGuns(dt);
@@ -4211,6 +4221,63 @@ export class ProceduralAnimator {
       const fist = side === this._jabSide ? Vector3.Lerp(guard, jab, ext) : guard;
       this._armTo(shoulderJ, elbowJ, handJ, fist, w, 2);
     }
+  }
+
+  private _bearerPole: { pole: Mesh; grip: Vector3; held: boolean } | null | undefined = undefined;
+  /** True while the bearer's two-hand pole hold (BEARER_HOLD) has the arms (the runtime's support overlay stands aside). */
+  get holdingBearerPole(): boolean {
+    return !!this._bearerPole?.held;
+  }
+
+  /** [S] 464 the bearer's pole upright before him in both stacked fists (spec at BEARER_HOLD), stood and marching. */
+  private _holdBearerPole(): void {
+    if (this.walkStyle === "quadruped") return;
+    if (this._bearerPole === undefined) {
+      const pole = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "staff" && n.getChildren().some((c) => c.name === "uprightPole"));
+      this._bearerPole = pole ? { pole, grip: pole.position.clone(), held: false } : null;
+    }
+    const P = this._bearerPole;
+    if (!P) return;
+    const s = this._state;
+    const w = s === AnimState.Idle || s === AnimState.Walking ? 1 - Math.min(1, this._limp) : 0;
+    if (w <= 0.01) {
+      // the carry turns the pole again from its rest; only the slide off the fist is ours to undo
+      if (P.held) P.pole.position.copyFrom(P.grip);
+      P.held = false;
+      return;
+    }
+    const b = this._body, B = BEARER_HOLD;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
+    const hip = b.hip.getAbsolutePosition();
+    const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
+    const { fwd, right } = this._heading();
+    const line = hip.add(fwd.scale(B.ahead * u)).add(right.scale(B.out * u));
+    const high = new Vector3(line.x, hip.y + B.high * u, line.z);
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, high, w, 2);
+    this._offArmTo(new Vector3(line.x, hip.y + B.low * u, line.z), w, 2);
+    // the pole plumb in the world, its +x (the cloth's side) to his weapon side, turned into the fist's frame
+    const hand = (P.pole.parent as TransformNode) ?? b.rightHand;
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand, hand]) n.computeWorldMatrix(true);
+    const up = Vector3.Up();
+    const z = Vector3.Cross(right, up).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(right, up, z, world);
+    const parentRot = new Quaternion();
+    hand.getWorldMatrix().decompose(undefined, parentRot);
+    const parent = Matrix.Identity();
+    parentRot.toRotationMatrix(parent);
+    const turn = Quaternion.FromRotationMatrix(world.multiply(parent.transpose()));
+    const rest = Quaternion.FromEulerAngles(P.pole.rotation.x, P.pole.rotation.y, P.pole.rotation.z);
+    P.pole.rotationQuaternion = Quaternion.Slerp(P.pole.rotationQuaternion ?? rest, turn, w);
+    // slid along its line so the butt stands on the ground under the weapon fist
+    const local = P.pole.getBoundingInfo().boundingBox.extendSize.y * 2 * P.pole.scaling.y;
+    const scale = Math.max(1e-4, hand.absoluteScaling.y);
+    const fistUp = (b.rightHand.getAbsolutePosition().y - b.root.getAbsolutePosition().y) / scale;
+    const at = Math.min(0.7, Math.max(0.05, fistUp / Math.max(1e-4, local)));
+    const held = new Vector3(0, local * (0.5 - at), 0);
+    held.rotateByQuaternionToRef(P.pole.rotationQuaternion, held);
+    P.pole.position.copyFrom(Vector3.Lerp(P.grip, held, w));
+    P.held = true;
   }
 
   private _blowgun: { tube: Mesh; grip: Vector3 } | null | undefined = undefined;
