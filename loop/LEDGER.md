@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-462 | BLOWDARTER_HAIR brown bob, bare head (918046b8) | legacy.blowdarter.a | approved (struck 1; 4, 5 by the lineup test)
-462 | cavalier_hat for the pike in place of the great-helm (9708312a) | legacy.pike.a | approved (none struck: plume team-coloured)
-462 | quiver_back special for the poacher (8e47a5ac) | legacy.poacher.b | approved (struck 2)
-462 | HAND_LAUNCH arrow from the bow fist (2f129417) | legacy.poacher.c | approved (none struck: bow not drawn at release)
-462 | MOUTH_LAUNCH dart from the head front (2f129417, half) | legacy.blowdarter.c | rejected (reverted 24f067a4)
-462 | [P] BEARER_RING radius 1.6 -> 2.2, root exception (d9f8f8c5) | legacy.flag_bearer.c + legacy.banner_bearer.c | approved (struck 1 each, c PASS both)
 463 | LONG_PIKE orange pike 2.8 s, collar, hooked blade (55c1c679) | legacy.pike.b | approved (struck 1, 2, 3; b PASS)
 463 | levelsPike for the pike: PIKE_LEVEL hold and thrust (cf35fc1b) | legacy.pike.c | approved (struck 1)
 463 | BLOWGUN banded tube + BLOWGUN_HOLD at the mouth (67888276) | legacy.blowdarter.b | approved (struck 1, 2; b PASS)
@@ -48,6 +42,12 @@ for 25 iterations.
 466 | boxerBareChest trunk in arm skin (07c88423) | legacy.boxer.a | approved (struck 1)
 466 | FLAG_CUFFS white cuffs banded in gold (07c88423) | legacy.flag_bearer.a | approved (struck 3)
 466 | TEAM_GLOVE rebuilt: wide .22, team x .8, white palm (7bac4615) | legacy.boxer.b | approved (struck 1; D)
+467 | POISON green dye, 4 dps for 6 s on a dart hit (ab237b96) | legacy.blowdarter.c | approved (struck 3; c PASS)
+467 | DRAWS_BEFORE_LOOSE poacher draws then looses (8faddfa9) | legacy.poacher.c | approved (struck 1; c PASS; D)
+467 | FLAG_BOOTS white boots, gold tops (c676cf71) | legacy.flag_bearer.a | approved (struck 4; D)
+467 | PIKE_BELT belt, baggy trousers; PIKE_HAIR (c676cf71) | legacy.pike.a | approved (struck 4, 3; D)
+467 | POACHER_KNEES tan knee caps (c676cf71) | legacy.poacher.a | approved (struck 4)
+467 | BARREL_WRAPS brown forearm wraps (c676cf71) | legacy.barrel_roller.a | approved (struck 5)
 
 ## Spent (never retry as [P])
 
@@ -59,19 +59,10 @@ pirate.pirate_queen done 450 rows (QUEEN_SKIRT/BOOTS/FRAME [R], QUEEN_GUARD; D) 
 spooky done 435-444 rows (reaper, stiffy, skeleton, vampire, candlehead, catapult dress and props; all D) | compacted 463 | 444 | approved | values: git log -- web/src/units/spookyDress.ts
 
 legacy_1 stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 8 units) | d PASS 8/8 (bearers polearm_melee 465: hp .68/.17, dmg .63, cd 2.31) | 465 | stats | values: git show 5d6b5d24
-propBuilder.ts:CHARGE_FLAG (long, thick, grip, ball, wide, tall, slab, edge, proud, emblem, glow) + LEGACY_GOLD, LEGACY_POLE | 1.55, .022, .3, .07, .48, .36, .012, .03, 1.8, .1, .15 | 457 | approved | staff log + orb (before 457)
-propBuilder.ts:STAY_BANNER (long, grip, beam, bar, knob, spike, wide, tall, inset, edge, tower) | 1.5, .3, 1.0, .03, .05, .09, .27, .42, .02, .025, .08 | 458 | approved | beam .62, banners .03 apart at the pole (457); staff log + orb (before 457)
-proceduralAnimation.ts:uprightPole marker -> PRIEST_HOLD + POLE_GRIP.bearerPole (off fist span) | Healer's planted hold; [.06, .24] | 458 | approved | one hand, the other raised (457); staff slant (before 457)
+legacy_1 done 457-459 rows (CHARGE_FLAG, STAY_BANNER, uprightPole, POACHER_HAT, POACHER_HAIR, PEASANT_HOOD, legacy.flag_bearer, BOXER_HEADGEAR, PEASANT_DRESS, POACHER_COAT; peasant, banner_bearer, boxer D 466; flag_bearer, pike, poacher D 467) | compacted 467 | 459 | approved | values: git show c07c1bca:loop/LEDGER.md
 propBuilder.ts:TEAM_GLOVE (wide, squash, band, glow, shade, palm, palmProud) + subdivisions 2 | .22, .92, .025, .1, .8, .55, .9 | 466 | approved | .11, glow .06, x.5 grey knobs (458-465); [S] rebuild 466 (critic accepted the colour move)
-legacyDress.ts:POACHER_HAT (sides, crown, flare, tall, dome, brim, thick, band, glow, felt) | 10, 1.1, .92, .2, .12, 2.0, .04, .11, .12, (.17,.11,.07) | 457 | approved | hood dome over the face (before 457)
-legacyDress.ts:POACHER_HAIR (side, top, foot, back, front, braid, braidFoot, knots, color, glow) | .22, .55, 1.25, 1.05, .45, .14, 1.75, 4, (.92,.92,.9), .22 | 458 | approved | none (before 458)
 unitVisuals.ts:legacy.barrel_roller build (scale, bulk, legLength, armLength, upperLegWidth, lowerLegWidth) | 1.0, .82, 1.08, 1.06, .9, .85 | 458 | approved | 1.24, 1.48 brute (before 458)
-legacyDress.ts:PEASANT_HOOD (wide, deep, tall, at, open, peak, back, collar, collarTall, neck, shade, glow) + rotation.y +PI | 1.24, 1.2, 1.2, .42, .34, .28, .08, 1.32, .24, 1.02, .72, .12 | 458 | approved | gap at the back (457 rejected)
 legacyDress.ts:BEARER_RING (radius, band, flat, lift, sides, glow; BEARER_RING_COLOR flag, banner) | 2.2, .05, .012, .02, 40, .45; (.95,.6,.2), (.25,.75,.95) | 462 | approved | radius 1.6 (460, the ally stood outside the reach); team colour (459); spent for [P] (root exception used 462)
-unitVisuals.ts:legacy.flag_bearer build (scale, bulk, headSize) | 1.0, .92, 1.05 | 459 | approved | 1.34 (before 459)
-legacyDress.ts:BOXER_HEADGEAR (wide, deep, tall, at, open, ear, earThick, earOut, earAt, shade, glow) | 1.16, 1.12, .95, .38, .36, .46, .14, .6, .55, .6, .1 | 459 | approved | bald (before 459)
-legacyDress.ts:PEASANT_DRESS (shade, glow, sleeveOut, sleeveTo, long, flare, point, pointLong, proud) | .72, .12, 1.3, .5, 1.0, 1.35, .5, .22, .02 | 459 | approved | plain team body (before 459)
-legacyDress.ts:POACHER_COAT (leather, fur, glow, long, flare, tufts, tuft, ring, furGlow) | (.36,.2,.1), (.95,.94,.9), .14, .6, 1.45, 10, .24, .5, .25 | 459 | approved | plain team body (before 459)
 legacyDress.ts:SHAKO (wide, flare, tall, peak, plate, plateTall, band, plume, plumeWide, shade, glow) | 1.02, 1.12, .95, .42, .42, .34, .08, .42, .22, .85, .12 | 459 | approved | bald (before 459)
 legacyDress.ts:BANNER_COATEE (shade, glow, epOut, epTo, fringe, belt, thick, span, waist, waistAt, whiteGlow) | .85, .12, 1.75, .16, .1, .16, 1.12, .82, .12, -.72, .3 | 460 | approved | plain team body (before 460)
 legacyDress.ts:FLAG_HELMET (wide, tall, dome, band, bandOut, plate, crest, crestLong, crestThin, whiteGlow) | 1.08, .18, .3, .12, 1.05, .22, .42, .8, .14, .25 | 460 | approved | bald (before 460)
@@ -115,3 +106,5 @@ propBuilder.ts:BANNER_ARCH (wide, tall, drop, crenel, crenelTall, door, doorTall
 propBuilder.ts:BANNER_FAN (rays, spread, long, root, tip, splay) | 5, .8, .12, .05, .012, .3 | 466 | approved | none (before 466)
 legacyDress.ts:PEASANT_SLEEVES (from, upperOut, lowerOut, lowerTo, cuffFrom, cuffOut, tan, glow) | .45, 1.2, 1.25, .8, .72, 1.75, (.85,.55,.28), .22 | 466 | approved | none (before 466)
 legacyDress.ts:FLAG_CUFFS (from, band, bandOut) | .6, .07, 1.6 | 466 | approved | none (before 466)
+runtimeUnit.ts:POISON (tint, dye, glow, seconds, dps, tick) | (.45,.9,.12), .7, .45, 6, 4, .5 | 467 | approved | none: 6 damage on the hit only (before 467)
+legacyDress.ts:FLAG_BOOTS + PIKE_BELT + PIKE_HAIR + POACHER_KNEES + BARREL_WRAPS (467 dress, specs at the code) | see legacyDress | 467 | approved | none (before 467)

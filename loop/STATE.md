@@ -1,5 +1,5 @@
 # Loop state (v7: a look list holds 6 blockers with the build first, the tail overlaps below 7 picks, a plateau [R] goes next, CONFIRM runs beside the critic; v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 466   Batch: legacy_1 (10/14)   Consecutive empty: 0   Done: 73/139   Parked: 0
+Iteration: 467   Batch: legacy_1 (11/14)   Consecutive empty: 0   Done: 76/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -13,7 +13,7 @@ dynasty: samurai ++++ D | firework_archer ++++ D | monk ++++ D | ninja ++++ D | 
 pirate: flintlock ++++ D | blunderbuss ++++ D | bomb_thrower ++++ D | harpooner ++++ D | cannon ++++ D | captain ++++ D | pirate_queen ++++ D
 spooky: skeleton_warrior ++++ D | skeleton_archer ++++ D | candlehead ++++ D | vampire ++++ D | pumpkin_catapult ++++ D | swordcaster ++++ D | reaper ++++ D
 wild_west: dynamite_thrower ++++ D | miner ++++ D | cactus ++++ D | gunslinger ++++ D | lasso ++++ D | deadeye ++++ D | quick_draw ++++ D
-legacy_1: peasant ++++ D | banner_bearer ++++ D | poacher -+-+ o | blowdarter -+-+ o | pike -+++ o | barrel_roller -+-+ o | boxer ++++ D | flag_bearer -+++ o
+legacy_1: peasant ++++ D | banner_bearer ++++ D | poacher ++++ D | blowdarter -+++ o | pike ++++ D | barrel_roller -+-+ o | boxer ++++ D | flag_bearer ++++ D
 legacy_2: pharaoh ???? q | wizard ???? q | chariot ???? q | thor ???? q | tank ???? q | super_boxer ???? q | dark_peasant ???? q | super_peasant ???? q
 good: devout_gauntlet ???? q | celestial_aegis ???? q | radiant_glaive ???? q | righteous_paladin ???? q | divine_arbiter ???? q | sacred_elephant ???? q | chronomancer ???? q
 evil: shadow_walker ???? q | exiled_sentinel ???? q | mad_mechanic ???? q | void_cultist ???? q | tempest_lich ???? q | death_bringer ???? q | void_monarch ???? q
@@ -23,25 +23,24 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
+467 (BASE c07c1bca): [S] blowdarter c.3 POISON (ab237b96) struck 3, c PASS | [S] poacher c.1 DRAWS_BEFORE_LOOSE (8faddfa9) struck 1, c PASS | [S] flag_bearer a.4 FLAG_BOOTS (c676cf71, shared) struck 4, a PASS | [S] pike a.4 PIKE_BELT (c676cf71) struck 4 | [S] pike a.3 PIKE_HAIR (c676cf71) struck 3, a PASS | [S] poacher a.4 POACHER_KNEES (c676cf71) struck 4, a PASS | [S] barrel_roller a.5 BARREL_WRAPS (c676cf71) struck 5; CONFIRM passed flag_bearer, pike, poacher: D - 7/7, 7 struck
 466 (BASE f28b5a0d): [S] banner_bearer b.3 BANNER_POLE (c3045bf2) struck 3 | [S] banner_bearer b.2 BANNER_ARCH (39c35a54) struck 2 | [S] banner_bearer b.1 BANNER_FAN (13b2b797) struck 1, b PASS | [S] peasant a.1 PEASANT_SLEEVES (07c88423, shared) struck 1, a PASS | [S] boxer a.1 boxerBareChest (07c88423) struck 1, a PASS | [S] flag_bearer a.3 FLAG_CUFFS (07c88423) struck 3 | [S] boxer b.1 TEAM_GLOVE rebuild (7bac4615) struck 1, b PASS; CONFIRM passed banner_bearer, peasant, boxer: D - 7/7, 7 struck
 465 (BASE 1bacaa78; evidence 2b229594 bearer spars his squire with the hurt ally in the ring): [S] banner_bearer + flag_bearer d polearm_melee blow, BEARER_PULSE (545192dc) d PASS both | [S] poacher c.2 SMALL_ARROW (ec355f73) struck 2 | [S] blowdarter c.2 BLOW_DART (ec355f73) struck 2 | [S] pike a.2 PIKE_VEST (ab5eacbe) struck 2 | [S] barrel_roller a.4 BARREL_VEST (ab5eacbe) struck 4 | [S] boxer a.1 build 1.08 (af84fde5) struck 1, a PASS | [S] peasant a.1 build 1.00 (af84fde5) struck 1, a PASS; CONFIRM failed banner b (3 new), peasant a (1 new), boxer a, b (1 each) - 7/7, 6 struck
-464 (BASE 64552e98): [S] blowdarter c.1 HAND_LAUNCH muzzle (b42e6e1c) struck 1 | [S] boxer c.2 HOP_BACK dodge (f5c1b38a) struck 2, c PASS | [S] pike c.2 PIKE_DROP (d57603bb, fa8827d7) struck 2, c PASS | [S] barrel_roller a.2 tricorn (38bca2d8) struck 2 | [S] poacher b.1 bowGrip (99c8103c) struck 1, b PASS | [S] flag_bearer b.4 CHARGE_PENNANT (c0cb4ef3) struck 4 | [S] banner_bearer b.3 BEARER_HOLD (70924ac8, shared) struck 3 + flag b.3, b PASS both | [P] poacher b.1 POACHER_BOW wood (e968d1a0) - 8/8, 8 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] legacy.banner_bearer (c3045bf2) VERDICT: APPROVE CRITERION: legacy.banner_bearer.b FAIL   (previous: FAIL)
-- GAP: [S] legacy.banner_bearer (39c35a54) VERDICT: APPROVE CRITERION: legacy.banner_bearer.b FAIL   (previous: FAIL)
-- GAP: [S] legacy.banner_bearer (13b2b797) VERDICT: APPROVE CRITERION: legacy.banner_bearer.b PASS   (previous: FAIL)
-- GAP: [S] legacy.peasant (07c88423) VERDICT: APPROVE CRITERION: legacy.peasant.a PASS   (previous: FAIL)
-- GAP: [S] legacy.boxer (07c88423) VERDICT: APPROVE CRITERION: legacy.boxer.a PASS   (previous: FAIL)
-- GAP: [S] legacy.flag_bearer (07c88423) VERDICT: APPROVE CRITERION: legacy.flag_bearer.a FAIL   (previous: FAIL)
-- GAP: [S] legacy.boxer (7bac4615) VERDICT: APPROVE CRITERION: legacy.boxer.b PASS   (previous: FAIL)
+- GAP: [S] legacy.blowdarter (ab237b96) VERDICT: APPROVE CRITERION: legacy.blowdarter.c PASS   (previous: FAIL)
+- GAP: [S] legacy.poacher (8faddfa9) VERDICT: APPROVE CRITERION: legacy.poacher.c PASS   (previous: FAIL)
+- GAP: [S] legacy.flag_bearer (c676cf71) VERDICT: APPROVE CRITERION: legacy.flag_bearer.a PASS   (previous: FAIL)
+- GAP: [S] legacy.pike (c676cf71) VERDICT: APPROVE CRITERION: legacy.pike.a PASS   (previous: FAIL) (blockers 4 and 3)
+- GAP: [S] legacy.poacher (c676cf71) VERDICT: APPROVE CRITERION: legacy.poacher.a PASS   (previous: FAIL)
+- GAP: [S] legacy.barrel_roller (c676cf71) VERDICT: APPROVE CRITERION: legacy.barrel_roller.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM 466: legacy.banner_bearer, legacy.peasant, legacy.boxer a PASS b PASS c PASS d PASS (4/4)
+- CONFIRM 467: legacy.flag_bearer, legacy.pike, legacy.poacher a PASS b PASS c PASS d PASS (4/4)
 ## Notes for next iteration (max 5 lines)
-- Flag bearer: a.4 white boots with gold tops is its last blocker (FLAG_BOOTS, BOXER_BOOTS cut), then CONFIRM; watch the near arm off the pole in _idle and the plumb-pole lunge.
-- Pike a: 3 hair, 4 belt left (b, c, d PASS). Barrel roller a: 3 hair, 5 arm wraps, 6 legs; c.2 roll delivery.
-- Poacher c.1: keep the bow in the weapon fist on the march and drawn at release; a.4 knees. Blowdarter c.3 poison tint; a.2 scarf, a.3 pants.
-- Starvation at 467: poacher a (last 461) takes a slot.
-- legacy_1 has 5 open units: the tail may overlap legacy_2's audit once picks drop under 7.
+- legacy_1 has 2 open units: blowdarter a (2 scarf, 3 pants) and barrel_roller a (3 hair, 6 legs) and c (2 roll the barrel into the enemy).
+- Those are 5 picks, under 7: the tail overlaps legacy_2's audit this iteration (step 2 audits legacy_2 beside the legacy_1 picks).
+- Barrel roller c.2: he walks the BARREL_RIDE barrel forward under his feet into the enemy, the blast on contact, in place of the 6 m throw.
+- CONFIRM watches: blowdarter dye on skin only; barrel grey tunic hem under the vest.
+- Starvation: none due at 468.
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
 # <unitId>
