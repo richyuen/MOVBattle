@@ -722,7 +722,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "legacy.blowdarter": vis(
     // [S] 462 bare-headed under a dark brown bob (legacyDress BLOWDARTER_HAIR; audit 457 a.1), not the dark hood
     { scale: 0.95, bulk: 0.8, armLength: 1.08 }, "blowgun", "none", "none", "none", "#6E8A5A", undefined, {
-      posePreset: "archer",
+      posePreset: "default", // [S] 463 the blowgun held at the mouth (proceduralAnimation BLOWGUN_HOLD): no archer overlay turning the arms after it
       materialPreset: "secret_nature",
     },
   ),

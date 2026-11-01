@@ -535,6 +535,15 @@ const DORY_AIM = { ahead: 1.8, out: 1.9, above: 0.1 };
  * runs from drawn back .draw of .reach at the start to the full .reach out by .driven of the blow, holds to .held and eases home by .home.
  */
 const DORY_THRUST = { ahead: 0.35, out: 0.6, up: -0.05, tilt: -0.06, reach: 0.75, draw: 0.45, driven: 0.22, held: 0.5, home: 0.85, blendOut: 0.15 };
+/*
+ * [S] 463 the blowgun held at the mouth (audit 457 blowdarter b.1: "a short stick on the back, empty hands forward - TABS: a long wooden blowgun held
+ * at the mouth in both hands, crossed arms"; b.2 "blowgun levelled at the mouth"; legacy.blowdarter.red.png, .png: the near fist at the mouth on the
+ * mouthpiece, the other arm crossed over and reaching out along the tube, the tube run forward from the lips a little down and out to his weapon side).
+ * The mouth: the head box's front (+z) .mouthAhead of its half depth ahead of its middle, .mouthDrop of its half height under it. The tube along his
+ * heading turned .side rad to the weapon side and .tilt rad down; its butt at the mouth, the weapon fist .near of its length along it, the off fist .far.
+ * Every living state but a stagger (eased out by the limp); the attack keeps the hold (the dart is blown, not drawn).
+ */
+const BLOWGUN_HOLD = { mouthAhead: 1.05, mouthDrop: 0.3, side: 0.18, tilt: 0.1, near: 0.07, far: 0.42 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
 const BULL_FISTS = { carryAhead: 0.5, carryOut: 1.1, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
 const CHARGE_POSE = { ease: 10, headDown: 0.42, toss: 0.08, pitch: 0.1, stride: 0.42, fold: 0.4, rock: 0.05, pace: 9 };
@@ -2353,6 +2362,7 @@ export class ProceduralAnimator {
     this._aimPick();
     this._twoHandPole();
     this._levelPike();
+    this._holdBlowgun();
     this._carryDory();
     this._applyBullFists();
     this._raiseGuns(dt);
@@ -4130,6 +4140,49 @@ export class ProceduralAnimator {
     const held = new Vector3(0, len * (0.5 - P.fistAt), 0);
     held.rotateByQuaternionToRef(turn, held);
     shaft.position.copyFrom(held);
+  }
+
+  private _blowgun: { tube: Mesh; grip: Vector3 } | null | undefined = undefined;
+
+  /** [S] 463 the blowgun held level at the mouth in both fists (spec at BLOWGUN_HOLD), every living state; found by its mesh name "blowgun". */
+  private _holdBlowgun(): void {
+    if (this.walkStyle === "quadruped") return;
+    if (this._blowgun === undefined) {
+      const find = (n: Node): Mesh | undefined => (n instanceof Mesh && n.name === "blowgun" ? n : n.getChildren().map(find).find((m) => m));
+      const tube = find(this._body.rightHand);
+      this._blowgun = tube ? { tube, grip: tube.position.clone() } : null;
+    }
+    if (!this._blowgun) return;
+    const { tube, grip } = this._blowgun;
+    const s = this._state;
+    const w = s === AnimState.Dead ? 0 : 1 - Math.min(1, this._limp);
+    if (w <= 0.01 || (s !== AnimState.Idle && s !== AnimState.Walking && s !== AnimState.Attacking)) {
+      if (tube.rotationQuaternion) {
+        tube.rotationQuaternion = null;
+        tube.position.copyFrom(grip);
+      }
+      return;
+    }
+    const b = this._body, H = BLOWGUN_HOLD;
+    const hand = (tube.parent as TransformNode) ?? b.rightHand;
+    for (const n of [b.root, b.hip, b.torso, b.neck, b.headMesh, hand]) n.computeWorldMatrix(true);
+    const box = b.headMesh.getBoundingInfo().boundingBox;
+    const mouth = Vector3.TransformCoordinates(box.center.add(new Vector3(0, -box.extendSize.y * H.mouthDrop, box.extendSize.z * H.mouthAhead)), b.headMesh.getWorldMatrix());
+    const { fwd, right } = this._heading();
+    const flat = fwd.scale(Math.cos(H.side)).add(right.scale(Math.sin(H.side)));
+    const dir = new Vector3(flat.x * Math.cos(H.tilt), -Math.sin(H.tilt), flat.z * Math.cos(H.tilt));
+    const local = tube.getBoundingInfo().boundingBox.extendSize.y * 2 * tube.scaling.y;
+    const len = local * (hand.absoluteScaling?.y ?? 1);
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, mouth.add(dir.scale(H.near * len)), w, 2);
+    this._offArmTo(mouth.add(dir.scale(H.far * len)), w, 2);
+    // the tube along that line, its butt at the mouth: the weapon fist .near of its length up from the butt
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand, hand]) n.computeWorldMatrix(true);
+    const along = Vector3.TransformNormal(dir, Matrix.Invert(hand.getWorldMatrix())).normalize();
+    const turn = Quaternion.FromUnitVectorsToRef(Vector3.Up(), along, new Quaternion());
+    tube.rotationQuaternion = turn;
+    const held = new Vector3(0, local * (0.5 - H.near), 0);
+    held.rotateByQuaternionToRef(turn, held);
+    tube.position.copyFrom(held);
   }
 
   /** Carries the dory low at the weapon hip (DORY_CARRY); set by the runtime for the hoplite. */

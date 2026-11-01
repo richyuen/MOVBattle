@@ -4864,15 +4864,37 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return star;
     }
     case "blowgun": {
-      const tube = MeshBuilder.CreateCylinder("blowgun", { height: 0.38 * s, diameter: 0.026 * s, tessellation: 8 }, scene);
-      tube.rotation.z = Math.PI / 2;
-      tube.position.y = 0.14 * s;
-      tube.material = mat(scene, new Color3(0.36, 0.22, 0.08));
-      const dart = MeshBuilder.CreateCylinder("blowdart", { height: 0.1 * s, diameterTop: 0, diameterBottom: 0.016 * s, tessellation: 6 }, scene);
-      dart.position.set(0.16 * s, 0.14 * s, 0);
-      dart.rotation.z = -Math.PI / 2;
+      /*
+       * [S] 463 the Blowdarter's blowgun (audit 457 blowdarter b.1: "a short stick on the back, empty hands forward - TABS: a long wooden blowgun held
+       * at the mouth in both hands"; legacy.blowdarter.red.png, .png: a light orange-tan tube about as long as his legs, a fatter mouthpiece at the near
+       * end, two dark bands along it, a grey dart point out of the far end). BLOWGUN in s: the tube .long along +y, .thick across, .wood; the mouthpiece
+       * .mouth long, .mouthOut of the tube across, at the butt (-y); dark bands .band long, .bandOut across, at .bandsAt of the length from the butt; the
+       * dart point .dart long, .dartWide across, out of the muzzle. Its muzzle marked by a "blowgunMuzzle" node. Held at the mouth by the animator
+       * (proceduralAnimation BLOWGUN_HOLD, which finds it by its name).
+       */
+      const B = BLOWGUN;
+      const L = B.long * s;
+      const tube = MeshBuilder.CreateCylinder("blowgun", { height: L, diameter: B.thick * s, tessellation: 8 }, scene);
+      tube.material = mat(scene, B.wood, 0.12, "cloth");
+      tube.convertToFlatShadedMesh();
+      const dark = mat(scene, B.dark, 0.08, "cloth");
+      const piece = (name: string, at: number, long: number, wide: number, m: ReturnType<typeof mat>): void => {
+        const c = MeshBuilder.CreateCylinder(name, { height: long * s, diameter: wide * B.thick * s, tessellation: 8 }, scene);
+        c.position.y = -L * 0.5 + at * L;
+        c.material = m;
+        c.convertToFlatShadedMesh();
+        c.parent = tube;
+      };
+      piece("blowgunMouth", B.mouth / B.long / 2, B.mouth, B.mouthOut, tube.material as ReturnType<typeof mat>);
+      for (const at of B.bandsAt) piece("blowgunBand", at, B.band, B.bandOut, dark);
+      const dart = MeshBuilder.CreateCylinder("blowdart", { height: B.dart * s, diameterTop: 0, diameterBottom: B.dartWide * s, tessellation: 4 }, scene);
+      dart.position.y = L * 0.5 + B.dart * s * 0.5;
+      dart.material = mat(scene, B.steel, 0.14, "cloth");
+      dart.convertToFlatShadedMesh();
       dart.parent = tube;
-      dart.material = mat(scene, new Color3(0.72, 0.82, 0.48));
+      const muzzle = new TransformNode("blowgunMuzzle", scene);
+      muzzle.position.y = L * 0.5;
+      muzzle.parent = tube;
       return tube;
     }
     case "scythe": {
@@ -6335,6 +6357,8 @@ function buildBoneBow(scene: Scene, s: number, stand: number, team: Color3): Mes
  * of the shaft across; the blade .blade long, .bladeWide across at its foot, .bladeThin deep, tapering to a point; the hook .hook long, .hookThick, off one
  * side .hookAt up the blade, raked .hookRake rad up. Named "shaft" (the levelled hold, PIKE_LEVEL, finds it), gripped .grip of its length up from the butt.
  */
+/** [S] 463 the Blowdarter's blowgun (spec at its case in buildWeapon). */
+const BLOWGUN = { long: 0.55, thick: 0.03, mouth: 0.05, mouthOut: 1.6, band: 0.022, bandOut: 1.35, bandsAt: [0.22, 0.6], dart: 0.07, dartWide: 0.022, wood: new Color3(0.9, 0.45, 0.15), dark: new Color3(0.2, 0.1, 0.05), steel: new Color3(0.62, 0.62, 0.66) };
 const LONG_PIKE = { long: 2.8, thick: 0.03, collar: 0.08, collarOut: 1.5, blade: 0.34, bladeWide: 0.07, bladeThin: 0.018, hook: 0.09, hookThick: 0.022, hookAt: 0.18, hookRake: 0.6, grip: 0.12, wood: new Color3(0.7, 0.3, 0.08), steel: new Color3(0.62, 0.62, 0.66) };
 function buildLongPike(scene: Scene, s: number): Mesh {
   const P = LONG_PIKE;
