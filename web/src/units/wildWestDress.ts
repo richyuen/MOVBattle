@@ -142,25 +142,35 @@ export function buildPeakHat(scene: Scene, W: number, H: number, seatAt: number,
  * .slope H deep; the crown from .crown W at the seat to .top of that at its flat top, .tall H over the head top; the whole hat tipped back .tilt rad.
  * Team colour times .shade, self-lit .glow.
  */
-const MINER_HAT = { sides: 8, crown: 1.2, brim: 1.85, slope: 0.16, top: 0.86, tall: 0.75, tilt: 0.14, shade: 0.9, glow: 0.12 };
+// [R] 458 MINER_HAT rebuild (CONFIRM 457 a.1: "a straight-sided cylinder crown (stovepipe/top-hat silhouette) with a narrow flat brim - TABS: a tapered,
+// faceted crown over a wide brim that tilts down at the front and sides, a slouched prospector's hat"; wild_west.miner.red.png, .blue.png, faction jpg
+// second from left). Spec: the brim a wide lampshade (PEAK_HAT's cut) .sides-sided from .crown W at the seat out and down to .brim W, .slope H deep; the
+// crown a frustum narrowing hard from .crown W to .top of that at .tall H over the head top, then a faceted cap from .top to .cap of the crown's width,
+// .capTall H more, so the top reads rounded-to-a-blunt-peak and never as a flat stovepipe lid; the hat tipped back .tilt rad. Team colour x .shade.
+const MINER_HAT = { sides: 8, crown: 1.16, brim: 2.2, slope: 0.3, top: 0.62, tall: 0.5, cap: 0.32, capTall: 0.16, tilt: 0.1, shade: 0.9, glow: 0.12 };
 
-/** The miner's tall team hat with a brim all round (spec at MINER_HAT), in the hat's units; `seat` under the head top. Returns the brim. */
+/** The miner's slouched team hat: a lampshade brim, a tapered faceted crown with a blunt cap (spec at MINER_HAT), in the hat's units; `seat` under the head top. Returns the brim. */
 export function buildMinerCap(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
   const C = MINER_HAT;
   const u = (v: number) => v / unit;
   const team = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(C.shade);
   const felt = getMaterialFactory().get("cloth", team, { emissive: team.scale(C.glow) });
   const brim = MeshBuilder.CreateCylinder("minerHatBrim", { height: u(C.slope * H), diameterTop: u(C.crown * W), diameterBottom: u(C.brim * W), tessellation: C.sides }, scene);
-  brim.position.y = u(seat - C.slope * H * 0.5 + 0.04 * H);
+  brim.position.y = u(seat - C.slope * H * 0.5 + 0.06 * H);
   brim.rotation.x = -C.tilt;
   brim.material = felt;
   brim.convertToFlatShadedMesh();
   const tall = -seat + C.tall * H;
   const crown = MeshBuilder.CreateCylinder("minerHatCrown", { height: u(tall), diameterBottom: u(C.crown * W), diameterTop: u(C.crown * W * C.top), tessellation: C.sides }, scene);
-  crown.position.y = u(C.slope * H * 0.5 - 0.04 * H + tall * 0.5);
+  crown.position.y = u(C.slope * H * 0.5 - 0.06 * H + tall * 0.5);
   crown.material = felt;
   crown.convertToFlatShadedMesh();
   crown.parent = brim;
+  const cap = MeshBuilder.CreateCylinder("minerHatCap", { height: u(C.capTall * H), diameterBottom: u(C.crown * W * C.top), diameterTop: u(C.crown * W * C.cap), tessellation: C.sides }, scene);
+  cap.position.y = u(tall * 0.5 + C.capTall * H * 0.5);
+  cap.material = felt;
+  cap.convertToFlatShadedMesh();
+  cap.parent = crown;
   return brim;
 }
 
