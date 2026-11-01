@@ -2886,7 +2886,9 @@ export class SimulationSystem {
       this.visualEffects.spawnTrampleRing(new Vector3(target.position.x, attacker.position.y, target.position.z), Math.max(2, splashRadius));
     }
     // [S] 436 the Reaper's scythe bursts a dark magic shockwave where it lands (card Characteristics; visualEffects REAPER_BURST), out to its splash
-    if (this.visualEffects && attacker.definition.id === "spooky.reaper" && !impaled) {
+    // [S] 444 (CONFIRM 443 c.1: "every scythe swing bursts a dark magic shockwave"): the impaling blow bursts too, the ring and dome at the ground
+    // where the man stood as he was speared (he alone is held, not cut)
+    if (this.visualEffects && attacker.definition.id === "spooky.reaper") {
       this.visualEffects.spawnReaperBurst(new Vector3(target.position.x, target.position.y, target.position.z), Math.max(2, splashRadius));
     }
     // A painter's brush throws its paint as it lands (card Appearance): blobs of the tuft's own paint leave its point, on along the swing
