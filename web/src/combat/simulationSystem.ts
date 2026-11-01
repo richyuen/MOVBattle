@@ -94,7 +94,8 @@ const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up
 // booted off his feet .fling m/s along the kick with .lift m/s up; the foot is back down .recover s later. Logged "kick" at the blow.
 const PIRATE_KICK = { units: new Set(["pirate.harpooner"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
 // [S] 464 the Pike's dropped pike (_dropPike): forward and up as it leaves the fist (m/s), its tumble (rad/s), his first slap after (s)
-const PIKE_DROP = { ahead: 0.6, up: 0.8, spin: 1.2, ready: 0.6 };
+// 464b: up .8, spin 1.2 left it level at his chest 150 ms on (the _ability_after shot read as still held): it now leaves falling, tipping
+const PIKE_DROP = { ahead: 0.6, up: -2.4, spin: 3, ready: 0.6 };
 const BLUNDERBUSS_RECOIL = { units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
 // [S] 428 the Captain's dragon pistol (card pirate.captain Weapons off Flintlock Blunderbuss: damage 50, cooldown 2 s, range 3, force 3000; Characteristics
 // "will charge in, blasting enemy units with their Pistol"): a man within .range m (centre to centre) with the pistol ready (.cooldown s apart, first
