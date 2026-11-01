@@ -36,10 +36,9 @@ drop a lesson once it is a comment at the code it describes.
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
 ## Rig and dress
-- A hunched idle can be _buildIdlePose's hashed sunk stance: a per-unit stance override fixed what scale/bulk did not (436 QUEEN_UPRIGHT).
+- A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen). The `_yoke` hull spans the whole trunk, not a collar: never anchor a chest piece to its foot (444).
 - Flipping a flat disc or ribbon one-sided by its summed normal (faceFront) can turn it away from the camera (390 halfling V vanished): build small flat dress pieces as thin closed slabs instead.
-- A hood or cap over the block head needs a superellipsoid profile (exponent about 3, 1.2 of the head) to clear the chamfered corners.
 - A shared prop that marks its mechanic by the style OBJECT (`style === VALKYRIE_WINGS`) loses the mechanic the moment one unit gets its own style: key the marker on a flag in the style (`fly: true`) so a per-unit fork keeps the flight/beat (394 valkyrie wings).
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
 - A pose keyed off `_air` reaches every airborne humanoid (hop-backs, the halfling's jump): gate it on a runtime flag set by the one mechanic it belongs to (392 leap pose).
