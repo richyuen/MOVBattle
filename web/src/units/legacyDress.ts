@@ -473,3 +473,18 @@ export function poacherBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 461 the Banner Bearer's white cuffs (critic 460 a.3: "cuffs, bare team forearms - TABS: white cuffs"; legacy.banner_bearer.red.png: a broad white
+ * cuff round each wrist, the lower third of the forearm, a little wider than the sleeve). BANNER_CUFFS: on each forearm a white shell .out of the limb
+ * round from .from to .to of its length. White self-lit BANNER_COATEE.whiteGlow (lit white in shade reads grey).
+ */
+const BANNER_CUFFS = { from: 0.62, to: 1.0, out: 1.45 };
+
+/** The Banner Bearer's broad white cuffs at the wrists (spec at BANNER_CUFFS). */
+export function bannerCuffs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = BANNER_CUFFS;
+  const white = getMaterialFactory().get("cloth", BANNER_COATEE.white, { emissive: BANNER_COATEE.white.scale(BANNER_COATEE.whiteGlow) });
+  return [body.leftLowerArm, body.rightLowerArm].map((arm) => limbShell(scene, "bannerCuff", arm, C.from, C.to, C.out, white));
+}
+
