@@ -1,7 +1,7 @@
-import { Scene, Color3, Mesh, MeshBuilder, VertexBuffer } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, VertexBuffer, type Material } from "@babylonjs/core";
 import { getMaterialFactory } from "./materialFactory";
 import type { ArticulatedBody } from "./bodyBuilder";
-import { limbShell } from "./medievalDress";
+import { limbBox, limbShell } from "./medievalDress";
 
 /*
  * Wild West dress (units/wild_west.*): per-unit hats, cloth, hair and ornaments. Sized off the body's own joints and meshes.
@@ -275,3 +275,50 @@ export function gunslingerJacket(scene: Scene, body: ArticulatedBody, teamColor:
  * W at its end .long H down; both .proud D off the shirt V; violet cloth (palette purple x .7), self-lit .glow.
  */
 const GUNSLINGER_TIE = { knot: 0.17, knotTall: 0.07, top: 0.15, foot: 0.24, long: 0.32, proud: 0.06, color: new Color3(0.42, 0.14, 0.63), glow: 0.12 };
+
+/*
+ * [S] 447 the Cactus's sleeves (critic 446 cactus a.1: "bare team arms shoulder to hand - TABS: thick green spiked cactus sleeves over the forearms";
+ * wild_west.cactus.red.png: each forearm cased from the elbow past the hand in a fat green cactus pad, about three arms across, its end rounded like a
+ * mitten, the hand hidden in it; tan pyramid spikes in regular rows round it). CACTUS_SLEEVE in the forearm's own box: a 6-sided shell .out of its
+ * half-width round it, from .from of its length to .to (past the hand), a rounded cap .cap of the shell across at the end; .rows rows of .ring spikes
+ * each, the rows staggered by half a step, each spike .spike of the shell's radius tall. The suit's green (the caller's), the robe's spikes' material.
+ */
+const CACTUS_SLEEVE = { out: 2.2, from: 0.04, to: 1.32, cap: 0.95, rows: 4, ring: 5, spike: 0.42 };
+
+/** The fat spiked sleeves over both forearms (spec at CACTUS_SLEEVE), in the suit's `green` with `spikeMat` spikes. */
+export function cactusSleeves(scene: Scene, body: ArticulatedBody, green: Material, spikeMat: Material): Mesh[] {
+  const C = CACTUS_SLEEVE;
+  const out: Mesh[] = [];
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    const L = limbBox(arm);
+    const shell = limbShell(scene, "cactusSleeve", arm, C.from, C.to, C.out, green);
+    out.push(shell);
+    const r = Math.max(L.wide, L.deep) * C.out;
+    const zs = shell.scaling.z;
+    const yTop = L.mid + L.half - C.from * L.half * 2, yBot = L.mid + L.half - C.to * L.half * 2;
+    const cap = MeshBuilder.CreateSphere("cactusSleeveCap", { diameter: r * 2 * 0.86 * C.cap, segments: 4 }, scene);
+    cap.scaling.set(1, 0.7, zs);
+    cap.position.y = yBot;
+    cap.material = green;
+    cap.convertToFlatShadedMesh();
+    cap.parent = arm.parent;
+    out.push(cap);
+    const tall = r * C.spike;
+    for (let row = 0; row < C.rows; row++) {
+      const y = yTop - (yTop - yBot) * (row + 0.5) / C.rows;
+      const rr = r * (1 - 0.14 * (row + 0.5) / C.rows);
+      for (let k = 0; k < C.ring; k++) {
+        const a = (Math.PI * 2 * (k + (row % 2) * 0.5)) / C.ring;
+        const dir = { x: Math.sin(a), z: Math.cos(a) };
+        const s = MeshBuilder.CreateCylinder("cactusSleeveSpine", { height: tall, diameterTop: 0, diameterBottom: tall * 0.85, tessellation: 4 }, scene);
+        s.position.set(dir.x * (rr + tall * 0.3), y, dir.z * (rr * zs + tall * 0.3));
+        s.rotation.set(Math.PI / 2, Math.atan2(dir.x, dir.z), 0);
+        s.material = spikeMat;
+        s.convertToFlatShadedMesh();
+        s.parent = arm.parent;
+        out.push(s);
+      }
+    }
+  }
+  return out;
+}
