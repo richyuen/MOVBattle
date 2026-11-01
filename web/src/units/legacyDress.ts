@@ -142,3 +142,35 @@ export function bearerRing(scene: Scene, body: ArticulatedBody, teamColor: Color
   ring.parent = body.root;
   return [ring];
 }
+
+/*
+ * [S] 459 the Boxer's headgear (audit 457 a.2: "headgear, bald - TABS: team boxing headgear with ear guards"; legacy.boxer.blue.png: a padded team
+ * cap over the crown, the back and the sides of the head, open round the face, a round pad over each ear). BOXER_HEADGEAR, in the head's width W and
+ * height H: a padded shell .wide W across and .deep W deep, .tall H high, its middle .at H under the head top, an arc .open of the way round left open
+ * on the face (the PEASANT_HOOD turn, + PI); an ear pad each side, a disc .ear W across and .earThick W thick, .earOut W out from the middle at .earAt
+ * H under the head top. Team colour times .shade, self-lit .glow.
+ */
+const BOXER_HEADGEAR = { wide: 1.16, deep: 1.12, tall: 0.95, at: 0.38, open: 0.36, ear: 0.46, earThick: 0.14, earOut: 0.6, earAt: 0.55, shade: 0.6, glow: 0.1 };
+
+/** The Boxer's padded team headgear with ear pads (spec at BOXER_HEADGEAR), in the hat's units. Returns the shell. */
+export function buildBoxerHeadgear(scene: Scene, W: number, H: number, unit: number, teamColor?: Color3): Mesh {
+  const B = BOXER_HEADGEAR;
+  const u = (v: number) => v / unit;
+  const c = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(B.shade);
+  const pad = getMaterialFactory().get("cloth", c, { emissive: c.scale(B.glow) });
+  const shell = MeshBuilder.CreateSphere("boxerHeadgear", { diameter: 1, segments: 8, arc: 1 - B.open }, scene);
+  shell.scaling.set(u(B.wide * W), u(B.tall * H), u(B.deep * W));
+  shell.rotation.y = Math.PI / 2 + Math.PI * B.open + Math.PI; // the gap on the face (LESSONS: + PI)
+  shell.position.y = u(-B.at * H);
+  shell.material = pad;
+  shell.convertToFlatShadedMesh();
+  for (const side of [-1, 1]) {
+    const ear = MeshBuilder.CreateCylinder("boxerEarPad", { height: u(B.earThick * W), diameter: u(B.ear * W), tessellation: 8 }, scene);
+    ear.rotation.z = Math.PI / 2;
+    ear.position.set(u(side * B.earOut * W), u(-B.earAt * H), 0);
+    ear.material = pad;
+    ear.convertToFlatShadedMesh();
+    ear.setParent(shell);
+  }
+  return shell;
+}

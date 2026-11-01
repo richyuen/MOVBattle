@@ -21,7 +21,7 @@ export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap" | "peak_hat"
-  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood"
+  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood" | "boxer_headgear"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
@@ -738,7 +738,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.boxer": vis(
-    { scale: 0.68, bulk: 0.94, headSize: 1.32, armLength: 1.08 }, "boxing_glove", "none", "none", "none", "#C54A4A", "boxing_glove", {
+    // [S] 459 padded team headgear with ear pads (legacyDress BOXER_HEADGEAR; audit 457 a.2)
+    { scale: 0.68, bulk: 0.94, headSize: 1.32, armLength: 1.08 }, "boxing_glove", "boxer_headgear", "none", "none", "#C54A4A", "boxing_glove", {
       weaponVariant: "team_glove", offhandVariant: "team_glove", // [S] 457 team mitts on the fists (propBuilder TEAM_GLOVE; audit 457 b.2)
       posePreset: "boxer",
       materialPreset: "legacy_toy",
