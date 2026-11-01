@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-438 | HARPOON grip settled onto the carry bar (da4b3767) | pirate.harpooner.b | approved
-438 | VAMPIRE_HAIR slicked-back cap, swept ridge, widow's peak (16a75717) | spooky.vampire.a | approved
-438 | VAMPIRE_BITE latch, BITE_POSE, BLOOD_DRAIN (29201909, e6949b0d) | spooky.vampire.c | dropped
-438 | CANDLE_TOWER wax cap + drips, lumpy column, cyan flame (584ca625) | spooky.candlehead.a | approved
-438 | BONE_FRAME bone arm + lashed crossbones, bone crossbars (757d7237) | spooky.pumpkin_catapult.b | approved
-438 | CATAPULT_BANNER team pennants off the low bone (9dbd09aa) | spooky.pumpkin_catapult.a | approved
-438 | SKELETON_BELT no skirt, belt + team tassels (c24646b8) | spooky.skeleton_archer.a | approved
 439 | STIFFY_SHORTS baggy team shorts to the knee, rag hems, brown belt, no skirt (e3336ba6) | spooky.skeleton_warrior.a | approved
 439 | ARCHER_KIT team forearm bracers, brown boot boxes + shin cuffs (bc447f44) | spooky.skeleton_archer.a | approved
 439 | SKELETON_CREW catapult operator stripped to bone, ribs, team rags (6e88e2f5) | spooky.pumpkin_catapult.a | approved
@@ -44,20 +37,21 @@ for 25 iterations.
 442 | PUMPKIN_POSTS upright square posts per rail, collar, cleat (4a2e5f3b) | spooky.pumpkin_catapult.a | approved
 442 | cape arc gap + V .64 to the belt (8e29a2cb) | spooky.vampire.a | rejected
 442 | QUEEN_SKIRT wrap hem + pale pelvis (af6e49fd, 6eb18db0) | pirate.pirate_queen.a | dropped
+443 | STIFFY_UPRIGHT shield stood upright on the fist, face out front (a18d0a6f) | spooky.skeleton_warrior.b | approved
+443 | DRAWS_BEFORE_LOOSE + skeleton archer, fire arrow off the full draw (3471ec43) | spooky.skeleton_archer.b | approved
+443 | no counterweight box on the spooky catapult (1992ee2c) | spooky.pumpkin_catapult.a | approved
+443 | REAPER_IMPALE hung high beside the shoulder, not targeted; REAPER_SPEAR thicker (b111a980) | spooky.reaper.c | approved
+443 | VAMPIRE_VEST team vest slab + short V .5/.28, off secret_ghost (67ad1643) | spooky.vampire.a | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
 
 dynasty.monk + viking.brawler done (MONK_STAFF + MONK_REST, MONK_SWING, MONK_TROUSERS, MONK_ARM_PLATES, BRAWLER_BEARD, BRAWLER_HATCHET, NORSE_BOARD, FIRST_LUNGE) | compacted 419 | 418 | approved | values: git show f1bce224:loop/LEDGER.md
-viking done 410-412 rows (LEG_WRAPS, ICE_ARCHER_QUIVER, ICE_NOCK, ICE_REST + grip seat) | compacted 413 | 412 | approved | values: git show e702238:loop/LEDGER.md
-dynasty.ninja done 411-413 rows (NINJA_HOOD, SHURIKEN, NINJA_GI, SHURIKEN_FLIGHT, NINJA_TROUSERS) | compacted 415 | 413 | approved | values: git show 46161b8:loop/LEDGER.md
-dynasty.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 411 | stats | values: git show cc4f7de
 dynasty.samurai + firework_archer + monk done (KABUTO, KATANA_REST, KATANA_STEEL, SAMURAI_BLOCK + SLASH_ARC, SAMURAI_CUIRASS, SAMURAI_HAKAMA, ARCHER_HAIR, ARCHER_ROBE, ARCHER_LEGS, KASA_GOLD, FIREWORK_BOW/ROCKET/NOCK/BURST/REST, TENGU_MASK) | compacted 422 | 421 | approved | values: git show 268e1355:loop/LEDGER.md
 dynasty.dragon done 416-431 rows (FLAME_JET + DRAGON_BREATH, DRAGON_FORM [R], DRAGON_CARRIER + poleColor + arm/fist, BODY_FLAMES, DRAGON_TRIM, DRAGON_HOLD) | compacted 432 | 431 | approved | values: git show 67890443:loop/LEDGER.md
 dynasty.hwacha done (HWACHA_RACK, HWACHA_ROCKET, HWACHA_WHEEL, LAUNCH_SMOKE, HWACHA_SHAFT, HWACHA_TIMBER) | compacted 421 | 420 | approved | values: git show 7f580c19:loop/LEDGER.md
 dynasty.monkey_king + monk + crew split, ancient.minotaur strap/girdle, pirate beard done rows (MONKEY_RUYI/TAIL, BO_SHOVE, MONKEY_CROWN/FACE/SHORTS/ROBE/TRUNK/HAIR, FRONT_SPLIT, MINO_STRAP/GIRDLE/CAP, PIRATE_BEARD) | compacted 437 | 433 | approved | values: git show 3c42103f:loop/LEDGER.md
-ancient.minotaur 402-415 rows (MINO_GIRDLE, MINO_SHELL, BULL_HEAD, MINO_STRAP + .clear, MINO_LEGS, MINO_BARREL, MINO_ARMS, BULL_MUZZLE, MINO_LATHE) | compacted 420 | 415 | approved | values: git show a1460c56:loop/LEDGER.md
 pirate 425-426 rows (TRICORN_BROWN, HARPOON_REEL, GUN_TOSS, BLUNDERBUSS + _AIM, CANNON_WHEEL, CUTLASS, CUTLASS_SLASH, PIRATE_KICK, BLUNDERBUSS_RECOIL, PISTOL_SHOT, BARREL_ARMOUR, OPEN_COAT, CANNON_SIGHT) | compacted 428 | 426 | approved | values: git show 0445ba6b:loop/LEDGER.md
 pirate 423-424 rows (PISTOL + PISTOL_AIM, HARPOON_BREECH, CANNON_BARREL, TRICORN_PLATE, PIRATE_VEST, PIRATE_PANTS + PIRATE_SHORTS) | compacted 427 | 424 | approved | values: git show 613ba5b9:loop/LEDGER.md
 pirate 427-428 rows (BOMB_SPIN + _POSE, BLUNDERBUSS_BLAST, PLANK_HAT, LAUNCH.cannonball, DRAGON_PISTOL, QUEEN_BANDANA, DRAGON_BLAST, CAPTAIN_COAT, QUEEN_SASH, BARREL_BRACERS, CANNON_HANDLES, CANNON_SHIRT) | compacted 430 | 428 | approved | values: git show 28adb4e4:loop/LEDGER.md
@@ -99,9 +93,10 @@ spookyDress.ts:REAPER_LEGS + proceduralAnimation.ts:REAPER_HOVER (glow, long, th
 spookyDress.ts:STIFFY_GREAVES + knee (from, to, across, flare, knee, kneeSquash, foot, shade; patella, pSquash, pProud) | .34, .88, 3.4, .82, 1.12, .75, .72, .55; .62, 1.2, .25 | 441 | approved | from .14 to .84 (440)
 spookyDress.ts:BOOT_SHAFT (from, to, across, cuffFrom, cuffTo, cuff, toe) | .48, 1.06, 2.5, .42, .56, 3.3, .78 | 440 | approved ARCHER_KIT boot box bootOut 1.25 (439)
 spookyDress.ts:SKELETON_BONE (color, unlit + unglowBone) | (1.1,.78,.4) unlit emissive, out of glow | 442 | approved | cloth (1,.86,.6) glow .3 grey 166/161/156 (441); getCloth unlit-glow (before 441)
-vehicleBuilder.ts:PUMPKIN_TIMBER (color, glow) | (.1,.055,.05), .14 | 441 | approved | "wood" (.36,.13,.09) red-brown + wheel tone (before 441)
+vehicleBuilder.ts:PUMPKIN_TIMBER (color, glow) | (.1,.055,.05), .14 (cw box removed 443) | 443 | approved | "wood" (.36,.13,.09) red-brown + wheel tone (before 441)
 spookyDress.ts:REAPER_ROBE (across, deep, sides, long, flare, rags, rag, ragLong, ragShort, ragIn) | 1.08, 1.25, 8, .85, 1.12, 10, .13, .32, .16, .94 | 441 | approved | unitFactory bell: ROBE 1.3, SKIRT .85, HEM 2.1, TATTERS 7
-spookyDress.ts:VAMPIRE_VEST (shirt, shirtGlow, vWide, vTop, vLong, vThick, proud, belt, beltOut) | (.86,.84,.78), .3, .46, -.02, .5, .02, .008, .16, 1.14 | 442 | rejected (442 V .64/.86 + cape arc gap .2 reverted; values here kept) | plain team (before 441)
+spookyDress.ts:VAMPIRE_VEST (shirt, shirtGlow, vWide, vTop, vLong, ...; vestWide, vestTop, vestThick, vestProud) + no secret_ghost | (.86,.84,.78), .3, .5, -.02, .28; .96, .02, .03, .006 | 443 | approved | vWide .46 vLong .5 (441); 442 V .64/.86 rejected; plain team (before 441)
 spookyDress.ts:VAMPIRE_BEARD (mouth, side, back, under, jawTop, proud, goatee, drop, fang, fangLong, fangGap, fangProud) | .42, .16, -.1, .18, .12, .08, .6, .4, .17, .34, .22, .14 | 440 | approved bare face (before 440)
-simulationSystem.ts:REAPER_IMPALE (weak, up, side, back, rootUp, rootBack, through, every, bite, afterDeath) + spookyDress REAPER_SPEAR (thick, tip) | .15, .6, .3, .1, .66, .08, .3, .6, .18, 2.5; .16, .12 | 442 | approved | none (before 442)
+simulationSystem.ts:REAPER_IMPALE (weak, up, side, back, rootUp, rootBack, through, every, bite, afterDeath) + spookyDress REAPER_SPEAR (thick, tip) | .15, .8, .45, .1, .66, .08, .3, .6, .18, 2.5; .22, .12 | 443 | approved | up .6 side .3 thick .16 (442); none (before 442)
 vehicleBuilder.ts:PUMPKIN_POSTS (thick, apart, over, collar, collarTall, collarAt) | 1.35, .75, .3, 1.3, 1.4, .28 | 442 | approved | A-frame legs + brace (before 442)
+propBuilder.ts:STIFFY_UPRIGHT (x, y, z rows in the hand frame; at) | (.713,-.501,.491) (-.174,.552,.816) (-.68,-.667,.306); (.062,.054,.36) | 443 | approved | round-branch carry, face up like a tray (before 443)

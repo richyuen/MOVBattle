@@ -19,4 +19,5 @@ d PASS (cost 2500, hp 36.57x, dmg 2.68x, cd 0.76x; 441 stats)
 - long legs [S] [1] - 441: legs .9 + head/trunk cut + skirt front cut - boot tops still reach the pelvis, no thigh shows; legs/tall a ledger reversal of 440's QUEEN_BUILD
 ## Notes (max 3 lines)
 - 442 probe (root frame): skirt .14-1.0 m all round (hem ~.56, front-left .26), pelvis box .63-1.01 in the dark body shade, knee .59, boot top .59, thighs already pale (QUEEN_SKIRT pants). The cut wrap + pale pelvis changed nothing in _idle: her bowl guards sit over that band.
+- 443: the [R] deferred to 444 (starves 448). It needs all four at once: hem up to mid-thigh, boot top under the knee, pelvis box pale, QUEEN_GUARD lifted so the guards clear the .6-.8 m band in _idle; probe_bbox the guard meshes (root frame) before geometry.
 - Spec of the [R]s at pirateDress QUEEN_BOOTS, QUEEN_FRAME (QUEEN_BUILD 440); queenFrame runs before her dress in unitFactory; stance QUEEN_UPRIGHT, guard QUEEN_GUARD. The scale row is spent.
