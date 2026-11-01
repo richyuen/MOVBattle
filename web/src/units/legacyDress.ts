@@ -295,3 +295,59 @@ export function buildShako(scene: Scene, W: number, H: number, seat: number, uni
   part(MeshBuilder.CreateCylinder("shakoPlume", { height: u(S.plume * H), diameterTop: 0, diameterBottom: u(S.plumeWide * W), tessellation: 6 }, scene), 0, tall / 2 + S.plume * H / 2, front * 0.6, white);
   return shako;
 }
+
+/** The trunk's box in the torso frame (W, H, D its sizes, c its middle) and a maker for flat-shaded pieces laid on it (pirateBelt's frame). */
+function trunkFrame(scene: Scene, body: ArticulatedBody, out: Mesh[]) {
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const lay = (m: Mesh, x: number, y: number, z: number, mat: Material): Mesh => {
+    m.position.set(cx + x, cy + y, cz + z);
+    m.rotation.addInPlace(tm.rotation);
+    m.parent = tm.parent;
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  return { W, H, D, lay };
+}
+
+/*
+ * [S] 460 the Banner Bearer's coatee (critic 459 a.2: "torso, plain team body - TABS: a military coatee with gold epaulettes and a white cross-belt";
+ * legacy.banner_bearer.blue.png: a team coatee, a broad gold epaulette lying on each shoulder over the top of the arm, a white belt crossing the chest
+ * from the left shoulder to the right hip and a white belt round the waist). BANNER_COATEE: the trunk in the team coat (team times .shade, self-lit
+ * .glow); on each upper arm a gold epaulette, a shell .epOut of the limb round from its top to .epTo of it, with a gold fringe ring .fringe below it a
+ * shade darker; a white cross-belt .belt W wide and .thick D proud of the trunk's front and back, running corner to corner over .span of the trunk's
+ * height; a white waist belt .waist H tall at .waistAt of H/2 under the middle. White self-lit .whiteGlow (lit white in shade reads grey).
+ */
+const BANNER_COATEE = { shade: 0.85, glow: 0.12, epOut: 1.75, epTo: 0.16, fringe: 0.1, belt: 0.16, thick: 1.12, span: 0.82, waist: 0.12, waistAt: -0.72, white: new Color3(0.95, 0.94, 0.9), whiteGlow: 0.3 };
+const COATEE_GOLD = new Color3(1, 0.7, 0.18);
+
+/** The Banner Bearer's team coatee, gold epaulettes, white cross-belt and waist belt (spec at BANNER_COATEE). */
+export function bannerCoatee(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = BANNER_COATEE;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(C.shade);
+  const coat = mf.get("cloth", t, { emissive: t.scale(C.glow) });
+  const gold = mf.get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(0.2) });
+  const fringeC = COATEE_GOLD.scale(0.75);
+  const fringe = mf.get("cloth", fringeC, { emissive: fringeC.scale(0.2) });
+  const white = mf.get("cloth", C.white, { emissive: C.white.scale(C.whiteGlow) });
+  body.torsoMesh.material = coat;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = coat;
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    out.push(limbShell(scene, "coateeEpaulette", arm, 0, C.epTo, C.epOut, gold));
+    out.push(limbShell(scene, "coateeFringe", arm, C.epTo, C.epTo + C.fringe, C.epOut * 0.9, fringe));
+  }
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  // the cross-belt: one slab through the trunk, its faces proud of the front and the back, tipped corner to corner
+  const rise = H * C.span, run = W * 0.92;
+  const strap = MeshBuilder.CreateBox("coateeCrossBelt", { width: Math.hypot(rise, run), height: W * C.belt, depth: D * C.thick }, scene);
+  strap.rotation.z = -Math.atan2(rise, run);
+  lay(strap, 0, 0, 0, white);
+  lay(MeshBuilder.CreateBox("coateeWaistBelt", { width: W * 1.06, height: H * C.waist, depth: D * C.thick }, scene), 0, H / 2 * C.waistAt, 0, white);
+  return out;
+}
+
