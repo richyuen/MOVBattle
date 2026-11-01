@@ -1086,3 +1086,43 @@ export function minerSleeves(scene: Scene, body: ArticulatedBody, teamColor: Col
   }
   return out;
 }
+
+/*
+ * [S] 455 the Lasso rider's moustache (CONFIRM 454 lasso a.2: "the face directly under the eyes is plain - TABS: a big dark curled fancy mustache right
+ * under the eyes, readable at distance"; card Appearance "a fancy mustache"; wild_west.lasso.red.png: a thick black moustache under the eyes, wider than
+ * the mouth, each half running out level and curling up at its end into a round loop). LASSO_MOUSTACHE in the head's own box (e its half sizes, c its
+ * centre, +z the face): each half a faceted bar .long of e.x long, .thick of e.y tall, from the middle out along a line drooping .droop rad, its middle
+ * .at of e.y under the centre and .proud of e.z in front of the face; at its outer end an upturned curl, a ring .curl of e.x across and .curlThick of
+ * e.y thick standing in the face's plane, sat on the bar's end. Near black, self-lit .glow.
+ */
+const LASSO_MOUSTACHE = { long: 0.66, thick: 0.26, droop: 0.12, at: -0.36, proud: 0.08, curl: 0.36, curlThick: 0.13, color: new Color3(0.05, 0.045, 0.04), glow: 0.1 };
+
+/** The Lasso rider's dark curled moustache under the eyes (spec at LASSO_MOUSTACHE). */
+export function lassoMoustache(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const M = LASSO_MOUSTACHE;
+  const hair = getMaterialFactory().get("cloth", M.color, { emissive: M.color.scale(M.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const y = c.y + e.y * M.at, z = c.z + e.z * (1 + M.proud);
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    const L = e.x * M.long;
+    const bar = MeshBuilder.CreateBox("lassoMoustache", { width: L, height: e.y * M.thick, depth: e.z * 0.16 }, scene);
+    bar.position.set(c.x + side * (L / 2) * Math.cos(M.droop), y - (L / 2) * Math.sin(M.droop), z);
+    bar.rotation.z = -side * M.droop;
+    bar.material = hair;
+    bar.parent = head;
+    bar.convertToFlatShadedMesh();
+    out.push(bar);
+    const r = e.x * M.curl * 0.5;
+    const curl = MeshBuilder.CreateTorus("lassoMoustacheCurl", { diameter: r * 2, thickness: e.y * M.curlThick, tessellation: 8 }, scene);
+    curl.rotation.x = Math.PI / 2;
+    curl.position.set(c.x + side * (L * Math.cos(M.droop) + r * 0.6), y - L * Math.sin(M.droop) + r * 0.8, z);
+    curl.material = hair;
+    curl.parent = head;
+    curl.convertToFlatShadedMesh();
+    out.push(curl);
+  }
+  return out;
+}
