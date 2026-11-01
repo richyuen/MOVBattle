@@ -3523,7 +3523,9 @@ function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  * .long H, the fist .grip up; a beam .beam H across, .bar H thick, knobs at its ends and a spike .spike H over the pole; two banners .wide H across and
  * .tall H down, .gap H apart, each a gold slab behind a team slab (gold rim .edge H) with a gold tower emblem (a block and three merlons) on each face.
  */
-const STAY_BANNER = { long: 1.5, thick: 0.022, grip: 0.3, beam: 0.62, bar: 0.03, knob: 0.05, spike: 0.09, wide: 0.27, tall: 0.42, gap: 0.03, slab: 0.012, edge: 0.025, proud: 1.8, tower: 0.08, glow: 0.15 };
+// [S] 458 beam 1.0 H with a banner hung at each end, .inset H in from the knob (critic 457 b.4: "the two banners hang touching either side of the pole on a
+// short beam"; legacy.banner_bearer.blue.png: the banners a man's width apart at the beam's ends); was beam .62, banners .03 apart at the pole
+const STAY_BANNER = { long: 1.5, thick: 0.022, grip: 0.3, beam: 1.0, bar: 0.03, knob: 0.05, spike: 0.09, wide: 0.27, tall: 0.42, inset: 0.02, slab: 0.012, edge: 0.025, proud: 1.8, tower: 0.08, glow: 0.15 };
 function buildStayBanner(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const B = STAY_BANNER, H = fit.stand, L = B.long * H, r = B.thick * H;
   const gold = mat(scene, LEGACY_GOLD, B.glow, "cloth"), cloth = mat(scene, team, B.glow, "cloth");
@@ -3542,7 +3544,7 @@ function buildStayBanner(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   part(MeshBuilder.CreateCylinder("bannerSpike", { height: B.spike * H, diameterTop: 0, diameterBottom: r * 2, tessellation: 4 }, scene), 0, L / 2 + B.spike * H / 2, 0, gold);
   const W = B.wide * H, T = B.tall * H, t = B.slab * H, e = B.edge * H, cy = top - B.bar * H / 2 - T / 2;
   for (const side of [-1, 1]) {
-    const cx = side * (B.gap * H / 2 + W / 2);
+    const cx = side * (B.beam * H / 2 - B.inset * H - W / 2);
     part(MeshBuilder.CreateBox("bannerEdge", { width: W, height: T, depth: t }, scene), cx, cy, 0, gold);
     part(MeshBuilder.CreateBox("bannerCloth", { width: W - 2 * e, height: T - 2 * e, depth: t * B.proud }, scene), cx, cy, 0, cloth);
     const k = B.tower * H, z = t * (B.proud / 2 + 0.5);
