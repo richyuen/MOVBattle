@@ -1040,7 +1040,7 @@ export function dynamiteShirt(scene: Scene, body: ArticulatedBody, teamColor: Co
  * boot tops). MINER_LEGS: the pelvis, thighs and shins in dark team cloth (the team colour times .shade, self-lit .glow); a 6-sided trouser leg .out of
  * the thigh's half-width round it its whole length, and on the shin .shinOut round from its top to .shinTo of it, inside the boot's turned top.
  */
-const MINER_LEGS = { shade: 0.55, glow: 0.12, out: 1.18, shinOut: 1.12, shinTo: 0.3 };
+const MINER_LEGS = { shade: 0.3, glow: 0.12, out: 1.18, shinOut: 1.12, shinTo: 0.3 }; // [S] 455 shade .55 read the shirt's pale team colour (455 look)
 
 /** The Miner's dark team overall legs, from the waist into the boots (spec at MINER_LEGS). */
 export function minerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
