@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-459 | [R] MINER_LOOK hat lift .2 H slope .22, shirt lift 0 (5bbb0646) | wild_west.miner.a | approved (a PASS; CONFIRM passed a; miner D)
-459 | BEARER_RING ground torus round the bearer, team colour (502c506c) | legacy.flag_bearer.c + legacy.banner_bearer.c | approved (struck 2 each; flag added 3 ring colour)
-459 | flag bearer scale 1.34 -> 1.0, bulk .92 (f1844412) | legacy.flag_bearer.a | approved (struck 5)
-459 | BOXER_HEADGEAR padded team shell, ear pads (17904d07) | legacy.boxer.a | approved (struck 2, 5)
-459 | PEASANT_DRESS team dress, short sleeves, knee skirt, front point (b3a3379d) | legacy.peasant.a | approved (struck 4)
-459 | POACHER_COAT brown sleeveless coat, skirt, white fur collar (cbf64ff2) | legacy.poacher.a | approved (struck 3)
-459 | SHAKO tall team shako, peak, gold plate and band, plume (44da9220) | legacy.banner_bearer.a | approved (struck 1, 4)
 460 | BANNER_COATEE team coat, gold epaulettes, white cross-belt and waist belt (16dedb8c) | legacy.banner_bearer.a | approved (struck 2)
 460 | FLAG_HELMET white crown, gold band and plate, team crest (53a654d8) | legacy.flag_bearer.a | approved (struck 1)
 460 | BOXER_SHORTS dark-team thigh shells, gold striped waistband (37bcb6d4) | legacy.boxer.a | approved (struck 3)
@@ -46,14 +39,21 @@ for 25 iterations.
 463 | BARREL_RIDE staved barrel under his feet, hip lifted (e3458425) | legacy.barrel_roller.b | approved (struck 1, 2; b PASS)
 463 | BARREL_SHOT hooped barrel missile (7089b8e7) | legacy.barrel_roller.c | approved (struck 1)
 463 | [P] PIKE_PLUME tan (87ab1edc) | legacy.pike.a | approved (struck 1)
+464 | HAND_LAUNCH muzzle from blowgunMuzzle (b42e6e1c) | legacy.blowdarter.c | approved (struck 1)
+464 | HOP_BACK Backwards Dodge (f5c1b38a) | legacy.boxer.c | approved (struck 2; c PASS)
+464 | PIKE_DROP pike let go on the first blow, disarmToFists (d57603bb, fa8827d7) | legacy.pike.c | approved (struck 2; c PASS)
+464 | hat tricorn (38bca2d8) | legacy.barrel_roller.a | approved (struck 2)
+464 | POACHER_BOW bowGrip in the fist (99c8103c) | legacy.poacher.b | approved (struck 1; b PASS)
+464 | CHARGE_PENNANT narrow pennant, saltire, rings (c0cb4ef3) | legacy.flag_bearer.b | approved (struck 4)
+464 | BEARER_HOLD pole plumb in both fists (70924ac8) | legacy.banner_bearer.b + legacy.flag_bearer.b | approved (struck 3 each; b PASS both)
+464 | [P] POACHER_BOW wood (e968d1a0) | legacy.poacher.b | approved (root exception; row spent for [P])
 
 ## Spent (never retry as [P])
 
 ## Rows
 
 wild_west done 448-453 rows (MINER_BLAST, GUNSLINGER_SIDEBURNS/SUIT/REST/SHOES, CACTUS_ROBE [R] + boots/spines, QUICK_DRAW_SHIRT/VEST, GUN_BELT; cactus, gunslinger, quick_draw D) | compacted 455 | 453 | approved | values: git show fa4523ed:loop/LEDGER.md
-pirateDress.ts:QUEEN_SKIRT [R] 450 (top, knee, out, flare, deep, slant, frontRise, beads, bead, pale; flapWide, flapFoot, flapX, flapLong, flapProud, flapLean) | .06, .5, 1.04, 1.22, 1.1, .2 (to her right), .42, 7, .11, .3; .5, .12, .8, 1.45, .06, .12 | 450 | approved | top .14 knee 1.08 slant .6 (to her left) frontDrop .4 pale .18 flap .6/.22/-.25/1.3 (435-449); out 1.06 flare 1.45 deep 1.25 (433-434)
-proceduralAnimation.ts:QUEEN_GUARD (out, ahead, drop, cross, lean, stagger) | .05, .14, .22, .6, .2, .04 | 450 | approved | drop .3 (431-449); blades held point-first, end-on (before 431)
+pirate.pirate_queen done 450 rows (QUEEN_SKIRT/BOOTS/FRAME [R], QUEEN_GUARD; D) | compacted 464 | 450 | approved | values: git log -- web/src/units/pirateDress.ts
 
 wild_west.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 444 | stats | values: git show 7aee94dc
 spooky done 435-444 rows (reaper, stiffy, skeleton, vampire, candlehead, catapult dress and props; all D) | compacted 463 | 444 | approved | values: git log -- web/src/units/spookyDress.ts
@@ -61,9 +61,7 @@ wild_west 444-447 rows (BULLET_RAIN, REVOLVER, BOWLER, LASSO_DRAG/ROPE, CACTUS_E
 wild_west done 448-456 rows (FLAT_HAT, PEAK_HAT, WINCHESTER(_AIM), RIFLE_TRACER, DYNAMITE_WIRES/HOLD/SKIRT/BOOTS/SHIRT/LOOK [R], WESTERN_BRAID, DEADEYE_SHIRT, LASSO_RAISE/MOUSTACHE/SHIRT, PINTO_LEGS/HEAD/COAT; dynamite, deadeye, lasso D 456) | compacted 457 | 456 | approved | values: git show 7f5ee168:loop/LEDGER.md
 wild_west.miner done 447-459 rows (MINER_OVERALLS/MOUSTACHE/BOOTS/UPRIGHT/HAT [R]/LEGS/SLEEVES/BUILD [R], PICK_SHOULDER; 459 hat lift .2 slope .22, shirt lift 0; miner D 459, wild_west all D) | compacted 459 | 459 | approved | values: git show 44da9220:loop/LEDGER.md
 
-pirateDress.ts:QUEEN_BOOTS [R] 450 (from, shaft, top, topTall, band, bandTall, bandAt; leather) + unitVisuals queen (scale, bulk) + QUEEN_SASH (wide, thick, proud, bomb, seat) | .38, 1.2, 1.32, .1, 1.26, .1, .52; (.45,.16,.1); 1.2 (439 [P], root exception spent), .85; .27, .1, .12, .25, .95 | 450 | approved | .12, 1.35, 1.7, .14, 1.42, .1, .34 (439-449); scale 1.45 (435-438); pale shins; sash .17, .08, .03, .2, .75 (428-434)
 
-pirateDress.ts:QUEEN_FRAME [R] 450 QUEEN_LEGLINE (trunk, deep, shoulders, pelvis, hips, tall, legs, pelvisCut, legSlim) + unitFactory tunicSkirt gate | .7, .85, .78, .75, .72, .65, .815, .5, .82; off, no cape (b5bd76ed) | 450 | approved | tall .76 legs .74 no cut/slim, tunicSkirt on (440-449); tall .85 legs 1 (438-439); tall 1 (437)
 
 legacy_1 stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 8 units) | d PASS 6/8 (bearers deal no damage: an [S]) | 457 | stats | values: git show 5d6b5d24
 propBuilder.ts:CHARGE_FLAG (long, thick, grip, ball, wide, tall, slab, edge, proud, emblem, glow) + LEGACY_GOLD, LEGACY_POLE | 1.55, .022, .3, .07, .48, .36, .012, .03, 1.8, .1, .15 | 457 | approved | staff log + orb (before 457)
@@ -100,8 +98,13 @@ propBuilder.ts:LONG_PIKE (long, thick, collar, blade, bladeWide, hook, hookAt, h
 runtimeUnit.ts:levelsPike units | ancient.sarissa, legacy.pike | 463 | approved | sarissa only (before 463)
 propBuilder.ts:BLOWGUN (long, thick, mouth, mouthOut, band, bandsAt, dart, wood) | .55, .03, .05, 1.6, .022, [.22,.6], .07, (.9,.45,.15) | 463 | approved | .38 s stick (before 463)
 proceduralAnimation.ts:BLOWGUN_HOLD (mouthAhead, mouthDrop, side, tilt, near, far) + blowdarter posePreset default | 1.05, .3, .18, .1, .07, .42 | 463 | approved | archer pose (before 463)
-propBuilder.ts:POACHER_BOW (long, thick, taper, bow, wrap, wrapAt, nockAt, wood, rope) | .62, .085, .55, .06, .09, [.1,.26], .86, (.85,.5,.25), (1,.78,.45) | 463 | approved | plain bow (before 463)
+propBuilder.ts:POACHER_BOW (long, thick, taper, bow, grip, wrap, wrapAt, nockAt, wood, rope) | .62, .085, .55, .06, .1, .09, [.1,.26], .86, (.62,.3,.1), (1,.78,.45) | 464 | spent | wood (.85,.5,.25) (463); plain bow (before 463); no further [P] (critic 464)
 proceduralAnimation.ts:BOXER_JAB (guardAhead, guardUp, guardIn, reach, jabUp, cock, cockAt, drivenAt, heldTo, lean) | .45, .12, .2, .95, -.05, .15, .12, .3, .78, .12 | 463 | approved | overhead strike (before 463)
 legacyDress.ts:BARREL_RIDE (wide, long, staves, thick, alt, hoop, hoopAt, rivets, wood, iron) | .3, .44, 12, .14, .8, .035, .72, 6, (.9,.48,.2), (.38,.38,.4) | 463 | approved | barrel at the waist (before 463)
 projectileSystem.ts:BARREL_SHOT (wide, long, staves, hoop, hoopAt, wood) + rosterManifest barrel_roller projectileHint | .42, .6, 10, .05, .7, (.9,.48,.2); barrel | 463 | approved | stone (before 463)
 legacyDress.ts:PIKE_PLUME (color, glow) | (1,.72,.32), .08 | 463 | approved | team plume (before 463)
+simulationSystem.ts:HOP_BACK legacy.boxer (afterLand, dist, rise, cooldown) | .2, 2.6, 2.2, 3 | 464 | approved | none (before 464)
+simulationSystem.ts:PIKE_DROP (ahead, up, spin, ready) | .6, -2.4, 3, .6 | 464 | approved | up .8 spin 1.2 (464a, read as held)
+propBuilder.ts:CHARGE_PENNANT (wide, tall, bar, ring, ringOut, ringGap) | .15, .46, .02, .025, 1.9, .07 | 464 | approved | CHARGE_FLAG sheet .48 x .36 (before 464)
+proceduralAnimation.ts:BEARER_HOLD (ahead, out, high, low) | .42, .22, .72, .3 | 464 | approved | PRIEST_HOLD at the side (before 464)
+unitVisuals.ts:legacy.barrel_roller hat | tricorn | 464 | approved | none (before 464)
