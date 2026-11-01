@@ -11,7 +11,7 @@ import { getMaterialFactory, type MatCategory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
 import { featherClump } from "./renaissanceDress";
 import { buildBowler, buildFlatHat, buildMinerCap, buildPeakHat, lassoCoil, DYNAMITE_LOOK } from "./wildWestDress";
-import { buildPoacherHat, buildPeasantHood, buildBoxerHeadgear, buildShako, buildFlagHelmet } from "./legacyDress";
+import { barrelRide, buildPoacherHat, buildPeasantHood, buildBoxerHeadgear, buildShako, buildFlagHelmet } from "./legacyDress";
 
 /*
  * [S] the catapult's boulder (352; medieval.catapult.blue.png: a grey-brown rock of flat facets lying in the bucket, the same rock in flight). An ico rock
@@ -8078,21 +8078,9 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
     }
     case "cart":
       return null;
-    case "barrel_body": {
-      const barrel = MeshBuilder.CreateCylinder("barrelBody", { height: 0.48 * s, diameter: 0.4 * s, tessellation: 12 }, scene);
-      barrel.parent = body.hip;
-      barrel.position.set(0, -0.12 * s, 0);
-      barrel.rotation.z = Math.PI / 2;
-      barrel.material = mat(scene, new Color3(0.44, 0.28, 0.16));
-      for (const zOff of [-0.14, 0, 0.14]) {
-        const hoop = MeshBuilder.CreateTorus("barrelHoop", { diameter: 0.34 * s, thickness: 0.02 * s, tessellation: 18 }, scene);
-        hoop.parent = barrel;
-        hoop.position.z = zOff * s;
-        hoop.rotation.y = Math.PI / 2;
-        hoop.material = mat(scene, new Color3(0.28, 0.28, 0.3));
-      }
-      return barrel;
-    }
+    case "barrel_body":
+      // [S] 463 the Barrel Roller stands on his barrel lying on the ground, not one carried at the waist (legacyDress BARREL_RIDE)
+      return barrelRide(scene, body);
     default:
       return null;
   }

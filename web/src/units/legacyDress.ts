@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, type Material } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, type Material } from "@babylonjs/core";
 import { limbShell } from "./medievalDress";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
@@ -682,4 +682,59 @@ const PIKE_PLUME = { color: new Color3(1.0, 0.72, 0.32), glow: 0.08 };
 export function pikePlume(body: ArticulatedBody): void {
   const tan = getMaterialFactory().get("cloth", PIKE_PLUME.color, { emissiveIntensity: PIKE_PLUME.glow });
   for (const m of body.root.getChildMeshes(false, (n) => n.name === "featherHatPlume")) m.material = tan;
+}
+
+/*
+ * [S] 463 the Barrel Roller rides his barrel (audit 457 barrel_roller b.1: "a dark barrel carried at the waist - TABS: he stands on top of a lying
+ * barrel"; b.2: "a dark brown drum - TABS: a light wooden staved barrel with two riveted grey hoops"; legacy.barrel_roller.red.png, card Appearance
+ * "riding on a normal explosive barrel": a barrel lying across his way under his boots, about a third of his height thick and nearly half his height
+ * long, light orange-brown staves, a grey hoop riveted round it near each end, his feet on its top). BARREL_RIDE in his height H: the barrel .wide H
+ * across, .long H long, of .staves boards .thick of its radius deep (every other one .alt darker), lying on the ground across his heading; hoops .hoop H
+ * wide at +-.hoopAt of the half-length, .hoopOut H proud, each with .rivets rivets .rivet H across. His hip is lifted the barrel's height: a
+ * "barrelRide" mark under the hip carries the lift in its position.y (proceduralAnimation _rideBarrel).
+ */
+const BARREL_RIDE = { wide: 0.3, long: 0.44, staves: 12, thick: 0.14, alt: 0.8, hoop: 0.035, hoopAt: 0.72, hoopOut: 0.008, rivets: 6, rivet: 0.016, wood: new Color3(0.9, 0.48, 0.2), iron: new Color3(0.38, 0.38, 0.4), glow: 0.1 };
+
+/** The Barrel Roller's barrel lying under his feet (spec at BARREL_RIDE), on the root; returns its core, the staves and hoops under it. */
+export function barrelRide(scene: Scene, body: ArticulatedBody): Mesh {
+  const B = BARREL_RIDE, H = body.metrics.overallHeight;
+  const mf = getMaterialFactory();
+  const lit = (c: Color3) => mf.get("cloth", c, { emissive: c.scale(B.glow) });
+  const wood = lit(B.wood), wood2 = lit(B.wood.scale(B.alt)), iron = lit(B.iron);
+  const R = (B.wide * H) / 2, L = B.long * H, t = R * B.thick;
+  const core = MeshBuilder.CreateCylinder("barrelBody", { height: L * 0.98, diameter: (R - t) * 2, tessellation: B.staves }, scene);
+  core.material = wood2;
+  core.rotation.z = Math.PI / 2; // its axis across his heading
+  core.position.y = R;
+  core.parent = body.root;
+  const put = (m: Mesh, mat: Material): void => {
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = core;
+  };
+  for (let i = 0; i < B.staves; i++) {
+    const a = (i / B.staves) * Math.PI * 2;
+    const stave = MeshBuilder.CreateBox("barrelStave", { width: ((2 * Math.PI * R) / B.staves) * 1.04, height: L, depth: t }, scene);
+    stave.position.set(Math.sin(a) * (R - t / 2), 0, Math.cos(a) * (R - t / 2));
+    stave.rotation.y = a;
+    put(stave, i % 2 ? wood2 : wood);
+  }
+  for (const side of [-1, 1]) {
+    const y = (side * B.hoopAt * L) / 2, rr = R + B.hoopOut * H;
+    const hoop = MeshBuilder.CreateCylinder("barrelRideHoop", { height: B.hoop * H, diameter: rr * 2, tessellation: B.staves }, scene);
+    hoop.position.y = y;
+    hoop.rotation.y = Math.PI / B.staves;
+    put(hoop, iron);
+    for (let k = 0; k < B.rivets; k++) {
+      const a = ((k + 0.5) / B.rivets) * Math.PI * 2;
+      const rivet = MeshBuilder.CreateBox("barrelRivet", { width: B.rivet * H, height: B.rivet * H, depth: B.rivet * H }, scene);
+      rivet.position.set(Math.sin(a) * rr, y, Math.cos(a) * rr);
+      rivet.rotation.y = a;
+      put(rivet, iron);
+    }
+  }
+  const mark = new TransformNode("barrelRide", scene);
+  mark.position.y = R * 2;
+  mark.parent = body.hip;
+  return core;
 }

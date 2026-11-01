@@ -2390,6 +2390,7 @@ export class ProceduralAnimator {
     this._lungeLegs();
     this._holdTPose(dt);
     this._reaperHover(dt);
+    this._rideBarrel();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
@@ -3531,6 +3532,21 @@ export class ProceduralAnimator {
       hip.rotation.z *= 1 - R.hang;
       knee.rotation.x += (R.knee - knee.rotation.x) * R.hang;
     }
+  }
+
+  // [S] 463 the Barrel Roller's lift onto his barrel (legacyDress BARREL_RIDE): the "barrelRide" mark's position.y, read once
+  private _barrelLift: number | null | undefined;
+  /** The Barrel Roller stood on the barrel lying under him: his hip lifted its height, alive. */
+  private _rideBarrel(): void {
+    const b = this._body;
+    if (this._barrelLift === undefined) {
+      const mark = b.hip.getChildren().find((n) => n.name === "barrelRide") as TransformNode | undefined;
+      this._barrelLift = mark ? mark.position.y : null;
+    }
+    if (!this._barrelLift || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
+    this._hipRest ??= b.hip.position.y;
+    // the hip is set from its rest every frame (update), so the lift is laid on afresh each frame, as the Reaper's hover
+    b.hip.position.y += this._barrelLift * (1 - Math.min(1, this._limp));
   }
 
   /** The scarecrow held up on his wings (spec at HOVER). */
