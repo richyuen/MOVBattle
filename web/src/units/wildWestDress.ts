@@ -1,5 +1,7 @@
 import { Scene, Color3, Mesh, MeshBuilder, VertexBuffer } from "@babylonjs/core";
 import { getMaterialFactory } from "./materialFactory";
+import type { ArticulatedBody } from "./bodyBuilder";
+import { limbShell } from "./medievalDress";
 
 /*
  * Wild West dress (units/wild_west.*): per-unit hats, cloth, hair and ornaments. Sized off the body's own joints and meshes.
@@ -84,4 +86,67 @@ export function lassoRope(scene: Scene): { rope: Mesh; loop: Mesh } {
   loop.material = tan;
   loop.isPickable = false;
   return { rope, loop };
+}
+
+/*
+ * [S] 446 the Gunslinger's suit jacket (critic 445 a.2: "short vest block, bare team arms - TABS: long-sleeved team suit jacket with lapels over a
+ * buttoned waistcoat"; wild_west.gunslinger.red.png: the jacket's sleeves run from the shoulder to the wrist, a little loose, a beige shirt cuff showing
+ * at each wrist; its fronts turn back in two broad lapels from the collar to mid-chest, a lighter shirt V between them; its skirts hang to mid-thigh).
+ * GUNSLINGER_JACKET: sleeves in the jacket cloth (the body's own material, so they match the trunk) .upperOut of the upper arm round its whole length
+ * and .lowerOut of the forearm round to .lowerTo of it; a beige cuff .cuff of the forearm long at its hand end, .cuffOut round. On the trunk (torso
+ * frame, W H D its box): the shirt V a wedge .vee W across at the collar to a point .veeLong H down, .proud D off the front; each lapel a slab .lapel W
+ * across and .lapelLong H long along the V's edge, .lapelProud D proud, leaning .lean rad in, the team colour x .lapelShade. The skirts are the tunic
+ * skirt hung to .skirt of the knee's drop (unitFactory). Self-lit .glow.
+ */
+export const GUNSLINGER_JACKET = {
+  upperOut: 1.4, lowerOut: 1.35, lowerTo: 0.86, cuff: 0.14, cuffOut: 1.25, skirt: 0.78, skirtFlare: 1.35,
+  vee: 0.34, veeLong: 0.4, proud: 0.03, lapel: 0.13, lapelLong: 0.46, lapelProud: 0.06, lean: 0.32, lapelShade: 0.62,
+  shirt: new Color3(0.78, 0.66, 0.46), glow: 0.12,
+};
+
+/** The Gunslinger's team suit jacket: full sleeves with beige cuffs, a shirt V and two lapels (spec at GUNSLINGER_JACKET). */
+export function gunslingerJacket(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const J = GUNSLINGER_JACKET;
+  const mf = getMaterialFactory();
+  const cloth = body.bodyMaterial;
+  const shirt = mf.get("cloth", J.shirt, { emissive: J.shirt.scale(J.glow * 1.5) });
+  const lapelColor = teamColor.scale(J.lapelShade);
+  const lapelMat = mf.get("cloth", lapelColor, { emissive: lapelColor.scale(J.glow) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    out.push(limbShell(scene, "gunslingerSleeve", arm, 0, 1, J.upperOut, cloth));
+  }
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "gunslingerSleeve", arm, 0, J.lowerTo, J.lowerOut, cloth));
+    out.push(limbShell(scene, "gunslingerCuff", arm, J.lowerTo - 0.02, J.lowerTo + J.cuff, J.cuffOut, shirt));
+  }
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const front = cz + D / 2, topY = cy + H / 2;
+  const place = (m: Mesh, x: number, y: number, z: number, rz: number): Mesh => {
+    m.position.set(cx + x, y, z);
+    m.rotation.copyFrom(tm.rotation);
+    m.rotation.z += rz;
+    m.parent = tm.parent;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  // the shirt V: a flat 4-sided frustum from the collar down to a point, on the jacket's front
+  const veeLong = H * J.veeLong;
+  const vee = MeshBuilder.CreateCylinder("gunslingerVee", { height: veeLong, diameterTop: W * J.vee * Math.SQRT2, diameterBottom: 0.002, tessellation: 4 }, scene);
+  vee.rotation.y = Math.PI / 4;
+  vee.bakeCurrentTransformIntoVertices();
+  vee.scaling.z = (D * J.proud) / (W * J.vee);
+  vee.material = shirt;
+  place(vee, 0, topY - veeLong / 2, front + D * J.proud / 2, 0);
+  // the lapels: darker team slabs along the V's edges, turned back from the collar to mid-chest
+  const lapelLong = H * J.lapelLong;
+  for (const side of [-1, 1]) {
+    const lapel = MeshBuilder.CreateBox("gunslingerLapel", { width: W * J.lapel, height: lapelLong, depth: D * J.lapelProud }, scene);
+    lapel.material = lapelMat;
+    place(lapel, side * (W * J.vee / 4 + W * J.lapel * 0.35), topY - lapelLong / 2, front + D * J.lapelProud / 2, -side * J.lean);
+  }
+  return out;
 }
