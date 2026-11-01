@@ -413,7 +413,7 @@ export function minerOveralls(scene: Scene, body: ArticulatedBody, teamColor: Co
  */
 const GUN_BELT = {
   band: 0.13, over: 1.07, holster: 0.17, holsterLong: 0.42, holsterDeep: 0.42, holsterOut: 0.58, splay: 0.12,
-  pouch: 0.36, pouchTall: 0.1, pouchOut: 0.3, slant: 0.55, shells: 4,
+  pouch: 0.44, pouchTall: 0.14, pouchOut: 0.3, slant: 0.55, shells: 4,
   leather: new Color3(0.17, 0.1, 0.06), holsterColor: new Color3(0.1, 0.085, 0.07), brass: new Color3(0.75, 0.5, 0.15), glow: 0.12,
 };
 
