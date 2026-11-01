@@ -1,4 +1,4 @@
-# Loop state (v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
+# Loop state (v7: a look list holds 6 blockers with the build first, the tail overlaps below 7 picks, a plateau [R] goes next, CONFIRM runs beside the critic; v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
 Iteration: 456   Batch: wild_west (12/14)   Consecutive empty: 0   Done: 69/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
@@ -43,7 +43,7 @@ secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade
 ```
 # <unitId>
 Status: open|done|parked   Audited: <iter>   Done: <iter or ->
-## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4, and the count of approved [S] since the list was written)
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
 a FAIL (0 since <iter>)
  1. <element> in unit_<id>_<shot> - TABS: <what the reference shows> (ref: <file or card section>)
 b PASS (<iter>)
