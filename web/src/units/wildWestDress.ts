@@ -462,6 +462,30 @@ export function minerBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 453 the Dynamite Thrower's boots (critic 444-452 dynamite a.4: "plain team feet - TABS: black knee boots with a folded cuff"; card Appearance
+ * "black boots"; wild_west.dynamite_thrower.red.png: near-black leather from a third of the way down the shin to the sole, bare team shin above; the top
+ * folds over in a cuff wider than the shaft and slanting out, the shaft a little wider than the shin). DYNAMITE_BOOTS in the shin's own box, as
+ * MINER_BOOTS: a 6-sided shell .out of its half-width round it from .from to .to of its length, the folded cuff .cuff round from .cuffFrom to .from;
+ * the foot in the same leather. Near-black, self-lit .glow.
+ */
+const DYNAMITE_BOOTS = { from: 0.46, to: 1.04, out: 1.3, cuffFrom: 0.32, cuff: 1.6, color: new Color3(0.07, 0.055, 0.05), glow: 0.1 };
+
+/** Black boots with a folded cuff on both shins and feet (spec at DYNAMITE_BOOTS). */
+export function dynamiteBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = DYNAMITE_BOOTS;
+  const leather = getMaterialFactory().get("cloth", B.color, { emissive: B.color.scale(B.glow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "dynamiteBoot", shin, B.from, B.to, B.out, leather));
+    out.push(limbShell(scene, "dynamiteBootCuff", shin, B.cuffFrom, B.from + 0.02, B.cuff, leather));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = leather;
+  }
+  return out;
+}
+
+/*
  * [S] 452 the Quick Draw's team vest (CONFIRM 451 quick_draw a.1: "vest a desaturated brown (~115,83,75), not the team red the pants show - TABS:
  * buttoned team-colour vest, a saturated crimson matching the hat and pants"; card Appearance "a buttoned team color vest"; wild_west.quick_draw.red.png:
  * the vest the hat's crimson, four small grey buttons down its front from the collar V to the belt). The secret_bandit body cloth blends the team colour
