@@ -65,8 +65,15 @@ const HWACHA_ROCKET = {
 /** The Skeleton Archer's burning arrow head (_dressFireArrow): flame tongues, longest (m), across (m), splay off the shaft, colours, glow */
 const FIRE_ARROW = { burn: 5, tongues: 4, long: 0.38, wide: 0.11, splay: 0.28, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), dark: new Color3(0.1, 0.08, 0.07), glow: 0.9 };
 /** The Pumpkin Catapult's jack-o'-lantern ("pumpkin" case): diameter (m), height of the width, ribbed lobes, skin, stem, carved-face glow */
+/**
+ * [S] 463 the Barrel Roller's explosive barrel (audit 457 barrel_roller c.1: "a grey rock-shaped chunk thrown from the shoulder - TABS: the explosive
+ * barrel he rides"; card Appearance "riding on a normal explosive barrel"; legacy.barrel_roller.red.png): a barrel lying on its side, BARREL_SHOT.wide
+ * across and .long long (m), of .staves light orange-brown boards (flat-shaded facets, every other face shade alike), a grey hoop .hoop long near each
+ * end at +-.hoopAt of the half-length; it flies on the stone's lob and bursts where it lands (its splash).
+ */
+const BARREL_SHOT = { wide: 0.42, long: 0.6, staves: 10, hoop: 0.05, hoopAt: 0.7, hoopOut: 1.06, wood: new Color3(0.9, 0.48, 0.2), iron: new Color3(0.38, 0.38, 0.4) };
 const PUMPKIN_SHOT = { size: 0.55, squash: 0.8, lobes: 8, orange: new Color3(0.9, 0.38, 0.08), stem: new Color3(0.25, 0.3, 0.1), face: new Color3(1, 0.8, 0.2) };
-export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire";
+export type ProjectileShape = "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -376,6 +383,7 @@ export class ProjectileSystem {
       case "pumpkin": speed = 12; arcHeight = dist * 0.35; break;
       case "shell":   speed = 46; arcHeight = dist * 0.015; break;
       case "stone":   speed = 10; arcHeight = dist * 0.4;  break;
+      case "barrel":  speed = 10; arcHeight = dist * 0.4;  break;
       case "cannonball": speed = 45; arcHeight = dist * 0.02; break; // fallback past the reach of LAUNCH.cannonball
       case "davinci_ball": speed = 30; arcHeight = dist * 0.06; break;
       case "firework": speed = 22; arcHeight = dist * FIREWORK_ROCKET.arc; break;
@@ -1354,6 +1362,22 @@ export class ProjectileSystem {
         // The catapult's boulder (the only unthrown-by-hand stone): the bucket's faceted grey-brown rock at its size, no team tint
         const stone = buildFacetedBoulder(this._scene, "stone", CATAPULT_BOULDER);
         stone.parent = root;
+        break;
+      }
+      case "barrel": {
+        const B = BARREL_SHOT;
+        const barrel = MeshBuilder.CreateCylinder("barrelShot", { height: B.long, diameter: B.wide, tessellation: B.staves }, this._scene);
+        barrel.rotation.z = Math.PI / 2;
+        barrel.material = this._getMat("barrel_wood", B.wood, 0.1);
+        barrel.convertToFlatShadedMesh();
+        barrel.parent = root;
+        for (const side of [-1, 1]) {
+          const hoop = MeshBuilder.CreateCylinder("barrelShotHoop", { height: B.hoop, diameter: B.wide * B.hoopOut, tessellation: B.staves }, this._scene);
+          hoop.position.y = (side * B.hoopAt * B.long) / 2;
+          hoop.material = this._getMat("barrel_iron", B.iron, 0.1);
+          hoop.convertToFlatShadedMesh();
+          hoop.parent = barrel;
+        }
         break;
       }
       case "cannonball": {

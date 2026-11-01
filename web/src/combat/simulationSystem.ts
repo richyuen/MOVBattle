@@ -48,6 +48,7 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
     case "bolt": return "bolt";
     case "bomb": return "bomb";
     case "pumpkin": return "pumpkin";
+    case "barrel": return "barrel"; // [S] 463 the Barrel Roller's explosive barrel (projectileSystem BARREL_SHOT)
     case "stone": return unit.definition.specialHint === "cannon" ? "cannonball" : "stone"; // a cannon fires an iron ball, not the catapult's rock
     case "spear": return "spear";
     case "firework": return "firework";
