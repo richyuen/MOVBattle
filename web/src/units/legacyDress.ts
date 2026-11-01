@@ -122,3 +122,23 @@ export function poacherHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   put(MeshBuilder.CreateBox("poacherBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, midY, c.z - e.z * P.back - t / 2 + t);
   return out;
 }
+
+/*
+ * [S] 459 the Flag and Banner Bearers' aura ring (audit 457 flag_bearer c.2 / banner_bearer c.2: "aura ring, none - TABS: a team-coloured circle on the
+ * ground around the bearer that marks the units it affects"; legacy.banner_bearer.jpg: a thin blue ring on the grass round the bearer, a few men wide;
+ * legacy.flag_bearer.red.png: an orange ring round his feet). BEARER_RING, in his standing height H: a flat ring .radius H out from his feet, .band H
+ * wide, .lift H over the soles (the root's y 0), .sides-sided; the team colour self-lit .glow so it reads on the grass.
+ */
+const BEARER_RING = { radius: 1.6, band: 0.05, flat: 0.012, lift: 0.02, sides: 40, glow: 0.45 };
+
+/** A flat team ring on the ground round the bearer (spec at BEARER_RING), hung on the body root at the soles. */
+export function bearerRing(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const R = BEARER_RING, H = body.metrics.overallHeight;
+  const ring = MeshBuilder.CreateTorus("bearerRing", { diameter: R.radius * H * 2, thickness: R.band * H, tessellation: R.sides }, scene);
+  ring.scaling.y = R.flat / R.band;
+  ring.position.y = R.lift * H;
+  ring.material = getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(R.glow) });
+  ring.isPickable = false;
+  ring.parent = body.root;
+  return [ring];
+}
