@@ -385,3 +385,32 @@ export function buildFlagHelmet(scene: Scene, W: number, H: number, seat: number
   return crown;
 }
 
+/*
+ * [S] 460 the Boxer's shorts (critic 459 a.3: "shorts, plain team body - TABS: long dark-team shorts with a gold striped waistband"; legacy.boxer.red.png:
+ * loose dark-team shorts from the waist to just above the knee, wider than the thigh, and round the waist a broad gold band of .stripes horizontal
+ * stripes, a lighter and a darker gold by turns). BOXER_SHORTS: the pelvis and a shell over each thigh .out of the limb round to .to of it in the team
+ * colour times .shade (self-lit .glow); the waistband on the trunk's foot, .band H tall, .bandOut W and D, its stripes stepping proud by turns.
+ */
+const BOXER_SHORTS = { shade: 0.55, glow: 0.12, out: 1.85, to: 0.88, band: 0.24, bandOut: 1.1, stripes: 4, step: 0.03 };
+
+/** The Boxer's long dark-team shorts and gold striped waistband (spec at BOXER_SHORTS). */
+export function boxerShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = BOXER_SHORTS;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(S.shade);
+  const dark = mf.get("cloth", t, { emissive: t.scale(S.glow) });
+  const gold = mf.get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(0.2) });
+  const deep = COATEE_GOLD.scale(0.7);
+  const gold2 = mf.get("cloth", deep, { emissive: deep.scale(0.2) });
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = dark;
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(limbShell(scene, "boxerShorts", thigh, 0, S.to, S.out, dark));
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const each = H * S.band / S.stripes;
+  for (let k = 0; k < S.stripes; k++) {
+    const grow = 1 + (k % 2 ? 0 : S.step);
+    lay(MeshBuilder.CreateBox("boxerWaistband", { width: W * S.bandOut * grow, height: each, depth: D * S.bandOut * grow }, scene), 0, -H / 2 + each * (k + 0.5), 0, k % 2 ? gold2 : gold);
+  }
+  return out;
+}
+
