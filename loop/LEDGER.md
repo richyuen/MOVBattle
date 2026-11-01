@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-448 | FLAT_HAT on the Lasso rider (fac00c2d) | wild_west.lasso.a | approved
-448 | GUNSLINGER_SIDEBURNS black bushy lumps down both cheeks (7082f6e9) | wild_west.gunslinger.a | approved
-448 | CACTUS_LONG .5 + CACTUS_BOOTS fat dark boots (2f5a4704) | wild_west.cactus.a | rejected-kept
-448 | WINCHESTER dark lever-action rifle, lever loop, short stock (2d87dded) | wild_west.deadeye.b | approved
-448 | QUICK_DRAW_SHIRT beige sleeves rolled past the elbow, collar V (3ca4f7f6) | wild_west.quick_draw.a | approved
-448 | MINER_OVERALLS lighter shirt, dark braces, waist band, no skirt (dbef099f) | wild_west.miner.a | approved
 449 | [R] QUEEN_LEGLINE pelvis cut .5, front hem rise, wrap flap at the side (b27052fd) | pirate.pirate_queen.a | rejected (a parked)
 450 | [R] QUEEN_LEGLINE hip .5, hem to mid-thigh slanting to her right, slim pale legs, slim knee boots, no tunicSkirt, fists at the hips (e97878d5, b5bd76ed) | pirate.pirate_queen.a | approved (a PASS)
 449 | DYNAMITE_WIRES black two-leg wire per stick (3adeea7c) | wild_west.dynamite_thrower.b | approved
@@ -40,6 +34,13 @@ for 25 iterations.
 452 | GUN_BELT pouch side list, deadeye pouch each hip (f7038a83) | wild_west.deadeye.a | approved
 452 | MINER_BOOTS dark brown knee boots, turned top (e0e391fd) | wild_west.miner.a | approved (a PASS)
 452 | CACTUS spikes tan, spike .55 base 1.15, hood ring 8 + crown 4 (81fef625) | wild_west.cactus.a | approved (a PASS)
+453 | no tunic skirt on the Quick Draw (f1e7c5e9) | wild_west.quick_draw.a | approved (a PASS)
+453 | DYNAMITE_BOOTS black boots, folded cuff (7d3f3350) | wild_west.dynamite_thrower.a | approved
+453 | GUNSLINGER_SHOES small black shoes (de84002b) | wild_west.gunslinger.a | approved (a PASS)
+453 | WESTERN_BRAID brown plait over the off shoulder (ca4802eb) | wild_west.deadeye.a | approved (a PASS)
+453 | MINER_UPRIGHT idle stance, chin up (8e7167ae) | wild_west.miner.a | approved
+453 | PICK_SHOULDER pick shouldered at rest (0a616333) | wild_west.miner.b | approved (none struck)
+453 | pinto coat + patches cloth, out of the glow layer, orange, peach (37b8faec) | wild_west.lasso.a | approved
 
 ## Spent (never retry as [P])
 
@@ -78,6 +79,13 @@ wildWestDress.ts:DYNAMITE_SKIRT (long, flare, stripes, stripe, proud, band, band
 wildWestDress.ts:QUICK_DRAW_VEST (shade, glow, buttons, button, from, to, proud, buttonColor) | .9, .12, 4, .07, .4, .88, .05, (.45,.45,.47) | 452 | approved | wildwest_leather body cloth (before 452)
 proceduralAnimation.ts:GUNSLINGER_REST (out, ahead, drop, dip) | .07, .06, .36, .75 | 452 | approved | gunner arms-out idle (before 452)
 wildWestDress.ts:MINER_BOOTS (from, to, out, cuffFrom, cuff, color, glow) | .14, 1.04, 1.25, .06, 1.45, (.12,.065,.04), .1 | 452 | approved | plain team feet (before 452)
+wildWestDress.ts:DYNAMITE_BOOTS (from, to, out, cuffFrom, cuff, color, glow) | .46, 1.04, 1.3, .32, 1.6, (.07,.055,.05), .1 | 453 | approved | from .34 cuffFrom .2 (453 look); plain team feet (before 453)
+wildWestDress.ts:DYNAMITE_SKIRT.teamGlow | 0 | 453 | approved | .12 (452)
+wildWestDress.ts:GUNSLINGER_SHOES (foot, from, to, out, color, glow) | .82, .9, 1.04, 1.12, (.05,.045,.05), .1 | 453 | approved | suit-cloth feet (before 453)
+wildWestDress.ts:WESTERN_BRAID (apart, rootUp, rootBack, footOut, footDrop, standOff, bow, plaits, thick, overlap, shade, band, tuft, hair, glow; deadeye side -1) | .42, .32, .12, .5, .85, .12, .18, 5, .3, 1.5, .75, .12, .2, (.36,.19,.09), .14 | 453 | approved | none (before 453)
+proceduralAnimation.ts:MINER_UPRIGHT (tilt, stride, lean, chin) | .06, .12, .06, .06 | 453 | approved | hashed stance, sunk crouch chin -.22 (before 453)
+proceduralAnimation.ts:PICK_SHOULDER (side, up, front, back, out, arm raise/turn/elbow) | .32, .95, .42, .3, .12, -1.6/.4/-1.7 | 453 | approved (none struck) | up .05 (453 probe: palm at the belly); pick on the fist rest (before 453)
+propBuilder.ts:PINTO_COAT, PINTO_CREAM, PINTO_NOGLOW (cloth, out of the glow layer) | (1,.3,.06), (.9,.55,.34), true | 453 | approved | (1,.5,.16)/(1,.76,.54) read yellow/white (453 probe); (.95,.42,.1)/(1,.93,.78) wood in the glow (before 453)
 wildWestDress.ts:DEADEYE_SHIRT (upperOut, lowerOut, lowerTo, cuffOut, vee, veeLong, color, glow) | 1.75, 1.95, .8, 1.35, .46, .4, (.95,.9,.74), .32 | 451 | approved | bare arms (before 451)
 spooky.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 434 | stats | values: git show 33bb56af
 spooky b props 434-436 rows (VAMPIRE_CLAWS, STIFFY_SHIELD, STIFFY_SWORD, BONE_BOW, CANDLE_ARMS; b PASS) | compacted 440 | 436 | approved | values: git show 93103dfd:loop/LEDGER.md
