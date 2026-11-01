@@ -1,5 +1,5 @@
 # Loop state (v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 455   Batch: wild_west (11/14)   Consecutive empty: 0   Done: 66/139   Parked: 0
+Iteration: 456   Batch: wild_west (12/14)   Consecutive empty: 0   Done: 69/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -12,7 +12,7 @@ viking: headbutter ++++ D | ice_archer ++++ D | brawler ++++ D | berserker ++++ 
 dynasty: samurai ++++ D | firework_archer ++++ D | monk ++++ D | ninja ++++ D | dragon ++++ D | hwacha ++++ D | monkey_king ++++ D
 pirate: flintlock ++++ D | blunderbuss ++++ D | bomb_thrower ++++ D | harpooner ++++ D | cannon ++++ D | captain ++++ D | pirate_queen ++++ D
 spooky: skeleton_warrior ++++ D | skeleton_archer ++++ D | candlehead ++++ D | vampire ++++ D | pumpkin_catapult ++++ D | swordcaster ++++ D | reaper ++++ D
-wild_west: dynamite_thrower -+++ o | miner -+++ o | cactus ++++ D | gunslinger ++++ D | lasso -+++ o | deadeye ++-+ o | quick_draw ++++ D
+wild_west: dynamite_thrower ++++ D | miner -+++ o | cactus ++++ D | gunslinger ++++ D | lasso ++++ D | deadeye ++++ D | quick_draw ++++ D
 legacy_1: peasant ???? q | banner_bearer ???? q | poacher ???? q | blowdarter ???? q | pike ???? q | barrel_roller ???? q | boxer ???? q | flag_bearer ???? q
 legacy_2: pharaoh ???? q | wizard ???? q | chariot ???? q | thor ???? q | tank ???? q | super_boxer ???? q | dark_peasant ???? q | super_peasant ???? q
 good: devout_gauntlet ???? q | celestial_aegis ???? q | radiant_glaive ???? q | righteous_paladin ???? q | divine_arbiter ???? q | sacred_elephant ???? q | chronomancer ???? q
@@ -23,25 +23,22 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
+456 (BASE a89c58e0): [S] deadeye c.1 receiver seated in the fist + overlay off + hip aim, aimed at the chest (65b9d4eb, b831338d) struck 1 | [S] deadeye c.2 recoil slide (da3c6b53) struck 2, c PASS; CONFIRM passed c; deadeye D | [S] lasso a.3 LASSO_SHIRT + hem (3956ccec, 14478070) struck 3, a PASS; CONFIRM passed a; lasso D | [R] dynamite a DYNAMITE_LOOK hat lift + bandanna (a089b2c5) struck 1, 2, a PASS; CONFIRM passed a; dynamite D - 4/4, 5 struck
 455 (BASE fa4523ed): [S] deadeye c.1 levelledGun + hip aim (b5b86f36) rejected, reverted c6329a96 | [S] deadeye c.3 RIFLE_TRACER (a5310afa) struck 3 | [S] dynamite a.1-2 DYNAMITE_SHIRT (905d3fd4, 9e286699) struck 1, 2, a PASS; CONFIRM passed b, c, failed a (2 new; a plateau) | [S] miner a.2 MINER_LEGS (63a28bba, 8ad8d441) struck 2 | [S] miner a.4 MINER_SLEEVES (b906f385) struck 4, a PASS; CONFIRM passed b, c, failed a (2 new; a plateau) | [S] lasso a.2 LASSO_MOUSTACHE (5517a3ff) struck 2 | [S] lasso a.1 PINTO_LEGS (e3f0ab28) struck 1 - 6/7, 6 struck
 454 (BASE 47cef1b6): evidence deadeye flightAt 3 ticks (087954a5) | [S] deadeye c.1 WINCHESTER_AIM + GUN_WARMUP (6a7b4719) approved, none struck | [S] dynamite a.3 WESTERN_BRAID (e92d6925) struck 3, a PASS; CONFIRM passed b, c, failed a (2 new) | [S] miner a.1 MINER_HAT (96109e64) struck 1 | [S] miner b.1 PICK_SHOULDER palm at the chin (aeb80c8a) struck 1, b PASS | [S] lasso a.1 PINTO_HEAD + PINTO_BEAD (641323cc) struck 1, a PASS; CONFIRM passed b, c, failed a (3 new) - 5/5, 4 struck
-453 (BASE 9a3ab6a1): [S] quick_draw a.2 no tunic skirt (f1e7c5e9) struck 2, a PASS; CONFIRM passed a; quick_draw D | [S] dynamite a.4 DYNAMITE_BOOTS (7d3f3350) struck 4 | [S] gunslinger a.4 GUNSLINGER_SHOES (de84002b) struck 4, a PASS; CONFIRM passed a; gunslinger D | [S] deadeye a.4 WESTERN_BRAID (ca4802eb) struck 4, a PASS; CONFIRM passed a, b, failed c (3 new) | [S] miner a.3 MINER_UPRIGHT (8e7167ae) struck 3 | [S] miner b.1 PICK_SHOULDER (0a616333) approved, none struck | [S] lasso a.2 pinto colours out of the glow (37b8faec) struck 2 | [P] dynamite DYNAMITE_SKIRT.teamGlow 0 (13a8ccd3) approved - 8/8, 6 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] wild_west.deadeye (b5b86f36) VERDICT: REJECT CRITERION: wild_west.deadeye.c FAIL   (previous: FAIL)
-- GAP: [S] wild_west.deadeye (a5310afa) VERDICT: APPROVE CRITERION: wild_west.deadeye.c FAIL   (previous: FAIL)
-- GAP: [S] wild_west.dynamite_thrower (905d3fd4, 9e286699) VERDICT: APPROVE CRITERION: wild_west.dynamite_thrower.a PASS   (previous: FAIL)
-- GAP: [S] wild_west.miner (63a28bba, 8ad8d441) VERDICT: APPROVE CRITERION: wild_west.miner.a FAIL   (previous: FAIL)
-- GAP: [S] wild_west.miner (b906f385) VERDICT: APPROVE CRITERION: wild_west.miner.a PASS   (previous: FAIL)
-- GAP: [S] wild_west.lasso (5517a3ff) VERDICT: APPROVE CRITERION: wild_west.lasso.a FAIL   (previous: FAIL)
-- GAP: [S] wild_west.lasso (e3f0ab28) VERDICT: APPROVE CRITERION: wild_west.lasso.a FAIL   (previous: FAIL)
+- GAP: [S] wild_west.deadeye (65b9d4eb, b831338d) VERDICT: APPROVE CRITERION: wild_west.deadeye.c FAIL   (previous: FAIL)
+- GAP: [S] wild_west.deadeye (da3c6b53) VERDICT: APPROVE CRITERION: wild_west.deadeye.c PASS   (previous: FAIL)
+- GAP: [S] wild_west.lasso (3956ccec, 14478070) VERDICT: APPROVE CRITERION: wild_west.lasso.a PASS   (previous: FAIL)
+- GAP: [R] wild_west.dynamite_thrower (a089b2c5) VERDICT: APPROVE CRITERION: wild_west.dynamite_thrower.a PASS   (previous: FAIL, plateau)
 - REGRESSIONS: none
-- CONFIRM 455: UNIT wild_west.dynamite_thrower: a FAIL b PASS c PASS d PASS (3/4) | UNIT wild_west.miner: a FAIL b PASS c PASS d PASS (3/4)
+- CONFIRM 456: UNIT wild_west.deadeye: a PASS b PASS c PASS d PASS (4/4) | UNIT wild_west.dynamite_thrower: a PASS b PASS c PASS d PASS (4/4) | UNIT wild_west.lasso: a PASS b PASS c PASS d PASS (4/4)
 ## Notes for next iteration (max 5 lines)
-- Dynamite a and miner a are plateau (CONFIRM failed a twice): each gets one [R] from both CONFIRM lists (dynamite: hat seat off the eyes + lighter team bandanna; miner: slim lanky build, no waist slab, longer legs - unitVisuals bulk 1.22).
-- Deadeye c.1: the gunner pose overlay (RuntimeUnit._applyPoseOverlay) runs after _aimWinchester and pitched the barrel; scaling it off (rejected 455) still left ~13° in the shot. Measure the muzzle-to-receiver line in the frame and level that; the barrel sits ~.3 m over the fist.
-- Lasso a: only the rider's team shirt left (LASSO_SHIRT, the DYNAMITE_SHIRT pattern), judged on a red --noglow swatch.
+- Only the miner is open in wild_west: a is plateau (CONFIRM 452, 455), so its pick is one [R] - a slim lanky build (unitVisuals bulk 1.22 / scale 1.12, MINER_OVERALLS waist slab .over 1.06, legs to half the height) keeping hat, moustache, braces, dark legs, sleeves, gloves, boots.
+- Tail overlap (step 2): wild_west has under 5 pickable [S] and legacy_1 is unaudited - audit legacy_1 next iteration and pick from both (Batch: wild_west+legacy_1).
+- The default tunic hem is hung later in body.bodyMaterial (unitFactory): a unit re-dressed in team cloth needs its hem branch too (456 lasso).
+- A gun held in the fist keeps the carry's offset in the hand when turned about its pivot: seat its receiver on the wrist joint (456 deadeye).
 - Team cloth: teamColor x .55 reads as the pale team colour in the hazy idle; "dark team" wants x .3-.35.
-- Pinto colours (453): the glow layer's bloom washed the coat to yellow; it and the patches are cloth out of the glow.
 ## Unit file template (loop/units/<id>.md, cap 3200 bytes)
 ```
 # <unitId>

@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-451 | DYNAMITE_HOLD upright bundle at the belly in both hands (c3d7f4df) | wild_west.dynamite_thrower.b | rejected (no throw: c regression; reverted 8a086de6)
-451 | LASSO_RAISE coil stood up in the world, loop over the fist (363add1b) | wild_west.lasso.b | approved (b PASS)
-451 | _aimPick haft laid along the blow's aim, head on the man in front (1a48b2d8) | wild_west.miner.c | approved (c PASS)
-451 | GUN_BELT dark belt, holster each hip (709dbc19) | wild_west.gunslinger.a | approved
-451 | GUN_BELT belt, gun-hip holster, slanting brass pouch (1e4fd4d6) | wild_west.quick_draw.a | approved (a PASS)
-451 | DEADEYE_SHIRT off-white puffy sleeves, cuffs, collar V (09138420) | wild_west.deadeye.a | approved
-451 | [R] CACTUS_ROBE hem at the knee, spike rings, 3 flowers, slim boots, upright (1a160cdf) | wild_west.cactus.a | approved (struck 2, 4)
 452 | DYNAMITE_HOLD resubmit + throwWindupCap 1 s (8326af8e) | wild_west.dynamite_thrower.b | approved (b PASS)
 452 | DYNAMITE_SKIRT knee skirt, gold stripes per face, gold hem band (d87b2f79) | wild_west.dynamite_thrower.a | approved
 452 | QUICK_DRAW_VEST team cloth body cloth, four grey buttons (1da9827a) | wild_west.quick_draw.a | approved
@@ -45,6 +38,10 @@ for 25 iterations.
 455 | MINER_SLEEVES dark sleeves, tan glove cuffs and hands (b906f385) | wild_west.miner.a | approved (a PASS)
 455 | LASSO_MOUSTACHE curled moustache (5517a3ff) | wild_west.lasso.a | approved
 455 | PINTO_LEGS slim round legs, small hooves (e3f0ab28) | wild_west.lasso.a | approved
+456 | WINCHESTER_AIM receiver seated in the fist, overlay off, hip aim; aimed at the man's chest (65b9d4eb, b831338d) | wild_west.deadeye.c | approved
+456 | WINCHESTER_AIM recoil a slide back along the level barrel (da3c6b53) | wild_west.deadeye.c | approved (c PASS)
+456 | LASSO_SHIRT team shirt, trousers, hem, short dark sleeves (3956ccec, 14478070) | wild_west.lasso.a | approved (a PASS)
+456 | [R] DYNAMITE_LOOK hat lifted off the eyes + lighter team bandanna (a089b2c5) | wild_west.dynamite_thrower.a | approved (a PASS, plateau cleared)
 
 ## Spent (never retry as [P])
 
@@ -80,11 +77,13 @@ wildWestDress.ts:WESTERN_BRAID (apart, rootUp, rootBack, footOut, footDrop, stan
 proceduralAnimation.ts:MINER_UPRIGHT (tilt, stride, lean, chin) | .06, .12, .06, .06 | 453 | approved | hashed stance, sunk crouch chin -.22 (before 453)
 proceduralAnimation.ts:PICK_SHOULDER (side, up, front, back, out, arm raise/turn/elbow) | .15, 1.25, .5, .3, .12, -1.6/.4/-1.7 | 454 | approved | .32, .95, .42 (453, fists at the chest); up .05 (453 probe); pick on the fist rest (before 453)
 wildWestDress.ts:MINER_HAT (sides, crown, brim, slope, top, tall, tilt, shade, glow) | 8, 1.2, 1.85, .16, .86, .75, .14, .9, .12 | 454 | approved | MINER_CAP skullcap + bill (447-453)
-proceduralAnimation.ts:WINCHESTER_AIM (ahead, inward, drop, kick, settle, up, down) + simulationSystem GUN_WARMUP (warmup) | .2, .06, .2, .12, 8, 60, 2.5; 1 s | 454 | approved | fired from the shoulder carry (before 454)
+proceduralAnimation.ts:WINCHESTER_AIM (ahead, inward, drop, slide, settle, up, down, seat, turn) + GUN_WARMUP + RuntimeUnit gunner overlay x (1 - levelledGun) | .28, .06, .26, .05, 8, 60, 2.5, .02, 1.2; 1 s | 456 | approved | ahead .2 drop .2 kick .12 rad up (454: shoulder height, ~15° up)
 projectileSystem.ts:RIFLE_TRACER (thick, hold, life; deadeye) | .035, .12, .3 | 455 | approved | none: only a muzzle puff (before 455)
 wildWestDress.ts:DYNAMITE_SHIRT (shade, sleeveShade, glow, upperOut, lowerOut) | .85, .35, .12, 1.22, 1.2 | 455 | approved | sleeveShade .7 (455 look: pale); secret_bandit body cloth (before 455)
 wildWestDress.ts:MINER_LEGS (shade, glow, out, shinOut, shinTo) + MINER_SLEEVES (upperOut, lowerOut, cuffFrom, cuffOut, glove, glow) | .3, .12, 1.18, 1.12, .3; 1.22, 1.18, .55, 1.55, (.72,.5,.26), .15 | 455 | approved | shade .55 (455 look: pale); bare team legs and arms (before 455)
 wildWestDress.ts:LASSO_MOUSTACHE (long, thick, droop, at, proud, curl, curlThick) | .66, .26, .12, -.36, .08, .36, .13 | 455 | approved | none (before 455)
+wildWestDress.ts:LASSO_SHIRT (shade, sleeveShade, glow, out, sleeveTo) + unitFactory tunic hem in lassoShirtCloth | .85, .35, .12, 1.3, .7 | 456 | approved | wildwest_leather body cloth (before 456)
+wildWestDress.ts:DYNAMITE_LOOK [R] 456 (hatLift, lift, band, collar, wide, long, proud, glow) + hat dynamite_hat | .24, .45, .1, 1.06, .92, .42, .07, .15 | 456 | approved | peak_hat at the eye seat, no bandanna (449-455)
 propBuilder.ts:PINTO_LEGS (fore, hind, sides, deep, foot, cannon, fetlock, hoof, hoofTall) | .22, .27, 6, 1.15, .12, .085, .065, .15, .09 | 455 | approved | barded wedges .36/.44 x1.45, hoof .27 (before 455)
 propBuilder.ts:PINTO_HEAD (wide, long, deep, muzzle, muzzleAt) + PINTO_BEAD (disc, thick, proud, pupil, look) | .6, .6, .54, .46, .7; .3, .07, .03, .48, .18 | 454 | approved | long thin box snout (447-453)
 propBuilder.ts:PINTO_COAT, PINTO_CREAM, PINTO_NOGLOW (cloth, out of the glow layer) | (1,.3,.06), (.9,.55,.34), true | 453 | approved | (1,.5,.16)/(1,.76,.54) read yellow/white (453 probe); (.95,.42,.1)/(1,.93,.78) wood in the glow (before 453)
