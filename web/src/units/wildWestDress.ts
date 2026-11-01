@@ -107,11 +107,11 @@ export function buildFlatHat(scene: Scene, W: number, H: number, seat: number, u
  * [S] 447 the Miner's cap (critic 446 miner a.1: "black top hat with a headlamp - TABS: team miner's cap, tall dome crown, front peak";
  * wild_west.miner.red.png: a team-coloured cap whose round crown rises well over the head, wider than it, and a stiff peak jutting out over the
  * eyes, tilted up a little; no lamp). MINER_CAP, in the head's width W and height H: a wall .wall W across from the seat to the head top, so it clears
- * the block head's chamfered corners; on it a dome .dome W across rising .rise H over the head top (under .3, so the capture keeps its framing),
+ * the block head's chamfered corners; on it a dome .dome W across rising .rise H over the head top (447.3b: .29 read as a flat cap),
  * its lower half inside the wall; a peak .peak W wide and .peakLong W out front at the seat, .thick H thick, tipped up .tip rad. Team colour times
  * .shade, self-lit .glow.
  */
-const MINER_CAP = { sides: 12, wall: 1.34, dome: 1.3, rise: 0.29, peak: 0.95, peakLong: 0.5, thick: 0.05, tip: 0.22, shade: 0.9, glow: 0.12 };
+const MINER_CAP = { sides: 12, wall: 1.42, dome: 1.38, rise: 0.72, peak: 1.0, peakLong: 0.55, thick: 0.05, tip: 0.22, shade: 0.9, glow: 0.12 };
 
 /** The miner's cap (spec at MINER_CAP), in the hat's units; `seat` under the head top. Returns the wall. */
 export function buildMinerCap(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
