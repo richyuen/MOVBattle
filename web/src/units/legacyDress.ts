@@ -527,3 +527,27 @@ export function boxerBoots(scene: Scene, body: ArticulatedBody, teamColor: Color
   return out;
 }
 
+/*
+ * [S] 461 the Flag Bearer's jacket (critic 460 a.2: "jacket, plain team body - TABS: a team military jacket with gold front trim"; legacy.flag_bearer
+ * .red.png: a team jacket over the trunk, a gold placket down the middle of its front from the collar to the hem, a gold standing collar round the neck,
+ * the hem a little below the waist). FLAG_JACKET on the trunk: the trunk and yoke in the team coat (team times .shade, self-lit .glow); a gold placket
+ * .placket W wide down the front, .proud D off it; a gold collar ring at the trunk's top, .collar H tall, .collarOut of W and D across. Gold COATEE_GOLD.
+ */
+const FLAG_JACKET = { shade: 0.85, glow: 0.12, placket: 0.12, proud: 0.05, collar: 0.1, collarOut: 0.82 };
+
+/** The Flag Bearer's team jacket with a gold placket and a gold collar (spec at FLAG_JACKET). */
+export function flagJacket(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const J = FLAG_JACKET;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(J.shade);
+  const coat = mf.get("cloth", t, { emissive: t.scale(J.glow) });
+  const gold = mf.get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(0.2) });
+  body.torsoMesh.material = coat;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = coat;
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  lay(MeshBuilder.CreateBox("flagJacketPlacket", { width: W * J.placket, height: H * 0.98, depth: D * J.proud }, scene), 0, 0, D / 2 + D * J.proud / 2, gold);
+  lay(MeshBuilder.CreateCylinder("flagJacketCollar", { height: H * J.collar, diameterTop: W * J.collarOut * 0.9, diameterBottom: W * J.collarOut, tessellation: 8 }, scene), 0, H / 2 + H * J.collar / 2 - H * 0.02, 0, gold).scaling.z = D / W;
+  return out;
+}
+
