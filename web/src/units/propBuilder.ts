@@ -2219,6 +2219,14 @@ export function attachProps(
       if (config.shield === "heater") Quaternion.FromRotationMatrix(Matrix.FromValues(0, -1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 1)).toEulerAnglesToRef(shield.rotation);
       // Strapped up the forearm and carried across the chest, not dangling at the hip
       shield.position.set(0.1 * scale, (round ? 0.22 : 0.14) * scale, 0.2 * scale);
+      // [S] 443 STIFFY_UPRIGHT (CONFIRM 442 skeleton_warrior b.1: "held flat across the chest like a tray, face up"): the hand's +z points up at the
+      // idle, so the Stiffy Shield is stood on the fist with its studded face out front and a little to his off side and its top up, a near-circle
+      // to the front three-quarter (rows: the shield's x, y, z in the hand's frame, solved from probe_axes at the idle), and carried ahead of the chest
+      if (config.shield === "stiffy") {
+        const U = STIFFY_UPRIGHT;
+        Quaternion.FromRotationMatrix(Matrix.FromValues(...U.x, 0, ...U.y, 0, ...U.z, 0, 0, 0, 0, 1)).toEulerAnglesToRef(shield.rotation);
+        shield.position.set(U.at[0] * scale, U.at[1] * scale, U.at[2] * scale);
+      }
     }
     props.push(shield);
   }
@@ -5634,6 +5642,8 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
 const ROUND_FACES = 3;
 const ROUND_SHADE = 0.12;
 /** The Skeleton Warrior's Stiffy Shield ("stiffy" case): board diameter (x2.0 on the arm), rim of the board, stud radius, studs in all and on the inner ring */
+/** The Stiffy Shield stood upright on the fist: its local x, y, z in the hand's frame (face +z out front, a little to the off side) and its seat in the hand */
+const STIFFY_UPRIGHT = { x: [0.713, -0.501, 0.491] as const, y: [-0.174, 0.552, 0.816] as const, z: [-0.68, -0.667, 0.306] as const, at: [0.062, 0.054, 0.36] as const };
 const STIFFY_SHIELD = { board: 0.3, rim: 1.1, stud: 0.016, studs: 12, inner: 4, dark: new Color3(0.2, 0.09, 0.09) };
 const ROUND_PAINT = 1.45;
 let roundBoardSerial = 0;
