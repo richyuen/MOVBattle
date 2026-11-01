@@ -25,7 +25,7 @@ drop a lesson once it is a comment at the code it describes.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of it (420 dragon, monkey king): a new tall prop re-frames every shot, so a RE-AUDIT follows.
-- A pistol is found by its "pistolBell" child (_aimPistol, GUN_TOSS): a new gun cut without it floats off the fist (445 revolver). A fast gunman kills a lone archer before it looses: a dodge scene needs a file of archers; his smoke hides the pair (445).
+- A pistol is found by its "pistolBell" child (_aimPistol, GUN_TOSS): a new gun cut without it floats off the fist (445 revolver). Gun smoke/flash are meshes (trailPuff, flash, pistolFlash): take() {hold, clean} holds one camera and hides them (446).
 - A bowman at the ready turns his chest up to .95 rad and his head off it: aim his idle from the head block's world facing, alpha = atan2(fz, fx) - swing (402 ice archer).
 - A wide stance reads as a stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a "stride" pose gap (403).
 - `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches: render them after it. 4+ units: background it.
