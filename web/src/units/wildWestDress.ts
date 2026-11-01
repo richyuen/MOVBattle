@@ -95,7 +95,7 @@ export function lassoRope(scene: Scene): { rope: Mesh; loop: Mesh } {
  * long up from the fist to the big loop, .loop across and .loopThick thick, standing on edge over the fist and tipped .tip rad back; .coils small
  * hanging coils .coil across round the fist, .coilStep apart. Tan LASSO_ROPE rope. Hidden while the thrown rope is out (simulationSystem _tryLasso).
  */
-const LASSO_COIL = { rise: 0.22, loop: 0.62, loopThick: 0.035, tip: 0.35, coils: 3, coil: 0.24, coilThick: 0.03, coilStep: 0.035 };
+const LASSO_COIL = { rise: 0.14, loop: 0.3, loopThick: 0.026, tip: 0.35, coils: 3, coil: 0.15, coilThick: 0.022, coilStep: 0.025 };
 
 /** The rope at the ready in the rider's fist (spec at LASSO_COIL): a node named "lassoCoil". */
 export function lassoCoil(scene: Scene, s: number): Mesh {

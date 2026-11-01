@@ -7156,7 +7156,7 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     const whip = body.rightHand.getChildren().find((n) => n.name === "whip");
     if (whip) {
       for (const c of whip.getChildren()) c.dispose();
-      lassoCoil(scene, s * 1.25).parent = whip;
+      lassoCoil(scene, s).parent = whip; // under the whip node's prop oversize
     }
     return barrel;
   }
