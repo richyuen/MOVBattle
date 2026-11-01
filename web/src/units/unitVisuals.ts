@@ -727,7 +727,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.pike": vis(
-    { scale: 1.14, bulk: 1.12, armLength: 1.3 }, "spear", "great_helm", "none", "none", "#B5B5B5",
+    // [S] 462 a wide-brimmed team hat with a plume (the cavalier's, propBuilder CAVALIER; audit 457 a.1), not the bucket great-helm
+    { scale: 1.14, bulk: 1.12, armLength: 1.3 }, "spear", "cavalier_hat", "none", "none", "#B5B5B5",
     undefined,
     { materialPreset: "legacy_toy" },
   ),
