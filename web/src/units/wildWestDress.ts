@@ -253,5 +253,25 @@ export function gunslingerJacket(scene: Scene, body: ArticulatedBody, teamColor:
     lapel.material = lapelMat;
     place(lapel, side * (W * J.vee / 4 + W * J.lapel * 0.35), topY - lapelLong / 2, front + D * J.lapelProud / 2, -side * J.lean);
   }
+  // [S] 447 the tie (spec at GUNSLINGER_TIE)
+  const T = GUNSLINGER_TIE;
+  const tieMat = mf.get("cloth", T.color, { emissive: T.color.scale(T.glow) });
+  const knot = MeshBuilder.CreateBox("gunslingerTieKnot", { width: W * T.knot, height: H * T.knotTall, depth: D * T.proud }, scene);
+  knot.material = tieMat;
+  place(knot, 0, topY - H * T.knotTall / 2, front + D * (J.proud + T.proud / 2), 0);
+  const blade = MeshBuilder.CreateCylinder("gunslingerTie", { height: H * T.long, diameterTop: W * T.top * Math.SQRT2, diameterBottom: W * T.foot * Math.SQRT2, tessellation: 4 }, scene);
+  blade.rotation.y = Math.PI / 4;
+  blade.bakeCurrentTransformIntoVertices();
+  blade.scaling.z = (D * T.proud * 0.8) / (W * T.foot);
+  blade.material = tieMat;
+  place(blade, 0, topY - H * T.knotTall - H * T.long / 2, front + D * (J.proud + T.proud * 0.4), 0);
   return out;
 }
+
+/*
+ * [S] 447 the Gunslinger's tie (critic 446 a.3: "tie: none - TABS: wide purple tie at the throat"; card Appearance; wild_west.gunslinger.red.png: a
+ * broad violet cravat from the collar down the shirt V to about the jacket's top button, as wide as the V at the top, a fat knot at the throat).
+ * GUNSLINGER_TIE, in the trunk's box W H D: a knot .knot W across and .knotTall H tall at the collar; a blade .top W across under it widening to .foot
+ * W at its end .long H down; both .proud D off the shirt V; violet cloth (palette purple x .7), self-lit .glow.
+ */
+const GUNSLINGER_TIE = { knot: 0.17, knotTall: 0.07, top: 0.15, foot: 0.24, long: 0.32, proud: 0.06, color: new Color3(0.42, 0.14, 0.63), glow: 0.12 };
