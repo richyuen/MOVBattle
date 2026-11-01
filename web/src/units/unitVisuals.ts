@@ -745,7 +745,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.flag_bearer": vis(
-    { scale: 1.34, bulk: 1.08, headSize: 1.05 }, "staff", "none", "none", "banner_back", "#5C79D4", undefined, {
+    // [S] 459 a normal 1.00x man (audit 457 a.5: "a large bulky man (size 1.34) - TABS: a normal 1.00x man", card Size), not the 1.34 / 1.08 bulk
+    { scale: 1.0, bulk: 0.92, headSize: 1.05 }, "staff", "none", "none", "banner_back", "#5C79D4", undefined, {
       weaponVariant: "charge_flag", // [S] 457 the team flag on a slim pole under a gold ball (propBuilder CHARGE_FLAG; audit 457 b.1)
       posePreset: "support",
       materialPreset: "legacy_toy",
