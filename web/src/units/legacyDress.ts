@@ -139,19 +139,14 @@ export function bearerReach(body: ArticulatedBody): number {
   return BEARER_RING.radius * body.metrics.overallHeight;
 }
 
-/** The bearer's ring cloth: his own colour (BEARER_RING_COLOR), else the team's, self-lit BEARER_RING.glow; his aura's ring on the allies wears it too. */
-export function bearerRingMaterial(unitId: string | undefined, teamColor: Color3): Material {
-  const c = (unitId && BEARER_RING_COLOR[unitId]) || teamColor;
-  return getMaterialFactory().get("cloth", c, { emissive: c.scale(BEARER_RING.glow) });
-}
-
 /** A flat team ring on the ground round the bearer (spec at BEARER_RING), hung on the body root at the soles. */
 export function bearerRing(scene: Scene, body: ArticulatedBody, teamColor: Color3, unitId?: string): Mesh[] {
   const R = BEARER_RING, H = body.metrics.overallHeight;
   const ring = MeshBuilder.CreateTorus("bearerRing", { diameter: R.radius * H * 2, thickness: R.band * H, tessellation: R.sides }, scene);
   ring.scaling.y = R.flat / R.band;
   ring.position.y = R.lift * H;
-  ring.material = bearerRingMaterial(unitId, teamColor);
+  const c = (unitId && BEARER_RING_COLOR[unitId]) || teamColor;
+  ring.material = getMaterialFactory().get("cloth", c, { emissive: c.scale(R.glow) });
   ring.isPickable = false;
   ring.parent = body.root;
   return [ring];

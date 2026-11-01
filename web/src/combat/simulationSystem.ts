@@ -16,7 +16,7 @@ import { HARPOON_MUZZLE, launchRingSword } from "../units/propBuilder";
 import { buildGroundSnake, type GroundSnake } from "../units/ancientDress";
 import { reaperSpear } from "../units/spookyDress";
 import { lassoRope } from "../units/wildWestDress";
-import { bearerReach, bearerRingMaterial } from "../units/legacyDress";
+import { bearerReach } from "../units/legacyDress";
 
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
@@ -1969,13 +1969,12 @@ export class SimulationSystem {
     const aura = BEARER_AURA_KIND[supporter.definition.id];
     if (aura) {
       const reach = bearerReach(supporter.body);
-      // 461: the ring mesh looked up by name was not found (the ally showed no ring): the material comes from legacyDress
-      const ringMat = bearerRingMaterial(supporter.definition.id, new Color3(0.9, 0.9, 0.9));
+      const ringMesh = supporter.body.root.getChildMeshes(false, (m) => m.name === "bearerRing")[0];
       const holds = attackProfile.cooldown * cooldownMultiplier + 0.5;
       for (const man of this._units) {
         if (man === supporter || man.isDead || man.team !== supporter.team) continue;
         if (Vector3.Distance(man.position, supporter.position) > reach) continue;
-        man.applyAura(aura, holds, now, ringMat);
+        man.applyAura(aura, holds, now, ringMesh?.material ?? null);
       }
       this._logAbility(supporter, aura, now, supporter.position);
       return;
