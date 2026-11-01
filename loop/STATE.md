@@ -1,5 +1,5 @@
 # Loop state (v7: a look list holds 6 blockers with the build first, the tail overlaps below 7 picks, a plateau [R] goes next, CONFIRM runs beside the critic; v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 458   Batch: wild_west+legacy_1 (12/14)   Consecutive empty: 0   Done: 69/139   Parked: 0
+Iteration: 459   Batch: legacy_1 (3/14)   Consecutive empty: 0   Done: 70/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -12,7 +12,7 @@ viking: headbutter ++++ D | ice_archer ++++ D | brawler ++++ D | berserker ++++ 
 dynasty: samurai ++++ D | firework_archer ++++ D | monk ++++ D | ninja ++++ D | dragon ++++ D | hwacha ++++ D | monkey_king ++++ D
 pirate: flintlock ++++ D | blunderbuss ++++ D | bomb_thrower ++++ D | harpooner ++++ D | cannon ++++ D | captain ++++ D | pirate_queen ++++ D
 spooky: skeleton_warrior ++++ D | skeleton_archer ++++ D | candlehead ++++ D | vampire ++++ D | pumpkin_catapult ++++ D | swordcaster ++++ D | reaper ++++ D
-wild_west: dynamite_thrower ++++ D | miner -+++ o | cactus ++++ D | gunslinger ++++ D | lasso ++++ D | deadeye ++++ D | quick_draw ++++ D
+wild_west: dynamite_thrower ++++ D | miner ++++ D | cactus ++++ D | gunslinger ++++ D | lasso ++++ D | deadeye ++++ D | quick_draw ++++ D
 legacy_1: peasant -+++ o | banner_bearer ---- o | poacher ---+ o | blowdarter ---+ o | pike ---+ o | barrel_roller ---+ o | boxer -+-+ o | flag_bearer ---- o
 legacy_2: pharaoh ???? q | wizard ???? q | chariot ???? q | thor ???? q | tank ???? q | super_boxer ???? q | dark_peasant ???? q | super_peasant ???? q
 good: devout_gauntlet ???? q | celestial_aegis ???? q | radiant_glaive ???? q | righteous_paladin ???? q | divine_arbiter ???? q | sacred_elephant ???? q | chronomancer ???? q
@@ -23,22 +23,22 @@ secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ?
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
 ## Focus (every gap this iteration: tag, unit, gap, sha, verdict; the line ends in `- <approved>/<total>, <struck> struck`)
+459 (BASE 8b1fb2d6): [R] miner a MINER_LOOK hat lift .2, shirt lift 0, --noglow swatch (5bbb0646) struck 1, 2, a PASS; CONFIRM (beside the critic) passed a; miner D; wild_west checkpoint 12/12 green, dropped from Batch | [S] flag_bearer + banner_bearer c.2 BEARER_RING (502c506c) struck 2 each, flag added 3 (ring orange in TABS) | [S] flag_bearer a.5 scale 1.0 (f1844412) struck 5 | [S] boxer a.2 BOXER_HEADGEAR (17904d07) struck 2, 5 | [S] peasant a.4 PEASANT_DRESS (b3a3379d) struck 4 | [S] poacher a.3 POACHER_COAT (cbf64ff2) struck 3 | [S] banner_bearer a.1 SHAKO (44da9220) struck 1, 4 - 7/7, 11 struck
 458 (BASE 0f00efd6): [R] miner a MINER_HAT slouched (db88c15a) struck 1, added 2 (eyes under the brim); CONFIRM (beside the critic) failed a: eyes, chest colour (4th: plateau) | [S] peasant a.2 PEASANT_HOOD resubmit, gap + PI (2692a0f1) struck 2 | [S] flag_bearer b.3 POLE_GRIP.bearerPole (6864fd6b, also banner b.3) none struck: the pole leans, fists apart | [S] banner_bearer b.4 STAY_BANNER beam 1.0 (20dbf14b) struck 4 | [S] poacher a.2 POACHER_HAIR (07b24943) struck 2 | [S] barrel_roller a.1 lanky build (336bafe3) struck 1 | [P] boxer b.1 TEAM_GLOVE x .5 on a swatch (f7d4c129) struck 1, b PASS - 7/7, 6 struck
 457 (BASE 7f5ee168; tail overlap: legacy_1 audited, stats 5d6b5d24 d 6/8): [R] miner a MINER_BUILD (b6a093c2) struck 1, 2, a PASS; CONFIRM (beside the critic) failed a on the hat (3rd CONFIRM fail: a plateau) | [S] flag_bearer b.1 CHARGE_FLAG + upright pole (3537400d, 35ba9eb6) struck 1, 2, added 4 | [S] banner_bearer b.1 STAY_BANNER + upright pole (c372d09e, 3244f182) struck 1, 2, added 4 | [S] boxer b.2 TEAM_GLOVE (4e6b33f9, bc99e306) struck 2 | [S] poacher a.1 POACHER_HAT (23a90927) struck 1 | [S] peasant a.2 PEASANT_HOOD (863f64ea) rejected, reverted da3672d0; pike b.1 not picked (an upright 3x pike re-frames every shot: needs the levelled grip b.3 with it), blowdarter b.1 not picked (a new two-hand mouth pose) - 5/6, 8 struck
-456 (BASE a89c58e0): [S] deadeye c.1 receiver seated in the fist + overlay off + hip aim, aimed at the chest (65b9d4eb, b831338d) struck 1 | [S] deadeye c.2 recoil slide (da3c6b53) struck 2, c PASS; CONFIRM passed c; deadeye D | [S] lasso a.3 LASSO_SHIRT + hem (3956ccec, 14478070) struck 3, a PASS; CONFIRM passed a; lasso D | [R] dynamite a DYNAMITE_LOOK hat lift + bandanna (a089b2c5) struck 1, 2, a PASS; CONFIRM passed a; dynamite D - 4/4, 5 struck
 ## Last verdicts (critic header lines verbatim)
-- GAP: [R] wild_west.miner (db88c15a) VERDICT: APPROVE CRITERION: wild_west.miner.a FAIL   (previous: FAIL)
-- GAP: [S] legacy.peasant (2692a0f1) VERDICT: APPROVE CRITERION: legacy.peasant.a FAIL   (previous: FAIL)
-- GAP: [S] legacy.flag_bearer (6864fd6b) VERDICT: APPROVE CRITERION: legacy.flag_bearer.b FAIL   (previous: FAIL)
-- GAP: [S] legacy.banner_bearer (6864fd6b) VERDICT: APPROVE CRITERION: legacy.banner_bearer.b FAIL   (previous: FAIL)
-- GAP: [S] legacy.banner_bearer (20dbf14b) VERDICT: APPROVE CRITERION: legacy.banner_bearer.b FAIL   (previous: FAIL)
-- GAP: [S] legacy.poacher (07b24943) VERDICT: APPROVE CRITERION: legacy.poacher.a FAIL   (previous: FAIL)
-- GAP: [S] legacy.barrel_roller (336bafe3) VERDICT: APPROVE CRITERION: legacy.barrel_roller.a FAIL   (previous: FAIL)
-- GAP: [P] legacy.boxer (f7d4c129) VERDICT: APPROVE CRITERION: legacy.boxer.b PASS   (previous: FAIL)
+- GAP: [R] wild_west.miner (5bbb0646) VERDICT: APPROVE CRITERION: wild_west.miner.a PASS   (previous: FAIL)
+- GAP: [S] legacy.flag_bearer (502c506c) VERDICT: APPROVE CRITERION: legacy.flag_bearer.c FAIL   (previous: FAIL)
+- GAP: [S] legacy.banner_bearer (502c506c) VERDICT: APPROVE CRITERION: legacy.banner_bearer.c FAIL   (previous: FAIL)
+- GAP: [S] legacy.flag_bearer (f1844412) VERDICT: APPROVE CRITERION: legacy.flag_bearer.a FAIL   (previous: FAIL)
+- GAP: [S] legacy.boxer (17904d07) VERDICT: APPROVE CRITERION: legacy.boxer.a FAIL   (previous: FAIL)
+- GAP: [S] legacy.peasant (b3a3379d) VERDICT: APPROVE CRITERION: legacy.peasant.a FAIL   (previous: FAIL)
+- GAP: [S] legacy.poacher (cbf64ff2) VERDICT: APPROVE CRITERION: legacy.poacher.a FAIL   (previous: FAIL)
+- GAP: [S] legacy.banner_bearer (44da9220) VERDICT: APPROVE CRITERION: legacy.banner_bearer.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM 458: UNIT wild_west.miner: a FAIL b PASS c PASS d PASS (3/4)
+- CONFIRM 459: UNIT wild_west.miner: a PASS b PASS c PASS d PASS (4/4)
 ## Notes for next iteration (max 5 lines)
-- Miner a plateau (4 CONFIRM fails: each found new elements after the last list cleared): one [R] from the 458 list - hat seated off the eyes, shirt at the team skin tone; give the CONFIRM a --noglow chest swatch for the colour blocker. After his D: wild_west checkpoint, drop it from Batch.
+- Bearer rings (critic 459): TABS colours them per unit, not per team - flag orange-gold (.95,.6,.2), banner cyan - one [P] on BEARER_RING (fallout of 502c506c); the bearers' c.1 needs haste / stay statuses in place of the heal.
 - Barrel roller is hidden in lineup_legacy (critic 458): an evidence commit first (capture.mjs gallery_faction_legacy, bring him to a clear slot) before any a gap on him.
 - Bearers' grip b.3: the pole leans out and the fists sit shoulder and hip (flag); the off fist stops short of the shaft (banner). One hold change (pole upright before the chest, fists stacked) for both.
 - Bearers' d: dmg 0 (stats wants damageMultiplier Infinity, skipped): they need a plain blow logged as a melee hit - an [S], not a stats knob.
