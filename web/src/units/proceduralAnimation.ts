@@ -254,7 +254,8 @@ const FIREWORK_REST = { across: 0.16, forward: 0.1 };
 const NORSE_BOARD = { ahead: 0.06, drop: 0.05, inward: 0.6 };
 const KATANA_REST = { ahead: 0.16, drop: 0.24, lean: 0.12, under: 0.9, settle: 0.8 };
 // [S] 431 the Pirate Queen's crossed blades at rest (see _restQueenBlades)
-const QUEEN_GUARD = { out: 0.05, ahead: 0.14, drop: 0.3, cross: 0.6, lean: 0.2, stagger: 0.04, settle: 0.8 };
+// [R] 444 the fists hang outside the hips, the bowl guards beside the thighs and not before them (pirateDress QUEEN_LEGLINE): out .05 -> .12, ahead .14 -> .08, drop .3 -> .24
+const QUEEN_GUARD = { out: 0.12, ahead: 0.08, drop: 0.24, cross: 0.6, lean: 0.2, stagger: 0.04, settle: 0.8 };
 const MONK_REST = { ahead: 0.14, inward: 0.08, drop: 0.16, tilt: 0.06 };
 /** [S] 412 the bo swing (_restMonkBo while attacking): the shaft line turned .back rad behind by .cock of the attack, round to .through rad in front by .hit; fists .reach further ahead at the hit; the far end raised .raise (rise per unit across) when cocked, dipped .dip at the hit. */
 const MONK_SWING = { back: 0.9, through: 1.35, cock: 0.3, hit: 0.5, reach: 0.08, raise: 1.3, dip: 0.35 };
