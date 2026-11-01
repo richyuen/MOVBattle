@@ -6854,8 +6854,16 @@ const PINTO_GLOW = 0.18;
 const PINTO_PATCHES: ReadonlyArray<readonly [number, number, number]> = [[-0.9, 0.25, 0.1], [0.85, 0.1, -0.35], [0.25, 0.7, -0.7], [-0.15, -0.75, 0.55], [0.35, 0.15, 0.92], [-0.5, 0.1, -0.85]];
 const PINTO_PATCH = 0.83;
 const PINTO_RAGGED = 0.06;
-const PINTO_EYE = 0.075;
-const PINTO_EAR = 0.3;
+const PINTO_EYE = 0.11;
+const PINTO_EAR = 0.5;
+/*
+ * [S] 446 the pinto's head (critic 445 lasso a.1: "long thin box snout, pink cube nose, no ears - TABS: big rounded head, tall pink-lined ears, big
+ * eyes"; wild_west.lasso.red.png: the head a fat rounded lump about as wide as the neck's top, ending in a broad rounded cream muzzle with two big pink
+ * nostrils on its front; ears nearly half the horse's height, broad leaves with pink insides, standing up and out; eyes a third of the head across,
+ * bulging from its sides). PINTO_HEAD in H: skull .wide across, .long of the head's length, .deep; muzzle a cream ball .muzzle across at .muzzleAt of
+ * the head's length, nostrils .nostril across; ears PINTO_EAR tall, .earWide at the root, flattened to .earFlat, splayed .earSplay rad; eyes PINTO_EYE.
+ */
+const PINTO_HEAD = { wide: 0.36, long: 0.92, deep: 0.34, muzzle: 0.32, muzzleAt: 0.9, nostril: 0.08, earWide: 0.18, earFlat: 0.45, earSplay: 0.35 };
 const PINTO_LOOP = 0.42;
 type HorseStyle = "barded" | "pinto";
 /*
@@ -7062,26 +7070,45 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     headPitch = N.pitch;
   }
   const headLong = H * 0.72;
-  const head = part(MeshBuilder.CreateCylinder("hhead", { height: headLong, diameterTop: H * 0.17, diameterBottom: H * 0.3, tessellation: 5 }, scene), coat);
+  const PH = PINTO_HEAD;
+  // [S] 446 the pinto's skull is a rounded lump (PINTO_HEAD), not the barded horse's tapered snout
+  const head = part(pinto
+    ? MeshBuilder.CreateSphere("hhead", { diameterX: H * PH.wide, diameterY: headLong * PH.long, diameterZ: H * PH.deep, segments: 5 }, scene)
+    : MeshBuilder.CreateCylinder("hhead", { height: headLong, diameterTop: H * 0.17, diameterBottom: H * 0.3, tessellation: 5 }, scene), coat);
   head.rotation.x = headPitch;
   head.position.set(0, poll.y + Math.cos(headPitch) * headLong * 0.42, poll.z + Math.sin(headPitch) * headLong * 0.42);
   if (pinto) {
     // The pinto's cream blaze down the face
     const blaze = part(MeshBuilder.CreateBox("hblaze", { width: H * 0.12, height: headLong * 0.85, depth: H * 0.05 }, scene), cream);
     blaze.parent = head;
-    blaze.position.set(0, -headLong * 0.04, -H * 0.085);
+    blaze.position.set(0, -headLong * 0.04, -H * PH.deep * 0.44);
   } else {
     buildChanfron(scene, head, headLong, H, part, dark);
   }
   const pink = mat(scene, PINTO_PINK, PINTO_GLOW);
-  const muzzle = part(MeshBuilder.CreateBox("hmuzzle", { width: H * (pinto ? 0.19 : 0.13), height: H * (pinto ? 0.15 : 0.1), depth: H * (pinto ? 0.17 : 0.12) }, scene), pinto ? pink : coat);
-  muzzle.position.set(0, poll.y + Math.cos(headPitch) * headLong * 0.95, poll.z + Math.sin(headPitch) * headLong * 0.95);
+  const muzzleAt = pinto ? PH.muzzleAt : 0.95;
+  const muzzle = part(pinto
+    ? MeshBuilder.CreateSphere("hmuzzle", { diameterX: H * PH.muzzle, diameterY: H * PH.muzzle * 0.8, diameterZ: H * PH.muzzle * 0.9, segments: 5 }, scene)
+    : MeshBuilder.CreateBox("hmuzzle", { width: H * 0.13, height: H * 0.1, depth: H * 0.12 }, scene), pinto ? cream : coat);
+  muzzle.position.set(0, poll.y + Math.cos(headPitch) * headLong * muzzleAt, poll.z + Math.sin(headPitch) * headLong * muzzleAt);
+  if (pinto) {
+    // two big pink nostrils on the muzzle's front (its +y along the head), set apart
+    muzzle.rotation.x = headPitch;
+    for (const x of [-1, 1]) {
+      const nostril = part(MeshBuilder.CreateBox("hnostril", { width: H * PH.nostril, height: H * 0.03, depth: H * PH.nostril }, scene), pink);
+      nostril.parent = muzzle;
+      nostril.position.set(x * H * PH.muzzle * 0.22, H * PH.muzzle * 0.38, -H * PH.muzzle * 0.08);
+      nostril.rotation.z = x * 0.35;
+    }
+  }
   const earTall = H * (pinto ? PINTO_EAR : CHANFRON.ear);
   for (const x of [-1, 1]) {
-    const ear = part(MeshBuilder.CreateCylinder("hear", { height: earTall, diameterTop: 0, diameterBottom: H * 0.1, tessellation: 4 }, scene), coat);
+    const ear = part(MeshBuilder.CreateCylinder("hear", { height: earTall, diameterTop: 0, diameterBottom: H * (pinto ? PH.earWide : 0.1), tessellation: 4 }, scene), coat);
+    // [S] 446 the pinto's ears are broad flat leaves standing up and out
+    if (pinto) ear.scaling.z = PH.earFlat;
     // the barded horse's ears stand up through the chanfron, so they root higher and splay wider
-    ear.position.set(x * H * (pinto ? 0.08 : 0.1), poll.y + earTall * 0.45 + (pinto ? 0 : H * 0.08), poll.z - H * 0.02);
-    ear.rotation.set(-0.3, 0, -x * (pinto ? 0.25 : 0.4));
+    ear.position.set(x * H * (pinto ? 0.11 : 0.1), poll.y + earTall * 0.45 + (pinto ? 0 : H * 0.08), poll.z - H * 0.02);
+    ear.rotation.set(-0.3, 0, -x * (pinto ? PH.earSplay : 0.4));
     if (!pinto) {
       // team inside the ear, facing forward
       const inner = part(MeshBuilder.CreateCylinder("hearInner", { height: earTall * 0.75, diameterTop: 0, diameterBottom: H * 0.065, tessellation: 4 }, scene), mat(scene, cloth, CHANFRON.glow, "cloth"));
@@ -7090,13 +7117,13 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
       continue;
     }
     // Pink inside the long ear, facing forward
-    const inner = part(MeshBuilder.CreateCylinder("hearInner", { height: earTall * 0.8, diameterTop: 0, diameterBottom: H * 0.065, tessellation: 4 }, scene), pink);
+    const inner = part(MeshBuilder.CreateCylinder("hearInner", { height: earTall * 0.8, diameterTop: 0, diameterBottom: H * PH.earWide * 0.7, tessellation: 4 }, scene), pink);
     inner.parent = ear;
-    inner.position.set(0, -earTall * 0.06, H * 0.028);
+    inner.position.set(0, -earTall * 0.06, H * PH.earWide * 0.3);
     // A big white eye with a black pupil on each side of the head
     const eye = part(MeshBuilder.CreateIcoSphere("heye", { radius: H * PINTO_EYE, subdivisions: 1 }, scene), mat(scene, new Color3(0.97, 0.97, 0.95)));
     eye.parent = head;
-    eye.position.set(x * H * 0.12, -headLong * 0.22, -H * 0.03);
+    eye.position.set(x * H * (pinto ? PH.wide * 0.42 : 0.12), -headLong * 0.22, -H * 0.03);
     const pupil = part(MeshBuilder.CreateIcoSphere("hpupil", { radius: H * PINTO_EYE * 0.55, subdivisions: 1 }, scene), dark);
     pupil.parent = eye;
     pupil.position.set(x * H * PINTO_EYE * 0.6, 0, -H * PINTO_EYE * 0.15);
