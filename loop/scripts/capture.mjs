@@ -473,13 +473,15 @@ async function main() {
           // the quick draw shoots one archer dead in .4 s, before its first arrow (look 445): four more archers in a file behind, so arrows fly at him
           if (id === "wild_west.quick_draw") for (const dz of [-1.8, -0.9, 0.9, 1.8]) game.spawnUnit("medieval.archer", 0, { x: -d - 1.5, z: dz });
           let ally = null;
-          if (support) {
+          // [evidence 465] a bearer fights (polearm_melee, his pole's blow) and his ring's aura pulses beside it: he spars with his squire and has the
+          // hurt ally beside him too, inside the ring, so the blow is the release and the aura the ability pair
+          if (support || id === "legacy.flag_bearer" || id === "legacy.banner_bearer") {
             ally = game.spawnUnit("medieval.squire", 1, { x: d + 2, z: 1.2 });
             if (ally) ally.applyDamage(ally.maxHealth * 0.6, ally.position.scale(0));
           }
           // the unit class, so resetBattle can restart its id counter; the first scene is placed again once it is known, so every run has the same ids
           if (a && !window.__RU) { window.__RU = a.constructor; return window.__unitPlace(id, d, support); }
-          window.__ua = a; window.__ut = t; window.__ually = ally;
+          window.__ua = a; window.__ut = t; window.__ually = ally; window.__usupport = support;
           window.advanceTime(50);
           return Boolean(a && t);
         };
@@ -523,7 +525,10 @@ async function main() {
         // 1 (the idle shot, the look and props evidence) is the wiki render's angle instead: a front three-quarter from the unit's own yaw
         // (alpha yaw - pi/2 is dead ahead), swung .6 rad toward his weapon side, a little above eye level; the motion shots stay side-on so arcs read.
         window.__unitFrame = (on, s) => {
-          const a = window.__ua, t = on === 2 && window.__ually ? window.__ually : window.__ut;
+          // 6: the ally alone, framed as 2 (a bearer's aura on the man inside his ring; his 2, the struck shot, stays on the squire he hits)
+          const allyShot = on === 6 || (on === 2 && window.__usupport);
+          if (on === 6) on = 2;
+          const a = window.__ua, t = allyShot && window.__ually ? window.__ually : window.__ut;
           const pa = a.body.root.position, pt = t.body.root.position;
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
           // the protector's slab hides his head from the front: his idle swings round to his side, where the head shows beside the slab (evidence 366)
@@ -687,7 +692,7 @@ async function main() {
         // [evidence 461] a bearer's aura lies on the ally inside his ring (BEARER_AURA: a ring at the ally's feet, haste or stay): his motion shots
         // frame that ally head to foot, the feet and aura ring in frame (critic 460 flag_bearer c.1, banner_bearer c.1: the ally's feet were cut off)
         const bearer = id === "legacy.flag_bearer" || id === "legacy.banner_bearer";
-        const far = bearer ? 2 : support ? 1 : d >= 6 || id === "pirate.blunderbuss" ? 3 : 0;
+        const far = support ? 1 : d >= 6 || id === "pirate.blunderbuss" ? 3 : 0;
         await take(`unit_${id}_idle`, null, 1);
         if (release) {
           // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
@@ -714,13 +719,14 @@ async function main() {
           // [evidence 426] ...and his kick lands on that man at his feet: framed on him too
           // [evidence 436] the skeleton archer's fire arrow sets the struck man alight 7 m off (critic 435): his burn is framed on him
           const burnOnMan = id === "spooky.skeleton_archer" && ability.kind === "status:fire";
+          const aura = bearer && (ability.kind === "haste" || ability.kind === "stay");
           const onMan = snake || burnOnMan || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup";
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
           // blanketed him and the re-framed camera hid the step)
           const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
           const pair = dodge ? { hold: ability.tick, clean: true } : {};
-          await take(`unit_${id}_ability`, ability.tick, dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
-          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
+          await take(`unit_${id}_ability`, ability.tick, aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
         }
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
