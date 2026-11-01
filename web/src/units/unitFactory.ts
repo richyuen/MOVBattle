@@ -717,6 +717,8 @@ export class UnitFactory {
     if (definition.id === "wild_west.deadeye" && !shouldUseVehicleBody) propMeshes.push(...gunBelt(this._scene, body, [], [1, -1]));
     // [S] 453 a brown braid from under the hat over her off shoulder (wildWestDress WESTERN_BRAID)
     if (definition.id === "wild_west.deadeye" && !shouldUseVehicleBody) propMeshes.push(...westernBraid(this._scene, body, -1));
+    // [S] 454 the Dynamite Thrower's brown braid over her off shoulder (wildWestDress WESTERN_BRAID, the Deadeye's)
+    if (definition.id === "wild_west.dynamite_thrower" && !shouldUseVehicleBody) propMeshes.push(...westernBraid(this._scene, body, -1));
     // [S] 448 the Miner's overalls: lighter team shirt, dark braces, team trousers' waist (wildWestDress MINER_OVERALLS)
     if (definition.id === "wild_west.miner" && !shouldUseVehicleBody) propMeshes.push(...minerOveralls(this._scene, body, teamColor));
     // [S] 449 the Miner's black handlebar moustache (wildWestDress MINER_MOUSTACHE)
