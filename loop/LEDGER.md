@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-455 | levelledGun gunner overlay off the aim + WINCHESTER_AIM at the hip (b5b86f36) | wild_west.deadeye.c | rejected (reverted c6329a96)
-455 | RIFLE_TRACER white streak muzzle to chest (a5310afa) | wild_west.deadeye.c | approved
-455 | DYNAMITE_SHIRT team cloth, dark sleeves to the wrist (905d3fd4, 9e286699) | wild_west.dynamite_thrower.a | approved (a PASS)
-455 | MINER_LEGS dark team overall legs (63a28bba, 8ad8d441) | wild_west.miner.a | approved
-455 | MINER_SLEEVES dark sleeves, tan glove cuffs and hands (b906f385) | wild_west.miner.a | approved (a PASS)
-455 | LASSO_MOUSTACHE curled moustache (5517a3ff) | wild_west.lasso.a | approved
-455 | PINTO_LEGS slim round legs, small hooves (e3f0ab28) | wild_west.lasso.a | approved
 456 | WINCHESTER_AIM receiver seated in the fist, overlay off, hip aim; aimed at the man's chest (65b9d4eb, b831338d) | wild_west.deadeye.c | approved
 456 | WINCHESTER_AIM recoil a slide back along the level barrel (da3c6b53) | wild_west.deadeye.c | approved (c PASS)
 456 | LASSO_SHIRT team shirt, trousers, hem, short dark sleeves (3956ccec, 14478070) | wild_west.lasso.a | approved (a PASS)
@@ -42,6 +35,12 @@ for 25 iterations.
 459 | PEASANT_DRESS team dress, short sleeves, knee skirt, front point (b3a3379d) | legacy.peasant.a | approved (struck 4)
 459 | POACHER_COAT brown sleeveless coat, skirt, white fur collar (cbf64ff2) | legacy.poacher.a | approved (struck 3)
 459 | SHAKO tall team shako, peak, gold plate and band, plume (44da9220) | legacy.banner_bearer.a | approved (struck 1, 4)
+460 | BANNER_COATEE team coat, gold epaulettes, white cross-belt and waist belt (16dedb8c) | legacy.banner_bearer.a | approved (struck 2)
+460 | FLAG_HELMET white crown, gold band and plate, team crest (53a654d8) | legacy.flag_bearer.a | approved (struck 1)
+460 | BOXER_SHORTS dark-team thigh shells, gold striped waistband (37bcb6d4) | legacy.boxer.a | approved (struck 3)
+460 | PEASANT_BELT 12 cream lumps, twisted by turns (9012c361) | legacy.peasant.a | approved (none struck: spaced shards)
+460 | POACHER_BELT tan band, grey buckle (59057417) | legacy.poacher.a | approved (none struck: inside the coat)
+460 | BEARER_AURA haste / stay on allies in the ring, a ring at their feet, in place of the heal (f1ecb6fc) | legacy.flag_bearer.c + legacy.banner_bearer.c | approved (none struck: not seen in the pair; evidence first)
 
 ## Spent (never retry as [P])
 
@@ -82,9 +81,15 @@ legacyDress.ts:POACHER_HAT (sides, crown, flare, tall, dome, brim, thick, band, 
 legacyDress.ts:POACHER_HAIR (side, top, foot, back, front, braid, braidFoot, knots, color, glow) | .22, .55, 1.25, 1.05, .45, .14, 1.75, 4, (.92,.92,.9), .22 | 458 | approved | none (before 458)
 unitVisuals.ts:legacy.barrel_roller build (scale, bulk, legLength, armLength, upperLegWidth, lowerLegWidth) | 1.0, .82, 1.08, 1.06, .9, .85 | 458 | approved | 1.24, 1.48 brute (before 458)
 legacyDress.ts:PEASANT_HOOD (wide, deep, tall, at, open, peak, back, collar, collarTall, neck, shade, glow) + rotation.y +PI | 1.24, 1.2, 1.2, .42, .34, .28, .08, 1.32, .24, 1.02, .72, .12 | 458 | approved | gap at the back (457 rejected)
-legacyDress.ts:BEARER_RING (radius, band, flat, lift, sides, glow) | 1.6, .05, .012, .02, 40, .45; team colour | 459 | approved | none (before 459)
+legacyDress.ts:BEARER_RING (radius, band, flat, lift, sides, glow; BEARER_RING_COLOR flag, banner) | 1.6, .05, .012, .02, 40, .45; (.95,.6,.2), (.25,.75,.95) | 460 | approved | team colour (459); none (before 459)
 unitVisuals.ts:legacy.flag_bearer build (scale, bulk, headSize) | 1.0, .92, 1.05 | 459 | approved | 1.34 (before 459)
 legacyDress.ts:BOXER_HEADGEAR (wide, deep, tall, at, open, ear, earThick, earOut, earAt, shade, glow) | 1.16, 1.12, .95, .38, .36, .46, .14, .6, .55, .6, .1 | 459 | approved | bald (before 459)
 legacyDress.ts:PEASANT_DRESS (shade, glow, sleeveOut, sleeveTo, long, flare, point, pointLong, proud) | .72, .12, 1.3, .5, 1.0, 1.35, .5, .22, .02 | 459 | approved | plain team body (before 459)
 legacyDress.ts:POACHER_COAT (leather, fur, glow, long, flare, tufts, tuft, ring, furGlow) | (.36,.2,.1), (.95,.94,.9), .14, .6, 1.45, 10, .24, .5, .25 | 459 | approved | plain team body (before 459)
 legacyDress.ts:SHAKO (wide, flare, tall, peak, plate, plateTall, band, plume, plumeWide, shade, glow) | 1.02, 1.12, .95, .42, .42, .34, .08, .42, .22, .85, .12 | 459 | approved | bald (before 459)
+legacyDress.ts:BANNER_COATEE (shade, glow, epOut, epTo, fringe, belt, thick, span, waist, waistAt, whiteGlow) | .85, .12, 1.75, .16, .1, .16, 1.12, .82, .12, -.72, .3 | 460 | approved | plain team body (before 460)
+legacyDress.ts:FLAG_HELMET (wide, tall, dome, band, bandOut, plate, crest, crestLong, crestThin, whiteGlow) | 1.08, .18, .3, .12, 1.05, .22, .42, .8, .14, .25 | 460 | approved | bald (before 460)
+legacyDress.ts:BOXER_SHORTS (shade, glow, out, to, band, bandOut, stripes, step) | .55, .12, 1.85, .88, .24, 1.1, 4, .03 | 460 | approved | plain team body (before 460)
+legacyDress.ts:PEASANT_BELT (lumps, out, at, lump, fat, twist, cream, glow) | 12, 1.12, -.42, .36, .42, .6, (1,.95,.8), .32 | 460 | approved | none (before 460)
+legacyDress.ts:POACHER_BELT (tall, at, out, buckle, bar, proud, tan, grey, glow) | .16, -.84, 1.14, .3, .24, .05, (.85,.55,.25), (.32,.32,.34), .16 | 460 | approved | none (before 460)
+runtimeUnit.ts:BEARER_AURA (haste, ring, band) + simulationSystem BEARER_AURA_KIND | 1.5, .5, .035; flag haste, banner stay | 460 | approved | support heal (before 460)
