@@ -332,14 +332,14 @@ const legacy = makeFaction(FactionId.Legacy, "legacy", [
   ["barrel_roller", "Barrel Roller", 350, "thrower", { weaponHint: "bomb", projectileHint: "barrel", size: "large", healthMultiplier: 0.11, damageMultiplier: 0.12, cooldownMultiplier: 0.34 }],
   ["boxer", "Boxer", 450, "tiny_melee", { size: "tiny", healthMultiplier: 1.37, cooldownMultiplier: 0.6 }],
   ["flag_bearer", "Flag Bearer", 500, "polearm_melee", { weaponHint: "staff", healthMultiplier: 0.17, damageMultiplier: 0.63, cooldownMultiplier: 2.31 }],
-  ["pharaoh", "Pharaoh", 1000, "special_magic", { abilities: ["fear"], hatHint: "pharaoh", weaponHint: "staff" }],
-  ["wizard", "Wizard", 3000, "special_magic", { projectileHint: "fireball", weaponHint: "staff" }],
-  ["chariot", "Chariot", 1000, "charge_melee", { abilities: ["charge_impact"], specialHint: "horse", size: "large" }],
-  ["thor", "Thor", 2200, "special_magic", { abilities: ["lightning_strike"], weaponHint: "lightning_bolt", visualPreset: "iconic_thor", behaviorPreset: "iconic_thor", controlStrength: 1.35, cooldownMultiplier: 0.8 }],
-  ["tank", "Tank", 5000, "artillery", { abilities: ["rapid_fire"], specialHint: "tank", size: "colossal", projectileHint: "bomb", visualPreset: "iconic_legacy_tank", behaviorPreset: "iconic_legacy_tank", burstCount: 1, cooldownMultiplier: 0.72, healthMultiplier: 1.2, compositionParts: [{ relation: "crew", label: "driver" }, { relation: "crew", label: "gunner" }] }],
-  ["super_boxer", "Super Boxer", 100000, "boss_melee", { moveSpeedOverride: 5.2, size: "large" }],
-  ["dark_peasant", "Dark Peasant", 500000, "special_magic", { abilities: ["summon", "fear", "push_force"], summonUnitIds: ["evil.shadow_walker"], summonCount: 3, maxActiveSummons: 5, summonLifetimeSeconds: 7.5, size: "giant", visualPreset: "iconic_dark_peasant", behaviorPreset: "iconic_dark_peasant", controlStrength: 2.7, statusDurationSeconds: 3.4, cooldownMultiplier: 0.7, healthMultiplier: 1.18 }],
-  ["super_peasant", "Super Peasant", 500000, "boss_melee", { abilities: ["flying_hover", "charge_impact"], size: "giant", moveSpeedOverride: 7.1, visualPreset: "iconic_super_peasant", behaviorPreset: "iconic_super_peasant", controlStrength: 2.05, cooldownMultiplier: 0.5, healthMultiplier: 1.12 }],
+  ["pharaoh", "Pharaoh", 750, "special_magic", { abilities: ["fear"], hatHint: "pharaoh", weaponHint: "staff", healthMultiplier: 0.09, damageMultiplier: 0.53, cooldownMultiplier: 0.56 }],
+  ["wizard", "Wizard", 1200, "special_magic", { projectileHint: "fireball", weaponHint: "staff", healthMultiplier: 0.82 }],
+  ["chariot", "Chariot", 1800, "charge_melee", { abilities: ["charge_impact"], specialHint: "horse", size: "large", healthMultiplier: 0.31 }],
+  ["thor", "Thor", 2200, "special_magic", { abilities: ["lightning_strike"], weaponHint: "lightning_bolt", visualPreset: "iconic_thor", behaviorPreset: "iconic_thor", controlStrength: 1.35, cooldownMultiplier: 0.56, healthMultiplier: 0.84, damageMultiplier: 2.04 }],
+  ["tank", "Tank", 6000, "artillery", { abilities: ["rapid_fire"], specialHint: "tank", size: "colossal", projectileHint: "bomb", visualPreset: "iconic_legacy_tank", behaviorPreset: "iconic_legacy_tank", burstCount: 1, cooldownMultiplier: 2.27, healthMultiplier: 1.2, compositionParts: [{ relation: "crew", label: "driver" }, { relation: "crew", label: "gunner" }], damageMultiplier: 20.37 }],
+  ["super_boxer", "Super Boxer", 10000, "boss_melee", { moveSpeedOverride: 5.2, size: "large", healthMultiplier: 0.24, damageMultiplier: 0.69, cooldownMultiplier: 0.05 }],
+  ["dark_peasant", "Dark Peasant", 9999999, "special_magic", { abilities: ["summon", "fear", "push_force"], summonUnitIds: ["evil.shadow_walker"], summonCount: 3, maxActiveSummons: 5, summonLifetimeSeconds: 7.5, size: "giant", visualPreset: "iconic_dark_peasant", behaviorPreset: "iconic_dark_peasant", controlStrength: 2.7, statusDurationSeconds: 3.4, cooldownMultiplier: 2.17, healthMultiplier: 0.08, damageMultiplier: 0.64 }],
+  ["super_peasant", "Super Peasant", 9999999, "boss_melee", { abilities: ["flying_hover", "charge_impact"], size: "giant", moveSpeedOverride: 7.1, visualPreset: "iconic_super_peasant", behaviorPreset: "iconic_super_peasant", controlStrength: 2.05, cooldownMultiplier: 0.04, healthMultiplier: 0.005, damageMultiplier: 115.79 }],
 ]);
 
 const good = makeFaction(FactionId.Good, "good", [
