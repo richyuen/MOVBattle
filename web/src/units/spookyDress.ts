@@ -1321,7 +1321,7 @@ export function vampireCollar(scene: Scene, body: ArticulatedBody, teamColor: Co
  */
 const VAMPIRE_VEST = {
   shirt: new Color3(0.86, 0.84, 0.78), shirtGlow: 0.3, vWide: 0.5, vTop: -0.02, vLong: 0.28, vThick: 0.02, proud: 0.008,
-  vestWide: 0.96, vestTop: 0.02, vestThick: 0.03, vestProud: 0.006, vUnder: 0.06, vFoot: 0.5,
+  vestWide: 0.96, vestTop: 0.02, vestThick: 0.03, vestProud: 0.006, vUnder: 0.12, vFoot: 0.5,
   belt: 0.16, beltOut: 1.14, sides: 8, dark: new Color3(0.07, 0.06, 0.07), glow: 0.12, beltWide: 1.04, beltProud: 0.02, beltUp: 0.1,
 };
 
@@ -1339,12 +1339,10 @@ export function vampireVest(scene: Scene, body: ArticulatedBody, team: Color3): 
   // the trunk's foremost face, the chest block and its yoke hull both
   let front = tm.position.z + (tb.center.z + tb.extendSize.z) * ts.z;
   const back = tm.position.z + (tb.center.z - tb.extendSize.z) * ts.z;
-  let yokeFoot = trunkTop;
   for (const m of body.torso.getChildMeshes(true)) {
     if (!(m instanceof Mesh) || !/_yoke/.test(m.name) || !m.isEnabled()) continue;
     const b = m.getBoundingInfo().boundingBox;
     front = Math.max(front, m.position.z + (b.center.z + b.extendSize.z) * m.scaling.z);
-    yokeFoot = Math.min(yokeFoot, m.position.y + (b.center.y - b.extendSize.y) * m.scaling.y);
   }
   // the team vest slab over the chest front, from under the trunk top to the trunk foot (the belt covers its lower edge)
   const trunkFoot = tm.position.y + (tb.center.y - tb.extendSize.y) * ts.y;
@@ -1356,8 +1354,8 @@ export function vampireVest(scene: Scene, body: ArticulatedBody, team: Color3): 
   vest.isPickable = false;
   out.push(vest);
   front += V.vestProud + V.vestThick;
-  // [S] 444 the V opens under the collar yoke (its foot, not the trunk top: 443 the yoke hid the short notch) and runs to mid-chest
-  const y0 = Math.min(trunkTop - H * V.vTop, yokeFoot + H * V.vUnder), y1 = Math.min(y0 - H * V.vLong, trunkTop - H * V.vFoot), half = (W * V.vWide) / 2, z0 = front + V.proud, z1 = z0 + V.vThick;
+  // [S] 444 the V opens .vUnder of H under the trunk top (443: at the top it sat behind the collar and beard) and runs to mid-chest (.vFoot)
+  const y0 = trunkTop - H * V.vUnder, y1 = Math.min(y0 - H * V.vLong, trunkTop - H * V.vFoot), half = (W * V.vWide) / 2, z0 = front + V.proud, z1 = z0 + V.vThick;
   // a closed slab (LESSONS 40): front and back triangles and the three sides
   const pts = [new Vector3(-half, y0, z0), new Vector3(half, y0, z0), new Vector3(0, y1, z0), new Vector3(-half, y0, z1), new Vector3(half, y0, z1), new Vector3(0, y1, z1)];
   const positions = pts.flatMap((p) => [p.x, p.y, p.z]);
