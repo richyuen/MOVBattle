@@ -698,7 +698,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ LEGACY ═══════════════════════
   "legacy.peasant": vis(
     // [S] 457 the team hood framing the face (legacyDress PEASANT_HOOD; audit 457 a.2)
-    { scale: 0.62, bulk: 0.78, headSize: 1.44, legLength: 0.74 }, "none", "peasant_hood", "none", "none", "#D8D8D8",
+    // [S] 465 a full-size lanky man at card Size 1.00x (audit 457 a.1: "a short squat figure (size 0.62)"; legacy.peasant.red.png): MINER_BUILD's cut,
+    // the trunk slim (bulk .82, torsoWidth .92), the legs to half his height (legLength 1.16), thin thighs and shins, a man's head under the hood
+    { scale: 1.0, bulk: 0.82, torsoWidth: 0.92, headSize: 1.1, legLength: 1.16, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "none", "peasant_hood", "none", "none", "#D8D8D8",
     undefined,
     { materialPreset: "legacy_toy" },
   ),
@@ -747,7 +749,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "legacy.boxer": vis(
     // [S] 459 padded team headgear with ear pads (legacyDress BOXER_HEADGEAR; audit 457 a.2)
-    { scale: 0.68, bulk: 0.94, headSize: 1.32, armLength: 1.08 }, "boxing_glove", "boxer_headgear", "none", "none", "#C54A4A", "boxing_glove", {
+    // [S] 465 a tall lanky man at card Size 1.08x (audit 457 a.1: "a short figure (size 0.68)"; legacy.boxer.red.png): MINER_BUILD's cut, the trunk
+    // slim (bulk .84, torsoWidth .92), the legs to half his height (legLength 1.16), thin thighs and shins, in place of the .68 squat
+    { scale: 1.08, bulk: 0.84, torsoWidth: 0.92, headSize: 1.12, armLength: 1.08, legLength: 1.16, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "boxing_glove", "boxer_headgear", "none", "none", "#C54A4A", "boxing_glove", {
       weaponVariant: "team_glove", offhandVariant: "team_glove", // [S] 457 team mitts on the fists (propBuilder TEAM_GLOVE; audit 457 b.2)
       posePreset: "boxer",
       materialPreset: "legacy_toy",
