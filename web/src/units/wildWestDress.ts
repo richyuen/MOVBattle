@@ -104,6 +104,42 @@ export function buildFlatHat(scene: Scene, W: number, H: number, seat: number, u
 }
 
 /*
+ * [S] 447 the Miner's cap (critic 446 miner a.1: "black top hat with a headlamp - TABS: team miner's cap, tall dome crown, front peak";
+ * wild_west.miner.red.png: a team-coloured cap whose round crown rises well over the head, wider than it, and a stiff peak jutting out over the
+ * eyes, tilted up a little; no lamp). MINER_CAP, in the head's width W and height H: a wall .wall W across from the seat to the head top, so it clears
+ * the block head's chamfered corners; on it a dome .dome W across rising .rise H over the head top (under .3, so the capture keeps its framing),
+ * its lower half inside the wall; a peak .peak W wide and .peakLong W out front at the seat, .thick H thick, tipped up .tip rad. Team colour times
+ * .shade, self-lit .glow.
+ */
+const MINER_CAP = { sides: 12, wall: 1.34, dome: 1.3, rise: 0.29, peak: 0.95, peakLong: 0.5, thick: 0.05, tip: 0.22, shade: 0.9, glow: 0.12 };
+
+/** The miner's cap (spec at MINER_CAP), in the hat's units; `seat` under the head top. Returns the wall. */
+export function buildMinerCap(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
+  const C = MINER_CAP;
+  const u = (v: number) => v / unit;
+  const team = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(C.shade);
+  const felt = getMaterialFactory().get("cloth", team, { emissive: team.scale(C.glow) });
+  const wallTall = -seat;
+  const wall = MeshBuilder.CreateCylinder("minerCapWall", { height: u(wallTall), diameterBottom: u(C.wall * W), diameterTop: u(C.dome * W), tessellation: C.sides }, scene);
+  wall.position.y = u(seat + wallTall * 0.5);
+  wall.material = felt;
+  wall.convertToFlatShadedMesh();
+  const dome = MeshBuilder.CreateSphere("minerCapDome", { diameter: u(C.dome * W), segments: 6 }, scene);
+  dome.scaling.y = (2 * C.rise * H) / (C.dome * W);
+  dome.position.y = u(wallTall * 0.5);
+  dome.material = felt;
+  dome.convertToFlatShadedMesh();
+  dome.parent = wall;
+  const peak = MeshBuilder.CreateBox("minerCapPeak", { width: u(C.peak * W), height: u(C.thick * H), depth: u(C.peakLong * W) }, scene);
+  peak.rotation.x = -C.tip;
+  peak.position.set(0, u(-wallTall * 0.5 + C.thick * H * 0.5), u(C.wall * W * 0.5 + C.peakLong * W * 0.4));
+  peak.material = felt;
+  peak.convertToFlatShadedMesh();
+  peak.parent = wall;
+  return wall;
+}
+
+/*
  * [S] 445 the Lasso's thrown rope (audit 444 lasso c.1; wild_west.lasso.jpg: a tan rope from the rider's fist, a loop round the man). LASSO_ROPE: a rope
  * .thick m across, 1 long up +y from its root (the caller places, aims and stretches it), and a loop .loop m across at its end, .loopThick thick; tan rope.
  */

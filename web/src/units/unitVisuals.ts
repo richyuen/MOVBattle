@@ -20,7 +20,7 @@ export type WeaponType =
 export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
-  | "cowboy_hat" | "bowler" | "flat_hat"
+  | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap"
   | "miner_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
@@ -645,8 +645,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "wild_west.miner": vis(
-    { scale: 1.12, bulk: 1.22, headSize: 1.04 }, "pickaxe", "miner_hat", "none", "none", "#6B4A2F", undefined, {
+    { scale: 1.12, bulk: 1.22, headSize: 1.04 }, "pickaxe", "miner_cap", "none", "none", "#6B4A2F", undefined, {
       // [S] 445 the long pick axe (propBuilder MINER_PICK), not the short stick (audit 444 b.1)
+      // [S] 447 the team miner's cap (wildWestDress MINER_CAP), not the black top hat with a lamp (critic 446 a.1)
       weaponVariant: "miner_pick",
       posePreset: "brute",
       materialPreset: "wildwest_leather",
