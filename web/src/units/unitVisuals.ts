@@ -712,7 +712,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "legacy.poacher": vis(
     // [S] 457 the dark wide-brim hat with a team band above the eyes (legacyDress POACHER_HAT), not the hood dome over the face (audit 457 a.1)
-    { scale: 0.94, bulk: 0.84, armLength: 1.1 }, "bow", "poacher_hat", "none", "none", "#6F7D43", undefined, {
+    { scale: 0.94, bulk: 0.84, armLength: 1.1 }, "bow", "poacher_hat", "none", "quiver_back", "#6F7D43", undefined, { // [S] 462 a quiver of arrows on his back (propBuilder quiver_back; audit 457 b.2)
       posePreset: "archer",
       materialPreset: "legacy_toy",
       attachmentPreset: "bow_ready",
