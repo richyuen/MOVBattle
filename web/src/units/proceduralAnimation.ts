@@ -3939,6 +3939,11 @@ export class ProceduralAnimator {
     this._pistol = null;
     this._offPistol = null;
   }
+  /** [S] 464 the Pike's pike has left his fists (simulationSystem _dropPike): the levelled hold lets go of it. */
+  dropPike(): void {
+    this._pike = null;
+    this.levelsPike = false;
+  }
   private _pistol: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
   private _offPistol: { node: Mesh; rest: Quaternion } | null = null;
   private _pistolAim = 1;

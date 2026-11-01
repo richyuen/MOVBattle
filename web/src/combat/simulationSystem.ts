@@ -93,6 +93,8 @@ const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up
 // out over .windup s (proceduralAnimation PIRATE_KICK_POSE), and at the blow the man (still within .slack more) takes .damage of a shot's harm and is
 // booted off his feet .fling m/s along the kick with .lift m/s up; the foot is back down .recover s later. Logged "kick" at the blow.
 const PIRATE_KICK = { units: new Set(["pirate.harpooner"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
+// [S] 464 the Pike's dropped pike (_dropPike): forward and up as it leaves the fist (m/s), its tumble (rad/s), his first slap after (s)
+const PIKE_DROP = { ahead: 0.6, up: 0.8, spin: 1.2, ready: 0.6 };
 const BLUNDERBUSS_RECOIL = { units: new Set(["pirate.blunderbuss"]), back: 4.5, lift: 3.2 };
 // [S] 428 the Captain's dragon pistol (card pirate.captain Weapons off Flintlock Blunderbuss: damage 50, cooldown 2 s, range 3, force 3000; Characteristics
 // "will charge in, blasting enemy units with their Pistol"): a man within .range m (centre to centre) with the pistol ready (.cooldown s apart, first
@@ -3288,6 +3290,8 @@ export class SimulationSystem {
     }
     // The struck man recoils on the frame the blow lands, not the next one: his pose for this step was set before the blow
     if (!impaled) target.reposeNow();
+    // [S] 464 the Pike loses his pike on his first blow and slaps on bare-handed (PIKE_DROP)
+    if (attacker.definition.id === "legacy.pike" && !attacker.isDead) this._dropPike(attacker, now);
     // ...and under a heavy weapon he is thrown back off his feet as hard as the blow pushed, whether it was held for the drop or struck at once from a swing the
     // walk cut short: after the dwell with the club head on him, or at once when the blow killed him
     if (dwells) this._pendingLaunches.push({ target, from: attacker.position.clone(), knockback: knockback.length(), at: now + BLOW_DWELL });
@@ -4179,6 +4183,28 @@ export class SimulationSystem {
     unit.animator.dropPistols();
     unit.disarmToFists(now, G.ready);
     this._logAbility(unit, "toss", now);
+  }
+
+  /**
+   * [S] 464 the Pike drops his pike after one attack and then slaps (audit 457 pike c.2: "the pike is still in hand after the attack - TABS: it loses
+   * its pike after one attack and then slaps"; card Characteristics). On the step his first blow lands, the pike (the "shaft" in his weapon fist) leaves
+   * the fist where it is and falls, PIKE_DROP.ahead m/s forward and .up m/s up, turning .spin rad/s, to lie on the turf with the tossed guns; the
+   * animator lets go of its levelled hold, and he fights on bare-handed (RuntimeUnit.disarmToFists), his first slap due .ready s on. Logged "drop".
+   */
+  private _dropPike(unit: RuntimeUnit, now: number): void {
+    const P = PIKE_DROP;
+    const pike = unit.body.rightHand.getDescendants(false, (n) => n.name === "shaft")[0] as TransformNode | undefined;
+    if (!pike) return;
+    worldMatrixChain(pike);
+    pike.setParent(null);
+    const fwd = new Vector3(Math.sin(unit.body.root.rotation.y), 0, Math.cos(unit.body.root.rotation.y));
+    const euler = pike.rotationQuaternion ? pike.rotationQuaternion.toEulerAngles() : pike.rotation.clone();
+    pike.rotationQuaternion = null;
+    pike.rotation.copyFrom(euler);
+    this._tossed.push({ node: pike, vel: fwd.scale(P.ahead).addInPlace(new Vector3(0, P.up, 0)), spin: new Vector3(P.spin, 0, 0), left: GUN_TOSS.lie });
+    unit.animator.dropPike();
+    unit.disarmToFists(now, P.ready);
+    this._logAbility(unit, "drop", now);
   }
 
   private _stepTossedGuns(dt: number): void {
