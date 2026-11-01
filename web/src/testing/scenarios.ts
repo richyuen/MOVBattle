@@ -1347,7 +1347,7 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     // [evidence 461] the eight men of legacy_1 in one front rank, the giants of legacy_2 (tank, super boxer, super peasant) behind them: at six to a
     // rank the tank and the giants hid the poacher, the barrel roller and the flag bearer's shins (critic 458, 460)
     {
-      columns: 8, spacingX: 4.6, spacingZ: 2.35,
+      columns: 8, spacingX: 4.6, spacingZ: 1.85, // [evidence 462] 2.35 put the near rank's ends (peasant, flag bearer) past the frame (critic 461)
       front: ["legacy.peasant", "legacy.banner_bearer", "legacy.poacher", "legacy.blowdarter", "legacy.pike", "legacy.barrel_roller", "legacy.boxer", "legacy.flag_bearer"],
     },
   ),
