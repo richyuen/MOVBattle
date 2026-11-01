@@ -28,6 +28,9 @@ const REAPER_BURST = {
 };
 // The pumpkin landing (see spawnPumpkinBurst): rind shards and their size, bouncing lanterns and their size (m), out and up speed (m/s), bounce keep, seconds
 const PUMPKIN_BURST = { shards: 8, rind: 0.2, lanterns: 4, lantern: 0.32, out: 3.4, up: 5.5, keep: 0.62, last: 2.4, orange: new Color3(0.9, 0.38, 0.08), face: new Color3(1, 0.8, 0.2), stem: new Color3(0.25, 0.3, 0.1) };
+// [S] 445 the Cactus Explosion's needles (see spawnCactusNeedles): needles, length and thickness (m), speed out (m/s), seconds, rise share of the rows;
+// pale tan self-lit spikes flying straight out of the body in every direction, point first
+const CACTUS_NEEDLES = { count: 26, long: 0.42, thick: 0.05, speed: 8, life: 0.55, rise: 0.45, color: new Color3(0.95, 0.78, 0.42) };
 // Paint flung off the painter's brush (see spawnPaintSplotches): blobs, size (m), speed along the swing, spread across it and up (m/s), seconds
 const PAINT_SPLOTCH = { count: 5, size: 0.09, speed: 3.4, spread: 1.6, up: 2.2, last: 1.0 };
 const GEAR_TOSS_MIN = 0.6;
@@ -1548,6 +1551,42 @@ export class VisualEffects {
         domeMat.dispose();
         shardMat.dispose();
       },
+    });
+  }
+  // ══════════════════ CACTUS NEEDLES ══════════════════
+  /**
+   * [S] 445 the Cactus Explosion (wild_west.cactus card ability "explode needles in every direction when attacked"; audit 444 cactus c.1): CACTUS_NEEDLES
+   * .count needles out of `position` (the body's middle) in every direction, spread over a few rows round the body from a little down to .rise up, each
+   * flying straight out point first at .speed for .life s, then gone.
+   */
+  spawnCactusNeedles(position: Vector3): void {
+    const N = CACTUS_NEEDLES;
+    const root = new TransformNode("cactusNeedles", this._scene);
+    root.position = position.clone();
+    const needleMat = getMaterialFactory().createUnique("cloth", N.color);
+    needleMat.emissiveColor = N.color.scale(0.6);
+    const needles: { mesh: Mesh; velocity: Vector3 }[] = [];
+    const rows = 3;
+    for (let i = 0; i < N.count; i++) {
+      const row = i % rows;
+      const a = (i / N.count) * Math.PI * 2 + row * 0.7;
+      const up = -0.15 + (N.rise + 0.15) * (row / (rows - 1));
+      const dir = new Vector3(Math.cos(a), up, Math.sin(a)).normalize();
+      const m = MeshBuilder.CreateCylinder("cactusNeedle", { height: N.long, diameterTop: 0, diameterBottom: N.thick, tessellation: 4 }, this._scene);
+      m.material = needleMat;
+      m.parent = root;
+      m.position.copyFrom(dir.scale(0.3));
+      m.rotationQuaternion = new Quaternion();
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, m.rotationQuaternion);
+      needles.push({ mesh: m, velocity: dir.scale(N.speed) });
+    }
+    this._effects.push({
+      root,
+      remaining: N.life,
+      update: (dt) => {
+        for (const n of needles) n.mesh.position.addInPlace(n.velocity.scale(dt));
+      },
+      dispose: () => needleMat.dispose(),
     });
   }
   // ══════════════════ PAINT SPLOTCHES ══════════════════

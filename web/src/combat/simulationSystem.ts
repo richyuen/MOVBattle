@@ -307,6 +307,13 @@ const VAMPIRE_LATCH = { round: 0.7, off: 0.75, up: 0.2, first: 0.3, every: 0.35,
  * a blow of .trample times the attack's damage that throws him .throwUp m/s up and .throwOut m/s on along the haul, and the rope is gone. Logged
  * "lasso" at the throw.
  */
+/**
+ * [S] 445 the Cactus Explosion (audit 444 cactus c.1: "missing: Cactus Explosion needle burst when attacked"; card ability "explode needles in every
+ * direction when attacked", Characteristics "it shoots spikes at enemy units"). Whenever a cactus loses health (any blow, missile or burn), at most once
+ * every CACTUS_EXPLOSION.cooldown s, needles burst out of his middle in every direction (visualEffects CACTUS_NEEDLES) and every foe within .radius m of
+ * him takes .damage and a push .push out from him. Logged "needles".
+ */
+const CACTUS_EXPLOSION = { units: new Set(["wild_west.cactus"]), cooldown: 1.2, radius: 3, damage: 20, push: 3 };
 const LASSO_DRAG = { units: new Set(["wild_west.lasso"]), low: 0.12, pull: 1.4, first: 0.3, every: 0.35, under: 0.6, most: 2.4, trample: 1.5, throwUp: 5, throwOut: 4 };
 /*
  * [S] 442 Reaper impale (audit 434 reaper c.2: "missing: tendrils impaling and hanging a weak unit"; card Characteristics: "Their tentacles will impale
@@ -554,6 +561,8 @@ export class SimulationSystem {
   // Vampires hanging on a man's neck (VAMPIRE_LATCH): the man, his side, the next draught and its damage, when he lets go (set once the man is dead)
   private _latches = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; next: number; draught: number; until: number }>();
   // Lassoed men being hauled in (LASSO_DRAG): the rider, the rope, the next drag hit and its damage, when the horse runs him over at the latest
+  // Cacti (CACTUS_EXPLOSION): their health at the last step and when they may burst again
+  private _cactusHp = new Map<RuntimeUnit, { hp: number; ready: number }>();
   private _lassos = new Map<RuntimeUnit, { rider: RuntimeUnit; rope: Mesh; loop: Mesh; at: Vector3; last: number; next: number; hit: number; blow: number; end: number }>();
   // Men hung on a Reaper's tendril (REAPER_IMPALE): who holds him, when he drops (set once he is dead), his next stab, the tendril mesh
   private _impales = new Map<RuntimeUnit, { holder: RuntimeUnit; until: number; next: number; spear: Mesh; yaw: number; tall: number }>();
@@ -724,6 +733,7 @@ export class SimulationSystem {
     this._impales.clear();
     for (const l of this._lassos.values()) { l.rope.dispose(); l.loop.dispose(); }
     this._lassos.clear();
+    this._cactusHp.clear();
     this._pendingThrows = [];
     this._pendingLaunches = [];
     this._closingFrom.clear();
@@ -815,6 +825,7 @@ export class SimulationSystem {
     if (this._rains.length > 0) this._stepRains(now);
     if (this._impales.size > 0) this._holdImpales(now);
     if (this._lassos.size > 0) this._haulLassos(now);
+    this._cactusExplosions(now);
     if (this._charges.size > 0) this._trampleCharges(now);
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
     if (this._butts.size > 0) this._landButts(now);
@@ -1138,6 +1149,33 @@ export class SimulationSystem {
       if (now < l.next) continue;
       l.next += D.every;
       this._strikeLogged(h, man, l.hit, Vector3.Zero(), now);
+    }
+  }
+
+  /** Cactus Explosion (CACTUS_EXPLOSION): each ready cactus that lost health since the last step bursts needles at every foe round him. */
+  private _cactusExplosions(now: number): void {
+    const C = CACTUS_EXPLOSION;
+    for (const unit of this._units) {
+      if (!C.units.has(unit.definition.id) || unit.isDead) continue;
+      const seen = this._cactusHp.get(unit);
+      const hp = unit.currentHealth;
+      if (!seen) { this._cactusHp.set(unit, { hp, ready: now }); continue; }
+      const hurt = hp < seen.hp - 1e-3;
+      seen.hp = hp;
+      if (!hurt || now < seen.ready) continue;
+      seen.ready = now + C.cooldown;
+      const mid = unit.position.add(new Vector3(0, unit.body.metrics.overallHeight * unit.body.root.scaling.y * 0.5, 0));
+      this.visualEffects?.spawnCactusNeedles(mid);
+      for (const foe of this._units) {
+        if (foe.isDead || foe.team === unit.team) continue;
+        const away = foe.position.subtract(unit.position);
+        away.y = 0;
+        const d = away.length();
+        if (d > C.radius) continue;
+        if (d > 1e-4) away.scaleInPlace(1 / d); else away.set(1, 0, 0);
+        foe.applyDamage(C.damage, away.scale(C.push));
+      }
+      this._logAbility(unit, "needles", now, mid);
     }
   }
 
