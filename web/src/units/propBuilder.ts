@@ -3551,6 +3551,13 @@ function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  * square collars .collar H tall, .collarOut of the pole across, at .collarsAt of the pole's length from its foot; a gold cross block .cross of the beam's
  * bar round the beam's middle; a gold cap .cap H tall on the butt. No spike over the beam.
  */
+/*
+ * [S] 466 the emblem (CONFIRM 465 b.2: "a small gold tower glyph in the middle of a plain pale field - TABS: a large gold arch/keyhole emblem with three
+ * crenels fills most of each banner"; legacy.banner_bearer.red.png). BANNER_ARCH in the banner's inner width w and height h: a gold block .wide w by .tall h,
+ * its middle .drop h under the banner's; three gold crenels on its top, .crenel w wide and .crenelTall h; a team doorway .door w wide cut up its middle to
+ * .doorTall of the block, its top a round arch, standing a slab proud of the gold so it reads as the cut.
+ */
+const BANNER_ARCH = { wide: 0.78, tall: 0.5, drop: 0.12, crenel: 0.18, crenelTall: 0.12, door: 0.34, doorTall: 0.72 };
 const BANNER_POLE = { thick: 0.04, collar: 0.03, collarOut: 1.5, collarsAt: [0.22, 0.5, 0.74], cross: 2.2, cap: 0.04, wood: new Color3(0.55, 0.3, 0.12) };
 const STAY_BANNER = { long: 1.5, thick: 0.022, grip: 0.3, beam: 1.0, bar: 0.03, knob: 0.05, spike: 0.09, wide: 0.27, tall: 0.42, inset: 0.02, slab: 0.012, edge: 0.025, proud: 1.8, tower: 0.08, glow: 0.15 };
 function buildStayBanner(scene: Scene, fit: BladeFit, team: Color3): Mesh {
@@ -3577,10 +3584,14 @@ function buildStayBanner(scene: Scene, fit: BladeFit, team: Color3): Mesh {
     const cx = side * (B.beam * H / 2 - B.inset * H - W / 2);
     part(MeshBuilder.CreateBox("bannerEdge", { width: W, height: T, depth: t }, scene), cx, cy, 0, gold);
     part(MeshBuilder.CreateBox("bannerCloth", { width: W - 2 * e, height: T - 2 * e, depth: t * B.proud }, scene), cx, cy, 0, cloth);
-    const k = B.tower * H, z = t * (B.proud / 2 + 0.5);
+    const A = BANNER_ARCH, w = W - 2 * e, h = T - 2 * e, z = t * (B.proud / 2 + 0.5);
+    const bw = A.wide * w, bh = A.tall * h, by = cy - A.drop * h, dw = A.door * w, dh = A.doorTall * bh;
     for (const face of [-1, 1]) {
-      part(MeshBuilder.CreateBox("bannerTower", { width: k, height: k, depth: t }, scene), cx, cy - k * 0.2, face * z, gold);
-      for (const m of [-1, 0, 1]) part(MeshBuilder.CreateBox("bannerMerlon", { width: k * 0.22, height: k * 0.3, depth: t }, scene), cx + m * k * 0.39, cy + k * 0.45, face * z, gold);
+      part(MeshBuilder.CreateBox("bannerTower", { width: bw, height: bh, depth: t }, scene), cx, by, face * z, gold);
+      for (const m of [-1, 0, 1]) part(MeshBuilder.CreateBox("bannerMerlon", { width: A.crenel * w, height: A.crenelTall * h, depth: t }, scene), cx + m * (bw - A.crenel * w) / 2, by + bh / 2 + A.crenelTall * h / 2, face * z, gold);
+      const doorBox = dh - dw / 2, dz = face * (z + t * 0.6);
+      part(MeshBuilder.CreateBox("bannerDoor", { width: dw, height: doorBox, depth: t }, scene), cx, by - bh / 2 + doorBox / 2, dz, cloth);
+      part(MeshBuilder.CreateCylinder("bannerDoorArch", { height: t, diameter: dw, tessellation: 12 }, scene), cx, by - bh / 2 + doorBox, dz, cloth).rotation.x = Math.PI / 2;
     }
   }
   pole.position.y = (0.5 - B.grip) * L;
