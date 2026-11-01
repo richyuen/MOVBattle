@@ -1009,3 +1009,27 @@ export function westernBraid(scene: Scene, body: ArticulatedBody, side: number):
   for (const m of out) m.convertToFlatShadedMesh();
   return out;
 }
+
+/*
+ * [S] 455 the Dynamite Thrower's team shirt (CONFIRM 454 dynamite_thrower a.1-2: "team-colour shirt on the torso renders olive-brown, not red" and "the
+ * arms are bare skin sticks from shoulder to hand - TABS: long dark team-colour sleeves down to the wrist, only the hands in skin colour"; card Appearance
+ * "a team color shirt"; wild_west.dynamite_thrower.blue.png: a dark team shirt on the trunk, its sleeves full to the wrist). The secret_bandit body cloth
+ * blends the team colour toward brown (LESSONS 449), so every body-cloth mesh but the head and hands wears team cloth, the team colour times
+ * DYNAMITE_SHIRT.shade, self-lit .glow; sleeves over both arms to the wrist in the same cloth times .sleeveShade, .upperOut of the upper arm round,
+ * .lowerOut of the forearm.
+ */
+const DYNAMITE_SHIRT = { shade: 0.85, sleeveShade: 0.7, glow: 0.12, upperOut: 1.22, lowerOut: 1.2 };
+
+/** The Dynamite Thrower's team shirt with full sleeves to the wrist (spec at DYNAMITE_SHIRT). */
+export function dynamiteShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = DYNAMITE_SHIRT;
+  const mf = getMaterialFactory();
+  const c = teamColor.scale(S.shade), sc = teamColor.scale(S.sleeveShade);
+  const cloth = mf.get("cloth", c, { emissive: c.scale(S.glow) });
+  const sleeve = mf.get("cloth", sc, { emissive: sc.scale(S.glow) });
+  for (const m of body.allMeshes) if (m.material === body.bodyMaterial && m !== body.headMesh && !/Hand/.test(m.name)) m.material = cloth;
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "dynamiteSleeve", arm, 0, 1, S.upperOut, sleeve));
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) out.push(limbShell(scene, "dynamiteSleeve", arm, 0, 1, S.lowerOut, sleeve));
+  return out;
+}
