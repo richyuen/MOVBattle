@@ -1902,7 +1902,7 @@ export class SimulationSystem {
       if (slot) this._holdWallHeading(unit, slot, enemy);
       if (attackProfile.type === AttackType.Melee) unit.leanIntoShove();
       // [S] 454 a gunman in range holds his aim between shots (the Deadeye's levelled Winchester, proceduralAnimation WINCHESTER_AIM)
-      else unit.readyAim();
+      else unit.readyAim(this._chestOf(enemy));
       // A presser with a club or a blade does not swing from two strides off: while he is still closing he holds it cocked, and brings it down once he
       // is at the man's shoulder, or has stopped closing (the crowd or a board holds him off).
       const closingFrom = this._closingFrom.get(unit);

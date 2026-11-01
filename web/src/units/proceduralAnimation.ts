@@ -352,7 +352,8 @@ const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25
  * the rifle still hung ~.27 m over and behind the fist (the carry's offset in the hand), so its receiver is seated .seat of her height over the wrist.
  */
 // [S] 456 .slide: the shot's recoil drives the rifle back .slide of her height along the barrel, settling at .settle (it was an upward .kick of .12 rad)
-const WINCHESTER_AIM = { ahead: 0.28, inward: 0.06, drop: 0.26, slide: 0.05, settle: 8, up: 60, down: 2.5, seat: 0.02 };
+// [S] 456 .turn: the barrel points at the man's chest (readyAim) while he is within .turn rad of her facing (she still turning to him read ~10° off the tracer)
+const WINCHESTER_AIM = { ahead: 0.28, inward: 0.06, drop: 0.26, slide: 0.05, settle: 8, up: 60, down: 2.5, seat: 0.02, turn: 1.2 };
 // [S] 425 the blunderbuss held low in both hands (see _aimBlunderbuss): the weapon fist's seat in shares of his height from the hip joint (ahead, out to
 // the weapon side, down), the barrel's droop below level and its turn in across his front (rad), the muzzle's kick up at the shot (rad)
 const BLUNDERBUSS_AIM = { ahead: 0.13, out: 0.07, drop: 0.0, droop: 0.22, across: 0.3, kick: 0.45 };
@@ -1561,9 +1562,12 @@ export class ProceduralAnimator {
   }
 
   /** Ranged, in range of the man: called every decision; a levelled gun (WINCHESTER_AIM) stays up until the calls stop. */
-  readyAim(): void {
+  readyAim(at?: Vector3): void {
     this._aimReadyTimer = 0.6;
+    // [S] 456 the man's chest (world): the levelled Winchester points at it, not along her facing while she still turns to him
+    if (at) this._aimAt = at.clone();
   }
+  private _aimAt: Vector3 | null = null;
 
   private _aimReadyTimer = 0;
 
@@ -3647,9 +3651,12 @@ export class ProceduralAnimator {
     for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
     const rootM = b.root.getWorldMatrix();
     const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
-    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const facing = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
     const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
     const height = b.metrics.overallHeight * b.root.scaling.y;
+    // toward her man when the sim gave his chest (readyAim), within .turn of her facing, else along her facing
+    const toMan = this._aimAt ? flat(this._aimAt.subtract(b.rightShoulder.getAbsolutePosition())) : facing;
+    const fwd = Vector3.Dot(toMan, facing) > Math.cos(A.turn) ? toMan : facing;
     const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(A.ahead * height))
       .addInPlace(outward.scale(-A.inward * height)).addInPlace(new Vector3(0, -A.drop * height, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);

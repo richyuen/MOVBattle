@@ -597,9 +597,9 @@ export class RuntimeUnit {
   }
 
   /** In range of its target with a ranged weapon: a gun held level at the man between shots (WINCHESTER_AIM). */
-  readyAim(): void {
+  readyAim(at?: Vector3): void {
     if (isVehicleUnit(this.definition.id)) return;
-    this.animator.readyAim();
+    this.animator.readyAim(at);
   }
 
   /** Closing on its target, a few strides out: a heavy weapon comes up cocked over the shoulder; within striking distance it is brought down on its own beat. */
