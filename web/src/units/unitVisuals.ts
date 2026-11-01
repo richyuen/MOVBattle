@@ -21,7 +21,7 @@ export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap" | "peak_hat"
-  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood"
+  | "miner_hat" | "dynamite_hat" | "poacher_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
@@ -697,8 +697,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ LEGACY ═══════════════════════
   "legacy.peasant": vis(
-    // [S] 457 the team hood framing the face (legacyDress PEASANT_HOOD; audit 457 a.2)
-    { scale: 0.62, bulk: 0.78, headSize: 1.44, legLength: 0.74 }, "none", "peasant_hood", "none", "none", "#D8D8D8",
+    { scale: 0.62, bulk: 0.78, headSize: 1.44, legLength: 0.74 }, "none", "none", "none", "none", "#D8D8D8",
     undefined,
     { materialPreset: "legacy_toy" },
   ),
