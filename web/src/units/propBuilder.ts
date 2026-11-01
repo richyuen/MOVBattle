@@ -6989,6 +6989,14 @@ const PINTO_EAR = 0.5;
  */
 const PINTO_HEAD = { wide: 0.6, long: 0.6, deep: 0.54, muzzle: 0.46, muzzleAt: 0.7, nostril: 0.1, earWide: 0.3, earFlat: 0.6, earSplay: 0.35, earPinch: 0.8, blaze: 0.36 };
 const PINTO_BEAD = { disc: 0.3, thick: 0.07, proud: 0.03, pupil: 0.48, look: 0.18 };
+/*
+ * [S] 455 the pinto's legs (CONFIRM 454 lasso a.1: "four wide flat-sided box pillars as thick as the horse's head, the body on a table-like block - TABS:
+ * slim tapering legs with small dark hooves under a deep rounded barrel"; wild_west.lasso.jpg: each leg a rounded taper from a muscled top under the
+ * barrel to a thin cannon, a little knot at the fetlock, a small dark hoof hardly wider than the cannon). PINTO_LEGS in H: the upper leg .fore / .hind
+ * across at its top, round (.sides facets, not the barded horse's 4-sided wedge), stretched only .deep fore-and-aft, narrowing to .foot at the joint;
+ * the cannon from .foot down to .cannon; fetlock .fetlock across; hoof .hoof across at its sole, .hoofTall tall.
+ */
+const PINTO_LEGS = { fore: 0.22, hind: 0.27, sides: 6, deep: 1.15, foot: 0.12, cannon: 0.085, fetlock: 0.065, hoof: 0.15, hoofTall: 0.09 };
 type HorseStyle = "barded" | "pinto";
 /*
  * [S] chanfron (336; renaissance.jouster.red.png: the horse's face is cased in a grey faceted plate from the poll to above the nostrils, the brown muzzle
@@ -7117,7 +7125,9 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
       const legX = x * W * 0.24;
       const legZ = z * L * (z > 0 ? 0.3 : 0.27);
       const top = belly + H * HORSE_DEEP * 0.3;
-      const hoofTall = H * 0.13;
+      const PL = PINTO_LEGS;
+      const hoofTall = H * (pinto ? PL.hoofTall : 0.13);
+      const upperDeep = pinto ? PL.deep : HORSE_UPPER_DEEP;
       const hemAt = hemY;
       // Fore: knee straight under the shoulder; hind: the hock set well back and the cannon slanting forward again to the hoof, a Z
       const joint = z > 0
@@ -7125,32 +7135,35 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
         : new Vector3(legX, hemAt - H * (HORSE_UPPER_SHOW - 0.04), legZ - H * HORSE_HOCK);
       const hoofAt = new Vector3(legX, floor + hoofTall * 0.9, z > 0 ? legZ + H * 0.03 : legZ - H * 0.06);
       const upper = new Vector3(legX, top, z > 0 ? legZ : legZ + H * 0.14);
-      const foot = H * 0.2;
+      const foot = H * (pinto ? PL.foot : 0.2);
       // The thick upper leg (forearm / gaskin) runs from inside the barrel down past the hem to the joint: a four-sided wedge set square to
-      // the horse, laid in a holder stretched HORSE_UPPER_DEEP fore-and-aft (ends given in the holder's space, so they land where they should)
+      // the horse, laid in a holder stretched HORSE_UPPER_DEEP fore-and-aft (ends given in the holder's space, so they land where they should);
+      // the pinto's a slim round taper (PINTO_LEGS)
       const holder = new Mesh("hwedge", scene);
       holder.parent = frame;
-      holder.scaling.z = HORSE_UPPER_DEEP;
-      const jl = new Vector3(joint.x, joint.y, joint.z / HORSE_UPPER_DEEP);
-      const ul = new Vector3(upper.x, upper.y, upper.z / HORSE_UPPER_DEEP);
+      holder.scaling.z = upperDeep;
+      const jl = new Vector3(joint.x, joint.y, joint.z / upperDeep);
+      const ul = new Vector3(upper.x, upper.y, upper.z / upperDeep);
       const d = ul.subtract(jl);
-      const thick = H * (z > 0 ? HORSE_FORE_THICK : HORSE_HIND_THICK);
-      const wedge = MeshBuilder.CreateCylinder(z > 0 ? "hforearm" : "hgaskin", { height: d.length() + foot * 0.4, diameterTop: thick * Math.SQRT2, diameterBottom: foot * Math.SQRT2, tessellation: 4 }, scene);
-      wedge.rotation.y = Math.PI / 4;
+      const thick = H * (pinto ? (z > 0 ? PL.fore : PL.hind) : z > 0 ? HORSE_FORE_THICK : HORSE_HIND_THICK);
+      const round = pinto ? 1 : Math.SQRT2;
+      const wedge = MeshBuilder.CreateCylinder(z > 0 ? "hforearm" : "hgaskin", { height: d.length() + foot * 0.4, diameterTop: thick * round, diameterBottom: foot * round, tessellation: pinto ? PL.sides : 4 }, scene);
+      if (!pinto) wedge.rotation.y = Math.PI / 4;
       wedge.bakeCurrentTransformIntoVertices();
       part(wedge, coat);
       wedge.parent = holder;
       wedge.rotation.x = Math.atan2(d.z, d.y);
       wedge.position.copyFrom(jl.add(ul).scale(0.5).subtract(d.normalize().scale(foot * 0.2)));
-      const cannon = limb("hcannon", hoofAt, joint, foot, H * 0.15);
+      const cannon = limb("hcannon", hoofAt, joint, foot, H * (pinto ? PL.cannon : 0.15));
       // The paint's cream socks, on one fore and the opposite hind
       if (pinto && x === z) cannon.material = cream;
       // The fetlock: a squat bulge where the cannon meets the hoof
-      const fetlock = part(MeshBuilder.CreateIcoSphere("hfetlock", { radius: H * 0.1, subdivisions: 1 }, scene), cannon.material as typeof coat);
+      const fetlock = part(MeshBuilder.CreateIcoSphere("hfetlock", { radius: H * (pinto ? PL.fetlock : 0.1), subdivisions: 1 }, scene), cannon.material as typeof coat);
       fetlock.scaling.set(1, 0.8, 1.15);
       fetlock.position.set(legX, floor + hoofTall * 1.15, hoofAt.z);
-      // A big flared hoof, as wide as the upper leg
-      const hoof = part(MeshBuilder.CreateCylinder("hhoof", { height: hoofTall, diameterTop: H * HORSE_HOOF * 0.72, diameterBottom: H * HORSE_HOOF, tessellation: 6 }, scene), dark);
+      // A big flared hoof, as wide as the upper leg (the pinto's small, PINTO_LEGS.hoof)
+      const hoofWide = H * (pinto ? PL.hoof : HORSE_HOOF);
+      const hoof = part(MeshBuilder.CreateCylinder("hhoof", { height: hoofTall, diameterTop: hoofWide * 0.72, diameterBottom: hoofWide, tessellation: 6 }, scene), dark);
       hoof.position.set(legX, floor + hoofTall / 2, hoofAt.z + H * 0.02);
       // [S] 369 the barded horse's canter (proceduralAnimation HORSE_GAIT): the whole leg hangs off a pivot at its top inside the barrel, so the
       // animator can swing it fore and aft; named hgait_<fore|hind>_<l|r>
