@@ -705,6 +705,15 @@ const CACTUS_UPRIGHT = { tilt: 0.05, stride: 0.06, lean: 0.04 };
  * MINER_UPRIGHT: no crouch, a short stride, a small tilt and lean, the chin .chin up.
  */
 const MINER_UPRIGHT = { tilt: 0.06, stride: 0.12, lean: 0.06, chin: 0.06 };
+/*
+ * [S] 453 the Miner's pick on his shoulder at rest (CONFIRM 452 miner b.1: "held one-handed low at the hip, the shaft trailing out diagonally - TABS:
+ * gripped two-handed and shouldered, the shaft upright past the head"; card "wields a pickaxe over its shoulder"; wild_west.miner.red.png: both fists
+ * together before the weapon shoulder at the chin, the haft standing up past the hat, leant a little back and out, the iron head over his head). In the
+ * trunk's frame, in shoulder heights (the shoulder at 1): the weapon palm .side out, .up above the trunk's pivot, .front ahead (lockbox solve from .arm); the
+ * haft's line (its +y, fist to head) leant .back toward his back and .out off his side; the off hand takes the haft under it (_twoHandPole, POLE_GRIP.minerHaft).
+ * Blended out under the aimed blow (_aimWeight).
+ */
+const PICK_SHOULDER = { side: 0.32, up: 0.95, front: 0.42, back: 0.3, out: 0.12, arm: { raise: -1.6, turn: 0.4, elbow: -1.7 } };
 const THROW_LET_GO = 0.5;
 /*
  * Two-hand boulder (vfx.k; units/tribal.stoner). Spec read off the reference: the boulder, about .38 of his height across, is held in front of the belly in both
@@ -3140,12 +3149,42 @@ export class ProceduralAnimator {
     }
     const p = this._pickProp;
     if (!p) return;
-    const w = this._state === AnimState.Dead ? 0 : Math.min(1, this._aimWeight);
+    const dead = this._state === AnimState.Dead;
+    const w = dead ? 0 : Math.min(1, this._aimWeight);
+    const b = this._body;
+    // [S] 453 off the blow the pick is shouldered (PICK_SHOULDER): the weapon palm before the shoulder by the chin, the haft up past the head
+    const rest = dead ? 0 : (1 - w) * (1 - Math.min(1, this._limp));
+    let restQ: Quaternion | null = null;
+    if (rest > 0.01) {
+      const S = PICK_SHOULDER;
+      const chain: TransformNode[] = [];
+      for (let n: TransformNode | null = b.torso; n; n = n.parent as TransformNode | null) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      const torsoM = b.torso.getWorldMatrix();
+      const height = Math.abs(b.rightShoulder.position.y);
+      const sr = Math.sign(b.rightShoulder.position.x) || 1;
+      const palmAt = Vector3.TransformCoordinates(new Vector3(sr * height * S.side, height * S.up, height * S.front), torsoM);
+      this._reachPalm(b.rightShoulder, b.rightElbow, b.rightHand, palmAt, [S.arm.raise, -sr * S.arm.turn, S.arm.elbow], height * 0.1, rest);
+      for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+      const up = Vector3.TransformNormal(new Vector3(sr * S.out, 1, -S.back), torsoM).normalize();
+      const ahead = Vector3.TransformNormal(new Vector3(0, 0, 1), torsoM);
+      const flatAhead = new Vector3(ahead.x, 0, ahead.z);
+      if (flatAhead.lengthSquared() < 1e-6) flatAhead.set(0, 0, 1);
+      // the head's two points fore and aft, in the plane through the haft and his front
+      const zr = Vector3.Cross(up, Vector3.Cross(flatAhead, up)).normalize();
+      const xr = Vector3.Cross(up, zr).normalize();
+      const worldR = Matrix.Identity();
+      Matrix.FromXYZAxesToRef(xr, up, zr, worldR);
+      const handQr = new Quaternion();
+      b.rightHand.getWorldMatrix().decompose(undefined, handQr);
+      const handR = Matrix.Identity();
+      handQr.toRotationMatrix(handR);
+      restQ = Quaternion.Slerp(p.rest, Quaternion.FromRotationMatrix(worldR.multiply(handR.transpose())), rest);
+    }
     if (w <= 0.01) {
-      p.node.rotationQuaternion = null;
+      p.node.rotationQuaternion = restQ;
       return;
     }
-    const b = this._body;
     for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
     const y = Vector3.TransformNormal(this._aimTip, Matrix.RotationY(b.root.rotation.y)).normalize();
     const flat = new Vector3(y.x, 0, y.z);
@@ -3158,7 +3197,7 @@ export class ProceduralAnimator {
     b.rightHand.getWorldMatrix().decompose(undefined, handRot);
     const hand = Matrix.Identity();
     handRot.toRotationMatrix(hand);
-    p.node.rotationQuaternion = Quaternion.Slerp(p.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    p.node.rotationQuaternion = Quaternion.Slerp(restQ ?? p.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
   }
 
   /** One arm's palm onto a world point by the lockbox solve (shoulder raise, shoulder turn, elbow bend from `start`), blended in by `w`. */
