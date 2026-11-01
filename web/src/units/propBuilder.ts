@@ -3545,23 +3545,33 @@ function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  */
 // [S] 458 beam 1.0 H with a banner hung at each end, .inset H in from the knob (critic 457 b.4: "the two banners hang touching either side of the pole on a
 // short beam"; legacy.banner_bearer.blue.png: the banners a man's width apart at the beam's ends); was beam .62, banners .03 apart at the pole
+/*
+ * [S] 466 the pole (CONFIRM 465 b.3: "a thin dark-brown shaft with a gold spear tip - TABS: a thick warm-brown pole with gold square collars, a gold cross
+ * fitting where it meets the beam, a gold butt cap, and no point"; legacy.banner_bearer.blue.png). BANNER_POLE: .thick H across in warm brown .wood; gold
+ * square collars .collar H tall, .collarOut of the pole across, at .collarsAt of the pole's length from its foot; a gold cross block .cross of the beam's
+ * bar round the beam's middle; a gold cap .cap H tall on the butt. No spike over the beam.
+ */
+const BANNER_POLE = { thick: 0.04, collar: 0.03, collarOut: 1.5, collarsAt: [0.22, 0.5, 0.74], cross: 2.2, cap: 0.04, wood: new Color3(0.55, 0.3, 0.12) };
 const STAY_BANNER = { long: 1.5, thick: 0.022, grip: 0.3, beam: 1.0, bar: 0.03, knob: 0.05, spike: 0.09, wide: 0.27, tall: 0.42, inset: 0.02, slab: 0.012, edge: 0.025, proud: 1.8, tower: 0.08, glow: 0.15 };
 function buildStayBanner(scene: Scene, fit: BladeFit, team: Color3): Mesh {
-  const B = STAY_BANNER, H = fit.stand, L = B.long * H, r = B.thick * H;
+  const B = STAY_BANNER, P = BANNER_POLE, H = fit.stand, L = B.long * H, r = P.thick * H;
   const gold = mat(scene, LEGACY_GOLD, B.glow, "cloth"), cloth = mat(scene, team, B.glow, "cloth");
   // Stood upright at his side like the Charge flag (named "staff", "uprightPole" marker; 457b)
   const pole = MeshBuilder.CreateCylinder("staff", { height: L, diameter: r, tessellation: 6 }, scene);
   pole.id = "stayBanner";
   new TransformNode("uprightPole", scene).parent = pole;
   new TransformNode("bearerPole", scene).parent = pole; // 458: the off fist rides the shaft too (proceduralAnimation POLE_GRIP.bearerPole)
-  pole.material = mat(scene, LEGACY_POLE, 0.08);
+  pole.material = mat(scene, P.wood, 0.1);
   const part = (m: Mesh, x: number, y: number, z: number, material: PBRMetallicRoughnessMaterial): Mesh => {
     m.position.set(x, y, z); m.parent = pole; m.material = material; m.convertToFlatShadedMesh(); return m;
   };
   const top = L / 2 - B.bar * H;
   part(MeshBuilder.CreateBox("bannerBeam", { width: B.beam * H, height: B.bar * H, depth: B.bar * H }, scene), 0, top, 0, gold);
   for (const side of [-1, 1]) part(MeshBuilder.CreateIcoSphere("bannerKnob", { radius: B.knob * H / 2, subdivisions: 1 }, scene), side * B.beam * H / 2, top, 0, gold);
-  part(MeshBuilder.CreateCylinder("bannerSpike", { height: B.spike * H, diameterTop: 0, diameterBottom: r * 2, tessellation: 4 }, scene), 0, L / 2 + B.spike * H / 2, 0, gold);
+  const sq = r * P.collarOut;
+  for (const at of P.collarsAt) part(MeshBuilder.CreateBox("bannerCollar", { width: sq, height: P.collar * H, depth: sq }, scene), 0, -L / 2 + at * L, 0, gold);
+  part(MeshBuilder.CreateBox("bannerCross", { width: B.bar * H * P.cross, height: B.bar * H * P.cross, depth: B.bar * H * P.cross }, scene), 0, top, 0, gold);
+  part(MeshBuilder.CreateBox("bannerButtCap", { width: sq, height: P.cap * H, depth: sq }, scene), 0, -L / 2 + P.cap * H / 2, 0, gold);
   const W = B.wide * H, T = B.tall * H, t = B.slab * H, e = B.edge * H, cy = top - B.bar * H / 2 - T / 2;
   for (const side of [-1, 1]) {
     const cx = side * (B.beam * H / 2 - B.inset * H - W / 2);
