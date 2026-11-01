@@ -637,7 +637,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ WILD WEST ═══════════════════════
   "wild_west.dynamite_thrower": vis(
-    { scale: 1.0, bulk: 0.96 }, "dynamite", "cowboy_hat", "none", "none", "#B75C21", undefined, {
+    { scale: 1.0, bulk: 0.96 }, "dynamite", "peak_hat", "none", "none", "#B75C21", undefined, {
       posePreset: "support",
       materialPreset: "secret_bandit",
       attachmentPreset: "bomb_lit",
