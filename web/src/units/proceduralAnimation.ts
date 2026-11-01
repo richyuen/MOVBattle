@@ -2290,6 +2290,7 @@ export class ProceduralAnimator {
     this._restKatana(dt);
     this._restQueenBlades(dt);
     this._restNorseBoard();
+    this._aimPick();
     this._twoHandPole();
     this._levelPike();
     this._carryDory();
@@ -3104,6 +3105,42 @@ export class ProceduralAnimator {
     const parentM = Matrix.Identity();
     parentQ.toRotationMatrix(parentM);
     coil.rotationQuaternion = Quaternion.FromRotationMatrix(worldM.multiply(parentM.transpose()));
+  }
+
+  /**
+   * [S] 451 the Miner's pick laid onto the blow (critic 447-449 miner c.2: "pick head hidden behind the hat, reads as a head-butt - TABS: the iron head comes
+   * down in front of the body"; wild_west.miner.png). _aimBlow raises the fist over his head and solves the arm for a weapon laid from it onto the man
+   * (_aimTip), but the pick is not one of the props _carryProp turns, so it rode the raised fist pointing up and back, its head behind his hat at the hit.
+   * Here, while the blow is aimed, the pick's haft runs from the fist along _aimTip, the iron head on the man before the miner, its two points in the
+   * plane of the swing (one strikes, one trails); off the blow it is back on its rest in the fist. Runs before _twoHandPole, so the off hand finds the haft.
+   */
+  private _pickProp: { node: TransformNode; rest: Quaternion } | null | undefined = undefined;
+  private _aimPick(): void {
+    if (this._pickProp === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "pickaxe" && n.getChildren().some((c) => c.getChildren().some((g) => g.name === "minerHaft")));
+      this._pickProp = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
+    }
+    const p = this._pickProp;
+    if (!p) return;
+    const w = this._state === AnimState.Dead ? 0 : Math.min(1, this._aimWeight);
+    if (w <= 0.01) {
+      p.node.rotationQuaternion = null;
+      return;
+    }
+    const b = this._body;
+    for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+    const y = Vector3.TransformNormal(this._aimTip, Matrix.RotationY(b.root.rotation.y)).normalize();
+    const flat = new Vector3(y.x, 0, y.z);
+    if (flat.lengthSquared() < 1e-6) flat.copyFrom(Vector3.TransformNormal(new Vector3(0, 0, 1), Matrix.RotationY(b.root.rotation.y)));
+    const z = Vector3.Cross(Vector3.Up(), flat).normalize();
+    const x = Vector3.Cross(y, z).normalize();
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, z, world);
+    const handRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    p.node.rotationQuaternion = Quaternion.Slerp(p.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
   }
 
   /** One arm's palm onto a world point by the lockbox solve (shoulder raise, shoulder turn, elbow bend from `start`), blended in by `w`. */
