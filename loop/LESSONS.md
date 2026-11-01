@@ -9,7 +9,7 @@ drop a lesson once it is a comment at the code it describes.
 - SSAO (main.ts, radius 1.5) reads a DOUBLESIDE ribbon's inward faces as occlusion and greys the cloth: build dress shells one-sided facing out (check flipFaces), never double-sided at the same depth.
 - Flat colour that survives ACES: an "unlit" material's colour comes from its EMISSIVE only (baseColor alone renders black), excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
 - ACES lifts a mid code value toward pale, so an unlit plate keeps a deep value (zeus's gold emblem is (0.62,0.26,0.03), 400); the same for timber: an IBL-lit mid albedo reads beige, so a brown hull wants (.2,.11,.055) with a small self-light (400).
-- "metal" renders near black under swiftshader: use "cloth" with a small emissive instead.
+- "metal" renders near black under swiftshader: use "cloth" with a small emissive.
 - Lit cloth in shade reads grey however white or warm: cream wants the flat unlit cut out of the glow (442 bone (1.1,.78,.4) swatched 215/199/164; self-lit cloth stayed grey 441).
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it (a vehicle's `bodyMaterial` IS the team colour: timber, iron, leather need their own; 392), and the head's as skin: a bone crewman needs a hidden anchor head (440 pumpkin operator).
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
@@ -24,7 +24,7 @@ drop a lesson once it is a comment at the code it describes.
 - Sim reads of joint positions must settle world matrices first (computeWorldMatrix(true) up the parent chain, as capture's __wp does).
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
-- The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of it (420 dragon, monkey king): a new tall prop re-frames every shot, so a RE-AUDIT follows.
+- The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of the UNIT height (a cap may rise .7 of a head, 447): a taller prop re-frames every shot, so a RE-AUDIT follows (420).
 - A pistol is found by its "pistolBell" child (_aimPistol, GUN_TOSS): a new gun cut without it floats off the fist (445 revolver). Gun smoke/flash are meshes (trailPuff, flash, pistolFlash): take() {hold, clean} holds one camera and hides them (446).
 - A bowman at the ready turns his chest up to .95 rad and his head off it: aim his idle from the head block's world facing, alpha = atan2(fz, fx) - swing (402 ice archer).
 - A wide stance reads as a stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a "stride" pose gap (403).
