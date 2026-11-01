@@ -703,6 +703,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "legacy.banner_bearer": vis(
     { scale: 1.0, bulk: 0.9 }, "staff", "none", "none", "banner_back", "#D74A4A", undefined, {
+      weaponVariant: "stay_banner", // [S] 457 two team banners on a gold cross-beam (propBuilder STAY_BANNER; audit 457 b.1)
       posePreset: "support",
       materialPreset: "legacy_toy",
     },

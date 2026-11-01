@@ -3508,6 +3508,41 @@ function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   return pole;
 }
 /*
+ * [S] 457 the Banner Bearer's Stay banner (audit 457 b.1: "a pink ball on the pole - TABS: a gold-fitted cross-beam carrying two hanging team banners
+ * with a gold castle emblem"; legacy.banner_bearer.red.png: a slim pole over the man, a gold cross-beam across its top with gold end knobs and a gold
+ * spike above, two tall team banners hanging side by side from the beam, each with a gold tower emblem). STAY_BANNER, in his standing height H: a pole
+ * .long H, the fist .grip up; a beam .beam H across, .bar H thick, knobs at its ends and a spike .spike H over the pole; two banners .wide H across and
+ * .tall H down, .gap H apart, each a gold slab behind a team slab (gold rim .edge H) with a gold tower emblem (a block and three merlons) on each face.
+ */
+const STAY_BANNER = { long: 1.5, thick: 0.022, grip: 0.3, beam: 0.62, bar: 0.03, knob: 0.05, spike: 0.09, wide: 0.27, tall: 0.42, gap: 0.03, slab: 0.012, edge: 0.025, proud: 1.8, tower: 0.08, glow: 0.15 };
+function buildStayBanner(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const B = STAY_BANNER, H = fit.stand, L = B.long * H, r = B.thick * H;
+  const gold = mat(scene, LEGACY_GOLD, B.glow, "cloth"), cloth = mat(scene, team, B.glow, "cloth");
+  const pole = MeshBuilder.CreateCylinder("bannerPole", { height: L, diameter: r, tessellation: 6 }, scene);
+  pole.id = "stayBanner";
+  pole.material = mat(scene, LEGACY_POLE, 0.08);
+  const part = (m: Mesh, x: number, y: number, z: number, material: PBRMetallicRoughnessMaterial): Mesh => {
+    m.position.set(x, y, z); m.parent = pole; m.material = material; m.convertToFlatShadedMesh(); return m;
+  };
+  const top = L / 2 - B.bar * H;
+  part(MeshBuilder.CreateBox("bannerBeam", { width: B.beam * H, height: B.bar * H, depth: B.bar * H }, scene), 0, top, 0, gold);
+  for (const side of [-1, 1]) part(MeshBuilder.CreateIcoSphere("bannerKnob", { radius: B.knob * H / 2, subdivisions: 1 }, scene), side * B.beam * H / 2, top, 0, gold);
+  part(MeshBuilder.CreateCylinder("bannerSpike", { height: B.spike * H, diameterTop: 0, diameterBottom: r * 2, tessellation: 4 }, scene), 0, L / 2 + B.spike * H / 2, 0, gold);
+  const W = B.wide * H, T = B.tall * H, t = B.slab * H, e = B.edge * H, cy = top - B.bar * H / 2 - T / 2;
+  for (const side of [-1, 1]) {
+    const cx = side * (B.gap * H / 2 + W / 2);
+    part(MeshBuilder.CreateBox("bannerEdge", { width: W, height: T, depth: t }, scene), cx, cy, 0, gold);
+    part(MeshBuilder.CreateBox("bannerCloth", { width: W - 2 * e, height: T - 2 * e, depth: t * B.proud }, scene), cx, cy, 0, cloth);
+    const k = B.tower * H, z = t * (B.proud / 2 + 0.5);
+    for (const face of [-1, 1]) {
+      part(MeshBuilder.CreateBox("bannerTower", { width: k, height: k, depth: t }, scene), cx, cy - k * 0.2, face * z, gold);
+      for (const m of [-1, 0, 1]) part(MeshBuilder.CreateBox("bannerMerlon", { width: k * 0.22, height: k * 0.3, depth: t }, scene), cx + m * k * 0.39, cy + k * 0.45, face * z, gold);
+    }
+  }
+  pole.position.y = (0.5 - B.grip) * L;
+  return pole;
+}
+/*
  * [S] the Brawler's bearded axe (392; viking.brawler.red.png, card Main Hand Brawler Axe; critic 391: a black rectangular hammer block on a haft, only the
  * haft in frame). A dark haft .long of his height with the butt .butt of it below the fist and the head at the top, a broad grey blade with a bearded
  * lower horn: a flat plate in the x-y plane (edge toward +x) whose cutting edge bows out from the top horn to the beard .beard below the haft's line, and a
@@ -4324,6 +4359,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "bo_staff": {
       if (type === "staff" && variant === "priest_staff") return buildPriestStaff(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "charge_flag") return buildChargeFlag(scene, fit, teamColor ?? accent);
+      if (type === "staff" && variant === "stay_banner") return buildStayBanner(scene, fit, teamColor ?? accent);
       const color = type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
         : new Color3(0.5, 0.35, 0.2);
       const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.05 * s }, scene);
