@@ -692,7 +692,8 @@ async function main() {
           await take(`unit_${id}_release`, release.tick, far);
           // A thrown missile at a man who has closed in (the stoner's boulder at 3 m) lands inside the motion pair's 9 ticks: its flight shot is taken
           // under half way to the hit instead, so the missile is still in the air and not yet its impact dust
-          const flightAt = shortThrow ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : 9;
+          // [evidence 454] the Deadeye's bullet (speed 100) lands ~5 ticks after the shot: her flight frame is 3 ticks on, the bullet half way (CONFIRM 453 c.3)
+          const flightAt = shortThrow ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : id === "wild_west.deadeye" ? 3 : 9;
           await take(`unit_${id}_flight`, release.tick + flightAt, far);
           await take(`unit_${id}_struck`, struckTick, shortThrow ? far : 2);
           if (RELOAD_SHOT[id]) await take(`unit_${id}_reload`, release.tick + RELOAD_SHOT[id], 1);
