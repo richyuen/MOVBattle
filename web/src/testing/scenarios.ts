@@ -1229,9 +1229,12 @@ function makeFactionGalleryScenario(
     cameraOverride?: GalleryCameraOverride;
     // extra metres of room beside the rank's last unit (a machine wider than a man's slot)
     lastApart?: number;
+    // these units in the last rank, the one nearest the camera (+x; row 0 is the far rank), the rest of the faction behind them in roster order
+    front?: string[];
   } = {},
 ): ScenarioSpec {
-  const unitIds = getUnitsByFaction(faction).map((unit) => unit.id);
+  const roster = getUnitsByFaction(faction).map((unit) => unit.id);
+  const unitIds = options.front ? [...roster.filter((id) => !options.front!.includes(id)), ...options.front.filter((id) => roster.includes(id))] : roster;
   // Eye level from the front, one rank wide where the faction fits, so the group fills the frame under a sky third
   const singleRank = unitIds.length <= 9;
   const spec = makeGalleryScenario(name, description, unitIds, {
@@ -1341,7 +1344,12 @@ const GALLERY_SCENARIOS: Record<string, ScenarioSpec> = {
     "gallery_faction_legacy",
     FactionId.Legacy,
     "Close-read faction lineup for Legacy.",
-    { columns: 6, spacingX: 4.6, spacingZ: 2.35 },
+    // [evidence 461] the eight men of legacy_1 in one front rank, the giants of legacy_2 (tank, super boxer, super peasant) behind them: at six to a
+    // rank the tank and the giants hid the poacher, the barrel roller and the flag bearer's shins (critic 458, 460)
+    {
+      columns: 8, spacingX: 4.6, spacingZ: 2.35,
+      front: ["legacy.peasant", "legacy.banner_bearer", "legacy.poacher", "legacy.blowdarter", "legacy.pike", "legacy.barrel_roller", "legacy.boxer", "legacy.flag_bearer"],
+    },
   ),
   gallery_faction_good: makeFactionGalleryScenario(
     "gallery_faction_good",
