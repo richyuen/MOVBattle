@@ -543,6 +543,15 @@ const DORY_THRUST = { ahead: 0.35, out: 0.6, up: -0.05, tilt: -0.06, reach: 0.75
  * heading turned .side rad to the weapon side and .tilt rad down; its butt at the mouth, the weapon fist .near of its length along it, the off fist .far.
  * Every living state but a stagger (eased out by the limp); the attack keeps the hold (the dart is blown, not drawn).
  */
+/*
+ * [S] 463 the boxer's straight jab (audit 457 boxer c.1: "the arm is raised overhead and the glove does not drive forward - TABS: a straight glove jab
+ * into the enemy"; legacy.boxer.png: gloves up before the chin, one driven straight out level at the chest, the other kept at the guard; card "punches
+ * the enemy units rapidly" with a glove in each hand). In u, his shoulder's height over his hip: the guard fist .guardAhead before its shoulder, .guardUp
+ * over it, .guardIn toward the middle; the jab fist driven out to .reach of the whole arm straight ahead, .jabUp over the shoulder. Over the blow (p of
+ * its time): drawn back .cock of the way by .cockAt, driven out by .drivenAt, held to .heldTo, home by 1. The trunk leans .lean forward with the drive.
+ * The gloves take turns, a new blow on the other fist.
+ */
+const BOXER_JAB = { guardAhead: 0.45, guardUp: 0.12, guardIn: 0.2, reach: 0.95, jabUp: -0.05, cock: 0.15, cockAt: 0.12, drivenAt: 0.3, heldTo: 0.78, lean: 0.12 };
 const BLOWGUN_HOLD = { mouthAhead: 1.05, mouthDrop: 0.3, side: 0.18, tilt: 0.1, near: 0.07, far: 0.42 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
 const BULL_FISTS = { carryAhead: 0.5, carryOut: 1.1, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
@@ -2363,6 +2372,7 @@ export class ProceduralAnimator {
     this._twoHandPole();
     this._levelPike();
     this._holdBlowgun();
+    this._boxerJab();
     this._carryDory();
     this._applyBullFists();
     this._raiseGuns(dt);
@@ -4140,6 +4150,45 @@ export class ProceduralAnimator {
     const held = new Vector3(0, len * (0.5 - P.fistAt), 0);
     held.rotateByQuaternionToRef(turn, held);
     shaft.position.copyFrom(held);
+  }
+
+  /** Jabs with the gloves (BOXER_JAB) instead of the overhead strike; set by the runtime for the boxer. */
+  jabs = false;
+  private _jabSide = 1;
+  private _jabLastT = Infinity;
+  /** True while a jab drives the arms (the runtime's boxer pose overlay stands aside). */
+  get jabbing(): boolean {
+    return this.jabs && this._state === AnimState.Attacking && this._attackMotion === "strike";
+  }
+
+  /** [S] 463 the boxer's straight jab, the other glove at the guard (spec at BOXER_JAB). */
+  private _boxerJab(): void {
+    if (!this.jabbing || this.walkStyle === "quadruped") return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    if (this._attackTimer < this._jabLastT) this._jabSide = -this._jabSide;
+    this._jabLastT = this._attackTimer;
+    const J = BOXER_JAB, b = this._body;
+    const p = Math.min(this._attackTimer / Math.max(this._attackDuration, 0.001), 1);
+    const ease = (x: number) => x * x * (3 - 2 * x);
+    const ext = p < J.cockAt ? -J.cock * ease(p / J.cockAt)
+      : p < J.drivenAt ? -J.cock + (1 + J.cock) * ease((p - J.cockAt) / (J.drivenAt - J.cockAt))
+      : p < J.heldTo ? 1 : 1 - ease((p - J.heldTo) / (1 - J.heldTo));
+    b.torso.rotation.x += J.lean * Math.max(0, ext) * w;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
+    const hip = b.hip.getAbsolutePosition();
+    const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
+    const { fwd, right } = this._heading();
+    const up = new Vector3(0, 1, 0);
+    for (const side of [1, -1]) {
+      const [shoulderJ, elbowJ, handJ] = side > 0 ? [b.rightShoulder, b.rightElbow, b.rightHand] : [b.leftShoulder, b.leftElbow, b.leftHand];
+      const at = shoulderJ.getAbsolutePosition();
+      const arm = (elbowJ.position.length() + handJ.position.length()) * shoulderJ.absoluteScaling.y;
+      const guard = at.add(fwd.scale(J.guardAhead * u)).add(up.scale(J.guardUp * u)).add(right.scale(-side * J.guardIn * u));
+      const jab = at.add(fwd.scale(J.reach * arm)).add(up.scale(J.jabUp * u));
+      const fist = side === this._jabSide ? Vector3.Lerp(guard, jab, ext) : guard;
+      this._armTo(shoulderJ, elbowJ, handJ, fist, w, 2);
+    }
   }
 
   private _blowgun: { tube: Mesh; grip: Vector3 } | null | undefined = undefined;

@@ -398,6 +398,8 @@ export class RuntimeUnit {
     this.animator.locomotionBias = this._resolveLocomotionBias();
     // [S] the minotaur fights bare-fisted: fists carried before the belly, grab then punch (379; proceduralAnimation BULL_FISTS)
     this.animator.bullFists = definition.id === "ancient.minotaur";
+    // [S] 463 the Boxer jabs straight out, the gloves taking turns (proceduralAnimation BOXER_JAB; audit 457 boxer c.1)
+    this.animator.jabs = definition.id === "legacy.boxer";
     // [S] the sarissa levels his pike in both fists (379; proceduralAnimation PIKE_LEVEL)
     // [S] 463 ...and so does the Pike: levelled two-handed at the hip, thrust along its line (audit 457 pike b.3: "held upright one-handed - TABS:
     // two-handed, levelled forward at the hip"; c.1: "the pike stays vertical when the hit is recorded - TABS: a long levelled pike thrust")
@@ -1878,6 +1880,7 @@ export class RuntimeUnit {
         body.rightElbow.rotation.x -= 0.08;
         break;
       case "boxer":
+        if (this.animator.jabbing) break; // [S] 463 the jab (BOXER_JAB) solved the arms: turning them after would lift the glove off its line
         body.leftShoulder.rotation.z -= 0.24;
         body.rightShoulder.rotation.z += 0.24;
         body.leftElbow.rotation.x -= 0.32;
