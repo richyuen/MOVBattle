@@ -64,3 +64,24 @@ export function buildBowler(scene: Scene, W: number, H: number, seat: number, un
   band.parent = crown;
   return crown;
 }
+
+/*
+ * [S] 445 the Lasso's thrown rope (audit 444 lasso c.1; wild_west.lasso.jpg: a tan rope from the rider's fist, a loop round the man). LASSO_ROPE: a rope
+ * .thick m across, 1 long up +y from its root (the caller places, aims and stretches it), and a loop .loop m across at its end, .loopThick thick; tan rope.
+ */
+const LASSO_ROPE = { thick: 0.045, loop: 0.62, loopThick: 0.06, color: new Color3(0.55, 0.34, 0.13), glow: 0.15 };
+
+/** The rope and its loop (spec at LASSO_ROPE): the rope 1 long up +y from the origin; the loop a ring the caller seats round the man's chest. */
+export function lassoRope(scene: Scene): { rope: Mesh; loop: Mesh } {
+  const R = LASSO_ROPE;
+  const tan = getMaterialFactory().get("cloth", R.color, { emissive: R.color.scale(R.glow) });
+  const rope = MeshBuilder.CreateCylinder("lassoRope", { height: 1, diameter: R.thick, tessellation: 6 }, scene);
+  rope.position.y = 0.5;
+  rope.bakeCurrentTransformIntoVertices();
+  rope.material = tan;
+  rope.isPickable = false;
+  const loop = MeshBuilder.CreateTorus("lassoLoop", { diameter: R.loop, thickness: R.loopThick, tessellation: 14 }, scene);
+  loop.material = tan;
+  loop.isPickable = false;
+  return { rope, loop };
+}

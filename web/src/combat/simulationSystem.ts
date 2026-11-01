@@ -15,6 +15,7 @@ import type { UnitVisualConfig } from "../units/unitVisuals";
 import { HARPOON_MUZZLE, launchRingSword } from "../units/propBuilder";
 import { buildGroundSnake, type GroundSnake } from "../units/ancientDress";
 import { reaperSpear } from "../units/spookyDress";
+import { lassoRope } from "../units/wildWestDress";
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
 import type { PlacementZone } from "../map/placementValidator";
@@ -297,6 +298,16 @@ const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
  */
 const BULLET_RAIN = { units: new Set(["wild_west.gunslinger"]), hold: 1.1, raise: 0.3, up: 22, fall: 0.55, count: 3, every: 0.4, spread: 0.9, splash: 2.5, blast: 0.6 };
 const VAMPIRE_LATCH = { round: 0.7, off: 0.75, up: 0.2, first: 0.3, every: 0.35, afterDeath: 0.5, blood: 12 };
+/**
+ * [S] 445 the Lasso's grab (audit 444 lasso c.1: "missing: lasso throw that grabs and drags the target"; card Characteristics "uses a lasso to grab
+ * units and drag them around; then run them over with its horse"). His attack is never a jab: he throws the rope (wildWestDress LASSO_ROPE) from his
+ * fist onto the man, its loop round the man's chest, and hauls him in: the man is held limp LASSO_DRAG.low m off the ground and pulled along the
+ * ground toward the horse at .pull m/s, the rope taut from the rider's fist to his chest; from .first s on, every .every s the drag is a hit (the
+ * attack's damage spread over its cooldown). When the man is within .under of the horse's body radius of it, or .most s on, the horse runs him over:
+ * a blow of .trample times the attack's damage that throws him .throwUp m/s up and .throwOut m/s on along the haul, and the rope is gone. Logged
+ * "lasso" at the throw.
+ */
+const LASSO_DRAG = { units: new Set(["wild_west.lasso"]), low: 0.12, pull: 1.4, first: 0.3, every: 0.35, under: 0.6, most: 2.4, trample: 1.5, throwUp: 5, throwOut: 4 };
 /*
  * [S] 442 Reaper impale (audit 434 reaper c.2: "missing: tendrils impaling and hanging a weak unit"; card Characteristics: "Their tentacles will impale
  * any weak Units and hang them as an effigy, and will continuously impale the weakling"; spooky.reaper.jpg: a knight hangs high beside his shoulder on a
@@ -542,6 +553,8 @@ export class SimulationSystem {
   private _rains: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; splash: number; upAt: number; drops: { at: Vector3; lands: number; shown: boolean }[] }[] = [];
   // Vampires hanging on a man's neck (VAMPIRE_LATCH): the man, his side, the next draught and its damage, when he lets go (set once the man is dead)
   private _latches = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; next: number; draught: number; until: number }>();
+  // Lassoed men being hauled in (LASSO_DRAG): the rider, the rope, the next drag hit and its damage, when the horse runs him over at the latest
+  private _lassos = new Map<RuntimeUnit, { rider: RuntimeUnit; rope: Mesh; loop: Mesh; at: Vector3; last: number; next: number; hit: number; blow: number; end: number }>();
   // Men hung on a Reaper's tendril (REAPER_IMPALE): who holds him, when he drops (set once he is dead), his next stab, the tendril mesh
   private _impales = new Map<RuntimeUnit, { holder: RuntimeUnit; until: number; next: number; spear: Mesh; yaw: number; tall: number }>();
   private _nextDecisionAt = new Map<RuntimeUnit, number>();
@@ -709,6 +722,8 @@ export class SimulationSystem {
     this._rains = [];
     for (const imp of this._impales.values()) imp.spear.dispose();
     this._impales.clear();
+    for (const l of this._lassos.values()) { l.rope.dispose(); l.loop.dispose(); }
+    this._lassos.clear();
     this._pendingThrows = [];
     this._pendingLaunches = [];
     this._closingFrom.clear();
@@ -799,6 +814,7 @@ export class SimulationSystem {
     if (this._latches.size > 0) this._holdLatches(now);
     if (this._rains.length > 0) this._stepRains(now);
     if (this._impales.size > 0) this._holdImpales(now);
+    if (this._lassos.size > 0) this._haulLassos(now);
     if (this._charges.size > 0) this._trampleCharges(now);
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
     if (this._butts.size > 0) this._landButts(now);
@@ -1052,6 +1068,87 @@ export class SimulationSystem {
       const head = man.body.headTop.getAbsolutePosition();
       this.hitLog.push({ t: now, attackerUnit: unit.definition.id, targetUnit: man.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
     }
+  }
+
+  /** A Lasso's attack: he ropes the man (spec at LASSO_DRAG); false for anyone else, and true while he already hauls someone in. */
+  private _tryLasso(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, cooldown: number, now: number): boolean {
+    const D = LASSO_DRAG;
+    if (!D.units.has(attacker.definition.id)) return false;
+    for (const l of this._lassos.values()) if (l.rider === attacker) return true;
+    if (attacker.isDead || target.isDead || target.linkedParent || isVehicleUnit(target.definition.id) || this._impales.has(target) || this._lassos.has(target)) return false;
+    const { rope, loop } = lassoRope(attacker.body.root.getScene());
+    const at = target.position.clone();
+    at.y = D.low;
+    const lasso = { rider: attacker, rope, loop, at, last: now, next: now + D.first, hit: damage * (D.every / Math.max(D.every, cooldown)), blow: damage * D.trample, end: now + D.most };
+    this._lassos.set(target, lasso);
+    this._haulLasso(target, lasso, now);
+    this._logAbility(attacker, "lasso", now, target.position);
+    return true;
+  }
+
+  /** Pulls a lassoed man a step toward the horse, low and limp, and runs the rope from the rider's fist to his chest (spec at LASSO_DRAG). */
+  private _haulLasso(man: RuntimeUnit, l: { rider: RuntimeUnit; rope: Mesh; loop: Mesh; at: Vector3; last: number }, now: number): void {
+    const D = LASSO_DRAG, h = l.rider;
+    const dt = Math.max(0, now - l.last);
+    l.last = now;
+    const to = h.position.subtract(l.at);
+    to.y = 0;
+    const d = to.length();
+    if (d > 1e-4) l.at.addInPlace(to.scale(Math.min(1, (D.pull * dt) / d)));
+    l.at.y = D.low;
+    man.hangAt(l.at, now + 0.3);
+    man.faceTarget(h.position);
+    worldMatrixChain(h.body.rightHand);
+    const fist = h.body.rightHand.getAbsolutePosition().clone();
+    const chest = l.at.add(new Vector3(0, man.body.metrics.overallHeight * man.body.root.scaling.y * 0.6, 0));
+    const dir = chest.subtract(fist);
+    const len = dir.length();
+    dir.normalize();
+    l.rope.position.copyFrom(fist);
+    l.rope.rotationQuaternion = l.rope.rotationQuaternion ?? new Quaternion();
+    Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, l.rope.rotationQuaternion);
+    l.rope.scaling.set(1, len, 1);
+    l.loop.position.copyFrom(chest);
+  }
+
+  /** Hauls each lassoed man in and drags him (hits); the horse runs him over once he is under it or the haul runs long (spec at LASSO_DRAG). */
+  private _haulLassos(now: number): void {
+    const D = LASSO_DRAG;
+    for (const [man, l] of this._lassos) {
+      const h = l.rider;
+      const gone = h.isDead || !this._units.includes(h) || man.body.root.isDisposed() || man.isDead;
+      const close = Vector3.Distance(new Vector3(h.position.x, 0, h.position.z), new Vector3(l.at.x, 0, l.at.z)) <= h.collisionBodyRadius * D.under;
+      if (gone || close || now >= l.end) {
+        l.rope.dispose();
+        l.loop.dispose();
+        this._lassos.delete(man);
+        if (man.body.root.isDisposed()) continue;
+        man.dropFromHang();
+        if (!gone) {
+          // run over: the horse's blow throws him up and on along the haul
+          const on = h.body.root.getDirection(Vector3.Forward());
+          on.y = 0;
+          if (on.lengthSquared() < 1e-6) on.set(0, 0, 1);
+          on.normalize();
+          this._strikeLogged(h, man, l.blow, on.scale(D.throwOut).add(new Vector3(0, D.throwUp, 0)), now);
+        }
+        continue;
+      }
+      this._haulLasso(man, l, now);
+      if (now < l.next) continue;
+      l.next += D.every;
+      this._strikeLogged(h, man, l.hit, Vector3.Zero(), now);
+    }
+  }
+
+  /** A blow that lands now and goes into the hit log (the capture's plain events). */
+  private _strikeLogged(attacker: RuntimeUnit, man: RuntimeUnit, damage: number, impulse: Vector3, now: number): void {
+    man.applyDamage(damage, impulse);
+    if (this.hitLog.length >= 200) this.hitLog.shift();
+    worldMatrixChain(man.body.headTop);
+    const head = man.body.headTop.getAbsolutePosition();
+    const p = man.position;
+    this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: man.definition.id, x: p.x, y: p.y, z: p.z, head: { x: head.x, y: head.y, z: head.z } });
   }
 
   /** Starts a Reaper's impale on a weak man (spec at REAPER_IMPALE); false when this blow is an ordinary cut. */
@@ -2378,6 +2475,8 @@ export class SimulationSystem {
     if (this._tryHurlLongship(attacker, target, damage, now)) return;
     // [S] 444 a vampire does not swing: he jumps onto the man's neck and drinks (VAMPIRE_LATCH)
     if (this._tryLatch(attacker, target, damage, attackProfile.cooldown * cooldownMultiplier, now)) return;
+    // [S] 445 the Lasso does not jab: he ropes the man and hauls him under the horse (LASSO_DRAG)
+    if (this._tryLasso(attacker, target, damage, attackProfile.cooldown * cooldownMultiplier, now)) return;
 
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
     if (abilities.has("push_force")) {
