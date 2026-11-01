@@ -664,7 +664,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
       // [S] 445 a long dark revolver in each fist (propBuilder REVOLVER), not the pirate flintlock (audit 444 b.1)
       weaponVariant: "revolver_pair", offhandVariant: "revolver_pair", // [S] 446 two revolvers in each fist (REVOLVER pair; critic 445 b.2)
       posePreset: "gunner",
-      materialPreset: "wildwest_leather",
+      // [S] 449 a team-cloth suit (CONFIRM 448 a.1: "tan jacket on the red team"), not the brown wildwest_leather blend
       attachmentPreset: "quickdraw_smoke",
       stateVariants: { attacking: ["quickdraw_smoke"] },
     },
