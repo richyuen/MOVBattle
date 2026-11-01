@@ -792,3 +792,58 @@ export function barrelVest(scene: Scene, body: ArticulatedBody, teamColor: Color
   lay(shirt, 0, H / 2 - (r / 2) * shirt.scaling.x, D / 2 + D * V.proud, white);
   return out;
 }
+
+/*
+ * [S] 466 the Peasant's undersleeves (CONFIRM 465 a.1: "bare team forearms below the short dress sleeves - TABS: tan/brown long undersleeves run from under
+ * the short team sleeve to the wrist, ending in a flared tan cuff"; legacy.peasant.blue.png). PEASANT_SLEEVES: a tan shell .upperOut of the upper arm round
+ * from .from of it (under the dress sleeve's foot) to its end, a tan shell .lowerOut round the forearm to .lowerTo of it, and a flared cuff .cuffOut round
+ * from .cuffFrom to its end. Tan .tan self-lit .glow (lit tan in shade reads grey).
+ */
+const PEASANT_SLEEVES = { from: 0.45, upperOut: 1.2, lowerOut: 1.25, lowerTo: 0.8, cuffFrom: 0.72, cuffOut: 1.75, tan: new Color3(0.85, 0.55, 0.28), glow: 0.22 };
+
+/** The Peasant's tan undersleeves to the wrist with a flared cuff (spec at PEASANT_SLEEVES). */
+export function peasantSleeves(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = PEASANT_SLEEVES;
+  const tan = getMaterialFactory().get("cloth", P.tan, { emissive: P.tan.scale(P.glow) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "peasantUnderSleeve", arm, P.from, 1.0, P.upperOut, tan));
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "peasantUnderSleeve", arm, 0, P.lowerTo, P.lowerOut, tan));
+    out.push(limbShell(scene, "peasantSleeveCuff", arm, P.cuffFrom, 1.0, P.cuffOut, tan));
+  }
+  return out;
+}
+
+/*
+ * [S] 466 the Boxer's bare chest (CONFIRM 465 a.1: "dark vest block covering the chest above the yellow waistband - TABS: bare team-skin chest and
+ * shoulders, nothing between the neck and the yellow waistband"; legacy.boxer.red.png). The trunk and its yoke take the arm's skin material, so the
+ * body's dark clothing shade no longer reads as a vest.
+ */
+export function boxerBareChest(body: ArticulatedBody): void {
+  const skin = body.leftUpperArm.material;
+  if (!skin) return;
+  body.torsoMesh.material = skin;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = skin;
+}
+
+/*
+ * [S] 466 the Flag Bearer's cuffs (audit 457 a.3: "cuffs, bare forearms - TABS: white-and-gold striped cuffs"; legacy.flag_bearer.red.png: a broad white
+ * cuff round each wrist with a gold band at its top and foot). FLAG_CUFFS on each forearm: a white shell BANNER_CUFFS.out round from .from to its end, and
+ * gold bands .band of the forearm tall, a little wider, at the cuff's top and foot.
+ */
+const FLAG_CUFFS = { from: 0.6, band: 0.07, bandOut: 1.6 };
+
+/** The Flag Bearer's white cuffs banded in gold at the wrists (spec at FLAG_CUFFS). */
+export function flagCuffs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = FLAG_CUFFS;
+  const mf = getMaterialFactory();
+  const white = mf.get("cloth", BANNER_COATEE.white, { emissive: BANNER_COATEE.white.scale(BANNER_COATEE.whiteGlow) });
+  const gold = mf.get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(0.2) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "flagCuff", arm, C.from, 1.0, BANNER_CUFFS.out, white));
+    out.push(limbShell(scene, "flagCuffBand", arm, C.from, C.from + C.band, C.bandOut, gold));
+    out.push(limbShell(scene, "flagCuffBand", arm, 1.0 - C.band, 1.0, C.bandOut, gold));
+  }
+  return out;
+}
