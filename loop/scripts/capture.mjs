@@ -470,6 +470,8 @@ async function main() {
           // [evidence 425] the Pirate Queen's Bomb Spin fires when she is outnumbered (card Abilities): she faces her squire and four mates
           // in a file beside it (five to one), so the mechanic can show once it exists (audit 422 c.2)
           if (id === "pirate.pirate_queen") for (const dz of [-1.8, -0.9, 0.9, 1.8]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.3, z: dz });
+          // the quick draw shoots one archer dead in .4 s, before its first arrow (look 445): four more archers in a file behind, so arrows fly at him
+          if (id === "wild_west.quick_draw") for (const dz of [-1.8, -0.9, 0.9, 1.8]) game.spawnUnit("medieval.archer", 0, { x: -d - 1.5, z: dz });
           let ally = null;
           if (support) {
             ally = game.spawnUnit("medieval.squire", 1, { x: d + 2, z: 1.2 });
