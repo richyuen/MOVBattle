@@ -946,8 +946,7 @@ export class UnitFactory {
     // (nor the minotaur: bare fur under his scrolled team girdle, 386 ancientDress MINO_SCROLL; the tunic skirt hid the girdle as a plain flared band)
     // (nor the jarl: a bare chest down to his belt over straight trousers, 406 vikingDress JARL_BELT)
     // (nor the captain: his coat's own skirts hang open to the knee, 428 pirateDress CAPTAIN_COAT)
-    // (nor the Pirate Queen: her own wrap skirt is cut short over bare pale thighs, and the tunic's dark band hung across them, [R] 444 pirateDress QUEEN_LEGLINE)
-    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king" && definition.id !== "ancient.minotaur" && definition.id !== "viking.jarl" && definition.id !== "pirate.captain" && definition.id !== "pirate.pirate_queen") {
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king" && definition.id !== "ancient.minotaur" && definition.id !== "viking.jarl" && definition.id !== "pirate.captain") {
       const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
       const knight = definition.id === "medieval.knight";
       const skirt = knight
