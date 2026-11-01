@@ -314,13 +314,13 @@ const spooky = makeFaction(FactionId.Spooky, "spooky", [
 ]);
 
 const wildWest = makeFaction(FactionId.WildWest, "wild_west", [
-  ["dynamite_thrower", "Dynamite Thrower", 180, "thrower", { weaponHint: "bomb", projectileHint: "bomb" }],
-  ["miner", "Miner", 250, "heavy_melee", { weaponHint: "hammer", hatHint: "hood" }],
-  ["cactus", "Cactus", 300, "heavy_melee", { specialHint: "cactus", size: "large" }],
-  ["gunslinger", "Gunslinger", 400, "rapid_ranged", { abilities: ["rapid_fire"], weaponHint: "flintlock", hatHint: "bandana" }],
-  ["lasso", "Lasso", 500, "charge_melee", { abilities: ["pull_hook", "charge_impact"], specialHint: "horse", weaponHint: "spear" }],
-  ["deadeye", "Deadeye", 650, "gunner", { weaponHint: "musket", hatHint: "bandana", engageRangeOverride: 16 }],
-  ["quick_draw", "Quick Draw", 1000, "rapid_ranged", { abilities: ["rapid_fire"], weaponHint: "flintlock", hatHint: "captain_hat", visualPreset: "iconic_quick_draw", behaviorPreset: "iconic_quick_draw", burstCount: 6, cooldownMultiplier: 0.5 }],
+  ["dynamite_thrower", "Dynamite Thrower", 100, "thrower", { healthMultiplier: 0.55, damageMultiplier: 0.08, cooldownMultiplier: 22.5, weaponHint: "bomb", projectileHint: "bomb" }],
+  ["miner", "Miner", 200, "heavy_melee", { healthMultiplier: 0.8, damageMultiplier: 0.43, cooldownMultiplier: 1.94, weaponHint: "hammer", hatHint: "hood" }],
+  ["cactus", "Cactus", 400, "heavy_melee", { healthMultiplier: 0.64, damageMultiplier: 0.1, cooldownMultiplier: 0.69, specialHint: "cactus", size: "large" }],
+  ["gunslinger", "Gunslinger", 650, "rapid_ranged", { healthMultiplier: 0.14, damageMultiplier: 0.71, cooldownMultiplier: 5.45, abilities: ["rapid_fire"], weaponHint: "flintlock", hatHint: "bandana" }],
+  ["lasso", "Lasso", 740, "charge_melee", { healthMultiplier: 0.69, abilities: ["pull_hook", "charge_impact"], specialHint: "horse", weaponHint: "spear" }],
+  ["deadeye", "Deadeye", 900, "gunner", { healthMultiplier: 0.14, damageMultiplier: 3.53, cooldownMultiplier: 1.39, weaponHint: "musket", hatHint: "bandana", engageRangeOverride: 16 }],
+  ["quick_draw", "Quick Draw", 1200, "rapid_ranged", { abilities: ["rapid_fire"], weaponHint: "flintlock", hatHint: "captain_hat", visualPreset: "iconic_quick_draw", behaviorPreset: "iconic_quick_draw", burstCount: 6, healthMultiplier: 0.17, damageMultiplier: 1.53, cooldownMultiplier: 0.09 }],
 ]);
 
 const legacy = makeFaction(FactionId.Legacy, "legacy", [
