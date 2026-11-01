@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-444 | reaper burst on the impaling blow too (49fad4e0) | spooky.reaper.c | approved
-444 | VAMPIRE_LATCH jump onto the man, pinned at his neck, draughts + BLOOD_DRAIN (9e904930) | spooky.vampire.c | approved
-444 | VAMPIRE_VEST V .12 under the trunk top to mid-chest, torso-frame belt band (681b8603, d1b8f3f4) | spooky.vampire.a | approved
-444 | spooky wheel tyre + hub in PUMPKIN_TIMBER (d50fe07b) | spooky.pumpkin_catapult.a | approved
-444 | [R] QUEEN_LEGLINE hem flipped/raised, pale pelvis, no tunic skirt, guards out (c71c375a, 9e30f921, c4daf42f) | pirate.pirate_queen.a | rejected
-444 | BULLET_RAIN arms up, guns fired skyward, 3 bullets fall with blasts (0e73eb2a) | wild_west.gunslinger.c | approved
 445 | REVOLVER long dark revolver, drum, hammer, raked grip + pistolBell mark (4a52867e, e2029795) | wild_west.gunslinger.b | approved
 445 | BOWLER wildWestDress dark team bowler, dome crown, curled brim (6e54d4ad, b5e033d5) | wild_west.gunslinger.a | approved
 445 | off hand emptied, one gun (58b22c60) | wild_west.quick_draw.b | approved
@@ -45,6 +39,13 @@ for 25 iterations.
 448 | WINCHESTER dark lever-action rifle, lever loop, short stock (2d87dded) | wild_west.deadeye.b | approved
 448 | QUICK_DRAW_SHIRT beige sleeves rolled past the elbow, collar V (3ca4f7f6) | wild_west.quick_draw.a | approved
 448 | MINER_OVERALLS lighter shirt, dark braces, waist band, no skirt (dbef099f) | wild_west.miner.a | approved
+449 | [R] QUEEN_LEGLINE pelvis cut .5, front hem rise, wrap flap at the side (b27052fd) | pirate.pirate_queen.a | rejected (a parked)
+449 | DYNAMITE_WIRES black two-leg wire per stick (3adeea7c) | wild_west.dynamite_thrower.b | approved
+449 | PEAK_HAT team peaked hat, lampshade brim (33c4d5f0) | wild_west.deadeye.a | approved
+449 | PEAK_HAT on the Dynamite Thrower (221f3f5a) | wild_west.dynamite_thrower.a | approved
+449 | CACTUS_BOOTS slim resubmit out 1.15 cuff 1.35 from .55 (a4b9b357) | wild_west.cactus.a | rejected
+449 | no wildwest_leather + GUNSLINGER_SUIT team cloth on trunk, sleeves, coat skirts (b52941b5, 129f319c) | wild_west.gunslinger.a | approved
+449 | MINER_MOUSTACHE black handlebar under the eyes (85c21cb8) | wild_west.miner.a | approved
 
 ## Spent (never retry as [P])
 
@@ -83,10 +84,14 @@ simulationSystem.ts:MINER_BLAST (radius, scale) | 2.5, .5 | 448 | approved | sca
 wildWestDress.ts:GUNSLINGER_TIE (knot, knotTall, top, foot, long, proud, color) | .17, .07, .15, .24, .32, .06, (.42,.14,.63) | 447 | approved | none (before 447)
 wildWestDress.ts:CACTUS_SLEEVE (out, from, to, cap, rows, ring, spike) | 2.2, .04, 1.32, .95, 4, 5, .42 | 447 | approved | arm scale 1.4 + 3 spines (before 447)
 wildWestDress.ts:GUNSLINGER_SIDEBURNS (lumps, lump, top, foot, out, ahead, jag) | 4, .42, .35, -.75, .12, .18, .12 | 448 | approved | none (before 448)
-wildWestDress.ts:CACTUS_BOOTS + unitFactory CACTUS_LONG (from, to, out, cuffFrom, cuff, toe; long) | .42, 1.04, 2.1, .34, 2.5, .85; .5 | 448 | rejected-kept | long .86, no boots (before 448)
+wildWestDress.ts:CACTUS_BOOTS + unitFactory CACTUS_LONG (from, to, out, cuffFrom, cuff, toe; long) | .42, 1.04, 2.1, .34, 2.5, .85; .5 | 449 | rejected-kept | slim .55/1.15/.5/1.35 rejected 449 (a [P] in effect); long .86, no boots (before 448)
 propBuilder.ts:WINCHESTER (long, grip, bore, tube, rcv, rcvDeep, loop, fore, butt, tilt) | 1.12, .3, .03, .75, .14, 2.2, 2.6, .32, .12, -.2 | 448 | approved | MATCHLOCK musket (before 448)
 wildWestDress.ts:QUICK_DRAW_SHIRT (upperOut, lowerOut, lowerTo, cuffFrom, cuffOut, vee, veeLong, color) | 1.45, 1.4, .28, .16, 1.75, .4, .34, (.8,.68,.45) | 448 | approved | bare arms (before 448)
 wildWestDress.ts:MINER_OVERALLS (lift, strap, apart, proud, waist, over) | .35, .1, .22, .04, .22, 1.06 | 448 | approved | leather vest block + tunic skirt (before 448)
+wildWestDress.ts:PEAK_HAT (sides, crown, brim, slope, peak, tall, shade; deadeye + dynamite_thrower) | 8, 1.12, 2.25, .3, .22, .6, .9 | 449 | approved | cowboy_hat (before 449)
+propBuilder.ts:DYNAMITE_WIRES (thick, rise, lean, bend, curl, tail) | .012, .08, .35, .06, 1.1, .09 | 449 | approved | one tan fuse (before 449)
+wildWestDress.ts:GUNSLINGER_SUIT (shade, glow) + unitVisuals gunslinger materialPreset | .8, .12; none | 449 | approved | body.bodyMaterial + wildwest_leather (before 449)
+wildWestDress.ts:MINER_MOUSTACHE (long, thick, droop, at, proud, tip, tipDrop) | .8, .28, .32, -.38, .08, .22, .16 | 449 | approved | long .62 thick .2 tip .17 (449 look); none (before 449)
 spooky.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 434 | stats | values: git show 33bb56af
 spooky b props 434-436 rows (VAMPIRE_CLAWS, STIFFY_SHIELD, STIFFY_SWORD, BONE_BOW, CANDLE_ARMS; b PASS) | compacted 440 | 436 | approved | values: git show 93103dfd:loop/LEDGER.md
 spooky c mechanics 434-435 rows (PUMPKIN_SHOT, FIRE_ARROW, SPIRIT_FIRE, BURN + BURN_STATUS, SPIRIT_LIFT, FEAR_SKULL + STIFFY_FEAR, PUMPKIN_BURST) | compacted 436 | 435 | approved | values: git show e1126012:loop/LEDGER.md
