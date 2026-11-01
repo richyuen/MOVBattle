@@ -358,6 +358,43 @@ export function quickDrawShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 451 the Deadeye's shirt (critic 448-449 deadeye a.2: "bare team arms under a dark vest block - TABS: puffy white long-sleeved shirt under a team V
+ * vest"; wild_west.deadeye.red.png: billowing off-white sleeves from the shoulder to the wrist, fullest over the elbow and forearm, about three arms
+ * across there, gathered into a narrower cuff at the wrist; an off-white collar standing in a deep V at the throat between the vest's fronts).
+ * DEADEYE_SHIRT: sleeves .upperOut of the upper arm round its whole length, .lowerOut of the forearm round to .lowerTo of it, gathered to .cuffOut round
+ * from .lowerTo to the wrist; on the trunk (torso frame, W H D its box) the V .vee W across at the collar to a point .veeLong H down, .proud D off the
+ * front. Off-white cloth self-lit .glow (more than the Quick Draw's beige: a lit white sleeve in shade reads grey, LESSONS).
+ */
+const DEADEYE_SHIRT = { upperOut: 1.75, lowerOut: 1.95, lowerTo: 0.8, cuffOut: 1.35, vee: 0.46, veeLong: 0.4, proud: 0.03, color: new Color3(0.95, 0.9, 0.74), glow: 0.32 };
+
+/** The Deadeye's off-white puffy shirt: full sleeves to the wrist and a collar V (spec at DEADEYE_SHIRT). */
+export function deadeyeShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = DEADEYE_SHIRT;
+  const shirt = getMaterialFactory().get("cloth", S.color, { emissive: S.color.scale(S.glow) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "deadeyeSleeve", arm, 0, 1, S.upperOut, shirt));
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "deadeyeSleeve", arm, 0, S.lowerTo, S.lowerOut, shirt));
+    out.push(limbShell(scene, "deadeyeCuff", arm, S.lowerTo - 0.02, 1, S.cuffOut, shirt));
+  }
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const veeLong = H * S.veeLong;
+  const vee = MeshBuilder.CreateCylinder("deadeyeVee", { height: veeLong, diameterTop: W * S.vee * Math.SQRT2, diameterBottom: 0.002, tessellation: 4 }, scene);
+  vee.rotation.y = Math.PI / 4;
+  vee.bakeCurrentTransformIntoVertices();
+  vee.scaling.z = (D * S.proud) / (W * S.vee);
+  vee.material = shirt;
+  vee.position.set(cx, cy + H / 2 - veeLong / 2, cz + D / 2 + D * S.proud / 2);
+  vee.rotation.copyFrom(tm.rotation);
+  vee.parent = tm.parent;
+  vee.convertToFlatShadedMesh();
+  out.push(vee);
+  return out;
+}
+
+/*
  * [S] 448 the Miner's overalls (critic 447 miner a.3: "overalls: dark team vest block, no braces - TABS: team overall trousers, two dark braces over a
  * lighter team shirt"; card Appearance "team colored overalls"; wild_west.miner.red.png: the trunk a lighter team shirt, two dark straps running
  * straight down its front and back from the shoulders into the waist of the team trousers, no tunic skirt; the trousers come up over the hips).

@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusSleeves, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawShirt, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusSleeves, deadeyeShirt, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawShirt, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -710,6 +710,8 @@ export class UnitFactory {
     if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...quickDrawShirt(this._scene, body));
     // [S] 451 a dark gun belt, a holster on the gun hip and a slanting ammo pouch on the other (wildWestDress GUN_BELT)
     if (definition.id === "wild_west.quick_draw" && !shouldUseVehicleBody) propMeshes.push(...gunBelt(this._scene, body, [1], true));
+    // [S] 451 the Deadeye's off-white puffy shirt: full sleeves to the wrist, collar V (wildWestDress DEADEYE_SHIRT)
+    if (definition.id === "wild_west.deadeye" && !shouldUseVehicleBody) propMeshes.push(...deadeyeShirt(this._scene, body));
     // [S] 448 the Miner's overalls: lighter team shirt, dark braces, team trousers' waist (wildWestDress MINER_OVERALLS)
     if (definition.id === "wild_west.miner" && !shouldUseVehicleBody) propMeshes.push(...minerOveralls(this._scene, body, teamColor));
     // [S] 449 the Miner's black handlebar moustache (wildWestDress MINER_MOUSTACHE)
