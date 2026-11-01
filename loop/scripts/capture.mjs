@@ -663,14 +663,19 @@ async function main() {
           : `unit_${id}: nothing within 9 s (rig ${det.rig.toFixed(2)} m, d ${d.toFixed(1)} m)`);
         if (det.error) continue;
         // [evidence 446] `hold`: the camera is framed at that tick and kept there while the scene runs on to `ticks` (a pair that shows a
-        // displacement, not a re-frame on the moved man); `clean`: smoke particle systems are left out of the frame
+        // displacement, not a re-frame on the moved man); `clean`: smoke particles and gun smoke/flash meshes are left out of the frame
         const take = async (name, ticks, on, { hold = null, clean = false } = {}) => {
           const ok = await page.evaluate(({ id, d, support, ticks, on, s, hold, clean }) => {
             const from = hold ?? ticks;
             const r = from === null ? window.__unitPlace(id, d, support) : window.__unitAt(id, d, support, from);
             if (r) window.__unitFrame(on, s);
             if (r && hold !== null && ticks > hold) window.advanceTime((ticks - hold) * 1000 / 60);
-            if (r && clean) for (const p of window.__ua.body.root.getScene().particleSystems) p.layerMask = 0;
+            if (r && clean) {
+              const sc = window.__ua.body.root.getScene();
+              for (const p of sc.particleSystems) p.layerMask = 0;
+              // a gun's smoke and flash are meshes (projectileSystem spawnMuzzleFlash / _leavePuff / spawnPistolShot), not particles
+              for (const m of sc.meshes) if (/^(trailPuff|flash|pistolFlash|quickdrawSmoke)$/.test(m.name)) m.setEnabled(false);
+            }
             return r;
           }, { id, d, support, ticks, on, s, hold, clean });
           if (ok) await shot(page, name);
