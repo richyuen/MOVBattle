@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerBoots, minerMoustache, minerOveralls, quickDrawCloth, quickDrawShirt, quickDrawVest, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerBoots, minerMoustache, minerOveralls, quickDrawShirt, quickDrawVest, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -975,7 +975,8 @@ export class UnitFactory {
         : bareSkinned && (wearsHideDress(definition.id) || definition.id === "tribal.spear_thrower")
         ? null
         // [R] 430 no tunic skirt on the Monkey King: his waist wrap sits straight on the puffy shorts, and the skirt was the maroon panel (MONKEY_ROBE)
-        : definition.id === "dynasty.monkey_king" || definition.id === "wild_west.miner" // [S] 448 the Miner's overalls hang no skirt (MINER_OVERALLS)
+        // [S] 453 nor the Quick Draw: his vest stops at the belt and the team trousers run straight down from it (CONFIRM 451 quick_draw a.2)
+        : definition.id === "dynasty.monkey_king" || definition.id === "wild_west.miner" || definition.id === "wild_west.quick_draw" // [S] 448 the Miner's overalls hang no skirt (MINER_OVERALLS)
         ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
@@ -990,9 +991,6 @@ export class UnitFactory {
               : definition.id === "wild_west.gunslinger"
                 ? hangSkirt(this._scene, body, "tunicSkirt", GUNSLINGER_JACKET.skirt, GUNSLINGER_JACKET.skirtFlare, gunslingerSuit(teamColor))
               // [S] 452 the Dynamite Thrower's team skirt to the knee (wildWestDress DYNAMITE_SKIRT; gold stripes and hem band below)
-              // [S] 452 the Quick Draw's tunic hem in his team cloth (wildWestDress QUICK_DRAW_VEST)
-              : definition.id === "wild_west.quick_draw"
-                ? hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, quickDrawCloth(teamColor))
               : definition.id === "wild_west.dynamite_thrower"
                 ? hangSkirt(this._scene, body, "tunicSkirt", DYNAMITE_SKIRT.long, DYNAMITE_SKIRT.flare, dynamiteSkirtCloth(teamColor))
               : definition.id === "viking.ice_archer"
