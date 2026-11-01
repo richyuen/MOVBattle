@@ -20,7 +20,7 @@ export type WeaponType =
 export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
-  | "cowboy_hat"
+  | "cowboy_hat" | "bowler"
   | "miner_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
@@ -657,7 +657,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "wild_west.gunslinger": vis(
-    { scale: 1.0, bulk: 0.9, armLength: 1.08 }, "flintlock", "cowboy_hat", "none", "none", "#7F4B24", "flintlock", {
+    { scale: 1.0, bulk: 0.9, armLength: 1.08 }, "flintlock", "bowler", "none", "none", "#7F4B24", "flintlock", {
       // [S] 445 a long dark revolver in each fist (propBuilder REVOLVER), not the pirate flintlock (audit 444 b.1)
       weaponVariant: "revolver", offhandVariant: "revolver",
       posePreset: "gunner",
