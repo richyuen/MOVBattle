@@ -1,4 +1,4 @@
-import { Scene, Color3, Matrix, Mesh, MeshBuilder, Quaternion, Vector3, VertexBuffer, type Material, type TransformNode } from "@babylonjs/core";
+import { Scene, Color3, Matrix, Mesh, MeshBuilder, Quaternion, TransformNode, Vector3, VertexBuffer, type Material, type Node } from "@babylonjs/core";
 import { getMaterialFactory } from "./materialFactory";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { limbBox, limbShell } from "./medievalDress";
@@ -935,5 +935,83 @@ export function cactusSleeves(scene: Scene, body: ArticulatedBody, green: Materi
       }
     }
   }
+  return out;
+}
+
+/** The head's box in the torso's frame: chin, middle height and depth, width, height and depth (as farmerDress / vikingDress). */
+function headInTorso(body: ArticulatedBody): { chin: number; midY: number; midZ: number; wide: number; tall: number; deep: number } {
+  for (let n: Node | null = body.headMesh; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+  body.torso.computeWorldMatrix(true);
+  const box = body.headMesh.getBoundingInfo().boundingBox;
+  const toTorso = body.torso.getWorldMatrix().clone().invert();
+  const pts = box.vectorsWorld.map((v) => Vector3.TransformCoordinates(v, toTorso));
+  const ys = pts.map((p) => p.y), zs = pts.map((p) => p.z), xs = pts.map((p) => p.x);
+  return {
+    chin: Math.min(...ys), midY: (Math.min(...ys) + Math.max(...ys)) / 2, midZ: (Math.min(...zs) + Math.max(...zs)) / 2,
+    wide: Math.max(...xs) - Math.min(...xs), tall: Math.max(...ys) - Math.min(...ys), deep: Math.max(...zs) - Math.min(...zs),
+  };
+}
+
+/*
+ * [S] 453 a brown braid under the hat (critic 451-452 deadeye a.4: "braid: none - TABS: brown braid under the hat"; wild_west.deadeye.red.png and
+ * wild_west.dynamite_thrower.red.png: a thick brown plait leaves the head under the brim beside one cheek, falls over the front of that shoulder and ends
+ * on the upper chest in a dark tie, a little tuft below). WESTERN_BRAID, hung from the torso so it lies on the shoulder whatever the neck does, in the
+ * head's own size (W head widths, H head heights), torso frame: root .apart W out on `side`, .rootUp H above the chin, .rootBack W behind the head's
+ * middle (under the brim); foot .footOut W out, .footDrop H under the chin, .standOff W in front of the chest's front; a quadratic bowed .bow W forward
+ * over the shoulder. .plaits flat lobes .thick W thick along it, every other one .shade darker; a dark tie .band H tall and a tuft .tuft H long at the
+ * foot. Hair brown, self-lit .glow.
+ */
+const WESTERN_BRAID = {
+  apart: 0.42, rootUp: 0.32, rootBack: 0.12, footOut: 0.5, footDrop: 0.85, standOff: 0.12, bow: 0.18,
+  plaits: 5, thick: 0.3, overlap: 1.5, shade: 0.75, band: 0.12, tuft: 0.2,
+  hair: new Color3(0.36, 0.19, 0.09), tie: new Color3(0.12, 0.1, 0.1), glow: 0.14,
+};
+
+/** A brown plait from under the hat over the `side` shoulder onto the chest, a dark tie and tuft at its end (spec at WESTERN_BRAID). */
+export function westernBraid(scene: Scene, body: ArticulatedBody, side: number): Mesh[] {
+  const B = WESTERN_BRAID;
+  const mf = getMaterialFactory();
+  const hair = mf.get("cloth", B.hair, { emissive: B.hair.scale(B.glow) });
+  const dark = mf.get("cloth", B.hair.scale(B.shade), { emissive: B.hair.scale(B.shade * B.glow) });
+  const tieMat = mf.get("cloth", B.tie, { emissive: B.tie.scale(0.1) });
+  const head = headInTorso(body);
+  const H = head.tall, W = head.wide;
+  const chest = body.torsoMesh;
+  const ext = chest.getBoundingInfo().boundingBox.extendSize;
+  const front = chest.position.z + ext.z * chest.scaling.z;
+  const thick = B.thick * W;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: Material): Mesh => {
+    m.material = mat;
+    m.parent = body.torso;
+    out.push(m);
+    return m;
+  };
+  const root = new Vector3(side * B.apart * W, head.chin + B.rootUp * H, head.midZ - B.rootBack * W);
+  const foot = new Vector3(side * B.footOut * W, head.chin - B.footDrop * H, front + B.standOff * W + thick * 0.5);
+  const mid = Vector3.Lerp(root, foot, 0.5);
+  mid.z = Math.max(mid.z, foot.z) + B.bow * W;
+  const along = (t: number): Vector3 => root.scale((1 - t) ** 2).add(mid.scale(2 * t * (1 - t))).add(foot.scale(t * t));
+  const tangent = (t: number): Vector3 => mid.subtract(root).scale(2 * (1 - t)).add(foot.subtract(mid).scale(2 * t)).normalize();
+  const lean = (t: number): number => Math.atan2(-tangent(t).z, -tangent(t).y);
+  const len = Vector3.Distance(root, foot) * 1.05;
+  const step = 1 / B.plaits;
+  for (let k = 0; k < B.plaits; k++) {
+    const t = (k + 0.5) * step;
+    const lobe = put(MeshBuilder.CreateIcoSphere("westernBraid", {
+      radiusX: thick * 0.5, radiusY: len * step * 0.5 * B.overlap, radiusZ: thick * 0.42, subdivisions: 1, flat: true,
+    }, scene), k % 2 ? dark : hair);
+    lobe.position.copyFrom(along(t));
+    lobe.position.x += (k % 2 ? 1 : -1) * thick * 0.08;
+    lobe.rotation.set(lean(t), 0, (k % 2 ? 1 : -1) * 0.35);
+  }
+  const tie = put(MeshBuilder.CreateCylinder("westernBraidTie", { height: B.band * H, diameter: thick * 1.25, tessellation: 7 }, scene), tieMat);
+  tie.position.copyFrom(foot);
+  tie.rotation.x = lean(1);
+  const tuft = put(MeshBuilder.CreateCylinder("westernBraidTuft", { height: B.tuft * H, diameterTop: thick * 0.8, diameterBottom: thick * 1.1, tessellation: 6 }, scene), hair);
+  const down = tangent(1);
+  tuft.position.copyFrom(foot.add(down.scale(B.band * H * 0.5 + B.tuft * H * 0.5)));
+  tuft.rotation.x = lean(1);
+  for (const m of out) m.convertToFlatShadedMesh();
   return out;
 }
