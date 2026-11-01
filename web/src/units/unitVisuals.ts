@@ -649,8 +649,13 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
       stateVariants: { attacking: ["lit_fuse"], "ability-active": ["lit_fuse"] },
     },
   ),
+  // [R] 457 MINER_BUILD (CONFIRM 455 a.1-2: "torso a wide rectangular block ... legs short and stubby"; wild_west.miner.red.png and the faction
+  // lineup: a slim narrow-chested figure as wide as the dynamite thrower beside him, long thin overall legs about half his height, boots to the knee).
+  // Spec: card Size 1.10 keeps scale 1.12; the trunk cut to a lanky Wobbler's (bulk .84, torsoWidth .92, the clubber's thin build), the legs
+  // stretched to half the standing height (legLength 1.16), thinner thighs and shins (upperLegWidth .88, lowerLegWidth .8); his hat, moustache,
+  // braces, dark legs, sleeves, gloves and boots ride the new body (all cut to its boxes)
   "wild_west.miner": vis(
-    { scale: 1.12, bulk: 1.22, headSize: 1.04 }, "pickaxe", "miner_cap", "none", "none", "#6B4A2F", undefined, {
+    { scale: 1.12, bulk: 0.84, torsoWidth: 0.92, headSize: 1.04, legLength: 1.16, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "pickaxe", "miner_cap", "none", "none", "#6B4A2F", undefined, {
       // [S] 445 the long pick axe (propBuilder MINER_PICK), not the short stick (audit 444 b.1)
       // [S] 447 the team miner's cap (wildWestDress MINER_CAP), not the black top hat with a lamp (critic 446 a.1)
       weaponVariant: "miner_pick",

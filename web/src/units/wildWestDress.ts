@@ -397,7 +397,8 @@ export function deadeyeShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
  * a strap .strap W wide each side, .apart W from the middle, .proud D off the front and back, from the top to the foot; the trousers' waist a team band
  * .waist H tall round the trunk's foot, .over of its width and depth. Dark brown straps; all self-lit .glow. The tunic skirt is not hung (unitFactory).
  */
-const MINER_OVERALLS = { lift: 0.35, strap: 0.1, apart: 0.22, proud: 0.04, waist: 0.22, over: 1.06, strapColor: new Color3(0.1, 0.06, 0.04), glow: 0.12 };
+// [R] 457 MINER_BUILD: the waist band flush with the trunk (.over 1.01), not a ledge proud of it (CONFIRM 455 a.1 "a protruding waist slab")
+const MINER_OVERALLS = { lift: 0.35, strap: 0.1, apart: 0.22, proud: 0.04, waist: 0.22, over: 1.01, strapColor: new Color3(0.1, 0.06, 0.04), glow: 0.12 };
 
 /** The Miner's lighter team shirt, two dark braces and the overall trousers' waist (spec at MINER_OVERALLS). */
 export function minerOveralls(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -1041,7 +1042,7 @@ export function dynamiteShirt(scene: Scene, body: ArticulatedBody, teamColor: Co
  * boot tops). MINER_LEGS: the pelvis, thighs and shins in dark team cloth (the team colour times .shade, self-lit .glow); a 6-sided trouser leg .out of
  * the thigh's half-width round it its whole length, and on the shin .shinOut round from its top to .shinTo of it, inside the boot's turned top.
  */
-const MINER_LEGS = { shade: 0.3, glow: 0.12, out: 1.18, shinOut: 1.12, shinTo: 0.3 }; // [S] 455 shade .55 read the shirt's pale team colour (455 look)
+const MINER_LEGS = { shade: 0.3, glow: 0.12, out: 1.08, shinOut: 1.06, shinTo: 0.3 }; // [R] 457 MINER_BUILD: slim trouser legs (out 1.18, shinOut 1.12 before) // [S] 455 shade .55 read the shirt's pale team colour (455 look)
 
 /** The Miner's dark team overall legs, from the waist into the boots (spec at MINER_LEGS). */
 export function minerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
