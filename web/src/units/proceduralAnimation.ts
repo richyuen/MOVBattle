@@ -723,7 +723,7 @@ const MINER_UPRIGHT = { tilt: 0.06, stride: 0.12, lean: 0.06, chin: 0.06 };
  * haft's line (its +y, fist to head) leant .back toward his back and .out off his side; the off hand takes the haft under it (_twoHandPole, POLE_GRIP.minerHaft).
  * Blended out under the aimed blow (_aimWeight).
  */
-const PICK_SHOULDER = { side: 0.32, up: 0.95, front: 0.42, back: 0.3, out: 0.12, arm: { raise: -1.6, turn: 0.4, elbow: -1.7 } };
+const PICK_SHOULDER = { side: 0.15, up: 1.25, front: 0.5, back: 0.3, out: 0.12, arm: { raise: -1.6, turn: 0.4, elbow: -1.7 } };
 const THROW_LET_GO = 0.5;
 /*
  * Two-hand boulder (vfx.k; units/tribal.stoner). Spec read off the reference: the boulder, about .38 of his height across, is held in front of the belly in both
