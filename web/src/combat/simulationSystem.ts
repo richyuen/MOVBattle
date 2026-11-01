@@ -287,6 +287,15 @@ const HALFLING_CLING = { round: 0.55, off: 0.85, up: 0.32, afterDeath: 2.5 };
  * drinks every .every s (the attack's damage spread over its cooldown), each draught a hit in the hit log, blood welling out of the man's neck the whole
  * time (visualEffects BLOOD_DRAIN). He drops off .afterDeath s after the man dies, or when he dies. Logged "bite" at the jump.
  */
+/**
+ * [S] 444 Bullet Rain (audit 444 gunslinger c.1: "missing: bullets fired upward that rain back down"; card Characteristics "shoots bullets upwards,
+ * which fall back down onto units, as if it's raining bullets", Weapons count 3, per projectile .4 s, explosion radius 2.5; wild_west.gunslinger.jpg:
+ * both arms straight up, the revolvers firing into the sky, smoke over his head). His attack raises both arms straight up (ProceduralAnimator.gunsUp,
+ * for .hold s); .raise s in, with the arms up, every gun fires straight up (a flash and puff at each muzzle, a streak .up m into the sky; logged
+ * "burst"); .fall s later the first of .count bullets comes down on the man, one every .every s, each landing within .spread m of where he stands as it
+ * falls: a streak from .up m over the spot to the ground, then a small blast (.blast) that deals the attack's damage out to .splash m.
+ */
+const BULLET_RAIN = { units: new Set(["wild_west.gunslinger"]), hold: 1.1, raise: 0.3, up: 22, fall: 0.55, count: 3, every: 0.4, spread: 0.9, splash: 2.5, blast: 0.6 };
 const VAMPIRE_LATCH = { round: 0.7, off: 0.75, up: 0.2, first: 0.3, every: 0.35, afterDeath: 0.5, blood: 12 };
 /*
  * [S] 442 Reaper impale (audit 434 reaper c.2: "missing: tendrils impaling and hanging a weak unit"; card Characteristics: "Their tentacles will impale
@@ -529,6 +538,8 @@ export class SimulationSystem {
   private _strikeReadyAt = new Map<RuntimeUnit, number>();
   // Halflings holding on to their man (HALFLING_CLING): the man, the side he hangs on, when he lets go (set once the man is dead)
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
+  // Gunslingers' volleys into the sky and the bullets coming down (BULLET_RAIN): when the guns fire up, then each bullet's spot and landing time
+  private _rains: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; splash: number; upAt: number; drops: { at: Vector3; lands: number; shown: boolean }[] }[] = [];
   // Vampires hanging on a man's neck (VAMPIRE_LATCH): the man, his side, the next draught and its damage, when he lets go (set once the man is dead)
   private _latches = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; next: number; draught: number; until: number }>();
   // Men hung on a Reaper's tendril (REAPER_IMPALE): who holds him, when he drops (set once he is dead), his next stab, the tendril mesh
@@ -695,6 +706,7 @@ export class SimulationSystem {
     this._clings.clear();
     for (const v of this._latches.keys()) v.holdHeading(null);
     this._latches.clear();
+    this._rains = [];
     for (const imp of this._impales.values()) imp.spear.dispose();
     this._impales.clear();
     this._pendingThrows = [];
@@ -785,6 +797,7 @@ export class SimulationSystem {
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
     if (this._latches.size > 0) this._holdLatches(now);
+    if (this._rains.length > 0) this._stepRains(now);
     if (this._impales.size > 0) this._holdImpales(now);
     if (this._charges.size > 0) this._trampleCharges(now);
     if (this._snakes.length > 0) this._slitherSnakes(dt, now);
@@ -938,6 +951,51 @@ export class SimulationSystem {
       unit.stopMoving();
       unit.teleportTo(at);
       unit.faceTarget(man.position);
+    }
+  }
+
+  /** Fires each gunslinger's guns into the sky and brings the bullets down on his man (spec at BULLET_RAIN). */
+  private _stepRains(now: number): void {
+    const R = BULLET_RAIN;
+    for (let k = this._rains.length - 1; k >= 0; k--) {
+      const rain = this._rains[k];
+      if (rain.upAt > 0 && now >= rain.upAt) {
+        rain.upAt = 0;
+        if (rain.attacker.isDead) { this._rains.splice(k, 1); continue; }
+        const bells = this._pistolBells(rain.attacker);
+        if (bells.length === 0) bells.push(rain.attacker.body.rightHand.getAbsolutePosition().clone());
+        for (const bell of bells) this.projectileSystem?.spawnPistolShot([bell], bell.add(new Vector3(0, R.up, 0)));
+        this._logAbility(rain.attacker, "burst", now, rain.target.position);
+        for (let i = 0; i < R.count; i++) rain.drops.push({ at: Vector3.Zero(), lands: now + R.fall + i * R.every, shown: false });
+      }
+      for (let i = rain.drops.length - 1; i >= 0; i--) {
+        const d = rain.drops[i];
+        // the streak sets off as far ahead of the landing as the fall takes at the shot's speed
+        if (!d.shown && now >= d.lands - R.up / 65) {
+          d.shown = true;
+          const a = Math.random() * Math.PI * 2, r = Math.random() * R.spread;
+          d.at = new Vector3(rain.target.position.x + Math.cos(a) * r, Math.max(0, rain.target.position.y), rain.target.position.z + Math.sin(a) * r);
+          this.projectileSystem?.spawnPistolShot([d.at.add(new Vector3(0, R.up, 0))], d.at, 0.01);
+        }
+        if (d.shown && now >= d.lands) {
+          rain.drops.splice(i, 1);
+          this.visualEffects?.spawnExplosionBurst(d.at, R.blast);
+          let hit: RuntimeUnit | null = null, best = rain.splash * rain.splash;
+          for (const u of this._units) {
+            if (u.isDead || u.team === rain.attacker.team) continue;
+            const dd = Vector3.DistanceSquared(new Vector3(u.position.x, 0, u.position.z), new Vector3(d.at.x, 0, d.at.z));
+            if (dd <= best) { best = dd; hit = u; }
+          }
+          if (hit) {
+            this._applySplashDamage(d.at, rain.splash, rain.attacker.team, rain.damage, rain.knockback.scale(0.4), hit, rain.knockback.scale(0.4));
+            if (this.hitLog.length >= 200) this.hitLog.shift();
+            worldMatrixChain(hit.body.headTop);
+            const head = hit.body.headTop.getAbsolutePosition();
+            this.hitLog.push({ t: now, attackerUnit: rain.attacker.definition.id, targetUnit: hit.definition.id, x: d.at.x, y: d.at.y, z: d.at.z, head: { x: head.x, y: head.y, z: head.z } });
+          }
+        }
+      }
+      if (rain.upAt === 0 && rain.drops.length === 0) this._rains.splice(k, 1);
     }
   }
 
@@ -2588,6 +2646,13 @@ export class SimulationSystem {
     if (preset === "secret_bomb_cannon") {
       this._fireVolley(attacker, target, damage, knockback, Math.max(2, attacker.definition.volleyCount ?? 2));
       this._applyOnHitStatuses(attacker, target, now, impactOrigin);
+      return;
+    }
+
+    // [S] 444 the Gunslinger fires his revolvers into the sky and the bullets rain down on the man (BULLET_RAIN)
+    if (BULLET_RAIN.units.has(attacker.definition.id)) {
+      attacker.animator.gunsUp(BULLET_RAIN.hold);
+      this._rains.push({ attacker, target, damage, knockback, splash: Math.max(splashRadius, BULLET_RAIN.splash), upAt: now + BULLET_RAIN.raise, drops: [] });
       return;
     }
 

@@ -255,6 +255,7 @@ const NORSE_BOARD = { ahead: 0.06, drop: 0.05, inward: 0.6 };
 const KATANA_REST = { ahead: 0.16, drop: 0.24, lean: 0.12, under: 0.9, settle: 0.8 };
 // [S] 431 the Pirate Queen's crossed blades at rest (see _restQueenBlades)
 // [R] 444 the fists hang outside the hips, the bowl guards beside the thighs and not before them (pirateDress QUEEN_LEGLINE): out .05 -> .12, ahead .14 -> .08, drop .3 -> .24
+const GUNS_UP = { reach: 0.95, out: 0.2, in: 0.12, out_: 0.3 };
 const QUEEN_GUARD = { out: 0.12, ahead: 0.08, drop: 0.24, cross: 0.6, lean: 0.2, stagger: 0.04, settle: 0.8 };
 const MONK_REST = { ahead: 0.14, inward: 0.08, drop: 0.16, tilt: 0.06 };
 /** [S] 412 the bo swing (_restMonkBo while attacking): the shaft line turned .back rad behind by .cock of the attack, round to .through rad in front by .hit; fists .reach further ahead at the hit; the far end raised .raise (rise per unit across) when cocked, dipped .dip at the hit. */
@@ -1366,6 +1367,37 @@ export class ProceduralAnimator {
   bullFists = false;
 
   /** The fists carry (BULL_FISTS), stood or marching, eased out under the charge run. */
+  /*
+   * [S] 444 the Gunslinger's Bullet Rain pose (simulationSystem BULLET_RAIN; wild_west.gunslinger.jpg: both arms straight up over his head, the
+   * revolvers pointing at the sky): for the seconds gunsUp() asks, each fist is solved onto a point a full arm (.reach of it) straight over its
+   * shoulder and .out of the arm outside it; eased in over .in s and out over .out_ s. It runs after the gun aims, so it wins over them.
+   */
+  private _gunsUpLeft = 0;
+  private _gunsUpW = 0;
+  /** Raises both arms straight up for `seconds` (spec at _raiseGuns). */
+  gunsUp(seconds: number): void {
+    this._gunsUpLeft = Math.max(this._gunsUpLeft, seconds);
+  }
+  private _raiseGuns(dt: number): void {
+    const G = GUNS_UP;
+    this._gunsUpW = this._gunsUpLeft > 0 ? Math.min(1, this._gunsUpW + dt / G.in) : Math.max(0, this._gunsUpW - dt / G.out_);
+    this._gunsUpLeft = Math.max(0, this._gunsUpLeft - dt);
+    const w = this._gunsUpW * (1 - Math.min(1, this._limp));
+    if (w <= 0.01) return;
+    const b = this._body;
+    for (const [shoulderJ, elbowJ, handJ] of [[b.rightShoulder, b.rightElbow, b.rightHand], [b.leftShoulder, b.leftElbow, b.leftHand]] as const) {
+      if (!shoulderJ || !elbowJ || !handJ) continue;
+      const chain: TransformNode[] = [];
+      for (let n: TransformNode | null = shoulderJ; n; n = n.parent as TransformNode | null) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      const arm = (elbowJ.position.length() + handJ.position.length()) * shoulderJ.absoluteScaling.y;
+      const outward = Vector3.TransformNormal(new Vector3(Math.sign(shoulderJ.position.x) || 1, 0, 0), b.root.getWorldMatrix());
+      outward.y = 0;
+      if (outward.lengthSquared() > 1e-6) outward.normalize();
+      const fist = shoulderJ.getAbsolutePosition().add(new Vector3(0, arm * G.reach, 0)).addInPlace(outward.scale(arm * G.out));
+      this._armTo(shoulderJ, elbowJ, handJ, fist, w, 2);
+    }
+  }
   private _applyBullFists(): void {
     if (!this.bullFists || this.walkStyle === "quadruped" || (this._state !== AnimState.Idle && this._state !== AnimState.Walking)) return;
     const b = this._body, F = BULL_FISTS, k = (1 - this._charge) * (1 - Math.min(1, this._limp));
@@ -2248,6 +2280,7 @@ export class ProceduralAnimator {
     this._levelPike();
     this._carryDory();
     this._applyBullFists();
+    this._raiseGuns(dt);
     this._hangFlasks();
     this._carryBoulder();
     this._holdPalette();
