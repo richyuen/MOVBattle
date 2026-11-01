@@ -3496,7 +3496,10 @@ function buildPriestStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
 const CHARGE_FLAG = { long: 1.55, thick: 0.022, grip: 0.3, ball: 0.07, wide: 0.48, tall: 0.36, slab: 0.012, edge: 0.03, proud: 1.8, emblem: 0.1, glow: 0.15 };
 const CHARGE_PENNANT = { wide: 0.15, tall: 0.46, bar: 0.02, ring: 0.025, ringOut: 1.9, ringGap: 0.07 };
 const LEGACY_GOLD = new Color3(0.95, 0.66, 0.16);
-const TEAM_GLOVE = { wide: 0.11, squash: 0.92, band: 0.025, glow: 0.06, shade: 0.5 }; // 458 [P]: the team colour x .5, glow .06 (critic 457: the mitt read near-white; glow .15, x1 before) // 457b: wide .17 swallowed the forearm, its white band a disc to the camera
+// [S] 466 bigger than his head, in the team colour, a white palm patch (CONFIRM 465 b.1: "small grey octagonal knobs, about half the head's width - TABS:
+// team-coloured gloves bigger than the head with a white palm patch"; legacy.boxer.red.png): wide .22, subdivisions 2, team x .8 self-lit .1, a white
+// patch .palm of the glove across on its inner (+x) side, .palmProud out
+const TEAM_GLOVE = { wide: 0.22, squash: 0.92, band: 0.025, glow: 0.1, shade: 0.8, palm: 0.55, palmProud: 0.9 }; // 458 [P]: the team colour x .5, glow .06 (critic 457: the mitt read near-white; glow .15, x1 before) // 457b: wide .17 swallowed the forearm, its white band a disc to the camera
 const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
 function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const F = CHARGE_FLAG, H = fit.stand, L = F.long * H, r = F.thick * H;
@@ -4264,7 +4267,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         // fists"; legacy.boxer.blue.png: a big rounded team mitt swallowing each hand, a white cuff band at the wrist). TEAM_GLOVE: the mitt centred on
         // the fist (the prop's origin), .wide of s across so it covers the hand box, squashed .squash; a white band .band round it on the wrist side.
         const G = TEAM_GLOVE;
-        const glove = MeshBuilder.CreateIcoSphere("teamGlove", { radius: G.wide * s / 2, subdivisions: 1 }, scene);
+        const glove = MeshBuilder.CreateIcoSphere("teamGlove", { radius: G.wide * s / 2, subdivisions: 2 }, scene);
         glove.scaling.set(1, G.squash, 1.12);
         glove.material = mat(scene, (teamColor ?? accent).scale(G.shade), G.glow, "cloth");
         glove.convertToFlatShadedMesh();
@@ -4273,6 +4276,12 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         band.parent = glove;
         band.material = mat(scene, new Color3(0.95, 0.93, 0.88), G.glow, "cloth");
         band.convertToFlatShadedMesh();
+        const palm = MeshBuilder.CreateIcoSphere("teamGlovePalm", { radius: G.wide * s * G.palm / 2, subdivisions: 1 }, scene);
+        palm.scaling.set(0.3, 1, 1);
+        palm.position.x = G.wide * s / 2 * G.palmProud;
+        palm.parent = glove;
+        palm.material = mat(scene, new Color3(0.95, 0.93, 0.88), G.glow * 2, "cloth");
+        palm.convertToFlatShadedMesh();
         return glove;
       }
       const cuff = MeshBuilder.CreateCylinder("boxingCuff", { height: 0.08 * s, diameter: 0.06 * s, tessellation: 10 }, scene);
