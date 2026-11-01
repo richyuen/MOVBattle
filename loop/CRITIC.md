@@ -61,7 +61,7 @@ Then the tail:
 ```
 RANKED GAPS:
 1. [S|P] <id>.<letter> <gap> — blocker <n>: <mechanism> — ref: <file> — ours: <png>
-... max 12 across the batch; at most 2 per unit; at least 8 [S] (fewer only when fewer FAIL criteria exist); at most 2 [P]; cheapest clear wins
+... max 12 across the batch; at most 3 per unit; at least 8 [S] (fewer only when fewer FAIL criteria exist); at most 2 [P]; cheapest clear wins
 ```
 
 RE-AUDIT: when the prompt names criteria to re-audit (after an evidence change) you score only those from scratch, with a new closed list per FAIL, and copy the others from the unit file's Verdicts block you are given; a `<faction>:re` batch (retired after `farmer:re`) is a full AUDIT of every unit of that faction, done ones included.
@@ -86,7 +86,7 @@ Then the tail:
 REGRESSIONS: none | <unit.criterion that got worse> -> attributed to <sha or all>
 RANKED GAPS:
 1. [S|P] <unitId>.<letter> <gap> — blocker <n>: <mechanism> — ref: <file> — ours: <png>
-... max 12 across the batch's open units, at most 2 per unit; at least 4 [S]; at most 2 [P], each naming the [S] gap it is fallout of; a `plateau`
+... max 12 across the batch's open units, at most 3 per unit; at least 4 [S]; at most 2 [P], each naming the [S] gap it is fallout of; a `plateau`
    criterion gets exactly one [R] entry naming the mechanism to rebuild and the reference to spec it from, and no [S]
 ```
 A unit is done when a, b, c and d all PASS and a CONFIRM critic agrees; then it is not judged again.
