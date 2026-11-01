@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusSleeves, gunslingerJacket, gunslingerSideburns, minerMoustache, minerOveralls, quickDrawShirt, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusSleeves, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawShirt, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -978,7 +978,7 @@ export class UnitFactory {
               ? hangSkirt(this._scene, body, "painterSweaterHem", PAINTER_SWEATER.long, PAINTER_SWEATER.flare, body.bodyMaterial)
               // [S] 409 the Ice Archer's coat skirt to mid-thigh in her coat cloth (vikingDress ICE_ARCHER_COAT)
               : definition.id === "wild_west.gunslinger"
-                ? hangSkirt(this._scene, body, "tunicSkirt", GUNSLINGER_JACKET.skirt, GUNSLINGER_JACKET.skirtFlare, body.bodyMaterial)
+                ? hangSkirt(this._scene, body, "tunicSkirt", GUNSLINGER_JACKET.skirt, GUNSLINGER_JACKET.skirtFlare, gunslingerSuit(teamColor))
               : definition.id === "viking.ice_archer"
                 ? hangSkirt(this._scene, body, "tunicSkirt", ICE_ARCHER_COAT.skirt, ICE_ARCHER_COAT.flare, iceArcherCoatCloth(teamColor))
                 : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, definition.id === "viking.headbutter" ? headbutterTunicCloth(teamColor) : body.bodyMaterial);

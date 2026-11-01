@@ -239,11 +239,25 @@ export const GUNSLINGER_JACKET = {
   shirt: new Color3(0.78, 0.66, 0.46), glow: 0.12,
 };
 
+/*
+ * [S] 449 the suit cloth (CONFIRM 448 a.1: "the coat, sleeves and coat skirts are tan/khaki and the red shows only on the legs and face - TABS: the whole
+ * suit jacket is team red, the same tone as the trousers"): the faction tint and the warm-cloth hue shift turn red-team body cloth tan, so the trunk,
+ * sleeves and coat skirts wear the team colour itself times GUNSLINGER_SUIT.shade, self-lit .glow.
+ */
+const GUNSLINGER_SUIT = { shade: 0.8, glow: 0.12 };
+
+/** The Gunslinger's team suit cloth (spec at GUNSLINGER_SUIT); the factory caches it by colour, so the coat skirts share it. */
+export function gunslingerSuit(teamColor: Color3): Material {
+  const c = teamColor.scale(GUNSLINGER_SUIT.shade);
+  return getMaterialFactory().get("cloth", c, { emissive: c.scale(GUNSLINGER_SUIT.glow) });
+}
+
 /** The Gunslinger's team suit jacket: full sleeves with beige cuffs, a shirt V and two lapels (spec at GUNSLINGER_JACKET). */
 export function gunslingerJacket(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const J = GUNSLINGER_JACKET;
   const mf = getMaterialFactory();
-  const cloth = body.bodyMaterial;
+  const cloth = gunslingerSuit(teamColor);
+  for (const m of body.allMeshes) if (m.material === body.bodyMaterial) m.material = cloth;
   const shirt = mf.get("cloth", J.shirt, { emissive: J.shirt.scale(J.glow * 1.5) });
   const lapelColor = teamColor.scale(J.lapelShade);
   const lapelMat = mf.get("cloth", lapelColor, { emissive: lapelColor.scale(J.glow) });
