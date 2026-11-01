@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-453 | no tunic skirt on the Quick Draw (f1e7c5e9) | wild_west.quick_draw.a | approved (a PASS)
-453 | DYNAMITE_BOOTS black boots, folded cuff (7d3f3350) | wild_west.dynamite_thrower.a | approved
-453 | GUNSLINGER_SHOES small black shoes (de84002b) | wild_west.gunslinger.a | approved (a PASS)
-453 | WESTERN_BRAID brown plait over the off shoulder (ca4802eb) | wild_west.deadeye.a | approved (a PASS)
-453 | MINER_UPRIGHT idle stance, chin up (8e7167ae) | wild_west.miner.a | approved
-453 | PICK_SHOULDER pick shouldered at rest (0a616333) | wild_west.miner.b | approved (none struck)
-453 | pinto coat + patches cloth, out of the glow layer, orange, peach (37b8faec) | wild_west.lasso.a | approved
 454 | WINCHESTER_AIM two-hand levelled aim + GUN_WARMUP 1 s (6a7b4719) | wild_west.deadeye.c | approved (none struck)
 454 | WESTERN_BRAID on the Dynamite Thrower (e92d6925) | wild_west.dynamite_thrower.a | approved (a PASS)
 454 | MINER_HAT tall faceted crown, sloped brim (96109e64) | wild_west.miner.a | approved
@@ -41,6 +34,12 @@ for 25 iterations.
 457 | TEAM_GLOVE team mitt centred on the fist, white band (4e6b33f9, bc99e306) | legacy.boxer.b | approved
 457 | POACHER_HAT dark felt wide brim, team band (23a90927) | legacy.poacher.a | approved
 457 | PEASANT_HOOD team cowl, peak, collar (863f64ea) | legacy.peasant.a | rejected (reverted da3672d0)
+458 | [R] MINER_HAT slouched: lampshade brim, tapered crown, blunt cap (db88c15a) | wild_west.miner.a | approved (struck 1, added 2: eyes; CONFIRM failed a)
+458 | PEASANT_HOOD resubmit, gap turned onto the face (2692a0f1) | legacy.peasant.a | approved (struck 2)
+458 | POLE_GRIP.bearerPole off fist on the shaft (6864fd6b) | legacy.flag_bearer.b + legacy.banner_bearer.b | approved (none struck)
+458 | STAY_BANNER beam 1.0 H, banners at its ends (20dbf14b) | legacy.banner_bearer.b | approved (struck 4)
+458 | POACHER_HAIR pale side locks, back sheet, braids (07b24943) | legacy.poacher.a | approved (struck 2)
+458 | barrel roller lanky build 1.00x (336bafe3) | legacy.barrel_roller.a | approved (struck 1)
 
 ## Spent (never retry as [P])
 
@@ -64,7 +63,7 @@ wildWestDress.ts:MINER_MOUSTACHE (long, thick, droop, at, proud, tip, tipDrop) |
 wildWestDress.ts:MINER_BOOTS (from, to, out, cuffFrom, cuff, color, glow) | .14, 1.04, 1.25, .06, 1.45, (.12,.065,.04), .1 | 452 | approved | plain team feet (before 452)
 proceduralAnimation.ts:MINER_UPRIGHT (tilt, stride, lean, chin) | .06, .12, .06, .06 | 453 | approved | hashed stance, sunk crouch chin -.22 (before 453)
 proceduralAnimation.ts:PICK_SHOULDER (side, up, front, back, out, arm raise/turn/elbow) | .15, 1.25, .5, .3, .12, -1.6/.4/-1.7 | 454 | approved | .32, .95, .42 (453, fists at the chest); up .05 (453 probe); pick on the fist rest (before 453)
-wildWestDress.ts:MINER_HAT (sides, crown, brim, slope, top, tall, tilt, shade, glow) | 8, 1.2, 1.85, .16, .86, .75, .14, .9, .12 | 454 | approved | MINER_CAP skullcap + bill (447-453)
+wildWestDress.ts:MINER_HAT [R] 458 (sides, crown, brim, slope, top, tall, cap, capTall, tilt, shade, glow) | 8, 1.16, 2.2, .3, .62, .5, .32, .16, .1, .9, .12 | 458 | approved | 8, 1.2, 1.85, .16, .86, .75 (stovepipe, 454-457); MINER_CAP skullcap + bill (447-453)
 wildWestDress.ts:MINER_LEGS (shade, glow, out, shinOut, shinTo) + MINER_SLEEVES (upperOut, lowerOut, cuffFrom, cuffOut, glove, glow) | .3, .12, 1.08, 1.06, .3; 1.22, 1.18, .55, 1.55, (.72,.5,.26), .15 | 457 | approved | out 1.18 shinOut 1.12 (455-456); shade .55 (455 look); bare team legs and arms (before 455)
 spooky.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 434 | stats | values: git show 33bb56af
 spooky b props 434-436 rows (VAMPIRE_CLAWS, STIFFY_SHIELD, STIFFY_SWORD, BONE_BOW, CANDLE_ARMS; b PASS) | compacted 440 | 436 | approved | values: git show 93103dfd:loop/LEDGER.md
@@ -81,7 +80,10 @@ spooky.candlehead done 438-440 rows (CANDLE_TOWER, CANDLE_ROBE, CANDLE_BOOTS; a 
 unitVisuals.ts:wild_west.miner MINER_BUILD [R] 457 (bulk, torsoWidth, legLength, upperLegWidth, lowerLegWidth) | .84, .92, 1.16, .88, .8 | 457 | approved | bulk 1.22, default torso and legs (before 457)
 legacy_1 stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 8 units) | d PASS 6/8 (bearers deal no damage: an [S]) | 457 | stats | values: git show 5d6b5d24
 propBuilder.ts:CHARGE_FLAG (long, thick, grip, ball, wide, tall, slab, edge, proud, emblem, glow) + LEGACY_GOLD, LEGACY_POLE | 1.55, .022, .3, .07, .48, .36, .012, .03, 1.8, .1, .15 | 457 | approved | staff log + orb (before 457)
-propBuilder.ts:STAY_BANNER (long, grip, beam, bar, knob, spike, wide, tall, gap, edge, tower) | 1.5, .3, .62, .03, .05, .09, .27, .42, .03, .025, .08 | 457 | approved | staff log + orb (before 457)
-proceduralAnimation.ts:uprightPole marker -> PRIEST_HOLD (a staff named staff with an uprightPole child) | Healer's planted hold | 457 | approved | staff slant + waving arm (before 457)
-propBuilder.ts:TEAM_GLOVE (wide, squash, band, glow) | .11, .92, .025, .15 | 457 | approved | wide .17 (457 look); maroon ball on a cuff off the fist (before 457)
+propBuilder.ts:STAY_BANNER (long, grip, beam, bar, knob, spike, wide, tall, inset, edge, tower) | 1.5, .3, 1.0, .03, .05, .09, .27, .42, .02, .025, .08 | 458 | approved | beam .62, banners .03 apart at the pole (457); staff log + orb (before 457)
+proceduralAnimation.ts:uprightPole marker -> PRIEST_HOLD + POLE_GRIP.bearerPole (off fist span) | Healer's planted hold; [.06, .24] | 458 | approved | one hand, the other raised (457); staff slant (before 457)
+propBuilder.ts:TEAM_GLOVE (wide, squash, band, glow, shade) | .11, .92, .025, .06, .5 | 458 | approved | glow .15 x1 near-white (457); wide .17 (457 look); maroon ball off the fist (before 457); no further [P] on its colour
 legacyDress.ts:POACHER_HAT (sides, crown, flare, tall, dome, brim, thick, band, glow, felt) | 10, 1.1, .92, .2, .12, 2.0, .04, .11, .12, (.17,.11,.07) | 457 | approved | hood dome over the face (before 457)
+legacyDress.ts:POACHER_HAIR (side, top, foot, back, front, braid, braidFoot, knots, color, glow) | .22, .55, 1.25, 1.05, .45, .14, 1.75, 4, (.92,.92,.9), .22 | 458 | approved | none (before 458)
+unitVisuals.ts:legacy.barrel_roller build (scale, bulk, legLength, armLength, upperLegWidth, lowerLegWidth) | 1.0, .82, 1.08, 1.06, .9, .85 | 458 | approved | 1.24, 1.48 brute (before 458)
+legacyDress.ts:PEASANT_HOOD (wide, deep, tall, at, open, peak, back, collar, collarTall, neck, shade, glow) + rotation.y +PI | 1.24, 1.2, 1.2, .42, .34, .28, .08, 1.32, .24, 1.02, .72, .12 | 458 | approved | gap at the back (457 rejected)
