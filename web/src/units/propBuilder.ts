@@ -6392,7 +6392,8 @@ function buildLongPike(scene: Scene, s: number): Mesh {
  * rope wraps .wrap long, .wrapOut of the stave across, at +-.wrapAt of the half-length; nock bands at +-.nockAt. Names "bow" and "string" kept (the
  * bow seat finds them); carried across the front like the ice bow (the iceBowCarry mark, _restIceBow).
  */
-const POACHER_BOW = { long: 0.62, thick: 0.085, taper: 0.55, bow: 0.06, grip: 0.1, wrap: 0.09, wrapOut: 1.18, wrapAt: [0.1, 0.26], nockAt: 0.86, nock: 0.05, wood: new Color3(0.85, 0.5, 0.25), rope: new Color3(1.0, 0.78, 0.45), dark: new Color3(0.25, 0.13, 0.06) };
+// [P] 464 wood (.85,.5,.25) -> (.62,.3,.1): the stave read near-white with the wraps lost on it (critic 463 poacher DEFECTS 2; legacy.poacher.red.png mid-brown tan)
+const POACHER_BOW = { long: 0.62, thick: 0.085, taper: 0.55, bow: 0.06, grip: 0.1, wrap: 0.09, wrapOut: 1.18, wrapAt: [0.1, 0.26], nockAt: 0.86, nock: 0.05, wood: new Color3(0.62, 0.3, 0.1), rope: new Color3(1.0, 0.78, 0.45), dark: new Color3(0.25, 0.13, 0.06) };
 function buildPoacherBow(scene: Scene, s: number, stand: number): Mesh {
   const B = POACHER_BOW;
   const L = stand * B.long;
