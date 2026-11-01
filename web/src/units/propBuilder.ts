@@ -3557,6 +3557,12 @@ function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  * its middle .drop h under the banner's; three gold crenels on its top, .crenel w wide and .crenelTall h; a team doorway .door w wide cut up its middle to
  * .doorTall of the block, its top a round arch, standing a slab proud of the gold so it reads as the cut.
  */
+/*
+ * [S] 466 the fan (CONFIRM 465 b.1: "each banner ends in a straight gold-framed edge - TABS: each banner's field ends in a fan of gold rays or tabs hanging
+ * below it"; legacy.banner_bearer.blue.png). BANNER_FAN: .rays gold rays from the banner's foot, spread over .spread of its width, each .long H, tapering
+ * from .root H to .tip H, splayed .splay rad per step out from the middle; flat closed plates (a 4-sided frustum squashed to the slab).
+ */
+const BANNER_FAN = { rays: 5, spread: 0.8, long: 0.12, root: 0.05, tip: 0.012, splay: 0.3 };
 const BANNER_ARCH = { wide: 0.78, tall: 0.5, drop: 0.12, crenel: 0.18, crenelTall: 0.12, door: 0.34, doorTall: 0.72 };
 const BANNER_POLE = { thick: 0.04, collar: 0.03, collarOut: 1.5, collarsAt: [0.22, 0.5, 0.74], cross: 2.2, cap: 0.04, wood: new Color3(0.55, 0.3, 0.12) };
 const STAY_BANNER = { long: 1.5, thick: 0.022, grip: 0.3, beam: 1.0, bar: 0.03, knob: 0.05, spike: 0.09, wide: 0.27, tall: 0.42, inset: 0.02, slab: 0.012, edge: 0.025, proud: 1.8, tower: 0.08, glow: 0.15 };
@@ -3584,6 +3590,19 @@ function buildStayBanner(scene: Scene, fit: BladeFit, team: Color3): Mesh {
     const cx = side * (B.beam * H / 2 - B.inset * H - W / 2);
     part(MeshBuilder.CreateBox("bannerEdge", { width: W, height: T, depth: t }, scene), cx, cy, 0, gold);
     part(MeshBuilder.CreateBox("bannerCloth", { width: W - 2 * e, height: T - 2 * e, depth: t * B.proud }, scene), cx, cy, 0, cloth);
+    const F = BANNER_FAN, foot = cy - T / 2, R = F.long * H;
+    for (let i = 0; i < F.rays; i++) {
+      const u = i / (F.rays - 1) * 2 - 1, th = u * F.splay * (F.rays - 1) / 2;
+      const ray = MeshBuilder.CreateCylinder("bannerFanRay", { height: R, diameterTop: F.root * H, diameterBottom: F.tip * H, tessellation: 4 }, scene);
+      ray.scaling.z = t * B.proud / (F.root * H);
+      const holder = new TransformNode("bannerFan", scene);
+      holder.parent = pole;
+      holder.position.set(cx + u * F.spread * W / 2 + Math.sin(th) * R / 2, foot - Math.cos(th) * R / 2, 0);
+      holder.rotation.z = th;
+      ray.parent = holder;
+      ray.material = gold;
+      ray.convertToFlatShadedMesh();
+    }
     const A = BANNER_ARCH, w = W - 2 * e, h = T - 2 * e, z = t * (B.proud / 2 + 0.5);
     const bw = A.wide * w, bh = A.tall * h, by = cy - A.drop * h, dw = A.door * w, dh = A.doorTall * bh;
     for (const face of [-1, 1]) {
