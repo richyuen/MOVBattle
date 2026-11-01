@@ -616,3 +616,24 @@ export function peasantFringe(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 461 the Poacher's boots (critic 460 a.5: "boots, team feet - TABS: tan fur boots"; legacy.poacher.red.png: tan-brown leather boots from below the
+ * mid-shin to the sole, a wide turned-down top over the shaft, the foot a tan block). POACHER_BOOTS in the shin's box (the MINER_BOOTS cut): a 6-sided
+ * shell .out round from .from to .to of its length, a turned top .cuff round from .cuffFrom to .from; the foot in the same leather. Self-lit .glow.
+ */
+const POACHER_BOOTS = { from: 0.62, to: 1.04, out: 1.3, cuffFrom: 0.5, cuff: 1.6, color: new Color3(0.62, 0.36, 0.18), glow: 0.14 };
+
+/** The Poacher's tan boots with a turned-down top (spec at POACHER_BOOTS). */
+export function poacherBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = POACHER_BOOTS;
+  const leather = getMaterialFactory().get("cloth", B.color, { emissive: B.color.scale(B.glow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "poacherBoot", shin, B.from, B.to, B.out, leather));
+    out.push(limbShell(scene, "poacherBootTop", shin, B.cuffFrom, B.from + 0.02, B.cuff, leather));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = leather;
+  }
+  return out;
+}
