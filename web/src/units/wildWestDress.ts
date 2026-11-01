@@ -1138,12 +1138,18 @@ export function lassoMoustache(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const LASSO_SHIRT = { shade: 0.85, sleeveShade: 0.35, glow: 0.12, out: 1.3, sleeveTo: 0.7 };
 
+/** The Lasso rider's team shirt cloth (spec at LASSO_SHIRT); cached by colour, so the tunic hem hung later (unitFactory) shares it. */
+export function lassoShirtCloth(teamColor: Color3): Material {
+  const c = teamColor.scale(LASSO_SHIRT.shade);
+  return getMaterialFactory().get("cloth", c, { emissive: c.scale(LASSO_SHIRT.glow) });
+}
+
 /** The Lasso rider's team shirt and trousers with short dark team sleeves (spec at LASSO_SHIRT). */
 export function lassoShirt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const S = LASSO_SHIRT;
   const mf = getMaterialFactory();
-  const c = teamColor.scale(S.shade), dc = teamColor.scale(S.sleeveShade);
-  const cloth = mf.get("cloth", c, { emissive: c.scale(S.glow) });
+  const dc = teamColor.scale(S.sleeveShade);
+  const cloth = lassoShirtCloth(teamColor);
   const dark = mf.get("cloth", dc, { emissive: dc.scale(S.glow) });
   for (const m of body.allMeshes) if (m.material === body.bodyMaterial && m !== body.headMesh && !/Hand/.test(m.name)) m.material = cloth;
   const out: Mesh[] = [];

@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteBandanna, dynamiteBoots, dynamiteShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerShoes, gunslingerSideburns, gunslingerSuit, lassoMoustache, lassoShirt, minerBoots, minerLegs, minerMoustache, minerSleeves, minerOveralls, quickDrawShirt, quickDrawVest, westernBraid, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteBandanna, dynamiteBoots, dynamiteShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerShoes, gunslingerSideburns, gunslingerSuit, lassoMoustache, lassoShirt, lassoShirtCloth, minerBoots, minerLegs, minerMoustache, minerSleeves, minerOveralls, quickDrawShirt, quickDrawVest, westernBraid, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -1013,6 +1013,9 @@ export class UnitFactory {
               // [S] 452 the Dynamite Thrower's team skirt to the knee (wildWestDress DYNAMITE_SKIRT; gold stripes and hem band below)
               : definition.id === "wild_west.dynamite_thrower"
                 ? hangSkirt(this._scene, body, "tunicSkirt", DYNAMITE_SKIRT.long, DYNAMITE_SKIRT.flare, dynamiteSkirtCloth(teamColor))
+              // [S] 456 the Lasso rider's tunic hem in his team shirt cloth (wildWestDress LASSO_SHIRT), not the olive-brown leather body cloth
+              : definition.id === "wild_west.lasso"
+                ? hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, lassoShirtCloth(teamColor))
               : definition.id === "viking.ice_archer"
                 ? hangSkirt(this._scene, body, "tunicSkirt", ICE_ARCHER_COAT.skirt, ICE_ARCHER_COAT.flare, iceArcherCoatCloth(teamColor))
                 : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, definition.id === "viking.headbutter" ? headbutterTunicCloth(teamColor) : body.bodyMaterial);
