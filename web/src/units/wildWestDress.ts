@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, Vector3, VertexBuffer, type Material, type TransformNode } from "@babylonjs/core";
+import { Scene, Color3, Matrix, Mesh, MeshBuilder, Quaternion, Vector3, VertexBuffer, type Material, type TransformNode } from "@babylonjs/core";
 import { getMaterialFactory } from "./materialFactory";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { limbBox, limbShell } from "./medievalDress";
@@ -435,6 +435,68 @@ export function minerOveralls(scene: Scene, body: ArticulatedBody, teamColor: Co
   }
   const waist = MeshBuilder.CreateBox("minerWaist", { width: W * O.over, height: H * O.waist, depth: D * O.over + D * O.proud * 2 }, scene);
   put(waist, 0, cy - H / 2 + H * O.waist / 2, cz, team);
+  return out;
+}
+
+/*
+ * [S] 452 the Dynamite Thrower's skirt (critic 449-451 dynamite_thrower a.2: "short dark tunic hem at the hip, no stripes - TABS: knee-length team skirt
+ * with vertical gold stripes and a gold hem band"; card Appearance "a team color skirt with gold lines on it"; wild_west.dynamite_thrower.red.png: a team
+ * skirt from the waist to just above the knee, a little flared, pale gold stripes running straight down it about a hand apart, a pale gold band round the
+ * hem). DYNAMITE_SKIRT: the tunic skirt hung .long of the hip-to-knee drop, flaring .flare, in team cloth (not the bandit-tinted body cloth, LESSONS 449);
+ * on every face of it .stripes stripes .stripe of the face's width across, running from the waist to the band, .proud of the skirt's radius off it; the
+ * hem band .band of the skirt tall and .bandOut of its hem round. Gold self-lit .glow.
+ */
+export const DYNAMITE_SKIRT = { long: 1.05, flare: 1.35, stripes: 2, stripe: 0.09, proud: 0.03, band: 0.12, bandOut: 1.04, gold: new Color3(0.95, 0.78, 0.42), glow: 0.3, teamGlow: 0.12 };
+
+/** The team cloth the Dynamite Thrower's skirt is hung in (spec at DYNAMITE_SKIRT). */
+export function dynamiteSkirtCloth(teamColor: Color3): Material {
+  return getMaterialFactory().get("cloth", teamColor, { emissive: teamColor.scale(DYNAMITE_SKIRT.teamGlow) });
+}
+
+/** Gold stripes down every face of the hung 6-sided skirt and a gold band round its hem (spec at DYNAMITE_SKIRT). */
+export function dynamiteSkirtTrim(scene: Scene, skirt: Mesh): Mesh[] {
+  const S = DYNAMITE_SKIRT;
+  const gold = getMaterialFactory().get("cloth", S.gold, { emissive: S.gold.scale(S.glow) });
+  const pos = skirt.getVerticesData(VertexBuffer.PositionKind) ?? [];
+  let yT = -Infinity, yB = Infinity;
+  for (let i = 1; i < pos.length; i += 3) { yT = Math.max(yT, pos[i]); yB = Math.min(yB, pos[i]); }
+  let rT = 0, rB = 0;
+  for (let i = 0; i < pos.length; i += 3) {
+    const r = Math.hypot(pos[i], pos[i + 2]);
+    if (Math.abs(pos[i + 1] - yT) < 1e-5) rT = Math.max(rT, r);
+    if (Math.abs(pos[i + 1] - yB) < 1e-5) rB = Math.max(rB, r);
+  }
+  const tall = yT - yB, bandTall = tall * S.band;
+  const out: Mesh[] = [];
+  // Babylon's cylinder sets its ring vertices at angle -k * 60 deg
+  const at = (k: number, r: number, y: number) => new Vector3(Math.cos(-k * Math.PI / 3) * r, y, Math.sin(-k * Math.PI / 3) * r);
+  for (let k = 0; k < 6; k++) {
+    const t0 = at(k, rT, yT), t1 = at(k + 1, rT, yT), b0 = at(k, rB, yB), b1 = at(k + 1, rB, yB);
+    for (let j = 0; j < S.stripes; j++) {
+      const u = (j + 1) / (S.stripes + 1);
+      const top = Vector3.Lerp(t0, t1, u), foot = Vector3.Lerp(b0, b1, u);
+      const y = foot.subtract(top);
+      const long = y.length() * (1 - S.band);
+      const across = b1.subtract(b0);
+      let n = Vector3.Cross(across, y).normalize();
+      if (n.x * (top.x + foot.x) + n.z * (top.z + foot.z) < 0) n = n.scale(-1);
+      const up = y.normalize().scale(-1), xd = Vector3.Cross(up, n).normalize();
+      const bar = MeshBuilder.CreateBox("dynamiteSkirtStripe", { width: across.length() * S.stripe, height: long, depth: rB * S.proud * 2 }, scene);
+      const m = Matrix.Identity();
+      Matrix.FromXYZAxesToRef(xd, up, n, m);
+      bar.rotationQuaternion = Quaternion.FromRotationMatrix(m);
+      bar.position.copyFrom(Vector3.Lerp(top, foot, (1 - S.band) / 2).add(n.scale(rB * S.proud)));
+      bar.material = gold;
+      bar.parent = skirt;
+      out.push(bar);
+    }
+  }
+  const band = MeshBuilder.CreateCylinder("dynamiteSkirtBand", { height: bandTall, diameterTop: 2 * (rB - (rB - rT) * S.band) * S.bandOut, diameterBottom: 2 * rB * S.bandOut, tessellation: 6 }, scene);
+  band.position.y = yB + bandTall / 2;
+  band.material = gold;
+  band.parent = skirt;
+  band.convertToFlatShadedMesh();
+  out.push(band);
   return out;
 }
 

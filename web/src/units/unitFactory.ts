@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawShirt, CACTUS_ROBE, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawShirt, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -982,6 +982,9 @@ export class UnitFactory {
               // [S] 409 the Ice Archer's coat skirt to mid-thigh in her coat cloth (vikingDress ICE_ARCHER_COAT)
               : definition.id === "wild_west.gunslinger"
                 ? hangSkirt(this._scene, body, "tunicSkirt", GUNSLINGER_JACKET.skirt, GUNSLINGER_JACKET.skirtFlare, gunslingerSuit(teamColor))
+              // [S] 452 the Dynamite Thrower's team skirt to the knee (wildWestDress DYNAMITE_SKIRT; gold stripes and hem band below)
+              : definition.id === "wild_west.dynamite_thrower"
+                ? hangSkirt(this._scene, body, "tunicSkirt", DYNAMITE_SKIRT.long, DYNAMITE_SKIRT.flare, dynamiteSkirtCloth(teamColor))
               : definition.id === "viking.ice_archer"
                 ? hangSkirt(this._scene, body, "tunicSkirt", ICE_ARCHER_COAT.skirt, ICE_ARCHER_COAT.flare, iceArcherCoatCloth(teamColor))
                 : hangSkirt(this._scene, body, "tunicSkirt", 0.45, 1.5, definition.id === "viking.headbutter" ? headbutterTunicCloth(teamColor) : body.bodyMaterial);
@@ -989,6 +992,7 @@ export class UnitFactory {
       if (definition.id === "renaissance.painter" && skirt) propMeshes.push(...painterSweaterRib(this._scene, skirt, teamColor));
       if (knight && skirt) propMeshes.push(...knightCuirass(this._scene, body, skirt));
       if (definition.id === "medieval.bard" && skirt) propMeshes.push(...bardTunic(this._scene, skirt, teamColor));
+      if (definition.id === "wild_west.dynamite_thrower" && skirt) propMeshes.push(...dynamiteSkirtTrim(this._scene, skirt));
       if (definition.id === "medieval.squire" && tabard && skirt) propMeshes.push(...squireTabardTrim(this._scene, body, tabard, skirt));
       // ...not under a hide cape: its flaps lie over the shoulders where the collar would (the chieftain)
       if (bareSkinned && !hasTribalNecklace(definition.id) && !TRIBAL_CAPE_UNITS.has(definition.id)) propMeshes.push(furCollar(this._scene, body));
