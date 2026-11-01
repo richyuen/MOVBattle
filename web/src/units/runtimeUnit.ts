@@ -28,6 +28,11 @@ const BALLOON_FLOAT = { seconds: 3, rise: 1.4, top: 3.2, per: 3, most: 9, size: 
  * they may even struggle to stand and walk"). While drunk his skin is DRUNK.dye of the way to DRUNK.green and lit .glow of it (his clothes .6 of that), his
  * trunk rolls .roll rad side to side at .rate rad/s with the head lolling against it, and he goes at .slow of his pace; the simulation has him wander.
  */
+/*
+ * [S] 460 a bearer's aura on the men inside his ring (applyAura; the Flag Bearer's speeds them up, the Banner Bearer's holds them still): a hastened man
+ * walks .haste times his pace; a ring .ring of his height across and .band thick lies at his feet while it holds.
+ */
+const BEARER_AURA = { haste: 1.5, ring: 0.5, band: 0.035 };
 const DRUNK = { green: new Color3(0.35, 0.85, 0.2), dye: 0.8, glow: 0.35, roll: 0.22, rate: 4.5, slow: 0.55 };
 /*
  * [S] gilded (351; medieval.healer card Appearance: "a golden beam connects to the unit the healer is curing, turning them gold for a moment"). While a
@@ -176,6 +181,10 @@ export class RuntimeUnit {
   private _chargeUntil = 0;
   private _cohesionMoveMultiplier = 1;
   private _slowUntil = 0;
+  // [S] 460 a bearer's aura (applyAura, BEARER_AURA): haste or stay until _auraUntil, shown by a small ring of the bearer's colour at his feet
+  private _auraKind: "haste" | "stay" | null = null;
+  private _auraUntil = 0;
+  private _auraRing: Mesh | null = null;
   // Drunk from a potion's splash (getDrunk, DRUNK): until when, and whether his skin is dyed green now
   private _drunkUntil = 0;
   private _drunkDyed = false;
@@ -1057,6 +1066,35 @@ export class RuntimeUnit {
     this._slowUntil = Math.max(this._slowUntil, now + Math.max(0.1, durationSeconds));
   }
 
+  /**
+   * [S] 460 inside a bearer's ring (card: the Flag Bearer "boosts its teammates' movement speed", the Banner Bearer "keeps ally Units stationary"):
+   * haste walks him BEARER_AURA.haste times his pace, stay holds him where he stands (he still fights what comes to him), for `seconds`. A flat ring
+   * BEARER_AURA.ring of his height across lies at his feet in the bearer's ring material while it holds.
+   */
+  applyAura(kind: "haste" | "stay", seconds: number, now: number, ringMaterial: Material | null): void {
+    if (this._isDead || this._isAnchoredActor) return;
+    this._auraKind = kind;
+    this._auraUntil = Math.max(this._auraUntil, now + seconds);
+    if (!ringMaterial) return;
+    if (!this._auraRing) {
+      const H = this.body.metrics.overallHeight;
+      const ring = MeshBuilder.CreateTorus("auraRing", { diameter: BEARER_AURA.ring * H, thickness: BEARER_AURA.band * H, tessellation: 24 }, this.body.root.getScene());
+      ring.scaling.y = 0.25;
+      ring.position.y = 0.03 * H;
+      ring.isPickable = false;
+      ring.parent = this.body.root;
+      this._auraRing = ring;
+    }
+    this._auraRing.material = ringMaterial;
+    this._auraRing.setEnabled(true);
+  }
+
+  /** His walk under a bearer's aura: 0 held by a Stay banner, BEARER_AURA.haste hastened by a Flag Bearer, else 1. */
+  private _auraMove(now: number): number {
+    if (now >= this._auraUntil || !this._auraKind) return 1;
+    return this._auraKind === "stay" ? 0 : BEARER_AURA.haste;
+  }
+
   /** Splashed by a potion (DRUNK): green and tottering, slowed, for `seconds`; the simulation has him wander instead of fight while isDrunk. */
   getDrunk(seconds: number): void {
     if (this._isDead || this._isAnchoredActor) return;
@@ -1182,6 +1220,7 @@ export class RuntimeUnit {
       this._toppleDirectionTag = "none";
       this._balanceDirection.copyFrom(this._getFacingVector());
     }
+    if (this._auraRing && (now >= this._auraUntil || this._isDead)) this._auraRing.setEnabled(false);
     if (now >= this._slowUntil) {
       this._slowMultiplier = 1;
     }
@@ -1275,7 +1314,7 @@ export class RuntimeUnit {
           ? Math.max(0.22, 1 - this.pressureLoad * this._crowdPhysicsProfile.pressureMovePenalty)
           : 1;
         const appliedDistance = Math.min(
-          this.definition.moveSpeed * this._slowMultiplier * this._chargeMultiplier * this._cohesionMoveMultiplier * recoveryMoveMultiplier * pressureMoveMultiplier * dt,
+          this.definition.moveSpeed * this._slowMultiplier * this._chargeMultiplier * this._cohesionMoveMultiplier * recoveryMoveMultiplier * pressureMoveMultiplier * this._auraMove(now) * dt,
           Math.sqrt(distSq),
         );
         const proposedPosition = pos.add(dir.scale(appliedDistance));
@@ -2155,6 +2194,9 @@ export class RuntimeUnit {
     this._isDead = false;
     this._drunkUntil = 0;
     this._gildUntil = 0;
+    this._auraUntil = 0;
+    this._auraKind = null;
+    this._auraRing?.setEnabled(false);
     this._gildMeshes(false);
     this._throwT = -1;
     if (this._drunkDyed && this._skinBase) this.body.skinMaterial.baseColor = this._skinBase;

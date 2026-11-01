@@ -132,6 +132,11 @@ export function poacherHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const BEARER_RING = { radius: 1.6, band: 0.05, flat: 0.012, lift: 0.02, sides: 40, glow: 0.45 };
 
+/** How far the bearer's ring reaches from his feet (BEARER_RING.radius of his height): his aura holds the allies inside it (simulationSystem). */
+export function bearerReach(body: ArticulatedBody): number {
+  return BEARER_RING.radius * body.metrics.overallHeight;
+}
+
 /** A flat team ring on the ground round the bearer (spec at BEARER_RING), hung on the body root at the soles. */
 export function bearerRing(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const R = BEARER_RING, H = body.metrics.overallHeight;
