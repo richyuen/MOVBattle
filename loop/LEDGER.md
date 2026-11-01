@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-440 | operator skull anchor: wrapAsBody skin clone off the bones (bc704fe0) | spooky.pumpkin_catapult.a | approved
-440 | STIFFY_GREAVES team knee dome + shin tube, slim bone feet (7c68a9f4, 1cdbda83) | spooky.skeleton_warrior.a | approved
-440 | BOOT_SHAFT per-foot brown shafts to mid-shin + cuffs, no slab (335a51ae) | spooky.skeleton_archer.a | approved
-440 | CANDLE_BOOTS dark team shafts to the knee, two gold rings (29284d0d) | spooky.candlehead.a | approved
-440 | VAMPIRE_BEARD jaw band, sideburns, goatee, two white fangs (c4c3d64f) | spooky.vampire.a | approved
-440 | REAPER_LEGS leg chain x1.6, thin .5, hip raised (b0c472fa) | spooky.reaper.a | approved
-440 | [R] QUEEN_BUILD leg chain .74, trunk .76 to the captain's height (fba5bc29) | pirate.pirate_queen.a | approved
 441 | SKELETON_BONE shared self-lit bone helper skeletonBone() (00099cf7) | spooky.skeleton_archer.a | rejected-kept
 441 | STIFFY_KNEE bone patella on the knee joint, shorts hem up, greave lower (c2ca5852) | spooky.skeleton_warrior.a | approved
 441 | PUMPKIN_TIMBER own near-black cloth timber, frame + arm + wheels + cw (fcb568a7) | spooky.pumpkin_catapult.a | approved
@@ -41,15 +34,20 @@ for 25 iterations.
 444 | spooky wheel tyre + hub in PUMPKIN_TIMBER (d50fe07b) | spooky.pumpkin_catapult.a | approved
 444 | [R] QUEEN_LEGLINE hem flipped/raised, pale pelvis, no tunic skirt, guards out (c71c375a, 9e30f921, c4daf42f) | pirate.pirate_queen.a | rejected
 444 | BULLET_RAIN arms up, guns fired skyward, 3 bullets fall with blasts (0e73eb2a) | wild_west.gunslinger.c | approved
+445 | REVOLVER long dark revolver, drum, hammer, raked grip + pistolBell mark (4a52867e, e2029795) | wild_west.gunslinger.b | approved
+445 | BOWLER wildWestDress dark team bowler, dome crown, curled brim (6e54d4ad, b5e033d5) | wild_west.gunslinger.a | approved
+445 | off hand emptied, one gun (58b22c60) | wild_west.quick_draw.b | approved
+445 | painter dodge extended to quick_draw (094a18a8) | wild_west.quick_draw.c | rejected
+445 | LASSO_DRAG rope + loop to the chest, haul in, trample (cbd214cd, 7db56d0f) | wild_west.lasso.c | approved
+445 | CACTUS_EXPLOSION needle burst when hurt + CACTUS_NEEDLES (9ab466fa) | wild_west.cactus.c | approved
+445 | MINER_PICK long haft, thin dark drooping pick head (47f7fe76) | wild_west.miner.b | approved
 
 ## Spent (never retry as [P])
 
 ## Rows
 
-dynasty.monk + viking.brawler done (MONK_STAFF + MONK_REST, MONK_SWING, MONK_TROUSERS, MONK_ARM_PLATES, BRAWLER_BEARD, BRAWLER_HATCHET, NORSE_BOARD, FIRST_LUNGE) | compacted 419 | 418 | approved | values: git show f1bce224:loop/LEDGER.md
 dynasty.samurai + firework_archer + monk done (KABUTO, KATANA_REST, KATANA_STEEL, SAMURAI_BLOCK + SLASH_ARC, SAMURAI_CUIRASS, SAMURAI_HAKAMA, ARCHER_HAIR, ARCHER_ROBE, ARCHER_LEGS, KASA_GOLD, FIREWORK_BOW/ROCKET/NOCK/BURST/REST, TENGU_MASK) | compacted 422 | 421 | approved | values: git show 268e1355:loop/LEDGER.md
 dynasty.dragon done 416-431 rows (FLAME_JET + DRAGON_BREATH, DRAGON_FORM [R], DRAGON_CARRIER + poleColor + arm/fist, BODY_FLAMES, DRAGON_TRIM, DRAGON_HOLD) | compacted 432 | 431 | approved | values: git show 67890443:loop/LEDGER.md
-dynasty.hwacha done (HWACHA_RACK, HWACHA_ROCKET, HWACHA_WHEEL, LAUNCH_SMOKE, HWACHA_SHAFT, HWACHA_TIMBER) | compacted 421 | 420 | approved | values: git show 7f580c19:loop/LEDGER.md
 dynasty.monkey_king + monk + crew split, ancient.minotaur strap/girdle, pirate beard done rows (MONKEY_RUYI/TAIL, BO_SHOVE, MONKEY_CROWN/FACE/SHORTS/ROBE/TRUNK/HAIR, FRONT_SPLIT, MINO_STRAP/GIRDLE/CAP, PIRATE_BEARD) | compacted 437 | 433 | approved | values: git show 3c42103f:loop/LEDGER.md
 pirate 425-426 rows (TRICORN_BROWN, HARPOON_REEL, GUN_TOSS, BLUNDERBUSS + _AIM, CANNON_WHEEL, CUTLASS, CUTLASS_SLASH, PIRATE_KICK, BLUNDERBUSS_RECOIL, PISTOL_SHOT, BARREL_ARMOUR, OPEN_COAT, CANNON_SIGHT) | compacted 428 | 426 | approved | values: git show 0445ba6b:loop/LEDGER.md
 pirate 423-424 rows (PISTOL + PISTOL_AIM, HARPOON_BREECH, CANNON_BARREL, TRICORN_PLATE, PIRATE_VEST, PIRATE_PANTS + PIRATE_SHORTS) | compacted 427 | 424 | approved | values: git show 613ba5b9:loop/LEDGER.md
@@ -66,6 +64,11 @@ pirateDress.ts:QUEEN_SHIRT (shoulderOut, puff, puffAt, to, cuffOut, vee, veeLong
 wild_west.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 444 | stats | values: git show 7aee94dc
 simulationSystem.ts:VAMPIRE_LATCH (round, off, up, first, every, afterDeath, blood) + visualEffects BLOOD_DRAIN | .7, .75, .2, .3, .35, .5, 12 | 444 | approved | swing + star (before 444)
 simulationSystem.ts:BULLET_RAIN (hold, raise, up, fall, count, every, spread, splash, blast) + GUNS_UP (reach, out) | 1.1, .3, 22, .55, 3, .4, .9, 2.5, .6; .95, .2 | 444 | approved | level burst (before 444)
+propBuilder.ts:REVOLVER (long, bore, drum, drumLong, tail, over, hammer, grip, gripRake; steel, wood) | .36, .075, .2, .18, .1, .15, .1, .36, .55; (.2,.2,.22), (.4,.2,.09) | 445 | approved | flintlock PISTOL (before 445)
+wildWestDress.ts:BOWLER (crown, flare, tall, dome, brim, thick, curl, band, shade, bandShade) | 1.14, 1.06, .18, .32, 1.62, .035, .12, .08, .25, .12 | 445 | approved | shade .42 (445.4); cowboy_hat (before 445)
+simulationSystem.ts:LASSO_DRAG (low, pull, first, every, under, most, trample, throwUp, throwOut) + LASSO_ROPE (thick, loop) | .12, 1.4, .3, .35, .6, 2.4, 1.5, 5, 4; .045, .62 | 445 | approved | jab (before 445)
+simulationSystem.ts:CACTUS_EXPLOSION (cooldown, radius, damage, push) + visualEffects CACTUS_NEEDLES (count, long, thick, speed, life, rise, color) | 1.2, 3, 20, 3; 26, .42, .05, 8, .55, .45, (.95,.78,.42) | 445 | approved | none (before 445)
+propBuilder.ts:MINER_PICK (long, thick, grip, head, bar, droop, collar) | .82, .035, .22, .5, .05, .22, .08 | 445 | approved | short pickaxe (before 445)
 spooky.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 434 | stats | values: git show 33bb56af
 spooky b props 434-436 rows (VAMPIRE_CLAWS, STIFFY_SHIELD, STIFFY_SWORD, BONE_BOW, CANDLE_ARMS; b PASS) | compacted 440 | 436 | approved | values: git show 93103dfd:loop/LEDGER.md
 spooky c mechanics 434-435 rows (PUMPKIN_SHOT, FIRE_ARROW, SPIRIT_FIRE, BURN + BURN_STATUS, SPIRIT_LIFT, FEAR_SKULL + STIFFY_FEAR, PUMPKIN_BURST) | compacted 436 | 435 | approved | values: git show e1126012:loop/LEDGER.md
@@ -76,21 +79,10 @@ pirateDress.ts:QUEEN_BOOTS [R] (from, shaft, top, topTall, band, bandTall, bandA
 visualEffects.ts:REAPER_BURST (ring0, thick, dome0, dome, domeAlpha, shards, shard, out, up, life, fade) | 1.6, .22, 1.2, 4.2, .7, 8, .55, 3, 4.5, .9, .4 | 436 | approved | spark only (before 436)
 proceduralAnimation.ts:QUEEN_UPRIGHT (tilt, stride, lean, chin) | .07, .08, .02, 0 | 436 | approved | hashed stance (before 436)
 
-spookyDress.ts:STIFFY_HELMET (out, clear, crown, cap, cheek, jaw, front, splay, neck, nape, kick) | 1.16, .06, .14, .82, .2, .22, .62, .08, .22, -.85, .3 | 437 | approved | dressSkeleton round hood (before 437)
-spookyDress.ts:SKELETON_HOOD (out, jaw, crown, open, side, peak, lean, collar, cape, drop, tatters) | 1.18, .3, .16, .55, .2, .5, .55, .4, 1.12, .24, 7 | 437 | approved | dressSkeleton round hood (before 437)
+spooky done 437-441 rows (STIFFY_HELMET, SKELETON_HOOD, VAMPIRE_BAT/HAIR/COLLAR, RIB_CRADLE, BONE_FRAME, CATAPULT_BANNER, SKELETON_BELT/CREW, STIFFY_SHORTS, ARCHER_KIT; spooky all D 444) | compacted 445 | 441 | approved | values: git show 8ace1e68:loop/LEDGER.md
 pirateDress.ts:QUEEN_FRAME + [R] 440 QUEEN_BUILD (trunk, deep, shoulders, pelvis, hips, tall, legs) | .7, .85, .78, .75, .72, .76, .74 | 440 | approved tall .85 legs 1 (438-439); tall 1 (437); full-width (before 437)
-spookyDress.ts:VAMPIRE_BAT (at, body, head, ear, span, fingers, dark, beat, lift, rate) | .55, .3, .2, .1, .7, 3, .35, .75, .25, 20 | 437 | approved | no bat form (before 437)
-vehicleBuilder.ts:RIB_CRADLE (ribs, step, bone, open, out, taper, size, squash, lobes) | 4, .12, .035, .75, 1.12, .85, .5, .82, 8 | 437 | approved | wooden bucket + plain sphere .45 (before 437)
-spookyDress.ts:VAMPIRE_HAIR (out, clear, crown, sweep, lean, back, peak, peakDrop, side, sideTo, front, nape) | 1.12, .04, .12, .42, .4, .25, .5, .3, .14, .5, .35, -.7 | 438 | approved | bald (before 438)
 spooky.candlehead done 438-440 rows (CANDLE_TOWER, CANDLE_ROBE, CANDLE_BOOTS; a PASS, CONFIRM 440) | compacted 441 | 440 | approved | values: git show a46e87b8:loop/LEDGER.md
-vehicleBuilder.ts:BONE_FRAME (arm, cross, crossAt, bar, big, lowAt, past, knob, lobe, cord) | .11, .62, [.5,.15], .12, .15, .62, .12, 1.35, .32, .025 | 438 | approved | timber arm + crossbar (before 438)
-vehicleBuilder.ts:CATAPULT_BANNER (cord, wide, tall, thick, sway, tail, shade, glow) | .06, .24, .46, .025, .06, .12, .8, .18 | 438 | approved | none (before 438)
-spookyDress.ts:SKELETON_BELT (belt, out, at, buckle, tabs, tab, long, taper, flare) | .16, 1.12, .8, .2, 4, .24, .42, .55, .18 | 438 | approved | dressSkeleton skirt (before 438)
 
-spookyDress.ts:STIFFY_SHORTS (top, hem, out, flare, deep, rags, rag, ragLong, belt, beltOut) | .16, .72, 3.6, 1.15, .88, 6, .7, .2, .2, 1.3 | 441 | approved | hem .86 (439-440); dressSkeleton skirt (before 439)
-spookyDress.ts:ARCHER_KIT (bracerFrom, bracerTo, bracer, bootTo, bootOut, bootLong, cuffFrom, cuff; leather) | .12, .6, 3.2, 1, 1.25, 1.1, .72, 3.6; (.4,.17,.07) | 439 | approved | bare bone (before 439)
-spookyDress.ts:SKELETON_CREW (limb, spine, ribs, ragTop, ragLong, ragOut, ragFlare, tatters, band, boneGlow) | .42, .16, 4, .4, .85, 1.05, 1.3, 7, .3, .3 | 439 | approved | dressCannonCrew (before 439)
-spookyDress.ts:VAMPIRE_COLLAR (capeTop, capeDrop, capeIn, capeOut, spikes, ring, arc, wide, tall, lean) | .08, .55, .45, 1.22, 5, .42, 1.25, .5, [1.5,1.3,1.15], .32 | 439 | approved | ring .26 tall .8-1.15 (439.5, inside the head); propBuilder vampire_collar wedge (before 439)
 spookyDress.ts:REAPER_LEGS + proceduralAnimation.ts:REAPER_HOVER (glow, long, thin, foot; lift, bob, rate, hang, sway, knee) | .3, 1.6, .5, .75; .15, .02, 1.8, .85, .12, .12 | 440 | approved long 1 thin 1 (439); grey legs on the ground (before 439)
 spookyDress.ts:STIFFY_GREAVES + knee (from, to, across, flare, knee, kneeSquash, foot, shade; patella, pSquash, pProud) | .34, .88, 3.4, .82, 1.12, .75, .72, .55; .62, 1.2, .25 | 441 | approved | from .14 to .84 (440)
 spookyDress.ts:BOOT_SHAFT (from, to, across, cuffFrom, cuffTo, cuff, toe) | .48, 1.06, 2.5, .42, .56, 3.3, .78 | 440 | approved ARCHER_KIT boot box bootOut 1.25 (439)
