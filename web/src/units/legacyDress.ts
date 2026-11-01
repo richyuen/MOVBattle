@@ -1,4 +1,5 @@
 import { Scene, Color3, Mesh, MeshBuilder } from "@babylonjs/core";
+import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
 /*
@@ -81,4 +82,43 @@ export function buildPeasantHood(scene: Scene, W: number, H: number, unit: numbe
   collar.convertToFlatShadedMesh();
   collar.setParent(cowl);
   return cowl;
+}
+
+/*
+ * [S] 458 the Poacher's hair (critic 457 a.2: "hair in unit_legacy.poacher_idle, none - TABS: long white hair with braids beside the face";
+ * legacy.poacher.red.png: pale grey-white hair hanging from under the brim down both sides of the face to the jaw and over the back of the head, a thin
+ * braid in front of each side lock running down past the chin). POACHER_HAIR, in the head box (half sizes e, centre c, +z the face): a side lock each
+ * side .side e.x thick, from .top e.y over the centre down to .foot e.y under it, from .back e.z behind to .front e.z ahead of the centre; a back sheet
+ * .side thick over the back of the head, the same height; a braid .braid e.x square in front of each lock, .braidFoot e.y under the centre, in .knots
+ * knots. Pale grey .color, self-lit .glow (LESSONS: lit cloth in shade reads grey, so the code value is near white).
+ */
+const POACHER_HAIR = { side: 0.22, top: 0.55, foot: 1.25, back: 1.05, front: 0.45, braid: 0.14, braidFoot: 1.75, knots: 4, color: new Color3(0.92, 0.92, 0.9), glow: 0.22 };
+
+/** The Poacher's pale side locks, back sheet and two braids (spec at POACHER_HAIR), hung on the head. */
+export function poacherHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = POACHER_HAIR;
+  const hair = getMaterialFactory().get("cloth", P.color, { emissive: P.color.scale(P.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, y: number, z: number): void => {
+    m.position.set(x, y, z);
+    m.material = hair;
+    m.parent = head;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  };
+  const tall = e.y * (P.top + P.foot), midY = c.y + e.y * (P.top - P.foot) / 2;
+  const t = e.x * P.side;
+  for (const s of [-1, 1]) {
+    const deep = e.z * (P.back + P.front);
+    put(MeshBuilder.CreateBox("poacherLock", { width: t, height: tall, depth: deep }, scene), c.x + s * (e.x + t / 2), midY, c.z + e.z * (P.front - P.back) / 2);
+    const b = e.x * P.braid, len = e.y * (P.braidFoot - 0.1), step = len / P.knots;
+    for (let k = 0; k < P.knots; k++) {
+      put(MeshBuilder.CreateBox("poacherBraid", { width: b, height: step * 0.9, depth: b }, scene), c.x + s * (e.x + t * 0.5), c.y - e.y * 0.1 - step * (k + 0.5), c.z + e.z * P.front + b / 2);
+    }
+  }
+  put(MeshBuilder.CreateBox("poacherBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, midY, c.z - e.z * P.back - t / 2 + t);
+  return out;
 }
