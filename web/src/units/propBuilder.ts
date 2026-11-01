@@ -6955,8 +6955,15 @@ const HORSE_WIDE = 0.85;
  * insides, a pink muzzle, and a dark mane in tufts down the top of the neck. No chanfron, plume or caparison. The rider holds his rope up in his right
  * fist (446, wildWestDress LASSO_COIL).
  */
-const PINTO_COAT = new Color3(0.95, 0.42, 0.1);
-const PINTO_CREAM = new Color3(1, 0.93, 0.78);
+/*
+ * [S] 453 the paint's colours (critic 444-451 lasso a.2: "yellow-tan with white patches - TABS: orange with peach patches"; wild_west.lasso.red.png: a light
+ * warm orange coat, the patches a pale peach, not white). Probe 453: the coat's code (.95, .42, .1) read brown-orange with the glow off and golden yellow
+ * with it on (the glow layer's bloom of the self-light washed it toward yellow), and the cream patches read white. The coat and patches are now cloth
+ * (as the dress swatches of palette.png, whose orange row shows orange) and kept out of the glow layer (PINTO_NOGLOW); the patches peach.
+ */
+const PINTO_COAT = new Color3(1, 0.3, 0.06);
+const PINTO_CREAM = new Color3(0.9, 0.55, 0.34);
+const PINTO_NOGLOW = true;
 const PINTO_PINK = new Color3(0.98, 0.55, 0.66);
 const PINTO_GLOW = 0.18;
 const PINTO_PATCHES: ReadonlyArray<readonly [number, number, number]> = [[-0.9, 0.25, 0.1], [0.85, 0.1, -0.35], [0.25, 0.7, -0.7], [-0.15, -0.75, 0.55], [0.35, 0.15, 0.92], [-0.5, 0.1, -0.85]];
@@ -7034,10 +7041,10 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   const L = H * HORSE_LONG;
   const W = Math.max(body.metrics.hipWidth * 2.2, H * HORSE_WIDE);
   // The paint's coat and patches are a little self-lit, so they stay orange and cream in the blue shade instead of greying
-  const coat = pinto ? mat(scene, PINTO_COAT, PINTO_GLOW) : mat(scene, BARDED_NECK.coat, BARDED_NECK.glow, "cloth");
+  const coat = pinto ? mat(scene, PINTO_COAT, PINTO_GLOW, "cloth") : mat(scene, BARDED_NECK.coat, BARDED_NECK.glow, "cloth");
   const dark = mat(scene, new Color3(0.16, 0.1, 0.07));
   const plate = mat(scene, new Color3(0.66, 0.68, 0.7));
-  const cream = pinto ? mat(scene, PINTO_CREAM, PINTO_GLOW) : mat(scene, new Color3(0.93, 0.84, 0.64));
+  const cream = pinto ? mat(scene, PINTO_CREAM, PINTO_GLOW, "cloth") : mat(scene, new Color3(0.93, 0.84, 0.64));
   const barrel = MeshBuilder.CreateIcoSphere("horse", { radius: 1, subdivisions: 2 }, scene);
   barrel.scaling.set(W / 2, H * HORSE_DEEP / 2, L / 2);
   barrel.convertToFlatShadedMesh();
@@ -7353,6 +7360,11 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     return pts;
   };
   part(MeshBuilder.CreateRibbon("hpeytral", { pathArray: [strapPath(strapY + H * C.strap / 2), strapPath(strapY - H * C.strap / 2)], sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
+  if (pinto && PINTO_NOGLOW) {
+    // [S] 453 the paint's coat and patches out of the glow layer, so its bloom does not wash the orange to yellow (PINTO_COAT)
+    const glow = scene.getGlowLayerByName("glow");
+    if (glow) for (const m of body.hip.getChildMeshes(false)) if (m instanceof Mesh && (m.material === coat || m.material === cream)) glow.addExcludedMesh(m);
+  }
   return barrel;
 }
 
