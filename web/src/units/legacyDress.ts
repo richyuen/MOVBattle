@@ -130,7 +130,8 @@ export function poacherHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  * legacy.flag_bearer.red.png: an orange ring round his feet). BEARER_RING, in his standing height H: a flat ring .radius H out from his feet, .band H
  * wide, .lift H over the soles (the root's y 0), .sides-sided; the team colour self-lit .glow so it reads on the grass.
  */
-const BEARER_RING = { radius: 1.6, band: 0.05, flat: 0.012, lift: 0.02, sides: 40, glow: 0.45 };
+const BEARER_RING = { radius: 2.2, band: 0.05, flat: 0.012, lift: 0.02, sides: 40, glow: 0.45 };
+// [P] 462 radius 1.6 -> 2.2: the reach is .radius of his 1.39 m body, 2.2 m, and the ally 2.3 m off stood on the line, unbuffed (critic 461; probe_aura)
 // [P] 460 one colour per bearer for both teams, not the team's (critic 459 flag c.3: legacy.flag_bearer red and blue renders an orange ring; the banner's cyan)
 const BEARER_RING_COLOR: Record<string, Color3> = { "legacy.flag_bearer": new Color3(0.95, 0.6, 0.2), "legacy.banner_bearer": new Color3(0.25, 0.75, 0.95) };
 
