@@ -556,7 +556,7 @@ export function quickDrawVest(scene: Scene, body: ArticulatedBody, teamColor: Co
  * on every face of it .stripes stripes .stripe of the face's width across, running from the waist to the band, .proud of the skirt's radius off it; the
  * hem band .band of the skirt tall and .bandOut of its hem round. Gold self-lit .glow.
  */
-export const DYNAMITE_SKIRT = { long: 1.05, flare: 1.35, stripes: 2, stripe: 0.09, proud: 0.03, band: 0.12, bandOut: 1.04, gold: new Color3(0.95, 0.78, 0.42), glow: 0.3, teamGlow: 0.12 };
+export const DYNAMITE_SKIRT = { long: 1.05, flare: 1.35, stripes: 2, stripe: 0.09, proud: 0.03, band: 0.12, bandOut: 1.04, gold: new Color3(0.95, 0.78, 0.42), glow: 0.3, teamGlow: 0 } // [P] 453 teamGlow .12 -> 0: the skirt read pale beside her pants (critic 452 dynamite a defect 1);
 
 /** The team cloth the Dynamite Thrower's skirt is hung in (spec at DYNAMITE_SKIRT). */
 export function dynamiteSkirtCloth(teamColor: Color3): Material {
