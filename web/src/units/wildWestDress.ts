@@ -1033,3 +1033,29 @@ export function dynamiteShirt(scene: Scene, body: ArticulatedBody, teamColor: Co
   for (const arm of [body.leftLowerArm, body.rightLowerArm]) out.push(limbShell(scene, "dynamiteSleeve", arm, 0, 1, S.lowerOut, sleeve));
   return out;
 }
+
+/*
+ * [S] 455 the Miner's overall legs (CONFIRM 452 miner a.2: "bare team skin from a thin navy waistband down to the boots - TABS: dark team-shade overall
+ * legs running into the boots"; wild_west.miner.blue.png: the overall trousers a dark team shade from the waist, straight full legs, tucked into the
+ * boot tops). MINER_LEGS: the pelvis, thighs and shins in dark team cloth (the team colour times .shade, self-lit .glow); a 6-sided trouser leg .out of
+ * the thigh's half-width round it its whole length, and on the shin .shinOut round from its top to .shinTo of it, inside the boot's turned top.
+ */
+const MINER_LEGS = { shade: 0.55, glow: 0.12, out: 1.18, shinOut: 1.12, shinTo: 0.3 };
+
+/** The Miner's dark team overall legs, from the waist into the boots (spec at MINER_LEGS). */
+export function minerLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const L = MINER_LEGS;
+  const c = teamColor.scale(L.shade);
+  const cloth = getMaterialFactory().get("cloth", c, { emissive: c.scale(L.glow) });
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    thigh.material = cloth;
+    out.push(limbShell(scene, "minerTrouser", thigh, 0, 1.04, L.out, cloth));
+  }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = cloth;
+    out.push(limbShell(scene, "minerTrouser", shin, 0, L.shinTo, L.shinOut, cloth));
+  }
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = cloth;
+  return out;
+}
