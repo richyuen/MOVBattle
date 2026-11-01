@@ -7,11 +7,10 @@ a FAIL (1 since 444)
  3. hat in unit_wild_west.lasso_idle: brown tall-crown hat three heads wide — TABS: small team flat-crown hat (ref: red.png)
  4. moustache in unit_wild_west.lasso_idle: none — TABS: black handlebar moustache (ref: red.png; card Appearance)
 b FAIL (1 since 444)
- 1. lasso in unit_wild_west.lasso_windup: rein hand holds a short dark stick, grey loop at the horse's flank away from the hand — TABS: coiled tan rope loop held up in the rider's hand (ref: lasso.jpg; red.png) [shot: evidence commit first, re-aim to unit_wild_west.lasso_idle]
+ 1. lasso in unit_wild_west.lasso_idle: rein hand holds a short dark stick, grey loop at the horse's flank away from the hand — TABS: coiled tan rope loop held up in the rider's hand (ref: lasso.jpg; red.png) [shot re-aimed 447 from _windup: the coil hides while the thrown rope is out]
 c PASS (445: rope thrown onto the man's chest, hauled in low under the horse and run over; LASSO_DRAG)
 d PASS (cost 740, hp 6.77x; dmg/cd no wiki; 446 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-0. EVIDENCE first (outside the 7): re-aim b blocker 1 to unit_wild_west.lasso_idle (the coil hides while the thrown rope is out, so _windup cannot show it) (critic 446)
 1. [S] b coil held up - blocker 1: LASSO_COIL big loop raised above and beside the fist (tip toward upright, rise larger), coils off his chin - ref: lasso.jpg - ours: unit_wild_west.lasso_idle (critic 446)
 2. [S] a horse head - blocker 1: PINTO_HEAD shorter and fatter (long ~.6, wide ~.48), blaze flush, ears broad leaves (earWide ~.3, earFlat ~.6), eyes bigger - ref: red.png - ours: unit_wild_west.lasso_idle (critic 446)
 9. [S] a hat - blocker 3: small team flat-crown hat in wildWestDress - ref: red.png - ours: unit_wild_west.lasso_idle (critic 446)
