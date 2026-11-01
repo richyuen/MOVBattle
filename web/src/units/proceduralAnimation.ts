@@ -334,6 +334,16 @@ const POLE_GRIP = {
  * per s after a fall), and the muzzle kicks up .kick (rad) at the shot, settling at .settle per s.
  */
 const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25, settle: 6 };
+/*
+ * [S] 454 the Deadeye's levelled shot (CONFIRM 453 deadeye c.1-2: "the rifle still in a shoulder carry ... fired from the carry pose - TABS: the rifle
+ * is levelled straight out at waist/chest height toward the target, both hands on it, and stays levelled through the recoil"; wild_west.deadeye.png:
+ * the Winchester held level before her middle, the weapon fist at the receiver by her right hip-bone with the stock tucked under the forearm, the off
+ * hand under the forend, the muzzle flash going out level). WINCHESTER_AIM, in her standing heights: the weapon fist .ahead before the shoulder, .inward
+ * toward her middle, .drop below the shoulder; the barrel level along her front, the muzzle kicked up .kick by the shot and settling at .settle; the
+ * off palm on the forend. The aim snaps up as the attack starts (.up per s, the shot leaves at its first step) and is held through the attack and
+ * while she stands in range of her man between shots (readyAim, the card's warm-up), then eases back to the shoulder carry at .down per s.
+ */
+const WINCHESTER_AIM = { ahead: 0.2, inward: 0.06, drop: 0.2, kick: 0.12, settle: 8, up: 60, down: 2.5 };
 // [S] 425 the blunderbuss held low in both hands (see _aimBlunderbuss): the weapon fist's seat in shares of his height from the hip joint (ahead, out to
 // the weapon side, down), the barrel's droop below level and its turn in across his front (rad), the muzzle's kick up at the shot (rad)
 const BLUNDERBUSS_AIM = { ahead: 0.13, out: 0.07, drop: 0.0, droop: 0.22, across: 0.3, kick: 0.45 };
@@ -1541,6 +1551,13 @@ export class ProceduralAnimator {
     }
   }
 
+  /** Ranged, in range of the man: called every decision; a levelled gun (WINCHESTER_AIM) stays up until the calls stop. */
+  readyAim(): void {
+    this._aimReadyTimer = 0.6;
+  }
+
+  private _aimReadyTimer = 0;
+
   /** Melee contact: called every decision while in reach; the shove pose decays on its own once the calls stop. */
   leanIntoShove(): void {
     this._shoveTimer = 0.5;
@@ -2306,6 +2323,7 @@ export class ProceduralAnimator {
     this._offhandToGrip();
     this._holdChopDown(dt);
     this._aimMusket(dt);
+    this._aimWinchester(dt);
     this._aimPistol(dt);
     this._aimBlunderbuss(dt);
     this._gripHarpoon();
@@ -3590,6 +3608,56 @@ export class ProceduralAnimator {
   private _musket: { node: Mesh; rest: Quaternion } | null | undefined = undefined;
   private _musketAim = 1;
   /** The shouldered aim (see MUSKET_AIM): the weapon fist ahead of the shoulder, the musket level along his front, held in every living state. */
+  /** The Deadeye's Winchester levelled at her middle for the shot, both hands on it (spec at WINCHESTER_AIM). */
+  private _winchester: { node: Mesh; rest: Quaternion; fore: Mesh } | null | undefined = undefined;
+  private _winchesterAim = 0;
+  private _aimWinchester(dt: number): void {
+    if (this._winchester === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "winchesterFore"));
+      const fore = node?.getChildren().find((c): c is Mesh => c instanceof Mesh && c.name === "winchesterFore");
+      this._winchester = node && fore ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z), fore } : null;
+    }
+    const gun = this._winchester;
+    if (!gun) return;
+    const A = WINCHESTER_AIM;
+    const firing = this._state === AnimState.Attacking;
+    this._aimReadyTimer -= dt;
+    const want = firing || (this._aimReadyTimer > 0 && this._state !== AnimState.Walking) ? 1 : 0;
+    this._winchesterAim += (want - this._winchesterAim) * Math.min(1, dt * (firing ? A.up : A.down));
+    const w = this._state === AnimState.Dead ? 0 : this._winchesterAim * (1 - Math.min(1, this._limp));
+    if (w <= 0.001) {
+      if (gun.node.rotationQuaternion) gun.node.rotationQuaternion = null;
+      return;
+    }
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder]) n.computeWorldMatrix(true);
+    const rootM = b.root.getWorldMatrix();
+    const flat = (v: Vector3): Vector3 => { v.y = 0; return v.lengthSquared() < 1e-6 ? v.set(0, 0, 1) : v.normalize(); };
+    const fwd = flat(Vector3.TransformNormal(new Vector3(0, 0, 1), rootM));
+    const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
+    const height = b.metrics.overallHeight * b.root.scaling.y;
+    const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(A.ahead * height))
+      .addInPlace(outward.scale(-A.inward * height)).addInPlace(new Vector3(0, -A.drop * height, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
+    const kick = firing ? A.kick * Math.min(1, this._attackTimer * 30) * Math.exp(-this._attackTimer * A.settle) : 0;
+    const y = fwd.scale(Math.cos(kick)).addInPlace(new Vector3(0, Math.sin(kick), 0)).normalize();
+    const z = Vector3.Cross(y, outward).normalize();
+    const zDown = z.y > 0 ? z.scale(-1) : z;
+    const x = Vector3.Cross(y, zDown).normalize();
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
+    const world = Matrix.Identity();
+    Matrix.FromXYZAxesToRef(x, y, zDown, world);
+    const handRot = new Quaternion();
+    b.rightHand.getWorldMatrix().decompose(undefined, handRot);
+    const hand = Matrix.Identity();
+    handRot.toRotationMatrix(hand);
+    gun.node.rotationQuaternion = Quaternion.Slerp(gun.rest, Quaternion.FromRotationMatrix(world.multiply(hand.transpose())), w);
+    // the off palm under the forend
+    gun.node.computeWorldMatrix(true);
+    gun.fore.computeWorldMatrix(true);
+    this._offArmTo(gun.fore.getBoundingInfo().boundingBox.centerWorld.clone(), w, 2);
+  }
+
   private _aimMusket(dt: number): void {
     if (this._musket === undefined) {
       const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "musketFore"));

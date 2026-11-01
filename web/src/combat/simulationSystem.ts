@@ -251,6 +251,9 @@ const REAR_RANK_LANE = 0.7;
 const BLOW_DWELL = 0.12;
 // one-blow-per-man: the longest beat a striker takes, once at his man, before his first blow (each man his own share of it, RuntimeUnit.vary)
 const STRIKE_LAG = 0.45;
+// [S] 454 a levelled gun's warm-up (card Winchester warm-up 1 s; CONFIRM 453 deadeye c.1: "fired from the carry pose"): in range of her man she holds the
+// rifle level (readyAim) for GUN_WARMUP.warmup s before the first shot, so it leaves the levelled muzzle, not the shoulder carry; out of range it resets
+const GUN_WARMUP = { units: new Set(["wild_west.deadeye"]), warmup: 1 };
 /*
  * Mammoth Charge (tribal.mammoth card: "they will charge at enemy units and trample anyone who comes close"; tribal.mammoth.jpg): an enemy between
  * MAMMOTH_CHARGE.from and .reach metres past its reach sets the mammoth running at it, .speed times its walk for up to .seconds, a dust cloud kicked up at
@@ -570,6 +573,7 @@ export class SimulationSystem {
   private _closingFrom = new Map<RuntimeUnit, number>();
   // one-blow-per-man: when a striker who closed on his man may first bring his weapon down (see STRIKE_LAG)
   private _strikeReadyAt = new Map<RuntimeUnit, number>();
+  private _aimReadyAt = new Map<RuntimeUnit, number>();
   // Halflings holding on to their man (HALFLING_CLING): the man, the side he hangs on, when he lets go (set once the man is dead)
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
   // Gunslingers' volleys into the sky and the bullets coming down (BULLET_RAIN): when the guns fire up, then each bullet's spot and landing time
@@ -757,6 +761,7 @@ export class SimulationSystem {
     this._pendingLaunches = [];
     this._closingFrom.clear();
     this._strikeReadyAt.clear();
+    this._aimReadyAt.clear();
     this._charges.clear();
     this._chargeReadyAt.clear();
     this._stabbedAt.clear();
@@ -1896,6 +1901,8 @@ export class SimulationSystem {
       unit.faceTarget(enemy.position);
       if (slot) this._holdWallHeading(unit, slot, enemy);
       if (attackProfile.type === AttackType.Melee) unit.leanIntoShove();
+      // [S] 454 a gunman in range holds his aim between shots (the Deadeye's levelled Winchester, proceduralAnimation WINCHESTER_AIM)
+      else unit.readyAim();
       // A presser with a club or a blade does not swing from two strides off: while he is still closing he holds it cocked, and brings it down once he
       // is at the man's shoulder, or has stopped closing (the crowd or a board holds him off).
       const closingFrom = this._closingFrom.get(unit);
@@ -1914,12 +1921,17 @@ export class SimulationSystem {
           if (lagged) unit.animator.waitBeat();
         }
       }
+      if (GUN_WARMUP.units.has(unit.definition.id)) {
+        if (!this._aimReadyAt.has(unit)) this._aimReadyAt.set(unit, now + GUN_WARMUP.warmup);
+        lagged ||= now < (this._aimReadyAt.get(unit) ?? 0);
+      }
       if (canAttack && !closing && !lagged) {
         const ready = unit.canAttack(now);
         this._tryAttack(unit, enemy, attackProfile, now);
         if (ready && !unit.canAttack(now) && unit.definition.id === "farmer.farmer") this._stabbedAt.set(unit, now);
       }
     } else {
+      this._aimReadyAt.delete(unit);
       if (canMove) {
         this._moveUnitToward(unit, enemy.position, engageDistance, now);
       } else {

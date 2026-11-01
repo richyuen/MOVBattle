@@ -596,6 +596,12 @@ export class RuntimeUnit {
     this.animator.leanIntoShove();
   }
 
+  /** In range of its target with a ranged weapon: a gun held level at the man between shots (WINCHESTER_AIM). */
+  readyAim(): void {
+    if (isVehicleUnit(this.definition.id)) return;
+    this.animator.readyAim();
+  }
+
   /** Closing on its target, a few strides out: a heavy weapon comes up cocked over the shoulder; within striking distance it is brought down on its own beat. */
   readyBlow(striking = false, target: RuntimeUnit | null = null, behindRank = false): void {
     if (isVehicleUnit(this.definition.id)) return;
