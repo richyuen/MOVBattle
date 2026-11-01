@@ -68,6 +68,42 @@ export function buildBowler(scene: Scene, W: number, H: number, seat: number, un
 }
 
 /*
+ * [S] 447 the Quick Draw's hat (critic 446 quick_draw a.1: "black top hat with a yellow disc badge - TABS: team flat-crown wide-brim hat with a black
+ * band"; wild_west.quick_draw.red.png: a team-coloured felt hat, its crown about a head across with straight sides and a flat top, standing about half
+ * a head over the eyes; a flat brim a little over two heads across; a black band at the crown's foot). FLAT_HAT, in the head's width W and height H:
+ * crown .crown W across, .flare of that at the top, from the seat to .tall H over the head top (under .3, so the capture keeps its framing); brim .brim
+ * W across, .thick H; band .band H tall over the brim; felt the team colour times .shade, self-lit .glow; band near black.
+ */
+const FLAT_HAT = { sides: 10, crown: 1.12, flare: 0.94, tall: 0.24, brim: 2.15, thick: 0.04, band: 0.1, shade: 0.85, glow: 0.12, bandColor: new Color3(0.03, 0.03, 0.035) };
+
+/** The flat-crown wide-brim hat (spec at FLAT_HAT), in the hat's units; `seat` under the head top. Returns the crown. */
+export function buildFlatHat(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
+  const F = FLAT_HAT;
+  const u = (v: number) => v / unit;
+  const team = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(F.shade);
+  const mats = getMaterialFactory();
+  const felt = mats.get("cloth", team, { emissive: team.scale(F.glow) });
+  const dark = mats.get("cloth", F.bandColor, {});
+  const tall = -seat + F.tall * H;
+  const crownD = F.crown * W;
+  const crown = MeshBuilder.CreateCylinder("flatHatCrown", { height: u(tall), diameterBottom: u(crownD), diameterTop: u(crownD * F.flare), tessellation: F.sides }, scene);
+  crown.position.y = u(seat + tall * 0.5);
+  crown.material = felt;
+  crown.convertToFlatShadedMesh();
+  const brim = MeshBuilder.CreateCylinder("flatHatBrim", { height: u(F.thick * H), diameter: u(F.brim * W), tessellation: 16 }, scene);
+  brim.position.y = u(-tall * 0.5 + F.thick * H * 0.5);
+  brim.material = felt;
+  brim.convertToFlatShadedMesh();
+  brim.parent = crown;
+  const band = MeshBuilder.CreateCylinder("flatHatBand", { height: u(F.band * H), diameter: u(crownD * 1.03), tessellation: F.sides }, scene);
+  band.position.y = u(-tall * 0.5 + F.thick * H + F.band * H * 0.5);
+  band.material = dark;
+  band.convertToFlatShadedMesh();
+  band.parent = crown;
+  return crown;
+}
+
+/*
  * [S] 445 the Lasso's thrown rope (audit 444 lasso c.1; wild_west.lasso.jpg: a tan rope from the rider's fist, a loop round the man). LASSO_ROPE: a rope
  * .thick m across, 1 long up +y from its root (the caller places, aims and stretches it), and a loop .loop m across at its end, .loopThick thick; tan rope.
  */
