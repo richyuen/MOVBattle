@@ -175,7 +175,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "miner_pick" | "queen_cutlass" | "stiffy_sword" | "bone_bow";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "queen_cutlass" | "stiffy_sword" | "bone_bow";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -661,7 +661,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "wild_west.gunslinger": vis(
     { scale: 1.0, bulk: 0.9, armLength: 1.08 }, "flintlock", "bowler", "none", "none", "#7F4B24", "flintlock", {
       // [S] 445 a long dark revolver in each fist (propBuilder REVOLVER), not the pirate flintlock (audit 444 b.1)
-      weaponVariant: "revolver", offhandVariant: "revolver",
+      weaponVariant: "revolver_pair", offhandVariant: "revolver_pair", // [S] 446 two revolvers in each fist (REVOLVER pair; critic 445 b.2)
       posePreset: "gunner",
       materialPreset: "wildwest_leather",
       attachmentPreset: "quickdraw_smoke",

@@ -3392,10 +3392,14 @@ const DRAGON_PISTOL = { ...PISTOL, long: 0.36, bore: 0.12, bell: 0.26, mouth: 4.
  * grip raked down and back). The pistol's cut (weaponVariant "revolver"), in the gun's length L = .long of his height: barrel .bore of L across from the
  * drum to the mouth; drum .drum of L across, .drumLong of L along, its back at the fist; frame .tail of L behind the fist; hammer .hammer of L tall;
  * grip .grip of L, raked .gripRake. Dark steel the shade of the reference, not the pistol's pale silver.
+ * [S] 446 the pair (weaponVariant "revolver_pair"; card Characteristics "two revolvers in each hand"; critic 445 b.2): a second revolver beside the first,
+ * .pairSide of L off its side, .pairDrop of L lower and .pairBack of L back, splayed .pairSplay rad; its own mouth (so BULLET_RAIN fires both) but no
+ * pistolBell mark, so the hand still seats and aims the first one.
  */
 const REVOLVER = {
   long: 0.36, bore: 0.075, drum: 0.2, drumLong: 0.18, drumSides: 6, tail: 0.1, over: 0.15, hammer: 0.1, grip: 0.36, gripRake: 0.55, gripWide: 0.1,
   steel: new Color3(0.2, 0.2, 0.22), glow: 0.05, wood: new Color3(0.4, 0.2, 0.09),
+  pairSide: 0.22, pairDrop: 0.08, pairBack: 0.1, pairSplay: 0.12,
 };
 /*
  * [S] 425 the Blunderbuss (pirate.blunderbuss.red.png: a short heavy gun held low across the belly in both hands, a deep tan-brown stock, a pale grey
@@ -4535,7 +4539,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "flintlock": {
       // [S] 423 the flintlock pistol, built to the spec at PISTOL: the fist at the origin on the grip, the barrel above it along +y
       // [S] 427 ...or the Captain's dragon pistol (DRAGON_PISTOL)
-      if (variant === "revolver") return buildRevolver(scene, fit.stand);
+      if (variant === "revolver" || variant === "revolver_pair") return buildRevolver(scene, fit.stand, variant === "revolver_pair");
       const dragon = variant === "dragon_pistol";
       const P = dragon ? DRAGON_PISTOL : PISTOL, M = MATCHLOCK;
       const L = fit.stand * P.long;
@@ -5788,7 +5792,7 @@ const SNAKE_BOW = {
   green: new Color3(0.24, 0.47, 0.26), white: new Color3(0.9, 0.92, 0.88), wrap: new Color3(0.42, 0.26, 0.14), tongue: new Color3(0.85, 0.12, 0.1),
 };
 /** [S] 445 the revolver (REVOLVER): the fist at the origin on the grip, the barrel along +y above it (-z), as the flintlock is held. */
-function buildRevolver(scene: Scene, stand: number): Mesh {
+function buildRevolver(scene: Scene, stand: number, pair = false): Mesh {
   const R = REVOLVER;
   const L = stand * R.long;
   const steel = mat(scene, R.steel, R.glow, "cloth");
@@ -5849,6 +5853,14 @@ function buildRevolver(scene: Scene, stand: number): Mesh {
   const mark = new TransformNode("pistolBell", scene);
   mark.position.copyFrom(muzzle.position);
   mark.parent = holder;
+  if (pair) {
+    const twin = buildRevolver(scene, stand, false);
+    for (const c of twin.getChildren()) if (c.name === "pistolBell") c.dispose();
+    twin.name = "revolverTwin";
+    twin.parent = holder;
+    twin.position.set(R.pairSide * L, -R.pairBack * L, R.pairDrop * L);
+    twin.rotation.z = -R.pairSplay;
+  }
   return holder;
 }
 
