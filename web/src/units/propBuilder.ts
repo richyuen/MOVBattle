@@ -4414,6 +4414,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (type === "bow" && variant === "snake_bow") return buildSnakeBow(scene, s, fit.stand);
       if (type === "bow" && variant === "ice_bow") return buildIceBow(scene, s, fit.stand);
       if (type === "bow" && variant === "bone_bow") return buildBoneBow(scene, s, fit.stand, teamColor ?? accent);
+      if (type === "bow" && variant === "poacher_bow") return buildPoacherBow(scene, s, fit.stand);
       if (type === "bow" && (variant === "longbow" || variant === "brown_longbow" || variant === "firework_bow")) {
         // The medieval archer's (352; medieval.archer.red.png: a plain brown longbow as tall as he is, a pale wrap at the grip) is the same stave in
         // BROWN_LONGBOW's colours: brown wood, no tip wraps, the grip wrapped pale and not in the team colour
@@ -6382,6 +6383,48 @@ function buildLongPike(scene: Scene, s: number): Mesh {
   }
   shaft.position.y = L * (0.5 - P.grip);
   return shaft;
+}
+/*
+ * [S] 463 the Poacher's short bow (audit 457 poacher b.1: "a thin dark curved stick held low at the hip - TABS: a chunky tan short bow with wrapped grips
+ * held across the chest"; legacy.poacher.red.png: a thick light-brown stave a little over half his height, faceted, fattest at the grip and tapering to
+ * blunt tips, two pale rope wraps either side of the fist and a dark nock band near each tip, held slanted across his chest). POACHER_BOW in the man's
+ * standing heights (fit.stand): the stave .long, .thick of its length at the grip tapering to .taper of that at the tips, bowed .bow off the string;
+ * rope wraps .wrap long, .wrapOut of the stave across, at +-.wrapAt of the half-length; nock bands at +-.nockAt. Names "bow" and "string" kept (the
+ * bow seat finds them); carried across the front like the ice bow (the iceBowCarry mark, _restIceBow).
+ */
+const POACHER_BOW = { long: 0.62, thick: 0.085, taper: 0.55, bow: 0.06, wrap: 0.09, wrapOut: 1.18, wrapAt: [0.1, 0.26], nockAt: 0.86, nock: 0.05, wood: new Color3(0.85, 0.5, 0.25), rope: new Color3(1.0, 0.78, 0.45), dark: new Color3(0.25, 0.13, 0.06) };
+function buildPoacherBow(scene: Scene, s: number, stand: number): Mesh {
+  const B = POACHER_BOW;
+  const L = stand * B.long;
+  const r0 = B.thick * L * 0.5;
+  const zs = 0.04 * s;
+  const radius = (t: number): number => r0 * (1 - (1 - B.taper) * Math.abs(t));
+  const zAt = (t: number): number => zs - B.bow * L * (1 - t * t) - r0;
+  const ts: number[] = [];
+  for (let i = 0; i <= 12; i++) ts.push(i / 6 - 1);
+  const path = ts.map((t) => new Vector3(0, t * L * 0.5, zAt(t)));
+  const stave = MeshBuilder.CreateTube("bow", { path, radiusFunction: (i) => radius(ts[i]), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
+  stave.material = mat(scene, B.wood, 0.12, "cloth");
+  stave.convertToFlatShadedMesh();
+  const band = (name: string, t: number, long: number, grow: number, m: ReturnType<typeof mat>): void => {
+    const c = MeshBuilder.CreateCylinder(name, { height: long * L, diameter: radius(t) * 2 * grow, tessellation: 6 }, scene);
+    c.position.set(0, t * L * 0.5, zAt(t));
+    c.material = m;
+    c.convertToFlatShadedMesh();
+    c.parent = stave;
+  };
+  const rope = mat(scene, B.rope, 0.12, "cloth");
+  for (const at of B.wrapAt) for (const side of [1, -1]) band("bowWrap", at * side, B.wrap, B.wrapOut, rope);
+  const dark = mat(scene, B.dark, 0.08, "cloth");
+  for (const side of [1, -1]) band("bowNock", B.nockAt * side, B.nock, B.wrapOut, dark);
+  const string = MeshBuilder.CreateCylinder("string", { height: L * 0.97, diameter: 0.006 * L, tessellation: 4 }, scene);
+  string.position.z = zs;
+  string.parent = stave;
+  string.material = mat(scene, new Color3(0.85, 0.8, 0.7), 0.12, "cloth");
+  stave.rotation.z = Math.PI / 2;
+  stave.position.y = 0.1 * s;
+  new TransformNode("iceBowCarry", scene).parent = stave;
+  return stave;
 }
 /** The medieval archer's longbow colours (352; medieval.archer.red.png): brown wood, a pale leather wrap at the grip */
 const BROWN_LONGBOW = { long: 1.4, wood: new Color3(0.45, 0.27, 0.14), wrap: new Color3(0.86, 0.78, 0.62) };

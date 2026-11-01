@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -713,6 +713,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "legacy.poacher": vis(
     // [S] 457 the dark wide-brim hat with a team band above the eyes (legacyDress POACHER_HAT), not the hood dome over the face (audit 457 a.1)
     { scale: 0.94, bulk: 0.84, armLength: 1.1 }, "bow", "poacher_hat", "none", "quiver_back", "#6F7D43", undefined, { // [S] 462 a quiver of arrows on his back (propBuilder quiver_back; audit 457 b.2)
+      weaponVariant: "poacher_bow", // [S] 463 a chunky tan short bow with rope-wrapped grips, carried across the chest (propBuilder POACHER_BOW; audit 457 b.1)
       posePreset: "archer",
       materialPreset: "legacy_toy",
       attachmentPreset: "bow_ready",
