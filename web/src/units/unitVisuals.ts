@@ -918,7 +918,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { moving: ["reaper_trail"], attacking: ["reaper_trail", "reaper_arc"], "ability-active": ["reaper_trail", "reaper_arc"] },
       });
     case "iconic_quick_draw":
-      return vis({ scale: 1.08, bulk: 0.94, armLength: 1.12 }, "flintlock", "captain_hat", "none", "cape", "#a56c34", "flintlock", {
+      // [S] 445 one revolver, the off hand empty (card Off Hand N/A; wild_west.quick_draw.red.png; audit 444 b.1)
+      return vis({ scale: 1.08, bulk: 0.94, armLength: 1.12 }, "flintlock", "captain_hat", "none", "cape", "#a56c34", undefined, {
         posePreset: "duelist", materialPreset: "secret_bandit", attachmentPreset: "quickdraw_smoke",
         stateVariants: { attacking: ["quickdraw_smoke"] },
       });
