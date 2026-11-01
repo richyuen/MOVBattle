@@ -322,6 +322,9 @@ const POLE_GRIP = {
   snathPeg: [0.28, 0.32], // the harvester's scythe: the off hand on the upper peg (SCYTHE_LOW)
   banjoNeck: [0.6, 0.95], // the bard's banjo: the off hand fretting up the neck (medieval.bard.red.png)
   boGrip: [0.3, 0.62], // the monk's bo: the off hand across his chest toward the off end (dynasty.monk.red.png, MONK_REST)
+  // [S] 446 the miner's pick: the off fist on the haft just under the weapon fist, both hands together over the shoulder (wild_west.miner.red.png;
+  // card Two-handed; critic 445 b.2)
+  minerHaft: [-0.14, -0.06],
 } as const;
 /*
  * [S] shouldered aim (331; renaissance.musketeer.jpg: the stock to him, the barrel out at the target, smoke at the muzzle). The weapon fist is solved (_armTo) onto a point MUSKET_AIM.ahead of his height before the weapon shoulder, .inward toward the cheek and .drop below it, so the

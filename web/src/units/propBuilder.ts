@@ -5901,6 +5901,9 @@ function buildMinerPick(scene: Scene, stand: number): Mesh {
     point.convertToFlatShadedMesh();
     point.parent = haft;
   }
+  // [S] 446 the mark the off hand finds the haft by (proceduralAnimation POLE_GRIP.minerHaft, _twoHandPole): both fists on it
+  const grip = new TransformNode("minerHaft", scene);
+  grip.parent = haft;
   const holder = new Mesh("pickaxe", scene);
   haft.parent = holder;
   return holder;
