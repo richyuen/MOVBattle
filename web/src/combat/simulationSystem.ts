@@ -201,7 +201,8 @@ function harpoonMuzzleOf(unit: RuntimeUnit): TransformNode | null {
  * launches from the fist that holds the bow (the hand with a mesh named bow* under it), "mouth" from the front of the head (.mouthAhead of its depth
  * ahead of its middle, .mouthDrop of its height under it), both at their world height (originLift 0).
  */
-const HAND_LAUNCH: Record<string, "bow" | "mouth"> = { "legacy.poacher": "bow", "legacy.blowdarter": "mouth" };
+// 462: the blowdarter's "mouth" was rejected (critic 462: the dart still left at crown height, the pipe on his back): his launch waits for the blowgun hold
+const HAND_LAUNCH: Record<string, "bow" | "mouth"> = { "legacy.poacher": "bow" };
 const MOUTH_LAUNCH = { mouthAhead: 1.1, mouthDrop: 0.3 };
 
 /** Where a HAND_LAUNCH shooter's missile leaves: his bow fist or his mouth, in world space; null when he has neither. */
