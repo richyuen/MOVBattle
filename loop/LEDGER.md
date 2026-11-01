@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-452 | DYNAMITE_HOLD resubmit + throwWindupCap 1 s (8326af8e) | wild_west.dynamite_thrower.b | approved (b PASS)
-452 | DYNAMITE_SKIRT knee skirt, gold stripes per face, gold hem band (d87b2f79) | wild_west.dynamite_thrower.a | approved
-452 | QUICK_DRAW_VEST team cloth body cloth, four grey buttons (1da9827a) | wild_west.quick_draw.a | approved
-452 | GUNSLINGER_REST revolvers low by the thighs at rest (608df0a6) | wild_west.gunslinger.a | approved
-452 | GUN_BELT pouch side list, deadeye pouch each hip (f7038a83) | wild_west.deadeye.a | approved
-452 | MINER_BOOTS dark brown knee boots, turned top (e0e391fd) | wild_west.miner.a | approved (a PASS)
-452 | CACTUS spikes tan, spike .55 base 1.15, hood ring 8 + crown 4 (81fef625) | wild_west.cactus.a | approved (a PASS)
 453 | no tunic skirt on the Quick Draw (f1e7c5e9) | wild_west.quick_draw.a | approved (a PASS)
 453 | DYNAMITE_BOOTS black boots, folded cuff (7d3f3350) | wild_west.dynamite_thrower.a | approved
 453 | GUNSLINGER_SHOES small black shoes (de84002b) | wild_west.gunslinger.a | approved (a PASS)
@@ -42,15 +35,19 @@ for 25 iterations.
 456 | WINCHESTER_AIM recoil a slide back along the level barrel (da3c6b53) | wild_west.deadeye.c | approved (c PASS)
 456 | LASSO_SHIRT team shirt, trousers, hem, short dark sleeves (3956ccec, 14478070) | wild_west.lasso.a | approved (a PASS)
 456 | [R] DYNAMITE_LOOK hat lifted off the eyes + lighter team bandanna (a089b2c5) | wild_west.dynamite_thrower.a | approved (a PASS, plateau cleared)
+457 | [R] MINER_BUILD lanky trunk, legs to half the height, waist flush, slim trousers (b6a093c2) | wild_west.miner.a | approved (a PASS; CONFIRM failed a on the hat)
+457 | CHARGE_FLAG team flag, gold rim + emblem + ball; pole upright, uprightPole marker in the Healer's hold (3537400d, 35ba9eb6) | legacy.flag_bearer.b | approved
+457 | STAY_BANNER gold cross-beam, two team banners with tower emblems; pole upright (c372d09e, 3244f182) | legacy.banner_bearer.b | approved
+457 | TEAM_GLOVE team mitt centred on the fist, white band (4e6b33f9, bc99e306) | legacy.boxer.b | approved
+457 | POACHER_HAT dark felt wide brim, team band (23a90927) | legacy.poacher.a | approved
+457 | PEASANT_HOOD team cowl, peak, collar (863f64ea) | legacy.peasant.a | rejected (reverted da3672d0)
 
 ## Spent (never retry as [P])
 
 ## Rows
 
-dynasty.dragon done 416-431 rows (FLAME_JET + DRAGON_BREATH, DRAGON_FORM [R], DRAGON_CARRIER + poleColor + arm/fist, BODY_FLAMES, DRAGON_TRIM, DRAGON_HOLD) | compacted 432 | 431 | approved | values: git show 67890443:loop/LEDGER.md
 dynasty.monkey_king + monk + crew split, ancient.minotaur strap/girdle, pirate beard done rows (MONKEY_RUYI/TAIL, BO_SHOVE, MONKEY_CROWN/FACE/SHORTS/ROBE/TRUNK/HAIR, FRONT_SPLIT, MINO_STRAP/GIRDLE/CAP, PIRATE_BEARD) | compacted 437 | 433 | approved | values: git show 3c42103f:loop/LEDGER.md
 wild_west done 448-453 rows (MINER_BLAST, GUNSLINGER_SIDEBURNS/SUIT/REST/SHOES, CACTUS_ROBE [R] + boots/spines, QUICK_DRAW_SHIRT/VEST, GUN_BELT; cactus, gunslinger, quick_draw D) | compacted 455 | 453 | approved | values: git show fa4523ed:loop/LEDGER.md
-pirate.bomb_thrower done 429-431 rows (PIRATE_SOCKS, BOMB_SASH, PIRATE_BELT) | compacted 432 | 431 | approved | values: git show 67890443:loop/LEDGER.md
 pirate.flintlock + blunderbuss + captain done 429-433 rows (PIRATE_HAIR, FLINTLOCK_LOCKS, PLAIN_SOCKS, CANNON_BANDANNA, BLUNDERBUSS_HAIR, BLUNDERBUSS, BARREL_GREAVES, CAPTAIN_PARROTS/BEARD/LEGS/TRICORN/FRONT) | compacted 435 | 433 | approved | values: git show b90a44ee:loop/LEDGER.md
 pirate.harpooner done 431-438 rows (HARPOON_BAYONET, scale 1.3, HARPOONER_PANTS, HARPOONER_SHOES, HARPOON_REST, HARPOON_BREECH [R]) | compacted 439 | 438 | approved | values: git show eb4676ee:loop/LEDGER.md
 pirateDress.ts:QUEEN_DREADS (wrap, rootY, spray, thick, rise, lean, tip, droop, falls, drop, splay, bead) | .42, 1, 7, .2, 1.05, .8, .75, 1, 3, -1.9, .12, .26 | 434 | approved | QUEEN_HAIR pirateHair slabs + curl lumps side .36 drop -2 (430-433)
@@ -61,33 +58,14 @@ pirateDress.ts:QUEEN_SHIRT (shoulderOut, puff, puffAt, to, cuffOut, vee, veeLong
 wild_west.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 444 | stats | values: git show 7aee94dc
 spooky done 435-444 rows (REAPER_TENDRILS/BURST/LEGS/ROBE/IMPALE, STIFFY_GREAVES/UPRIGHT, BOOT_SHAFT, SKELETON_BONE, PUMPKIN_TIMBER/POSTS, VAMPIRE_VEST/BEARD/LATCH; spooky all D 444) | compacted 447 | 444 | approved | values: git show cbd79d83:loop/LEDGER.md
 wild_west 444-447 rows (BULLET_RAIN, REVOLVER, BOWLER, LASSO_DRAG/ROPE, CACTUS_EXPLOSION/NEEDLES, MINER_PICK, GUNSLINGER_JACKET, PINTO_HEAD, LASSO_COIL, POLE_GRIP.minerHaft, QUICK_FAN, MINER_CAP, GUNSLINGER_TIE, CACTUS_SLEEVE) | compacted 451 | 447 | approved | values: git show 3ac8ee79:loop/LEDGER.md
-wildWestDress.ts:FLAT_HAT (crown, flare, tall, brim, thick, band, shade, glow; quick_draw + lasso) | 1.12, .94, .24, 2.15, .04, .1, .85, .12 | 448 | approved | captain_hat / cowboy_hat (before 447-448)
-propBuilder.ts:WINCHESTER (long, grip, bore, tube, rcv, rcvDeep, loop, fore, butt, tilt) | 1.12, .3, .03, .75, .14, 2.2, 2.6, .32, .12, -.2 | 448 | approved | MATCHLOCK musket (before 448)
-wildWestDress.ts:MINER_OVERALLS (lift, strap, apart, proud, waist, over) | .35, .1, .22, .04, .22, 1.06 | 448 | approved | leather vest block + tunic skirt (before 448)
-wildWestDress.ts:PEAK_HAT (sides, crown, brim, slope, peak, tall, shade; deadeye + dynamite_thrower) | 8, 1.12, 2.25, .3, .22, .6, .9 | 449 | approved | cowboy_hat (before 449)
-propBuilder.ts:DYNAMITE_WIRES (thick, rise, lean, bend, curl, tail) | .012, .08, .35, .06, 1.1, .09 | 449 | approved | one tan fuse (before 449)
+wild_west done 448-456 rows (FLAT_HAT, PEAK_HAT, WINCHESTER(_AIM), RIFLE_TRACER, DYNAMITE_WIRES/HOLD/SKIRT/BOOTS/SHIRT/LOOK [R], WESTERN_BRAID, DEADEYE_SHIRT, LASSO_RAISE/MOUSTACHE/SHIRT, PINTO_LEGS/HEAD/COAT; dynamite, deadeye, lasso D 456) | compacted 457 | 456 | approved | values: git show 7f5ee168:loop/LEDGER.md
+wildWestDress.ts:MINER_OVERALLS (lift, strap, apart, proud, waist, over) | .35, .1, .22, .04, .22, 1.01 | 457 | approved | over 1.06 (448-456, a waist ledge); leather vest block + tunic skirt (before 448)
 wildWestDress.ts:MINER_MOUSTACHE (long, thick, droop, at, proud, tip, tipDrop) | .8, .28, .32, -.38, .08, .22, .16 | 449 | approved | long .62 thick .2 tip .17 (449 look); none (before 449)
-proceduralAnimation.ts:LASSO_RAISE (out, back, face) | .45, .15, -.6 | 451 | approved | coil rode the fist, loop hanging under it (446-450)
-proceduralAnimation.ts:DYNAMITE_HOLD (size, side, up, front, lowGrip, highGrip, across, palmOff, right raise/turn/elbow, left raise/turn/elbow) + unitVisuals throwWindupCap | .78, .2, .06, .36, .45, .1, .1, .2, -.3/.15/-1.2, -.45/1.15/-1.9; cap 1 s | 452 | approved | bundle on the shoulder (before 452); hold through the fire, rejected (451)
-wildWestDress.ts:DYNAMITE_SKIRT (long, flare, stripes, stripe, proud, band, bandOut, gold, glow, teamGlow) | 1.05, 1.35, 2, .09, .03, .12, 1.04, (.95,.78,.42), .3, .12 | 452 | approved | tunic hem at the hip (before 452)
 wildWestDress.ts:MINER_BOOTS (from, to, out, cuffFrom, cuff, color, glow) | .14, 1.04, 1.25, .06, 1.45, (.12,.065,.04), .1 | 452 | approved | plain team feet (before 452)
-wildWestDress.ts:DYNAMITE_BOOTS (from, to, out, cuffFrom, cuff, color, glow) | .46, 1.04, 1.3, .32, 1.6, (.07,.055,.05), .1 | 453 | approved | from .34 cuffFrom .2 (453 look); plain team feet (before 453)
-wildWestDress.ts:DYNAMITE_SKIRT.teamGlow | 0 | 453 | approved | .12 (452)
-wildWestDress.ts:WESTERN_BRAID (apart, rootUp, rootBack, footOut, footDrop, standOff, bow, plaits, thick, overlap, shade, band, tuft, hair, glow; deadeye side -1) | .42, .32, .12, .5, .85, .12, .18, 5, .3, 1.5, .75, .12, .2, (.36,.19,.09), .14 | 453 | approved | none (before 453)
 proceduralAnimation.ts:MINER_UPRIGHT (tilt, stride, lean, chin) | .06, .12, .06, .06 | 453 | approved | hashed stance, sunk crouch chin -.22 (before 453)
 proceduralAnimation.ts:PICK_SHOULDER (side, up, front, back, out, arm raise/turn/elbow) | .15, 1.25, .5, .3, .12, -1.6/.4/-1.7 | 454 | approved | .32, .95, .42 (453, fists at the chest); up .05 (453 probe); pick on the fist rest (before 453)
 wildWestDress.ts:MINER_HAT (sides, crown, brim, slope, top, tall, tilt, shade, glow) | 8, 1.2, 1.85, .16, .86, .75, .14, .9, .12 | 454 | approved | MINER_CAP skullcap + bill (447-453)
-proceduralAnimation.ts:WINCHESTER_AIM (ahead, inward, drop, slide, settle, up, down, seat, turn) + GUN_WARMUP + RuntimeUnit gunner overlay x (1 - levelledGun) | .28, .06, .26, .05, 8, 60, 2.5, .02, 1.2; 1 s | 456 | approved | ahead .2 drop .2 kick .12 rad up (454: shoulder height, ~15° up)
-projectileSystem.ts:RIFLE_TRACER (thick, hold, life; deadeye) | .035, .12, .3 | 455 | approved | none: only a muzzle puff (before 455)
-wildWestDress.ts:DYNAMITE_SHIRT (shade, sleeveShade, glow, upperOut, lowerOut) | .85, .35, .12, 1.22, 1.2 | 455 | approved | sleeveShade .7 (455 look: pale); secret_bandit body cloth (before 455)
-wildWestDress.ts:MINER_LEGS (shade, glow, out, shinOut, shinTo) + MINER_SLEEVES (upperOut, lowerOut, cuffFrom, cuffOut, glove, glow) | .3, .12, 1.18, 1.12, .3; 1.22, 1.18, .55, 1.55, (.72,.5,.26), .15 | 455 | approved | shade .55 (455 look: pale); bare team legs and arms (before 455)
-wildWestDress.ts:LASSO_MOUSTACHE (long, thick, droop, at, proud, curl, curlThick) | .66, .26, .12, -.36, .08, .36, .13 | 455 | approved | none (before 455)
-wildWestDress.ts:LASSO_SHIRT (shade, sleeveShade, glow, out, sleeveTo) + unitFactory tunic hem in lassoShirtCloth | .85, .35, .12, 1.3, .7 | 456 | approved | wildwest_leather body cloth (before 456)
-wildWestDress.ts:DYNAMITE_LOOK [R] 456 (hatLift, lift, band, collar, wide, long, proud, glow) + hat dynamite_hat | .24, .45, .1, 1.06, .92, .42, .07, .15 | 456 | approved | peak_hat at the eye seat, no bandanna (449-455)
-propBuilder.ts:PINTO_LEGS (fore, hind, sides, deep, foot, cannon, fetlock, hoof, hoofTall) | .22, .27, 6, 1.15, .12, .085, .065, .15, .09 | 455 | approved | barded wedges .36/.44 x1.45, hoof .27 (before 455)
-propBuilder.ts:PINTO_HEAD (wide, long, deep, muzzle, muzzleAt) + PINTO_BEAD (disc, thick, proud, pupil, look) | .6, .6, .54, .46, .7; .3, .07, .03, .48, .18 | 454 | approved | long thin box snout (447-453)
-propBuilder.ts:PINTO_COAT, PINTO_CREAM, PINTO_NOGLOW (cloth, out of the glow layer) | (1,.3,.06), (.9,.55,.34), true | 453 | approved | (1,.5,.16)/(1,.76,.54) read yellow/white (453 probe); (.95,.42,.1)/(1,.93,.78) wood in the glow (before 453)
-wildWestDress.ts:DEADEYE_SHIRT (upperOut, lowerOut, lowerTo, cuffOut, vee, veeLong, color, glow) | 1.75, 1.95, .8, 1.35, .46, .4, (.95,.9,.74), .32 | 451 | approved | bare arms (before 451)
+wildWestDress.ts:MINER_LEGS (shade, glow, out, shinOut, shinTo) + MINER_SLEEVES (upperOut, lowerOut, cuffFrom, cuffOut, glove, glow) | .3, .12, 1.08, 1.06, .3; 1.22, 1.18, .55, 1.55, (.72,.5,.26), .15 | 457 | approved | out 1.18 shinOut 1.12 (455-456); shade .55 (455 look); bare team legs and arms (before 455)
 spooky.* stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 7 units) | d PASS 7/7 | 434 | stats | values: git show 33bb56af
 spooky b props 434-436 rows (VAMPIRE_CLAWS, STIFFY_SHIELD, STIFFY_SWORD, BONE_BOW, CANDLE_ARMS; b PASS) | compacted 440 | 436 | approved | values: git show 93103dfd:loop/LEDGER.md
 spooky c mechanics 434-435 rows (PUMPKIN_SHOT, FIRE_ARROW, SPIRIT_FIRE, BURN + BURN_STATUS, SPIRIT_LIFT, FEAR_SKULL + STIFFY_FEAR, PUMPKIN_BURST) | compacted 436 | 435 | approved | values: git show e1126012:loop/LEDGER.md
@@ -100,3 +78,10 @@ spooky done 437-441 rows (STIFFY_HELMET, SKELETON_HOOD, VAMPIRE_BAT/HAIR/COLLAR,
 pirateDress.ts:QUEEN_FRAME [R] 450 QUEEN_LEGLINE (trunk, deep, shoulders, pelvis, hips, tall, legs, pelvisCut, legSlim) + unitFactory tunicSkirt gate | .7, .85, .78, .75, .72, .65, .815, .5, .82; off, no cape (b5bd76ed) | 450 | approved | tall .76 legs .74 no cut/slim, tunicSkirt on (440-449); tall .85 legs 1 (438-439); tall 1 (437)
 spooky.candlehead done 438-440 rows (CANDLE_TOWER, CANDLE_ROBE, CANDLE_BOOTS; a PASS, CONFIRM 440) | compacted 441 | 440 | approved | values: git show a46e87b8:loop/LEDGER.md
 
+unitVisuals.ts:wild_west.miner MINER_BUILD [R] 457 (bulk, torsoWidth, legLength, upperLegWidth, lowerLegWidth) | .84, .92, 1.16, .88, .8 | 457 | approved | bulk 1.22, default torso and legs (before 457)
+legacy_1 stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 8 units) | d PASS 6/8 (bearers deal no damage: an [S]) | 457 | stats | values: git show 5d6b5d24
+propBuilder.ts:CHARGE_FLAG (long, thick, grip, ball, wide, tall, slab, edge, proud, emblem, glow) + LEGACY_GOLD, LEGACY_POLE | 1.55, .022, .3, .07, .48, .36, .012, .03, 1.8, .1, .15 | 457 | approved | staff log + orb (before 457)
+propBuilder.ts:STAY_BANNER (long, grip, beam, bar, knob, spike, wide, tall, gap, edge, tower) | 1.5, .3, .62, .03, .05, .09, .27, .42, .03, .025, .08 | 457 | approved | staff log + orb (before 457)
+proceduralAnimation.ts:uprightPole marker -> PRIEST_HOLD (a staff named staff with an uprightPole child) | Healer's planted hold | 457 | approved | staff slant + waving arm (before 457)
+propBuilder.ts:TEAM_GLOVE (wide, squash, band, glow) | .11, .92, .025, .15 | 457 | approved | wide .17 (457 look); maroon ball on a cuff off the fist (before 457)
+legacyDress.ts:POACHER_HAT (sides, crown, flare, tall, dome, brim, thick, band, glow, felt) | 10, 1.1, .92, .2, .12, 2.0, .04, .11, .12, (.17,.11,.07) | 457 | approved | hood dome over the face (before 457)

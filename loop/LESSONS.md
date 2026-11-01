@@ -9,8 +9,7 @@ drop a lesson once it is a comment at the code it describes.
 - SSAO (main.ts, radius 1.5) reads a DOUBLESIDE ribbon's inward faces as occlusion and greys the cloth: build dress shells one-sided facing out (check flipFaces), never double-sided at the same depth.
 - Flat colour that survives ACES: an "unlit" material's colour comes from its EMISSIVE only (baseColor alone renders black), excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
 - ACES lifts a mid code value toward pale, so an unlit plate keeps a deep value (zeus's gold emblem is (0.62,0.26,0.03), 400); the same for timber: an IBL-lit mid albedo reads beige, so a brown hull wants (.2,.11,.055) with a small self-light (400).
-- "metal" renders near black under swiftshader: use "cloth" with a small emissive.
-- Lit cloth in shade reads grey however white or warm: cream wants the flat unlit cut out of the glow (442 bone (1.1,.78,.4) swatched 215/199/164; self-lit cloth stayed grey 441).
+- "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey however white or warm: cream wants the flat unlit cut out of the glow (442 bone (1.1,.78,.4) swatched 215/199/164; self-lit cloth stayed grey 441).
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it (a vehicle's `bodyMaterial` IS the team colour: timber, iron, leather need their own; 392), and the head's as skin: a bone crewman needs a hidden anchor head (440 pumpkin operator).
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 
@@ -18,6 +17,7 @@ drop a lesson once it is a comment at the code it describes.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is written by stats.mjs, not by capture; every non-regression capture wipes iter-N (stats.json, a tail-overlap batch's audit.md too) and each stats run overwrites it: copy audit.md out before step 5 and restore it, rerun `stats.mjs <id,id,...> --iter N` once with every unit after the final capture (422).
 - Probes (`loop/scripts/probes/`, repo root, `--build` after a source change): probe_bbox (--unit --pat --frame=torso: vertex bboxes), probe_mat <unit> <regex>, probe_near, probe_close (--aim=head|torso|y:<y> --dist --yaw; --noglow: true colour), probe_head, probe_local, probe_axes (--unit --pat --frame: a prop's axes and face normal), probe_impale, probe_bowdraw (--unit: a bowman's state, arms and bow axis over 1 s, front shot to output/loop/probe_bowdraw.png).
+- A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
 - A flat plate on a dress ribbon needs 7+ cm of stand-off: the ribbon's chords dip inside its rim (398/399 zeus).
@@ -26,8 +26,6 @@ drop a lesson once it is a comment at the code it describes.
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of the UNIT height (a cap may rise .7 of a head, 447): a taller prop re-frames every shot, so a RE-AUDIT follows (420).
 - A pistol is found by its "pistolBell" child (445). Gun smoke/flash meshes (trailPuff, flash, pistolFlash) are hidden by take() {clean} (446).
-- A bowman at the ready turns his chest up to .95 rad and his head off it: aim his idle from the head block's world facing, alpha = atan2(fz, fx) - swing (402 ice archer).
-- A wide stance reads as a stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a "stride" pose gap (403).
 - `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches: render them after it. 4+ units: background it.
 - A dress change aimed at the idle must clear the rest pose: probe what covers that band first (442 queen: the hem-to-knee band sat behind her sword guards, two commits dropped). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
@@ -53,3 +51,4 @@ drop a lesson once it is a comment at the code it describes.
 
 - A prop not in _carryProp's node regex rides the fist, so _aimBlow's raised fist points it back at the hit: lay it on _aimTip before _twoHandPole (451 miner).
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
+- A CreateSphere arc's open gap is NOT on +z after rotation.y = PI/2 + PI*open (propBuilder's hood): it faced backward and hid the face (457 peasant). Probe the gap first.

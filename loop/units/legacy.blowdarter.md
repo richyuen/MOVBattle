@@ -1,0 +1,22 @@
+# legacy.blowdarter
+Status: open   Audited: 457   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
+a FAIL (0 since 457)
+ 1. headgear in unit_legacy.blowdarter_idle, the same dark dome hat with a brim at the neck — TABS: bare head with brown shoulder-length hair (ref: legacy.blowdarter.red.png)
+ 2. chest in unit_legacy.blowdarter_idle, plain team torso — TABS: a tan feathered scarf in a V with white feathers hanging (ref: legacy.blowdarter.blue.png, card Appearance)
+ 3. legs in unit_legacy.blowdarter_idle, team legs to the feet — TABS: brown knee-length pants with a fringed team-band hem (ref: legacy.blowdarter.red.png)
+ 4. knees in unit_legacy.blowdarter_idle, none — TABS: feathered knee guards (ref: legacy.blowdarter.blue.png)
+ 5. belt in unit_legacy.blowdarter_idle, none — TABS: a brown belt (ref: legacy.blowdarter.red.png)
+b FAIL (0 since 457)
+ 1. blowpipe in unit_legacy.blowdarter_idle, a short stick on the back, empty hands forward — TABS: a long wooden blowgun held at the mouth in both hands, crossed arms (ref: legacy.blowdarter.red.png)
+ 2. blowpipe in unit_legacy.blowdarter_windup, not visible — TABS: blowgun levelled at the mouth (ref: legacy.blowdarter.png)
+c FAIL (0 since 457)
+ 1. dart origin in unit_legacy.blowdarter_release, the shaft leaves from the hat and no pipe is at the mouth — TABS: the dart leaves the blowgun muzzle (ref: legacy.blowdarter.png)
+ 2. projectile in unit_legacy.blowdarter_ability_after, an arrow-length shaft — TABS: a small blowdart (ref: card Weapons)
+ 3. poison in unit_legacy.blowdarter_struck, status:poison is recorded but the target shows no tint or effect — TABS: the hit unit is poisoned and slowly dies (ref: card Characteristics)
+d PASS (cost 220, hp 1.08x, dmg 0.16x, cd 0.90x; 457 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] legacy.blowdarter.b blowgun at the mouth — blocker 1: BLOWGUN prop and a two-hand mouth hold pose — ref: legacy.blowdarter.red.png — ours: unit_legacy.blowdarter_idle.png
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)

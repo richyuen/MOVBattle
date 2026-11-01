@@ -1,0 +1,22 @@
+# legacy.barrel_roller
+Status: open   Audited: 457   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
+a FAIL (0 since 457)
+ 1. build in unit_legacy.barrel_roller_idle, bulky slab torso and thick limbs (size 1.24) — TABS: a lanky slim pirate (ref: legacy.barrel_roller.red.png, card Size 1.00x)
+ 2. hat in unit_legacy.barrel_roller_idle, bald — TABS: a dark brown tricorne (ref: legacy.barrel_roller.blue.png)
+ 3. hair in unit_legacy.barrel_roller_idle, none — TABS: white hair (ref: legacy.barrel_roller.red.png)
+ 4. shirt in unit_legacy.barrel_roller_idle, plain team body — TABS: a team vest over a white open shirt (ref: legacy.barrel_roller.blue.png)
+ 5. arms in unit_legacy.barrel_roller_idle, bare — TABS: brown arm wraps (ref: legacy.barrel_roller.red.png)
+ 6. legs in unit_legacy.barrel_roller_idle, team legs to blocky feet — TABS: baggy team pants, cream socks, tan shoes (ref: legacy.barrel_roller.blue.png)
+b FAIL (0 since 457)
+ 1. barrel position in unit_legacy.barrel_roller_idle, a dark barrel carried at the waist — TABS: he stands on top of a lying barrel (ref: legacy.barrel_roller.red.png, card Appearance)
+ 2. barrel look in unit_legacy.barrel_roller_idle, a dark brown drum — TABS: a light wooden staved barrel with two riveted grey hoops (ref: legacy.barrel_roller.blue.png)
+c FAIL (0 since 457)
+ 1. thrown object in unit_legacy.barrel_roller_release, a grey rock-shaped chunk thrown from the shoulder — TABS: the explosive barrel he rides (ref: card Appearance)
+ 2. delivery in unit_legacy.barrel_roller_flight, the blast arrives by a throw from 6 m while he stands — TABS: he walks the barrel forward under his feet into the enemy (ref: card Appearance, legacy.barrel_roller.png)
+d PASS (cost 350, hp 0.47x, dmg 0.33x, cd 0.75x; 457 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] legacy.barrel_roller.b rides the barrel — blocker 1: BARREL_RIDE mount, the man standing on a lying hooped barrel — ref: legacy.barrel_roller.red.png — ours: unit_legacy.barrel_roller_idle.png
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)
