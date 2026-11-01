@@ -727,6 +727,8 @@ const LOCKBOX_CARRY = { raise: 0.15, out: 0.6, turn: 0.6, elbow: -1.85 };
  * below the middle, the left .highGrip above it; each arm solved from its start (raise, turn, elbow). Held, the block is .size of the thrown one.
  */
 const DYNAMITE_HOLD = { size: 0.78, side: 0.2, up: 0.06, front: 0.36, lowGrip: 0.45, highGrip: 0.1, right: { raise: -0.3, turn: 0.15, elbow: -1.2 }, left: { raise: -0.5, turn: 0.9, elbow: -1.7 } };
+// [S] 451 the Lasso's held-up coil (see _raiseLassoCoil): lean out off his side, back toward the tail, turn of the loop's face, in rad
+const LASSO_RAISE = { out: 0.45, back: 0.15, face: -0.6 };
 const LOCKBOX_NAVEL = 0.35;
 const LOCKBOX_FRONT = 0.55;
 const LOCKBOX_PALM_OUT = 0.35;
@@ -2296,6 +2298,7 @@ export class ProceduralAnimator {
     this._hangFlasks();
     this._carryBoulder();
     this._holdDynamite();
+    this._raiseLassoCoil();
     this._holdPalette();
     this._couchLance();
     this._holdHeater();
@@ -3071,6 +3074,36 @@ export class ProceduralAnimator {
     const handM = Matrix.Identity();
     handQ.toRotationMatrix(handM);
     stick.rotationQuaternion = Quaternion.FromRotationMatrix(local.multiply(handM.transpose()));
+  }
+
+  /**
+   * [S] 451 the Lasso's rope held up (LASSO_RAISE; critic 446-447 lasso b.1: "coiled tan rope loop held up in the rider's hand"; wild_west.lasso.red.png:
+   * from his fist the rope runs up and out to the big open loop, which stands over the fist beside his shoulder, never hanging below it). The fist's +y
+   * points down and out (probe_axes 447), so the coil built up its +y hung its loop under the hand and its small coils up by his chin: here the coil is
+   * stood in the world each frame, its +y up and leant .out rad off his side (away from the horse's neck) and .back rad toward his tail, and turned .face
+   * rad about that line so the loop's face shows to the front three-quarter. The small coils then hang below the fist.
+   */
+  private _lassoCoil: TransformNode | null | undefined = undefined;
+  private _raiseLassoCoil(): void {
+    if (this._lassoCoil === undefined) {
+      const whip = this._body.rightHand.getChildren().find((n) => n.name === "whip");
+      this._lassoCoil = (whip?.getChildren().find((n) => n.name === "lassoCoil") as TransformNode | undefined) ?? null;
+    }
+    const coil = this._lassoCoil;
+    if (!coil || coil.isDisposed() || !coil.isEnabled() || this._state === AnimState.Dead) return;
+    const R = LASSO_RAISE;
+    const parent = coil.parent as TransformNode;
+    for (let n: TransformNode | null = parent; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+    const side = Math.sign(this._body.rightShoulder.position.x) || 1;
+    const world = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y + R.face * side, -R.back, -R.out * side);
+    const parentQ = new Quaternion();
+    parent.getWorldMatrix().decompose(undefined, parentQ);
+    // As the lockbox: local = world x parent^T (row-vector matrices), so local x parent = world
+    const worldM = Matrix.Identity();
+    world.toRotationMatrix(worldM);
+    const parentM = Matrix.Identity();
+    parentQ.toRotationMatrix(parentM);
+    coil.rotationQuaternion = Quaternion.FromRotationMatrix(worldM.multiply(parentM.transpose()));
   }
 
   /** One arm's palm onto a world point by the lockbox solve (shoulder raise, shoulder turn, elbow bend from `start`), blended in by `w`. */
