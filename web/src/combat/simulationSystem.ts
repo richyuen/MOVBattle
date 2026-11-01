@@ -129,7 +129,9 @@ const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 // dynasty.firework_archer.jpg): she fired at the decision from her carry, so _release caught her mid-stride with the bow away
 // [S] 443 ...and the skeleton archer (CONFIRM 442 b.1: "at the windup the bow stands upright behind the head - TABS: held out at the target, the string
 // hand drawn back"): his Fire Arrow left at the decision, so the shot 150 ms before it caught his carry, never the draw
-const DRAWS_BEFORE_LOOSE = new Set(["medieval.archer", "viking.ice_archer", "dynasty.firework_archer", "spooky.skeleton_archer"]);
+// [S] 467 the Poacher draws his stave before he looses (audit 457 poacher c.1: "the arrow leaves from the hat while the bow hangs at the hip - TABS: the arrow
+// leaves the drawn bow"; card Poacher Bow warm-up 1 s, shoot delay 1 s)
+const DRAWS_BEFORE_LOOSE = new Set(["medieval.archer", "viking.ice_archer", "dynasty.firework_archer", "spooky.skeleton_archer", "legacy.poacher"]);
 // [S] the potionseller's potions splash men drunk instead of blowing up (342; ProjectileSystem DRUNK_SPLASH): drunk men stagger about, not fighting (DRUNK_WANDER)
 const DRUNK_POTIONS = new Set(["farmer.potion_seller"]);
 // A drunk man's wander: he reels off DRUNK_WANDER.reach m toward a heading that swings round at .swing rad/s from his own hashed start
