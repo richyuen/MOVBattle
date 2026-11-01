@@ -175,7 +175,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "queen_cutlass" | "stiffy_sword" | "bone_bow";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "miner_pick" | "queen_cutlass" | "stiffy_sword" | "bone_bow";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -646,6 +646,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "wild_west.miner": vis(
     { scale: 1.12, bulk: 1.22, headSize: 1.04 }, "pickaxe", "miner_hat", "none", "none", "#6B4A2F", undefined, {
+      // [S] 445 the long pick axe (propBuilder MINER_PICK), not the short stick (audit 444 b.1)
+      weaponVariant: "miner_pick",
       posePreset: "brute",
       materialPreset: "wildwest_leather",
     },

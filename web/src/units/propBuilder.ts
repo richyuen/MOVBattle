@@ -4041,6 +4041,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return handle;
     }
     case "pickaxe": {
+      if (variant === "miner_pick") return buildMinerPick(scene, fit.stand);
       const handle = MeshBuilder.CreateCylinder("pickaxeHandle", { height: 0.56 * s, diameter: 0.032 * s, tessellation: 6 }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
       addGripWraps(scene, handle, [-0.12 * s, -0.04 * s, 0.04 * s], 0.035 * s);
@@ -5848,6 +5849,48 @@ function buildRevolver(scene: Scene, stand: number): Mesh {
   const mark = new TransformNode("pistolBell", scene);
   mark.position.copyFrom(muzzle.position);
   mark.parent = holder;
+  return holder;
+}
+
+/*
+ * [S] 445 the Miner's pick axe (audit 444 miner b.1: "short dark stick a forearm long, no readable head - TABS: long wooden haft about shoulder height,
+ * long thin dark iron pick head"; wild_west.miner.red.png, miner.png: a brown haft nearly as long as he is tall, the fist a fifth of it from the butt; a
+ * dark iron head across its top, two long thin points tapering out and drooping a little, a collar round the haft). MINER_PICK in his standing height:
+ * haft .long, .thick across, the fist .grip of it from the butt; head .head across tip to tip, .bar thick at the collar, its points drooping .droop rad;
+ * collar .collar of the haft tall.
+ */
+const MINER_PICK = {
+  long: 0.82, thick: 0.035, grip: 0.22, head: 0.5, bar: 0.05, droop: 0.22, collar: 0.08,
+  wood: new Color3(0.42, 0.22, 0.1), iron: new Color3(0.17, 0.17, 0.19), glow: 0.05,
+};
+
+/** The Miner's pick (spec at MINER_PICK): the fist at the origin on the haft, the haft up +y, the head across x at its top. */
+function buildMinerPick(scene: Scene, stand: number): Mesh {
+  const P = MINER_PICK;
+  const L = stand * P.long;
+  const wood = mat(scene, P.wood, 0.08, "cloth");
+  const iron = mat(scene, P.iron, P.glow, "cloth");
+  const haft = MeshBuilder.CreateCylinder("minerPickHaft", { height: L, diameterTop: P.thick * stand, diameterBottom: P.thick * stand * 0.9, tessellation: 7 }, scene);
+  haft.position.y = L * (0.5 - P.grip);
+  haft.material = wood;
+  haft.convertToFlatShadedMesh();
+  const top = L * 0.5;
+  const collar = MeshBuilder.CreateBox("minerPickCollar", { width: P.bar * stand, height: P.collar * L, depth: P.bar * stand }, scene);
+  collar.position.y = top - P.collar * L * 0.5;
+  collar.material = iron;
+  collar.parent = haft;
+  for (const side of [-1, 1]) {
+    const half = P.head * stand * 0.5;
+    const point = MeshBuilder.CreateCylinder("minerPickPoint", { height: half, diameterTop: 0, diameterBottom: P.bar * stand * 0.85, tessellation: 4 }, scene);
+    // laid out sideways from the collar, the tip drooping toward the haft's foot
+    point.rotation.z = -side * (Math.PI / 2 + P.droop);
+    point.position.set(side * half * 0.5 * Math.cos(P.droop), top - P.collar * L * 0.5 - half * 0.5 * Math.sin(P.droop), 0);
+    point.material = iron;
+    point.convertToFlatShadedMesh();
+    point.parent = haft;
+  }
+  const holder = new Mesh("pickaxe", scene);
+  haft.parent = holder;
   return holder;
 }
 
