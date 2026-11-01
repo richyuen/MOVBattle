@@ -6980,8 +6980,15 @@ const PINTO_EAR = 0.5;
  * [S] 447 (critic 446 lasso a.1 NEXT: "shorter and fatter, blaze flush, ears broad leaves, eyes bigger"): each ear a leaf - an ellipsoid .earWide
  * across at its middle, pinched to a point toward its tip (.earPinch of its width gone at the top), its pink inside the same leaf smaller; the blaze
  * a cream lens set into the skull's front (.blaze of its width), not a box standing off it.
+ * [S] 454 (critic 447-453 lasso a.1: "long narrow head with a small dark eye and a pink nose block - TABS: a big rounded head with big white bead eyes";
+ * wild_west.lasso.red.png: the skull a fat faceted ball about as wide as it is long and as wide as the neck's top is thick, the cream muzzle a big
+ * rounded snout tucked close under it; each eye a big flat white bead on the skull's side, a third of the head across, its black pupil a smaller bead
+ * on its outer face looking forward). The skull a faceted icosphere .wide x .long x .deep (long now in H, not of the old head length); the muzzle
+ * .muzzle across at .muzzleAt of the head's length; eyes flat white discs PINTO_EYE.disc H across, .thick deep, standing .proud off the skull's side,
+ * pupils .pupil of the disc across on their outer faces, set .look of the disc forward.
  */
-const PINTO_HEAD = { wide: 0.46, long: 0.66, deep: 0.4, muzzle: 0.4, muzzleAt: 0.78, nostril: 0.09, earWide: 0.3, earFlat: 0.6, earSplay: 0.35, earPinch: 0.8, blaze: 0.36 };
+const PINTO_HEAD = { wide: 0.6, long: 0.6, deep: 0.54, muzzle: 0.46, muzzleAt: 0.7, nostril: 0.1, earWide: 0.3, earFlat: 0.6, earSplay: 0.35, earPinch: 0.8, blaze: 0.36 };
+const PINTO_BEAD = { disc: 0.3, thick: 0.07, proud: 0.03, pupil: 0.48, look: 0.18 };
 type HorseStyle = "barded" | "pinto";
 /*
  * [S] chanfron (336; renaissance.jouster.red.png: the horse's face is cased in a grey faceted plate from the poll to above the nostrils, the brown muzzle
@@ -7190,14 +7197,14 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   const PH = PINTO_HEAD;
   // [S] 446 the pinto's skull is a rounded lump (PINTO_HEAD), not the barded horse's tapered snout
   const head = part(pinto
-    ? MeshBuilder.CreateSphere("hhead", { diameterX: H * PH.wide, diameterY: headLong * PH.long, diameterZ: H * PH.deep, segments: 5 }, scene)
+    ? MeshBuilder.CreateIcoSphere("hhead", { radiusX: H * PH.wide * 0.5, radiusY: H * PH.long * 0.5, radiusZ: H * PH.deep * 0.5, subdivisions: 2, flat: true }, scene)
     : MeshBuilder.CreateCylinder("hhead", { height: headLong, diameterTop: H * 0.17, diameterBottom: H * 0.3, tessellation: 5 }, scene), coat);
   head.rotation.x = headPitch;
   head.position.set(0, poll.y + Math.cos(headPitch) * headLong * 0.42, poll.z + Math.sin(headPitch) * headLong * 0.42);
   if (pinto) {
     // The pinto's cream blaze down the face
     // [S] 447 a lens of the skull's own shape, narrower, a hair in front of it: flush with the face, not a box standing off it
-    const blaze = part(MeshBuilder.CreateSphere("hblaze", { diameterX: H * PH.wide * PH.blaze, diameterY: headLong * PH.long * 0.94, diameterZ: H * PH.deep, segments: 5 }, scene), cream);
+    const blaze = part(MeshBuilder.CreateIcoSphere("hblaze", { radiusX: H * PH.wide * PH.blaze * 0.5, radiusY: H * PH.long * 0.47, radiusZ: H * PH.deep * 0.5, subdivisions: 2, flat: true }, scene), cream);
     blaze.parent = head;
     blaze.position.set(0, headLong * 0.02, -H * PH.deep * 0.03);
   } else {
@@ -7253,13 +7260,16 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     const inner = leaf("hearInner", H * PH.earWide * 0.7, earTall * 0.8, pink);
     inner.parent = ear;
     inner.position.set(0, -earTall * 0.04, H * PH.earWide * PH.earFlat * 0.18);
-    // A big white eye with a black pupil on each side of the head
-    const eye = part(MeshBuilder.CreateIcoSphere("heye", { radius: H * PINTO_EYE, subdivisions: 1 }, scene), mat(scene, new Color3(0.97, 0.97, 0.95)));
+    // [S] 454 a big flat white bead eye on each side of the skull, its black pupil on the outer face looking forward (PINTO_BEAD)
+    const E = PINTO_BEAD;
+    const eye = part(MeshBuilder.CreateCylinder("heye", { height: H * E.thick, diameter: H * E.disc, tessellation: 10 }, scene), mat(scene, new Color3(0.97, 0.97, 0.95), 0.25, "cloth"));
     eye.parent = head;
-    eye.position.set(x * H * (pinto ? PH.wide * 0.42 : 0.12), -headLong * 0.22, -H * 0.03);
-    const pupil = part(MeshBuilder.CreateIcoSphere("hpupil", { radius: H * PINTO_EYE * 0.55, subdivisions: 1 }, scene), dark);
+    eye.rotation.z = Math.PI / 2;
+    eye.position.set(x * (H * PH.wide * 0.5 - H * E.thick * 0.5 + H * E.proud), -H * PH.long * 0.12, -H * PH.deep * 0.12);
+    const pupil = part(MeshBuilder.CreateCylinder("hpupil", { height: H * E.thick * 0.6, diameter: H * E.disc * E.pupil, tessellation: 8 }, scene), dark);
     pupil.parent = eye;
-    pupil.position.set(x * H * PINTO_EYE * 0.6, 0, -H * PINTO_EYE * 0.15);
+    // the disc's axis (its +y) points out of the head's side after the turn: the pupil sits on that outer face, forward of the middle
+    pupil.position.set(0, -x * H * E.thick * 0.5, -H * E.disc * E.look);
   }
   if (pinto) {
     // The mane: dark tufts down the top of the neck, a forelock at the poll
