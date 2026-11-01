@@ -278,6 +278,43 @@ export function gunslingerJacket(scene: Scene, body: ArticulatedBody, teamColor:
 const GUNSLINGER_TIE = { knot: 0.17, knotTall: 0.07, top: 0.15, foot: 0.24, long: 0.32, proud: 0.06, color: new Color3(0.42, 0.14, 0.63), glow: 0.12 };
 
 /*
+ * [S] 448 the Quick Draw's shirt (critic 447 quick_draw a.2: "shirt: bare team arms - TABS: beige shirt with rolled-up sleeves"; card Appearance "a
+ * beige shirt with rolled-up sleeves and a buttoned team color vest over it"; wild_west.quick_draw.red.png: loose beige sleeves from the shoulder to
+ * just past the elbow, rolled into a fat cuff there, the bare forearm below; a beige collar V at the throat between the vest's fronts). QUICK_DRAW_SHIRT:
+ * sleeves .upperOut of the upper arm round its length and .lowerOut of the forearm round to .lowerTo of it, a rolled cuff .cuffOut round from .cuffFrom
+ * to .lowerTo; on the trunk (torso frame, W H D its box) a beige V .vee W across at the collar to a point .veeLong H down, .proud D off the front.
+ * Beige cloth self-lit .glow (cream wants self-light to stay off grey).
+ */
+const QUICK_DRAW_SHIRT = { upperOut: 1.45, lowerOut: 1.4, lowerTo: 0.28, cuffFrom: 0.16, cuffOut: 1.75, vee: 0.4, veeLong: 0.34, proud: 0.03, color: new Color3(0.8, 0.68, 0.45), glow: 0.18 };
+
+/** The Quick Draw's beige shirt: loose sleeves rolled up past the elbow and a collar V (spec at QUICK_DRAW_SHIRT). */
+export function quickDrawShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = QUICK_DRAW_SHIRT;
+  const shirt = getMaterialFactory().get("cloth", S.color, { emissive: S.color.scale(S.glow) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "quickDrawSleeve", arm, 0, 1, S.upperOut, shirt));
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "quickDrawSleeve", arm, 0, S.lowerTo, S.lowerOut, shirt));
+    out.push(limbShell(scene, "quickDrawCuff", arm, S.cuffFrom, S.lowerTo, S.cuffOut, shirt));
+  }
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const veeLong = H * S.veeLong;
+  const vee = MeshBuilder.CreateCylinder("quickDrawVee", { height: veeLong, diameterTop: W * S.vee * Math.SQRT2, diameterBottom: 0.002, tessellation: 4 }, scene);
+  vee.rotation.y = Math.PI / 4;
+  vee.bakeCurrentTransformIntoVertices();
+  vee.scaling.z = (D * S.proud) / (W * S.vee);
+  vee.material = shirt;
+  vee.position.set(cx, cy + H / 2 - veeLong / 2, cz + D / 2 + D * S.proud / 2);
+  vee.rotation.copyFrom(tm.rotation);
+  vee.parent = tm.parent;
+  vee.convertToFlatShadedMesh();
+  out.push(vee);
+  return out;
+}
+
+/*
  * [S] 448 the Gunslinger's sideburns (critic 447 a.4: "sideburns: none - TABS: black bushy sideburns"; wild_west.gunslinger.red.png: a thick
  * black-grey tuft down each side of the face from under the bowler's brim, beside the eyes, to the jaw, standing out from the cheek and ragged at its
  * edge). GUNSLINGER_SIDEBURNS in the head's own box (e its half sizes, c its centre): on each side .lumps faceted lumps, each .lump of e.x across, in a
