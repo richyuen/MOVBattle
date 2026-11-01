@@ -3492,8 +3492,10 @@ const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
 function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const F = CHARGE_FLAG, H = fit.stand, L = F.long * H, r = F.thick * H;
   const gold = mat(scene, LEGACY_GOLD, F.glow, "cloth"), cloth = mat(scene, team, F.glow, "cloth");
-  const pole = MeshBuilder.CreateCylinder("flagPole", { height: L, diameter: r, tessellation: 6 }, scene);
+  // Named "staff" with an "uprightPole" marker child: the animator stands it upright at his side in the Healer's planted hold (457b)
+  const pole = MeshBuilder.CreateCylinder("staff", { height: L, diameter: r, tessellation: 6 }, scene);
   pole.id = "chargeFlag";
+  new TransformNode("uprightPole", scene).parent = pole;
   pole.material = mat(scene, LEGACY_POLE, 0.08);
   const part = (m: Mesh, x: number, y: number, z: number, material: PBRMetallicRoughnessMaterial): Mesh => {
     m.position.set(x, y, z); m.parent = pole; m.material = material; m.convertToFlatShadedMesh(); return m;

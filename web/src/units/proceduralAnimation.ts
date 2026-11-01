@@ -2504,7 +2504,7 @@ export class ProceduralAnimator {
     };
     // A caster's rod: a staff with an orb on it (a plain staff is a striking weapon) or a bolt.
     const rod = this.locomotionBias === "aimed" ? undefined
-      : this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bolt" || (n.name === "staff" && n.getChildren().some((c) => c.name === "orb")));
+      : this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bolt" || (n.name === "staff" && n.getChildren().some((c) => c.name === "orb" || c.name === "uprightPole")));
     const held = this.locomotionBias !== "aimed" && !rod && !this._spearShaft() && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     // A club, a sword or a hafted head turns in the fist to the attitude; anything else only rides the arm.
     const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry|scytheCarry)$/.test(n.name));
@@ -2583,7 +2583,8 @@ export class ProceduralAnimator {
     const armed = this.locomotionBias === "aimed" && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     const staff = rod?.name === "staff";
     const bone = rod?.id === "boneStaff";
-    const priest = rod?.id === "priestStaff";
+    // [S] 457 a flag or banner pole (a child marked "uprightPole", propBuilder CHARGE_FLAG / STAY_BANNER) is stood upright at the side in the Healer's hold
+    const priest = rod?.id === "priestStaff" || !!rod?.getChildren().some((c) => c.name === "uprightPole");
     if (bone || priest) this._carryTurn = 1;
     const rodHold = !rod ? null : priest
       ? { raise: PRIEST_HOLD.raise - h(81) * 0.08, out: PRIEST_HOLD.out + h(82) * 0.06, elbow: PRIEST_HOLD.elbow - h(83) * 0.1, tip: lean(...PRIEST_HOLD.tip), left: { ...PRIEST_HOLD.left }, plant: true }
