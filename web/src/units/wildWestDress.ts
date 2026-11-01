@@ -422,6 +422,42 @@ export function gunslingerSideburns(scene: Scene, body: ArticulatedBody): Mesh[]
 }
 
 /*
+ * [S] 449 the Miner's handlebar moustache (critic 448 miner a.2: "moustache: none - TABS: big black handlebar moustache"; wild_west.miner.red.png: a
+ * thick black moustache across the face under the eyes, wider than the mouth, each half sweeping out and down to a rounded end). MINER_MOUSTACHE in
+ * the head's own box (e its half sizes, c its centre, +z the face): each half a faceted bar .long of e.x long, .thick of e.y tall, from the middle out
+ * along a line drooping .droop rad, its middle .at of e.y under the centre and .proud of e.z in front of the face; at its outer end a lump .tip of
+ * e.x round, .tipDrop of e.y lower. Near black, self-lit .glow.
+ */
+const MINER_MOUSTACHE = { long: 0.8, thick: 0.28, droop: 0.32, at: -0.38, proud: 0.08, tip: 0.22, tipDrop: 0.16, color: new Color3(0.05, 0.045, 0.04), glow: 0.1 };
+
+/** A big black handlebar moustache under the eyes (spec at MINER_MOUSTACHE). */
+export function minerMoustache(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const M = MINER_MOUSTACHE;
+  const hair = getMaterialFactory().get("cloth", M.color, { emissive: M.color.scale(M.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const y = c.y + e.y * M.at, z = c.z + e.z * (1 + M.proud);
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    const L = e.x * M.long;
+    const bar = MeshBuilder.CreateBox("minerMoustache", { width: L, height: e.y * M.thick, depth: e.z * 0.16 }, scene);
+    bar.position.set(c.x + side * (L / 2) * Math.cos(M.droop), y - (L / 2) * Math.sin(M.droop), z);
+    bar.rotation.z = -side * M.droop;
+    bar.material = hair;
+    bar.parent = head;
+    out.push(bar);
+    const tip = MeshBuilder.CreateIcoSphere("minerMoustacheTip", { radius: e.x * M.tip, subdivisions: 1, flat: true }, scene);
+    tip.position.set(c.x + side * L * Math.cos(M.droop), y - L * Math.sin(M.droop) - e.y * M.tipDrop * 0.5, z);
+    tip.scaling.set(0.8, 1.2, 0.6);
+    tip.material = hair;
+    tip.parent = head;
+    out.push(tip);
+  }
+  return out;
+}
+
+/*
  * [S] 448 the Cactus's boots (critic 447 cactus a.2: "robe length: hem to the ground, legs hidden - TABS: robe to the knee, team shins and dark brown
  * boots below"; wild_west.cactus.red.png: under the knee-length robe a short band of team shin, then dark brown boots from mid-shin to the foot, their
  * tops a little wider, the toes rounded). CACTUS_BOOTS in the shin's own box: a 6-sided shell .out of its half-width round it from .from to .to of its
