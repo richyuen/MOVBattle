@@ -740,7 +740,7 @@ export function cactusBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 export const CACTUS_ROBE = {
   bodice: 1.12, waist: 1.24, tall: 1.04, deep: 1.3, rise: 0.08, hem: 0.9, flare: 1.5,
-  chestRings: 2, skirtRings: 3, ring: 8, spike: 0.42, base: 0.95,
+  chestRings: 2, skirtRings: 3, ring: 8, spike: 0.55, base: 1.15, // [S] 452 bigger, broader (critic 451 a.3)
   petals: 8, hoodFlower: 1.05, shoulderFlower: 0.72, hemFlower: 0.82,
   petal: new Color3(1, 0.36, 0.3), eye: new Color3(1, 0.8, 0.2), glow: 0.18,
 };

@@ -329,10 +329,11 @@ const CACTUS_HOOD = 1.6;
 const CACTUS_HOOD_OPEN = 0.26;
 const CACTUS_SLEEVE = 1.4;
 const CACTUS_SLEEVE_SPINES = 3;
-const CACTUS_HOOD_SPINES = 6;
+const CACTUS_HOOD_SPINES = 12; // [S] 452 a ring of 8 round the hood and 4 on its crown (critic 451 cactus a.3: "the hood carries one or two")
 const CACTUS_SPINE = 0.4;
 const CACTUS_GREEN = new Color3(0.12, 0.36, 0.2);
-const CACTUS_SPINE_COLOR = new Color3(0.66, 0.38, 0.26);
+// [S] 452 tan, not maroon (critic 451 cactus a.3: "dark maroon-brown and small - TABS: broad-based tan pyramid spikes"; palette.png cloth tan x1 row)
+const CACTUS_SPINE_COLOR = new Color3(0.8, 0.58, 0.32);
 
 // Clothes are solids hung on the body, not a colour painted on it. The lower half of a garment is a faceted bell hung from the waist over the pelvis and the tops of
 // the thighs, standing off the legs at its hem: it rides the hips and not the legs, so a stride swings the knees out from under it. length is in thighs, flare is the
@@ -2792,7 +2793,7 @@ function dressCactus(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
   // The suit is the body's own cloth turned green, so the tunic hem hung later follows it
   body.bodyMaterial.baseColor = Color3.Lerp(CACTUS_GREEN, teamColor.scale(0.3), 0.08);
   const green = body.bodyMaterial;
-  const spineMat = getMaterialFactory().getCloth(CACTUS_SPINE_COLOR);
+  const spineMat = getMaterialFactory().get("cloth", CACTUS_SPINE_COLOR, { emissive: CACTUS_SPINE_COLOR.scale(0.15) });
   const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
   const spineTall = headSize * CACTUS_SPINE;
   // A four-sided spine on a parent, at a point on its surface, pointing out along `out` (unit, horizontal or not)
@@ -2848,9 +2849,10 @@ function dressCactus(scene: Scene, body: ArticulatedBody, teamColor: Color3): Me
   added.push(mantle);
   const hoodR = headSize * CACTUS_HOOD * 0.5;
   for (let i = 0; i < CACTUS_HOOD_SPINES; i++) {
-    // Over the crown and back of the hood, clear of the face window
-    const a = Math.PI * (0.55 + 0.9 * i / (CACTUS_HOOD_SPINES - 1)) * (i % 2 ? 1 : -1);
-    const tilt = 0.5 + 0.35 * (i % 3);
+    // [S] 452 a ring of 8 round the hood's sides and back (the face window, +z, left clear), then 4 over the crown
+    const ring = i < 8;
+    const a = ring ? Math.PI * 0.25 + (Math.PI * 1.5 * i) / 7 : (Math.PI / 2) * (i - 8) + Math.PI / 4;
+    const tilt = ring ? 1.35 : 0.55;
     const out = new Vector3(Math.sin(a) * Math.sin(tilt), Math.cos(tilt), Math.cos(a) * Math.sin(tilt));
     spine(body.headMesh, new Vector3(0, headSize * 0.1, -headSize * 0.08).add(out.scale(hoodR)), out);
   }
