@@ -6860,7 +6860,7 @@ const PINTO_GLOW = 0.18;
 const PINTO_PATCHES: ReadonlyArray<readonly [number, number, number]> = [[-0.9, 0.25, 0.1], [0.85, 0.1, -0.35], [0.25, 0.7, -0.7], [-0.15, -0.75, 0.55], [0.35, 0.15, 0.92], [-0.5, 0.1, -0.85]];
 const PINTO_PATCH = 0.83;
 const PINTO_RAGGED = 0.06;
-const PINTO_EYE = 0.11;
+const PINTO_EYE = 0.14;
 const PINTO_EAR = 0.5;
 /*
  * [S] 446 the pinto's head (critic 445 lasso a.1: "long thin box snout, pink cube nose, no ears - TABS: big rounded head, tall pink-lined ears, big
@@ -6868,8 +6868,11 @@ const PINTO_EAR = 0.5;
  * nostrils on its front; ears nearly half the horse's height, broad leaves with pink insides, standing up and out; eyes a third of the head across,
  * bulging from its sides). PINTO_HEAD in H: skull .wide across, .long of the head's length, .deep; muzzle a cream ball .muzzle across at .muzzleAt of
  * the head's length, nostrils .nostril across; ears PINTO_EAR tall, .earWide at the root, flattened to .earFlat, splayed .earSplay rad; eyes PINTO_EYE.
+ * [S] 447 (critic 446 lasso a.1 NEXT: "shorter and fatter, blaze flush, ears broad leaves, eyes bigger"): each ear a leaf - an ellipsoid .earWide
+ * across at its middle, pinched to a point toward its tip (.earPinch of its width gone at the top), its pink inside the same leaf smaller; the blaze
+ * a cream lens set into the skull's front (.blaze of its width), not a box standing off it.
  */
-const PINTO_HEAD = { wide: 0.36, long: 0.92, deep: 0.34, muzzle: 0.32, muzzleAt: 0.9, nostril: 0.08, earWide: 0.18, earFlat: 0.45, earSplay: 0.35 };
+const PINTO_HEAD = { wide: 0.46, long: 0.66, deep: 0.4, muzzle: 0.4, muzzleAt: 0.78, nostril: 0.09, earWide: 0.3, earFlat: 0.6, earSplay: 0.35, earPinch: 0.8, blaze: 0.36 };
 type HorseStyle = "barded" | "pinto";
 /*
  * [S] chanfron (336; renaissance.jouster.red.png: the horse's face is cased in a grey faceted plate from the poll to above the nostrils, the brown muzzle
@@ -7084,9 +7087,10 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
   head.position.set(0, poll.y + Math.cos(headPitch) * headLong * 0.42, poll.z + Math.sin(headPitch) * headLong * 0.42);
   if (pinto) {
     // The pinto's cream blaze down the face
-    const blaze = part(MeshBuilder.CreateBox("hblaze", { width: H * 0.12, height: headLong * 0.85, depth: H * 0.05 }, scene), cream);
+    // [S] 447 a lens of the skull's own shape, narrower, a hair in front of it: flush with the face, not a box standing off it
+    const blaze = part(MeshBuilder.CreateSphere("hblaze", { diameterX: H * PH.wide * PH.blaze, diameterY: headLong * PH.long * 0.94, diameterZ: H * PH.deep, segments: 5 }, scene), cream);
     blaze.parent = head;
-    blaze.position.set(0, -headLong * 0.04, -H * PH.deep * 0.44);
+    blaze.position.set(0, headLong * 0.02, -H * PH.deep * 0.03);
   } else {
     buildChanfron(scene, head, headLong, H, part, dark);
   }
@@ -7107,10 +7111,25 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     }
   }
   const earTall = H * (pinto ? PINTO_EAR : CHANFRON.ear);
+  // [S] 447 the pinto's ear: a leaf, an ellipsoid pinched to a point toward its tip (PINTO_HEAD.earPinch)
+  const leaf = (name: string, wide: number, tall: number, m: typeof coat): Mesh => {
+    const l = part(MeshBuilder.CreateSphere(name, { diameterX: wide, diameterY: tall, diameterZ: wide * PH.earFlat, segments: 5 }, scene), m);
+    const pos = l.getVerticesData(VertexBuffer.PositionKind);
+    if (pos) {
+      for (let i = 0; i < pos.length; i += 3) {
+        const up = Math.max(0, pos[i + 1] / (tall / 2));
+        pos[i] *= 1 - PH.earPinch * up * up;
+        pos[i + 2] *= 1 - PH.earPinch * up * up;
+      }
+      l.updateVerticesData(VertexBuffer.PositionKind, pos);
+      l.refreshBoundingInfo();
+    }
+    return l;
+  };
   for (const x of [-1, 1]) {
-    const ear = part(MeshBuilder.CreateCylinder("hear", { height: earTall, diameterTop: 0, diameterBottom: H * (pinto ? PH.earWide : 0.1), tessellation: 4 }, scene), coat);
-    // [S] 446 the pinto's ears are broad flat leaves standing up and out
-    if (pinto) ear.scaling.z = PH.earFlat;
+    const ear = pinto
+      ? leaf("hear", H * PH.earWide, earTall, coat)
+      : part(MeshBuilder.CreateCylinder("hear", { height: earTall, diameterTop: 0, diameterBottom: H * 0.1, tessellation: 4 }, scene), coat);
     // the barded horse's ears stand up through the chanfron, so they root higher and splay wider
     ear.position.set(x * H * (pinto ? 0.11 : 0.1), poll.y + earTall * 0.45 + (pinto ? 0 : H * 0.08), poll.z - H * 0.02);
     ear.rotation.set(-0.3, 0, -x * (pinto ? PH.earSplay : 0.4));
@@ -7122,9 +7141,9 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
       continue;
     }
     // Pink inside the long ear, facing forward
-    const inner = part(MeshBuilder.CreateCylinder("hearInner", { height: earTall * 0.8, diameterTop: 0, diameterBottom: H * PH.earWide * 0.7, tessellation: 4 }, scene), pink);
+    const inner = leaf("hearInner", H * PH.earWide * 0.7, earTall * 0.8, pink);
     inner.parent = ear;
-    inner.position.set(0, -earTall * 0.06, H * PH.earWide * 0.3);
+    inner.position.set(0, -earTall * 0.04, H * PH.earWide * PH.earFlat * 0.18);
     // A big white eye with a black pupil on each side of the head
     const eye = part(MeshBuilder.CreateIcoSphere("heye", { radius: H * PINTO_EYE, subdivisions: 1 }, scene), mat(scene, new Color3(0.97, 0.97, 0.95)));
     eye.parent = head;
