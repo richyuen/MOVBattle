@@ -414,3 +414,30 @@ export function boxerShorts(scene: Scene, body: ArticulatedBody, teamColor: Colo
   return out;
 }
 
+/*
+ * [S] 460 the Peasant's rope belt (critic 459 a.5: "waist, no belt - TABS: a thick cream braided rope belt"; legacy.peasant.red.png: a fat cream rope
+ * round the waist over the dress, about a third of the way up the trunk, made of twisted lumps leaning one way and then the other). PEASANT_BELT: .lumps
+ * faceted lumps on an ellipse .out of the trunk's half width and depth at .at of H/2 under its middle, each .lump W long along the rope and .fat of
+ * that thick, leaning .twist rad by turns. Cream .cream, self-lit .glow (lit cream in shade reads grey).
+ */
+const PEASANT_BELT = { lumps: 12, out: 1.12, at: -0.42, lump: 0.36, fat: 0.42, twist: 0.6, cream: new Color3(1, 0.95, 0.8), glow: 0.32 };
+
+/** The Peasant's cream braided rope belt round the dress's waist (spec at PEASANT_BELT). */
+export function peasantBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = PEASANT_BELT;
+  const cream = getMaterialFactory().get("cloth", P.cream, { emissive: P.cream.scale(P.glow) });
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const rx = W / 2 * P.out, rz = D / 2 * P.out, y = H / 2 * P.at;
+  for (let k = 0; k < P.lumps; k++) {
+    const a = (k / P.lumps) * Math.PI * 2;
+    const lump = MeshBuilder.CreateIcoSphere("peasantBelt", { radius: 0.5, subdivisions: 1, flat: true }, scene);
+    const long = W * P.lump;
+    lump.scaling.set(long, long * P.fat, long * P.fat);
+    // along the rope's tangent, leaning one way and then the other: the braid
+    lump.rotation.set(0, a + Math.PI / 2, k % 2 ? P.twist : -P.twist);
+    lay(lump, Math.sin(a) * rx, y, Math.cos(a) * rz, cream);
+  }
+  return out;
+}
+
