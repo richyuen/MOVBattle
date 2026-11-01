@@ -325,13 +325,13 @@ const wildWest = makeFaction(FactionId.WildWest, "wild_west", [
 
 const legacy = makeFaction(FactionId.Legacy, "legacy", [
   ["peasant", "Peasant", 30, "tiny_melee", { size: "tiny", damageMultiplier: 0.25, cooldownMultiplier: 0.75 }],
-  ["banner_bearer", "Banner Bearer", 100, "support_buff", { weaponHint: "staff", healthMultiplier: 0.83, cooldownMultiplier: 1.5 }],
+  ["banner_bearer", "Banner Bearer", 100, "polearm_melee", { weaponHint: "staff", healthMultiplier: 0.68, damageMultiplier: 0.63, cooldownMultiplier: 2.31 }],
   ["poacher", "Poacher", 120, "archer", { weaponHint: "bow", healthMultiplier: 0.5, damageMultiplier: 0.66 }],
   ["blowdarter", "Blowdarter", 220, "rapid_ranged", { abilities: ["poison", "rapid_fire"], weaponHint: "staff", projectileHint: "arrow", healthMultiplier: 0.64, damageMultiplier: 0.15, cooldownMultiplier: 0.82 }],
   ["pike", "Pike", 300, "polearm_melee", { weaponHint: "spear", engageRangeOverride: 3.1, healthMultiplier: 0.12, damageMultiplier: 0.7 }],
   ["barrel_roller", "Barrel Roller", 350, "thrower", { weaponHint: "bomb", projectileHint: "barrel", size: "large", healthMultiplier: 0.11, damageMultiplier: 0.12, cooldownMultiplier: 0.34 }],
   ["boxer", "Boxer", 450, "tiny_melee", { size: "tiny", healthMultiplier: 1.37, cooldownMultiplier: 0.6 }],
-  ["flag_bearer", "Flag Bearer", 500, "support_buff", { weaponHint: "staff", healthMultiplier: 0.21, cooldownMultiplier: 1.5 }],
+  ["flag_bearer", "Flag Bearer", 500, "polearm_melee", { weaponHint: "staff", healthMultiplier: 0.17, damageMultiplier: 0.63, cooldownMultiplier: 2.31 }],
   ["pharaoh", "Pharaoh", 1000, "special_magic", { abilities: ["fear"], hatHint: "pharaoh", weaponHint: "staff" }],
   ["wizard", "Wizard", 3000, "special_magic", { projectileHint: "fireball", weaponHint: "staff" }],
   ["chariot", "Chariot", 1000, "charge_melee", { abilities: ["charge_impact"], specialHint: "horse", size: "large" }],

@@ -26,6 +26,8 @@ import { NavigationGrid } from "../map/navigation";
 
 /** [S] 460 the aura each bearer's ring lays on the allies inside it (RuntimeUnit.applyAura), in place of the support heal. */
 const BEARER_AURA_KIND: Record<string, "haste" | "stay"> = { "legacy.flag_bearer": "haste", "legacy.banner_bearer": "stay" };
+/** [S] 465 a bearer is a melee man (his pole is his weapon, Stay Banner / Charge Flag): the ring's aura is a pulse of its own, every `every` s, held `holds` s. */
+const BEARER_PULSE = { every: 3, holds: 3.5 };
 
 export interface SpawnUnitOptions {
   role?: RuntimeSpawnRole;
@@ -1564,6 +1566,8 @@ export class SimulationSystem {
       return;
     }
 
+    if (BEARER_AURA_KIND[unit.definition.id]) this._pulseBearerAura(unit, now);
+
     if (attackProfile.type === AttackType.Support) {
       const ally = this._selectAllyToSupport(unit, aiProfile);
       if (!ally) {
@@ -1990,6 +1994,21 @@ export class SimulationSystem {
     }
   }
 
+  private readonly _bearerAuraAt = new WeakMap<RuntimeUnit, number>();
+
+  /** [S] 460/465 a bearer's ring (haste for the Flag Bearer, stay for the Banner Bearer) holds every ally inside it; it pulses on its own clock, beside his blows. */
+  private _pulseBearerAura(bearer: RuntimeUnit, now: number): void {
+    const aura = BEARER_AURA_KIND[bearer.definition.id];
+    if (!aura || now < (this._bearerAuraAt.get(bearer) ?? 0)) return;
+    const reach = bearerReach(bearer.body);
+    const held = this._units.filter((man) => man !== bearer && !man.isDead && man.team === bearer.team && Vector3.Distance(man.position, bearer.position) <= reach);
+    if (held.length === 0) return;
+    this._bearerAuraAt.set(bearer, now + BEARER_PULSE.every);
+    const ringMesh = bearer.body.root.getChildMeshes(false, (m) => m.name === "bearerRing")[0];
+    for (const man of held) man.applyAura(aura, BEARER_PULSE.holds, now, ringMesh?.material ?? null);
+    this._logAbility(bearer, aura, now, bearer.position);
+  }
+
   private _handleSupportAction(
     supporter: RuntimeUnit, ally: RuntimeUnit,
     attackProfile: AttackProfile, now: number,
@@ -2009,20 +2028,6 @@ export class SimulationSystem {
 
     const cooldownMultiplier = supporter.definition.cooldownMultiplier ?? 1;
     supporter.setAttackCooldown(now, attackProfile.cooldown * cooldownMultiplier);
-    // [S] 460 a bearer heals no one: his ring's aura (haste for the Flag Bearer, stay for the Banner Bearer) holds every ally inside it until his next
-    const aura = BEARER_AURA_KIND[supporter.definition.id];
-    if (aura) {
-      const reach = bearerReach(supporter.body);
-      const ringMesh = supporter.body.root.getChildMeshes(false, (m) => m.name === "bearerRing")[0];
-      const holds = attackProfile.cooldown * cooldownMultiplier + 0.5;
-      for (const man of this._units) {
-        if (man === supporter || man.isDead || man.team !== supporter.team) continue;
-        if (Vector3.Distance(man.position, supporter.position) > reach) continue;
-        man.applyAura(aura, holds, now, ringMesh?.material ?? null);
-      }
-      this._logAbility(supporter, aura, now, supporter.position);
-      return;
-    }
     let healAmount = Math.max(20, attackProfile.damage);
     if (getBehaviorPreset(supporter) === "secret_cheerleader") {
       healAmount = Math.max(healAmount, 45);
