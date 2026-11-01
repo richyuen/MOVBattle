@@ -3475,6 +3475,39 @@ function buildPriestStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   return shaft;
 }
 /*
+ * [S] 457 the Flag Bearer's flag (audit 457 b.1: "no fabric, a pale ball at the tip - TABS: a team-coloured flag with a gold border and emblem hanging
+ * under a gold ball finial"; legacy.flag_bearer.blue.png: a slim wooden pole well over the man, a gold ball on top, the flag a tall team rectangle hung
+ * from the top on one side, a gold edge all round and a gold emblem in its middle). CHARGE_FLAG, in his standing height H: a pole .long H, .thick H
+ * across, the fist .grip of the way up; a gold ball .ball H on top; the flag .wide H out from the pole and .tall H down from under the ball, a gold slab
+ * .edge H bigger all round behind a team slab .proud thicker, so the gold shows as a rim on both faces; a gold diamond .emblem H in the middle of each face.
+ * Flat pieces are thin closed slabs (LESSONS: a one-sided flag turns away). Cloth with a small self-light: "metal" renders near black.
+ */
+const CHARGE_FLAG = { long: 1.55, thick: 0.022, grip: 0.3, ball: 0.07, wide: 0.48, tall: 0.36, slab: 0.012, edge: 0.03, proud: 1.8, emblem: 0.1, glow: 0.15 };
+const LEGACY_GOLD = new Color3(0.95, 0.66, 0.16);
+const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
+function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const F = CHARGE_FLAG, H = fit.stand, L = F.long * H, r = F.thick * H;
+  const gold = mat(scene, LEGACY_GOLD, F.glow, "cloth"), cloth = mat(scene, team, F.glow, "cloth");
+  const pole = MeshBuilder.CreateCylinder("flagPole", { height: L, diameter: r, tessellation: 6 }, scene);
+  pole.id = "chargeFlag";
+  pole.material = mat(scene, LEGACY_POLE, 0.08);
+  const part = (m: Mesh, x: number, y: number, z: number, material: PBRMetallicRoughnessMaterial): Mesh => {
+    m.position.set(x, y, z); m.parent = pole; m.material = material; m.convertToFlatShadedMesh(); return m;
+  };
+  const ballR = F.ball * H / 2;
+  part(MeshBuilder.CreateIcoSphere("flagBall", { radius: ballR, subdivisions: 1 }, scene), 0, L / 2 + ballR * 0.9, 0, gold);
+  const W = F.wide * H, T = F.tall * H, t = F.slab * H, e = F.edge * H;
+  const cx = r / 2 + W / 2, cy = L / 2 - T / 2 - r;
+  part(MeshBuilder.CreateBox("flagEdge", { width: W, height: T, depth: t }, scene), cx, cy, 0, gold);
+  part(MeshBuilder.CreateBox("flagCloth", { width: W - 2 * e, height: T - 2 * e, depth: t * F.proud }, scene), cx, cy, 0, cloth);
+  for (const face of [-1, 1]) {
+    const d = part(MeshBuilder.CreateBox("flagEmblem", { width: F.emblem * H, height: F.emblem * H, depth: t }, scene), cx, cy, face * t * (F.proud / 2 + 0.5), gold);
+    d.rotation.z = Math.PI / 4;
+  }
+  pole.position.y = (0.5 - F.grip) * L;
+  return pole;
+}
+/*
  * [S] the Brawler's bearded axe (392; viking.brawler.red.png, card Main Hand Brawler Axe; critic 391: a black rectangular hammer block on a haft, only the
  * haft in frame). A dark haft .long of his height with the butt .butt of it below the fist and the head at the top, a broad grey blade with a bearded
  * lower horn: a flat plate in the x-y plane (edge toward +x) whose cutting edge bows out from the top horn to the beard .beard below the haft's line, and a
@@ -4290,6 +4323,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "staff":
     case "bo_staff": {
       if (type === "staff" && variant === "priest_staff") return buildPriestStaff(scene, fit, teamColor ?? accent);
+      if (type === "staff" && variant === "charge_flag") return buildChargeFlag(scene, fit, teamColor ?? accent);
       const color = type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
         : new Color3(0.5, 0.35, 0.2);
       const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.05 * s }, scene);

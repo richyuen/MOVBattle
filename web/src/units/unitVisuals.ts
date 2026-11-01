@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -740,6 +740,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "legacy.flag_bearer": vis(
     { scale: 1.34, bulk: 1.08, headSize: 1.05 }, "staff", "none", "none", "banner_back", "#5C79D4", undefined, {
+      weaponVariant: "charge_flag", // [S] 457 the team flag on a slim pole under a gold ball (propBuilder CHARGE_FLAG; audit 457 b.1)
       posePreset: "support",
       materialPreset: "legacy_toy",
     },
