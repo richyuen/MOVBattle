@@ -399,7 +399,9 @@ export class RuntimeUnit {
     // [S] the minotaur fights bare-fisted: fists carried before the belly, grab then punch (379; proceduralAnimation BULL_FISTS)
     this.animator.bullFists = definition.id === "ancient.minotaur";
     // [S] the sarissa levels his pike in both fists (379; proceduralAnimation PIKE_LEVEL)
-    this.animator.levelsPike = definition.id === "ancient.sarissa";
+    // [S] 463 ...and so does the Pike: levelled two-handed at the hip, thrust along its line (audit 457 pike b.3: "held upright one-handed - TABS:
+    // two-handed, levelled forward at the hip"; c.1: "the pike stays vertical when the hit is recorded - TABS: a long levelled pike thrust")
+    this.animator.levelsPike = definition.id === "ancient.sarissa" || definition.id === "legacy.pike";
     // [S] the hoplite carries his dory low at the weapon hip, point forward and down (380; proceduralAnimation DORY_CARRY)
     this.animator.carriesDory = definition.id === "ancient.hoplite";
     this._spawnPosition = body.root.position.clone();
