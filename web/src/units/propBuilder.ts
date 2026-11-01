@@ -3494,6 +3494,7 @@ function buildPriestStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  * Flat pieces are thin closed slabs (LESSONS: a one-sided flag turns away). Cloth with a small self-light: "metal" renders near black.
  */
 const CHARGE_FLAG = { long: 1.55, thick: 0.022, grip: 0.3, ball: 0.07, wide: 0.48, tall: 0.36, slab: 0.012, edge: 0.03, proud: 1.8, emblem: 0.1, glow: 0.15 };
+const CHARGE_PENNANT = { wide: 0.15, tall: 0.46, bar: 0.02, ring: 0.025, ringOut: 1.9, ringGap: 0.07 };
 const LEGACY_GOLD = new Color3(0.95, 0.66, 0.16);
 const TEAM_GLOVE = { wide: 0.11, squash: 0.92, band: 0.025, glow: 0.06, shade: 0.5 }; // 458 [P]: the team colour x .5, glow .06 (critic 457: the mitt read near-white; glow .15, x1 before) // 457b: wide .17 swallowed the forearm, its white band a disc to the camera
 const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
@@ -3511,13 +3512,26 @@ function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   };
   const ballR = F.ball * H / 2;
   part(MeshBuilder.CreateIcoSphere("flagBall", { radius: ballR, subdivisions: 1 }, scene), 0, L / 2 + ballR * 0.9, 0, gold);
-  const W = F.wide * H, T = F.tall * H, t = F.slab * H, e = F.edge * H;
+  /*
+   * [S] 464 a narrow tall pennant hung down the pole's top (audit 457 flag_bearer b.4: "a wide landscape sheet standing out sideways from the pole top -
+   * TABS: a narrow tall pennant hanging down the pole's upper part"; legacy.flag_bearer.blue.png: a team strip a third as wide as it is tall, hung close
+   * against the pole under the ball, a gold rim, a gold saltire across it, two gold rings round the pole under its foot). CHARGE_PENNANT in H: .wide by
+   * .tall, the saltire's bars .bar H thick along the cloth's diagonals; rings .ring H tall, .ringOut of the pole across, .ringGap H apart under the foot.
+   */
+  const P = CHARGE_PENNANT;
+  const W = P.wide * H, T = P.tall * H, t = F.slab * H, e = F.edge * H;
   const cx = r / 2 + W / 2, cy = L / 2 - T / 2 - r;
   part(MeshBuilder.CreateBox("flagEdge", { width: W, height: T, depth: t }, scene), cx, cy, 0, gold);
   part(MeshBuilder.CreateBox("flagCloth", { width: W - 2 * e, height: T - 2 * e, depth: t * F.proud }, scene), cx, cy, 0, cloth);
+  const iw = W - 2 * e, ih = T - 2 * e, diag = Math.hypot(iw, ih), tilt = Math.atan2(iw, ih);
   for (const face of [-1, 1]) {
-    const d = part(MeshBuilder.CreateBox("flagEmblem", { width: F.emblem * H, height: F.emblem * H, depth: t }, scene), cx, cy, face * t * (F.proud / 2 + 0.5), gold);
-    d.rotation.z = Math.PI / 4;
+    for (const s of [-1, 1]) {
+      const bar = part(MeshBuilder.CreateBox("flagEmblem", { width: P.bar * H, height: diag * 0.92, depth: t }, scene), cx, cy, face * t * (F.proud / 2 + 0.5), gold);
+      bar.rotation.z = s * tilt;
+    }
+  }
+  for (let k = 0; k < 2; k++) {
+    part(MeshBuilder.CreateCylinder("flagRing", { height: P.ring * H, diameter: r * P.ringOut, tessellation: 8 }, scene), 0, cy - T / 2 - P.ring * H / 2 - k * P.ringGap * H, 0, gold);
   }
   pole.position.y = (0.5 - F.grip) * L;
   return pole;
