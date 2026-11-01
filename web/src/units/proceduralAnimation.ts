@@ -351,7 +351,8 @@ const MUSKET_AIM = { ahead: 0.17, inward: 0.03, drop: 0.03, rate: 10, kick: 0.25
  * drops .26 of her height under the shoulder (just over the hip joint) and stands .28 before it, so the short stock lies under the forearm. Probe 456:
  * the rifle still hung ~.27 m over and behind the fist (the carry's offset in the hand), so its receiver is seated .seat of her height over the wrist.
  */
-const WINCHESTER_AIM = { ahead: 0.28, inward: 0.06, drop: 0.26, kick: 0.12, settle: 8, up: 60, down: 2.5, seat: 0.02 };
+// [S] 456 .slide: the shot's recoil drives the rifle back .slide of her height along the barrel, settling at .settle (it was an upward .kick of .12 rad)
+const WINCHESTER_AIM = { ahead: 0.28, inward: 0.06, drop: 0.26, slide: 0.05, settle: 8, up: 60, down: 2.5, seat: 0.02 };
 // [S] 425 the blunderbuss held low in both hands (see _aimBlunderbuss): the weapon fist's seat in shares of his height from the hip joint (ahead, out to
 // the weapon side, down), the barrel's droop below level and its turn in across his front (rad), the muzzle's kick up at the shot (rad)
 const BLUNDERBUSS_AIM = { ahead: 0.13, out: 0.07, drop: 0.0, droop: 0.22, across: 0.3, kick: 0.45 };
@@ -3652,8 +3653,10 @@ export class ProceduralAnimator {
     const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(A.ahead * height))
       .addInPlace(outward.scale(-A.inward * height)).addInPlace(new Vector3(0, -A.drop * height, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
-    const kick = firing ? A.kick * Math.min(1, this._attackTimer * 30) * Math.exp(-this._attackTimer * A.settle) : 0;
-    const y = fwd.scale(Math.cos(kick)).addInPlace(new Vector3(0, Math.sin(kick), 0)).normalize();
+    // [S] 456 the recoil a slide back along the barrel and a settle, the barrel held level (critic 455 deadeye c.2: "make the recoil kick a backward
+    // slide of the rifle along its own axis plus a settle back to level, not an upward pitch")
+    const recoil = firing ? Math.min(1, this._attackTimer * 30) * Math.exp(-this._attackTimer * A.settle) : 0;
+    const y = fwd.clone();
     const z = Vector3.Cross(y, outward).normalize();
     const zDown = z.y > 0 ? z.scale(-1) : z;
     const x = Vector3.Cross(y, zDown).normalize();
@@ -3670,7 +3673,7 @@ export class ProceduralAnimator {
     // moved to .seat of her height over the wrist joint, the move put back into the hand's frame.
     gun.node.computeWorldMatrix(true);
     const pivot = Vector3.TransformCoordinates(gun.node.getPivotPoint(), gun.node.getWorldMatrix());
-    const seatAt = b.rightHand.getAbsolutePosition().add(new Vector3(0, A.seat * height, 0));
+    const seatAt = b.rightHand.getAbsolutePosition().add(new Vector3(0, A.seat * height, 0)).addInPlace(fwd.scale(-A.slide * height * recoil));
     const handInv = b.rightHand.getWorldMatrix().clone().invert();
     gun.node.position.addInPlace(Vector3.TransformNormal(seatAt.subtract(pivot).scaleInPlace(w), handInv));
     // the off palm under the forend
