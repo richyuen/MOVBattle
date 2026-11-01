@@ -730,7 +730,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     { materialPreset: "legacy_toy" },
   ),
   "legacy.barrel_roller": vis(
-    { scale: 1.24, bulk: 1.48, headSize: 0.98 }, "none", "none", "none", "barrel_body", "#704726", undefined, {
+    // [S] 458 a lanky slim pirate at card Size 1.00x (audit 457 a.1: "bulky slab torso and thick limbs (size 1.24) - TABS: a lanky slim pirate"; the
+    // clubber's thin build): scale 1.0, bulk .82, longer legs and arms, thinner limbs, in place of the 1.24 / 1.48 brute
+    { scale: 1.0, bulk: 0.82, headSize: 0.98, legLength: 1.08, armLength: 1.06, upperLegWidth: 0.9, lowerLegWidth: 0.85 }, "none", "none", "none", "barrel_body", "#704726", undefined, {
       posePreset: "support",
       materialPreset: "secret_bandit",
     },
