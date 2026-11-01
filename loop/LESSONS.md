@@ -25,7 +25,7 @@ drop a lesson once it is a comment at the code it describes.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of the UNIT height (a cap may rise .7 of a head, 447): a taller prop re-frames every shot, so a RE-AUDIT follows (420).
-- A pistol is found by its "pistolBell" child (_aimPistol, GUN_TOSS): a new gun cut without it floats off the fist (445 revolver). Gun smoke/flash are meshes (trailPuff, flash, pistolFlash): take() {hold, clean} holds one camera and hides them (446).
+- A pistol is found by its "pistolBell" child (445). Gun smoke/flash meshes (trailPuff, flash, pistolFlash) are hidden by take() {clean} (446).
 - A bowman at the ready turns his chest up to .95 rad and his head off it: aim his idle from the head block's world facing, alpha = atan2(fz, fx) - swing (402 ice archer).
 - A wide stance reads as a stride from the .6 rad idle swing: probe the feet (probe_local --pat=FootM) before a "stride" pose gap (403).
 - `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches: render them after it. 4+ units: background it.
@@ -35,7 +35,7 @@ drop a lesson once it is a comment at the code it describes.
 - The _ability/_release shots are the log tick itself, before RuntimeUnit.update: a swap or pose set at the log shows only after (437 bat). A latch reads in _release when it pins at the decision and its plain hits come from the draughts .3 s on (444 vampire).
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
-- An idle hold gated on `Attacking && _attackMotion === "throw"` stays on through a long-cooldown thrower's windup (cd x .36): no throw in release/flight (451). Gate it on the fire.
+- An idle hold gated on Attacking+throw stays on through a long-cooldown windup: gate it on the fire (451). RuntimeUnit._applyPoseOverlay (posePreset gunner, archer...) runs AFTER the animator's layers and re-turns a held aim: probe the final frame (455 barrel 17° up).
 ## Rig and dress
 - A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen). The `_yoke` hull spans the whole trunk, not a collar: never anchor a chest piece to its foot (444).
