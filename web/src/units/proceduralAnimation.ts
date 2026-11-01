@@ -4158,7 +4158,8 @@ export class ProceduralAnimator {
   private _jabLastT = Infinity;
   /** True while a jab drives the arms (the runtime's boxer pose overlay stands aside). */
   get jabbing(): boolean {
-    return this.jabs && this._state === AnimState.Attacking && this._attackMotion === "strike";
+    // any blow: the glove infers the blade slash (unitVisuals inferWeaponPresentationFamily), the bare fist the strike
+    return this.jabs && this._state === AnimState.Attacking;
   }
 
   /** [S] 463 the boxer's straight jab, the other glove at the guard (spec at BOXER_JAB). */
