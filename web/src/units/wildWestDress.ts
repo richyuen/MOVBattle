@@ -439,6 +439,29 @@ export function minerOveralls(scene: Scene, body: ArticulatedBody, teamColor: Co
 }
 
 /*
+ * [S] 452 the Miner's boots (critic 449-451 miner a.4: "plain team feet - TABS: dark brown knee boots"; wild_west.miner.red.png: dark brown leather
+ * boots from just under the knee to the sole, the shaft a little wider than the shin with a turned top, the foot a rounded dark toe). MINER_BOOTS in the
+ * shin's own box: a 6-sided shell .out of its half-width round it from .from to .to of its length, a turned top .cuff round from .cuffFrom to .from; the
+ * foot in the same leather. Dark brown, self-lit .glow.
+ */
+const MINER_BOOTS = { from: 0.14, to: 1.04, out: 1.25, cuffFrom: 0.06, cuff: 1.45, color: new Color3(0.12, 0.065, 0.04), glow: 0.1 };
+
+/** Dark brown knee boots on both shins and feet (spec at MINER_BOOTS). */
+export function minerBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = MINER_BOOTS;
+  const leather = getMaterialFactory().get("cloth", B.color, { emissive: B.color.scale(B.glow) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "minerBoot", shin, B.from, B.to, B.out, leather));
+    out.push(limbShell(scene, "minerBootCuff", shin, B.cuffFrom, B.from + 0.02, B.cuff, leather));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = leather;
+  }
+  return out;
+}
+
+/*
  * [S] 452 the Quick Draw's team vest (CONFIRM 451 quick_draw a.1: "vest a desaturated brown (~115,83,75), not the team red the pants show - TABS:
  * buttoned team-colour vest, a saturated crimson matching the hat and pants"; card Appearance "a buttoned team color vest"; wild_west.quick_draw.red.png:
  * the vest the hat's crimson, four small grey buttons down its front from the collar V to the belt). The secret_bandit body cloth blends the team colour

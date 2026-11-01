@@ -1,6 +1,6 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
-import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerMoustache, minerOveralls, quickDrawCloth, quickDrawShirt, quickDrawVest, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
+import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerSideburns, gunslingerSuit, minerBoots, minerMoustache, minerOveralls, quickDrawCloth, quickDrawShirt, quickDrawVest, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -716,6 +716,8 @@ export class UnitFactory {
     if (definition.id === "wild_west.miner" && !shouldUseVehicleBody) propMeshes.push(...minerOveralls(this._scene, body, teamColor));
     // [S] 449 the Miner's black handlebar moustache (wildWestDress MINER_MOUSTACHE)
     if (definition.id === "wild_west.miner" && !shouldUseVehicleBody) propMeshes.push(...minerMoustache(this._scene, body));
+    // [S] 452 the Miner's dark brown knee boots (wildWestDress MINER_BOOTS)
+    if (definition.id === "wild_west.miner" && !shouldUseVehicleBody) propMeshes.push(...minerBoots(this._scene, body));
     // [S] 432 the Captain's tan pants tucked into black knee boots with brass buckles (pirateDress CAPTAIN_LEGS)
     if (definition.id === "pirate.captain" && !shouldUseVehicleBody) propMeshes.push(...captainLegs(this._scene, body));
     // [S] 431 the Captain's long brown beard with a moustache under the eyes, run down onto his chest (pirateDress CAPTAIN_BEARD)
