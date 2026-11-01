@@ -20,7 +20,7 @@ export type WeaponType =
 export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
-  | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap"
+  | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap" | "peak_hat"
   | "miner_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
@@ -677,7 +677,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "wild_west.deadeye": vis(
-    { scale: 1.02, bulk: 0.92, armLength: 1.12 }, "musket", "cowboy_hat", "none", "none", "#6C5136", undefined, {
+    { scale: 1.02, bulk: 0.92, armLength: 1.12 }, "musket", "peak_hat", "none", "none", "#6C5136", undefined, {
       // [S] 448 the dark Winchester (propBuilder WINCHESTER; audit 444 b.1), not the silver matchlock
       weaponVariant: "winchester",
       posePreset: "gunner",

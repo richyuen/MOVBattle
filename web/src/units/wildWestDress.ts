@@ -105,6 +105,35 @@ export function buildFlatHat(scene: Scene, W: number, H: number, seat: number, u
 }
 
 /*
+ * [S] 449 the peaked hat of the Deadeye and the Dynamite Thrower (audit 444 deadeye a.1: "brown tall-crown wide-brim hat - TABS: team peaked conical
+ * hat"; dynamite_thrower a.1: "black-brown tall flat-crown hat, gold band, brim three heads wide - TABS: team low peaked/conical hat with a turned-down
+ * brim"; wild_west.deadeye.red.png, wild_west.dynamite_thrower.red.png: a team-coloured felt hat, a low faceted crown rising to a blunt peak, its brim a
+ * wide lampshade sloping down and out all round, about two and a quarter heads across). PEAK_HAT in the head's W and H: the brim a .sides-sided
+ * frustum from .crown W across at the seat out and down to .brim W across, .slope H lower; on it the crown from .crown W across up to .peak of that at
+ * its top, .tall H over the head top (under .3 of the unit height). Team colour times .shade, self-lit .glow.
+ */
+const PEAK_HAT = { sides: 8, crown: 1.12, brim: 2.25, slope: 0.3, peak: 0.22, tall: 0.6, shade: 0.9, glow: 0.12 };
+
+/** The team peaked hat with a sloped lampshade brim (spec at PEAK_HAT), in the hat's units; `seat` under the head top. Returns the brim. */
+export function buildPeakHat(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
+  const P = PEAK_HAT;
+  const u = (v: number) => v / unit;
+  const team = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(P.shade);
+  const felt = getMaterialFactory().get("cloth", team, { emissive: team.scale(P.glow) });
+  const brim = MeshBuilder.CreateCylinder("peakHatBrim", { height: u(P.slope * H), diameterTop: u(P.crown * W), diameterBottom: u(P.brim * W), tessellation: P.sides }, scene);
+  brim.position.y = u(seat - P.slope * H * 0.5 + 0.04 * H);
+  brim.material = felt;
+  brim.convertToFlatShadedMesh();
+  const tall = -seat + P.tall * H;
+  const crown = MeshBuilder.CreateCylinder("peakHatCrown", { height: u(tall), diameterBottom: u(P.crown * W), diameterTop: u(P.crown * W * P.peak), tessellation: P.sides }, scene);
+  crown.position.y = u(P.slope * H * 0.5 - 0.04 * H + tall * 0.5);
+  crown.material = felt;
+  crown.convertToFlatShadedMesh();
+  crown.parent = brim;
+  return brim;
+}
+
+/*
  * [S] 447 the Miner's cap (critic 446 miner a.1: "black top hat with a headlamp - TABS: team miner's cap, tall dome crown, front peak";
  * wild_west.miner.red.png: a team-coloured cap whose round crown rises well over the head, wider than it, and a stiff peak jutting out over the
  * eyes, tilted up a little; no lamp). MINER_CAP, in the head's width W and height H: a wall .wall W across from the seat to the head top, so it clears

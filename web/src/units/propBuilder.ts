@@ -10,7 +10,7 @@ import { inferWeaponGripPreset, inferWeaponPresentationFamily } from "./unitVisu
 import { getMaterialFactory, type MatCategory } from "./materialFactory";
 import { jitterVertices } from "./tribalDress";
 import { featherClump } from "./renaissanceDress";
-import { buildBowler, buildFlatHat, buildMinerCap, lassoCoil } from "./wildWestDress";
+import { buildBowler, buildFlatHat, buildMinerCap, buildPeakHat, lassoCoil } from "./wildWestDress";
 
 /*
  * [S] the catapult's boulder (352; medieval.catapult.blue.png: a grey-brown rock of flat facets lying in the bucket, the same rock in flight). An ico rock
@@ -56,7 +56,7 @@ const FIREWORK_BOW = { long: 1.15, cap: 0.12, capColor: new Color3(0.92, 0.5, 0.
 /** [S] 418 the Firework Arrow nocked across the firework bow's grip: in stave lengths, the tube .long, .wide, set .side off the stave and reaching .back
  * behind the string; .bands green rings, a dark head .head long. */
 const FIREWORK_NOCK = { long: 0.3, wide: 0.08, side: 0.05, back: 0.02, bands: 3, ring: 1.3, head: 0.1, shaft: 0.012, nock: 0.12, wood: new Color3(0.45, 0.3, 0.16), band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14) };
-const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "hoplite_helm", "legion_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat", "bowler", "flat_hat", "miner_cap"];
+const HEAD_FITTED_HATS: (HatType | undefined)[] = ["beret", "brim_hat", "cavalier_hat", "morion", "sallet", "feather_hat", "conical_hat", "helmet", "plume_helmet", "hood_liripipe", "hood", "viking_helmet", "horned_helmet", "bone_mask", "beast_skull", "antler_skull", "bull_head", "crested_helm", "hoplite_helm", "legion_helm", "dragon_head", "kasa", "pointed_cowl", "sun_hat", "bandana", "tricorn", "pirate_hat", "sack_mask", "armet", "royal_crown", "floppy_hat", "bowler", "flat_hat", "miner_cap", "peak_hat"];
 /*
  * A tricorn (250; units/pirate.captain: a black felt hat pulled down to the brow, its brim turned up on three sides into a triangle about two heads across,
  * one corner over the face and two behind the ears, the walls standing about half a head high; the captain's carries a white skull and crossbones on the
@@ -774,6 +774,8 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
   // [S] 447 the Quick Draw's flat-crown hat (wildWestDress FLAT_HAT) and the Miner's cap (MINER_CAP)
   if (type === "flat_hat") return buildFlatHat(scene, W, H, seat, unit, teamColor);
   if (type === "miner_cap") return buildMinerCap(scene, W, H, seat, unit, teamColor);
+  // [S] 449 the Deadeye's and the Dynamite Thrower's peaked hat (wildWestDress PEAK_HAT)
+  if (type === "peak_hat") return buildPeakHat(scene, W, H, seat, unit, teamColor);
   if (type === "floppy_hat") {
     // [S] the Bard's floppy hat (355; spec at FLOPPY_HAT), replacing the pale flat straw disc with a stick quill
     const F = FLOPPY_HAT;
