@@ -134,39 +134,33 @@ export function buildPeakHat(scene: Scene, W: number, H: number, seat: number, u
 }
 
 /*
- * [S] 447 the Miner's cap (critic 446 miner a.1: "black top hat with a headlamp - TABS: team miner's cap, tall dome crown, front peak";
- * wild_west.miner.red.png: a team-coloured cap whose round crown rises well over the head, wider than it, and a stiff peak jutting out over the
- * eyes, tilted up a little; no lamp). MINER_CAP, in the head's width W and height H: a wall .wall W across from the seat to the head top, so it clears
- * the block head's chamfered corners; on it a dome .dome W across rising .rise H over the head top (447.3b: .29 read as a flat cap),
- * its lower half inside the wall; a peak .peak W wide and .peakLong W out front at the seat, .thick H thick, tipped up .tip rad. Team colour times
- * .shade, self-lit .glow.
+ * [S] 454 the Miner's hat (CONFIRM 452 miner a.1: "a rounded skullcap with a short front bill - TABS: a tall faceted team-colour crown with a wide brim
+ * all round"; wild_west.miner.blue.png, .red.png: a team felt hat, its crown an 8-sided block taller than the head is above the eyes, narrowing a little
+ * to a flat top and tipped back; the brim all round, sloping down and out like a shallow lampshade, about one and three quarter heads across; replaces
+ * the 447 MINER_CAP dome and bill). MINER_HAT in the head's W and H: the brim a .sides frustum from .crown W across at the seat out and down to .brim W,
+ * .slope H deep; the crown from .crown W at the seat to .top of that at its flat top, .tall H over the head top; the whole hat tipped back .tilt rad.
+ * Team colour times .shade, self-lit .glow.
  */
-const MINER_CAP = { sides: 12, wall: 1.42, dome: 1.38, rise: 0.72, peak: 1.0, peakLong: 0.55, thick: 0.05, tip: 0.22, shade: 0.9, glow: 0.12 };
+const MINER_HAT = { sides: 8, crown: 1.2, brim: 1.85, slope: 0.16, top: 0.86, tall: 0.75, tilt: 0.14, shade: 0.9, glow: 0.12 };
 
-/** The miner's cap (spec at MINER_CAP), in the hat's units; `seat` under the head top. Returns the wall. */
+/** The miner's tall team hat with a brim all round (spec at MINER_HAT), in the hat's units; `seat` under the head top. Returns the brim. */
 export function buildMinerCap(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
-  const C = MINER_CAP;
+  const C = MINER_HAT;
   const u = (v: number) => v / unit;
   const team = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(C.shade);
   const felt = getMaterialFactory().get("cloth", team, { emissive: team.scale(C.glow) });
-  const wallTall = -seat;
-  const wall = MeshBuilder.CreateCylinder("minerCapWall", { height: u(wallTall), diameterBottom: u(C.wall * W), diameterTop: u(C.dome * W), tessellation: C.sides }, scene);
-  wall.position.y = u(seat + wallTall * 0.5);
-  wall.material = felt;
-  wall.convertToFlatShadedMesh();
-  const dome = MeshBuilder.CreateSphere("minerCapDome", { diameter: u(C.dome * W), segments: 6 }, scene);
-  dome.scaling.y = (2 * C.rise * H) / (C.dome * W);
-  dome.position.y = u(wallTall * 0.5);
-  dome.material = felt;
-  dome.convertToFlatShadedMesh();
-  dome.parent = wall;
-  const peak = MeshBuilder.CreateBox("minerCapPeak", { width: u(C.peak * W), height: u(C.thick * H), depth: u(C.peakLong * W) }, scene);
-  peak.rotation.x = -C.tip;
-  peak.position.set(0, u(-wallTall * 0.5 + C.thick * H * 0.5), u(C.wall * W * 0.5 + C.peakLong * W * 0.4));
-  peak.material = felt;
-  peak.convertToFlatShadedMesh();
-  peak.parent = wall;
-  return wall;
+  const brim = MeshBuilder.CreateCylinder("minerHatBrim", { height: u(C.slope * H), diameterTop: u(C.crown * W), diameterBottom: u(C.brim * W), tessellation: C.sides }, scene);
+  brim.position.y = u(seat - C.slope * H * 0.5 + 0.04 * H);
+  brim.rotation.x = -C.tilt;
+  brim.material = felt;
+  brim.convertToFlatShadedMesh();
+  const tall = -seat + C.tall * H;
+  const crown = MeshBuilder.CreateCylinder("minerHatCrown", { height: u(tall), diameterBottom: u(C.crown * W), diameterTop: u(C.crown * W * C.top), tessellation: C.sides }, scene);
+  crown.position.y = u(C.slope * H * 0.5 - 0.04 * H + tall * 0.5);
+  crown.material = felt;
+  crown.convertToFlatShadedMesh();
+  crown.parent = brim;
+  return brim;
 }
 
 /*
