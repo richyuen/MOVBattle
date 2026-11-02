@@ -1366,3 +1366,43 @@ export function thorHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   put(MeshBuilder.CreateBox("thorBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, midY, c.z - e.z * P.back + t / 2);
   return out;
 }
+
+/*
+ * [S] 471 the Super Boxer's shorts (audit 468 super_boxer a.4: "shorts: navy legs to the knee - TABS: white boxing shorts under a gold waistband";
+ * legacy.super_boxer.red.png: loose white shorts from the waist to above the knee, a team stripe down each side, under a broad banded gold waistband).
+ * SUPER_BOXER_SHORTS: the pelvis white; a white shell .out round each thigh to .to of it; a team stripe .stripe W wide down the outer side of each;
+ * the waistband as BOXER_SHORTS' (.band of the trunk, .stripes gold bands alternating deep and bright). White .white self-lit .glow.
+ */
+const SUPER_BOXER_SHORTS = { out: 1.7, to: 0.72, stripe: 0.28, white: new Color3(0.96, 0.95, 0.92), glow: 0.3, band: 0.22, bandOut: 1.1, stripes: 4, step: 0.03 };
+
+/** The Super Boxer's white shorts with team side stripes under a gold waistband (spec at SUPER_BOXER_SHORTS). */
+export function superBoxerShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const S = SUPER_BOXER_SHORTS;
+  const mf = getMaterialFactory();
+  const white = mf.get("cloth", S.white, { emissive: S.white.scale(S.glow) });
+  const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(0.15) });
+  const gold = mf.get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(0.2) });
+  const deep = COATEE_GOLD.scale(0.7);
+  const gold2 = mf.get("cloth", deep, { emissive: deep.scale(0.2) });
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = white;
+  const out: Mesh[] = [];
+  for (const [thigh, side] of [[body.leftUpperLeg, 1], [body.rightUpperLeg, -1]] as const) {
+    const shell = limbShell(scene, "superBoxerShorts", thigh, 0, S.to, S.out, white);
+    out.push(shell);
+    // a team stripe down the outer side: a thin box on the shell's outer face
+    const bb = shell.getBoundingInfo().boundingBox;
+    const stripe = MeshBuilder.CreateBox("superBoxerStripe", { width: bb.extendSize.x * 0.25, height: bb.extendSize.y * 1.9, depth: bb.extendSize.z * 2 * S.stripe }, scene);
+    stripe.parent = shell;
+    stripe.position.set(bb.center.x + side * bb.extendSize.x * 0.95, bb.center.y, bb.center.z);
+    stripe.material = team;
+    stripe.convertToFlatShadedMesh();
+    out.push(stripe);
+  }
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const each = H * S.band / S.stripes;
+  for (let k = 0; k < S.stripes; k++) {
+    const grow = 1 + (k % 2 ? 0 : S.step);
+    lay(MeshBuilder.CreateBox("superBoxerWaistband", { width: W * S.bandOut * grow, height: each, depth: D * S.bandOut * grow }, scene), 0, -H / 2 + each * (k + 0.5), 0, k % 2 ? gold2 : gold);
+  }
+  return out;
+}
