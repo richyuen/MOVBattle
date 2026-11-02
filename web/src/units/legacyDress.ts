@@ -1096,3 +1096,56 @@ export function barrelLegs(scene: Scene, body: ArticulatedBody, teamColor: Color
   }
   return out;
 }
+
+/*
+ * [S] 468 the Super Peasant's bracelets (audit 468 b.1: "bracelets missing on both wrists - TABS: thick glowing gold cuffs at each wrist";
+ * legacy.super_peasant.red.png, legacy.super_peasant.jpg: a fat gold cuff round each wrist, lit from within). SUPER_CUFFS: a gold shell .out round each
+ * forearm from .from to its end, with a brighter rim band .rim long and .rimOut round at each edge. Gold .gold self-lit .glow.
+ */
+const SUPER_CUFFS = { from: 0.62, out: 1.75, rim: 0.08, rimOut: 1.95, gold: new Color3(1, 0.78, 0.2), glow: 0.75, rimGlow: 1.0 };
+
+/** The Super Peasant's glowing gold wrist cuffs (spec at SUPER_CUFFS). */
+export function superPeasantCuffs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = SUPER_CUFFS;
+  const mf = getMaterialFactory();
+  const gold = mf.get("cloth", C.gold, { emissive: C.gold.scale(C.glow) });
+  const rim = mf.get("cloth", C.gold, { emissive: C.gold.scale(C.rimGlow) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(limbShell(scene, "superCuff", arm, C.from, 1.0, C.out, gold));
+    out.push(limbShell(scene, "superCuffRim", arm, C.from, C.from + C.rim, C.rimOut, rim));
+    out.push(limbShell(scene, "superCuffRim", arm, 1.0 - C.rim, 1.0, C.rimOut, rim));
+  }
+  return out;
+}
+
+/*
+ * [S] 468 the Wizard's beard (audit 468 a.2: "beard missing: bare chin - TABS: a long grey beard to mid-chest"; legacy.wizard.red.png, card Appearance:
+ * a long grey beard from the cheeks to the middle of the chest, a moustache over it). WIZARD_BEARD on the head box: a faceted grey wedge .wide e.x across at
+ * the cheeks narrowing to .tip at its end, .long head-heights long from .from e.y under the centre, .proud e.z off the face and .thick e.z deep; a moustache
+ * bar .mous e.x across under the eyes. Grey .grey self-lit .glow.
+ */
+const WIZARD_BEARD = { wide: 1.9, tip: 0.4, long: 2.4, from: 0.1, proud: 1.35, thick: 1.0, mous: 1.3, grey: new Color3(0.78, 0.78, 0.8), glow: 0.3 };
+
+/** The Wizard's long grey beard and moustache (spec at WIZARD_BEARD), hung on the head. */
+export function wizardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = WIZARD_BEARD;
+  const grey = getMaterialFactory().get("cloth", B.grey, { emissive: B.grey.scale(B.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const long = e.y * 2 * B.long;
+  const out: Mesh[] = [];
+  const beard = MeshBuilder.CreateCylinder("wizardBeard", { height: long, diameterTop: e.x * B.wide, diameterBottom: e.x * B.tip, tessellation: 6 }, scene);
+  beard.scaling.z = (e.z * B.thick) / (e.x * B.wide);
+  beard.position.set(c.x, c.y - e.y * B.from - long / 2, c.z + e.z * B.proud);
+  const mous = MeshBuilder.CreateBox("wizardMoustache", { width: e.x * B.mous, height: e.y * 0.18, depth: e.z * 0.3 }, scene);
+  mous.position.set(c.x, c.y - e.y * 0.2, c.z + e.z * 1.02);
+  for (const m of [beard, mous]) {
+    m.material = grey;
+    m.parent = head;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+  }
+  return out;
+}
