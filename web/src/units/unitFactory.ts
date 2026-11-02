@@ -433,8 +433,9 @@ export class UnitFactory {
         {
           detailLevel: visual.bodyDetailLevel ?? "standard",
           showNeck: true,
-          showShoulderPads: isArmored && !isZeus,
-          showBelt: isArmored,
+          // [S] 471b the Super Boxer is shirtless: no armour pads or belt plate (audit 468 super_boxer a.2)
+          showShoulderPads: isArmored && !isZeus && definition.id !== "legacy.super_boxer",
+          showBelt: isArmored && definition.id !== "legacy.super_boxer",
         },
       );
       // Attach weapon, hat, shield, special props
