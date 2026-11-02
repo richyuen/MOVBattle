@@ -480,6 +480,8 @@ const BULL_CHARGE = { lean: 0.6, head: 0.35, armsBack: 0.7, pump: 0.25, stride: 
  * [S] 401 the arms swept right back (critic 400: "one hand planted"): .arms 2.3 rad carries them over the shoulders so they lie along the body's line
  * toward the feet - at .45 they hung straight down from the horizontal trunk and the near hand propped on the ground like a brace.
  */
+// [S] 474 the superman flight's arms (spec at setSuperman): raised past the head
+const SUPERMAN = { arms: 3.0 };
 const DIVE = { tip: 1.22, trunk: 0.16, head: 0.62, arms: 2.3, elbow: 0.35, knee: 0.18, in: 18, out: 26 };
 /*
  * [S] 426 the Pirate Kick (card pirate.harpooner Characteristics "kicking them once in melee range"; Abilities Pirate Kick): a front kick with the gun kept
@@ -1382,6 +1384,18 @@ export class ProceduralAnimator {
   private _diveTarget = 0;
   setDive(on: boolean): void {
     this._diveTarget = on ? 1 : 0;
+    if (!on) this._superman = false;
+  }
+  /**
+   * [S] 474 the Super Peasant's superman flight (simulationSystem SUPER_FLIGHT; legacy.super_peasant.jpg: laid flat out head first, both fists thrust ahead
+   * past the head, legs trailing): the dive at full weight from this frame (no ease: the flight shot is taken mid-flight), the arms raised .SUPERMAN.arms
+   * over the head so they reach ahead of it along the body's line, the knees straight.
+   */
+  private _superman = false;
+  setSuperman(on: boolean): void {
+    this._superman = on;
+    this._diveTarget = on ? 1 : 0;
+    if (on) this._dive = 1;
   }
   private _applyDive(dt: number): void {
     this._dive += (this._diveTarget - this._dive) * Math.min(1, dt * (this._diveTarget > this._dive ? DIVE.in : DIVE.out));
@@ -1391,12 +1405,14 @@ export class ProceduralAnimator {
     b.hip.rotation.x += DIVE.tip * d;
     b.torso.rotation.x += DIVE.trunk * d;
     b.neck.rotation.x -= DIVE.head * d;
-    b.leftShoulder.rotation.x -= DIVE.arms * d;
-    b.rightShoulder.rotation.x -= DIVE.arms * d;
+    const arms = this._superman ? SUPERMAN.arms : DIVE.arms;
+    b.leftShoulder.rotation.x -= arms * d;
+    b.rightShoulder.rotation.x -= arms * d;
     b.leftElbow.rotation.x += DIVE.elbow * d;
     b.rightElbow.rotation.x += DIVE.elbow * d;
-    b.leftKnee.rotation.x += DIVE.knee * d;
-    b.rightKnee.rotation.x += DIVE.knee * d;
+    const knee = this._superman ? 0 : DIVE.knee;
+    b.leftKnee.rotation.x += knee * d;
+    b.rightKnee.rotation.x += knee * d;
   }
   /** The Pirate Kick (spec at PIRATE_KICK_POSE), set by the sim for the length of a kick (simulationSystem PIRATE_KICK); `windup` s to the blow. */
   private _kick = 0;

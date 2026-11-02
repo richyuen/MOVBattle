@@ -262,6 +262,13 @@ function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
 
 /** Zeus's thrown bolt is back in his fist this share of the cooldown after the throw (384; until then the fist is empty). */
 const ZEUS_REARM = 0.6;
+/*
+ * [S] 474 the Super Peasant's flight (audit 468 super_peasant c.1: "flight missing: he strides on the ground - TABS: he flies flat out at high speed in a
+ * superman pose"; legacy.super_peasant.jpg, card Characteristics "They fly at extremely high speeds"): closing from beyond his reach to .reach of it he
+ * flies at the man at .speed m/s (at least .minDur s), laid flat out (proceduralAnimation setSuperman), .lift m up at the middle of the line (the arc's
+ * peak reached by 1/.rise of the way), set down short of the man; logged "flight" at .logAt of the way, where the pose and the height read.
+ */
+const SUPER_FLIGHT = { reach: 9, speed: 13, minDur: 0.45, lift: 1.3, rise: 1.0, logAt: 0.4 };
 // [S] 474 the Dark Peasant's thrown volley (spec at its use; card Weapons Throw Dark Peasant count 15, .03 s apart, explosion radius 2): from his hand sphere
 // (.sphere m round a centre .centre m up), each hand .share of the blow's damage and .push of its knockback, landing within .spread m of the man
 const DARK_VOLLEY = { count: 15, every: 0.03, sphere: 1.1, centre: 1.1, spread: 1.6, share: 0.06, push: 0.1, splash: 2 };
@@ -675,6 +682,29 @@ export class SimulationSystem {
   private _chargeDustKick = new Map<RuntimeUnit, number>();
   private _chargePosed = new Set<RuntimeUnit>();
   // Big Headbutt (BIG_HEADBUTT): each minotaur's butt under way (blow and end times) and when the next is ready
+  // [S] 474 the Super Peasant's flights under way (SUPER_FLIGHT)
+  private _superFlights = new Map<RuntimeUnit, { from: Vector3; to: Vector3; t0: number; dur: number; logged: boolean }>();
+  /** Each Super Peasant flight under way: carried flat out along its line, .lift m up at the middle, logged "flight" at .logAt of the way, set down at its end. */
+  private _stepSuperFlights(now: number): void {
+    const F = SUPER_FLIGHT;
+    for (const [unit, fl] of this._superFlights) {
+      if (unit.isDead) { unit.animator.setDive(false); this._superFlights.delete(unit); continue; }
+      const u = Math.min(1, (now - fl.t0) / fl.dur);
+      const pos = Vector3.Lerp(fl.from, fl.to, u);
+      pos.y = F.lift * Math.pow(Math.sin(Math.PI * Math.min(1, u * F.rise)), 0.5) * (u < 1 ? 1 : 0);
+      unit.teleportTo(pos);
+      unit.body.root.rotation.y = Math.atan2(fl.to.x - fl.from.x, fl.to.z - fl.from.z);
+      if (!fl.logged && u >= F.logAt) {
+        fl.logged = true;
+        this._logAbility(unit, "flight", now);
+      }
+      if (u >= 1) {
+        unit.animator.setDive(false);
+        unit.setAttackCooldown(now, 0);
+        this._superFlights.delete(unit);
+      }
+    }
+  }
   private _butts = new Map<RuntimeUnit, { target: RuntimeUnit; blowAt: number; endAt: number; done: boolean; spec: typeof BIG_HEADBUTT; sprawlAt?: number }>();
   private _buttReadyAt = new Map<RuntimeUnit, number>();
   // Pirate Kick (PIRATE_KICK): each kick under way and when the next is ready
@@ -898,6 +928,7 @@ export class SimulationSystem {
     for (const unit of this._units) {
       unit.update(dt, now);
     }
+    if (this._superFlights.size > 0) this._stepSuperFlights(now);
     // After the animation step, so the frame a blow lands on is the frame its club is down on the man
     if (this._pendingBlows.length > 0) this._landPendingBlows(now);
     if (this._pendingLaunches.length > 0) this._fireDwelledLaunches(now);
@@ -1649,6 +1680,23 @@ export class SimulationSystem {
       return;
     }
 
+    // [S] 474 the Super Peasant flies at the man (SUPER_FLIGHT) in place of the blink: while a flight is under way he takes no other decision
+    if (preset === "iconic_super_peasant" && this._superFlights.has(unit)) return;
+    if (preset === "iconic_super_peasant" && distance > engageDistance && distance < engageDistance * SUPER_FLIGHT.reach && unit.canAttack(now)) {
+      const dir = enemy.position.subtract(unit.position);
+      dir.y = 0;
+      dir.normalize();
+      const to = enemy.position.subtract(dir.scale(engageDistance * 0.6));
+      to.y = 0;
+      const from = unit.position.clone();
+      from.y = 0;
+      this._superFlights.set(unit, { from, to, t0: now, dur: Math.max(SUPER_FLIGHT.minDur, Vector3.Distance(from, to) / SUPER_FLIGHT.speed), logged: false });
+      unit.stopMoving();
+      this._clearPathState(unit);
+      unit.animator.setSuperman(true);
+      if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position, new Color3(1.0, 0.88, 0.35));
+      return;
+    }
     if ((preset === "iconic_super_peasant" || preset === "iconic_thor") && distance > engageDistance && distance < engageDistance * (preset === "iconic_super_peasant" ? 5.5 : 3.0) && unit.canAttack(now)) {
       if (this.visualEffects) {
         this.visualEffects.spawnSmokePuff(
