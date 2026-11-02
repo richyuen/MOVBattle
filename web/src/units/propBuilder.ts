@@ -3501,6 +3501,54 @@ const LEGACY_GOLD = new Color3(0.95, 0.66, 0.16);
 // patch .palm of the glove across on its inner (+x) side, .palmProud out
 const TEAM_GLOVE = { wide: 0.22, squash: 0.92, band: 0.025, glow: 0.1, shade: 0.8, palm: 0.55, palmProud: 0.9 }; // 458 [P]: the team colour x .5, glow .06 (critic 457: the mitt read near-white; glow .15, x1 before) // 457b: wide .17 swallowed the forearm, its white band a disc to the camera
 const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
+/*
+ * [S] 469 the Pharaoh's crook (audit 468 pharaoh b.1: "main hand: a long dark club capped with a glowing pale orb - TABS: a striped team/gold crook with a
+ * curled hook top"; legacy.pharaoh.red.png, card Main Hand Pharaoh Sickle: a shaft about two-thirds his height, banded team and gold all along, held a third
+ * of the way up; at its top it bends over into a round hook that curls back down on itself like a question mark). PHARAOH_CROOK in his standing height H:
+ * the shaft .long H, .thick H across, in .bands alternating team and gold bands, the fist .grip of the way up; the hook a ring .hook H across bent from
+ * the shaft's top over .curl rad in .segs straight banded segments; a small gold knob named "orb" on the hook's end, where his spell leaves.
+ */
+const PHARAOH_CROOK = { long: 0.78, thick: 0.03, bands: 9, grip: 0.38, hook: 0.2, curl: 4.4, segs: 11, knob: 0.04, glow: 0.14 };
+function buildPharaohCrook(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const C = PHARAOH_CROOK, H = fit.stand, L = C.long * H, r = C.thick * H;
+  const gold = mat(scene, LEGACY_GOLD, C.glow, "cloth"), cloth = mat(scene, team, C.glow, "cloth");
+  const shaft = MeshBuilder.CreateCylinder("staff", { height: L / C.bands, diameter: r, tessellation: 6 }, scene);
+  shaft.id = "pharaohCrook";
+  shaft.material = cloth;
+  shaft.convertToFlatShadedMesh();
+  // the shaft's bands: the root mesh is the middle band (y 0), the others stacked above and below it
+  const half = Math.floor(C.bands / 2), band = L / C.bands;
+  for (let k = -half; k <= half; k++) {
+    if (k === 0) continue;
+    const m = MeshBuilder.CreateCylinder("crookBand", { height: band, diameter: r, tessellation: 6 }, scene);
+    m.position.y = k * band;
+    m.material = (k + half) % 2 ? gold : cloth;
+    m.convertToFlatShadedMesh();
+    m.parent = shaft;
+  }
+  // the hook: a ring of radius R standing on the shaft's top, its centre out to +x, swept from the shaft's top (angle pi) over and down by .curl
+  const R = C.hook * H / 2, topY = (half + 0.5) * band, cx = R;
+  const seg = (2 * R * Math.sin(C.curl / C.segs / 2)) * 1.08;
+  let endX = 0, endY = topY;
+  for (let i = 0; i < C.segs; i++) {
+    const a0 = Math.PI - (i / C.segs) * C.curl, a1 = Math.PI - ((i + 1) / C.segs) * C.curl, am = (a0 + a1) / 2;
+    const m = MeshBuilder.CreateCylinder("crookHook", { height: seg, diameter: r, tessellation: 6 }, scene);
+    m.position.set(cx + Math.cos(am) * R, topY + Math.sin(am) * R, 0);
+    m.rotation.z = am; // the segment runs along the ring's tangent
+    m.material = i % 2 ? gold : cloth;
+    m.convertToFlatShadedMesh();
+    m.parent = shaft;
+    endX = cx + Math.cos(a1) * R; endY = topY + Math.sin(a1) * R;
+  }
+  const orb = MeshBuilder.CreateIcoSphere("orb", { radius: C.knob * H / 2, subdivisions: 1 }, scene);
+  orb.position.set(endX, endY, 0);
+  orb.material = gold;
+  orb.convertToFlatShadedMesh();
+  orb.parent = shaft;
+  // the fist .grip of the way up from the butt: the shaft's middle stands above it
+  shaft.position.y = (0.5 - C.grip) * L;
+  return shaft;
+}
 function buildChargeFlag(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const F = CHARGE_FLAG, H = fit.stand, L = F.long * H, r = F.thick * H;
   const gold = mat(scene, LEGACY_GOLD, F.glow, "cloth"), cloth = mat(scene, team, F.glow, "cloth");
@@ -4460,6 +4508,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (type === "staff" && variant === "priest_staff") return buildPriestStaff(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "charge_flag") return buildChargeFlag(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "stay_banner") return buildStayBanner(scene, fit, teamColor ?? accent);
+      if (type === "staff" && variant === "pharaoh_crook") return buildPharaohCrook(scene, fit, teamColor ?? accent); // [S] 469 (PHARAOH_CROOK)
       const color = type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
         : new Color3(0.5, 0.35, 0.2);
       const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.05 * s }, scene);
