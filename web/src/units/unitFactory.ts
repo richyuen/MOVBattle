@@ -762,6 +762,8 @@ export class UnitFactory {
     if (definition.id === "legacy.peasant" && !shouldUseVehicleBody) propMeshes.push(...peasantSleeves(this._scene, body));
     // [S] 466 the Boxer's bare team-skin chest (legacyDress boxerBareChest)
     if (definition.id === "legacy.boxer" && !shouldUseVehicleBody) boxerBareChest(body);
+    // [S] 471 the Super Boxer is shirtless too: the trunk and yoke in his arm skin, no plated vest (audit 468 super_boxer a.2; legacyDress boxerBareChest)
+    if (definition.id === "legacy.super_boxer" && !shouldUseVehicleBody) boxerBareChest(body);
     // [S] 466 the Flag Bearer's white cuffs banded in gold (legacyDress FLAG_CUFFS)
     if (definition.id === "legacy.flag_bearer" && !shouldUseVehicleBody) propMeshes.push(...flagCuffs(this._scene, body));
     // [S] 467 the Flag Bearer's white boots with gold tops (legacyDress FLAG_BOOTS)
