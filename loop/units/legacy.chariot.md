@@ -1,0 +1,20 @@
+# legacy.chariot
+Status: open   Audited: 468   Done: -
+## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
+a FAIL (0 since 468)
+ 1. driver headgear in unit_legacy.chariot_idle: bare team head — TABS: a Roman helmet with a tall transverse crest plume (ref: legacy.chariot.red.png; card Appearance)
+ 2. driver body in unit_legacy.chariot_idle: bare team torso — TABS: dark segmented armour with gold straps (ref: legacy.chariot.red.png)
+ 3. car front in unit_legacy.chariot_idle: a plain blue tub with a thin gold rim — TABS: a tall team front panel with gold laurel wreaths (ref: legacy.chariot.red.png, legacy.chariot.jpg)
+b FAIL (0 since 468)
+ 1. gladius missing from the driver's right hand in unit_legacy.chariot_idle — TABS: a short sword held upright (ref: legacy.chariot.red.png; card Appearance)
+ 2. shield missing in unit_legacy.chariot_idle — TABS: a tall curved team scutum with gold wings (ref: legacy.chariot.red.png)
+ 3. wheel blades missing in unit_legacy.chariot_windup: bare hubs — TABS: long scythe blades jut from each wheel hub (ref: legacy.chariot.jpg; card Appearance)
+c PASS (468)
+d PASS (cost 1800=1800, hp 9.65x vs 9.65x (0%), dmg 55.00 (wiki none, skipped), cd 1.80 (wiki none, skipped); 468 stats)
+## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
+1. [S] legacy.chariot.a helmet — blocker 1: Roman helmet with a tall transverse crest plume on the driver — ref: legacy.chariot.red.png — ours: unit_legacy.chariot_idle.png
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)
+- ref legacy.chariot.red.png: plumed helmet, scutum and gladius on the driver; ours unit_legacy.chariot_idle: bare blue man with empty hands
+- ref legacy.chariot.jpg: the horse charges and the blade trails from the wheel; ours unit_legacy.chariot_struck: the horse ploughs the knight flat under its legs (c passes on this trample), but the hubs have no blade

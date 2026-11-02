@@ -12,14 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-463 | LONG_PIKE orange pike 2.8 s, collar, hooked blade (55c1c679) | legacy.pike.b | approved (struck 1, 2, 3; b PASS)
-463 | levelsPike for the pike: PIKE_LEVEL hold and thrust (cf35fc1b) | legacy.pike.c | approved (struck 1)
-463 | BLOWGUN banded tube + BLOWGUN_HOLD at the mouth (67888276) | legacy.blowdarter.b | approved (struck 1, 2; b PASS)
-463 | POACHER_BOW chunky stave, rope wraps, iceBowCarry (7e2eb586) | legacy.poacher.b | approved (none struck: no fist on it)
-463 | BOXER_JAB straight jab from the guard (523ab3d2, 578ed136) | legacy.boxer.c | approved (struck 1)
-463 | BARREL_RIDE staved barrel under his feet, hip lifted (e3458425) | legacy.barrel_roller.b | approved (struck 1, 2; b PASS)
-463 | BARREL_SHOT hooped barrel missile (7089b8e7) | legacy.barrel_roller.c | approved (struck 1)
-463 | [P] PIKE_PLUME tan (87ab1edc) | legacy.pike.a | approved (struck 1)
 464 | HAND_LAUNCH muzzle from blowgunMuzzle (b42e6e1c) | legacy.blowdarter.c | approved (struck 1)
 464 | HOP_BACK Backwards Dodge (f5c1b38a) | legacy.boxer.c | approved (struck 2; c PASS)
 464 | PIKE_DROP pike let go on the first blow, disarmToFists (d57603bb, fa8827d7) | legacy.pike.c | approved (struck 2; c PASS)
@@ -48,6 +40,12 @@ for 25 iterations.
 467 | PIKE_BELT belt, baggy trousers; PIKE_HAIR (c676cf71) | legacy.pike.a | approved (struck 4, 3; D)
 467 | POACHER_KNEES tan knee caps (c676cf71) | legacy.poacher.a | approved (struck 4)
 467 | BARREL_WRAPS brown forearm wraps (c676cf71) | legacy.barrel_roller.a | approved (struck 5)
+468 | BARREL_ROLL closes to 1.6 m, shot rolls from the barrelBody core (5a54adf1) | legacy.barrel_roller.c | approved (none struck; CONFIRM passed c, critic kept it)
+468 | BLOWDARTER_SCARF tan V, white feathers (6539168f) | legacy.blowdarter.a | approved (none struck: side-on)
+468 | BLOWDARTER_PANTS brown thighs, team hem (6539168f) | legacy.blowdarter.a | rejected (hunk reverted a49b8e78: colours inverted)
+468 | BARREL_HAIR white locks; BARREL_LEGS pants, socks, shoes (6539168f) | legacy.barrel_roller.a | approved (struck 3, 6; added 7)
+468 | SUPER_CUFFS glowing gold cuffs (9c6d188f) | legacy.super_peasant.b | approved (struck 1; b PASS)
+468 | WIZARD_BEARD grey wedge, moustache (9c6d188f) | legacy.wizard.a | approved (struck 2)
 
 ## Spent (never retry as [P])
 
