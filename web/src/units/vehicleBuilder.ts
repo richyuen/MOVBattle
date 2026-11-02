@@ -2944,6 +2944,8 @@ const CHARIOT_GALLOP: [number, [number, number], [number, number], [number, numb
   [1, [1.08, -0.6], [0.55, -0.95], [0.06, -1.2]],
   [-1, [1.08, -0.6], [0.52, -0.78], [0.06, -0.5]],
 ];
+// [S] 470 the driver's Roman helmet (spec in buildChariot)
+const CHARIOT_HELM = { cap: 1.12, lift: 0.18, drop: 0.55, crest: 1.5, crestThick: 0.22, crestUp: -0.12, rim: 0.88, steel: new Color3(0.32, 0.32, 0.36), pale: new Color3(0.98, 0.85, 0.6) };
 function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("chariot_root", scene);
   const rig = new TransformNode("chariot_rig", scene);
@@ -3075,6 +3077,42 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
     driver.leftElbow.rotation.x = -0.4;
     driver.rightElbow.rotation.x = -0.4;
   });
+  /*
+   * [S] 470 the driver's Roman helmet (audit 468 chariot a.1: "driver headgear: bare team head - TABS: a Roman helmet with a tall transverse crest
+   * plume"; legacy.chariot.red.png: a dark steel cap over the crown with a cheek guard down each side, and on top a tall team-coloured crest fanned from
+   * ear to ear, a paler band along its curve). CHARIOT_HELM on the head box (half sizes e, centre c, +z the face): the cap .cap of e over the crown,
+   * dropping .drop e.y below the centre at the back and sides; a cheek guard each side; the crest a half disc .crest e.x across standing across the head
+   * (side to side), .crestThick e.z thick, its foot .crestUp e.y over the cap top, with a paler rim .rim of it inside its curve.
+   */
+  {
+    const C = CHARIOT_HELM;
+    const head = operator.headMesh;
+    const bb = head.getBoundingInfo().boundingBox;
+    const e = bb.extendSize, c = bb.center;
+    const steel = lit(C.steel, 0.12), crest = lit(color, 0.2), rimMat = lit(C.pale, 0.3);
+    const put = (m: Mesh, mat: Mesh["material"], x: number, y: number, z: number): Mesh => {
+      m.position.set(x, y, z);
+      m.material = mat;
+      m.parent = head;
+      m.convertToFlatShadedMesh();
+      allMeshes.push(m);
+      return m;
+    };
+    const cap = put(MeshBuilder.CreateSphere("chariotHelm", { diameterX: e.x * 2 * C.cap, diameterY: e.y * 2 * C.cap, diameterZ: e.z * 2 * C.cap, segments: 6, slice: 0.55 }, scene), steel, c.x, c.y + e.y * C.lift, c.z - e.z * 0.04);
+    cap.scaling.y = 1;
+    for (const s of [-1, 1]) {
+      put(MeshBuilder.CreateBox("chariotHelmCheek", { width: e.x * 0.18, height: e.y * C.drop * 2, depth: e.z * 0.9 }, scene), steel, c.x + s * e.x * 1.04, c.y - e.y * C.drop * 0.4, c.z + e.z * 0.1);
+    }
+    const topY = c.y + e.y * (C.lift + C.cap) + e.y * C.crestUp;
+    const R = e.x * C.crest;
+    // a half cylinder of arc .5 turned so its flat face stands across the head (side to side) and its curve rises over it (rotation.x -pi/2 lifts +z to +y)
+    const fan = put(MeshBuilder.CreateCylinder("chariotHelmCrest", { height: e.z * C.crestThick, diameter: R * 2, arc: 0.5, tessellation: 14 }, scene), crest, c.x, topY, c.z - e.z * 0.05);
+    fan.rotation.x = -Math.PI / 2;
+    const rim = put(MeshBuilder.CreateCylinder("chariotHelmCrestRim", { height: e.z * C.crestThick * 1.15, diameter: R * 2 * C.rim, arc: 0.5, tessellation: 14 }, scene), rimMat, c.x, topY, c.z - e.z * 0.05);
+    rim.rotation.x = -Math.PI / 2;
+    const inner = put(MeshBuilder.CreateCylinder("chariotHelmCrestCore", { height: e.z * C.crestThick * 1.3, diameter: R * 2 * C.rim * 0.82, arc: 0.5, tessellation: 14 }, scene), crest, c.x, topY, c.z - e.z * 0.05);
+    inner.rotation.x = -Math.PI / 2;
+  }
   const headTopY = stand.position.y + operator.headTopY * CHARIOT_DRIVER;
 
   return wrapAsBody(
