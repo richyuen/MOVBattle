@@ -3506,6 +3506,45 @@ const LEGACY_GOLD = new Color3(0.95, 0.66, 0.16);
 const TEAM_GLOVE = { wide: 0.22, squash: 0.92, band: 0.025, glow: 0.1, shade: 0.8, palm: 0.55, palmProud: 0.9 }; // 458 [P]: the team colour x .5, glow .06 (critic 457: the mitt read near-white; glow .15, x1 before) // 457b: wide .17 swallowed the forearm, its white band a disc to the camera
 const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
 /*
+ * [S] 470 the Pharaoh's flail (audit 468 pharaoh b.2: "off hand: empty - TABS: a striped flail rod with gold tassel strands hanging from its tip";
+ * legacy.pharaoh.red.png, card Off Hand Pharaoh Flail: a short rod banded team and gold, held near its butt and pointed up and out; a gold knob at its
+ * tip, and from the knob three gold strands as long as half the rod, each strung with a few beads and ending in a gold tassel). PHARAOH_FLAIL in his
+ * standing height H: the rod .long H, .thick H across, in .bands alternating team and gold, the fist .grip of the way up; a gold knob .knob H; .strands
+ * strands .strand H long, .wire H thick, hung from the knob along the rod, spread .spread H apart, .beads beads each; a tassel .tassel H long at each foot.
+ */
+const PHARAOH_FLAIL = { long: 0.42, thick: 0.026, bands: 7, grip: 0.12, knob: 0.045, strands: 3, strand: 0.2, wire: 0.008, spread: 0.022, beads: 3, bead: 0.016, tassel: 0.06, glow: 0.14 };
+function buildPharaohFlail(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const F = PHARAOH_FLAIL, H = fit.stand, L = F.long * H, r = F.thick * H;
+  const gold = mat(scene, LEGACY_GOLD, F.glow, "cloth"), cloth = mat(scene, team, F.glow, "cloth");
+  const band = L / F.bands, half = Math.floor(F.bands / 2);
+  const rod = MeshBuilder.CreateCylinder("pharaohFlail", { height: band, diameter: r, tessellation: 6 }, scene);
+  rod.material = cloth;
+  rod.convertToFlatShadedMesh();
+  const part = (m: Mesh, x: number, y: number, z: number, material: PBRMetallicRoughnessMaterial): Mesh => {
+    m.position.set(x, y, z); m.parent = rod; m.material = material; m.convertToFlatShadedMesh(); return m;
+  };
+  for (let k = -half; k <= half; k++) {
+    if (k === 0) continue;
+    part(MeshBuilder.CreateCylinder("flailBand", { height: band, diameter: r, tessellation: 6 }, scene), 0, k * band, 0, (k + half) % 2 ? gold : cloth);
+  }
+  const tipY = (half + 0.5) * band, knobR = (F.knob * H) / 2;
+  part(MeshBuilder.CreateIcoSphere("flailKnob", { radius: knobR, subdivisions: 1 }, scene), 0, tipY + knobR * 0.8, 0, gold);
+  // the strands hang from the knob back along the rod, spread beside it (held up, they fall down beside the rod as in the render)
+  const S = F.strand * H;
+  for (let i = 0; i < F.strands; i++) {
+    const x = r + knobR * 0.6 + (i - (F.strands - 1) / 2) * F.spread * H * 0.4, z = (i - (F.strands - 1) / 2) * F.spread * H;
+    const top = tipY + knobR * 0.5;
+    part(MeshBuilder.CreateCylinder("flailStrand", { height: S, diameter: F.wire * H, tessellation: 4 }, scene), x, top - S / 2, z, gold);
+    for (let b = 0; b < F.beads; b++) {
+      part(MeshBuilder.CreateBox("flailBead", { size: F.bead * H }, scene), x, top - S * (b + 1) / (F.beads + 1), z, b % 2 ? gold : cloth);
+    }
+    part(MeshBuilder.CreateCylinder("flailTassel", { height: F.tassel * H, diameterTop: F.wire * H * 2, diameterBottom: F.bead * H * 1.6, tessellation: 5 }, scene), x, top - S - (F.tassel * H) / 2, z, gold);
+  }
+  // the fist .grip of the way up from the butt: the rod's middle stands above it
+  rod.position.y = (0.5 - F.grip) * L;
+  return rod;
+}
+/*
  * [S] 469 the Pharaoh's crook (audit 468 pharaoh b.1: "main hand: a long dark club capped with a glowing pale orb - TABS: a striped team/gold crook with a
  * curled hook top"; legacy.pharaoh.red.png, card Main Hand Pharaoh Sickle: a shaft about two-thirds his height, banded team and gold all along, held a third
  * of the way up; at its top it bends over into a round hook that curls back down on itself like a question mark). PHARAOH_CROOK in his standing height H:
@@ -4513,6 +4552,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (type === "staff" && variant === "charge_flag") return buildChargeFlag(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "stay_banner") return buildStayBanner(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "pharaoh_crook") return buildPharaohCrook(scene, fit, teamColor ?? accent); // [S] 469 (PHARAOH_CROOK)
+      if (type === "staff" && variant === "pharaoh_flail") return buildPharaohFlail(scene, fit, teamColor ?? accent); // [S] 470 (PHARAOH_FLAIL)
       const color = type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
         : new Color3(0.5, 0.35, 0.2);
       const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.05 * s }, scene);

@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -767,7 +767,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.pharaoh": vis(
-    { scale: 1.36, bulk: 1.08, headSize: 1.08 }, "staff", "modius", "none", "cape", "#E0B34A", undefined, {
+    { scale: 1.36, bulk: 1.08, headSize: 1.08 }, "staff", "modius", "none", "cape", "#E0B34A", "staff", {
+      offhandVariant: "pharaoh_flail", // [S] 470 a striped flail with gold tassels in the off hand (propBuilder PHARAOH_FLAIL; audit 468 b.2)
       posePreset: "caster",
       weaponVariant: "pharaoh_crook", // [S] 469 a striped team/gold crook with a curled hook (propBuilder PHARAOH_CROOK; audit 468 b.1)
       materialPreset: "secret_royal",
