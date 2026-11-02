@@ -1856,7 +1856,8 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
    * each a team operator seated (thighs .thigh rad forward, shins .shin rad back down, legs .spread rad apart), his hip set on the seat; on the turret roof
    * and astride the barrel (on the turret, so they turn with it) and on the rear deck; a dark dome helmet .helmet of the head box over each crown.
    */
-  if (options.showOperators !== false) {
+  // 471b: always, not gated by showOperators (the tank's crew are linked actors, so its decorative operators are always suppressed; the riders are its look)
+  {
     const R = TANK_RIDERS;
     const helmetMat = makeMat(scene, R.helmetColor);
     for (const seat of R.seats) {
