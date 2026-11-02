@@ -21,7 +21,7 @@ export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap" | "peak_hat"
-  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood" | "boxer_headgear" | "shako" | "flag_helmet"
+  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood" | "boxer_headgear" | "shako" | "flag_helmet" | "modius"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
@@ -767,7 +767,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.pharaoh": vis(
-    { scale: 1.36, bulk: 1.08, headSize: 1.08 }, "staff", "pharaoh", "none", "cape", "#E0B34A", undefined, {
+    { scale: 1.36, bulk: 1.08, headSize: 1.08 }, "staff", "modius", "none", "cape", "#E0B34A", undefined, {
       posePreset: "caster",
       weaponVariant: "pharaoh_crook", // [S] 469 a striped team/gold crook with a curled hook (propBuilder PHARAOH_CROOK; audit 468 b.1)
       materialPreset: "secret_royal",

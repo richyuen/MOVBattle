@@ -1174,3 +1174,45 @@ export function wizardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 469 the Pharaoh's modius (audit 468 pharaoh a.1: "headgear: a wide flat yellow box with blue stripes and side lappets - TABS: a tall narrow
+ * team-coloured modius cylinder with gold bands, about twice the head's height"; legacy.pharaoh.red.png: a team cylinder about as wide as the head,
+ * a little wider at its top, standing near two heads over the brow; a gold rim round its top; low down a gold band, a white band and a gold band
+ * stacked over the brow). MODIUS, in the head's W and H: the body .wide W across at the seat, .flare of that at its top, .tall H over the seat;
+ * .sides facets; a gold rim .rim H at the top; the base bands .band H each from .bandsAt H up the body, gold, white, gold. Team times .shade.
+ */
+const MODIUS = { sides: 10, wide: 1.0, flare: 1.14, tall: 1.75, rim: 0.07, band: 0.07, bandsAt: 0.12, proud: 1.04, shade: 0.9, glow: 0.12 };
+const MODIUS_GOLD = new Color3(0.95, 0.66, 0.16);
+
+/** The Pharaoh's tall team modius with gold and white bands (spec at MODIUS), in the hat's units; `seat` under the head top. Returns the body. */
+export function buildModius(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
+  const M = MODIUS;
+  const u = (v: number) => v / unit;
+  const mf = getMaterialFactory();
+  const t = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(M.shade);
+  const felt = mf.get("cloth", t, { emissive: t.scale(M.glow) });
+  const gold = mf.get("cloth", MODIUS_GOLD, { emissive: MODIUS_GOLD.scale(0.2) });
+  const white = mf.get("cloth", new Color3(0.95, 0.94, 0.9), { emissive: new Color3(0.25, 0.25, 0.24) });
+  const tall = -seat + M.tall * H;
+  const lo = M.wide * W, hi = lo * M.flare;
+  const body = MeshBuilder.CreateCylinder("modius", { height: u(tall), diameterBottom: u(lo), diameterTop: u(hi), tessellation: M.sides }, scene);
+  body.position.y = u(seat + tall / 2);
+  body.material = felt;
+  body.convertToFlatShadedMesh();
+  const ring = (name: string, y: number, h: number, mat: Material): void => {
+    // the body's width at that height (from its foot), a little proud of it
+    const at = (y + tall / 2) / tall, d = (lo + (hi - lo) * at) * M.proud;
+    const m = MeshBuilder.CreateCylinder(name, { height: u(h), diameter: u(d), tessellation: M.sides }, scene);
+    m.position.y = u(y);
+    m.material = mat;
+    m.convertToFlatShadedMesh();
+    m.parent = body;
+  };
+  ring("modiusRim", tall / 2 - (M.rim * H) / 2, M.rim * H, gold);
+  const b = M.band * H, foot = -tall / 2 + M.bandsAt * H;
+  ring("modiusBand", foot + b / 2, b, gold);
+  ring("modiusBand", foot + b * 1.5, b, white);
+  ring("modiusBand", foot + b * 2.5, b, gold);
+  return body;
+}
