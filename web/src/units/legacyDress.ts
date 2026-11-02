@@ -1095,6 +1095,25 @@ export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+
+/*
+ * [S] 474 the Pharaoh's arm bands (audit 468 pharaoh a.5: "arm cuffs missing: bare team arms - TABS: gold bands at upper arm and wrist";
+ * legacy.pharaoh.red.png, legacy.pharaoh.jpg: a broad gold band round each upper arm under the shoulder and a broader gold cuff at each wrist).
+ * PHARAOH_BANDS: on each upper arm a gold shell .out round from .armFrom to .armTo of its length; on each forearm a gold shell .out round from .wristFrom
+ * to its end. Self-lit .glow.
+ */
+const PHARAOH_BANDS = { out: 1.45, armFrom: 0.22, armTo: 0.4, wristFrom: 0.68, glow: 0.24 };
+
+/** The Pharaoh's gold armlets and wrist cuffs (spec at PHARAOH_BANDS). */
+export function pharaohBands(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = PHARAOH_BANDS;
+  const gold = getMaterialFactory().get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(B.glow) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "pharaohArmlet", arm, B.armFrom, B.armTo, B.out, gold));
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) out.push(limbShell(scene, "pharaohWristCuff", arm, B.wristFrom, 1.0, B.out, gold));
+  return out;
+}
+
 /*
  * [S] 466 the Flag Bearer's cuffs (audit 457 a.3: "cuffs, bare forearms - TABS: white-and-gold striped cuffs"; legacy.flag_bearer.red.png: a broad white
  * cuff round each wrist with a gold band at its top and foot). FLAG_CUFFS on each forearm: a white shell BANNER_CUFFS.out round from .from to its end, and
