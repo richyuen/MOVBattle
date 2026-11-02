@@ -1694,14 +1694,16 @@ const TANK_RIDERS = {
  * each hull side and turret side; the mantlet collar and the muzzle ring in team.
  */
 const TANK_PAINT = { tan: new Color3(0.8, 0.66, 0.36), roof: new Color3(0.64, 0.52, 0.28), // 472b: (.58,.47,.24) swatched dark olive
-  hatch: new Color3(0.2, 0.2, 0.21), rail: 0.42, railThick: 0.05 };
+  hatch: new Color3(0.2, 0.2, 0.21), rail: 0.42, railThick: 0.05, glow: 0.12 };
 function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("legacy_tank_root", scene);
   const allMeshes: Mesh[] = [];
   const P = TANK_PAINT;
-  const hullMat = makeMat(scene, P.tan);
+  // 474 [P]: cloth with a small self-light, not makeMat's getWood, which greyed the tan (critic 472: swatch sat .05)
+  const paint = (c: Color3) => getMaterialFactory().get("cloth", c, { emissive: c.scale(P.glow) });
+  const hullMat = paint(P.tan);
   const teamMat = makeMat(scene, color);
-  const roofMat = makeMat(scene, P.roof);
+  const roofMat = paint(P.roof);
   const hatchMat = makeMat(scene, P.hatch);
   const hullDark = makeMat(scene, darken(color, 0.28));
   const trackMat = makeMat(scene, new Color3(0.2, 0.22, 0.2));
