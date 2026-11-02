@@ -1497,7 +1497,7 @@ export function thorCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3)
  * box (half sizes e, centre c, +z the face): the stem from the mouth corner (.side e.x out, .mouth e.y under the centre, .out e.z ahead of it, clear of
  * the beard) in .segs segments .seg e.z long, each dropping .bend rad more; a bowl .bowl e.x across and .bowlTall e.y tall standing at its end; brown wood.
  */
-const WIZARD_PIPE = { side: 0.35, mouth: 0.35, out: 1.4, segs: 3, seg: 0.38, thick: 0.1, bend: 0.32, bowl: 0.32, bowlTall: 0.38, wood: new Color3(0.42, 0.24, 0.1), glow: 0.14 };
+const WIZARD_PIPE = { side: 0.45, mouth: 0.35, out: 1.4, segs: 3, seg: 0.6, thick: 0.17, bend: 0.32, bowl: 0.5, bowlTall: 0.55, wood: new Color3(0.42, 0.24, 0.1), glow: 0.14 };
 
 /** The Wizard's curved brown pipe from the mouth over the beard (spec at WIZARD_PIPE), hung on the head. */
 export function wizardPipe(scene: Scene, body: ArticulatedBody): Mesh[] {
