@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -941,6 +941,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "iconic_thor":
       return vis({ scale: 1.68, bulk: 1.18, headSize: 1.1, armLength: 1.12 }, "hammer", "winged_band", "none", "cape", "#8ec7ff", undefined, {
+        weaponVariant: "mjolnir", // [S] 474 a short mallet with a chest-sized block head (propBuilder MJOLNIR; audit 468 thor b.1)
         posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "storm_halo", fxPreset: "wind",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["storm_flare"], "ability-active": ["storm_flare"] },

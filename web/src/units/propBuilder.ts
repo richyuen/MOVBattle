@@ -3511,6 +3511,8 @@ const TEAM_GLOVE = { wide: 0.22, squash: 0.92, band: 0.025, glow: 0.1, shade: 0.
  * gold .color self-lit .glow (in the glow layer, so it haloes).
  */
 const GLOW_GLOVE = { wide: 0.17, squash: 0.88, thumb: 0.42, color: new Color3(1, 0.74, 0.28), glow: 0.5 }; // 472b: wide .3 hid his whole trunk, (1,.86,.5) glow .85 read white
+// [S] 474 Thor's Mjolnir (spec at its build in the hammer case), in the unit scale s
+const MJOLNIR = { haft: 0.3, thick: 0.045, head: 0.26, headTall: 0.17, ring: 0.7, loop: 0.06, grip: 0.3 };
 const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
 /*
  * [S] 470 the Pharaoh's flail (audit 468 pharaoh b.2: "off hand: empty - TABS: a striped flail rod with gold tassel strands hanging from its tip";
@@ -4326,6 +4328,44 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "hammer":
     case "mace": {
+      if (type === "hammer" && variant === "mjolnir") {
+        // [S] 474 Thor's Mjolnir (audit 468 thor b.1: "hammer: a long-shafted sledge with a small flat head - TABS: a short mallet whose block head is as big
+        // as his chest"; legacy.thor.red.png, card Appearance): MJOLNIR in s, a short dark-wrapped haft .haft long, .thick across, a pale grey block head
+        // .head wide (across the haft), .headTall tall and deep, bevelled by a darker band .band round its middle, a glowing pale-blue ring on each end face
+        // .ring of the head across, a loop .loop at the haft's foot; the fist .grip of the way up the haft.
+        const M = MJOLNIR;
+        const haft = MeshBuilder.CreateCylinder("handle", { height: M.haft * s, diameter: M.thick * s, tessellation: 8 }, scene);
+        haft.material = mat(scene, new Color3(0.22, 0.13, 0.07), 0.08, "cloth");
+        haft.convertToFlatShadedMesh();
+        addGripWraps(scene, haft, [-0.06 * s, 0, 0.06 * s], M.thick * 1.25 * s);
+        const stone = mat(scene, new Color3(0.78, 0.76, 0.72), 0.12, "cloth");
+        const headY = (M.haft / 2 + M.headTall / 2 - 0.01) * s;
+        const head = MeshBuilder.CreateBox("hammerhead", { width: M.head * s, height: M.headTall * s, depth: M.headTall * s }, scene);
+        head.position.y = headY;
+        head.parent = haft;
+        head.material = stone;
+        head.convertToFlatShadedMesh();
+        const band = MeshBuilder.CreateBox("mjolnirBand", { width: M.head * s * 0.18, height: M.headTall * s * 1.06, depth: M.headTall * s * 1.06 }, scene);
+        band.position.y = headY;
+        band.parent = haft;
+        band.material = mat(scene, new Color3(0.4, 0.4, 0.42), 0.1, "cloth");
+        band.convertToFlatShadedMesh();
+        const glow = mat(scene, new Color3(0.55, 0.85, 1), 0.9, "cloth");
+        for (const sd of [-1, 1]) {
+          const ring = MeshBuilder.CreateTorus("mjolnirRing", { diameter: M.ring * M.headTall * s, thickness: 0.012 * s, tessellation: 16 }, scene);
+          ring.rotation.z = Math.PI / 2;
+          ring.position.set(sd * (M.head * s / 2 + 0.002 * s), headY, 0);
+          ring.parent = haft;
+          ring.material = glow;
+        }
+        const loop = MeshBuilder.CreateTorus("mjolnirLoop", { diameter: M.loop * s, thickness: 0.01 * s, tessellation: 10 }, scene);
+        loop.rotation.x = Math.PI / 2;
+        loop.position.y = -(M.haft / 2 + M.loop / 2) * s;
+        loop.parent = haft;
+        loop.material = haft.material;
+        haft.position.y = (0.5 - M.grip) * M.haft * s;
+        return haft;
+      }
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.035 * s }, scene);
       handle.material = mat(scene, new Color3(0.45, 0.3, 0.15));
       addGripWraps(scene, handle, [-0.12 * s, -0.04 * s, 0.04 * s], 0.04 * s);
