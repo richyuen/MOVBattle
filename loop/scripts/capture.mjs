@@ -538,7 +538,9 @@ async function main() {
           // other side flipped back onto it (face check), so his idle swings .3 rad only; [evidence 414] the samurai's too (the boulder behind his kabuto)
           // [evidence 428] the pirate cannon's rider stands behind the breech on its handles (428.5): from .6 rad the near wheel hid him and both
           // handles; his idle swings .25 rad, near the straight-front angle of pirate.cannon.red.png, so he shows over the barrel between the wheels
-          const swing = a.definition.id === "tribal.protector" ? 1.35 : a.definition.id === "farmer.halfling" ? 0.2 : a.definition.id === "dynasty.monk" || a.definition.id === "dynasty.samurai" ? 0.3 : a.definition.id === "pirate.cannon" ? 0.25 : 0.6;
+          // [evidence 469] the blowdarter's crouched blowgun hold read side-on from .6 rad, the scarf V on his chest edge-on (critic 468 a.2): his idle swings .2 rad,
+          // near the front-on angle of legacy.blowdarter.red.png
+          const swing = a.definition.id === "tribal.protector" ? 1.35 : a.definition.id === "farmer.halfling" || a.definition.id === "legacy.blowdarter" ? 0.2 : a.definition.id === "dynasty.monk" || a.definition.id === "dynasty.samurai" ? 0.3 : a.definition.id === "pirate.cannon" ? 0.25 : 0.6;
           if (on === 1) {
             // the idle look-around can turn the face to the far side (the painter, the spear thrower): when the face points more than .9 rad off
             // the camera, the swing goes to his other side, where the face shows (evidence 371). Face = eye midpoint minus the head mesh centre.
