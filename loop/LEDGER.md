@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-468 | BARREL_ROLL closes to 1.6 m, shot rolls from the barrelBody core (5a54adf1) | legacy.barrel_roller.c | approved (none struck; CONFIRM passed c, critic kept it)
-468 | BLOWDARTER_SCARF tan V, white feathers (6539168f) | legacy.blowdarter.a | approved (none struck: side-on)
-468 | BLOWDARTER_PANTS brown thighs, team hem (6539168f) | legacy.blowdarter.a | rejected (hunk reverted a49b8e78: colours inverted)
-468 | BARREL_HAIR white locks; BARREL_LEGS pants, socks, shoes (6539168f) | legacy.barrel_roller.a | approved (struck 3, 6; added 7)
-468 | SUPER_CUFFS glowing gold cuffs (9c6d188f) | legacy.super_peasant.b | approved (struck 1; b PASS)
-468 | WIZARD_BEARD grey wedge, moustache (9c6d188f) | legacy.wizard.a | approved (struck 2)
 469 | BLOWDARTER_SCARF one solid V, 7 feathers, shoulder wings (3495f889) | legacy.blowdarter.a | approved (struck 2)
 469 | BLOWDARTER_SHORTS team shorts, tan fringed hem (9c5878c2) | legacy.blowdarter.a | approved (struck 1)
 469 | BLOWDARTER_HAIR parted crown, flared locks (8c918f0e) | legacy.blowdarter.a | approved (struck 3; a PASS; D)
@@ -48,6 +42,13 @@ for 25 iterations.
 472 | THOR_BELT wide grey belt, octagonal buckle (3212c6b0) | legacy.thor.a | approved (struck 4)
 472 | PHARAOH_COLLAR flat gold broad collar (063e6c76) | legacy.pharaoh.a | approved (struck 3)
 472 | WIZARD_ROBE team coat-robe to the knees, dark belt (731cde05) | legacy.wizard.a | approved (struck 4)
+473 | peasant lanky cut at 1.15x (f74a0207) | legacy.dark_peasant.a | approved (struck 1)
+473 | man's size 1.15x, lanky cut (1d7ba5f5) | legacy.super_peasant.a | approved (struck 1, 5)
+473 | DARK_HANDS thirty floating black hands (599bbe2e) | legacy.dark_peasant.b | approved (struck 1; b PASS)
+473 | THOR_SKY_BOLT sky bolts on the man and the hammer (06dcdf2e, a35fddac) | legacy.thor.c | approved (struck 1, 2; c PASS)
+473 | WIZARD_SPELL glowing star bolt (aee5fce8) | legacy.wizard.c | approved (struck 1)
+473 | KNEEL_AURA gold ring, disc, wheeling rays (3f0f1952) | legacy.pharaoh.c | approved (struck 1)
+473 | PUNCH_BURST white-gold flash at contact (ca68611a) | legacy.super_boxer.c | approved (struck 3)
 
 ## Spent (never retry as [P])
 
