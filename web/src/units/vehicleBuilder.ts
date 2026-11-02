@@ -1686,10 +1686,22 @@ const TANK_RIDERS = {
     { onTurret: false, x: -0.4, y: 0.86, z: -1.12, turn: Math.PI, astride: false },
   ],
 };
+/*
+ * [S] 472 the tank's paint (audit 468 tank a.2: "hull colour: the whole tank in team blue - TABS: a tan hull with team colour only on the track skirts,
+ * handles and fittings"; legacy.tank.red.png: a khaki hull, glacis, decks and turret, the barrel khaki too; team colour on the low skirt blocks at the
+ * corners, the grab rails on the hull and turret sides, the towing eyes, the mantlet collar and the muzzle ring; dark grey cupolas). TANK_PAINT: the hull and
+ * turret in .tan, the roof .roof, the hatches .hatch; the lower hull and side skirts stay team (the body material); .rails team grab rails (.rail long) on
+ * each hull side and turret side; the mantlet collar and the muzzle ring in team.
+ */
+const TANK_PAINT = { tan: new Color3(0.58, 0.47, 0.24), roof: new Color3(0.46, 0.37, 0.19), hatch: new Color3(0.2, 0.2, 0.21), rail: 0.42, railThick: 0.05 };
 function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("legacy_tank_root", scene);
   const allMeshes: Mesh[] = [];
-  const hullMat = makeMat(scene, brighten(color, 0.12));
+  const P = TANK_PAINT;
+  const hullMat = makeMat(scene, P.tan);
+  const teamMat = makeMat(scene, color);
+  const roofMat = makeMat(scene, P.roof);
+  const hatchMat = makeMat(scene, P.hatch);
   const hullDark = makeMat(scene, darken(color, 0.28));
   const trackMat = makeMat(scene, new Color3(0.2, 0.22, 0.2));
   const metal = makeMat(scene, new Color3(0.34, 0.36, 0.38));
@@ -1730,7 +1742,7 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
     const skirt = MeshBuilder.CreateBox("tankSideSkirt", { width: 0.16, height: 0.42, depth: 2.52 }, scene);
     skirt.position.set(side * 0.98, 0.46, -0.08);
     skirt.parent = root;
-    skirt.material = hullMat;
+    skirt.material = hullDark;
     allMeshes.push(skirt);
 
     const frontCheek = MeshBuilder.CreateBox("tankFrontCheek", { width: 0.16, height: 0.3, depth: 0.78 }, scene);
@@ -1801,47 +1813,47 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
   const turretRoof = MeshBuilder.CreateBox("tankTurretRoof", { width: 1.0, height: 0.08, depth: 0.74 }, scene);
   turretRoof.position.set(0, 0.34, 0.02);
   turretRoof.parent = turretBase;
-  turretRoof.material = hullDark;
+  turretRoof.material = roofMat;
   allMeshes.push(turretRoof);
 
   const gunMantlet = MeshBuilder.CreateCylinder("tankGunMantlet", { height: 0.34, diameter: 0.34, tessellation: 16 }, scene);
   gunMantlet.position.set(0, 0.08, 0.72);
   gunMantlet.rotation.x = Math.PI / 2;
   gunMantlet.parent = turretBase;
-  gunMantlet.material = metal;
+  gunMantlet.material = teamMat;
   allMeshes.push(gunMantlet);
 
   const barrel = MeshBuilder.CreateCylinder("tankBarrel", { height: 2.25, diameter: 0.12, tessellation: 16 }, scene);
   barrel.position.set(0, 0.1, 1.82);
   barrel.rotation.x = Math.PI / 2;
   barrel.parent = turretBase;
-  barrel.material = metal;
+  barrel.material = hullMat;
   allMeshes.push(barrel);
 
   const fumeExtractor = MeshBuilder.CreateCylinder("tankFumeExtractor", { height: 0.34, diameter: 0.18, tessellation: 16 }, scene);
   fumeExtractor.position.set(0, 0.1, 1.2);
   fumeExtractor.rotation.x = Math.PI / 2;
   fumeExtractor.parent = turretBase;
-  fumeExtractor.material = metal;
+  fumeExtractor.material = teamMat;
   allMeshes.push(fumeExtractor);
 
   const muzzle = MeshBuilder.CreateCylinder("tankMuzzle", { height: 0.12, diameterTop: 0.14, diameterBottom: 0.12, tessellation: 16 }, scene);
   muzzle.position.set(0, 0.1, 2.94);
   muzzle.rotation.x = Math.PI / 2;
   muzzle.parent = turretBase;
-  muzzle.material = metal;
+  muzzle.material = teamMat;
   allMeshes.push(muzzle);
 
   const commanderCupola = MeshBuilder.CreateCylinder("tankCupola", { height: 0.12, diameter: 0.26, tessellation: 14 }, scene);
   commanderCupola.position.set(-0.18, 0.44, -0.08);
   commanderCupola.parent = turretBase;
-  commanderCupola.material = hullDark;
+  commanderCupola.material = hatchMat;
   allMeshes.push(commanderCupola);
 
   const loaderHatch = MeshBuilder.CreateCylinder("tankLoaderHatch", { height: 0.05, diameter: 0.2, tessellation: 14 }, scene);
   loaderHatch.position.set(0.2, 0.42, 0.08);
   loaderHatch.parent = turretBase;
-  loaderHatch.material = hullDark;
+  loaderHatch.material = hatchMat;
   allMeshes.push(loaderHatch);
 
   const sightBlock = MeshBuilder.CreateBox("tankSight", { width: 0.08, height: 0.08, depth: 0.16 }, scene);
@@ -1849,6 +1861,17 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
   sightBlock.parent = turretBase;
   sightBlock.material = metal;
   allMeshes.push(sightBlock);
+
+  // 472 team grab rails: one along each hull side on the deck, one on each turret side
+  for (const side of [-1, 1]) {
+    for (const [parent, x, y, z] of [[root, side * 0.88, 0.9, 0.3], [turretBase, side * 0.7, 0.24, -0.1]] as const) {
+      const rail = MeshBuilder.CreateBox("tankRail", { width: P.railThick, height: P.railThick * 2, depth: P.rail }, scene);
+      rail.position.set(x, y, z);
+      rail.parent = parent;
+      rail.material = teamMat;
+      allMeshes.push(rail);
+    }
+  }
 
   /*
    * [S] 471 the tank's riders (audit 468 tank a.1: "riders missing: nobody on the hull - TABS: three helmeted team riders, one on the turret, one on the
