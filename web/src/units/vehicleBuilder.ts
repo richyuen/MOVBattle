@@ -2990,7 +2990,7 @@ const CHARIOT_GALLOP: [number, [number, number], [number, number], [number, numb
 ];
 // [S] 470 the driver's Roman helmet (spec in buildChariot)
 // [S] 471 the driver's gladius (spec in buildChariot), in the driver's own units
-const CHARIOT_GLADIUS = { grip: 0.12, guard: 0.13, blade: 0.42, wide: 0.07, thick: 0.02, tilt: -1.1, steel: new Color3(0.8, 0.82, 0.86), gripColor: new Color3(0.25, 0.15, 0.08) };
+const CHARIOT_GLADIUS = { grip: 0.12, guard: 0.13, blade: 0.42, wide: 0.07, thick: 0.02, tilt: 1.3, /* 471b: the forearm reaches .9+.4 rad forward of hanging, so +1.3 about the hand stands the blade up (-1.1 laid it down and back) */ steel: new Color3(0.8, 0.82, 0.86), gripColor: new Color3(0.25, 0.15, 0.08) };
 const CHARIOT_HELM = { cap: 1.12, lift: 0.18, drop: 0.55, crest: 1.5, crestThick: 0.22, crestUp: -0.12, rim: 0.88, steel: new Color3(0.32, 0.32, 0.36), pale: new Color3(0.98, 0.85, 0.6) };
 function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("chariot_root", scene);
