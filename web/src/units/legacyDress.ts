@@ -640,15 +640,17 @@ export function poacherBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
- * [S] 462 the Blowdarter's hair (audit 457 a.1: "headgear, the same dark dome hat with a brim at the neck - TABS: bare head with brown shoulder-length
- * hair"; legacy.blowdarter.red.png: no hat; dark brown hair in a bob, a cap over the crown parted in the middle, falling down both sides of the face to
- * the jaw and over the back of the head, the face and eyes clear). BLOWDARTER_HAIR in the head box (half sizes e, centre c, +z the face): a crown cap
- * .capOut e across, .cap e.y thick on the top; a side sheet each side .side e.x thick, from .top e.y over the centre down to .foot e.y under it, from
- * .back e.z behind to .front e.z ahead of the centre; a back sheet the same height. Dark brown .color, self-lit .glow.
+ * [S] 462 the Blowdarter's hair; [S] 469 the bob rebuilt (CONFIRM 468 a.3: "TABS: a dark-brown bob with a centre part and side locks down to the jaw, framing
+ * the face; ours is a flat brown slab behind the head with a flat lid overhanging the brow"; legacy.blowdarter.blue.png: the crown in two sloped halves
+ * meeting at a ridge down the middle, no brim over the brow; a lock each side flaring out from the temple to the jaw, its front edge framing the face;
+ * the back falling to the nape). BLOWDARTER_HAIR in the head box (half sizes e, centre c, +z the face): two roof halves .roof e.x across and .cap e.y
+ * thick, sloped .slope rad down from the centre ridge, from .back e.z behind to .brow e.z ahead of the centre (short of the brow); a lock each side .side
+ * e.x thick from .top e.y over the centre to .foot e.y under it, .back to .front e.z, flared .flare rad out at its foot; a back sheet to .nape e.y
+ * under the centre. Dark brown .color, self-lit .glow.
  */
-const BLOWDARTER_HAIR = { capOut: 1.12, cap: 0.22, side: 0.24, top: 0.9, foot: 0.75, back: 1.08, front: 0.35, color: new Color3(0.16, 0.08, 0.06), glow: 0.12 };
+const BLOWDARTER_HAIR = { roof: 1.12, cap: 0.3, slope: 0.32, brow: 0.7, side: 0.3, top: 0.95, foot: 0.85, back: 1.08, front: 0.55, flare: 0.14, nape: 0.8, color: new Color3(0.16, 0.08, 0.06), glow: 0.12 };
 
-/** The Blowdarter's dark brown bob over a bare head (spec at BLOWDARTER_HAIR), hung on the head. */
+/** The Blowdarter's parted dark brown bob over a bare head (spec at BLOWDARTER_HAIR), hung on the head. */
 export function blowdarterHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const B = BLOWDARTER_HAIR;
   const hair = getMaterialFactory().get("cloth", B.color, { emissive: B.color.scale(B.glow) });
@@ -656,19 +658,28 @@ export function blowdarterHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const bb = head.getBoundingInfo().boundingBox;
   const e = bb.extendSize, c = bb.center;
   const out: Mesh[] = [];
-  const put = (m: Mesh, x: number, y: number, z: number): void => {
+  const put = (m: Mesh, x: number, y: number, z: number): Mesh => {
     m.position.set(x, y, z);
     m.material = hair;
     m.parent = head;
     m.convertToFlatShadedMesh();
     out.push(m);
+    return m;
   };
-  const t = e.x * B.side, tall = e.y * (B.top + B.foot), midY = c.y + e.y * (B.top - B.foot) / 2;
-  put(MeshBuilder.CreateBox("blowdarterCap", { width: e.x * 2 * B.capOut, height: e.y * B.cap, depth: e.z * 2 * B.capOut }, scene), c.x, c.y + e.y * (1 + B.cap / 2) - e.y * 0.06, c.z - e.z * 0.04);
+  const depth = e.z * (B.back + B.brow), zMid = c.z + e.z * (B.brow - B.back) / 2;
   for (const s of [-1, 1]) {
-    put(MeshBuilder.CreateBox("blowdarterHair", { width: t, height: tall, depth: e.z * (B.back + B.front) }, scene), c.x + s * (e.x + t / 2), midY, c.z + e.z * (B.front - B.back) / 2);
+    // a roof half: its inner edge at the ridge over the centre, sloping down to the side
+    const w = e.x * B.roof;
+    const roof = put(MeshBuilder.CreateBox("blowdarterRoof", { width: w, height: e.y * B.cap, depth }, scene),
+      c.x + s * (w / 2) * Math.cos(B.slope), c.y + e.y * (1 + B.cap / 2) - (w / 2) * Math.sin(B.slope) + e.y * 0.08, zMid);
+    roof.rotation.z = -s * B.slope;
+    const t = e.x * B.side, tall = e.y * (B.top + B.foot);
+    const lock = put(MeshBuilder.CreateBox("blowdarterHair", { width: t, height: tall, depth: e.z * (B.back + B.front) }, scene),
+      c.x + s * (e.x + t / 2), c.y + e.y * (B.top - B.foot) / 2, c.z + e.z * (B.front - B.back) / 2);
+    lock.rotation.z = s * B.flare;
   }
-  put(MeshBuilder.CreateBox("blowdarterBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, midY, c.z - e.z * B.back + t / 2);
+  const t = e.x * B.side, tall = e.y * (B.top + B.nape);
+  put(MeshBuilder.CreateBox("blowdarterBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, c.y + e.y * (B.top - B.nape) / 2, c.z - e.z * B.back + t / 2);
   return out;
 }
 
