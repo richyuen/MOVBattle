@@ -775,7 +775,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.wizard": vis(
-    { scale: 1.76, bulk: 1.08, headSize: 1.12 }, "staff", "witch_hat", "none", "cape", "#7BA0FF", undefined, {
+    { scale: 1.76, bulk: 1.08, headSize: 1.12 }, "staff", "witch_hat", "none", "cape", "#7BA0FF", "sword", {
+      offhandVariant: "longsword", // [S] 470 a slim longsword in his left hand beside the staff (audit 468 wizard b.2; legacy.wizard.red.png, card Off Hand Wizard Sword)
       posePreset: "caster",
       materialPreset: "secret_holy",
       attachmentPreset: "storm_halo",
