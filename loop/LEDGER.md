@@ -12,14 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-464 | HAND_LAUNCH muzzle from blowgunMuzzle (b42e6e1c) | legacy.blowdarter.c | approved (struck 1)
-464 | HOP_BACK Backwards Dodge (f5c1b38a) | legacy.boxer.c | approved (struck 2; c PASS)
-464 | PIKE_DROP pike let go on the first blow, disarmToFists (d57603bb, fa8827d7) | legacy.pike.c | approved (struck 2; c PASS)
-464 | hat tricorn (38bca2d8) | legacy.barrel_roller.a | approved (struck 2)
-464 | POACHER_BOW bowGrip in the fist (99c8103c) | legacy.poacher.b | approved (struck 1; b PASS)
-464 | CHARGE_PENNANT narrow pennant, saltire, rings (c0cb4ef3) | legacy.flag_bearer.b | approved (struck 4)
-464 | BEARER_HOLD pole plumb in both fists (70924ac8) | legacy.banner_bearer.b + legacy.flag_bearer.b | approved (struck 3 each; b PASS both)
-464 | [P] POACHER_BOW wood (e968d1a0) | legacy.poacher.b | approved (root exception; row spent for [P])
 465 | polearm_melee blow, BEARER_PULSE aura on its own clock, stats knobs (545192dc; evidence 2b229594) | legacy.banner_bearer.d + legacy.flag_bearer.d | approved (d PASS both)
 465 | SMALL_ARROW short shaft (ec355f73) | legacy.poacher.c | approved (struck 2)
 465 | BLOW_DART needle and team tuft (ec355f73) | legacy.blowdarter.c | approved (struck 2)
@@ -46,6 +38,14 @@ for 25 iterations.
 468 | BARREL_HAIR white locks; BARREL_LEGS pants, socks, shoes (6539168f) | legacy.barrel_roller.a | approved (struck 3, 6; added 7)
 468 | SUPER_CUFFS glowing gold cuffs (9c6d188f) | legacy.super_peasant.b | approved (struck 1; b PASS)
 468 | WIZARD_BEARD grey wedge, moustache (9c6d188f) | legacy.wizard.a | approved (struck 2)
+469 | BLOWDARTER_SCARF one solid V, 7 feathers, shoulder wings (3495f889) | legacy.blowdarter.a | approved (struck 2)
+469 | BLOWDARTER_SHORTS team shorts, tan fringed hem (9c5878c2) | legacy.blowdarter.a | approved (struck 1)
+469 | BLOWDARTER_HAIR parted crown, flared locks (8c918f0e) | legacy.blowdarter.a | approved (struck 3; a PASS; D)
+469 | BARREL_ROLL.ridden ridden barrel hidden + rolled on the fire path (d67af714, 5cabc202) | legacy.barrel_roller.c | approved (struck 2; c PASS; D)
+469 | [P] BARREL_LEGS.pantTo .8, cream glow .1 (f5721bce) | legacy.barrel_roller.a | approved (struck 7; a PASS)
+469 | PHARAOH_CROOK striped crook, curled hook (32f27e05) | legacy.pharaoh.b | approved (struck 1)
+469 | MODIUS tall team crown, gold bands (7c1181a9) | legacy.pharaoh.a | approved (struck 1)
+469 | WINGED_BAND grey band, white wings (e9078ccf, de828e55) | legacy.thor.a | approved (struck 1)
 
 ## Spent (never retry as [P])
 
