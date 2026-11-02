@@ -1288,3 +1288,81 @@ export function pharaohGarb(scene: Scene, body: ArticulatedBody, teamColor: Colo
   ring("pharaohGarbLine", (chestY + waistY) / 2, G.line);
   return out;
 }
+
+/*
+ * [S] 470 the Super Boxer's hair (audit 468 super_boxer a.3: "hair missing: bare team head - TABS: tall golden super-saiyan spikes over a headband";
+ * legacy.super_boxer.red.png: a pale gold mop of a dozen long spikes standing near straight up off the crown, the tallest about a head high, fanning a
+ * little outward at the sides; a team headband round the brow under them). SUPER_BOXER_HAIR on the head box (half sizes e, centre c, +z the face): a
+ * gold cap .cap e.y thick on the crown, .capOut e across; .spikes spikes rooted on the crown in rows, each .spike to .spikeMax e.y*2 tall and .base e.x
+ * across at its foot, leant .fan rad out from the middle and .back rad back; a team band .band e.y tall round the brow, .bandOut e across. Gold .gold.
+ */
+const SUPER_BOXER_HAIR = { cap: 0.32, capOut: 1.08, spikes: 12, spike: 0.55, spikeMax: 1.0, base: 0.5, fan: 0.35, back: 0.18, band: 0.22, bandOut: 1.08, bandAt: 0.42, gold: new Color3(1, 0.88, 0.5), glow: 0.35 };
+
+/** The Super Boxer's tall pale-gold spiked hair over a team headband (spec at SUPER_BOXER_HAIR), hung on the head. */
+export function superBoxerHair(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const P = SUPER_BOXER_HAIR;
+  const mf = getMaterialFactory();
+  const gold = mf.get("cloth", P.gold, { emissive: P.gold.scale(P.glow) });
+  const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(0.15) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mat: Material, x: number, y: number, z: number): Mesh => {
+    m.position.set(x, y, z);
+    m.material = mat;
+    m.parent = head;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  const topY = c.y + e.y;
+  put(MeshBuilder.CreateBox("superBoxerCap", { width: e.x * 2 * P.capOut, height: e.y * P.cap, depth: e.z * 2 * P.capOut }, scene), gold, c.x, topY - e.y * P.cap * 0.3, c.z - e.z * 0.05);
+  put(MeshBuilder.CreateBox("superBoxerBand", { width: e.x * 2 * P.bandOut, height: e.y * P.band, depth: e.z * 2 * P.bandOut }, scene), team, c.x, c.y + e.y * P.bandAt, c.z);
+  // rows of spikes across the crown, front to back; the middle ones the tallest
+  const cols = 4, rows = Math.ceil(P.spikes / cols);
+  for (let i = 0; i < P.spikes; i++) {
+    const u = (i % cols) / (cols - 1) * 2 - 1, v = Math.floor(i / cols) / Math.max(1, rows - 1) * 2 - 1;
+    const tall = e.y * 2 * (P.spikeMax - (P.spikeMax - P.spike) * (Math.abs(u) * 0.7 + ((i * 7) % 5) / 10));
+    const lean = u * P.fan, back = P.back - v * 0.1;
+    const x = c.x + u * e.x * 0.75, z = c.z - v * e.z * 0.6 - e.z * 0.1;
+    const s = put(MeshBuilder.CreateCylinder("superBoxerSpike", { height: tall, diameterTop: 0, diameterBottom: e.x * P.base, tessellation: 4 }, scene), gold,
+      x + Math.sin(lean) * tall / 2, topY + Math.cos(lean) * tall / 2 - e.y * 0.05, z - Math.sin(back) * tall / 2);
+    s.rotation.set(-back, 0, -lean);
+  }
+  return out;
+}
+
+/*
+ * [S] 470 Thor's hair (audit 468 thor a.2: "hair missing: bare head under the helmet - TABS: shoulder-length blond hair"; legacy.thor.red.png: straw-blond
+ * hair from under the headband over the crown, falling at both sides past the jaw to the shoulders and down the back of the neck, the face clear).
+ * THOR_HAIR on the head box (half sizes e, centre c, +z the face): a crown cap .cap e.y thick, .capOut e across; a lock each side .side e.x thick from
+ * .top e.y over the centre to .foot e.y under it, .back to .front e.z, flared .flare rad; a back sheet the same height. Blond .color, self-lit .glow.
+ */
+const THOR_HAIR = { cap: 0.28, capOut: 1.1, side: 0.32, top: 0.9, foot: 1.7, back: 1.1, front: 0.45, flare: 0.12, color: new Color3(0.93, 0.78, 0.42), glow: 0.25 };
+
+/** Thor's blond shoulder-length hair under the band (spec at THOR_HAIR), hung on the head. */
+export function thorHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = THOR_HAIR;
+  const hair = getMaterialFactory().get("cloth", P.color, { emissive: P.color.scale(P.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, y: number, z: number): Mesh => {
+    m.position.set(x, y, z);
+    m.material = hair;
+    m.parent = head;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  put(MeshBuilder.CreateBox("thorHairCap", { width: e.x * 2 * P.capOut, height: e.y * P.cap, depth: e.z * 2 * P.capOut }, scene), c.x, c.y + e.y * (1 + P.cap / 2) - e.y * 0.1, c.z - e.z * 0.08);
+  const t = e.x * P.side, tall = e.y * (P.top + P.foot), midY = c.y + e.y * (P.top - P.foot) / 2;
+  for (const s of [-1, 1]) {
+    const lock = put(MeshBuilder.CreateBox("thorHair", { width: t, height: tall, depth: e.z * (P.back + P.front) }, scene), c.x + s * (e.x + t / 2), midY, c.z + e.z * (P.front - P.back) / 2);
+    lock.rotation.z = s * P.flare;
+  }
+  put(MeshBuilder.CreateBox("thorBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, midY, c.z - e.z * P.back + t / 2);
+  return out;
+}
