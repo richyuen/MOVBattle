@@ -3546,6 +3546,7 @@ export class ProceduralAnimator {
 
   // [S] 463 the Barrel Roller's lift onto his barrel (legacyDress BARREL_RIDE): the "barrelRide" mark's position.y, read once
   private _barrelLift: number | null | undefined;
+  private _barrelCore: TransformNode | null | undefined;
   /** The Barrel Roller stood on the barrel lying under him: his hip lifted its height, alive. */
   private _rideBarrel(): void {
     const b = this._body;
@@ -3554,6 +3555,9 @@ export class ProceduralAnimator {
       this._barrelLift = mark ? mark.position.y : null;
     }
     if (!this._barrelLift || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
+    // [S] 469 off the barrel while it is out rolling at the man (simulationSystem BARREL_ROLL.ridden hides it): on his feet on the ground
+    this._barrelCore ??= (b.root.getDescendants(false, (n) => n.name === "barrelBody")[0] as TransformNode | undefined) ?? null;
+    if (this._barrelCore && !this._barrelCore.isEnabled(false)) return;
     this._hipRest ??= b.hip.position.y;
     // the hip is set from its rest every frame (update), so the lift is laid on afresh each frame, as the Reaper's hover
     b.hip.position.y += this._barrelLift * (1 - Math.min(1, this._limp));

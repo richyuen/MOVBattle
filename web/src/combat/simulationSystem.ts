@@ -220,7 +220,13 @@ const HAND_LAUNCH: Record<string, "bow" | "mouth" | "muzzle" | "barrel"> = { "le
  * barrel to melee reach (rosterManifest engageRangeOverride), and his barrel shot leaves from the ridden barrel's core ("barrel": the barrelBody mesh)
  * and runs along the ground at the man, an arc of BARREL_ROLL.arc of the distance, bursting where it meets him.
  */
-const BARREL_ROLL = { arc: 0.02 };
+const BARREL_ROLL = { arc: 0.02, ridden: true };
+/*
+ * [S] 469 the barrel he rides is the bomb (critic 468 c.2: "the rolled bomb is a copy spawned at his barrel's core; the barrel he rides stays intact under
+ * his feet, so _release shows two barrels at once - TABS: the barrel he rides is the one that rolls into the man and explodes"). BARREL_ROLL.ridden: when
+ * the shot rolls, his barrelBody (staves and hoops under it) is hidden and his lift drops (proceduralAnimation _rideBarrel reads it), so he stands on the
+ * ground; a fresh barrel is under him again when his next blow is ready (_barrelOut, checked each decision).
+ */
 const MOUTH_LAUNCH = { mouthAhead: 1.1, mouthDrop: 0.3 };
 
 /** Where a HAND_LAUNCH shooter's missile leaves: his bow fist or his mouth, in world space; null when he has neither. */
@@ -1584,6 +1590,12 @@ export class SimulationSystem {
     }
 
     if (BEARER_AURA_KIND[unit.definition.id]) this._pulseBearerAura(unit, now);
+    // [S] 469 a fresh barrel under the Barrel Roller once his next blow is ready (BARREL_ROLL.ridden)
+    const ridden = this._barrelOut.get(unit);
+    if (ridden && unit.canAttack(now)) {
+      ridden.setEnabled(true);
+      this._barrelOut.delete(unit);
+    }
 
     if (attackProfile.type === AttackType.Support) {
       const ally = this._selectAllyToSupport(unit, aiProfile);
@@ -3375,6 +3387,8 @@ export class SimulationSystem {
   }
 
   /** Throws whose arm has come over to the let-go: the prop in the fist flies from where the fist is, and the hand is empty until the next windup. */
+  // [S] 469 the Barrel Roller's ridden barrel, hidden while it is out rolling at the man (BARREL_ROLL.ridden), until his next blow is ready
+  private _barrelOut = new Map<RuntimeUnit, TransformNode>();
   private _launchPendingThrows(now: number): void {
     const due = this._pendingThrows.filter((t) => now >= t.leavesAt);
     if (due.length === 0) return;
@@ -3420,6 +3434,12 @@ export class SimulationSystem {
         this.projectileSystem.spawnProjectile(
           t.shape, rolledFrom, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: 0, arc: BARREL_ROLL.arc, targetLift: 0.3 },
         );
+        // [S] 469 the barrel he rode is the one that rolls: it leaves from under his feet and he drops to the ground (critic 468 c.2)
+        const ridden = attacker.body.root.getDescendants(false, (n) => n.name === "barrelBody")[0] as TransformNode | undefined;
+        if (ridden && BARREL_ROLL.ridden) {
+          ridden.setEnabled(false);
+          this._barrelOut.set(attacker, ridden);
+        }
         continue;
       }
       const prop = attacker.animator.heldThrowProp();
