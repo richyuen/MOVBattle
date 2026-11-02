@@ -12,12 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-467 | POISON green dye, 4 dps for 6 s on a dart hit (ab237b96) | legacy.blowdarter.c | approved (struck 3; c PASS)
-467 | DRAWS_BEFORE_LOOSE poacher draws then looses (8faddfa9) | legacy.poacher.c | approved (struck 1; c PASS; D)
-467 | FLAG_BOOTS white boots, gold tops (c676cf71) | legacy.flag_bearer.a | approved (struck 4; D)
-467 | PIKE_BELT belt, baggy trousers; PIKE_HAIR (c676cf71) | legacy.pike.a | approved (struck 4, 3; D)
-467 | POACHER_KNEES tan knee caps (c676cf71) | legacy.poacher.a | approved (struck 4)
-467 | BARREL_WRAPS brown forearm wraps (c676cf71) | legacy.barrel_roller.a | approved (struck 5)
 468 | BARREL_ROLL closes to 1.6 m, shot rolls from the barrelBody core (5a54adf1) | legacy.barrel_roller.c | approved (none struck; CONFIRM passed c, critic kept it)
 468 | BLOWDARTER_SCARF tan V, white feathers (6539168f) | legacy.blowdarter.a | approved (none struck: side-on)
 468 | BLOWDARTER_PANTS brown thighs, team hem (6539168f) | legacy.blowdarter.a | rejected (hunk reverted a49b8e78: colours inverted)
@@ -46,6 +40,14 @@ for 25 iterations.
 471 | TANK_RIDERS 3 seated helmeted riders (b6c89034, eab01a0d) | legacy.tank.a | approved (struck 1)
 471 | WIZARD_PIPE curved brown pipe (b29ab410, cacbecab) | legacy.wizard.a | approved (struck 3)
 471 | CHARIOT_GLADIUS short upright sword (e3104c4a, daefd9aa, b32cd4b0) | legacy.chariot.b | approved (struck 1)
+472 | TANK_PAINT tan hull, team skirts/rails/fittings (f46e36f9, 918ae7b5) | legacy.tank.a | approved (none struck; getWood greys the tan)
+472 | GLOW_GLOVE glowing gold mitts (d6551dd7, d0d1329f) | legacy.super_boxer.b | approved (none struck; off the fists)
+472 | SUPER_BOXER_EYES yellow eyes (0cd79ea7) | legacy.super_boxer.a | approved (struck 6)
+472 | [P] SUPER_BOXER_SHORTS.stripe .28 -> .12 (b86b479d) | legacy.super_boxer.a | approved
+472 | CHARIOT_SCUTUM curved team shield, gold rim/boss/wings (69122fa4) | legacy.chariot.b | approved (struck 2)
+472 | THOR_BELT wide grey belt, octagonal buckle (3212c6b0) | legacy.thor.a | approved (struck 4)
+472 | PHARAOH_COLLAR flat gold broad collar (063e6c76) | legacy.pharaoh.a | approved (struck 3)
+472 | WIZARD_ROBE team coat-robe to the knees, dark belt (731cde05) | legacy.wizard.a | approved (struck 4)
 
 ## Spent (never retry as [P])
 

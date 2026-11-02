@@ -1,8 +1,7 @@
 # legacy.thor
 Status: open   Audited: 468   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
-a FAIL (3 since 468)
- 4. belt missing in unit_legacy.thor_idle — TABS: a wide grey Viking belt with a round central buckle (ref: legacy.thor.red.png)
+a FAIL (4 since 468)
  5. lower legs in unit_legacy.thor_idle: plain navy legs into dark boots — TABS: knee-length trousers ending in fur cuffs over leather boots (ref: legacy.thor.red.png)
 b FAIL (0 since 468)
  1. hammer in unit_legacy.thor_idle: a long-shafted sledge with a small flat head — TABS: a short mallet whose block head is as big as his chest (ref: legacy.thor.red.png; card Appearance)
@@ -12,9 +11,10 @@ c FAIL (0 since 468)
  2. bolt shape in unit_legacy.thor_ability: broad flat light-blue triangular wedges — TABS: thin bright white-blue crackling lines (ref: legacy.thor.jpg)
 d PASS (cost 2200=2200, hp 21.22x vs 21.13x (+0%), dmg 4.17x vs 4.17x (+0%), cd 1.01x vs 1.00x (+1%); 468 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] legacy.thor.a belt — blocker 4: a wide grey belt with a round central buckle at the trunk foot — ref: legacy.thor.red.png — ours: unit_legacy.thor_idle.png
-2. [S] legacy.thor.b hammer — blocker 1: a short mallet whose block head is as big as his chest — ref: legacy.thor.red.png — ours: unit_legacy.thor_idle.png
+1. [S] legacy.thor.a fur cuffs — blocker 5: pale fur shin cuffs over brown boots — ref: legacy.thor.red.png — ours: unit_legacy.thor_idle.png
+2. [S] legacy.thor.b hammer — blocker 1: a short mallet with a chest-sized block head — ref: legacy.thor.red.png — ours: unit_legacy.thor_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+472 | THOR_BELT wide grey belt, octagonal buckle (3212c6b0) | a | approved (struck 4)
 471 | THOR_COAT open team coat, gold trims, chain (b7ea8381) | a | approved (struck 3)
 470 | THOR_HAIR blond shoulder-length (8bcd54e9, shared) | a | approved (struck 2)
 469 | WINGED_BAND grey band, two white wings of 4 broad feathers (e9078ccf, de828e55) | a | approved (struck 1)

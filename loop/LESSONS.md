@@ -11,6 +11,7 @@ drop a lesson once it is a comment at the code it describes.
 - ACES lifts a mid code value toward pale, so an unlit plate keeps a deep value (zeus's gold emblem is (0.62,0.26,0.03), 400); the same for timber: an IBL-lit mid albedo reads beige, so a brown hull wants (.2,.11,.055) with a small self-light (400).
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey however white or warm: cream wants the flat unlit cut out of the glow (442 bone (1.1,.78,.4) swatched 215/199/164; self-lit cloth stayed grey 441).
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it (a vehicle's `bodyMaterial` IS the team colour: timber, iron, leather need their own; 392), and the head's as skin: a bone crewman needs a hidden anchor head (440 pumpkin operator).
+- vehicleBuilder makeMat is getWood: it greys a mid colour (472 tank tan (.8,.66,.36) swatched sat .05). A painted vehicle colour wants a "cloth" material with a small self-light (the lit() helper), checked on a --noglow swatch.
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 
 ## Capture and probes
