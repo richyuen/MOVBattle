@@ -3105,8 +3105,10 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: launchAt ? 0 : originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), fireArrow: FIRE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined },
+            { originLift: launchAt ? 0 : originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), fireArrow: FIRE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined, ...(HAND_LAUNCH[attacker.definition.id] === "barrel" && launchAt ? { arc: BARREL_ROLL.arc, targetLift: 0.3 } : {}) },
           );
+          // [S] 469 the Barrel Roller's shot is the barrel under his feet, rolled along the ground (BARREL_ROLL)
+          if (HAND_LAUNCH[attacker.definition.id] === "barrel" && launchAt) this._rollRiddenBarrel(attacker);
           if (loadedBolt?.isEnabled()) {
             loadedBolt.setEnabled(false);
             this._arrowsAway.set(loadedBolt, now + attackProfile.cooldown * cooldownMultiplier * 0.5);
@@ -3389,6 +3391,14 @@ export class SimulationSystem {
   /** Throws whose arm has come over to the let-go: the prop in the fist flies from where the fist is, and the hand is empty until the next windup. */
   // [S] 469 the Barrel Roller's ridden barrel, hidden while it is out rolling at the man (BARREL_ROLL.ridden), until his next blow is ready
   private _barrelOut = new Map<RuntimeUnit, TransformNode>();
+  /** [S] 469 the barrel he rode is the one that rolls: it leaves from under his feet and he drops to the ground (critic 468 c.2; BARREL_ROLL.ridden). */
+  private _rollRiddenBarrel(attacker: RuntimeUnit): void {
+    if (!BARREL_ROLL.ridden) return;
+    const ridden = attacker.body.root.getDescendants(false, (n) => n.name === "barrelBody")[0] as TransformNode | undefined;
+    if (!ridden) return;
+    ridden.setEnabled(false);
+    this._barrelOut.set(attacker, ridden);
+  }
   private _launchPendingThrows(now: number): void {
     const due = this._pendingThrows.filter((t) => now >= t.leavesAt);
     if (due.length === 0) return;
@@ -3434,12 +3444,7 @@ export class SimulationSystem {
         this.projectileSystem.spawnProjectile(
           t.shape, rolledFrom, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: 0, arc: BARREL_ROLL.arc, targetLift: 0.3 },
         );
-        // [S] 469 the barrel he rode is the one that rolls: it leaves from under his feet and he drops to the ground (critic 468 c.2)
-        const ridden = attacker.body.root.getDescendants(false, (n) => n.name === "barrelBody")[0] as TransformNode | undefined;
-        if (ridden && BARREL_ROLL.ridden) {
-          ridden.setEnabled(false);
-          this._barrelOut.set(attacker, ridden);
-        }
+        this._rollRiddenBarrel(attacker);
         continue;
       }
       const prop = attacker.animator.heldThrowProp();
