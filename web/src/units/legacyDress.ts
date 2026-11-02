@@ -1490,3 +1490,44 @@ export function thorCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3)
   }
   return out;
 }
+
+/*
+ * [S] 471 the Wizard's pipe (audit 468 wizard a.3: "pipe missing - TABS: a curved pipe from the mouth"; legacy.wizard.red.png, card Appearance: a long
+ * brown pipe from the corner of his mouth out over the beard, its stem curving down and out and its bowl turned up at the end). WIZARD_PIPE on the head
+ * box (half sizes e, centre c, +z the face): the stem from the mouth corner (.side e.x out, .mouth e.y under the centre, .out e.z ahead of it, clear of
+ * the beard) in .segs segments .seg e.z long, each dropping .bend rad more; a bowl .bowl e.x across and .bowlTall e.y tall standing at its end; brown wood.
+ */
+const WIZARD_PIPE = { side: 0.35, mouth: 0.35, out: 1.4, segs: 3, seg: 0.38, thick: 0.1, bend: 0.32, bowl: 0.32, bowlTall: 0.38, wood: new Color3(0.42, 0.24, 0.1), glow: 0.14 };
+
+/** The Wizard's curved brown pipe from the mouth over the beard (spec at WIZARD_PIPE), hung on the head. */
+export function wizardPipe(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const P = WIZARD_PIPE;
+  const wood = getMaterialFactory().get("cloth", P.wood, { emissive: P.wood.scale(P.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const out: Mesh[] = [];
+  let x = c.x + e.x * P.side, y = c.y - e.y * P.mouth, z = c.z + e.z * P.out;
+  let pitch = 0.15;
+  for (let i = 0; i < P.segs; i++) {
+    const len = e.z * P.seg;
+    const dy = -Math.sin(pitch) * len, dz = Math.cos(pitch) * len;
+    const seg = MeshBuilder.CreateCylinder("wizardPipeStem", { height: len * 1.05, diameter: e.x * P.thick, tessellation: 6 }, scene);
+    seg.position.set(x + len * 0.15, y + dy / 2, z + dz / 2);
+    seg.rotation.x = Math.PI / 2 + pitch; // its axis along +z, tipped down by the pitch
+    seg.rotation.y = 0.25;
+    seg.material = wood;
+    seg.parent = head;
+    seg.convertToFlatShadedMesh();
+    out.push(seg);
+    x += len * 0.3; y += dy; z += dz;
+    pitch += P.bend;
+  }
+  const bowl = MeshBuilder.CreateCylinder("wizardPipeBowl", { height: e.y * P.bowlTall, diameterTop: e.x * P.bowl, diameterBottom: e.x * P.bowl * 0.75, tessellation: 7 }, scene);
+  bowl.position.set(x, y + e.y * P.bowlTall * 0.35, z);
+  bowl.material = wood;
+  bowl.parent = head;
+  bowl.convertToFlatShadedMesh();
+  out.push(bowl);
+  return out;
+}
