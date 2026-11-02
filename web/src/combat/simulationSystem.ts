@@ -2837,6 +2837,13 @@ export class SimulationSystem {
           this.visualEffects.spawnZeusBolt(target.position.add(new Vector3(Math.cos(a) * T.spread, T.high * 0.8, Math.sin(a) * T.spread)), target.position, true);
         }
         this.visualEffects.spawnSmokePuff(target.position);
+        // 473b: and one down onto his raised hammer, where he calls it (the strike on the man is out of the frame that shows him)
+        const fist = attacker.body.rightHand;
+        if (fist) {
+          for (let n: Node | null = fist; n; n = n.parent) if (n instanceof TransformNode) n.computeWorldMatrix(true);
+          const at = fist.getAbsolutePosition().clone();
+          this.visualEffects.spawnZeusBolt(at.add(new Vector3(0.4, T.high, 0.2)), at.subtract(new Vector3(0, 0.9, 0)));
+        }
       }
       this._applyDirectOrSplash(target, damage * 1.22, Math.max(2.4, splashRadius + 0.5), attacker.team, knockback.scale(2.15 * controlStrength));
       return;
