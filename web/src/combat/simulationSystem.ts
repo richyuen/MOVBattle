@@ -268,7 +268,8 @@ const ZEUS_REARM = 0.6;
  * flies at the man at .speed m/s (at least .minDur s), laid flat out (proceduralAnimation setSuperman), .lift m up at the middle of the line (the arc's
  * peak reached by 1/.rise of the way), set down short of the man; logged "flight" at .logAt of the way, where the pose and the height read.
  */
-const SUPER_FLIGHT = { reach: 9, speed: 13, minDur: 0.45, lift: 1.3, rise: 1.0, logAt: 0.4 };
+const SUPER_FLIGHT = { reach: 9, speed: 13, minDur: 0.45, lift: 0.8, // 474b: 1.3 lifted him out of the top of the release frame
+  rise: 1.0, logAt: 0.4 };
 // [S] 474 the Dark Peasant's thrown volley (spec at its use; card Weapons Throw Dark Peasant count 15, .03 s apart, explosion radius 2): from his hand sphere
 // (.sphere m round a centre .centre m up), each hand .share of the blow's damage and .push of its knockback, landing within .spread m of the man
 const DARK_VOLLEY = { count: 15, every: 0.03, sphere: 1.1, centre: 1.1, spread: 1.6, share: 0.06, push: 0.1, splash: 2 };
