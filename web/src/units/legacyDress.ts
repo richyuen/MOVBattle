@@ -837,6 +837,27 @@ export function boxerBareChest(body: ArticulatedBody): void {
   for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = skin;
 }
 
+
+/*
+ * [S] 472 the Super Boxer's yellow eyes (audit 468 super_boxer a.6: "eyes: black beads - TABS: yellow eyes"; card Appearance: "its eyes are yellow unlike
+ * most units"; legacy.super_boxer.red.png: two bright pale discs under the headband). SUPER_BOXER_EYES: each eye disc in a self-lit .eye yellow, its pupil
+ * a deep amber .pupil so the disc still reads as an eye; the dark rim stays.
+ */
+const SUPER_BOXER_EYES = { eye: new Color3(1, 0.82, 0.12), eyeGlow: 0.7, pupil: new Color3(0.5, 0.26, 0.02), pupilGlow: 0.2 };
+
+/** The Super Boxer's yellow eye discs with amber pupils (spec at SUPER_BOXER_EYES). */
+export function superBoxerEyes(body: ArticulatedBody): void {
+  const E = SUPER_BOXER_EYES;
+  const mf = getMaterialFactory();
+  const eye = mf.get("bone", E.eye, { emissive: E.eye.scale(E.eyeGlow) });
+  const pupil = mf.get("bone", E.pupil, { emissive: E.pupil.scale(E.pupilGlow) });
+  for (const m of [body.leftEye, body.rightEye]) {
+    if (!m) continue;
+    m.material = eye;
+    for (const c of m.getChildMeshes(true)) if (/Pupil$/.test(c.name)) c.material = pupil;
+  }
+}
+
 /*
  * [S] 466 the Flag Bearer's cuffs (audit 457 a.3: "cuffs, bare forearms - TABS: white-and-gold striped cuffs"; legacy.flag_bearer.red.png: a broad white
  * cuff round each wrist with a gold band at its top and foot). FLAG_CUFFS on each forearm: a white shell BANNER_CUFFS.out round from .from to its end, and
