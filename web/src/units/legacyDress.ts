@@ -1100,7 +1100,7 @@ export function barrelHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  * legacy.barrel_roller.blue.png: loose team pants to below the knee, cream socks to the ankle, tan shoes). BARREL_LEGS: a team shell .pantOut round each
  * thigh and on down the shin to .pantTo; a cream sock shell .sockOut round the shin from .pantTo to its end; the foot blocks tan.
  */
-const BARREL_LEGS = { pantOut: 1.45, shinPantOut: 1.4, pantTo: 0.35, sockOut: 1.2, cream: new Color3(0.95, 0.9, 0.75), tan: new Color3(0.7, 0.42, 0.18), glow: 0.22, shade: 0.85 };
+const BARREL_LEGS = { pantOut: 1.45, shinPantOut: 1.4, pantTo: 0.8, sockOut: 1.2, cream: new Color3(0.95, 0.9, 0.75), tan: new Color3(0.7, 0.42, 0.18), glow: 0.1, shade: 0.85 };
 
 /** The Barrel Roller's baggy team pants, cream socks and tan shoes (spec at BARREL_LEGS). */
 export function barrelLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
