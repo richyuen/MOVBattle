@@ -83,7 +83,7 @@ const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, flet
  * (audit 457 blowdarter c.2: the dart flew as a full arrow).
  */
 const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
-export type ProjectileShape = "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell" | "dark_hand";
+export type ProjectileShape = "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -263,12 +263,6 @@ const FIREBALL_SHELL = new Color3(1, 0.45, 0.08);
  * spell bolt"; card Weapons Wizard Spell, explosion radius 3): the fireball's build in a white heart and a violet-blue shell .size of the fireball, with
  * .spikes long thin star rays .ray m long through the heart (a sparkle), a long .tail m tail and a blue particle trail; in the glow layer, so it blooms.
  */
-/*
- * [S] 474 a Dark Peasant hand thrown in his volley ("dark_hand"; audit 468 dark_peasant c.1: "missing: the thrown Dark Peasant volley; nothing flies";
- * card Weapons Throw Dark Peasant: count 15, projectile speed 30, explosion radius 2): one of his black gloved hands, DARK_HAND_SHOT .palm m square, four
- * fingers and a thumb .finger m long reaching ahead along the flight (+z), a cuff behind; near-black .color self-lit .glow.
- */
-const DARK_HAND_SHOT = { palm: 0.26, finger: 0.2, color: new Color3(0.07, 0.06, 0.1), glow: 0.35 };
 const WIZARD_SPELL = { heart: new Color3(0.95, 0.97, 1), shell: new Color3(0.42, 0.45, 1), ray: new Color3(0.75, 0.85, 1), size: 1.35, spikes: 4, rayLong: 1.3, tail: 1.6 };
 const SPIRIT_FIRE = { heart: new Color3(0.85, 1, 1), shell: new Color3(0.1, 0.85, 1), size: 1.15 };
 // A bone mage's leaf whirl (units/tribal.bone_mage): a loose spinning knot of long pointed autumn leaves, each about a forearm long, red, rust and crimson
@@ -419,7 +413,6 @@ export class ProjectileSystem {
       case "crow": speed = 18; arcHeight = dist * 0.15; break;
       case "fireball": speed = 20; arcHeight = dist * 0.1; break;
       case "wizard_spell": speed = 18; arcHeight = dist * 0.08; break;
-      case "dark_hand": speed = 30; arcHeight = dist * 0.06; break;
       case "spirit_fire": speed = 20; arcHeight = dist * 0.1; break;
       case "leaves": speed = 12; arcHeight = dist * 0.12; break;
       case "sword": speed = 16; arcHeight = dist * 0.04; break;
@@ -1593,29 +1586,6 @@ export class ProjectileSystem {
       case "crow": {
         // [S] a flying crow (342; farmer.scarecrow.png, card: Crow Throw, projectile Crow): spec at FLYING_CROW
         this._buildFlyingCrow(root);
-        break;
-      }
-      case "dark_hand": {
-        const D = DARK_HAND_SHOT, p = D.palm, fl = D.finger, fw = p / 4.6;
-        const parts: Mesh[] = [MeshBuilder.CreateBox("darkHandShot", { width: p, height: p * 0.32, depth: p }, this._scene)];
-        for (let k = 0; k < 4; k++) {
-          const fin = MeshBuilder.CreateBox("darkHandShotFinger", { width: fw, height: fw, depth: fl }, this._scene);
-          fin.position.set((k - 1.5) * p * 0.26, 0, p / 2 + fl * 0.45);
-          parts.push(fin);
-        }
-        const thumb = MeshBuilder.CreateBox("darkHandShotThumb", { width: fw, height: fw, depth: fl * 0.7 }, this._scene);
-        thumb.position.set(p * 0.6, 0, p * 0.15);
-        thumb.rotation.y = 0.8;
-        parts.push(thumb);
-        const cuff = MeshBuilder.CreateCylinder("darkHandShotCuff", { height: p * 0.35, diameter: p * 0.8, tessellation: 8 }, this._scene);
-        cuff.rotation.x = Math.PI / 2;
-        cuff.position.z = -p / 2 - p * 0.15;
-        parts.push(cuff);
-        const hand = Mesh.MergeMeshes(parts, true);
-        if (hand) {
-          hand.material = getMaterialFactory().get("cloth", D.color, { emissive: D.color.scale(D.glow) });
-          hand.parent = root;
-        }
         break;
       }
       case "wizard_spell": {
