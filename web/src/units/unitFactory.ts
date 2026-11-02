@@ -292,6 +292,11 @@ const HORNED_EVIL: Record<string, HornedEvilStyle> = {
     horn: [], hornColor: new Color3(0.6, 0.6, 0.46), cloth: new Color3(0.08, 0.09, 0.2), legs: new Color3(0.07, 0.07, 0.11),
     helm: null, teeth: 0, skull: false, spikes: true, wraps: false, skirt: 0, thick: 1, boneCrown: true, bone: new Color3(0.6, 0.6, 0.46),
   },
+  // Custom faction copy of evil.void_monarch (not loop-owned)
+  "custom.void_monarch": {
+    horn: [], hornColor: new Color3(0.6, 0.6, 0.46), cloth: new Color3(0.08, 0.09, 0.2), legs: new Color3(0.07, 0.07, 0.11),
+    helm: null, teeth: 0, skull: false, spikes: true, wraps: false, skirt: 0, thick: 1, boneCrown: true, bone: new Color3(0.6, 0.6, 0.46),
+  },
 };
 const MONARCH_SPIKES: [number, number][] = [[0, 1.5], [-0.55, 0.9], [0.55, 0.9], [-1.2, 0.65], [1.2, 0.65], [-2.0, 0.5], [2.0, 0.5]];
 const MONARCH_PAULDRON = 0.62;
@@ -976,9 +981,9 @@ export class UnitFactory {
       propMeshes.push(...dressSuperPeasant(this._scene, body));
     }
     // [S] 474 the Dark Peasant's messy brown hair over a bare head (audit 468 dark_peasant a.2; legacyDress DARK_PEASANT_HAIR)
-    if (definition.id === "legacy.dark_peasant" && !shouldUseVehicleBody) propMeshes.push(...darkPeasantHair(this._scene, body));
+    if ((definition.id === "legacy.dark_peasant" || definition.id === "custom.dark_peasant") && !shouldUseVehicleBody) propMeshes.push(...darkPeasantHair(this._scene, body));
     // [S] 473 the Dark Peasant's sphere of big black floating hands (audit 468 dark_peasant b.1; legacyDress DARK_HANDS)
-    if (definition.id === "legacy.dark_peasant" && !shouldUseVehicleBody) propMeshes.push(...darkPeasantHands(this._scene, body));
+    if ((definition.id === "legacy.dark_peasant" || definition.id === "custom.dark_peasant") && !shouldUseVehicleBody) propMeshes.push(...darkPeasantHands(this._scene, body));
     // [S] 468 the Super Peasant's glowing gold wrist cuffs (legacyDress SUPER_CUFFS)
     if (definition.id === "legacy.super_peasant" && !shouldUseVehicleBody) propMeshes.push(...superPeasantCuffs(this._scene, body));
     // [S] 474 the Super Peasant's white mid-thigh tunic with a laced collar (audit 468 super_peasant a.2; legacyDress SUPER_TUNIC)

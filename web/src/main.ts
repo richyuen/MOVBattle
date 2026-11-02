@@ -952,6 +952,7 @@ const FACTION_TAB_COLORS: Record<number, string> = {
   [FactionId.Good]: "#e6c75a",
   [FactionId.Evil]: "#7d3434",
   [FactionId.Secret]: "#c8c8c8",
+  [FactionId.Custom]: "#7a5ccc",
 };
 
 let activeFaction = ALL_UNITS[0]?.faction ?? FactionId.Tribal;

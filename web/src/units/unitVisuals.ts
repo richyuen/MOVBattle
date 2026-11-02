@@ -901,6 +901,17 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
       stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
     },
   ),
+  // Custom faction: our Void Monarch, a copy of evil.void_monarch as it stood before the loop reached the Evil batch
+  "custom.void_monarch": vis(
+    { scale: 2.08, bulk: 1.46, headSize: 1.14, armLength: 1.16 }, "staff", "none", "none", "cape", "#5A4A8E", undefined, {
+      posePreset: "monarch",
+      materialPreset: "evil_void",
+      attachmentPreset: "shadow_orbit",
+      fxPreset: "spectral",
+      bodyDetailLevel: "hero",
+      stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
+    },
+  ),
 };
 
 export function getUnitVisual(id: string): UnitVisualConfig {
@@ -982,6 +993,13 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       // standing upright as a caster in place of the 2.08 hunched giant
       return vis({ scale: 1.15, bulk: 0.82, torsoWidth: 0.92, headSize: 1.1, armLength: 1.06, legLength: 1.16, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "none", "none", "none", "none", "#3b2b59", undefined, {
         // [S] 474 a bare team head under messy brown hair (audit 468 a.2): no hood, no ruff cape, the plain team body in place of the ghost lavender
+        posePreset: "caster", materialPreset: "legacy_toy", attachmentPreset: "shadow_orbit", fxPreset: "spectral",
+        bodyDetailLevel: "hero",
+        stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
+      });
+    case "custom_dark_peasant":
+      // Custom faction: our Dark Peasant, a copy of iconic_dark_peasant as of iteration 474 (the loop owns that one, not this)
+      return vis({ scale: 1.15, bulk: 0.82, torsoWidth: 0.92, headSize: 1.1, armLength: 1.06, legLength: 1.16, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "none", "none", "none", "none", "#3b2b59", undefined, {
         posePreset: "caster", materialPreset: "legacy_toy", attachmentPreset: "shadow_orbit", fxPreset: "spectral",
         bodyDetailLevel: "hero",
         stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
@@ -1617,5 +1635,6 @@ function inferAccent(faction: FactionId): string {
     case FactionId.Good: return "#E6C75A";
     case FactionId.Evil: return "#7D3434";
     case FactionId.Secret: return "#B8B8B8";
+    case FactionId.Custom: return "#5A4A8E";
   }
 }

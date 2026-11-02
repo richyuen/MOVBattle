@@ -2841,6 +2841,25 @@ export class SimulationSystem {
       return;
     }
 
+    // Custom faction: our Dark Peasant's summon-and-pull, a copy of the iconic_dark_peasant branch as it stood before the loop reworked it.
+    // The loop owns iconic_dark_peasant and never touches this one.
+    if (preset === "custom_dark_peasant") {
+      this._logAbility(attacker, "area_pull", now, target.position);
+      this._summonUnits(attacker);
+      const controlRadius = Math.max(5.2, splashRadius + 1.6);
+      const controlDuration = attacker.definition.statusDurationSeconds ?? 3.2;
+      const pullForce = knockback.scale(-2.15 * controlStrength);
+      const secondaryCenter = target.position.add(impulseDir.scale(-1.2));
+      this._applyAreaControl(target.position, controlRadius, attacker.team, damage * 0.9, pullForce, now, 0.28, controlDuration);
+      this._applyAreaControl(secondaryCenter, Math.max(3.6, controlRadius * 0.7), attacker.team, damage * 0.55, pullForce.scale(0.78), now, 0.34, Math.max(2.4, controlDuration - 0.4));
+      if (this.visualEffects) {
+        this.visualEffects.spawnSmokePuff(target.position, new Color3(0.35, 0.24, 0.52));
+        this.visualEffects.spawnSmokePuff(secondaryCenter, new Color3(0.28, 0.2, 0.42));
+        this.visualEffects.spawnSmokePuff(attacker.position.add(impulseDir.scale(1.2)), new Color3(0.24, 0.18, 0.38));
+      }
+      return;
+    }
+
     if (preset === "iconic_chronomancer") {
       this._logAbility(attacker, "slow_dome", now, target.position);
       this._applyAreaControl(target.position, Math.max(3.6, splashRadius + 1.1), attacker.team, damage * 0.72, knockback.scale(0.55 * controlStrength), now, 0.34, attacker.definition.statusDurationSeconds ?? 3.8);
@@ -3583,7 +3602,7 @@ export class SimulationSystem {
         if (this.visualEffects) {
           this.visualEffects.spawnSmokePuff(
             pos,
-            preset === "iconic_dark_peasant"
+            preset === "iconic_dark_peasant" || preset === "custom_dark_peasant"
               ? new Color3(0.34, 0.22, 0.5)
               : preset === "iconic_monkey_king"
                 ? new Color3(0.95, 0.8, 0.35)

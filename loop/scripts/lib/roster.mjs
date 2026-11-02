@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const BATCH_MAX = 10;
+// Factions the loop never audits: our own units with no TABS original (the Custom faction in rosterManifest.ts).
+export const LOOP_EXCLUDED_FACTIONS = new Set(["custom"]);
 
 export function loadRoster() {
   const src = fs.readFileSync(path.join(root, "web", "src", "data", "rosterManifest.ts"), "utf8");
@@ -16,6 +18,7 @@ export function loadRoster() {
   let m;
   while ((m = head.exec(src))) {
     const faction = m[2];
+    if (LOOP_EXCLUDED_FACTIONS.has(faction)) continue;
     // Scan to the matching close of the entries array
     let depth = 1;
     let i = head.lastIndex;

@@ -15,6 +15,8 @@ export enum FactionId {
   Good,
   Evil,
   Secret,
+  // Our own units that are not TABS copies (kept outside the fidelity loop; see CLAUDE.md). Keep it last: enum values are numbers.
+  Custom,
 }
 
 export const FACTION_COLORS: Record<FactionId, Color3> = {
@@ -32,6 +34,7 @@ export const FACTION_COLORS: Record<FactionId, Color3> = {
   [FactionId.Good]: new Color3(1.0, 0.9, 0.45),       // vivid gold
   [FactionId.Evil]: new Color3(0.48, 0.12, 0.12),     // deep crimson
   [FactionId.Secret]: new Color3(0.72, 0.72, 0.72),   // light gray
+  [FactionId.Custom]: new Color3(0.36, 0.24, 0.62),   // void purple
 };
 
 export const FACTION_NAMES: Record<FactionId, string> = {
@@ -49,6 +52,7 @@ export const FACTION_NAMES: Record<FactionId, string> = {
   [FactionId.Good]: "Good",
   [FactionId.Evil]: "Evil",
   [FactionId.Secret]: "Secret",
+  [FactionId.Custom]: "Custom",
 };
 
 export const TEAM_COLORS = {

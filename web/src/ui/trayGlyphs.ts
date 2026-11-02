@@ -139,4 +139,5 @@ export const FACTION_GLYPH_PATHS: Record<number, string> = {
   [FactionId.Good]: "M7 5a5 2 0 1 0 10 0a5 2 0 1 0-10 0M12 9v12M12 13c-4-3-7-2-9 0 3 0 6 2 9 4M12 13c4-3 7-2 9 0-3 0-6 2-9 4",
   [FactionId.Evil]: `${ring(12, 13, 5)}M8.5 9.5C6 8 5 6 5 3c2 1 4 2 5.5 5M15.5 9.5C18 8 19 6 19 3c-2 1-4 2-5.5 5M10 13l1.5 1M14 13l-1.5 1`,
   [FactionId.Secret]: "M8 8a4 4 0 1 1 6 3.5c-1.5 1-2 1.5-2 3.5M12 19v.5",
+  [FactionId.Custom]: "M12 3l1.8 5.4L19 6l-2.4 5.2L22 13l-5.4 1.8L19 20l-5.2-2.4L12 23l-1.8-5.4L5 20l2.4-5.2L2 13l5.4-1.8L5 6l5.2 2.4z",
 };

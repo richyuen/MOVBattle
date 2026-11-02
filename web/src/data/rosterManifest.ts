@@ -58,6 +58,7 @@ export type UnitVisualPreset =
   | "iconic_quick_draw"
   | "iconic_chronomancer"
   | "iconic_dark_peasant"
+  | "custom_dark_peasant"
   | "iconic_super_peasant"
   | "iconic_hwacha"
   | "iconic_da_vinci_tank"
@@ -114,6 +115,7 @@ export type UnitBehaviorPreset =
   | "iconic_quick_draw"
   | "iconic_chronomancer"
   | "iconic_dark_peasant"
+  | "custom_dark_peasant"
   | "iconic_super_peasant"
   | "iconic_hwacha"
   | "iconic_da_vinci_tank"
@@ -362,6 +364,15 @@ const evil = makeFaction(FactionId.Evil, "evil", [
   ["void_monarch", "Void Monarch", 4000, "special_magic", { abilities: ["summon", "fear"], weaponHint: "staff", size: "giant", summonUnitIds: ["evil.shadow_walker"], summonCount: 2 }],
 ]);
 
+// Our own versions of units, kept as they were before the TABS-fidelity loop reworked the originals. The loop never audits this faction
+// (loop/scripts/lib/roster.mjs skips it), so give these units their own preset names and id-keyed visuals instead of sharing the originals'.
+const custom = makeFaction(FactionId.Custom, "custom", [
+  // Dark Peasant before the loop: summons shadow walkers and pulls the enemy in; stats as of 1cc82c80^ (before the loop set TABS stats)
+  ["dark_peasant", "Dark Peasant", 500000, "special_magic", { abilities: ["summon", "fear", "push_force"], summonUnitIds: ["evil.shadow_walker"], summonCount: 3, maxActiveSummons: 5, summonLifetimeSeconds: 7.5, size: "giant", visualPreset: "custom_dark_peasant", behaviorPreset: "custom_dark_peasant", controlStrength: 2.7, statusDurationSeconds: 3.4, cooldownMultiplier: 0.7, healthMultiplier: 1.18 }],
+  // Void Monarch before the loop: a staff-carrying giant who summons shadow walkers and causes fear
+  ["void_monarch", "Void Monarch", 4000, "special_magic", { abilities: ["summon", "fear"], weaponHint: "staff", size: "giant", summonUnitIds: ["evil.shadow_walker"], summonCount: 2 }],
+]);
+
 const secret = makeFaction(FactionId.Secret, "secret", [
   ["ballooner", "Ballooner", 120, "flying_melee", { abilities: ["flying_hover", "pull_hook"], specialHint: "balloon", visualPreset: "secret_ballooner", behaviorPreset: "secret_balloon_lift", controlStrength: 1.3, statusDurationSeconds: 2.2 }],
   ["bomb_on_a_stick", "Bomb on a Stick", 150, "thrower", { weaponHint: "bomb", projectileHint: "bomb", visualPreset: "secret_bomb_on_a_stick" }],
@@ -419,6 +430,7 @@ export const ROSTER_MANIFEST: RosterManifestEntry[] = [
   ...good,
   ...evil,
   ...secret,
+  ...custom,
 ];
 
 export const EXPECTED_FACTION_COUNTS: Record<FactionId, number> = {
@@ -436,4 +448,5 @@ export const EXPECTED_FACTION_COUNTS: Record<FactionId, number> = {
   [FactionId.Good]: 7,
   [FactionId.Evil]: 7,
   [FactionId.Secret]: 39,
+  [FactionId.Custom]: 2,
 };
