@@ -12,14 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-469 | BLOWDARTER_SCARF one solid V, 7 feathers, shoulder wings (3495f889) | legacy.blowdarter.a | approved (struck 2)
-469 | BLOWDARTER_SHORTS team shorts, tan fringed hem (9c5878c2) | legacy.blowdarter.a | approved (struck 1)
-469 | BLOWDARTER_HAIR parted crown, flared locks (8c918f0e) | legacy.blowdarter.a | approved (struck 3; a PASS; D)
-469 | BARREL_ROLL.ridden ridden barrel hidden + rolled on the fire path (d67af714, 5cabc202) | legacy.barrel_roller.c | approved (struck 2; c PASS; D)
-469 | [P] BARREL_LEGS.pantTo .8, cream glow .1 (f5721bce) | legacy.barrel_roller.a | approved (struck 7; a PASS)
-469 | PHARAOH_CROOK striped crook, curled hook (32f27e05) | legacy.pharaoh.b | approved (struck 1)
-469 | MODIUS tall team crown, gold bands (7c1181a9) | legacy.pharaoh.a | approved (struck 1)
-469 | WINGED_BAND grey band, white wings (e9078ccf, de828e55) | legacy.thor.a | approved (struck 1)
 470 | offhand longsword (f309bcf8) | legacy.wizard.b | approved (struck 2)
 470 | PHARAOH_FLAIL striped rod, beaded tassels; sword hold (00da6760, a8b8e64d, 12c19add) | legacy.pharaoh.b | approved (struck 2; added 3 hold)
 470 | PHARAOH_GARB team trunk, gold bands (740e0371) | legacy.pharaoh.a | approved (struck 2)
@@ -49,6 +41,13 @@ for 25 iterations.
 473 | WIZARD_SPELL glowing star bolt (aee5fce8) | legacy.wizard.c | approved (struck 1)
 473 | KNEEL_AURA gold ring, disc, wheeling rays (3f0f1952) | legacy.pharaoh.c | approved (struck 1)
 473 | PUNCH_BURST white-gold flash at contact (ca68611a) | legacy.super_boxer.c | approved (struck 3)
+474 | SUPER_FLIGHT superman flight, lift .8 (06150948, 4796acd3) | legacy.super_peasant.c | approved (struck 1)
+474 | DARK_PEASANT_HAIR bare head, brown mop (b40f53c2) | legacy.dark_peasant.a | approved (struck 2, 3)
+474 | SUPER_TUNIC white tunic, laced collar (f8accbf7) | legacy.super_peasant.a | approved (none struck; skirt hidden)
+474 | MJOLNIR short haft, head .19, glowing end rings (23dd93bf, a3c8a272) | legacy.thor.b | approved (struck 1, 2; b PASS)
+474 | WIZARD_HAT floppy bent-tip hat (7c149002) | legacy.wizard.a | approved (struck 1)
+474 | PHARAOH_BANDS gold armlets and wrist cuffs (44052bc1) | legacy.pharaoh.a | approved (struck 5; a PASS)
+474 | [P] TANK_PAINT hull/roof on cloth, glow .12 (66732b31) | legacy.tank.a | approved (struck 2)
 
 ## Spent (never retry as [P])
 
