@@ -3789,6 +3789,8 @@ export class SimulationSystem {
     }
     if (abilities.has("fear") && this.visualEffects) {
       this.visualEffects.spawnSmokePuff(target.position);
+      // [S] 473 the Pharaoh's kneel: golden rays wheel round him and a golden circle forms on the ground at his feet (visualEffects KNEEL_AURA)
+      if (attacker.definition.id === "legacy.pharaoh") this.visualEffects.spawnKneelAura(attacker.position);
       this._logAbility(attacker, "status:fear", now, target.position);
     }
   }

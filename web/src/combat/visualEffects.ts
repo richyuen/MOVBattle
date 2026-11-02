@@ -58,6 +58,13 @@ const KICK_DUST = { count: 5, spread: 0.35, lift: 0.25, born: 0.5, grown: 1.5, o
  * spreads from .from to .to of the stomp's radius over .life s, each swelling .born -> .grown m and rising .rise m; a flat dust band on the ground under them
  * (.band of the radius wide, alpha .bandPeak); .clods dark earth clods thrown up and out (.toss m/s up, .fling out) and falling back under .gravity.
  */
+/*
+ * [S] 473 the Pharaoh's kneel aura (audit 468 pharaoh c.1: "kneel aura missing - TABS: golden rays circle him and a golden circle forms on the ground"; card
+ * Abilities Pharaoh Kneel). KNEEL_AURA round his feet, .radius m out: a gold ring .ring m thick lying on the ground and a pale gold disc inside it at
+ * .disc alpha; .rays thin gold beams .rayTall m tall, .rayWide m across, standing round him at .rayAt of the radius, rising from the ground over .grow of
+ * the life and wheeling round him at .spin rad/s; the whole fades in fast and out over its .life s. Self-lit, in the glow layer so the gold blooms.
+ */
+const KNEEL_AURA = { radius: 2.4, ring: 0.14, disc: 0.28, rays: 12, rayTall: 2.6, rayWide: 0.09, rayAt: 0.62, grow: 0.25, spin: 1.4, life: 2.2, gold: new Color3(1, 0.78, 0.2), pale: new Color3(1, 0.9, 0.5) };
 const TRAMPLE_RING = {
   sprites: 12, from: 0.25, to: 1.0, born: 0.7, grown: 1.8, rise: 0.4, life: 1.2, peak: 0.85,
   band: 0.22, bandPeak: 0.5, clods: 8, toss: 4.2, fling: 2.2, gravity: 9.8, clod: 0.16,
@@ -1128,6 +1135,73 @@ export class VisualEffects {
           glow?.removeExcludedMesh(sp.mesh);
           sp.mat.dispose();
         }
+      },
+    });
+  }
+
+  /** [S] 473 the Pharaoh's golden kneel aura round `center` (spec at KNEEL_AURA): a gold ring and disc on the ground, gold rays wheeling round him. */
+  spawnKneelAura(center: Vector3): void {
+    const K = KNEEL_AURA;
+    const root = new TransformNode("kneelAura", this._scene);
+    root.position.set(center.x, center.y + 0.04, center.z);
+    const mat = (c: Color3, alpha: number): StandardMaterial => {
+      const m = new StandardMaterial("kneelAuraMat", this._scene);
+      m.diffuseColor = c;
+      m.emissiveColor = c;
+      m.disableLighting = true;
+      m.alpha = alpha;
+      m.backFaceCulling = false;
+      return m;
+    };
+    const ringMat = mat(K.gold, 1), discMat = mat(K.pale, K.disc), rayMat = mat(K.gold, 0.9);
+    const ring = MeshBuilder.CreateTorus("kneelAuraRing", { diameter: K.radius * 2, thickness: K.ring, tessellation: 40 }, this._scene);
+    ring.scaling.y = 0.3;
+    ring.material = ringMat;
+    ring.parent = root;
+    ring.isPickable = false;
+    const disc = MeshBuilder.CreateDisc("kneelAuraDisc", { radius: K.radius, tessellation: 40 }, this._scene);
+    disc.rotation.x = Math.PI / 2;
+    disc.position.y = 0.01;
+    disc.material = discMat;
+    disc.parent = root;
+    disc.isPickable = false;
+    const wheel = new TransformNode("kneelAuraWheel", this._scene);
+    wheel.parent = root;
+    const rays: Mesh[] = [];
+    for (let k = 0; k < K.rays; k++) {
+      const a = (k / K.rays) * Math.PI * 2;
+      const ray = MeshBuilder.CreateBox("kneelAuraRay", { width: K.rayWide, height: 1, depth: K.rayWide }, this._scene);
+      ray.setPivotPoint(new Vector3(0, -0.5, 0));
+      ray.position.set(Math.cos(a) * K.radius * K.rayAt, 0.5, Math.sin(a) * K.radius * K.rayAt);
+      ray.rotation.set(Math.sin(a) * 0.18, 0, -Math.cos(a) * 0.18); // leaning out from him
+      ray.material = rayMat;
+      ray.parent = wheel;
+      ray.isPickable = false;
+      rays.push(ray);
+    }
+    let age = 0;
+    const pose = (): void => {
+      const u = Math.min(1, age / K.life);
+      const fade = u < 0.06 ? u / 0.06 : u > 0.7 ? 1 - (u - 0.7) / 0.3 : 1;
+      const rise = Math.min(1, u / K.grow);
+      for (const r of rays) r.scaling.y = Math.max(0.01, K.rayTall * (0.35 + 0.65 * rise));
+      wheel.rotation.y = age * K.spin;
+      ringMat.alpha = fade;
+      discMat.alpha = K.disc * fade;
+      rayMat.alpha = 0.9 * fade;
+    };
+    pose();
+    this._effects.push({
+      root,
+      remaining: K.life,
+      update: (dt) => {
+        age += dt;
+        pose();
+      },
+      dispose: () => {
+        ringMat.dispose();
+        discMat.dispose();
+        rayMat.dispose();
       },
     });
   }
