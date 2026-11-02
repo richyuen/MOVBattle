@@ -3512,7 +3512,7 @@ const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
  * standing height H: the rod .long H, .thick H across, in .bands alternating team and gold, the fist .grip of the way up; a gold knob .knob H; .strands
  * strands .strand H long, .wire H thick, hung from the knob along the rod, spread .spread H apart, .beads beads each; a tassel .tassel H long at each foot.
  */
-const PHARAOH_FLAIL = { long: 0.42, thick: 0.026, bands: 7, grip: 0.12, knob: 0.045, strands: 3, strand: 0.2, wire: 0.008, spread: 0.022, beads: 3, bead: 0.016, tassel: 0.06, glow: 0.14 };
+const PHARAOH_FLAIL = { long: 0.55, thick: 0.034, bands: 7, grip: 0.12, knob: 0.06, strands: 3, strand: 0.26, wire: 0.016, spread: 0.04, beads: 3, bead: 0.028, tassel: 0.1, glow: 0.2 }; // 470b: long .42, wire .008, tassel .06 read as a stub at the hip
 function buildPharaohFlail(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const F = PHARAOH_FLAIL, H = fit.stand, L = F.long * H, r = F.thick * H;
   const gold = mat(scene, LEGACY_GOLD, F.glow, "cloth"), cloth = mat(scene, team, F.glow, "cloth");
