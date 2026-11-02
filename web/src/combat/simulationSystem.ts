@@ -59,7 +59,7 @@ function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): Proj
     case "shuriken": return "shuriken";
     case "rocket_arrow": return "rocket_arrow";
     case "crow": return "crow";
-    case "fireball": return "fireball";
+    case "fireball": return unit.definition.id === "legacy.wizard" ? "wizard_spell" : "fireball"; // [S] 473 the Wizard's own spell (projectileSystem WIZARD_SPELL)
     case "spirit_fire": return "spirit_fire";
     case "leaves": return "leaves";
     case "sword": return "sword";

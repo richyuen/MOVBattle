@@ -83,7 +83,7 @@ const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, flet
  * (audit 457 blowdarter c.2: the dart flew as a full arrow).
  */
 const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
-export type ProjectileShape = "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel";
+export type ProjectileShape = "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -258,6 +258,12 @@ const FIREBALL_TAIL = 0.8;
 const FIREBALL_HEART = new Color3(1, 0.92, 0.55);
 const FIREBALL_SHELL = new Color3(1, 0.45, 0.08);
 /** The Candlehead's spirit fire ("spirit_fire"): pale-cyan heart, cyan shell, size of the fireball */
+/*
+ * [S] 473 the Wizard's spell ("wizard_spell"; audit 468 wizard c.1: "spell: a faint pale-yellow hexagon puff near the staff tip - TABS: a readable glowing
+ * spell bolt"; card Weapons Wizard Spell, explosion radius 3): the fireball's build in a white heart and a violet-blue shell .size of the fireball, with
+ * .spikes long thin star rays .ray m long through the heart (a sparkle), a long .tail m tail and a blue particle trail; in the glow layer, so it blooms.
+ */
+const WIZARD_SPELL = { heart: new Color3(0.95, 0.97, 1), shell: new Color3(0.42, 0.45, 1), ray: new Color3(0.75, 0.85, 1), size: 1.35, spikes: 4, rayLong: 1.3, tail: 1.6 };
 const SPIRIT_FIRE = { heart: new Color3(0.85, 1, 1), shell: new Color3(0.1, 0.85, 1), size: 1.15 };
 // A bone mage's leaf whirl (units/tribal.bone_mage): a loose spinning knot of long pointed autumn leaves, each about a forearm long, red, rust and crimson
 const LEAF_COUNT = 11;
@@ -406,6 +412,7 @@ export class ProjectileSystem {
       case "rocket_arrow": speed = 30; arcHeight = dist * 0.03; break;
       case "crow": speed = 18; arcHeight = dist * 0.15; break;
       case "fireball": speed = 20; arcHeight = dist * 0.1; break;
+      case "wizard_spell": speed = 18; arcHeight = dist * 0.08; break;
       case "spirit_fire": speed = 20; arcHeight = dist * 0.1; break;
       case "leaves": speed = 12; arcHeight = dist * 0.12; break;
       case "sword": speed = 16; arcHeight = dist * 0.04; break;
@@ -458,6 +465,9 @@ export class ProjectileSystem {
           break;
         case "spirit_fire":
           trailSystem = createTrail(this._scene, trailMesh, SPIRIT_FIRE.shell, 10);
+          break;
+        case "wizard_spell":
+          trailSystem = createTrail(this._scene, trailMesh, WIZARD_SPELL.shell, 10);
           break;
         case "rocket_arrow":
           trailSystem = createTrail(this._scene, trailMesh, palette.primary, 15);
@@ -1576,6 +1586,31 @@ export class ProjectileSystem {
       case "crow": {
         // [S] a flying crow (342; farmer.scarecrow.png, card: Crow Throw, projectile Crow): spec at FLYING_CROW
         this._buildFlyingCrow(root);
+        break;
+      }
+      case "wizard_spell": {
+        const W = WIZARD_SPELL, WIDE = FIREBALL_WIDE * W.size;
+        const mf = getMaterialFactory();
+        const heart = MeshBuilder.CreateIcoSphere("wizardSpell", { radius: WIDE * 0.32, subdivisions: 1, flat: true }, this._scene);
+        heart.material = mf.get("unlit", W.heart, { emissive: W.heart });
+        heart.parent = root;
+        const shell = MeshBuilder.CreateIcoSphere("wizardSpell_shell", { radius: WIDE * 0.5, subdivisions: 1, flat: true }, this._scene);
+        shell.rotation.set(0.6, 0.9, 0.3);
+        shell.material = mf.get("unlit", W.shell, { emissive: W.shell, alpha: 0.7 });
+        shell.parent = root;
+        const rayMat = mf.get("unlit", W.ray, { emissive: W.ray });
+        for (let k = 0; k < W.spikes; k++) {
+          const ray = MeshBuilder.CreateCylinder("wizardSpell_ray", { height: W.rayLong * WIDE * 2, diameter: WIDE * 0.09, tessellation: 4 }, this._scene);
+          // a star: rays crossing in the plane square to the flight, and one along it
+          ray.rotation.set(k === W.spikes - 1 ? Math.PI / 2 : 0, 0, (k * Math.PI) / (W.spikes - 1));
+          ray.material = rayMat;
+          ray.parent = root;
+        }
+        const tail = MeshBuilder.CreateCylinder("wizardSpell_tail", { height: W.tail, diameterTop: WIDE * 0.75, diameterBottom: 0, tessellation: 6 }, this._scene);
+        tail.rotation.x = Math.PI / 2;
+        tail.position.z = -W.tail / 2;
+        tail.material = mf.get("unlit", W.shell, { emissive: W.shell, alpha: 0.5 });
+        tail.parent = root;
         break;
       }
       case "spirit_fire":
