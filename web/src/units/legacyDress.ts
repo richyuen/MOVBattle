@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, TransformNode, type Material } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, type Material } from "@babylonjs/core";
 import { limbShell } from "./medievalDress";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
@@ -1215,4 +1215,45 @@ export function buildModius(scene: Scene, W: number, H: number, seat: number, un
   ring("modiusBand", foot + b * 1.5, b, white);
   ring("modiusBand", foot + b * 2.5, b, gold);
   return body;
+}
+
+/*
+ * [S] 469 Thor's winged headband (audit 468 thor a.1: "headgear: a dark dome helmet with two grey horns - TABS: a metal headband with two upswept white
+ * wings"; legacy.thor.red.png: no helmet; a thin grey metal band round the head over the brow, and on each side above the ear a white wing of a few
+ * long feathers sweeping up and back, standing near a head over the crown). WINGED_BAND, in the head's W and H: the band .wide W across, .band H tall
+ * at the seat; each wing .feathers white blades, the first .feather H long and each next .shorter of it, .blade W across, rooted at the band's side
+ * .rootUp H above its foot, leant .out rad outward and .back rad back, fanned .fan rad apart toward the back. Grey .iron, white .white, self-lit.
+ */
+const WINGED_BAND = { wide: 1.08, band: 0.13, feathers: 3, feather: 0.95, shorter: 0.75, blade: 0.16, rootUp: 0.1, out: 0.22, back: 0.42, fan: 0.32, iron: new Color3(0.62, 0.62, 0.66), white: new Color3(0.96, 0.95, 0.92), glow: 0.3 };
+
+/** Thor's grey headband with two upswept white wings (spec at WINGED_BAND), in the hat's units; `seat` under the head top. Returns the band. */
+export function buildWingedBand(scene: Scene, W: number, H: number, seat: number, unit: number): Mesh {
+  const B = WINGED_BAND;
+  const u = (v: number) => v / unit;
+  const mf = getMaterialFactory();
+  const iron = mf.get("cloth", B.iron, { emissive: B.iron.scale(0.15) });
+  const white = mf.get("cloth", B.white, { emissive: B.white.scale(B.glow) });
+  const bandH = B.band * H;
+  const band = MeshBuilder.CreateCylinder("wingedBand", { height: u(bandH), diameter: u(B.wide * W), tessellation: 12 }, scene);
+  band.position.y = u(seat + bandH / 2);
+  band.material = iron;
+  band.convertToFlatShadedMesh();
+  for (const s of [-1, 1]) {
+    for (let k = 0; k < B.feathers; k++) {
+      const long = B.feather * H * Math.pow(B.shorter, k);
+      // a flat blade, wide at its root and coming to a point, its flat facing out to the side
+      const f = MeshBuilder.CreateCylinder("wingFeather", { height: u(long), diameterTop: 0, diameterBottom: u(B.blade * W), tessellation: 4 }, scene);
+      f.scaling.x = 0.3;
+      const lean = B.back + k * B.fan;
+      // its root at the band's side, its middle half its length up the leant axis
+      const dir = new Vector3(s * Math.sin(B.out), Math.cos(B.out) * Math.cos(lean), -Math.sin(lean));
+      const root = new Vector3(s * (B.wide * W) / 2, -bandH / 2 + B.rootUp * H, -k * B.blade * W * 0.4);
+      f.position.set(u(root.x + (dir.x * long) / 2), u(root.y + (dir.y * long) / 2), u(root.z + (dir.z * long) / 2));
+      f.rotation.set(-lean, 0, -s * B.out);
+      f.material = white;
+      f.convertToFlatShadedMesh();
+      f.parent = band;
+    }
+  }
+  return band;
 }
