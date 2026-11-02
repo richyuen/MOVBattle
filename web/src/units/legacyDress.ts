@@ -955,6 +955,59 @@ export function wizardRobe(scene: Scene, body: ArticulatedBody, teamColor: Color
   return out;
 }
 
+
+/*
+ * [S] 473 the Dark Peasant's floating hands (audit 468 dark_peasant b.1: "floating hands missing - TABS: a sphere of dozens of big black hands circling
+ * him"; legacy.dark_peasant.red.png, card Appearance: some thirty black gloved hands, each about a head and a half long, spread over a ball round him from
+ * his feet to over his head and out to about half his height on each side, fingers splayed, a cuff at each wrist, turned every way). DARK_HANDS in his
+ * standing height H: .count hands on a Fibonacci sphere .radius H round a centre .centre H up (squashed .squash in y); each a palm .palm H square, four
+ * fingers and a thumb .finger H long, a cuff .cuff H across at the wrist; each turned to face out from the centre and rolled by a golden-angle step.
+ * Near-black .color, a little self-lit .glow so the faces still read in shade. Each hand is merged to one mesh.
+ */
+const DARK_HANDS = { count: 30, radius: 0.62, centre: 0.5, squash: 0.85, palm: 0.1, finger: 0.075, cuff: 0.075, color: new Color3(0.07, 0.06, 0.1), glow: 0.35 };
+
+/** The Dark Peasant's sphere of big black floating hands round him (spec at DARK_HANDS). */
+export function darkPeasantHands(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const D = DARK_HANDS;
+  const black = getMaterialFactory().get("cloth", D.color, { emissive: D.color.scale(D.glow) });
+  const H = body.metrics.headTopY - body.metrics.footBottomY;
+  const p = H * D.palm, fl = H * D.finger, fw = p / 4.6;
+  const out: Mesh[] = [];
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < D.count; i++) {
+    const parts: Mesh[] = [];
+    const palm = MeshBuilder.CreateBox("darkHandPalm", { width: p, height: p, depth: p * 0.32 }, scene);
+    parts.push(palm);
+    for (let k = 0; k < 4; k++) {
+      const fin = MeshBuilder.CreateBox("darkHandFinger", { width: fw, height: fl * (k === 1 || k === 2 ? 1 : 0.85), depth: fw }, scene);
+      fin.position.set((k - 1.5) * p * 0.26, p / 2 + fl * 0.45, 0);
+      fin.rotation.z = (k - 1.5) * -0.12;
+      parts.push(fin);
+    }
+    const thumb = MeshBuilder.CreateBox("darkHandThumb", { width: fw, height: fl * 0.7, depth: fw }, scene);
+    thumb.position.set(p * 0.62, p * 0.05, 0);
+    thumb.rotation.z = -0.9;
+    parts.push(thumb);
+    const cuff = MeshBuilder.CreateCylinder("darkHandCuff", { height: p * 0.35, diameter: H * D.cuff, tessellation: 8 }, scene);
+    cuff.position.y = -p / 2 - p * 0.15;
+    parts.push(cuff);
+    const hand = Mesh.MergeMeshes(parts, true);
+    if (!hand) continue;
+    hand.name = "darkHand";
+    // a point on the Fibonacci sphere
+    const y = 1 - (2 * (i + 0.5)) / D.count, r = Math.sqrt(1 - y * y), a = i * golden;
+    const dir = new Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+    hand.position.set(dir.x * H * D.radius, H * D.centre + dir.y * H * D.radius * D.squash, dir.z * H * D.radius);
+    // fingers along the sphere's tangent, the palm facing out
+    hand.rotation.set(Math.asin(-dir.y) * 0.8 + Math.PI / 2 * (i % 2), Math.atan2(dir.x, dir.z), a * 1.7);
+    hand.parent = body.root;
+    hand.material = black;
+    hand.convertToFlatShadedMesh();
+    out.push(hand);
+  }
+  return out;
+}
+
 /*
  * [S] 466 the Flag Bearer's cuffs (audit 457 a.3: "cuffs, bare forearms - TABS: white-and-gold striped cuffs"; legacy.flag_bearer.red.png: a broad white
  * cuff round each wrist with a gold band at its top and foot). FLAG_CUFFS on each forearm: a white shell BANNER_CUFFS.out round from .from to its end, and

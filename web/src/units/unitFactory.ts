@@ -1,7 +1,7 @@
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteBandanna, dynamiteBoots, dynamiteShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerShoes, gunslingerSideburns, gunslingerSuit, lassoMoustache, lassoShirt, lassoShirtCloth, minerBoots, minerLegs, minerMoustache, minerSleeves, minerOveralls, quickDrawShirt, quickDrawVest, westernBraid, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
-import { bannerCoatee, bannerCuffs, blowdarterHair, bearerRing, boxerBoots, boxerShorts, flagJacket, peasantBelt, peasantDress, peasantFringe, peasantLegs, pikePlume, pikeVest, barrelVest, peasantSleeves, boxerBareChest, flagCuffs, flagBoots, pikeBelt, pikeHair, poacherKnees, barrelWraps, blowdarterScarf, blowdarterShorts, barrelHair, barrelLegs, superPeasantCuffs, wizardBeard, pharaohGarb, superBoxerHair, thorHair, superBoxerShorts, superBoxerEyes, pharaohKilt, pharaohCollar, thorCoat, thorBelt, wizardPipe, wizardRobe, poacherBelt, poacherBoots, peasantDressCloth, peasantDressPoint, poacherCoat, poacherCoatCloth, poacherHair, PEASANT_DRESS, POACHER_COAT } from "./legacyDress";
+import { bannerCoatee, bannerCuffs, blowdarterHair, bearerRing, boxerBoots, boxerShorts, flagJacket, peasantBelt, peasantDress, peasantFringe, peasantLegs, pikePlume, pikeVest, barrelVest, peasantSleeves, boxerBareChest, flagCuffs, flagBoots, pikeBelt, pikeHair, poacherKnees, barrelWraps, blowdarterScarf, blowdarterShorts, barrelHair, barrelLegs, superPeasantCuffs, wizardBeard, pharaohGarb, superBoxerHair, thorHair, superBoxerShorts, superBoxerEyes, pharaohKilt, pharaohCollar, thorCoat, thorBelt, wizardPipe, wizardRobe, darkPeasantHands, poacherBelt, poacherBoots, peasantDressCloth, peasantDressPoint, poacherCoat, poacherCoatCloth, poacherHair, PEASANT_DRESS, POACHER_COAT } from "./legacyDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -975,6 +975,8 @@ export class UnitFactory {
     if (definition.id === "legacy.super_peasant" && !shouldUseVehicleBody) {
       propMeshes.push(...dressSuperPeasant(this._scene, body));
     }
+    // [S] 473 the Dark Peasant's sphere of big black floating hands (audit 468 dark_peasant b.1; legacyDress DARK_HANDS)
+    if (definition.id === "legacy.dark_peasant" && !shouldUseVehicleBody) propMeshes.push(...darkPeasantHands(this._scene, body));
     // [S] 468 the Super Peasant's glowing gold wrist cuffs (legacyDress SUPER_CUFFS)
     if (definition.id === "legacy.super_peasant" && !shouldUseVehicleBody) propMeshes.push(...superPeasantCuffs(this._scene, body));
     // [S] 468 the Wizard's long grey beard and moustache (legacyDress WIZARD_BEARD)
