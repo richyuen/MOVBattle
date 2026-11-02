@@ -289,6 +289,9 @@ const HARPOON_BARB_SWEEP = 0.5; // rad back off the shaft
 const HARPOON_SHAFT_COLOR = new Color3(0.2, 0.16, 0.13);
 const HARPOON_IRON_COLOR = new Color3(0.16, 0.17, 0.19);
 
+// [S] 470 the tank shell's fireball (spec at ProjectileSystem._spawnShellFireball)
+const TANK_FIREBALL = { outer: 2.4, core: 1.5, lift: 0.9, life: 0.35, fire: new Color3(1, 0.62, 0.12), hot: new Color3(1, 0.95, 0.7) };
+
 export class ProjectileSystem {
   private _scene: Scene;
   private _active: ActiveProjectile[] = [];
@@ -964,6 +967,8 @@ export class ProjectileSystem {
         this.visualEffects.spawnPumpkinBurst(p.targetPos);
       } else if (this.impactPresentation) {
         this.impactPresentation.presentExplosion(p.targetPos, explosionScale);
+        // [S] 470 a tank shell bursts in a big white-yellow fireball over its smoke (TANK_FIREBALL)
+        if (p.shape === "shell") this._spawnShellFireball(p.targetPos);
       } else {
         this._spawnExplosion(p.targetPos, explosionScale);
       }
@@ -1065,6 +1070,28 @@ export class ProjectileSystem {
       // Lift of 8-12 m/s under 22 m/s2 gravity: bodies near the centre clear head height. The sideways throw is
       // slow next to it, so a group goes up over the crater instead of being skittled out flat.
       unit.applyBlastLaunch(outward, 1 + 1.5 * falloff, 8 + 4 * falloff);
+    }
+  }
+
+  /*
+   * [S] 470 the tank's fireball (audit 468 tank c.1: "explosion in unit_legacy.tank_struck: a black-grey rocky smoke cloud under the flung knight - TABS: a
+   * large fiery white-yellow fireball"; legacy.tank.png, card Characteristics "fiery explosion"). TANK_FIREBALL: an orange-yellow ball .outer m across,
+   * .lift m up, round a white-yellow core .core m across, both self-lit and unlit, swelling and fading on the flash clock (.life s, at most .35 so the
+   * flash fade starts at full size) over the shell's smoke.
+   */
+  private _spawnShellFireball(pos: Vector3): void {
+    const F = TANK_FIREBALL;
+    for (const [d, c] of [[F.outer, F.fire], [F.core, F.hot]] as const) {
+      const ball = MeshBuilder.CreateIcoSphere("shellFireball", { radius: d / 2, subdivisions: 2 }, this._scene);
+      ball.position = pos.clone();
+      ball.position.y += F.lift;
+      const m = getMaterialFactory().createUnique("unlit", c);
+      m.disableLighting = true;
+      m.emissiveColor = c;
+      m.alpha = 0.9;
+      m.transparencyMode = 2;
+      ball.material = m;
+      this._flashes.push({ mesh: ball, remaining: F.life, ownsMaterial: true });
     }
   }
 
