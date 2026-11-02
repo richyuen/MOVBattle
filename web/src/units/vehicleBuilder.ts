@@ -1693,7 +1693,8 @@ const TANK_RIDERS = {
  * turret in .tan, the roof .roof, the hatches .hatch; the lower hull and side skirts stay team (the body material); .rails team grab rails (.rail long) on
  * each hull side and turret side; the mantlet collar and the muzzle ring in team.
  */
-const TANK_PAINT = { tan: new Color3(0.58, 0.47, 0.24), roof: new Color3(0.46, 0.37, 0.19), hatch: new Color3(0.2, 0.2, 0.21), rail: 0.42, railThick: 0.05 };
+const TANK_PAINT = { tan: new Color3(0.8, 0.66, 0.36), roof: new Color3(0.64, 0.52, 0.28), // 472b: (.58,.47,.24) swatched dark olive
+  hatch: new Color3(0.2, 0.2, 0.21), rail: 0.42, railThick: 0.05 };
 function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("legacy_tank_root", scene);
   const allMeshes: Mesh[] = [];
