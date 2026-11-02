@@ -2989,6 +2989,8 @@ const CHARIOT_GALLOP: [number, [number, number], [number, number], [number, numb
   [-1, [1.08, -0.6], [0.52, -0.78], [0.06, -0.5]],
 ];
 // [S] 470 the driver's Roman helmet (spec in buildChariot)
+// [S] 471 the driver's gladius (spec in buildChariot), in the driver's own units
+const CHARIOT_GLADIUS = { grip: 0.12, guard: 0.13, blade: 0.42, wide: 0.07, thick: 0.02, tilt: -1.1, steel: new Color3(0.8, 0.82, 0.86), gripColor: new Color3(0.25, 0.15, 0.08) };
 const CHARIOT_HELM = { cap: 1.12, lift: 0.18, drop: 0.55, crest: 1.5, crestThick: 0.22, crestUp: -0.12, rim: 0.88, steel: new Color3(0.32, 0.32, 0.36), pale: new Color3(0.98, 0.85, 0.6) };
 function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("chariot_root", scene);
@@ -3156,6 +3158,32 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
     rim.rotation.x = -Math.PI / 2;
     const inner = put(MeshBuilder.CreateCylinder("chariotHelmCrestCore", { height: e.z * C.crestThick * 1.3, diameter: R * 2 * C.rim * 0.82, arc: 0.5, tessellation: 14 }, scene), crest, c.x, topY, c.z - e.z * 0.05);
     inner.rotation.x = -Math.PI / 2;
+  }
+  /*
+   * [S] 471 the driver's gladius (audit 468 chariot b.1: "gladius missing from the driver's right hand - TABS: a short sword held upright";
+   * legacy.chariot.red.png: a short straight steel blade standing up out of his right fist, a gold guard and pommel, a dark grip). CHARIOT_GLADIUS in the
+   * hand's frame: a dark grip .grip long through the fist, a gold guard .guard across over it, a steel blade .blade long and .wide across rising from the
+   * guard to a point, a gold pommel under the grip; the whole leant .tilt rad so the blade stands up from the forward-reaching arm.
+   */
+  {
+    const G = CHARIOT_GLADIUS;
+    const hand = operator.body.rightHand;
+    const sword = new TransformNode("chariotGladius", scene);
+    sword.parent = hand;
+    sword.rotation.x = G.tilt;
+    const steel = lit(G.steel, 0.25), grip = lit(G.gripColor, 0.08);
+    const piece = (m: Mesh, y: number, mat: Mesh["material"]): void => {
+      m.parent = sword;
+      m.position.y = y;
+      m.material = mat;
+      m.convertToFlatShadedMesh();
+      allMeshes.push(m);
+    };
+    piece(MeshBuilder.CreateBox("gladiusGrip", { width: G.thick * 1.6, height: G.grip, depth: G.thick * 1.6 }, scene), 0, grip);
+    piece(MeshBuilder.CreateBox("gladiusGuard", { width: G.guard, height: G.thick * 1.4, depth: G.thick * 2.4 }, scene), G.grip / 2, gold);
+    piece(MeshBuilder.CreateSphere("gladiusPommel", { diameter: G.thick * 3, segments: 4 }, scene), -G.grip / 2, gold);
+    piece(MeshBuilder.CreateBox("gladiusBlade", { width: G.wide, height: G.blade, depth: G.thick }, scene), G.grip / 2 + G.blade / 2, steel);
+    piece(MeshBuilder.CreateCylinder("gladiusPoint", { height: G.wide * 1.2, diameterTop: 0, diameterBottom: G.wide * 1.4, tessellation: 4 }, scene), G.grip / 2 + G.blade + G.wide * 0.6, steel);
   }
   const headTopY = stand.position.y + operator.headTopY * CHARIOT_DRIVER;
 
