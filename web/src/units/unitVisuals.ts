@@ -984,8 +984,10 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
       });
     case "iconic_super_peasant":
-      return vis({ scale: 2.02, bulk: 1.18, headSize: 1.08, armLength: 1.2, legLength: 1.08 }, "none", "none", "none", "cape", "#f3d45a", undefined, {
-        posePreset: "giant", materialPreset: "secret_hero", attachmentPreset: "super_aura", fxPreset: "solar",
+      // [S] 473 a man's size at card Size 1.15x (audit 468 super_peasant a.1: "scale: the blond giant towers about twice his neighbours' height - TABS:
+      // 1.15x, barely taller than a man"; reference/factions/legacy.jpg): the Peasant's lanky cut at 1.15 in place of the 2.02 giant, standing as a boxer
+      return vis({ scale: 1.15, bulk: 0.86, torsoWidth: 0.94, headSize: 1.08, armLength: 1.08, legLength: 1.16, upperLegWidth: 0.9, lowerLegWidth: 0.82 }, "none", "none", "none", "cape", "#f3d45a", undefined, {
+        posePreset: "boxer", materialPreset: "secret_hero", attachmentPreset: "super_aura", fxPreset: "solar",
         bodyDetailLevel: "hero",
         stateVariants: { moving: ["super_aura"], attacking: ["super_aura"], "ability-active": ["super_aura"] },
       });
