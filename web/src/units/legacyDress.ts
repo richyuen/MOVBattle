@@ -974,14 +974,16 @@ export function barrelWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
- * [S] 468 the Blowdarter's feathered scarf (audit 457 a.2: "chest, plain team torso - TABS: a tan feathered scarf in a V with white feathers hanging";
- * legacy.blowdarter.blue.png, card Appearance "a feathery scarf-type accessory": a tan band from each shoulder meeting in a V on the chest, white feathers
- * hanging from it). BLOWDARTER_SCARF on the trunk: two tan bands .band W wide and .proud D off the front, from the shoulders' tops to a point .deep H
- * under the trunk's top; .feathers white blades .feather H long and .featherWide W across hanging from points along the V. Tan .tan, white .white.
+ * [S] 468 the Blowdarter's feathered scarf; [S] 469 rebuilt as one solid V (CONFIRM 468 a.2: "TABS: a large tan V over the chest front with white feather
+ * drops, the unit's most readable accent from the front; ours shows only a thin tan edge strip"; legacy.blowdarter.red.png, .blue.png: a solid tan
+ * triangle from shoulder to shoulder across the collar, its point at mid-chest; six white feather blades hang from its two lower edges and its point,
+ * and a white feather stands up beside the neck on each shoulder). BLOWDARTER_SCARF on the trunk: a tan three-sided plate .wide W across the top,
+ * .deep H from the collar to the point, .proud D off the front; .feathers white blades .feather H long, .featherWide W across, hung along the lower
+ * edges; a white wing .wing H tall on each shoulder at .wingAt W out. Tan .tan, white .white, both self-lit.
  */
-const BLOWDARTER_SCARF = { band: 0.2, proud: 0.12, deep: 0.5, feathers: 5, feather: 0.22, featherWide: 0.09, tan: new Color3(0.85, 0.55, 0.25), white: new Color3(0.95, 0.94, 0.9), glow: 0.2 };
+const BLOWDARTER_SCARF = { wide: 0.92, deep: 0.5, proud: 0.14, feathers: 7, feather: 0.24, featherWide: 0.11, wing: 0.38, wingAt: 0.34, tan: new Color3(0.85, 0.55, 0.25), white: new Color3(0.95, 0.94, 0.9), glow: 0.22 };
 
-/** The Blowdarter's tan feathered V scarf with white feathers hanging (spec at BLOWDARTER_SCARF). */
+/** The Blowdarter's solid tan V scarf with white feathers hanging and two upright at the shoulders (spec at BLOWDARTER_SCARF). */
 export function blowdarterScarf(scene: Scene, body: ArticulatedBody): Mesh[] {
   const B = BLOWDARTER_SCARF;
   const mf = getMaterialFactory();
@@ -989,17 +991,28 @@ export function blowdarterScarf(scene: Scene, body: ArticulatedBody): Mesh[] {
   const white = mf.get("cloth", B.white, { emissive: B.white.scale(0.3) });
   const out: Mesh[] = [];
   const { W, H, D, lay } = trunkFrame(scene, body, out);
-  const z = D / 2 + D * B.proud / 2, top = H / 2, tip = top - H * B.deep, half = W * 0.42;
-  const run = Math.hypot(half, top - tip), tilt = Math.atan2(half, top - tip);
-  for (const s of [-1, 1]) {
-    const band = lay(MeshBuilder.CreateBox("blowdarterScarf", { width: W * B.band, height: run, depth: D * B.proud }, scene), s * half / 2, (top + tip) / 2, z, tan);
-    band.rotation.z += s * tilt;
-  }
+  const z = D / 2 + D * B.proud / 2, top = H / 2, half = W * B.wide / 2, tip = top - H * B.deep;
+  // a three-sided disc, one corner turned straight down (as BARREL_VEST): the flat top edge at the collar, the point at mid-chest
+  const r = (half * 2) / Math.sqrt(3);
+  const plate = MeshBuilder.CreateDisc("blowdarterScarf", { radius: r, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  plate.rotation.z = -Math.PI / 2;
+  plate.scaling.x = (H * B.deep) / (1.5 * r);
+  lay(plate, 0, top - (r / 2) * plate.scaling.x, z, tan);
+  // a thick backing so the plate reads as cloth from the side, not a sheet
+  const back = MeshBuilder.CreateDisc("blowdarterScarfBack", { radius: r, tessellation: 3, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  back.rotation.z = -Math.PI / 2;
+  back.scaling.x = plate.scaling.x;
+  lay(back, 0, top - (r / 2) * plate.scaling.x, z - D * B.proud * 0.5, tan);
   for (let k = 0; k < B.feathers; k++) {
     const u = k / (B.feathers - 1) * 2 - 1;
-    const x = u * half * 0.8, y = tip + Math.abs(u) * (top - tip) * 0.8 - H * B.feather / 2;
-    const f = lay(MeshBuilder.CreateCylinder("blowdarterFeather", { height: H * B.feather, diameterTop: W * B.featherWide, diameterBottom: W * B.featherWide * 0.25, tessellation: 4 }, scene), x, y, z + D * 0.04, white);
+    const x = u * half * 0.82, y = tip + Math.abs(u) * (top - tip) * 0.82 - H * B.feather * 0.42;
+    const f = lay(MeshBuilder.CreateCylinder("blowdarterFeather", { height: H * B.feather, diameterTop: W * B.featherWide, diameterBottom: W * B.featherWide * 0.2, tessellation: 4 }, scene), x, y, z + D * 0.05, white);
     f.scaling.z = 0.35;
+  }
+  for (const s of [-1, 1]) {
+    const w = lay(MeshBuilder.CreateCylinder("blowdarterWing", { height: H * B.wing, diameterTop: 0, diameterBottom: W * B.featherWide * 1.3, tessellation: 4 }, scene), s * W * B.wingAt, top + H * B.wing * 0.38, z - D * 0.1, white);
+    w.rotation.z += -s * 0.3;
+    w.scaling.z = 0.35;
   }
   return out;
 }
