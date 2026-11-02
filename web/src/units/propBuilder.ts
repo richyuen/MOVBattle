@@ -3512,7 +3512,8 @@ const TEAM_GLOVE = { wide: 0.22, squash: 0.92, band: 0.025, glow: 0.1, shade: 0.
  */
 const GLOW_GLOVE = { wide: 0.17, squash: 0.88, thumb: 0.42, color: new Color3(1, 0.74, 0.28), glow: 0.5 }; // 472b: wide .3 hid his whole trunk, (1,.86,.5) glow .85 read white
 // [S] 474 Thor's Mjolnir (spec at its build in the hammer case), in the unit scale s
-const MJOLNIR = { haft: 0.3, thick: 0.045, head: 0.26, headTall: 0.17, ring: 0.7, loop: 0.06, grip: 0.3 };
+const MJOLNIR = { haft: 0.28, thick: 0.04, head: 0.19, headTall: 0.125, // 474b: head .26 x .17 dwarfed his whole trunk
+  ring: 0.7, loop: 0.06, grip: 0.3 };
 const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
 /*
  * [S] 470 the Pharaoh's flail (audit 468 pharaoh b.2: "off hand: empty - TABS: a striped flail rod with gold tassel strands hanging from its tip";
