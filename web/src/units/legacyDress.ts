@@ -1224,7 +1224,7 @@ export function buildModius(scene: Scene, W: number, H: number, seat: number, un
  * at the seat; each wing .feathers white blades, the first .feather H long and each next .shorter of it, .blade W across, rooted at the band's side
  * .rootUp H above its foot, leant .out rad outward and .back rad back, fanned .fan rad apart toward the back. Grey .iron, white .white, self-lit.
  */
-const WINGED_BAND = { wide: 1.08, band: 0.13, feathers: 3, feather: 0.95, shorter: 0.75, blade: 0.16, rootUp: 0.1, out: 0.22, back: 0.42, fan: 0.32, iron: new Color3(0.62, 0.62, 0.66), white: new Color3(0.96, 0.95, 0.92), glow: 0.3 };
+const WINGED_BAND = { wide: 1.08, band: 0.13, feathers: 4, feather: 0.95, shorter: 0.78, blade: 0.42, rootUp: 0.1, out: 0.22, back: 0.42, fan: 0.32, iron: new Color3(0.62, 0.62, 0.66), white: new Color3(0.96, 0.95, 0.92), glow: 0.3 };
 
 /** Thor's grey headband with two upswept white wings (spec at WINGED_BAND), in the hat's units; `seat` under the head top. Returns the band. */
 export function buildWingedBand(scene: Scene, W: number, H: number, seat: number, unit: number): Mesh {
@@ -1243,7 +1243,7 @@ export function buildWingedBand(scene: Scene, W: number, H: number, seat: number
       const long = B.feather * H * Math.pow(B.shorter, k);
       // a flat blade, wide at its root and coming to a point, its flat facing out to the side
       const f = MeshBuilder.CreateCylinder("wingFeather", { height: u(long), diameterTop: 0, diameterBottom: u(B.blade * W), tessellation: 4 }, scene);
-      f.scaling.x = 0.3;
+      f.scaling.x = 0.45;
       const lean = B.back + k * B.fan;
       // its root at the band's side, its middle half its length up the leant axis
       const dir = new Vector3(s * Math.sin(B.out), Math.cos(B.out) * Math.cos(lean), -Math.sin(lean));
