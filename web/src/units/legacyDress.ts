@@ -1453,3 +1453,40 @@ export function pharaohKilt(scene: Scene, body: ArticulatedBody, teamColor: Colo
   return out;
 }
 
+
+/*
+ * [S] 471 Thor's open coat (audit 468 thor a.3: "torso: grey vest block - TABS: a short-sleeved team coat open over the chest with gold trim and a gold chain
+ * clasp"; legacy.thor.red.png: the trunk in a team coat whose fronts part down the middle over his bare chest, a gold strip along each front edge, short team
+ * sleeves to mid upper arm, and a gold chain of a few links hanging across the opening at the chest). THOR_COAT: the trunk and yoke in team times .shade; on
+ * its front a skin panel .open W wide from top to foot, .proud D off it, edged each side by a gold strip .trim W wide; a team sleeve shell .sleeveOut round
+ * each upper arm to .sleeve of it; .links gold links, a chain sagging across the opening at .chainAt H over the middle. Gold .gold self-lit .glow.
+ */
+const THOR_COAT = { shade: 0.85, open: 0.3, proud: 0.04, trim: 0.06, sleeve: 0.55, sleeveOut: 1.3, links: 3, link: 0.11, chainAt: 0.22, sag: 0.06, gold: new Color3(0.95, 0.66, 0.16), glow: 0.22 };
+
+/** Thor's short-sleeved team coat open on his chest, gold-trimmed, with a gold chain across (spec at THOR_COAT). */
+export function thorCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const C = THOR_COAT;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(C.shade);
+  const coat = mf.get("cloth", t, { emissive: t.scale(0.12) });
+  const gold = mf.get("cloth", C.gold, { emissive: C.gold.scale(C.glow) });
+  body.torsoMesh.material = coat;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = coat;
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const z = D / 2 + (D * C.proud) / 2;
+  lay(MeshBuilder.CreateBox("thorCoatOpen", { width: W * C.open, height: H * 0.98, depth: D * C.proud }, scene), 0, 0, z, body.skinMaterial);
+  for (const s of [-1, 1]) {
+    lay(MeshBuilder.CreateBox("thorCoatTrim", { width: W * C.trim, height: H * 0.98, depth: D * C.proud * 1.6 }, scene), s * (W * C.open / 2 + W * C.trim / 2), 0, z, gold);
+  }
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "thorSleeve", arm, 0, C.sleeve, C.sleeveOut, coat));
+  // the chain: links across the opening, the middle one lowest
+  for (let k = 0; k < C.links; k++) {
+    const u = C.links === 1 ? 0 : (k / (C.links - 1)) * 2 - 1;
+    const x = u * W * C.open * 0.42, y = H * C.chainAt - (1 - u * u) * H * C.sag;
+    const link = MeshBuilder.CreateTorus("thorChainLink", { diameter: W * C.link, thickness: W * C.link * 0.3, tessellation: 8 }, scene);
+    link.rotation.x = Math.PI / 2;
+    lay(link, x, y, z + D * C.proud, gold);
+  }
+  return out;
+}
