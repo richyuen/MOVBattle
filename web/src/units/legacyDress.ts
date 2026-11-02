@@ -1056,6 +1056,45 @@ export function darkPeasantHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+
+/*
+ * [S] 474 the Super Peasant's tunic (audit 468 super_peasant a.2: "shirt: a grey vest block - TABS: a white peasant tunic to mid-thigh with a laced
+ * collar"; legacy.super_peasant.red.png: a loose white tunic from the shoulders to mid-thigh, short sleeves to mid upper arm, its skirt flaring a little
+ * below the waist, and at the throat a small slit closed by a brown lace crossed twice). SUPER_TUNIC: the trunk, yoke and pelvis in white .white self-lit
+ * .glow (lit white in shade reads grey); a white sleeve .sleeveOut round each upper arm to .sleeveTo; a faceted skirt .sides round from .waist of the
+ * trunk's width at its foot to .flare at the hem, .long of the hip-to-knee drop; a dark slit .slit W wide down .slitLong H from the top of the chest front
+ * and .laces brown crossed laces over it.
+ */
+const SUPER_TUNIC = { white: new Color3(0.96, 0.95, 0.91), glow: 0.4, sleeveOut: 1.35, sleeveTo: 0.55, sides: 10, waist: 1.08, flare: 1.32, long: 0.62, slit: 0.06, slitLong: 0.2, laces: 2, lace: new Color3(0.36, 0.2, 0.08) };
+
+/** The Super Peasant's white mid-thigh tunic with a laced collar (spec at SUPER_TUNIC). */
+export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = SUPER_TUNIC;
+  const mf = getMaterialFactory();
+  const white = mf.get("cloth", T.white, { emissive: T.white.scale(T.glow) });
+  const lace = mf.get("cloth", T.lace, { emissive: T.lace.scale(0.15) });
+  body.torsoMesh.material = white;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = white;
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = white;
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "superTunicSleeve", arm, 0, T.sleeveTo, T.sleeveOut, white));
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const drop = Math.abs(body.leftKnee.position.y) * T.long;
+  const skirt = MeshBuilder.CreateCylinder("superTunicSkirt", { height: drop, diameterTop: W * T.waist, diameterBottom: W * T.flare, tessellation: T.sides }, scene);
+  skirt.scaling.z = Math.max(0.7, D / W);
+  lay(skirt, 0, -H / 2 - drop / 2 + H * 0.06, 0, white);
+  const slitH = H * T.slitLong, front = D / 2 + D * 0.02;
+  lay(MeshBuilder.CreateBox("superTunicSlit", { width: W * T.slit, height: slitH, depth: D * 0.03 }, scene), 0, H / 2 - slitH / 2, front, lace);
+  for (let k = 0; k < T.laces; k++) {
+    for (const sd of [-1, 1]) {
+      const l = MeshBuilder.CreateBox("superTunicLace", { width: W * T.slit * 3.2, height: H * 0.018, depth: D * 0.03 }, scene);
+      l.rotation.z = sd * 0.5;
+      lay(l, 0, H / 2 - slitH * (k + 0.6) / (T.laces + 0.4), front + D * 0.01, lace);
+    }
+  }
+  return out;
+}
+
 /*
  * [S] 466 the Flag Bearer's cuffs (audit 457 a.3: "cuffs, bare forearms - TABS: white-and-gold striped cuffs"; legacy.flag_bearer.red.png: a broad white
  * cuff round each wrist with a gold band at its top and foot). FLAG_CUFFS on each forearm: a white shell BANNER_CUFFS.out round from .from to its end, and
