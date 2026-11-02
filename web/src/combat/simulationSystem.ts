@@ -262,6 +262,9 @@ function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
 
 /** Zeus's thrown bolt is back in his fist this share of the cooldown after the throw (384; until then the fist is empty). */
 const ZEUS_REARM = 0.6;
+// [S] 474 the Dark Peasant's thrown volley (spec at its use; card Weapons Throw Dark Peasant count 15, .03 s apart, explosion radius 2): from his hand sphere
+// (.sphere m round a centre .centre m up), each hand .share of the blow's damage and .push of its knockback, landing within .spread m of the man
+const DARK_VOLLEY = { count: 15, every: 0.03, sphere: 1.1, centre: 1.1, spread: 1.6, share: 0.06, push: 0.1, splash: 2 };
 // [S] 473 Thor's sky bolt (spec at its use in the iconic_thor ability): from .high m over the man, .forks thinner forks .spread m off it
 const THOR_SKY_BOLT = { high: 11, forks: 2, spread: 1.6 };
 // [S] 386 Zeus's lightning chain (card Characteristics: the thunderbolt "will conduct to nearby units"): from the struck man the bolt hops to the nearest
@@ -2777,6 +2780,17 @@ export class SimulationSystem {
 
     if (preset === "iconic_dark_peasant") {
       this._logAbility(attacker, "area_pull", now, target.position);
+      // [S] 474 his volley: DARK_VOLLEY.count black hands thrown off his hand sphere at the man, .every s apart, spread over .spread m round him
+      if (this.projectileSystem) {
+        const V = DARK_VOLLEY;
+        for (let k = 0; k < V.count; k++) {
+          const a = k * 2.39996, y = 1 - (2 * (k + 0.5)) / V.count;
+          const from = attacker.position.add(new Vector3(Math.cos(a) * V.sphere, V.centre + y * V.sphere * 0.8, Math.sin(a) * V.sphere));
+          const at = target.position.add(new Vector3(Math.cos(a * 1.3) * V.spread * ((k % 3) / 2), 0, Math.sin(a * 1.3) * V.spread * ((k % 3) / 2)));
+          this.projectileSystem.spawnProjectile("dark_hand", from, target, damage * V.share, knockback.scale(V.push), V.splash, attacker.team, this._units, undefined, k * V.every, { at, originLift: 0 });
+        }
+        this._logAbility(attacker, "volley", now, target.position);
+      }
       this._summonUnits(attacker);
       const controlRadius = Math.max(5.2, splashRadius + 1.6);
       const controlDuration = attacker.definition.statusDurationSeconds ?? 3.2;
