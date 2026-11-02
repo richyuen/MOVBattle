@@ -893,6 +893,33 @@ export function thorBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+
+/*
+ * [S] 472 the Pharaoh's broad collar (audit 468 pharaoh a.3: "broad collar missing at the neck - TABS: a gold collar across the shoulders";
+ * legacy.pharaoh.red.png: a flat gold collar round the foot of the neck, spreading over the tops of the shoulders and dipping in a shallow curve onto the
+ * top of the chest). PHARAOH_COLLAR: a flat faceted gold plate .sides round, .wide W across (squashed to the trunk's depth, .deep of D), .thick H thick,
+ * its top .top of H/2 over the trunk's middle; below its front a gold bib of .bibs stepped slabs, each .bibW W wide and .bibH H tall, .proud D proud of
+ * the chest. Self-lit .glow.
+ */
+const PHARAOH_COLLAR = { sides: 10, wide: 1.12, deep: 1.25, thick: 0.08, top: 0.98, bibs: 2, bibW: 0.62, bibH: 0.07, proud: 0.06, glow: 0.22 };
+
+/** The Pharaoh's flat gold broad collar over the shoulders and the top of the chest (spec at PHARAOH_COLLAR). */
+export function pharaohCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = PHARAOH_COLLAR;
+  const gold = getMaterialFactory().get("cloth", COATEE_GOLD, { emissive: COATEE_GOLD.scale(C.glow) });
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const y = (H / 2) * C.top - (H * C.thick) / 2;
+  const plate = MeshBuilder.CreateCylinder("pharaohCollar", { height: H * C.thick, diameter: W * C.wide, tessellation: C.sides }, scene);
+  plate.scaling.z = (D * C.deep) / (W * C.wide);
+  lay(plate, 0, y, 0, gold);
+  for (let k = 0; k < C.bibs; k++) {
+    const w = W * C.bibW * (1 - k * 0.25);
+    lay(MeshBuilder.CreateBox("pharaohCollarBib", { width: w, height: H * C.bibH, depth: D * C.proud }, scene), 0, y - H * C.thick / 2 - H * C.bibH * (k + 0.5), D / 2 + (D * C.proud) / 2, gold);
+  }
+  return out;
+}
+
 /*
  * [S] 466 the Flag Bearer's cuffs (audit 457 a.3: "cuffs, bare forearms - TABS: white-and-gold striped cuffs"; legacy.flag_bearer.red.png: a broad white
  * cuff round each wrist with a gold band at its top and foot). FLAG_CUFFS on each forearm: a white shell BANNER_CUFFS.out round from .from to its end, and
