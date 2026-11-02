@@ -65,6 +65,12 @@ const KICK_DUST = { count: 5, spread: 0.35, lift: 0.25, born: 0.5, grown: 1.5, o
  * the life and wheeling round him at .spin rad/s; the whole fades in fast and out over its .life s. Self-lit, in the glow layer so the gold blooms.
  */
 const KNEEL_AURA = { radius: 2.4, ring: 0.14, disc: 0.28, rays: 12, rayTall: 2.6, rayWide: 0.09, rayAt: 0.62, grow: 0.25, spin: 1.4, life: 2.2, gold: new Color3(1, 0.78, 0.2), pale: new Color3(1, 0.9, 0.5) };
+/*
+ * [S] 473 the Super Boxer's punch burst (audit 468 super_boxer c.3: "hit burst missing - TABS: a burst of light at contact"; legacy.super_boxer.jpg, card
+ * weapon explosion radius 1.75): PUNCH_BURST at the contact point, a white-hot core ball swelling from .from to .radius m across in .swell s inside a
+ * gold shell .shell of it, and .rays thin gold rays .ray m long shooting out round it; all fading over .life s. Self-lit, in the glow layer.
+ */
+const PUNCH_BURST = { from: 0.2, radius: 1.75, swell: 0.18, shell: 1.25, rays: 10, ray: 1.6, rayWide: 0.07, life: 0.7, core: new Color3(1, 0.98, 0.9), gold: new Color3(1, 0.8, 0.3) };
 const TRAMPLE_RING = {
   sprites: 12, from: 0.25, to: 1.0, born: 0.7, grown: 1.8, rise: 0.4, life: 1.2, peak: 0.85,
   band: 0.22, bandPeak: 0.5, clods: 8, toss: 4.2, fling: 2.2, gravity: 9.8, clod: 0.16,
@@ -1201,6 +1207,71 @@ export class VisualEffects {
       dispose: () => {
         ringMat.dispose();
         discMat.dispose();
+        rayMat.dispose();
+      },
+    });
+  }
+
+  /** [S] 473 the Super Boxer's burst of light where his punch lands (spec at PUNCH_BURST). */
+  spawnPunchBurst(at: Vector3): void {
+    const P = PUNCH_BURST;
+    const root = new TransformNode("punchBurst", this._scene);
+    root.position.copyFrom(at);
+    const mat = (c: Color3, alpha: number): StandardMaterial => {
+      const m = new StandardMaterial("punchBurstMat", this._scene);
+      m.diffuseColor = c;
+      m.emissiveColor = c;
+      m.disableLighting = true;
+      m.alpha = alpha;
+      return m;
+    };
+    const coreMat = mat(P.core, 1), shellMat = mat(P.gold, 0.55), rayMat = mat(P.gold, 1);
+    const core = MeshBuilder.CreateIcoSphere("punchBurstCore", { radius: 0.5, subdivisions: 2 }, this._scene);
+    core.material = coreMat;
+    core.parent = root;
+    const shell = MeshBuilder.CreateIcoSphere("punchBurstShell", { radius: 0.5 * P.shell, subdivisions: 1, flat: true }, this._scene);
+    shell.material = shellMat;
+    shell.parent = root;
+    const rays: Mesh[] = [];
+    for (let k = 0; k < P.rays; k++) {
+      // spread over a sphere (golden angle) so some always cross the camera's view
+      const y = 1 - (2 * (k + 0.5)) / P.rays, r = Math.sqrt(1 - y * y), a = k * 2.39996;
+      const dir = new Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+      const ray = MeshBuilder.CreateCylinder("punchBurstRay", { height: 1, diameterTop: 0, diameterBottom: P.rayWide, tessellation: 4 }, this._scene);
+      ray.setPivotPoint(new Vector3(0, -0.5, 0));
+      ray.position = dir.scale(0.5);
+      // stand the ray (its +y) along dir
+      const axis = Vector3.Cross(Vector3.Up(), dir);
+      const ang = Math.acos(Math.max(-1, Math.min(1, dir.y)));
+      if (axis.lengthSquared() > 1e-6) ray.rotationQuaternion = Quaternion.RotationAxis(axis.normalize(), ang);
+      ray.material = rayMat;
+      ray.parent = root;
+      rays.push(ray);
+    }
+    let age = 0;
+    const pose = (): void => {
+      const u = Math.min(1, age / P.life);
+      const g = Math.min(1, age / P.swell);
+      const size = P.from + (P.radius - P.from) * (1 - (1 - g) * (1 - g));
+      core.scaling.setAll(size * 0.7);
+      shell.scaling.setAll(size);
+      for (const r of rays) r.scaling.y = Math.max(0.01, P.ray * (0.3 + 0.7 * g));
+      const fade = u < 0.35 ? 1 : 1 - (u - 0.35) / 0.65;
+      coreMat.alpha = fade;
+      shellMat.alpha = 0.55 * fade;
+      rayMat.alpha = fade;
+    };
+    pose();
+    this._effects.push({
+      root,
+      remaining: P.life,
+      update: (dt) => {
+        age += dt;
+        pose();
+      },
+      dispose: () => {
+        coreMat.dispose();
+        shellMat.dispose();
         rayMat.dispose();
       },
     });

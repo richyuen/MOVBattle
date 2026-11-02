@@ -3310,6 +3310,8 @@ export class SimulationSystem {
       this._logAbility(attacker, "blast", now, target.position);
     }
     if (!impaled) this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
+    // [S] 473 the Super Boxer's punch bursts in light where it lands (visualEffects PUNCH_BURST): at the man's chest
+    if (attacker.definition.id === "legacy.super_boxer") this.visualEffects?.spawnPunchBurst(target.position.add(new Vector3(0, 1.1, 0)));
     // A halfling's first blow that lands takes hold of the man (HALFLING_CLING)
     if (attacker.definition.id === "farmer.halfling" && !this._clings.has(attacker) && !attacker.isDead) {
       this._clings.set(attacker, { target, side: attacker.runtimeId % 2 === 0 ? 1 : -1, until: Infinity });
