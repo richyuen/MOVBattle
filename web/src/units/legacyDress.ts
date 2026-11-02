@@ -1005,44 +1005,6 @@ export function blowdarterScarf(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
- * [S] 468 the Blowdarter's pants (audit 457 a.3: "legs, team legs to the feet - TABS: brown knee-length pants with a fringed team-band hem";
- * legacy.blowdarter.red.png: brown pants from the waist to the knee, a team band round each hem with a fringe of short tabs below it, bare team shins).
- * BLOWDARTER_PANTS: the pelvis brown, a brown shell .out round each thigh to its end; a team band .bandOut round from .bandFrom to the end; .tabs team
- * tabs .tab of the thigh long hanging from the band's foot round the leg. Brown .brown self-lit .glow.
- */
-const BLOWDARTER_PANTS = { out: 1.4, bandFrom: 0.84, bandOut: 1.55, tabs: 6, tab: 0.16, brown: new Color3(0.42, 0.22, 0.1), glow: 0.14 };
-
-/** The Blowdarter's brown knee pants with a fringed team hem (spec at BLOWDARTER_PANTS). */
-export function blowdarterPants(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
-  const P = BLOWDARTER_PANTS;
-  const mf = getMaterialFactory();
-  const brown = mf.get("cloth", P.brown, { emissive: P.brown.scale(P.glow) });
-  const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(0.12) });
-  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = brown;
-  const out: Mesh[] = [];
-  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
-    out.push(limbShell(scene, "blowdarterPants", thigh, 0, 1.0, P.out, brown));
-    const band = limbShell(scene, "blowdarterPantsHem", thigh, P.bandFrom, 1.0, P.bandOut, team);
-    out.push(band);
-    const bb = thigh.getBoundingInfo().boundingBox;
-    const r = Math.max(bb.extendSize.x * thigh.scaling.x, bb.extendSize.z * thigh.scaling.z) * P.bandOut;
-    const long = bb.extendSize.y * 2 * thigh.scaling.y * P.tab;
-    const footY = band.position.y - (band.getBoundingInfo().boundingBox.extendSize.y);
-    for (let k = 0; k < P.tabs; k++) {
-      const a = (k / P.tabs) * Math.PI * 2;
-      const tab = MeshBuilder.CreateBox("blowdarterFringe", { width: r * 0.45, height: long, depth: r * 0.12 }, scene);
-      tab.parent = thigh.parent;
-      tab.position.set(Math.sin(a) * r * 0.92, footY - long / 2, Math.cos(a) * r * 0.92 * band.scaling.z);
-      tab.rotation.y = a;
-      tab.material = team;
-      tab.convertToFlatShadedMesh();
-      out.push(tab);
-    }
-  }
-  return out;
-}
-
-/*
  * [S] 468 the Barrel Roller's hair (audit 457 a.3: "hair, none - TABS: white hair"; legacy.barrel_roller.red.png: white hair puffing out under the
  * tricorn's brim over the ears and at the nape). BARREL_HAIR in the head box (as PIKE_HAIR): a side lock each side .side e.x thick from .top e.y over
  * the centre to .foot e.y under it, .back to .front e.z; a back sheet the same height. White .color, self-lit .glow.
