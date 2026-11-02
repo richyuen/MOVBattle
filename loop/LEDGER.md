@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-465 | polearm_melee blow, BEARER_PULSE aura on its own clock, stats knobs (545192dc; evidence 2b229594) | legacy.banner_bearer.d + legacy.flag_bearer.d | approved (d PASS both)
-465 | SMALL_ARROW short shaft (ec355f73) | legacy.poacher.c | approved (struck 2)
-465 | BLOW_DART needle and team tuft (ec355f73) | legacy.blowdarter.c | approved (struck 2)
-465 | PIKE_VEST cream vest, team half-disc (ab5eacbe) | legacy.pike.a | approved (struck 2)
-465 | BARREL_VEST team vest, white shirt V (ab5eacbe) | legacy.barrel_roller.a | approved (struck 4)
-465 | lanky 1.08x build, MINER_BUILD cut (af84fde5) | legacy.boxer.a | approved (struck 1; a PASS)
-465 | lanky 1.00x build, MINER_BUILD cut (af84fde5) | legacy.peasant.a | approved (struck 1; a PASS)
 466 | BANNER_POLE thick warm pole, gold collars, cross, butt cap, no spike (c3045bf2) | legacy.banner_bearer.b | approved (struck 3)
 466 | BANNER_ARCH gold crenellated arch, team doorway (39c35a54) | legacy.banner_bearer.b | approved (struck 2)
 466 | BANNER_FAN five gold rays under each banner (13b2b797) | legacy.banner_bearer.b | approved (struck 1; b PASS; D)
@@ -46,6 +39,13 @@ for 25 iterations.
 469 | PHARAOH_CROOK striped crook, curled hook (32f27e05) | legacy.pharaoh.b | approved (struck 1)
 469 | MODIUS tall team crown, gold bands (7c1181a9) | legacy.pharaoh.a | approved (struck 1)
 469 | WINGED_BAND grey band, white wings (e9078ccf, de828e55) | legacy.thor.a | approved (struck 1)
+470 | offhand longsword (f309bcf8) | legacy.wizard.b | approved (struck 2)
+470 | PHARAOH_FLAIL striped rod, beaded tassels; sword hold (00da6760, a8b8e64d, 12c19add) | legacy.pharaoh.b | approved (struck 2; added 3 hold)
+470 | PHARAOH_GARB team trunk, gold bands (740e0371) | legacy.pharaoh.a | approved (struck 2)
+470 | CHARIOT_HELM steel cap, team crest (6bf8b13f) | legacy.chariot.a | approved (struck 1)
+470 | SUPER_BOXER_HAIR gold spikes, headband (8bcd54e9) | legacy.super_boxer.a | approved (struck 3, 5)
+470 | THOR_HAIR blond shoulder-length (8bcd54e9) | legacy.thor.a | approved (struck 2)
+470 | TANK_FIREBALL white-yellow fireball (889b498c, 78a19cba) | legacy.tank.c | approved (struck 1; c PASS)
 
 ## Spent (never retry as [P])
 

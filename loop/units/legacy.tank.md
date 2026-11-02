@@ -7,13 +7,12 @@ a FAIL (0 since 468)
  3. turret in unit_legacy.tank_idle: a tall stepped box turret — TABS: the low wide faceted wedge turret of an M1 Abrams (ref: legacy.tank.red.png; card Appearance)
  4. turret roof in unit_legacy.tank_idle: two flat discs — TABS: cupolas, hatches and two tall antennas (ref: legacy.tank.red.png)
 b PASS (468)
-c FAIL (0 since 468)
- 1. explosion in unit_legacy.tank_struck: a black-grey rocky smoke cloud under the flung knight — TABS: a large fiery white-yellow fireball (ref: legacy.tank.png; card Characteristics "fiery explosion")
+c PASS (470: the shell bursts in a big white-yellow fireball; TANK_FIREBALL)
 d PASS (cost 6000=6000, hp 62.57x vs 56.25x (+11%), dmg 22.22x vs 22.22x (0%), cd 2.50x vs 2.50x (0%); 468 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] legacy.tank.a riders — blocker 1: vehicleBuilder three seated helmeted team riders (turret, barrel, rear deck) — ref: legacy.tank.red.png — ours: unit_legacy.tank_idle.png
-2. [S] legacy.tank.c fireball — blocker 1: tank-round impact effect as a large fiery yellow-white burst instead of black smoke — ref: legacy.tank.png — ours: unit_legacy.tank_struck.png
+1. [S] legacy.tank.a riders — blocker 1: three helmeted team riders on turret, barrel and rear — ref: legacy.tank.red.png — ours: unit_legacy.tank_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+470 | TANK_FIREBALL white-yellow fireball (889b498c, 78a19cba) | c | approved (struck 1; c PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
 - ref legacy.tank.red.png: khaki Abrams with three red riders seated on it; ours unit_legacy.tank_idle: an all-blue stepped Tiger-like box with no crew
