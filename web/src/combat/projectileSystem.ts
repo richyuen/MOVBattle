@@ -290,7 +290,7 @@ const HARPOON_SHAFT_COLOR = new Color3(0.2, 0.16, 0.13);
 const HARPOON_IRON_COLOR = new Color3(0.16, 0.17, 0.19);
 
 // [S] 470 the tank shell's fireball (spec at ProjectileSystem._spawnShellFireball)
-const TANK_FIREBALL = { outer: 2.4, core: 1.5, lift: 0.9, life: 0.35, fire: new Color3(1, 0.62, 0.12), hot: new Color3(1, 0.95, 0.7) };
+const TANK_FIREBALL = { outer: 1.5, core: 0.9, lift: 0.9, life: 0.35, fire: new Color3(1, 0.62, 0.12), hot: new Color3(1, 0.95, 0.7) };
 
 export class ProjectileSystem {
   private _scene: Scene;
