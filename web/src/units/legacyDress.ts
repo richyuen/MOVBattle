@@ -1008,6 +1008,54 @@ export function darkPeasantHands(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+
+/*
+ * [S] 474 the Dark Peasant's messy hair (audit 468 dark_peasant a.2: "head: a dark navy pointed hood with a ruff collar - TABS: a bare team head with messy
+ * brown hair"; legacy.dark_peasant.red.png: a bare head under a shaggy mid-brown mop, a thick cap over the crown, uneven tufts sticking up and out at odd
+ * angles, a ragged fringe across the brow over the eyes' tops and locks over the ears). DARK_PEASANT_HAIR in the head box (half sizes e, centre c, +z the
+ * face): a cap .cap e.x across and .thick e.y thick on the crown from .back e.z behind to .brow e.z ahead; .tufts tufts .tuft e.x long leaning out at
+ * hashed angles over the crown; a fringe of .fringe flat locks across the brow down to .fringeTo e.y over the centre; a lock over each ear. Brown .color.
+ */
+const DARK_PEASANT_HAIR = { cap: 1.08, thick: 0.32, back: 1.08, brow: 0.85, tufts: 8, tuft: 0.55, fringe: 4, fringeTo: 0.45, side: 0.25, color: new Color3(0.3, 0.17, 0.08), glow: 0.14 };
+
+/** The Dark Peasant's messy brown mop over a bare head (spec at DARK_PEASANT_HAIR), hung on the head. */
+export function darkPeasantHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const H = DARK_PEASANT_HAIR;
+  const hair = getMaterialFactory().get("cloth", H.color, { emissive: H.color.scale(H.glow) });
+  const head = body.headMesh;
+  const bb = head.getBoundingInfo().boundingBox;
+  const e = bb.extendSize, c = bb.center;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, y: number, z: number, rx = 0, rz = 0): Mesh => {
+    m.position.set(x, y, z);
+    m.rotation.set(rx, 0, rz);
+    m.material = hair;
+    m.parent = head;
+    m.convertToFlatShadedMesh();
+    out.push(m);
+    return m;
+  };
+  const top = c.y + e.y;
+  const depth = e.z * (H.back + H.brow), zMid = c.z + (e.z * (H.brow - H.back)) / 2;
+  put(MeshBuilder.CreateBox("darkPeasantHairCap", { width: e.x * 2 * H.cap, height: e.y * H.thick, depth }, scene), c.x, top + e.y * H.thick * 0.3, zMid);
+  for (let k = 0; k < H.tufts; k++) {
+    const hx = Math.sin(k * 2.3) , hz = Math.cos(k * 1.7);
+    const len = e.x * H.tuft * (0.7 + 0.3 * ((k * 5) % 3));
+    put(MeshBuilder.CreateCylinder("darkPeasantHairTuft", { height: len, diameterTop: 0, diameterBottom: e.x * 0.42, tessellation: 4 }, scene),
+      c.x + hx * e.x * 0.7, top + e.y * H.thick * 0.5 + len * 0.3, c.z + hz * e.z * 0.7, hz * 0.7, -hx * 0.9);
+  }
+  for (let k = 0; k < H.fringe; k++) {
+    const x = c.x + ((k + 0.5) / H.fringe - 0.5) * e.x * 2 * 0.9;
+    const tall = e.y * (1 - H.fringeTo) * (0.8 + 0.25 * (k % 2));
+    put(MeshBuilder.CreateCylinder("darkPeasantFringe", { height: tall, diameterTop: e.x * 0.5, diameterBottom: 0, tessellation: 4 }, scene),
+      x, top - tall / 2 + e.y * 0.1, c.z + e.z * 1.02, -0.2, (k - 1.5) * 0.15);
+  }
+  for (const sd of [-1, 1]) {
+    put(MeshBuilder.CreateBox("darkPeasantHairSide", { width: e.x * H.side, height: e.y * 0.9, depth: e.z * 1.3 }, scene), c.x + sd * (e.x + (e.x * H.side) / 2), c.y + e.y * 0.45, c.z - e.z * 0.15, 0, sd * 0.12);
+  }
+  return out;
+}
+
 /*
  * [S] 466 the Flag Bearer's cuffs (audit 457 a.3: "cuffs, bare forearms - TABS: white-and-gold striped cuffs"; legacy.flag_bearer.red.png: a broad white
  * cuff round each wrist with a gold band at its top and foot). FLAG_CUFFS on each forearm: a white shell BANNER_CUFFS.out round from .from to its end, and

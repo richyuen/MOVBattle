@@ -978,8 +978,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       // [S] 473 the generic Wobbler peasant body at card Size 1.15x (audit 468 dark_peasant a.1: "build: a hulking slab-armoured giant - TABS: the lanky
       // generic Wobbler peasant body, 1.15x"; legacy.dark_peasant.red.png): the Peasant's lanky cut (slim trunk, legs half his height, thin limbs) at 1.15,
       // standing upright as a caster in place of the 2.08 hunched giant
-      return vis({ scale: 1.15, bulk: 0.82, torsoWidth: 0.92, headSize: 1.1, armLength: 1.06, legLength: 1.16, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "none", "hood", "none", "cape", "#3b2b59", undefined, {
-        posePreset: "caster", materialPreset: "secret_ghost", attachmentPreset: "shadow_orbit", fxPreset: "spectral",
+      return vis({ scale: 1.15, bulk: 0.82, torsoWidth: 0.92, headSize: 1.1, armLength: 1.06, legLength: 1.16, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "none", "none", "none", "none", "#3b2b59", undefined, {
+        // [S] 474 a bare team head under messy brown hair (audit 468 a.2): no hood, no ruff cape, the plain team body in place of the ghost lavender
+        posePreset: "caster", materialPreset: "legacy_toy", attachmentPreset: "shadow_orbit", fxPreset: "spectral",
         bodyDetailLevel: "hero",
         stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
       });
