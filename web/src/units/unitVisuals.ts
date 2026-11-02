@@ -975,8 +975,11 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["chrono_ring"], "ability-active": ["chrono_ring"] },
       });
     case "iconic_dark_peasant":
-      return vis({ scale: 2.08, bulk: 1.64, headSize: 1.16, armLength: 1.22 }, "none", "hood", "none", "cape", "#3b2b59", undefined, {
-        posePreset: "giant", materialPreset: "secret_ghost", attachmentPreset: "shadow_orbit", fxPreset: "spectral",
+      // [S] 473 the generic Wobbler peasant body at card Size 1.15x (audit 468 dark_peasant a.1: "build: a hulking slab-armoured giant - TABS: the lanky
+      // generic Wobbler peasant body, 1.15x"; legacy.dark_peasant.red.png): the Peasant's lanky cut (slim trunk, legs half his height, thin limbs) at 1.15,
+      // standing upright as a caster in place of the 2.08 hunched giant
+      return vis({ scale: 1.15, bulk: 0.82, torsoWidth: 0.92, headSize: 1.1, armLength: 1.06, legLength: 1.16, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "none", "hood", "none", "cape", "#3b2b59", undefined, {
+        posePreset: "caster", materialPreset: "secret_ghost", attachmentPreset: "shadow_orbit", fxPreset: "spectral",
         bodyDetailLevel: "hero",
         stateVariants: { moving: ["shadow_orbit"], attacking: ["shadow_orbit"], "ability-active": ["shadow_orbit"] },
       });
