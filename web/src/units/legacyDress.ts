@@ -920,6 +920,41 @@ export function pharaohCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+
+/*
+ * [S] 472 the Wizard's coat-robe (audit 468 wizard a.4: "body: grey vest block over a short navy skirt - TABS: a long team coat-robe to the knees with a
+ * dark belt"; legacy.wizard.red.png: a team coat from the shoulders to the knees, its skirts flaring a little from the waist and parted in front over team
+ * trousers, long team sleeves to the wrist, a dark brown belt with a grey buckle round the waist). WIZARD_ROBE: the trunk, yoke, arms and legs in team
+ * times .shade; a faceted coat skirt .sides round from .waist of the trunk's foot width at the belt to .flare at the hem, .long of the hip-to-knee drop
+ * past the knee, hung from the trunk foot; a dark belt .belt H tall, .beltOut of W and D, with a grey buckle .buckle W wide on its front. Self-lit .glow.
+ */
+const WIZARD_ROBE = { shade: 0.9, sides: 10, waist: 1.1, flare: 1.45, long: 1.15, belt: 0.12, beltOut: 1.14, buckle: 0.2, leather: new Color3(0.22, 0.12, 0.06), steel: new Color3(0.5, 0.5, 0.52), glow: 0.12 };
+
+/** The Wizard's long team coat-robe to the knees with a dark belt (spec at WIZARD_ROBE). */
+export function wizardRobe(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const R = WIZARD_ROBE;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(R.shade);
+  const coat = mf.get("cloth", t, { emissive: t.scale(R.glow) });
+  const leather = mf.get("cloth", R.leather, { emissive: R.leather.scale(R.glow) });
+  const steel = mf.get("cloth", R.steel, { emissive: R.steel.scale(0.25) });
+  body.torsoMesh.material = coat;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = coat;
+  for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) limb.material = coat;
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const beltY = -H / 2 + (H * R.belt) / 2;
+  lay(MeshBuilder.CreateBox("wizardRobeBelt", { width: W * R.beltOut, height: H * R.belt, depth: D * R.beltOut }, scene), 0, beltY, 0, leather);
+  lay(MeshBuilder.CreateBox("wizardRobeBuckle", { width: W * R.buckle, height: H * R.belt * 1.2, depth: D * 0.08 }, scene), 0, beltY, (D * R.beltOut) / 2 + D * 0.03, steel);
+  // the skirts: a bell from the trunk foot down past the knee
+  const drop = Math.abs(body.leftKnee.position.y) * R.long;
+  const top = W * R.waist, hem = W * R.flare;
+  const skirt = MeshBuilder.CreateCylinder("wizardRobeSkirt", { height: drop, diameterTop: top, diameterBottom: hem, tessellation: R.sides }, scene);
+  skirt.scaling.z = Math.max(0.7, D / W);
+  lay(skirt, 0, -H / 2 - drop / 2 + H * R.belt * 0.5, 0, coat);
+  return out;
+}
+
 /*
  * [S] 466 the Flag Bearer's cuffs (audit 457 a.3: "cuffs, bare forearms - TABS: white-and-gold striped cuffs"; legacy.flag_bearer.red.png: a broad white
  * cuff round each wrist with a gold band at its top and foot). FLAG_CUFFS on each forearm: a white shell BANNER_CUFFS.out round from .from to its end, and
