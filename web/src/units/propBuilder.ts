@@ -4004,6 +4004,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "sword":
     case "cutlass": {
+      // [S] 470b the Pharaoh's flail held in the off fist as a sword is, rod up and forward where it reads (from the staff hold it pointed at the camera)
+      if (type === "sword" && variant === "pharaoh_flail") return buildPharaohFlail(scene, fit, teamColor ?? accent);
       const cut = type === "sword" ? (variant === "longsword" ? LONGSWORD : variant === "valkyrie_sword" ? VALKYRIE_SWORD : undefined) : undefined;
       // [S] 425 the pirates' cutlass and sabre are slim curved blades on tan hilts (CUTLASS), not the straight broad slab
       const { blade, hilt } = type === "cutlass" ? buildCutlass(scene, "blade", fit, variant === "queen_cutlass" ? QUEEN_CUTLASS : CUTLASS)
