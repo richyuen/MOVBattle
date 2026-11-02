@@ -1257,3 +1257,34 @@ export function buildWingedBand(scene: Scene, W: number, H: number, seat: number
   }
   return band;
 }
+
+/*
+ * [S] 470 the Pharaoh's garb (audit 468 pharaoh a.2: "torso: plain grey base vest block - TABS: team-coloured garb banded with gold across chest and
+ * waist"; legacy.pharaoh.red.png: the trunk in team cloth a shade under the skin, a broad gold band round the chest under the arms and a broader gold
+ * band round the waist, a thin gold line between them). PHARAOH_GARB: the trunk, its yoke and the pelvis in team times .shade; gold bands wrapped
+ * round the trunk .out of its W and D: the chest band .chest H tall centred .chestAt H over the trunk's middle, the waist band .waist H tall at its
+ * foot, a thin line .line H tall halfway between. Gold .gold self-lit .glow.
+ */
+const PHARAOH_GARB = { shade: 0.85, out: 1.08, chest: 0.16, chestAt: 0.12, waist: 0.2, line: 0.05, gold: new Color3(0.95, 0.66, 0.16), glow: 0.2 };
+
+/** The Pharaoh's team garb banded in gold at the chest and waist (spec at PHARAOH_GARB). */
+export function pharaohGarb(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const G = PHARAOH_GARB;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(G.shade);
+  const cloth = mf.get("cloth", t, { emissive: t.scale(0.12) });
+  const gold = mf.get("cloth", G.gold, { emissive: G.gold.scale(G.glow) });
+  body.torsoMesh.material = cloth;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = cloth;
+  for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = cloth;
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const ring = (name: string, y: number, h: number): void => {
+    lay(MeshBuilder.CreateBox(name, { width: W * G.out, height: H * h, depth: D * G.out }, scene), 0, y, 0, gold);
+  };
+  const chestY = H * G.chestAt, waistY = -H / 2 + (H * G.waist) / 2;
+  ring("pharaohChestBand", chestY, G.chest);
+  ring("pharaohWaistBand", waistY, G.waist);
+  ring("pharaohGarbLine", (chestY + waistY) / 2, G.line);
+  return out;
+}
