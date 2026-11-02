@@ -3504,6 +3504,13 @@ const LEGACY_GOLD = new Color3(0.95, 0.66, 0.16);
 // team-coloured gloves bigger than the head with a white palm patch"; legacy.boxer.red.png): wide .22, subdivisions 2, team x .8 self-lit .1, a white
 // patch .palm of the glove across on its inner (+x) side, .palmProud out
 const TEAM_GLOVE = { wide: 0.22, squash: 0.92, band: 0.025, glow: 0.1, shade: 0.8, palm: 0.55, palmProud: 0.9 }; // 458 [P]: the team colour x .5, glow .06 (critic 457: the mitt read near-white; glow .15, x1 before) // 457b: wide .17 swallowed the forearm, its white band a disc to the camera
+/*
+ * [S] 472 the Super Boxer's glowing gloves (audit 468 super_boxer b.1: "gloves: dull khaki spheres - TABS: two big glowing gold-white gloves on both
+ * fists"; legacy.super_boxer.red.png, card Appearance "Glowing Boxing Gloves": a pale gold mitt on each fist, wider than his head, haloed in light).
+ * GLOW_GLOVE: the mitt centred on the fist (the prop's origin), .wide of s across, squashed .squash, a thumb lump .thumb of it on the inner side; pale
+ * gold .color self-lit .glow (in the glow layer, so it haloes).
+ */
+const GLOW_GLOVE = { wide: 0.3, squash: 0.88, thumb: 0.42, color: new Color3(1, 0.86, 0.5), glow: 0.85 };
 const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
 /*
  * [S] 470 the Pharaoh's flail (audit 468 pharaoh b.2: "off hand: empty - TABS: a striped flail rod with gold tassel strands hanging from its tip";
@@ -4355,6 +4362,20 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return handle;
     }
     case "boxing_glove": {
+      if (variant === "glow_glove") {
+        const G = GLOW_GLOVE;
+        const glove = MeshBuilder.CreateIcoSphere("glowGlove", { radius: G.wide * s / 2, subdivisions: 2 }, scene);
+        glove.scaling.set(1, G.squash, 1.15);
+        const m = mat(scene, G.color, G.glow, "cloth");
+        glove.material = m;
+        glove.convertToFlatShadedMesh();
+        const thumb = MeshBuilder.CreateIcoSphere("glowGloveThumb", { radius: G.wide * s * G.thumb / 2, subdivisions: 1 }, scene);
+        thumb.position.set(G.wide * s * 0.42, G.wide * s * 0.12, G.wide * s * 0.1);
+        thumb.parent = glove;
+        thumb.material = m;
+        thumb.convertToFlatShadedMesh();
+        return glove;
+      }
       if (variant === "team_glove") {
         // [S] 457 the Boxer's gloves on his fists (audit 457 b.2: "gloves float beside the upper arms while bare fists show below - TABS: gloves on the
         // fists"; legacy.boxer.blue.png: a big rounded team mitt swallowing each hand, a white cuff band at the wrist). TEAM_GLOVE: the mitt centred on
