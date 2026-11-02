@@ -3014,6 +3014,8 @@ const CHARIOT_GALLOP: [number, [number, number], [number, number], [number, numb
 // [S] 470 the driver's Roman helmet (spec in buildChariot)
 // [S] 471 the driver's gladius (spec in buildChariot), in the driver's own units
 const CHARIOT_GLADIUS = { grip: 0.09, guard: 0.1, blade: 0.22, wide: 0.055, thick: 0.02, tilt: 1.3, /* 471b: the forearm reaches .9+.4 rad forward of hanging, so +1.3 about the hand stands the blade up (-1.1 laid it down and back) */ steel: new Color3(0.8, 0.82, 0.86), gripColor: new Color3(0.25, 0.15, 0.08) };
+// [S] 472 the driver's scutum (spec in buildChariot), in his torso box W (width) and H (height)
+const CHARIOT_SCUTUM = { tall: 1.9, wide: 0.85, bend: 0.42, slab: 0.06, rim: 0.07, out: 0.62, ahead: 0.9, drop: 0.1, turn: 0.35, boss: 0.2, wing: 0.42, wingThick: 0.07, wingLean: 0.5, glow: 0.22 };
 const CHARIOT_HELM = { cap: 1.12, lift: 0.18, drop: 0.55, crest: 1.5, crestThick: 0.22, crestUp: -0.12, rim: 0.88, steel: new Color3(0.32, 0.32, 0.36), pale: new Color3(0.98, 0.85, 0.6) };
 function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("chariot_root", scene);
@@ -3207,6 +3209,51 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
     piece(MeshBuilder.CreateSphere("gladiusPommel", { diameter: G.thick * 3, segments: 4 }, scene), -G.grip / 2, gold);
     piece(MeshBuilder.CreateBox("gladiusBlade", { width: G.wide, height: G.blade, depth: G.thick }, scene), G.grip / 2 + G.blade / 2, steel);
     piece(MeshBuilder.CreateCylinder("gladiusPoint", { height: G.wide * 1.2, diameterTop: 0, diameterBottom: G.wide * 1.4, tessellation: 4 }, scene), G.grip / 2 + G.blade + G.wide * 0.6, steel);
+  }
+  /*
+   * [S] 472 the driver's scutum (audit 468 chariot b.2: "shield missing - TABS: a tall curved team scutum with gold wings"; legacy.chariot.red.png, card
+   * Appearance "a Centurion Shield": on his left side a tall oblong team shield from the shoulder to below the hip, curved round him, a gold rim all
+   * round, a gold boss in its middle and gold wing strokes fanning up and down from the boss). CHARIOT_SCUTUM in the torso box (W wide, H tall, D deep):
+   * three thin team slabs .tall H tall, together .wide W across, the outer two bent back .bend rad (the curve); behind each a gold slab .rim bigger all
+   * round (the rim); hung .out W out on his left (-x) side and .ahead D before the chest, .drop H below the trunk middle, turned .turn rad out; a gold boss
+   * .boss W across; four gold wing bars .wing W long, .wingLean rad off upright, fanning from the boss.
+   */
+  {
+    const S = CHARIOT_SCUTUM;
+    const torso = operator.body.torso;
+    const tb = operator.body.torsoMesh.getBoundingInfo().boundingBox;
+    const W = tb.extendSize.x * 2, H = tb.extendSize.y * 2, D = tb.extendSize.z * 2;
+    const shield = new TransformNode("chariotScutum", scene);
+    shield.parent = torso;
+    shield.position.set(tb.center.x - W * S.out, tb.center.y - H * S.drop, tb.center.z + D * S.ahead);
+    shield.rotation.y = -S.turn;
+    const face = lit(color, S.glow);
+    const panelW = (W * S.wide) / 3, tall = H * S.tall, t = W * S.slab;
+    const slab = (name: string, w: number, h: number, d: number, mat: Mesh["material"], parent: TransformNode, x: number, y: number, z: number, ry = 0, rz = 0): Mesh => {
+      const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+      m.parent = parent;
+      m.position.set(x, y, z);
+      m.rotation.set(0, ry, rz);
+      m.material = mat;
+      m.convertToFlatShadedMesh();
+      allMeshes.push(m);
+      return m;
+    };
+    for (const k of [-1, 0, 1]) {
+      // each panel on its own pivot at the centre panel's edge, bent back about it
+      const pivot = new TransformNode("chariotScutumPanel", scene);
+      pivot.parent = shield;
+      pivot.position.x = k * panelW / 2;
+      pivot.rotation.y = -k * S.bend;
+      const x = k * panelW / 2;
+      slab("chariotScutumFace", panelW, tall, t, face, pivot, x, 0, 0);
+      slab("chariotScutumRim", panelW + (k === 0 ? 0 : W * S.rim), tall + W * S.rim * 2, t, gold, pivot, x + k * W * S.rim / 2, 0, -t * 0.8);
+    }
+    slab("chariotScutumBoss", W * S.boss, W * S.boss, t * 2.5, gold, shield, 0, 0, t * 1.2);
+    for (const [sx, sy] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
+      const len = W * S.wing;
+      slab("chariotScutumWing", W * S.wingThick, len, t, gold, shield, sx * Math.sin(S.wingLean) * len * 0.62, sy * Math.cos(S.wingLean) * len * 0.62, t * 0.7, 0, -sx * sy * S.wingLean);
+    }
   }
   const headTopY = stand.position.y + operator.headTopY * CHARIOT_DRIVER;
 
