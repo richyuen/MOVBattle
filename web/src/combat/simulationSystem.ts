@@ -262,6 +262,8 @@ function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
 
 /** Zeus's thrown bolt is back in his fist this share of the cooldown after the throw (384; until then the fist is empty). */
 const ZEUS_REARM = 0.6;
+// [S] 473 Thor's sky bolt (spec at its use in the iconic_thor ability): from .high m over the man, .forks thinner forks .spread m off it
+const THOR_SKY_BOLT = { high: 11, forks: 2, spread: 1.6 };
 // [S] 386 Zeus's lightning chain (card Characteristics: the thunderbolt "will conduct to nearby units"): from the struck man the bolt hops to the nearest
 // living enemy within .reach m of the last man it reached, up to .links hops, each a chain arc (visualEffects spawnZeusBolt chain) and .share of the
 // bolt's damage to the man it reaches, logged once as "lightning_chain"
@@ -2825,8 +2827,16 @@ export class SimulationSystem {
     if (preset === "iconic_thor") {
       this._logAbility(attacker, "lightning", now, target.position);
       if (this.visualEffects) {
-        this.visualEffects.spawnLightning(attackOrigin, target.position);
-        this.visualEffects.spawnSmokePuff(attackOrigin);
+        // [S] 473 the lightning strikes down out of the sky onto the man (audit 468 thor c.1: "bolt origin: a horizontal bolt leaves his chest - TABS:
+        // lightning strikes down from the sky"; legacy.thor.jpg, card Abilities Thor Lightning): THOR_SKY_BOLT thin white-cored blue zig-zags (Zeus's
+        // bolt cut) from .high m over the man, the main one straight down and .forks thinner ones a little off it, and a puff where it lands
+        const T = THOR_SKY_BOLT;
+        this.visualEffects.spawnZeusBolt(target.position.add(new Vector3(0, T.high, 0)), target.position);
+        for (let k = 0; k < T.forks; k++) {
+          const a = (k / T.forks) * Math.PI * 2 + 0.6;
+          this.visualEffects.spawnZeusBolt(target.position.add(new Vector3(Math.cos(a) * T.spread, T.high * 0.8, Math.sin(a) * T.spread)), target.position, true);
+        }
+        this.visualEffects.spawnSmokePuff(target.position);
       }
       this._applyDirectOrSplash(target, damage * 1.22, Math.max(2.4, splashRadius + 0.5), attacker.team, knockback.scale(2.15 * controlStrength));
       return;
