@@ -1677,6 +1677,15 @@ function buildDaVinciTank(scene: Scene, color: Color3, options: { showOperators?
   );
 }
 
+// [S] 471 the tank's three seated riders (spec in buildLegacyTank): seats in their parent's frame (the turret base for the roof and barrel riders)
+const TANK_RIDERS = {
+  thigh: 1.45, shin: 1.35, spread: 0.12, astride: 0.55, helmet: 1.14, helmetColor: new Color3(0.26, 0.29, 0.22),
+  seats: [
+    { onTurret: true, x: 0.22, y: 0.33, z: -0.2, turn: 0, astride: false },
+    { onTurret: true, x: 0, y: 0.2, z: 1.35, turn: 0, astride: true },
+    { onTurret: false, x: -0.4, y: 0.86, z: -1.12, turn: Math.PI, astride: false },
+  ],
+};
 function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("legacy_tank_root", scene);
   const allMeshes: Mesh[] = [];
@@ -1840,6 +1849,40 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
   sightBlock.parent = turretBase;
   sightBlock.material = metal;
   allMeshes.push(sightBlock);
+
+  /*
+   * [S] 471 the tank's riders (audit 468 tank a.1: "riders missing: nobody on the hull - TABS: three helmeted team riders, one on the turret, one on the
+   * barrel and one at the back"; legacy.tank.red.png: three small team men sitting on the tank, legs hanging, each in a round dark helmet). TANK_RIDERS:
+   * each a team operator seated (thighs .thigh rad forward, shins .shin rad back down, legs .spread rad apart), his hip set on the seat; on the turret roof
+   * and astride the barrel (on the turret, so they turn with it) and on the rear deck; a dark dome helmet .helmet of the head box over each crown.
+   */
+  if (options.showOperators !== false) {
+    const R = TANK_RIDERS;
+    const helmetMat = makeMat(scene, R.helmetColor);
+    for (const seat of R.seats) {
+      const parent = seat.onTurret ? turretBase : root;
+      const rider = addOperator(scene, parent, allMeshes, seat.x, 0, seat.z, color, (b) => {
+        for (const [hip, knee, side] of [[b.leftHip, b.leftKnee, 1], [b.rightHip, b.rightKnee, -1]] as const) {
+          hip.rotation.x = -R.thigh;
+          hip.rotation.z = side * (seat.astride ? R.astride : R.spread);
+          knee.rotation.x = R.shin;
+        }
+        b.leftShoulder.rotation.x = -0.4;
+        b.rightShoulder.rotation.x = -0.4;
+      });
+      // sit him down: his hip on the seat
+      rider.body.root.position.y = seat.y - rider.body.hip.position.y;
+      rider.body.root.rotation.y = seat.turn;
+      const hb = rider.headMesh.getBoundingInfo().boundingBox;
+      const e = hb.extendSize, c = hb.center;
+      const helmet = MeshBuilder.CreateSphere("tankRiderHelmet", { diameterX: e.x * 2 * R.helmet, diameterY: e.y * 2 * R.helmet, diameterZ: e.z * 2 * R.helmet, segments: 6, slice: 0.55 }, scene);
+      helmet.position.set(c.x, c.y + e.y * 0.2, c.z - e.z * 0.04);
+      helmet.parent = rider.headMesh;
+      helmet.material = helmetMat;
+      helmet.convertToFlatShadedMesh();
+      allMeshes.push(helmet);
+    }
+  }
 
   let operator: VehicleOperator | null = null;
   if (options.showOperators !== false) {
