@@ -1,11 +1,9 @@
 # legacy.pharaoh
 Status: open   Audited: 468   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
-a FAIL (2 since 468)
+a FAIL (3 since 468)
  3. broad collar missing at the neck in unit_legacy.pharaoh_idle — TABS: a gold collar across the shoulders (ref: legacy.pharaoh.red.png)
- 4. lower body in unit_legacy.pharaoh_idle: dark navy trousers to the boots — TABS: a flared team kilt to mid-thigh over bare team legs (ref: legacy.pharaoh.red.png)
  5. arm cuffs missing in unit_legacy.pharaoh_idle: bare team arms — TABS: gold bands at upper arm and wrist (ref: legacy.pharaoh.red.png, legacy.pharaoh.jpg)
- 6. feet in unit_legacy.pharaoh_idle: dark navy boots — TABS: gold sandals (ref: legacy.pharaoh.red.png)
 b FAIL (2 since 468)
  3. flail in unit_legacy.pharaoh_idle: held upright in front of the belly, foreshortened to a gold knob-and-bead stub — TABS: the striped rod held up and out to the side with the tassels hanging from its tip (ref: legacy.pharaoh.red.png)
 c FAIL (0 since 468)
@@ -13,11 +11,12 @@ c FAIL (0 since 468)
  2. target in unit_legacy.pharaoh_struck: the knight reels backwards, standing, arms raised — TABS: enemies stop in front of him and kneel (card Characteristics)
 d PASS (cost 750=750, hp 0.81x vs 0.81x (0%), dmg 1.08x vs 1.08x (+0%), cd 1.01x vs 1.00x (+1%); 468 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] legacy.pharaoh.a kilt — blocker 4: flared team kilt to mid-thigh over bare team legs — ref: legacy.pharaoh.red.png — ours: unit_legacy.pharaoh_idle.png
-2. [S] legacy.pharaoh.b flail hold — blocker 3: rod held up and out to the side, tassels free — ref: legacy.pharaoh.red.png — ours: unit_legacy.pharaoh_idle.png
-3. [S] legacy.pharaoh.a collar — blocker 3: gold broad-collar yoke plate — ref: legacy.pharaoh.red.png — ours: unit_legacy.pharaoh_idle.png
+1. [S] legacy.pharaoh.a broad collar — blocker 3: a gold collar plate across the shoulders and neck — ref: legacy.pharaoh.red.png — ours: unit_legacy.pharaoh_idle.png
+2. [S] legacy.pharaoh.a arm cuffs — blocker 5: gold bands at the upper arm and wrist — ref: legacy.pharaoh.red.png — ours: unit_legacy.pharaoh_idle.png
+3. [S] legacy.pharaoh.b flail hold — blocker 3: rod held up and out to the side, tassels free — ref: legacy.pharaoh.red.png — ours: unit_legacy.pharaoh_idle.png
 4. [S] legacy.pharaoh.c kneel aura — blocker 1: golden ray ring and ground circle spawned on status:fear (simulationSystem/effects) — ref: card Abilities Pharaoh Kneel — ours: unit_legacy.pharaoh_ability
 ## Attempts (iter | gap | criterion | verdict)
+471 | PHARAOH_KILT flared pleated kilt, bare legs (a032b635) | a | approved (struck 4; 6 by the lineup test)
 470 | PHARAOH_FLAIL striped rod, beaded tassels, sword hold (00da6760, a8b8e64d, 12c19add) | b | approved (struck 2; added 3)
 470 | PHARAOH_GARB team trunk, gold chest and waist bands (740e0371) | a | approved (struck 2)
 469 | PHARAOH_CROOK striped team/gold crook, curled hook (32f27e05) | b | approved (struck 1)

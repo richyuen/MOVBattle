@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-466 | BANNER_POLE thick warm pole, gold collars, cross, butt cap, no spike (c3045bf2) | legacy.banner_bearer.b | approved (struck 3)
-466 | BANNER_ARCH gold crenellated arch, team doorway (39c35a54) | legacy.banner_bearer.b | approved (struck 2)
-466 | BANNER_FAN five gold rays under each banner (13b2b797) | legacy.banner_bearer.b | approved (struck 1; b PASS; D)
-466 | PEASANT_SLEEVES tan undersleeves, flared cuff (07c88423) | legacy.peasant.a | approved (struck 1; D)
-466 | boxerBareChest trunk in arm skin (07c88423) | legacy.boxer.a | approved (struck 1)
-466 | FLAG_CUFFS white cuffs banded in gold (07c88423) | legacy.flag_bearer.a | approved (struck 3)
-466 | TEAM_GLOVE rebuilt: wide .22, team x .8, white palm (7bac4615) | legacy.boxer.b | approved (struck 1; D)
 467 | POISON green dye, 4 dps for 6 s on a dart hit (ab237b96) | legacy.blowdarter.c | approved (struck 3; c PASS)
 467 | DRAWS_BEFORE_LOOSE poacher draws then looses (8faddfa9) | legacy.poacher.c | approved (struck 1; c PASS; D)
 467 | FLAG_BOOTS white boots, gold tops (c676cf71) | legacy.flag_bearer.a | approved (struck 4; D)
@@ -46,6 +39,13 @@ for 25 iterations.
 470 | SUPER_BOXER_HAIR gold spikes, headband (8bcd54e9) | legacy.super_boxer.a | approved (struck 3, 5)
 470 | THOR_HAIR blond shoulder-length (8bcd54e9) | legacy.thor.a | approved (struck 2)
 470 | TANK_FIREBALL white-yellow fireball (889b498c, 78a19cba) | legacy.tank.c | approved (struck 1; c PASS)
+471 | bare chest: team-skin trunk, no pads or belt (f1bc0724, 360d7a5a) | legacy.super_boxer.a | approved (struck 2)
+471 | SUPER_BOXER_SHORTS white, team stripes, gold waistband (6b0b6c96) | legacy.super_boxer.a | approved (struck 4)
+471 | PHARAOH_KILT flared pleated kilt, bare legs (a032b635) | legacy.pharaoh.a | approved (struck 4, 6)
+471 | THOR_COAT open coat, gold trims, chain (b7ea8381) | legacy.thor.a | approved (struck 3)
+471 | TANK_RIDERS 3 seated helmeted riders (b6c89034, eab01a0d) | legacy.tank.a | approved (struck 1)
+471 | WIZARD_PIPE curved brown pipe (b29ab410, cacbecab) | legacy.wizard.a | approved (struck 3)
+471 | CHARIOT_GLADIUS short upright sword (e3104c4a, daefd9aa, b32cd4b0) | legacy.chariot.b | approved (struck 1)
 
 ## Spent (never retry as [P])
 
