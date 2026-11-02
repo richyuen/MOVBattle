@@ -1406,3 +1406,50 @@ export function superBoxerShorts(scene: Scene, body: ArticulatedBody, teamColor:
   }
   return out;
 }
+
+/*
+ * [S] 471 the Pharaoh's kilt (audit 468 pharaoh a.4: "lower body: dark navy trousers to the boots - TABS: a flared team kilt to mid-thigh over bare team
+ * legs"; legacy.pharaoh.red.png: a team skirt from the gold waist band flaring out to a wide hem at mid-thigh, its faces in two shades like pleats, the legs
+ * below it bare team skin). PHARAOH_KILT: the legs (thighs and shins) in the body's skin; a faceted bell .sides round from the pelvis's top, .waist of its
+ * width at the top and .flare at the hem, .long of the hip-to-knee drop long, in team times .shade; .pleats darker strips .pleatWide of the hem's side
+ * round its foot. Self-lit .glow.
+ */
+const PHARAOH_KILT = { sides: 10, waist: 1.15, flare: 1.9, long: 0.62, shade: 0.9, pleatShade: 0.72, pleats: 10, pleatWide: 0.35, glow: 0.12 };
+
+/** The Pharaoh's flared team kilt to mid-thigh over bare legs (spec at PHARAOH_KILT). */
+export function pharaohKilt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const K = PHARAOH_KILT;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(K.shade), d = teamColor.scale(K.pleatShade);
+  const cloth = mf.get("cloth", t, { emissive: t.scale(K.glow) });
+  const dark = mf.get("cloth", d, { emissive: d.scale(K.glow) });
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = body.skinMaterial;
+  const pelvis = body.allMeshes.find((m) => /_pelvis$/.test(m.name));
+  if (!pelvis) return [];
+  const size = pelvis.getBoundingInfo().boundingBox.extendSize;
+  const drop = Math.abs(body.leftKnee.position.y) * K.long;
+  const top = size.x * 2 * K.waist, hem = size.x * 2 * K.flare;
+  const kilt = MeshBuilder.CreateCylinder("pharaohKilt", { height: drop, diameterTop: top, diameterBottom: hem, tessellation: K.sides }, scene);
+  kilt.convertToFlatShadedMesh();
+  kilt.scaling.z = Math.max(0.75, (size.z / size.x) * 1.3);
+  kilt.position.y = pelvis.position.y + size.y - drop / 2;
+  kilt.parent = body.hip;
+  kilt.material = cloth;
+  const out: Mesh[] = [kilt];
+  // pleats: darker strips on every other face of the bell, leaning out with it
+  const lean = Math.atan2((hem - top) / 2, drop);
+  for (let k = 0; k < K.pleats; k += 2) {
+    const a = ((k + 0.5) / K.sides) * Math.PI * 2;
+    const r = (top + hem) / 4 * 1.01;
+    const strip = MeshBuilder.CreateBox("pharaohKiltPleat", { width: (Math.PI * (top + hem) / 2 / K.sides) * K.pleatWide * 2, height: drop / Math.cos(lean), depth: 0.01 }, scene);
+    strip.parent = kilt;
+    strip.position.set(Math.sin(a) * r, 0, Math.cos(a) * r);
+    strip.rotation.set(-lean, a, 0);
+    strip.rotationQuaternion = null;
+    strip.material = dark;
+    strip.convertToFlatShadedMesh();
+    out.push(strip);
+  }
+  return out;
+}
+
