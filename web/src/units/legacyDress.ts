@@ -1443,6 +1443,48 @@ export function wizardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
 const MODIUS = { sides: 10, wide: 1.0, flare: 1.14, tall: 1.75, rim: 0.07, band: 0.07, bandsAt: 0.12, proud: 1.04, shade: 0.9, glow: 0.12 };
 const MODIUS_GOLD = new Color3(0.95, 0.66, 0.16);
 
+/*
+ * [S] 474 the Wizard's floppy hat (audit 468 wizard a.1: "hat: a tall rigid navy cone over a wide flat brim with a pale band - TABS: a shorter floppy
+ * team hat with a bent tip and a drooping brim"; legacy.wizard.red.png: a team felt hat a little taller than the head, its crown a wide cone whose upper
+ * half bends over to one side and its tip hangs down, on a brim that droops all round from the crown's foot like a soft bell). WIZARD_HAT in the head's
+ * width W and height H: a crown frustum .crown H tall from .foot W across to .neck W; over it a second frustum .upper H tall bent .bend rad over, then a
+ * tip cone .tip H long bent .tipBend more; the brim a shallow downward bell from .brimTop W across at the crown's foot to .brim W, .droop H deep. Team
+ * felt times .shade, self-lit .glow.
+ */
+const WIZARD_HAT = { crown: 0.62, foot: 1.12, neck: 0.62, upper: 0.5, bend: 0.65, tip: 0.42, tipBend: 0.8, brimTop: 1.15, brim: 2.0, droop: 0.32, sides: 9, shade: 0.9, glow: 0.12 };
+
+/** The Wizard's floppy team hat with a bent tip and a drooping brim (spec at WIZARD_HAT), in the hat's units; `seat` under the head top. */
+export function buildWizardHat(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
+  const Z = WIZARD_HAT;
+  const u = (v: number) => v / unit;
+  const t = (teamColor ?? new Color3(0.5, 0.5, 0.55)).scale(Z.shade);
+  const felt = getMaterialFactory().get("cloth", t, { emissive: t.scale(Z.glow) });
+  const part = (m: Mesh, parent: TransformNode | null, y: number): Mesh => {
+    m.position.y = y;
+    if (parent) m.parent = parent;
+    m.material = felt;
+    m.convertToFlatShadedMesh();
+    return m;
+  };
+  const crownH = Z.crown * H;
+  const crown = part(MeshBuilder.CreateCylinder("wizardHat", { height: u(crownH), diameterBottom: u(Z.foot * W), diameterTop: u(Z.neck * W), tessellation: Z.sides }, scene), null, u(seat + crownH / 2));
+  const knee = new TransformNode("wizardHatBend", scene);
+  knee.parent = crown;
+  knee.position.y = u(crownH / 2);
+  knee.rotation.z = -Z.bend;
+  const upperH = Z.upper * H;
+  const upper = part(MeshBuilder.CreateCylinder("wizardHatUpper", { height: u(upperH), diameterBottom: u(Z.neck * W), diameterTop: u(Z.neck * W * 0.45), tessellation: Z.sides }, scene), knee, u(upperH / 2));
+  const ankle = new TransformNode("wizardHatTipBend", scene);
+  ankle.parent = upper;
+  ankle.position.y = u(upperH / 2);
+  ankle.rotation.z = -Z.tipBend;
+  const tipH = Z.tip * H;
+  part(MeshBuilder.CreateCylinder("wizardHatTip", { height: u(tipH), diameterBottom: u(Z.neck * W * 0.45), diameterTop: 0, tessellation: Z.sides }, scene), ankle, u(tipH / 2));
+  const droop = Z.droop * H;
+  part(MeshBuilder.CreateCylinder("wizardHatBrim", { height: u(droop), diameterTop: u(Z.brimTop * W), diameterBottom: u(Z.brim * W), tessellation: Z.sides * 2 }, scene), crown, u(-crownH / 2 - droop / 2 + droop * 0.25));
+  return crown;
+}
+
 /** The Pharaoh's tall team modius with gold and white bands (spec at MODIUS), in the hat's units; `seat` under the head top. Returns the body. */
 export function buildModius(scene: Scene, W: number, H: number, seat: number, unit: number, teamColor?: Color3): Mesh {
   const M = MODIUS;

@@ -21,7 +21,7 @@ export type HatType =
   | "none" | "crown" | "royal_crown" | "floppy_hat" | "helmet" | "viking_helmet" | "horned_helmet"
   | "hood" | "turban" | "conical_hat" | "witch_hat" | "tricorn" | "bandana"
   | "cowboy_hat" | "bowler" | "flat_hat" | "miner_cap" | "peak_hat"
-  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood" | "boxer_headgear" | "shako" | "flag_helmet" | "modius" | "winged_band"
+  | "miner_hat" | "dynamite_hat" | "poacher_hat" | "peasant_hood" | "boxer_headgear" | "shako" | "flag_helmet" | "modius" | "winged_band" | "wizard_hat"
   | "laurel" | "plume_helmet" | "straw_hat" | "beret"
   | "samurai_helmet" | "ninja_mask" | "kasa"
   | "pharaoh" | "feather_headdress" | "bone_mask" | "beast_skull" | "antler_skull"
@@ -776,7 +776,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.wizard": vis(
-    { scale: 1.76, bulk: 1.08, headSize: 1.12 }, "staff", "witch_hat", "none", "cape", "#7BA0FF", "sword", {
+    { scale: 1.76, bulk: 1.08, headSize: 1.12 }, "staff", "wizard_hat", // [S] 474 the floppy team hat (legacyDress WIZARD_HAT; audit 468 a.1)
+    "none", "cape", "#7BA0FF", "sword", {
       offhandVariant: "longsword", // [S] 470 a slim longsword in his left hand beside the staff (audit 468 wizard b.2; legacy.wizard.red.png, card Off Hand Wizard Sword)
       posePreset: "caster",
       materialPreset: "secret_holy",
