@@ -1394,7 +1394,7 @@ export function thorHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  * SUPER_BOXER_SHORTS: the pelvis white; a white shell .out round each thigh to .to of it; a team stripe .stripe W wide down the outer side of each;
  * the waistband as BOXER_SHORTS' (.band of the trunk, .stripes gold bands alternating deep and bright). White .white self-lit .glow.
  */
-const SUPER_BOXER_SHORTS = { out: 1.7, to: 0.72, stripe: 0.28, white: new Color3(0.96, 0.95, 0.92), glow: 0.3, band: 0.22, bandOut: 1.1, stripes: 4, step: 0.03 };
+const SUPER_BOXER_SHORTS = { out: 1.7, to: 0.72, stripe: 0.12, white: new Color3(0.96, 0.95, 0.92), glow: 0.3, band: 0.22, bandOut: 1.1, stripes: 4, step: 0.03 };
 
 /** The Super Boxer's white shorts with team side stripes under a gold waistband (spec at SUPER_BOXER_SHORTS). */
 export function superBoxerShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
