@@ -476,10 +476,6 @@ export class ProjectileSystem {
         case "wizard_spell":
           trailSystem = createTrail(this._scene, trailMesh, WIZARD_SPELL.shell, 10);
           break;
-        case "dark_hand":
-          // 474b: a dark streak behind each thrown hand, so the volley reads as flying and not as the sphere round him
-          trailSystem = createTrail(this._scene, trailMesh, new Color3(0.16, 0.1, 0.3), 10);
-          break;
         case "rocket_arrow":
           trailSystem = createTrail(this._scene, trailMesh, palette.primary, 15);
           trailSystem.minSize = 0.03;
