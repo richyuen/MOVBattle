@@ -858,6 +858,41 @@ export function superBoxerEyes(body: ArticulatedBody): void {
   }
 }
 
+
+/*
+ * [S] 472 Thor's belt (audit 468 thor a.4: "belt missing - TABS: a wide grey Viking belt with a round central buckle"; legacy.thor.red.png: at the foot of
+ * the coat a broad grey band round the waist, a quarter of the trunk tall, and on its front a big round grey buckle wider than the band, an octagonal
+ * plate with a darker raised boss in its middle and small studs along the band beside it). THOR_BELT: a band .tall H high, .out of W and D, its middle
+ * .at of H/2 under the trunk's middle, grey .grey; an octagonal plate .buckle W across on its front, .proud D out; a boss .boss of the plate, darker
+ * .dark; .studs studs each side .stud W across. Self-lit .glow (lit grey in shade reads near black).
+ */
+const THOR_BELT = { tall: 0.2, out: 1.2, at: -0.8, buckle: 0.36, proud: 0.08, boss: 0.45, studs: 2, stud: 0.06, grey: new Color3(0.55, 0.55, 0.57), dark: new Color3(0.32, 0.33, 0.36), glow: 0.25 };
+
+/** Thor's wide grey belt with a big round buckle (spec at THOR_BELT). */
+export function thorBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = THOR_BELT;
+  const mf = getMaterialFactory();
+  const grey = mf.get("cloth", B.grey, { emissive: B.grey.scale(B.glow) });
+  const dark = mf.get("cloth", B.dark, { emissive: B.dark.scale(B.glow) });
+  const out: Mesh[] = [];
+  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const y = (H / 2) * B.at, front = (D * B.out) / 2;
+  lay(MeshBuilder.CreateBox("thorBelt", { width: W * B.out, height: H * B.tall, depth: D * B.out }, scene), 0, y, 0, grey);
+  const plate = MeshBuilder.CreateCylinder("thorBeltBuckle", { height: D * B.proud, diameter: W * B.buckle, tessellation: 8 }, scene);
+  plate.rotation.x = Math.PI / 2;
+  lay(plate, 0, y, front + (D * B.proud) / 2, grey);
+  const boss = MeshBuilder.CreateCylinder("thorBeltBoss", { height: D * B.proud, diameter: W * B.buckle * B.boss, tessellation: 8 }, scene);
+  boss.rotation.x = Math.PI / 2;
+  lay(boss, 0, y, front + D * B.proud, dark);
+  for (const side of [-1, 1]) {
+    for (let k = 1; k <= B.studs; k++) {
+      const x = side * (W * B.buckle / 2 + k * W * B.stud * 2.2);
+      lay(MeshBuilder.CreateBox("thorBeltStud", { size: W * B.stud }, scene), x, y, front, dark);
+    }
+  }
+  return out;
+}
+
 /*
  * [S] 466 the Flag Bearer's cuffs (audit 457 a.3: "cuffs, bare forearms - TABS: white-and-gold striped cuffs"; legacy.flag_bearer.red.png: a broad white
  * cuff round each wrist with a gold band at its top and foot). FLAG_CUFFS on each forearm: a white shell BANNER_CUFFS.out round from .from to its end, and
