@@ -49,6 +49,8 @@ const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45, coat: new 
  * [S] the ice crust a freeze leaves on its target (395, see _applyFrostCrust): shards of pale ice on the trunk, head, arms and thighs.
  */
 const FROST = { shards: 4, wide: 0.42, color: new Color3(0.5, 0.82, 1.0), glow: 0.28 };
+// [S] 475 a man kneeling before the Pharaoh (spec at RuntimeUnit._kneelUntil)
+const KNEEL_POSE = { hip: 0.1, knee: 1.55, drop: 0.9, bow: 0.35, arms: 0.25 };
 const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
 const BURN = { tongues: 6, long: 2.6, wide: 0.55, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), glow: 0.9 };
 /*
@@ -1658,6 +1660,7 @@ export class RuntimeUnit {
     if (this.isStaggered) return false;
     if (now < this._toppledUntil) return false;
     if (now < this._downedUntil) return false;
+    if (now < this._kneelUntil) return false; // [S] 475 kneeling before the Pharaoh (KNEEL_POSE)
     if (!this._grounded || this.position.y > 0.04) return false;
     if (channel === "attack" && now < this._attackInterruptedUntil) return false;
     if (channel === "attack" && now < this._recoveringUntil) return false;
@@ -1843,6 +1846,7 @@ export class RuntimeUnit {
     this._applyFrostCrust(now);
     this._applyBurnFlames(now);
     this._applyFearSkull(now);
+    this._applyKneelPose(now);
   }
 
   private _applyPoseOverlay(isAttacking: boolean): void {
@@ -2141,6 +2145,43 @@ export class RuntimeUnit {
     this._fearFrom = from.clone();
   }
   isAfraid(now: number): boolean { return !this._isDead && now < this._fearUntil; }
+
+  /*
+   * [S] 475 Pharaoh Kneel (audit 468 pharaoh c.2: "the knight reels backwards, standing, arms raised - TABS: enemies stop in front of him and kneel"; card
+   * Characteristics "forces enemy units to stop before it and kneel"). While `_kneelUntil` a man is stopped where he stands (his knock-back cleared), faces
+   * the one who made him kneel and kneels on both knees: KNEEL_POSE thighs .hip rad off upright, shins folded .knee rad back to lie on the ground, the
+   * pelvis dropped .drop of a thigh, the trunk bowed .bow rad, the arms hung .arms rad forward; no moving, no fighting (hasCapability).
+   */
+  private _kneelUntil = 0;
+  private _kneelYaw = 0;
+  private _kneelHipY: number | null = null;
+  applyKneel(seconds: number, before: Vector3, now: number): void {
+    if (this._isDead || this._isAnchoredActor) return;
+    this._kneelUntil = Math.max(this._kneelUntil, now + Math.max(0.1, seconds));
+    this._kneelYaw = Math.atan2(before.x - this.position.x, before.z - this.position.z);
+    this._velocity.x = 0;
+    this._velocity.z = 0;
+    this.stopMoving();
+  }
+  isKneeling(now: number): boolean { return !this._isDead && now < this._kneelUntil; }
+  private _applyKneelPose(now: number): void {
+    const body = this.body;
+    if (!this.isKneeling(now)) {
+      if (this._kneelHipY !== null) { body.hip.position.y = this._kneelHipY; this._kneelHipY = null; }
+      return;
+    }
+    const K = KNEEL_POSE;
+    if (this._kneelHipY === null) this._kneelHipY = body.hip.position.y;
+    body.root.rotation.y = this._kneelYaw;
+    for (const [hip, knee] of [[body.leftHip, body.leftKnee], [body.rightHip, body.rightKnee]] as const) {
+      hip.rotation.set(-K.hip, 0, 0);
+      knee.rotation.set(K.knee, 0, 0);
+    }
+    body.hip.position.y = this._kneelHipY - Math.abs(body.leftKnee.position.y) * K.drop;
+    body.torso.rotation.x = K.bow;
+    body.torso.rotation.z = 0;
+    for (const sh of [body.leftShoulder, body.rightShoulder]) sh.rotation.x = -K.arms;
+  }
   get fearFrom(): Vector3 { return this._fearFrom; }
   private _applyFearSkull(now: number): void {
     const on = this.isAfraid(now);

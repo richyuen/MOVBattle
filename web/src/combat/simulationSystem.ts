@@ -147,6 +147,8 @@ const ICE_ARROWS = new Set(["viking.ice_archer"]);
 /** [S] 434 archers whose arrows fly burning (projectileSystem FIRE_ARROW) */
 const FIRE_ARROWS = new Set(["spooky.skeleton_archer"]);
 const STIFFY_FEAR = { units: new Set(["spooky.skeleton_warrior"]), every: 2, seconds: 3.5, reach: 4 };
+// [S] 475 Pharaoh Kneel: the struck man and enemies within .radius (KNEEL_AURA's ring) kneel .seconds (RuntimeUnit.applyKneel)
+const PHARAOH_KNEEL = { radius: 2.4, seconds: 3 };
 const BURN_STATUS = { tick: 0.5, damage: 3, spread: 1.4, keep: 2 };
 // [S] 390 engines that fly the bolt they have loaded: a copy of the named node leaves the muzzle and the loaded one is gone until half the reload is past (vehicleBuilder ballistaLoadedBolt)
 const LOADED_BOLTS: Record<string, string> = { "ancient.ballista": "ballistaLoadedBolt" };
@@ -3868,6 +3870,15 @@ export class SimulationSystem {
       this.visualEffects.spawnSmokePuff(target.position);
       // [S] 473 the Pharaoh's kneel: golden rays wheel round him and a golden circle forms on the ground at his feet (visualEffects KNEEL_AURA)
       if (attacker.definition.id === "legacy.pharaoh") this.visualEffects.spawnKneelAura(attacker.position);
+      // [S] 475 Pharaoh Kneel: the struck man and every enemy inside the golden circle stop before him and kneel (RuntimeUnit.applyKneel)
+      if (attacker.definition.id === "legacy.pharaoh") {
+        for (const other of this._units) {
+          if (other.isDead || other.team === attacker.team) continue;
+          if (other !== target && Vector3.DistanceSquared(other.position, attacker.position) > PHARAOH_KNEEL.radius * PHARAOH_KNEEL.radius) continue;
+          other.applyKneel(PHARAOH_KNEEL.seconds, attacker.position, now);
+        }
+        this._logAbility(attacker, "status:kneel", now, target.position);
+      }
       this._logAbility(attacker, "status:fear", now, target.position);
     }
   }
