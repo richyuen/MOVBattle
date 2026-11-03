@@ -3557,6 +3557,77 @@ function buildPharaohFlail(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   return rod;
 }
 /*
+ * [S] 475 the Wizard's staff (audit 468 wizard b.1: "a plain straight dark pole capped by a pale sphere - TABS: a twisted wooden staff with a carved curled
+ * head set with glowing pale-blue crystals"; legacy.wizard.red.png: a gnarled brown staff taller than he is, its shaft wandering a little as it rises and
+ * thinning toward the foot; at its top a thicker carved head of twisted wood strands winding round each other, pale-blue glowing crystal slivers set
+ * between the strands, the wood curling over to one side into a pointed tip). WIZARD_STAFF in his standing height H: the shaft .long H, .thick H across at
+ * its head and .foot of that at its butt, wandering .wander H side to side .waves times; the head .head H tall of .strands strands .strand H thick wound
+ * .twist turns round the axis .round H out, gathered into a pointed tip .tip H that leans .lean rad; .crystals pale-blue slivers .crystal H long between
+ * the strands; brown wood self-lit .glow; the fist .grip of the way up; a hidden "orb" at the head's middle, where his spell leaves.
+ */
+const WIZARD_STAFF = { long: 0.98, thick: 0.034, foot: 0.7, wander: 0.012, waves: 3, head: 0.14, strands: 3, strand: 0.026, twist: 0.9, round: 0.02, tip: 0.07, lean: 0.5, crystals: 3, crystal: 0.08,
+  wood: new Color3(0.34, 0.19, 0.08), glow: 0.14, ice: new Color3(0.62, 0.86, 1), iceGlow: 1.1, grip: 0.42 };
+function buildWizardStaff(scene: Scene, fit: BladeFit): Mesh {
+  const S = WIZARD_STAFF, H = fit.stand, L = S.long * H;
+  const wood = mat(scene, S.wood, S.glow, "cloth"), ice = mat(scene, S.ice, S.iceGlow, "cloth");
+  // the shaft: a tube from the butt (y -L/2) to the head's foot, wandering in x and z
+  const shaftTop = L / 2 - S.head * H;
+  const path: Vector3[] = [];
+  const n = 14;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, y = -L / 2 + t * (shaftTop + L / 2);
+    path.push(new Vector3(Math.sin(t * Math.PI * S.waves) * S.wander * H, y, Math.cos(t * Math.PI * S.waves * 0.7) * S.wander * H * 0.6));
+  }
+  const r0 = S.thick * H / 2;
+  const shaft = MeshBuilder.CreateTube("staff", { path, radiusFunction: (i) => r0 * (S.foot + (1 - S.foot) * (i / n)), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
+  shaft.id = "wizardStaff";
+  shaft.material = wood;
+  shaft.convertToFlatShadedMesh();
+  const top = path[n];
+  // the head: strands winding round the axis from the shaft's top, gathered into a leaning point
+  const headH = S.head * H;
+  for (let k = 0; k < S.strands; k++) {
+    const p: Vector3[] = [];
+    const m = 10;
+    for (let i = 0; i <= m; i++) {
+      const t = i / m, a = (k / S.strands) * Math.PI * 2 + t * S.twist * Math.PI * 2;
+      const out = S.round * H * Math.sin(Math.PI * Math.min(1, t * 1.15));
+      p.push(new Vector3(top.x + Math.cos(a) * out + Math.sin(S.lean) * t * t * headH * 0.35, top.y + t * headH, top.z + Math.sin(a) * out));
+    }
+    const strand = MeshBuilder.CreateTube("wizardStaffStrand", { path: p, radius: S.strand * H / 2, tessellation: 5, cap: Mesh.CAP_ALL }, scene);
+    strand.material = wood;
+    strand.convertToFlatShadedMesh();
+    strand.parent = shaft;
+  }
+  // the pointed tip leaning over to one side
+  const tipBase = new Vector3(top.x + Math.sin(S.lean) * headH * 0.35, top.y + headH, top.z);
+  const tip = MeshBuilder.CreateCylinder("wizardStaffTip", { height: S.tip * H, diameterBottom: S.strand * H * 2.2, diameterTop: 0, tessellation: 5 }, scene);
+  tip.position.set(tipBase.x + Math.sin(S.lean) * S.tip * H / 2, tipBase.y + Math.cos(S.lean) * S.tip * H / 2, tipBase.z);
+  tip.rotation.z = -S.lean;
+  tip.material = wood;
+  tip.convertToFlatShadedMesh();
+  tip.parent = shaft;
+  // pale-blue crystal slivers set between the strands, leaning with the twist
+  for (let k = 0; k < S.crystals; k++) {
+    const a = ((k + 0.5) / S.crystals) * Math.PI * 2;
+    const c = MeshBuilder.CreateCylinder("wizardStaffCrystal", { height: S.crystal * H, diameter: S.strand * H * 1.3, tessellation: 4 }, scene);
+    c.scaling.z = 0.45;
+    c.position.set(top.x + Math.cos(a) * S.round * H * 1.05, top.y + headH * 0.48, top.z + Math.sin(a) * S.round * H * 1.05);
+    c.rotation.set(0, -a, 0.45);
+    c.material = ice;
+    c.convertToFlatShadedMesh();
+    c.parent = shaft;
+  }
+  const orb = MeshBuilder.CreateSphere("orb", { diameter: S.strand * H, segments: 3 }, scene);
+  orb.position.set(top.x, top.y + headH * 0.5, top.z);
+  orb.material = ice;
+  orb.isVisible = false;
+  orb.parent = shaft;
+  // the fist .grip of the way up from the butt: the shaft's middle stands above it
+  shaft.position.y = (0.5 - S.grip) * L;
+  return shaft;
+}
+/*
  * [S] 469 the Pharaoh's crook (audit 468 pharaoh b.1: "main hand: a long dark club capped with a glowing pale orb - TABS: a striped team/gold crook with a
  * curled hook top"; legacy.pharaoh.red.png, card Main Hand Pharaoh Sickle: a shaft about two-thirds his height, banded team and gold all along, held a third
  * of the way up; at its top it bends over into a round hook that curls back down on itself like a question mark). PHARAOH_CROOK in his standing height H:
@@ -4619,6 +4690,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (type === "staff" && variant === "stay_banner") return buildStayBanner(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "pharaoh_crook") return buildPharaohCrook(scene, fit, teamColor ?? accent); // [S] 469 (PHARAOH_CROOK)
       if (type === "staff" && variant === "pharaoh_flail") return buildPharaohFlail(scene, fit, teamColor ?? accent); // [S] 470 (PHARAOH_FLAIL)
+      if (type === "staff" && variant === "wizard_staff") return buildWizardStaff(scene, fit); // [S] 475 (WIZARD_STAFF)
       const color = type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
         : new Color3(0.5, 0.35, 0.2);
       const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.05 * s }, scene);
