@@ -722,7 +722,8 @@ async function main() {
           // [evidence 436] the skeleton archer's fire arrow sets the struck man alight 7 m off (critic 435): his burn is framed on him
           const burnOnMan = id === "spooky.skeleton_archer" && ability.kind === "status:fire";
           const aura = bearer && (ability.kind === "haste" || ability.kind === "stay");
-          const onMan = snake || burnOnMan || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup";
+          // [evidence 475] the wizard's firework bursts on the man his spell spun up, 7.8 m off: framed on him
+          const onMan = snake || burnOnMan || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "firework";
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
           // blanketed him and the re-framed camera hid the step)
           const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
