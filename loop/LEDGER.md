@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-470 | offhand longsword (f309bcf8) | legacy.wizard.b | approved (struck 2)
-470 | PHARAOH_FLAIL striped rod, beaded tassels; sword hold (00da6760, a8b8e64d, 12c19add) | legacy.pharaoh.b | approved (struck 2; added 3 hold)
-470 | PHARAOH_GARB team trunk, gold bands (740e0371) | legacy.pharaoh.a | approved (struck 2)
-470 | CHARIOT_HELM steel cap, team crest (6bf8b13f) | legacy.chariot.a | approved (struck 1)
-470 | SUPER_BOXER_HAIR gold spikes, headband (8bcd54e9) | legacy.super_boxer.a | approved (struck 3, 5)
-470 | THOR_HAIR blond shoulder-length (8bcd54e9) | legacy.thor.a | approved (struck 2)
-470 | TANK_FIREBALL white-yellow fireball (889b498c, 78a19cba) | legacy.tank.c | approved (struck 1; c PASS)
 471 | bare chest: team-skin trunk, no pads or belt (f1bc0724, 360d7a5a) | legacy.super_boxer.a | approved (struck 2)
 471 | SUPER_BOXER_SHORTS white, team stripes, gold waistband (6b0b6c96) | legacy.super_boxer.a | approved (struck 4)
 471 | PHARAOH_KILT flared pleated kilt, bare legs (a032b635) | legacy.pharaoh.a | approved (struck 4, 6)
@@ -48,15 +41,23 @@ for 25 iterations.
 474 | WIZARD_HAT floppy bent-tip hat (7c149002) | legacy.wizard.a | approved (struck 1)
 474 | PHARAOH_BANDS gold armlets and wrist cuffs (44052bc1) | legacy.pharaoh.a | approved (struck 5; a PASS)
 474 | [P] TANK_PAINT hull/roof on cloth, glow .12 (66732b31) | legacy.tank.a | approved (struck 2)
+475 | THOR_LEGS knee trousers, fur cuffs, leather boots (df66d71e) | legacy.thor.a | approved (struck 5; CONFIRM failed a)
+475 | TANK_TURRET low faceted Abrams wedge (e0b2e72e) | legacy.tank.a | approved (struck 3)
+475 | CHARIOT_SCYTHE blade back from each hub (841dc9fc) | legacy.chariot.b | approved (struck 3; b PASS)
+475 | TANK_ROOF cupola, team dome, hatch, antennas (7a612df2) | legacy.tank.a | approved (struck 4; CONFIRM failed a)
+475 | CHARIOT_LORICA dark hoops, gold straps, pauldrons (89b096f6) | legacy.chariot.a | approved (struck 2)
+475 | WIZARD_STAFF twisted staff, crystal head (c4906faa) | legacy.wizard.b | approved (struck 1; CONFIRM failed b)
+475 | FLAIL_HOLD rod up and out, strands plumb (b994faf3) | legacy.pharaoh.b | approved (struck 3; b PASS)
+475 | KNEEL_POSE struck man and circle kneel (a5a5db73) | legacy.pharaoh.c | approved (struck 2; c PASS)
+475 | WIZARD_FIREWORK spin up then burst (2475d0af, 41a3dc3b) | legacy.wizard.c | approved (none struck; burst after he lands)
+475 | [P] wizard proportions.scale 1.76 -> 1.3 (048b6138) | legacy.wizard.a | approved (struck 5)
 
 ## Spent (never retry as [P])
 
 ## Rows
 
 wild_west done 444-459 rows (all dress, props, mechanics and stats; all D 459) | compacted 465 | 459 | approved | values: git show 44da9220:loop/LEDGER.md (it points to the earlier compactions)
-pirate.pirate_queen done 450 rows (QUEEN_SKIRT/BOOTS/FRAME [R], QUEEN_GUARD; D) | compacted 464 | 450 | approved | values: git log -- web/src/units/pirateDress.ts
 
-spooky done 435-444 rows (reaper, stiffy, skeleton, vampire, candlehead, catapult dress and props; all D) | compacted 463 | 444 | approved | values: git log -- web/src/units/spookyDress.ts
 
 legacy_1 stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 8 units) | d PASS 8/8 (bearers polearm_melee 465: hp .68/.17, dmg .63, cd 2.31) | 465 | stats | values: git show 5d6b5d24
 legacy_1 done 457-459 rows (CHARGE_FLAG, STAY_BANNER, uprightPole, POACHER_HAT, POACHER_HAIR, PEASANT_HOOD, legacy.flag_bearer, BOXER_HEADGEAR, PEASANT_DRESS, POACHER_COAT; peasant, banner_bearer, boxer D 466; flag_bearer, pike, poacher D 467) | compacted 467 | 459 | approved | values: git show c07c1bca:loop/LEDGER.md
@@ -108,3 +109,14 @@ legacyDress.ts:PEASANT_SLEEVES (from, upperOut, lowerOut, lowerTo, cuffFrom, cuf
 legacyDress.ts:FLAG_CUFFS (from, band, bandOut) | .6, .07, 1.6 | 466 | approved | none (before 466)
 runtimeUnit.ts:POISON (tint, dye, glow, seconds, dps, tick) | (.45,.9,.12), .7, .45, 6, 4, .5 | 467 | approved | none: 6 damage on the hit only (before 467)
 legacyDress.ts:FLAG_BOOTS + PIKE_BELT + PIKE_HAIR + POACHER_KNEES + BARREL_WRAPS (467 dress, specs at the code) | see legacyDress | 467 | approved | none (before 467)
+
+legacyDress.ts:THOR_LEGS (pantTo, fur, furOut, tufts, bootFrom, bootOut, top, strapAt) | .34, .14, 1.85, 7, .5, 1.35, .1, .9 | 475 | approved | navy legs (before 475)
+vehicleBuilder.ts:TANK_TURRET (wide, top, tall, foot, long, ahead, bustle, inset) | 1.56, .8, .34, -.02, 1.18, .06, .72, .86 | 475 | approved | stepped box turret (before 475)
+vehicleBuilder.ts:TANK_ROOF (roof, commander, cupola, cupolaTall, domeAt, dome, hatchAt, antennas, antenna) | .33, [-.3,-.28], .34, .2, [.34,.14], .3, [-.12,.3], [+-.26,-.55], 1.35 | 475 | approved | two flat discs (before 475)
+vehicleBuilder.ts:CHARIOT_SCYTHE (collar, out, long, root, tip, flat, curl) | .1, .08, 1.25, .11, .012, .28, .06 | 475 | approved | bare hubs (before 475)
+vehicleBuilder.ts:CHARIOT_LORICA (hoops, line, out, hoopFrom, hoopTo, strap, strapAt, plates, plate, plateOut) | 4, .045, 1.06, .42, .88, .07, .22, 3, .16, 1.45 | 475 | approved | bare team torso (before 475)
+propBuilder.ts:WIZARD_STAFF (long, thick, foot, head, strands, twist, round, tip, lean, crystals, grip) | .98, .034, .7, .14, 3, .9, .02, .07, .5, 3, .42 | 475 | approved | .85 s pole + orb (before 475)
+propBuilder.ts:FLAIL_HOLD (hand axes, aim) | probed idle lHand, aim (-.7,.62,.35) | 475 | approved | rod along the fist (before 475)
+runtimeUnit.ts:KNEEL_POSE (hip, knee, drop, bow, arms) + simulationSystem PHARAOH_KNEEL (radius, seconds) | .1, 1.55, .9, .35, .25; 2.4, 3 | 475 | approved | none (before 475)
+projectileSystem.ts:WIZARD_FIREWORK (up, spin, tip, delay, over) | 6.5, 16, .5, .75, .9 | 475 | approved | blast fling (before 475)
+unitVisuals.ts:legacy.wizard proportions.scale | 1.3 | 475 | approved | 1.76 (before 475)

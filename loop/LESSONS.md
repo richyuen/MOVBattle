@@ -17,12 +17,13 @@ drop a lesson once it is a comment at the code it describes.
 ## Capture and probes
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is written by stats.mjs, not by capture; every non-regression capture wipes iter-N (stats.json, a tail-overlap batch's audit.md too) and each stats run overwrites it: copy audit.md out before step 5 and restore it, rerun `stats.mjs <id,id,...> --iter N` once with every unit after the final capture (422).
-- Probes (`loop/scripts/probes/`, repo root, `--build` after a source change): probe_bbox (--unit --pat --frame=torso: vertex bboxes), probe_mat <unit> <regex>, probe_near, probe_close (--aim=head|torso|y:<y> --dist --yaw; --noglow: true colour), probe_head, probe_local, probe_axes (--unit --pat --frame: a prop's axes and face normal), probe_impale, probe_bowdraw (--unit: a bowman's state, arms and bow axis over 1 s, front shot to output/loop/probe_bowdraw.png).
+- Probes (`loop/scripts/probes/`, repo root, `--build` after a source change): probe_bbox (--unit --pat --frame=torso), probe_mat <unit> <regex>, probe_near, probe_close (--aim=head|torso|y:<y> --dist --yaw; --noglow), probe_head, probe_local, probe_axes (--unit --pat: a prop's axes in the unit frame), probe_impale, probe_bowdraw.
+- capture's PLAIN regex takes any ability kind starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475 wizard firework: no ability shot).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
 - A flat plate on a dress ribbon needs 7+ cm of stand-off (398 zeus).
-- Sim reads of joint positions: settle world matrices first (computeWorldMatrix(true) up the chain, as capture __wp).
+- Sim reads of joint positions: settle world matrices first.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of the UNIT height (a cap may rise .7 of a head, 447): a taller prop re-frames every shot, so a RE-AUDIT follows (420).

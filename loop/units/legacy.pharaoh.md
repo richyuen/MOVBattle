@@ -1,24 +1,22 @@
 # legacy.pharaoh
-Status: open   Audited: 468   Done: -
+Status: open   Audited: 468, 475 (CONFIRM: passed b, c; failed a)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
-a PASS (474: modius, collar, garb, kilt, gold arm bands; PHARAOH_BANDS)
-b FAIL (2 since 468)
- 3. flail in unit_legacy.pharaoh_idle: held upright in front of the belly, foreshortened to a gold knob-and-bead stub — TABS: the striped rod held up and out to the side with the tassels hanging from its tip (ref: legacy.pharaoh.red.png)
-c FAIL (1 since 468)
- 2. target in unit_legacy.pharaoh_struck: the knight reels backwards, standing, arms raised — TABS: enemies stop in front of him and kneel (card Characteristics)
-d PASS (cost 750=750, hp 0.81x vs 0.81x (0%), dmg 1.08x vs 1.08x (+0%), cd 1.01x vs 1.00x (+1%); 468 stats)
+a FAIL (0 since 475)
+ 1. build in unit_legacy.pharaoh_idle: squat, with a wide boxy striped torso and short legs, about a quarter of his height below the skirt — TABS: slim and lanky, with long thin legs about half the height below a short skirt (ref: legacy.pharaoh.red.png, legacy.pharaoh.jpg)
+ 2. false beard in unit_legacy.pharaoh_idle: no beard under the chin — TABS: a small gold pharaoh beard hangs from the chin onto the collar (ref: legacy.pharaoh.red.png)
+b PASS (475: crook, flail up and out with tassels hanging; FLAIL_HOLD; CONFIRM 475)
+c PASS (475: golden ring and rays, the struck man kneels; KNEEL_POSE; CONFIRM 475)
+d PASS (cost 750=750, hp 0.81x vs 0.81x (0%), dmg 1.08x vs 1.08x (+0%), cd 1.01x vs 1.00x (+1%); 475 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] legacy.pharaoh.b flail hold — blocker 3: rod held up and out to the side, tassels hanging from its tip — ref: legacy.pharaoh.red.png — ours: unit_legacy.pharaoh_idle.png
-2. [S] legacy.pharaoh.c kneel — blocker 2: enemies in his status kneel before him — ref: card Characteristics — ours: unit_legacy.pharaoh_struck.png
+(none listed: the CONFIRM 475 list carries no ranked entries; pick its blockers in order)
 ## Attempts (iter | gap | criterion | verdict)
-474 | PHARAOH_BANDS gold armlets and wrist cuffs (44052bc1) | a | approved (struck 5; a PASS)
+475 | FLAIL_HOLD rod up and out, strands hung plumb (b994faf3) | b | approved (struck 3; b PASS)
+475 | KNEEL_POSE struck man and circle kneel (a5a5db73) | c | approved (struck 2; c PASS)
+474 | PHARAOH_BANDS gold armlets and wrist cuffs (44052bc1) | a | approved (struck 5; a PASS, then CONFIRM 475 failed a)
 473 | KNEEL_AURA gold ring, disc, wheeling rays (3f0f1952) | c | approved (struck 1)
 472 | PHARAOH_COLLAR flat gold broad collar, bib (063e6c76) | a | approved (struck 3)
-471 | PHARAOH_KILT flared pleated kilt, bare legs (a032b635) | a | approved (struck 4; 6 by the lineup test)
-470 | PHARAOH_FLAIL striped rod, beaded tassels, sword hold (00da6760, a8b8e64d, 12c19add) | b | approved (struck 2; added 3)
-470 | PHARAOH_GARB team trunk, gold chest and waist bands (740e0371) | a | approved (struck 2)
-469 | PHARAOH_CROOK striped team/gold crook, curled hook (32f27e05) | b | approved (struck 1)
-469 | MODIUS tall team crown, gold rim, gold-white-gold bands (7c1181a9) | a | approved (struck 1)
+471 | PHARAOH_KILT flared pleated kilt, bare legs (a032b635) | a | approved (struck 4, 6)
+469-470 | MODIUS, PHARAOH_CROOK, PHARAOH_GARB, PHARAOH_FLAIL | a, b | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- ref legacy.pharaoh.red.png: tall striped modius with gold bands over a team face; ours unit_legacy.pharaoh_idle: a wide yellow box with navy stripes hides the head, nothing tall above it
+- 475 critic minor: flail strands are baked for the idle hand, they fan stiffly in the swing; the kneeling man keeps his sword at guard.
