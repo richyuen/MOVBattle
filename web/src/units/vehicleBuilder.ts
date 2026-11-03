@@ -3045,6 +3045,8 @@ const CHARIOT_GALLOP: [number, [number, number], [number, number], [number, numb
 const CHARIOT_GLADIUS = { grip: 0.09, guard: 0.1, blade: 0.22, wide: 0.055, thick: 0.02, tilt: 1.3, /* 471b: the forearm reaches .9+.4 rad forward of hanging, so +1.3 about the hand stands the blade up (-1.1 laid it down and back) */ steel: new Color3(0.8, 0.82, 0.86), gripColor: new Color3(0.25, 0.15, 0.08) };
 // [S] 472 the driver's scutum (spec in buildChariot), in his torso box W (width) and H (height)
 const CHARIOT_SCUTUM = { tall: 1.9, wide: 0.85, bend: 0.42, slab: 0.06, rim: 0.07, out: 0.62, ahead: 0.9, drop: 0.1, turn: 0.35, boss: 0.2, wing: 0.42, wingThick: 0.07, wingLean: 0.5, glow: 0.22 };
+// [S] 475 the driver's lorica (spec in buildChariot), in his torso box
+const CHARIOT_LORICA = { steel: new Color3(0.13, 0.13, 0.15), hoops: 4, line: 0.045, out: 1.06, hoopFrom: 0.42, hoopTo: 0.88, strap: 0.07, strapAt: 0.22, proud: 0.06, plates: 3, plate: 0.16, plateOut: 1.45 };
 // [S] 475 the wheel scythes (spec in buildChariot)
 const CHARIOT_SCYTHE = { collar: 0.1, out: 0.08, long: 1.25, root: 0.11, tip: 0.012, flat: 0.28, curl: 0.06, steel: new Color3(0.3, 0.3, 0.34) };
 const CHARIOT_HELM = { cap: 1.12, lift: 0.18, drop: 0.55, crest: 1.5, crestThick: 0.22, crestUp: -0.12, rim: 0.88, steel: new Color3(0.32, 0.32, 0.36), pale: new Color3(0.98, 0.85, 0.6) };
@@ -3302,6 +3304,47 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
     for (const [sx, sy] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
       const len = W * S.wing;
       slab("chariotScutumWing", W * S.wingThick, len, t, gold, shield, sx * Math.sin(S.wingLean) * len * 0.62, sy * Math.cos(S.wingLean) * len * 0.62, t * 0.7, 0, -sx * sy * S.wingLean);
+    }
+  }
+  /*
+   * [S] 475 the driver's lorica (audit 468 chariot a.2: "driver body: bare team torso - TABS: dark segmented armour with gold straps"; legacy.chariot.red.png,
+   * card Appearance "a Centurion": his trunk in near-black steel hoops, thin gold lines between them round the belly, two gold straps down the chest
+   * from the shoulders, and a stack of dark plates curving over each shoulder). CHARIOT_LORICA in the torso box (W wide, H tall, D deep): the trunk and
+   * yoke in dark steel .steel; .hoops gold bands .line H tall, .out of W and D, from .hoopFrom to .hoopTo H down the trunk; two gold straps .strap W wide
+   * .strapAt W either side of the middle, .proud D off the chest; on each upper arm .plates dark plates stepping down from the shoulder, .plate long.
+   */
+  {
+    const L = CHARIOT_LORICA;
+    const body = operator.body;
+    const steel = lit(L.steel, 0.1);
+    body.torsoMesh.material = steel;
+    for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = steel;
+    const tb = body.torsoMesh.getBoundingInfo().boundingBox;
+    const W = tb.extendSize.x * 2, H = tb.extendSize.y * 2, D = tb.extendSize.z * 2, c = tb.center;
+    const lay = (m: Mesh, x: number, y: number, z: number, mat: Mesh["material"], parent: TransformNode = body.torso): Mesh => {
+      m.parent = parent;
+      m.position.set(x, y, z);
+      m.material = mat;
+      m.convertToFlatShadedMesh();
+      allMeshes.push(m);
+      return m;
+    };
+    for (let k = 0; k < L.hoops; k++) {
+      const y = c.y + H / 2 - H * (L.hoopFrom + (L.hoopTo - L.hoopFrom) * (k / (L.hoops - 1)));
+      lay(MeshBuilder.CreateBox("chariotLoricaHoop", { width: W * L.out, height: H * L.line, depth: D * L.out }, scene), c.x, y, c.z, gold);
+    }
+    for (const s of [-1, 1]) {
+      lay(MeshBuilder.CreateBox("chariotLoricaStrap", { width: W * L.strap, height: H * 0.55, depth: D * L.proud }, scene), c.x + s * W * L.strapAt, c.y + H * 0.2, c.z + D / 2 + D * L.proud / 2, gold);
+    }
+    for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+      const ab = arm.getBoundingInfo().boundingBox;
+      const aw = Math.max(ab.extendSize.x, ab.extendSize.z) * 2, ah = ab.extendSize.y * 2;
+      // in the arm mesh's own frame: plates stepping down from the shoulder, each a little narrower, a gold edge under the last
+      for (let k = 0; k < L.plates; k++) {
+        const wide = aw * (L.plateOut - k * 0.1);
+        lay(MeshBuilder.CreateBox("chariotLoricaPauldron", { width: wide, height: ah * L.plate, depth: wide }, scene), ab.center.x, ab.center.y + ah / 2 - ah * L.plate * (k + 0.5) * 0.85, ab.center.z, steel, arm);
+      }
+      lay(MeshBuilder.CreateBox("chariotLoricaPauldronEdge", { width: aw * (L.plateOut - L.plates * 0.1), height: ah * L.line * 1.4, depth: aw * (L.plateOut - L.plates * 0.1) }, scene), ab.center.x, ab.center.y + ah / 2 - ah * L.plate * L.plates * 0.85, ab.center.z, gold, arm);
     }
   }
   const headTopY = stand.position.y + operator.headTopY * CHARIOT_DRIVER;
