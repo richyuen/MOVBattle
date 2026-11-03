@@ -1048,7 +1048,7 @@ export class ProjectileSystem {
    * [S] 475 the Wizard's firework (audit 468 wizard c.2: "the knight crouches on the ground with his sword up - TABS: the struck unit spins up into the air
    * and explodes like a firework"; card Characteristics "Its spell makes enemy units spin and explode like a firework"). WIZARD_FIREWORK: each enemy the
    * spell lands on is shot straight up .up m/s, spinning .spin rad/s round his upright, tipped .tip rad (RuntimeUnit.fireworkLaunch); .delay s on, up in
-   * the air, he bursts: a firework spark ball on him (visualEffects spawnFireworkBurst), the spell's damage once more, logged as the Wizard's "firework".
+   * the air, he bursts: a firework spark ball on him (visualEffects spawnFireworkBurst), the spell's damage once more, logged as the Wizard's "spell_burst".
    */
   private _fireworks: { unit: RuntimeUnit; at: number; damage: number }[] = [];
   private _fireworkClock = 0;
@@ -1067,7 +1067,7 @@ export class ProjectileSystem {
       const at = f.unit.position.add(new Vector3(0, WIZARD_FIREWORK.over, 0));
       this.visualEffects?.spawnFireworkBurst(at);
       if (!f.unit.isDead) f.unit.applyDamage(f.damage, Vector3.Zero());
-      this.abilityHook?.("legacy.wizard", "firework", at); // the only wizard_spell shooter (simulationSystem: legacy.wizard's fireball)
+      this.abilityHook?.("legacy.wizard", "spell_burst", at); // 475b: not "firework..." (capture reads a "fire" prefix as a plain shot); the only wizard_spell shooter (simulationSystem: legacy.wizard's fireball)
     }
   }
 
