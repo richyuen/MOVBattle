@@ -3525,36 +3525,64 @@ const LEGACY_POLE = new Color3(0.36, 0.22, 0.12);
  * strands .strand H long, .wire H thick, hung from the knob along the rod, spread .spread H apart, .beads beads each; a tassel .tassel H long at each foot.
  */
 const PHARAOH_FLAIL = { long: 0.55, thick: 0.034, bands: 7, grip: 0.12, knob: 0.06, strands: 3, strand: 0.26, wire: 0.016, spread: 0.04, beads: 3, bead: 0.028, tassel: 0.1, glow: 0.2 }; // 470b: long .42, wire .008, tassel .06 read as a stub at the hip
+/*
+ * [S] 475 the flail's hold (audit 468 pharaoh b.3: "held upright in front of the belly, foreshortened to a gold knob-and-bead stub - TABS: the striped rod
+ * held up and out to the side with the tassels hanging from its tip"; legacy.pharaoh.red.png: from his fist the rod rises out to his left side at about
+ * forty degrees over the level, and the strands drop straight down from its tip). FLAIL_HOLD: the off-hand frame at the idle, read with probe_axes
+ * (unit root axes of the fist: .handX, .handY, .handZ); the rod turned in the fist to point along .aim in the unit's frame (out to his left, up, a little
+ * ahead), and the strands hung along the unit's down. The fist is a hidden root, so a later re-turn of the prop root keeps the tilt.
+ */
+const FLAIL_HOLD = { handX: new Vector3(0.974, -0.051, 0.221), handY: new Vector3(0.099, -0.783, -0.614), handZ: new Vector3(0.204, 0.621, -0.758), aim: new Vector3(-0.7, 0.62, 0.35) };
 function buildPharaohFlail(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const F = PHARAOH_FLAIL, H = fit.stand, L = F.long * H, r = F.thick * H;
   const gold = mat(scene, LEGACY_GOLD, F.glow, "cloth"), cloth = mat(scene, team, F.glow, "cloth");
   const band = L / F.bands, half = Math.floor(F.bands / 2);
-  const rod = MeshBuilder.CreateCylinder("pharaohFlail", { height: band, diameter: r, tessellation: 6 }, scene);
+  // a unit-frame direction in the fist's frame (the hand axes are orthonormal: project onto each)
+  const inHand = (v: Vector3): Vector3 => new Vector3(Vector3.Dot(v, FLAIL_HOLD.handX), Vector3.Dot(v, FLAIL_HOLD.handY), Vector3.Dot(v, FLAIL_HOLD.handZ)).normalize();
+  const aim = inHand(FLAIL_HOLD.aim.normalizeToNew());
+  const fist = MeshBuilder.CreateIcoSphere("pharaohFlail", { radius: r * 0.7, subdivisions: 1 }, scene);
+  fist.material = gold;
+  const tilt = new TransformNode("pharaohFlailTilt", scene);
+  tilt.parent = fist;
+  tilt.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), aim, new Quaternion());
+  // the fist .grip of the way up from the butt: the rod's middle stands above it
+  tilt.position.copyFrom(aim.scale((0.5 - F.grip) * L));
+  const rod = MeshBuilder.CreateCylinder("pharaohFlailRod", { height: band, diameter: r, tessellation: 6 }, scene);
+  rod.parent = tilt;
   rod.material = cloth;
   rod.convertToFlatShadedMesh();
   const part = (m: Mesh, x: number, y: number, z: number, material: PBRMetallicRoughnessMaterial): Mesh => {
-    m.position.set(x, y, z); m.parent = rod; m.material = material; m.convertToFlatShadedMesh(); return m;
+    m.position.set(x, y, z); m.parent = tilt; m.material = material; m.convertToFlatShadedMesh(); return m;
   };
+  // the unit's down in the tilted rod's frame, for the hanging strands
+  const toRod = new Matrix();
+  tilt.rotationQuaternion.toRotationMatrix(toRod);
+  const down = Vector3.TransformNormal(inHand(new Vector3(0, -1, 0)), toRod.clone().invert()).normalize();
+  const hang = Quaternion.FromUnitVectorsToRef(Vector3.Up(), down.scale(-1), new Quaternion());
   for (let k = -half; k <= half; k++) {
     if (k === 0) continue;
     part(MeshBuilder.CreateCylinder("flailBand", { height: band, diameter: r, tessellation: 6 }, scene), 0, k * band, 0, (k + half) % 2 ? gold : cloth);
   }
   const tipY = (half + 0.5) * band, knobR = (F.knob * H) / 2;
   part(MeshBuilder.CreateIcoSphere("flailKnob", { radius: knobR, subdivisions: 1 }, scene), 0, tipY + knobR * 0.8, 0, gold);
-  // the strands hang from the knob back along the rod, spread beside it (held up, they fall down beside the rod as in the render)
+  // 475: the strands drop from the knob straight down (the unit's down, in the rod's frame), spread side by side
   const S = F.strand * H;
+  const side = Vector3.Cross(down, Vector3.Up()).normalize();
   for (let i = 0; i < F.strands; i++) {
-    const x = r + knobR * 0.6 + (i - (F.strands - 1) / 2) * F.spread * H * 0.4, z = (i - (F.strands - 1) / 2) * F.spread * H;
-    const top = tipY + knobR * 0.5;
-    part(MeshBuilder.CreateCylinder("flailStrand", { height: S, diameter: F.wire * H, tessellation: 4 }, scene), x, top - S / 2, z, gold);
+    const off = (i - (F.strands - 1) / 2) * F.spread * H;
+    const top = new Vector3(0, tipY + knobR * 0.5, 0).add(side.scale(off));
+    const at = (t: number) => top.add(down.scale(t));
+    const strand = part(MeshBuilder.CreateCylinder("flailStrand", { height: S, diameter: F.wire * H, tessellation: 4 }, scene), 0, 0, 0, gold);
+    strand.position.copyFrom(at(S / 2));
+    strand.rotationQuaternion = hang.clone();
     for (let b = 0; b < F.beads; b++) {
-      part(MeshBuilder.CreateBox("flailBead", { size: F.bead * H }, scene), x, top - S * (b + 1) / (F.beads + 1), z, b % 2 ? gold : cloth);
+      part(MeshBuilder.CreateBox("flailBead", { size: F.bead * H }, scene), 0, 0, 0, b % 2 ? gold : cloth).position.copyFrom(at(S * (b + 1) / (F.beads + 1)));
     }
-    part(MeshBuilder.CreateCylinder("flailTassel", { height: F.tassel * H, diameterTop: F.wire * H * 2, diameterBottom: F.bead * H * 1.6, tessellation: 5 }, scene), x, top - S - (F.tassel * H) / 2, z, gold);
+    const tassel = part(MeshBuilder.CreateCylinder("flailTassel", { height: F.tassel * H, diameterTop: F.wire * H * 2, diameterBottom: F.bead * H * 1.6, tessellation: 5 }, scene), 0, 0, 0, gold);
+    tassel.position.copyFrom(at(S + (F.tassel * H) / 2));
+    tassel.rotationQuaternion = hang.clone();
   }
-  // the fist .grip of the way up from the butt: the rod's middle stands above it
-  rod.position.y = (0.5 - F.grip) * L;
-  return rod;
+  return fist;
 }
 /*
  * [S] 475 the Wizard's staff (audit 468 wizard b.1: "a plain straight dark pole capped by a pale sphere - TABS: a twisted wooden staff with a carved curled
