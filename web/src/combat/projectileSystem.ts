@@ -264,6 +264,8 @@ const FIREBALL_SHELL = new Color3(1, 0.45, 0.08);
  * .spikes long thin star rays .ray m long through the heart (a sparkle), a long .tail m tail and a blue particle trail; in the glow layer, so it blooms.
  */
 const WIZARD_SPELL = { heart: new Color3(0.95, 0.97, 1), shell: new Color3(0.42, 0.45, 1), ray: new Color3(0.75, 0.85, 1), size: 1.35, spikes: 4, rayLong: 1.3, tail: 1.6 };
+// [S] 475 the Wizard's firework (spec at ProjectileSystem._fireworkLaunch): launch m/s, spin rad/s, tip rad, burst after s, burst m over his root
+const WIZARD_FIREWORK = { up: 6.5, spin: 16, tip: 0.5, delay: 0.75, over: 0.9 };
 const SPIRIT_FIRE = { heart: new Color3(0.85, 1, 1), shell: new Color3(0.1, 0.85, 1), size: 1.15 };
 // A bone mage's leaf whirl (units/tribal.bone_mage): a loose spinning knot of long pointed autumn leaves, each about a forearm long, red, rust and crimson
 const LEAF_COUNT = 11;
@@ -636,6 +638,8 @@ export class ProjectileSystem {
   }
 
   update(dt: number): void {
+    this._fireworkClock += dt;
+    this._stepFireworks();
     // A reeled man's rope: from the muzzle where the gun is now to his chest where he is now (TOW_CHEST up off his feet)
     for (let i = this._tows.length - 1; i >= 0; i--) {
       const w = this._tows[i];
@@ -951,6 +955,7 @@ export class ProjectileSystem {
         const delta = unit.applyDamage(p.damage, p.knockback);
         if (p.shape === "leaves") this._loftFromSpikes(p, unit);
         if (p.shape === "spirit_fire") this._knockUpFromSpiritFire(p, unit);
+        if (p.shape === "wizard_spell") this._fireworkLaunch(p, unit);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({
             source: "projectile",
@@ -966,7 +971,8 @@ export class ProjectileSystem {
           });
         }
       }
-      this._flingFromBlast(p);
+      // [S] 475 the Wizard's spell spins its men up instead of flinging them (WIZARD_FIREWORK)
+      if (p.shape !== "wizard_spell") this._flingFromBlast(p);
       // Spawn impact effect for explosive
       const explosionScale = p.shape === "shell" ? 1.8 : 1;
       if (p.shape === "davinci_ball") {
@@ -1003,6 +1009,7 @@ export class ProjectileSystem {
         if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
         if (p.shape === "spirit_fire") this._knockUpFromSpiritFire(p, p.target);
         if (p.shape === "firework") this._fireworkBurst(p);
+        if (p.shape === "wizard_spell") this._fireworkLaunch(p, p.target);
         if (this.impactPresentation) {
           this.impactPresentation.recordImpact({
             source: "projectile",
@@ -1034,6 +1041,33 @@ export class ProjectileSystem {
       if (unit === p.target || unit.isDead || unit.team === p.attackerTeam) continue;
       if (Vector3.DistanceSquared(unit.position, p.target.position) > r2) continue;
       unit.applyDamage(p.damage * FIREWORK_BLAST.share, p.knockback);
+    }
+  }
+
+  /*
+   * [S] 475 the Wizard's firework (audit 468 wizard c.2: "the knight crouches on the ground with his sword up - TABS: the struck unit spins up into the air
+   * and explodes like a firework"; card Characteristics "Its spell makes enemy units spin and explode like a firework"). WIZARD_FIREWORK: each enemy the
+   * spell lands on is shot straight up .up m/s, spinning .spin rad/s round his upright, tipped .tip rad (RuntimeUnit.fireworkLaunch); .delay s on, up in
+   * the air, he bursts: a firework spark ball on him (visualEffects spawnFireworkBurst), the spell's damage once more, logged as the Wizard's "firework".
+   */
+  private _fireworks: { unit: RuntimeUnit; at: number; damage: number }[] = [];
+  private _fireworkClock = 0;
+  private _fireworkLaunch(p: ActiveProjectile, unit: RuntimeUnit): void {
+    if (unit.isDead) return;
+    const F = WIZARD_FIREWORK;
+    unit.fireworkLaunch(F.up, F.spin, F.tip, F.delay + 0.1);
+    this._fireworks.push({ unit, at: this._fireworkClock + F.delay, damage: p.damage });
+  }
+  private _stepFireworks(): void {
+    const now = this._fireworkClock;
+    for (let i = this._fireworks.length - 1; i >= 0; i--) {
+      const f = this._fireworks[i];
+      if (now < f.at) continue;
+      this._fireworks.splice(i, 1);
+      const at = f.unit.position.add(new Vector3(0, WIZARD_FIREWORK.over, 0));
+      this.visualEffects?.spawnFireworkBurst(at);
+      if (!f.unit.isDead) f.unit.applyDamage(f.damage, Vector3.Zero());
+      this.abilityHook?.("legacy.wizard", "firework", at); // the only wizard_spell shooter (simulationSystem: legacy.wizard's fireball)
     }
   }
 
@@ -1864,6 +1898,7 @@ export class ProjectileSystem {
     this._tracers.length = 0;
     for (const w of this._tows) w.rope.dispose();
     this._tows.length = 0;
+    this._fireworks.length = 0;
     for (const l of this._litter) l.mesh.dispose();
     for (const q of this._puffs) q.mesh.dispose();
     this._puffs.length = 0;

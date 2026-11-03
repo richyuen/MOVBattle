@@ -1661,6 +1661,7 @@ export class RuntimeUnit {
     if (now < this._toppledUntil) return false;
     if (now < this._downedUntil) return false;
     if (now < this._kneelUntil) return false; // [S] 475 kneeling before the Pharaoh (KNEEL_POSE)
+    if (now < this._fireworkUntil) return false; // [S] 475 spun up by the Wizard's spell (fireworkLaunch)
     if (!this._grounded || this.position.y > 0.04) return false;
     if (channel === "attack" && now < this._attackInterruptedUntil) return false;
     if (channel === "attack" && now < this._recoveringUntil) return false;
@@ -1847,6 +1848,7 @@ export class RuntimeUnit {
     this._applyBurnFlames(now);
     this._applyFearSkull(now);
     this._applyKneelPose(now);
+    this._applyFireworkSpin(now);
   }
 
   private _applyPoseOverlay(isAttacking: boolean): void {
@@ -2164,6 +2166,37 @@ export class RuntimeUnit {
     this.stopMoving();
   }
   isKneeling(now: number): boolean { return !this._isDead && now < this._kneelUntil; }
+
+  /*
+   * [S] 475 the Wizard's firework (spec at projectileSystem WIZARD_FIREWORK): shot straight up `up` m/s off where he stands, his sideways drift cleared,
+   * and spun round his upright `spin` rad/s, tipped `tip` rad, until `seconds` on (RuntimeUnit._applyFireworkSpin, after the animator).
+   */
+  private _fireworkUntil = 0;
+  private _fireworkFrom = 0;
+  private _fireworkYaw = 0;
+  private _fireworkSpin = 0;
+  private _fireworkTip = 0;
+  fireworkLaunch(up: number, spin: number, tip: number, seconds: number): void {
+    if (this._isAnchoredActor || isVehicleUnit(this.definition.id)) return;
+    const now = RuntimeUnit.timeNowSeconds();
+    this._velocity.set(0, Math.max(this._velocity.y, up), 0);
+    this._grounded = false;
+    if (this._isDead) this._physicsActive = true;
+    this._fireworkFrom = now;
+    this._fireworkUntil = now + seconds;
+    this._fireworkYaw = this.body.root.rotation.y;
+    this._fireworkSpin = spin;
+    this._fireworkTip = tip;
+    this.stopMoving();
+  }
+  isFireworkSpinning(now: number): boolean { return now < this._fireworkUntil; }
+  private _applyFireworkSpin(now: number): void {
+    if (now >= this._fireworkUntil) return;
+    const age = now - this._fireworkFrom;
+    this.body.root.rotation.y = this._fireworkYaw + age * this._fireworkSpin;
+    this.body.torso.rotation.z = this._fireworkTip;
+    for (const sh of [this.body.leftShoulder, this.body.rightShoulder]) sh.rotation.z = (sh === this.body.leftShoulder ? -1 : 1) * 1.2;
+  }
   private _applyKneelPose(now: number): void {
     const body = this.body;
     if (!this.isKneeling(now)) {
