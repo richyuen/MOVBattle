@@ -1696,6 +1696,9 @@ const TANK_RIDERS = {
 const TANK_PAINT = { tan: new Color3(0.8, 0.66, 0.36), roof: new Color3(0.64, 0.52, 0.28), // 472b: (.58,.47,.24) swatched dark olive
   hatch: new Color3(0.2, 0.2, 0.21), rail: 0.42, railThick: 0.05, glow: 0.12 };
 // [S] 475 the Abrams wedge turret (spec in buildLegacyTank): top at foot + tall = .32, where the roof rider sits
+// [S] 475 the turret roof (spec in buildLegacyTank), (x, z) spots on the roof
+const TANK_ROOF = { roof: 0.33, commander: [-0.3, -0.28], cupola: 0.34, cupolaTall: 0.2, blocks: 6, domeAt: [0.34, 0.14], dome: 0.3, collar: 0.08, hatchAt: [-0.12, 0.3], hatch: 0.22,
+  antennas: [[-0.26, -0.55], [0.26, -0.55]], antenna: 1.35, whip: 0.035 };
 const TANK_TURRET = { wide: 1.56, top: 0.8, tall: 0.34, foot: -0.02, long: 1.18, ahead: 0.06, bustle: 0.72, inset: 0.86 };
 function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("legacy_tank_root", scene);
@@ -1849,17 +1852,38 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
   muzzle.material = teamMat;
   allMeshes.push(muzzle);
 
-  const commanderCupola = MeshBuilder.CreateCylinder("tankCupola", { height: 0.12, diameter: 0.26, tessellation: 14 }, scene);
-  commanderCupola.position.set(-0.18, 0.38, -0.08);
-  commanderCupola.parent = turretBase;
-  commanderCupola.material = hatchMat;
-  allMeshes.push(commanderCupola);
-
-  const loaderHatch = MeshBuilder.CreateCylinder("tankLoaderHatch", { height: 0.05, diameter: 0.2, tessellation: 14 }, scene);
-  loaderHatch.position.set(0.2, 0.345, 0.08);
-  loaderHatch.parent = turretBase;
-  loaderHatch.material = hatchMat;
-  allMeshes.push(loaderHatch);
+  /*
+   * [S] 475 the turret roof (audit 468 tank a.4: "two flat discs - TABS: cupolas, hatches and two tall antennas"; legacy.tank.red.png: on the roof a tall
+   * dark commander's cupola, a ring of vision blocks round its waist and a hatch lid on top; a team-coloured domed cupola on a dark collar on the other
+   * side; a low dark hatch toward the front; two thin dark whip antennas, each well over a man tall, rising from little bases at the turret's back corners).
+   * TANK_ROOF in the turret base's frame on the roof at .roof: each piece at its (x, z); the commander cupola .cupola across and .cupolaTall high with
+   * .blocks vision blocks and a lid; the dome .dome across on a .collar high collar; the hatch .hatch across; antennas .antenna tall and .whip thick.
+   */
+  const R = TANK_ROOF;
+  const roofPart = (mesh: Mesh, x: number, y: number, z: number, mat: Mesh["material"]) => {
+    mesh.position.set(x, R.roof + y, z);
+    mesh.parent = turretBase;
+    mesh.material = mat;
+    allMeshes.push(mesh);
+    return mesh;
+  };
+  const [cx, cz] = R.commander;
+  roofPart(MeshBuilder.CreateCylinder("tankCupola", { height: R.cupolaTall, diameterBottom: R.cupola * 1.1, diameterTop: R.cupola, tessellation: 10 }, scene), cx, R.cupolaTall / 2, cz, hatchMat).convertToFlatShadedMesh();
+  for (let k = 0; k < R.blocks; k++) {
+    const a = (k / R.blocks) * Math.PI * 2;
+    const block = roofPart(MeshBuilder.CreateBox("tankCupolaBlock", { width: R.cupola * 0.22, height: R.cupolaTall * 0.32, depth: R.cupola * 0.1 }, scene), cx + Math.sin(a) * R.cupola * 0.52, R.cupolaTall * 0.62, cz + Math.cos(a) * R.cupola * 0.52, metal);
+    block.rotation.y = a;
+  }
+  roofPart(MeshBuilder.CreateCylinder("tankCupolaLid", { height: 0.035, diameter: R.cupola * 0.88, tessellation: 10 }, scene), cx, R.cupolaTall + 0.018, cz, hatchMat);
+  const [dx, dz] = R.domeAt;
+  roofPart(MeshBuilder.CreateCylinder("tankDomeCollar", { height: R.collar, diameter: R.dome * 1.04, tessellation: 12 }, scene), dx, R.collar / 2, dz, hatchMat);
+  roofPart(MeshBuilder.CreateSphere("tankDome", { diameter: R.dome, slice: 0.5, segments: 6 }, scene), dx, R.collar, dz, teamMat).convertToFlatShadedMesh();
+  const [hx, hz] = R.hatchAt;
+  roofPart(MeshBuilder.CreateCylinder("tankLoaderHatch", { height: 0.045, diameter: R.hatch, tessellation: 12 }, scene), hx, 0.022, hz, hatchMat);
+  for (const [ax, az] of R.antennas) {
+    roofPart(MeshBuilder.CreateCylinder("tankAntennaBase", { height: 0.07, diameter: 0.08, tessellation: 8 }, scene), ax, 0.035, az, hatchMat);
+    roofPart(MeshBuilder.CreateCylinder("tankAntenna", { height: R.antenna, diameterBottom: R.whip, diameterTop: R.whip * 0.5, tessellation: 5 }, scene), ax, 0.07 + R.antenna / 2, az, hatchMat);
+  }
 
   const sightBlock = MeshBuilder.CreateBox("tankSight", { width: 0.08, height: 0.08, depth: 0.16 }, scene);
   sightBlock.position.set(0.3, 0.26, 0.44);
