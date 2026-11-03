@@ -1782,6 +1782,56 @@ export function pharaohKilt(scene: Scene, body: ArticulatedBody, teamColor: Colo
  */
 const THOR_COAT = { shade: 0.85, open: 0.3, proud: 0.04, trim: 0.06, sleeve: 0.55, sleeveOut: 1.3, links: 3, link: 0.11, chainAt: 0.22, sag: 0.06, gold: new Color3(0.95, 0.66, 0.16), glow: 0.22 };
 
+/*
+ * [S] 475 Thor's trousers, fur cuffs and boots (audit 468 thor a.5: "plain navy legs into dark boots - TABS: knee-length trousers ending in fur cuffs over
+ * leather boots"; legacy.thor.red.png, .blue.png: baggy team trousers, darker than the coat, from the belt to just under the knee; a ragged cream fur
+ * cuff round each leg at their foot; a short band of bare leg; then rust-brown leather boots to mid-shin with a turned cream top and a cream strap round
+ * the ankle). THOR_LEGS: a team shell .pantOut round each thigh and on down the shin to .pantTo (shinOut); a cream cuff shell .furOut round the shin
+ * over .fur above .pantTo, with .tufts cream wedges .tuft of the shin wide hanging off its rim; a leather boot shell .bootOut from .bootFrom to the
+ * foot, a cream turned top .topOut over .top of it, a cream strap .strapOut at .strapAt; the foot blocks leather. Self-lit .glow.
+ */
+const THOR_LEGS = { shade: 0.72, pantOut: 1.5, shinOut: 1.5, pantTo: 0.34, fur: 0.14, furOut: 1.85, tufts: 7, tuft: 0.55, bootFrom: 0.5, bootOut: 1.35, top: 0.1, topOut: 1.55, strapAt: 0.9, strapOut: 1.45, cream: new Color3(0.96, 0.86, 0.62), leather: new Color3(0.55, 0.26, 0.14), glow: 0.16 };
+
+/** Thor's knee-length team trousers with ragged fur cuffs over leather boots (spec at THOR_LEGS). */
+export function thorLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const L = THOR_LEGS;
+  const mf = getMaterialFactory();
+  const t = teamColor.scale(L.shade);
+  const pants = mf.get("cloth", t, { emissive: t.scale(0.12) });
+  const fur = mf.get("cloth", L.cream, { emissive: L.cream.scale(L.glow * 1.6) });
+  const leather = mf.get("cloth", L.leather, { emissive: L.leather.scale(L.glow) });
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) out.push(limbShell(scene, "thorPants", thigh, 0, 1.0, L.pantOut, pants));
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "thorPants", shin, 0, L.pantTo, L.shinOut, pants));
+    const cuff = limbShell(scene, "thorFurCuff", shin, L.pantTo - L.fur, L.pantTo + 0.02, L.furOut, fur);
+    out.push(cuff);
+    // ragged tufts hanging off the cuff's rim, turned round the leg
+    const bb = shin.getBoundingInfo().boundingBox;
+    const half = Math.max(bb.extendSize.x, bb.extendSize.z) * shin.scaling.x;
+    const cuffH = cuff.getBoundingInfo().boundingBox.extendSize.y * 2;
+    for (let k = 0; k < L.tufts; k++) {
+      const a = (k / L.tufts) * Math.PI * 2 + 0.3;
+      const tall = cuffH * (0.9 + 0.5 * ((k * 37) % 5) / 4);
+      const tuft = MeshBuilder.CreateCylinder("thorFurTuft", { height: tall, diameterTop: half * L.tuft, diameterBottom: 0, tessellation: 3 }, scene);
+      tuft.convertToFlatShadedMesh();
+      tuft.parent = cuff.parent;
+      const r = half * L.furOut * 0.92;
+      tuft.position.set(Math.sin(a) * r, cuff.position.y - cuffH / 2 - tall * 0.3, Math.cos(a) * r * 0.9);
+      tuft.rotation.y = a;
+      tuft.material = fur;
+      out.push(tuft);
+    }
+    out.push(limbShell(scene, "thorBoot", shin, L.bootFrom, 1.04, L.bootOut, leather));
+    out.push(limbShell(scene, "thorBootTop", shin, L.bootFrom - 0.02, L.bootFrom + L.top, L.topOut, fur));
+    out.push(limbShell(scene, "thorBootStrap", shin, L.strapAt, L.strapAt + 0.06, L.strapOut, fur));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) if (foot instanceof Mesh && /_[lr]FootM$/.test(foot.name)) foot.material = leather;
+  }
+  return out;
+}
+
 /** Thor's short-sleeved team coat open on his chest, gold-trimmed, with a gold chain across (spec at THOR_COAT). */
 export function thorCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const C = THOR_COAT;
