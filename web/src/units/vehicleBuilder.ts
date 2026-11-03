@@ -1695,6 +1695,8 @@ const TANK_RIDERS = {
  */
 const TANK_PAINT = { tan: new Color3(0.8, 0.66, 0.36), roof: new Color3(0.64, 0.52, 0.28), // 472b: (.58,.47,.24) swatched dark olive
   hatch: new Color3(0.2, 0.2, 0.21), rail: 0.42, railThick: 0.05, glow: 0.12 };
+// [S] 475 the Abrams wedge turret (spec in buildLegacyTank): top at foot + tall = .32, where the roof rider sits
+const TANK_TURRET = { wide: 1.56, top: 0.8, tall: 0.34, foot: -0.02, long: 1.18, ahead: 0.06, bustle: 0.72, inset: 0.86 };
 function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const root = new TransformNode("legacy_tank_root", scene);
   const allMeshes: Mesh[] = [];
@@ -1785,38 +1787,38 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
   turretBase.parent = root;
   turretBase.position.set(0, 0.96, 0.02);
 
-  const turretMain = MeshBuilder.CreateBox("tankTurretMain", { width: 1.28, height: 0.42, depth: 1.16 }, scene);
-  turretMain.position.set(0, 0.12, 0.08);
+  /*
+   * [S] 475 the turret rebuilt as an Abrams wedge (audit 468 tank a.3: "a tall stepped box turret - TABS: the low wide faceted wedge turret of an M1
+   * Abrams"; legacy.tank.red.png: seen from the front three-quarter the turret is a low flat-topped octagon nearly as wide as the deck, its eight faces
+   * sloping in toward a flat roof, longer than wide, the front faces swept back to a blunt point over the mantlet, a low bustle box at its back).
+   * TANK_TURRET in the turret base's frame: an 8-sided frustum .wide across its foot and .top of that at its roof, .tall high, stretched .long in z and set
+   * .ahead forward, a flat face toward each axis; a low bustle .bustle wide at the back; a flat roof plate inset .inset on top (the roof paint).
+   */
+  const T = TANK_TURRET;
+  const turretMain = MeshBuilder.CreateCylinder("tankTurretMain", { height: T.tall, diameterBottom: T.wide, diameterTop: T.wide * T.top, tessellation: 8 }, scene);
+  turretMain.rotation.y = Math.PI / 8;
+  turretMain.bakeCurrentTransformIntoVertices();
+  turretMain.scaling.z = T.long;
+  turretMain.position.set(0, T.foot + T.tall / 2, T.ahead);
   turretMain.parent = turretBase;
   turretMain.material = hullMat;
+  turretMain.convertToFlatShadedMesh();
   allMeshes.push(turretMain);
 
-  const turretBustle = MeshBuilder.CreateBox("tankTurretBustle", { width: 1.08, height: 0.26, depth: 0.56 }, scene);
-  turretBustle.position.set(0, 0.08, -0.72);
+  const turretBustle = MeshBuilder.CreateBox("tankTurretBustle", { width: T.wide * T.bustle, height: T.tall * 0.62, depth: 0.5 }, scene);
+  turretBustle.position.set(0, T.foot + T.tall * 0.36, T.ahead - T.wide * T.long * 0.42);
   turretBustle.parent = turretBase;
   turretBustle.material = hullMat;
   allMeshes.push(turretBustle);
 
-  const turretFront = MeshBuilder.CreateBox("tankTurretFront", { width: 1.06, height: 0.28, depth: 0.52 }, scene);
-  turretFront.position.set(0, 0.04, 0.76);
-  turretFront.rotation.x = -0.16;
-  turretFront.parent = turretBase;
-  turretFront.material = hullMat;
-  allMeshes.push(turretFront);
-
-  for (const side of [-1, 1]) {
-    const cheek = MeshBuilder.CreateBox("tankTurretCheek", { width: 0.28, height: 0.34, depth: 0.62 }, scene);
-    cheek.position.set(side * 0.6, 0.08, 0.36);
-    cheek.rotation.y = side * 0.18;
-    cheek.parent = turretBase;
-    cheek.material = hullMat;
-    allMeshes.push(cheek);
-  }
-
-  const turretRoof = MeshBuilder.CreateBox("tankTurretRoof", { width: 1.0, height: 0.08, depth: 0.74 }, scene);
-  turretRoof.position.set(0, 0.34, 0.02);
+  const turretRoof = MeshBuilder.CreateCylinder("tankTurretRoof", { height: 0.03, diameter: T.wide * T.top * T.inset, tessellation: 8 }, scene);
+  turretRoof.rotation.y = Math.PI / 8;
+  turretRoof.bakeCurrentTransformIntoVertices();
+  turretRoof.scaling.z = T.long;
+  turretRoof.position.set(0, T.foot + T.tall + 0.012, T.ahead);
   turretRoof.parent = turretBase;
   turretRoof.material = roofMat;
+  turretRoof.convertToFlatShadedMesh();
   allMeshes.push(turretRoof);
 
   const gunMantlet = MeshBuilder.CreateCylinder("tankGunMantlet", { height: 0.34, diameter: 0.34, tessellation: 16 }, scene);
@@ -1848,13 +1850,13 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
   allMeshes.push(muzzle);
 
   const commanderCupola = MeshBuilder.CreateCylinder("tankCupola", { height: 0.12, diameter: 0.26, tessellation: 14 }, scene);
-  commanderCupola.position.set(-0.18, 0.44, -0.08);
+  commanderCupola.position.set(-0.18, 0.38, -0.08);
   commanderCupola.parent = turretBase;
   commanderCupola.material = hatchMat;
   allMeshes.push(commanderCupola);
 
   const loaderHatch = MeshBuilder.CreateCylinder("tankLoaderHatch", { height: 0.05, diameter: 0.2, tessellation: 14 }, scene);
-  loaderHatch.position.set(0.2, 0.42, 0.08);
+  loaderHatch.position.set(0.2, 0.345, 0.08);
   loaderHatch.parent = turretBase;
   loaderHatch.material = hatchMat;
   allMeshes.push(loaderHatch);
@@ -1867,7 +1869,7 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
 
   // 472 team grab rails: one along each hull side on the deck, one on each turret side
   for (const side of [-1, 1]) {
-    for (const [parent, x, y, z] of [[root, side * 0.88, 0.9, 0.3], [turretBase, side * 0.7, 0.24, -0.1]] as const) {
+    for (const [parent, x, y, z] of [[root, side * 0.88, 0.9, 0.3], [turretBase, side * 0.66, 0.2, -0.1]] as const) {
       const rail = MeshBuilder.CreateBox("tankRail", { width: P.railThick, height: P.railThick * 2, depth: P.rail }, scene);
       rail.position.set(x, y, z);
       rail.parent = parent;
