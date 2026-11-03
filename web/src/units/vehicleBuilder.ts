@@ -3021,6 +3021,8 @@ const CHARIOT_GALLOP: [number, [number, number], [number, number], [number, numb
 const CHARIOT_GLADIUS = { grip: 0.09, guard: 0.1, blade: 0.22, wide: 0.055, thick: 0.02, tilt: 1.3, /* 471b: the forearm reaches .9+.4 rad forward of hanging, so +1.3 about the hand stands the blade up (-1.1 laid it down and back) */ steel: new Color3(0.8, 0.82, 0.86), gripColor: new Color3(0.25, 0.15, 0.08) };
 // [S] 472 the driver's scutum (spec in buildChariot), in his torso box W (width) and H (height)
 const CHARIOT_SCUTUM = { tall: 1.9, wide: 0.85, bend: 0.42, slab: 0.06, rim: 0.07, out: 0.62, ahead: 0.9, drop: 0.1, turn: 0.35, boss: 0.2, wing: 0.42, wingThick: 0.07, wingLean: 0.5, glow: 0.22 };
+// [S] 475 the wheel scythes (spec in buildChariot)
+const CHARIOT_SCYTHE = { collar: 0.1, out: 0.08, long: 1.25, root: 0.11, tip: 0.012, flat: 0.28, curl: 0.06, steel: new Color3(0.3, 0.3, 0.34) };
 const CHARIOT_HELM = { cap: 1.12, lift: 0.18, drop: 0.55, crest: 1.5, crestThick: 0.22, crestUp: -0.12, rim: 0.88, steel: new Color3(0.32, 0.32, 0.36), pale: new Color3(0.98, 0.85, 0.6) };
 function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   const root = new TransformNode("chariot_root", scene);
@@ -3124,6 +3126,7 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   }
   // Wheels either side: a dark team rim on spokes round a gold hub, on one axle
   const axleY = CHARIOT_WHEEL / 2;
+  const steelBlade = lit(CHARIOT_SCYTHE.steel, 0.12);
   const axle = add(MeshBuilder.CreateCylinder("chariotAxle", { height: CHARIOT_CAR_WIDE + 0.36, diameter: 0.08, tessellation: 6 }, scene), teamDark);
   axle.rotation.z = Math.PI / 2;
   axle.position.set(0, axleY, CHARIOT_CAR_Z - 0.1);
@@ -3140,6 +3143,23 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
       spoke.rotation.x = (i / CHARIOT_SPOKES) * Math.PI;
       spoke.position.copyFrom(rim.position);
     }
+    /*
+     * [S] 475 the wheel scythes (audit 468 chariot b.3: "wheel blades missing: bare hubs - TABS: long scythe blades jut from each wheel hub";
+     * legacy.chariot.jpg, card Appearance "blades on its wheels": from each hub a dark steel blade runs straight out sideways a little, then sweeps
+     * back along the ground behind the wheel, longer than the wheel is tall, a thin flat blade that tapers to a point and curls up a touch at its tip).
+     * CHARIOT_SCYTHE from the hub's outer face: a gold collar .collar long out along x; the blade .out beyond the rim, then back .long of the wheel
+     * across in two tapered flat pieces (.root to .tip deep in y, .flat of that thick in x), the second rising .curl.
+     */
+    const S = CHARIOT_SCYTHE;
+    const hubOut = x + side * 0.08;
+    const collarM = add(MeshBuilder.CreateCylinder("chariotScytheCollar", { height: S.collar, diameter: 0.12, tessellation: 8 }, scene), gold);
+    collarM.rotation.z = Math.PI / 2;
+    collarM.position.set(hubOut + side * S.collar / 2, axleY, rim.position.z);
+    const bladeRoot = new Vector3(hubOut + side * S.collar, axleY, rim.position.z);
+    const elbow = bladeRoot.add(new Vector3(side * S.out, -0.02, -CHARIOT_WHEEL * S.long * 0.55));
+    const tip = elbow.add(new Vector3(side * S.out * 0.3, S.curl, -CHARIOT_WHEEL * S.long * 0.45));
+    seg("chariotScythe", bladeRoot, elbow, S.root, S.root * 0.7, steelBlade, S.flat);
+    seg("chariotScythe", elbow, tip, S.root * 0.7, S.tip, steelBlade, S.flat);
   }
 
   // The driver standing in the car, arms out to the reins
