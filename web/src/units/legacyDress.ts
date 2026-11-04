@@ -1177,18 +1177,20 @@ const SUPER_TUNIC = { white: new Color3(0.96, 0.95, 0.91), glow: 0.4, sleeveOut:
 export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   const T = SUPER_TUNIC;
   const mf = getMaterialFactory();
-  const white = mf.get("cloth", T.white, { emissive: T.white.scale(T.glow) });
+  const white = mf.get("unlit", T.white, { emissive: T.white.scale(0.85) });
   const lace = mf.get("cloth", T.lace, { emissive: T.lace.scale(0.15) });
   body.torsoMesh.material = white;
   for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = white;
   for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = white;
   const out: Mesh[] = [];
   for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "superTunicSleeve", arm, 0, T.sleeveTo, T.sleeveOut, white));
-  const { W, H, D, lay } = trunkFrame(scene, body, out);
-  const drop = Math.abs(body.leftKnee.position.y) * T.long;
-  const skirt = MeshBuilder.CreateCylinder("superTunicSkirt", { height: drop, diameterTop: W * T.waist, diameterBottom: W * T.flare, tessellation: T.sides }, scene);
-  skirt.scaling.z = Math.max(0.7, D / W);
-  lay(skirt, 0, -H / 2 - drop / 2 + H * 0.06, 0, white);
+  // [S] 480: outer tunic overlaps the rope belt and encloses the entire
+  // pelvis, then flares to mid-thigh (legacy.super_peasant.red.png).
+  const { W, H, D, lay } = outerTrunkFrame(scene, body, out);
+  const drop = Math.abs(body.leftKnee.position.y) * 0.8 + H * 0.15;
+  const skirt = MeshBuilder.CreateCylinder("superTunicSkirt", { height: drop, diameterTop: W * 1.2, diameterBottom: W * 1.35, tessellation: T.sides }, scene);
+  skirt.scaling.z = D / W * 1.22;
+  lay(skirt, 0, -H * 0.3 - drop / 2 + H * 0.05, 0, white);
   const slitH = H * T.slitLong, front = D / 2 + D * 0.02;
   out.push(...superPeasantRopeBelt(scene, body));
   lay(MeshBuilder.CreateBox("superTunicSlit", { width: W * T.slit, height: slitH, depth: D * 0.03 }, scene), 0, H / 2 - slitH / 2, front, lace);
