@@ -298,6 +298,32 @@ export class VisualEffects {
    * [S] 418 the Firework Arrow's burst (FIREWORK_BURST; card: explosion radius 2.5): a bright core flash and .sparks spark streaks flung out from `at`
    * in a ball, each a thin unlit bar in one of .colors, flying to .radius over .grow of the burst and fading over its .seconds, out of the glow.
    */
+  /** [S] 480 Wizard: detached radial sparks grow from the victim's chest,
+   * with visible solid gold tails even between discrete capture ticks. */
+  spawnWizardDetonation(at: Vector3): void {
+    const root = new TransformNode("wizardDetonation", this._scene);
+    root.position.copyFrom(at);
+    const mat = this._fxMat(new Color3(1, 0.7, 0.18), new Color3(1.4, 0.8, 0.2));
+    const sparks: { mesh: Mesh; dir: Vector3 }[] = [];
+    for (let i = 0; i < 28; i++) {
+      const y = 1 - 2 * (i + 0.5) / 28, a = i * Math.PI * (3 - Math.sqrt(5));
+      const r = Math.sqrt(1 - y * y), dir = new Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+      const mesh = MeshBuilder.CreateBox("wizardRadialSpark", { width: 0.055, height: 0.055, depth: 0.6 }, this._scene);
+      mesh.parent = root; mesh.material = mat; mesh.isPickable = false;
+      mesh.position.copyFrom(dir.scale(0.4)); mesh.lookAt(dir.scale(2));
+      sparks.push({ mesh, dir });
+    }
+    this._effects.push({ root, remaining: 1.1, update: (_dt, remaining) => {
+      const age = 1.1 - remaining, reach = 0.4 + Math.min(1, age / 0.3) * 1.8;
+      for (const s of sparks) {
+        s.mesh.position.copyFrom(s.dir.scale(reach));
+        s.mesh.position.y -= age * age * 0.8;
+        s.mesh.scaling.z = Math.max(0.2, 1 - age * 0.6);
+      }
+      mat.alpha = Math.max(0, Math.min(1, remaining * 2));
+    }, dispose: () => mat.dispose() });
+  }
+
   spawnFireworkBurst(at: Vector3, lift = FIREWORK_BURST.lift): void {
     const B = FIREWORK_BURST;
     const root = new TransformNode("fireworkBurst", this._scene);
