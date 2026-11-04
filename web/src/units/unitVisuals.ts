@@ -954,7 +954,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["storm_flare"], "ability-active": ["storm_flare"] },
       });
     case "iconic_thor":
-      return vis({ scale: 1.68, bulk: 1.18, headSize: 1.1, armLength: 1.12 }, "hammer", "winged_band", "none", "cape", "#8ec7ff", undefined, {
+      // [S] 477: slim Wobbler trunk and long thin legs under the knee trousers.
+      return vis({ scale: 1.68, bulk: 0.84, torsoWidth: 0.92, headSize: 1.1, armLength: 1.06, legLength: 1.3, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "hammer", "winged_band", "none", "cape", "#8ec7ff", undefined, {
         weaponVariant: "mjolnir", // [S] 474 a short mallet with a chest-sized block head (propBuilder MJOLNIR; audit 468 thor b.1)
         posePreset: "duelist", materialPreset: "secret_royal", attachmentPreset: "storm_halo", fxPreset: "wind",
         bodyDetailLevel: "hero",
