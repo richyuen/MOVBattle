@@ -1148,6 +1148,7 @@ export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   skirt.scaling.z = Math.max(0.7, D / W);
   lay(skirt, 0, -H / 2 - drop / 2 + H * 0.06, 0, white);
   const slitH = H * T.slitLong, front = D / 2 + D * 0.02;
+  out.push(...superPeasantRopeBelt(scene, body));
   lay(MeshBuilder.CreateBox("superTunicSlit", { width: W * T.slit, height: slitH, depth: D * 0.03 }, scene), 0, H / 2 - slitH / 2, front, lace);
   for (let k = 0; k < T.laces; k++) {
     for (const sd of [-1, 1]) {
@@ -1166,6 +1167,22 @@ export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
  * PHARAOH_BANDS: on each upper arm a gold shell .out round from .armFrom to .armTo of its length; on each forearm a gold shell .out round from .wristFrom
  * to its end. Self-lit .glow.
  */
+/** [S] 479: thick interlocking white rope around the Super Peasant's waist,
+ * standing clear of the outer hull, not an inset band (legacy.super_peasant.red.png). */
+function superPeasantRopeBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const out: Mesh[] = [], { W, H, D, lay } = outerTrunkFrame(scene, body, out);
+  const color = new Color3(0.7, 0.665, 0.56), cream = getMaterialFactory().get("unlit", color);
+  for (let k = 0; k < 16; k++) {
+    const a = k * Math.PI / 8;
+    const knot = MeshBuilder.CreateIcoSphere("superRopeBraid", { radius: 0.5, subdivisions: 1, flat: true }, scene);
+    knot.scaling.set(W * 0.27, H * 0.16, W * 0.16);
+    knot.rotation.set(0, a + Math.PI / 2, (k % 2 ? -1 : 1) * 0.65);
+    lay(knot, Math.sin(a) * W * 0.56, -H * 0.3, Math.cos(a) * D * 0.65, cream);
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(knot);
+  }
+  return out;
+}
+
 const PHARAOH_BANDS = { out: 1.45, armFrom: 0.22, armTo: 0.4, wristFrom: 0.68, glow: 0.24 };
 
 /** The Pharaoh's gold armlets and wrist cuffs (spec at PHARAOH_BANDS). */
