@@ -767,7 +767,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.pharaoh": vis(
-    { scale: 1.36, bulk: 1.08, headSize: 1.08 }, "staff", "modius", "none", "cape", "#E0B34A", "sword", {
+    // [S] 477: replace the slab build with the reference's slim trunk and long thin bare legs.
+    { scale: 1.36, bulk: 0.82, torsoWidth: 0.92, headSize: 1.08, legLength: 1.3, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "staff", "modius", "none", "cape", "#E0B34A", "sword", {
       offhandVariant: "pharaoh_flail", // [S] 470 a striped flail with gold tassels in the off hand (propBuilder PHARAOH_FLAIL; audit 468 b.2)
       posePreset: "caster",
       weaponVariant: "pharaoh_crook", // [S] 469 a striped team/gold crook with a curled hook (propBuilder PHARAOH_CROOK; audit 468 b.1)

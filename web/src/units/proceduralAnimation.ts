@@ -4639,10 +4639,13 @@ export class ProceduralAnimator {
     // [S] 453 the Miner upright, chin up (MINER_UPRIGHT), found by his pick's haft mark
     const miner = this._body.rightHand.getChildren().some((n) => n.name === "pickaxe" && n.getChildren().some((c) => c.getChildren().some((g) => g.name === "minerHaft")));
     if (miner) Object.assign(stance, { tilt: MINER_UPRIGHT.tilt, stride: MINER_UPRIGHT.stride, crouch: 0, chin: MINER_UPRIGHT.chin, cock: 0 });
+    // [S] 477 Pharaoh: straight-legged royal stance, not the seeded crouch.
+    const pharaoh = this._body.torso.getChildMeshes(true).some((m) => m.name === "pharaohChestBand");
+    if (pharaoh) Object.assign(stance, { tilt: 0.02, stride: 0.12, crouch: 0, chin: 0 });
     return {
       square,
       wide,
-      lean: miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
+      lean: pharaoh ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,
