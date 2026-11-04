@@ -1575,7 +1575,7 @@ export function superPeasantCuffs(scene: Scene, body: ArticulatedBody): Mesh[] {
  * the cheeks narrowing to .tip at its end, .long head-heights long from .from e.y under the centre, .proud e.z off the face and .thick e.z deep; a moustache
  * bar .mous e.x across under the eyes. Grey .grey self-lit .glow.
  */
-const WIZARD_BEARD = { wide: 1.9, tip: 0.4, long: 2.4, from: 0.1, proud: 1.35, thick: 1.0, mous: 1.3, grey: new Color3(0.78, 0.78, 0.8), glow: 0.3 };
+const WIZARD_BEARD = { wide: 1.9, tip: 0.4, long: 2.4, from: 0.1, proud: 1.35, thick: 1.0, mous: 1.3, grey: new Color3(0.35, 0.35, 0.36), glow: 0.08 };
 
 /** The Wizard's long grey beard and moustache (spec at WIZARD_BEARD), hung on the head. */
 export function wizardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
