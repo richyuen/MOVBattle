@@ -2176,6 +2176,8 @@ export class RuntimeUnit {
   private _fireworkYaw = 0;
   private _fireworkSpin = 0;
   private _fireworkTip = 0;
+  private _fireworkBaseY = 0;
+  private _fireworkLift = 0;
   fireworkLaunch(up: number, spin: number, tip: number, seconds: number): void {
     if (this._isAnchoredActor || isVehicleUnit(this.definition.id)) return;
     const now = RuntimeUnit.timeNowSeconds();
@@ -2183,6 +2185,8 @@ export class RuntimeUnit {
     this._grounded = false;
     if (this._isDead) this._physicsActive = true;
     this._fireworkFrom = now;
+    this._fireworkBaseY = this.position.y;
+    this._fireworkLift = up;
     this._fireworkUntil = now + seconds;
     this._fireworkYaw = this.body.root.rotation.y;
     this._fireworkSpin = spin;
@@ -2193,6 +2197,11 @@ export class RuntimeUnit {
   private _applyFireworkSpin(now: number): void {
     if (now >= this._fireworkUntil) return;
     const age = now - this._fireworkFrom;
+    // [S] 479: spell lift owns the height until the burst; gravity/ground recovery
+    // must not put the spinning victim back on his feet before it detonates.
+    this.body.root.position.y = this._fireworkBaseY + Math.min(1.8, age * this._fireworkLift);
+    this._velocity.set(0, 0, 0);
+    this._grounded = false;
     this.body.root.rotation.y = this._fireworkYaw + age * this._fireworkSpin;
     this.body.torso.rotation.z = this._fireworkTip;
     for (const sh of [this.body.leftShoulder, this.body.rightShoulder]) sh.rotation.z = (sh === this.body.leftShoulder ? -1 : 1) * 1.2;

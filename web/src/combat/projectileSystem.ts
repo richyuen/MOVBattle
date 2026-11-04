@@ -1064,9 +1064,10 @@ export class ProjectileSystem {
       const f = this._fireworks[i];
       if (now < f.at) continue;
       this._fireworks.splice(i, 1);
-      const at = f.unit.position.add(new Vector3(0, WIZARD_FIREWORK.over, 0));
+      f.unit.body.torsoMesh.computeWorldMatrix(true);
+      const at = f.unit.body.torsoMesh.getAbsolutePosition().clone();
       this.visualEffects?.spawnFireworkBurst(at);
-      if (!f.unit.isDead) f.unit.applyDamage(f.damage, Vector3.Zero());
+      if (!f.unit.isDead) f.unit.applyDamage(Math.max(f.damage, f.unit.currentHealth), Vector3.Zero());
       this.abilityHook?.("legacy.wizard", "spell_burst", at); // 475b: not "firework..." (capture reads a "fire" prefix as a plain shot); the only wizard_spell shooter (simulationSystem: legacy.wizard's fireball)
     }
   }
