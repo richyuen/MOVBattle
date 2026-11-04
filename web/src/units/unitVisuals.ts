@@ -777,7 +777,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.wizard": vis(
-    { scale: 1.3, bulk: 1.08, headSize: 1.12 }, "staff", "wizard_hat", // [S] 474 the floppy team hat (legacyDress WIZARD_HAT; audit 468 a.1); [P] 475 scale 1.76 -> 1.3 (card Size 1.15x; audit 468 a.5)
+    { scale: 1.3, bulk: 0.82, torsoWidth: 0.92, headSize: 1.12, legLength: 1.3, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "staff", "wizard_hat", // [S] 480: lanky legs under the open knee coat
     "none", "cape", "#7BA0FF", "sword", {
       offhandVariant: "longsword", // [S] 470 a slim longsword in his left hand beside the staff (audit 468 wizard b.2; legacy.wizard.red.png, card Off Hand Wizard Sword)
       weaponVariant: "wizard_staff", // [S] 475 a twisted wooden staff with a curled head set with pale-blue crystals (propBuilder WIZARD_STAFF; audit 468 b.1)
