@@ -2376,7 +2376,6 @@ export class ProceduralAnimator {
     this._squareShield();
     this._carrySpear();
     this._carryProp(dt);
-    this._holdWizardSword();
     this._holdForkStab(dt);
     this._turnFork();
     this._holdBanjo();
@@ -2418,6 +2417,7 @@ export class ProceduralAnimator {
     this._holdTPose(dt);
     this._reaperHover(dt);
     this._rideBarrel();
+    this._holdWizardSword();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
