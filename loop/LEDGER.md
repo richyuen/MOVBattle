@@ -7,42 +7,53 @@ Script stats are exempt from critic/reversal checks. One row per knob; update at
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-474 | SUPER_FLIGHT superman flight, lift .8 (06150948, 4796acd3) | legacy.super_peasant.c | approved (struck 1)
-474 | DARK_PEASANT_HAIR bare head, brown mop (b40f53c2) | legacy.dark_peasant.a | approved (struck 2, 3)
-474 | SUPER_TUNIC white tunic, laced collar (f8accbf7) | legacy.super_peasant.a | approved (none struck; skirt hidden)
-474 | MJOLNIR short haft, head .19, glowing end rings (23dd93bf, a3c8a272) | legacy.thor.b | approved (struck 1, 2; b PASS)
-474 | WIZARD_HAT floppy bent-tip hat (7c149002) | legacy.wizard.a | approved (struck 1)
-474 | PHARAOH_BANDS gold armlets and wrist cuffs (44052bc1) | legacy.pharaoh.a | approved (struck 5; a PASS)
-474 | [P] TANK_PAINT hull/roof on cloth, glow .12 (66732b31) | legacy.tank.a | approved (struck 2)
-475 | THOR_LEGS knee trousers, fur cuffs, leather boots (df66d71e) | legacy.thor.a | approved (struck 5; CONFIRM failed a)
-475 | TANK_TURRET low faceted Abrams wedge (e0b2e72e) | legacy.tank.a | approved (struck 3)
-475 | CHARIOT_SCYTHE blade back from each hub (841dc9fc) | legacy.chariot.b | approved (struck 3; b PASS)
-475 | TANK_ROOF cupola, team dome, hatch, antennas (7a612df2) | legacy.tank.a | approved (struck 4; CONFIRM failed a)
-475 | CHARIOT_LORICA dark hoops, gold straps, pauldrons (89b096f6) | legacy.chariot.a | approved (struck 2)
-475 | WIZARD_STAFF twisted staff, crystal head (c4906faa) | legacy.wizard.b | approved (struck 1; CONFIRM failed b)
-475 | FLAIL_HOLD rod up and out, strands plumb (b994faf3) | legacy.pharaoh.b | approved (struck 3; b PASS)
-475 | KNEEL_POSE struck man and circle kneel (a5a5db73) | legacy.pharaoh.c | approved (struck 2; c PASS)
-475 | WIZARD_FIREWORK spin up then burst (2475d0af, 41a3dc3b) | legacy.wizard.c | approved (none struck; burst after he lands)
-475 | [P] wizard proportions.scale 1.76 -> 1.3 (048b6138) | legacy.wizard.a | approved (struck 5)
+475 | df66d71e | legacy.thor.a | approved (struck 5; CONFIRM failed a)
+475 | e0b2e72e | legacy.tank.a | approved (struck 3)
+475 | 841dc9fc | legacy.chariot.b | approved (struck 3; b PASS)
+475 | 7a612df2 | legacy.tank.a | approved (struck 4; CONFIRM failed a)
+475 | 89b096f6 | legacy.chariot.a | approved (struck 2)
+475 | c4906faa | legacy.wizard.b | approved (struck 1; CONFIRM failed b)
+475 | b994faf3 | legacy.pharaoh.b | approved (struck 3; b PASS)
+475 | a5a5db73 | legacy.pharaoh.c | approved (struck 2; c PASS)
+475 | 2475d0af, 41a3dc3b | legacy.wizard.c | approved (none struck; burst after he lands)
+475 | 048b6138 | legacy.wizard.a | approved (struck 5)
 
-476 | raised car front and gold laurels (b64da862, ca17191a) | legacy.chariot.a | approved (struck 3; CONFIRM failed a, b)
-477 | slim straight-legged build (b8d03fdd) | legacy.pharaoh.a | approved (struck 1)
-477 | gold false beard (a019aff2) | legacy.pharaoh.a | approved (struck 2)
-477 | lanky upright build (e8a90461) | legacy.thor.a | approved (struck 1)
-477 | pointed blond beard (8bdc9ab2, 74843223) | legacy.thor.a | approved (struck 2)
-477 | swept layered wings (dfbb27b2) | legacy.thor.a | approved (struck 3)
-477 | transverse crest (32545a0f) | legacy.chariot.a | approved (struck 1)
-477 | oval shield (17bfabb4) | legacy.chariot.b | approved
-477 | lanky upright build (e09e65d6) | legacy.super_boxer.a | approved (struck 1)
-477 | luminous fist-fitted mitts (533a1de9) | legacy.super_boxer.b | approved
+476 | b64da862, ca17191a | legacy.chariot.a | approved (struck 3; CONFIRM failed a, b)
+477 | b8d03fdd | legacy.pharaoh.a | approved (struck 1)
+477 | a019aff2 | legacy.pharaoh.a | approved (struck 2)
+477 | e8a90461 | legacy.thor.a | approved (struck 1)
+477 | 8bdc9ab2, 74843223 | legacy.thor.a | approved (struck 2)
+477 | dfbb27b2 | legacy.thor.a | approved (struck 3)
+477 | 32545a0f | legacy.chariot.a | approved (struck 1)
+477 | 17bfabb4 | legacy.chariot.b | approved
+477 | e09e65d6 | legacy.super_boxer.a | approved (struck 1)
+477 | 533a1de9 | legacy.super_boxer.b | approved
 478 | [R] outer-hull fitted chest courses and waistband (faaba396) | legacy.pharaoh.a | approved (struck 1; CONFIRM failed a: sandals)
+479 | [R] open V coat, broad studded Viking belt (288e2eb7, ddec1562) | legacy.thor.a | approved (struck 1)
+479 | exposed shield forearm mount (b4856556) | legacy.chariot.b | approved (struck 1; b PASS)
+479 | padded glove knuckles/cuffs, head-relative fit (36730de3, cc74e96d) | legacy.super_boxer.b | approved (struck 1; b PASS)
+479 | back-dash, forward exploding punch (d2432f2a) | legacy.super_boxer.c | approved (struck 1)
+479 | patchy open laced jerkin (663b3f2d, 5fa80d38) | legacy.dark_peasant.a | approved (struck 4)
+479 | fifteen streaking thrown hands (1eb610b3; evidence b83edf3d, ff152789, fc7c5263) | legacy.dark_peasant.c | approved (struck 1)
+479 | white interlocking rope belt (0fb715a1, 3f642c6a) | legacy.super_peasant.a | approved (struck 3)
+479 | streaming wrist ribbons (909a9f7c) | legacy.super_peasant.c | approved (struck 2)
+479 | sustained spell lift until lethal chest burst (0117757c, c67e45e9) | legacy.wizard.c | approved (airborne clause struck)
 ## Spent (never retry as [P])
 
 ## Rows
+legacyDress.ts:THOR_COAT front + THOR_BELT | outer hull V .8->.16W; belt .25H, buckle .48W,4 studs; shade .35 | 479 | approved | inset parallel strips, belt .2H,buckle .36W,shade .85
+vehicleBuilder.ts:CHARIOT_SCUTUM mount (x,y,z,turn) | -1.35W,+.62H,+1.4D,.62; forearm bracket | 479 | approved | -.85W,+.18H,.9D,-.12 (477)
+propBuilder.ts:GLOW_GLOVE knuckles,cuff,fit | pad 1.38x1x.8, cuff .4x.9; core max(2.4 hands,1 head) | 479 | approved | core ball + thumb,2.4 hands (477)
+legacyDress.ts:DARK_JERKIN (panel,tail,laces,leather) | .32W,.93H; .42H;4;(.17,.13,.1) | 479 | approved | none
+visualEffects.ts:DARK_VOLLEY (count,delay,speed,streak) | 15,.03,30,1.6; sphere slots restored at impact | 479 | approved | none
+legacyDress.ts:SUPER_ROPE (knots,span,fat,ellipse,color) | 16,.27W,.16H,(.56W,.65D),(.7,.665,.56) emissive | 479 | approved | none
+visualEffects.ts:SUPER_WRIST_RIBBONS (samples,width,emission) | 14,.09,(1.6,1.2,.15); world-space flight history | 479 | approved | none
+runtimeUnit.ts:FIREWORK_LIFT + projectileSystem chest burst | analytic rise min(1.8,age*up), no gravity until burst; lethal | 479 | approved | ballistic up6.5,delay.75; root+.9,spell damage (475)
+simulationSystem.ts:SUPERBOXER_PUNCH (back,backTime,forwardTime,cooldown) | 2,.22,.24,4; splash1.75,profile damage | 479 | approved | ordinary melee punch
 legacyDress.ts:PHARAOH_GARB shell (proud, chest, chestAt, waist, flare) | .025,.22,.12,.23,1.08; sliced yoke/chest/pelvis | 478 | approved | box: out 1.08,chest .16,chestAt .12,waist .2,line .05 (470)
-vehicleBuilder.ts:CHARIOT_SCUTUM oval/face, offset, turn, ornamentZ | 1.35W/1.35tall,1.22W/1.25tall; -.85W,+.18H; -.12; 1.8t | 477 | approved | rectangular panels, hidden rim
+vehicleBuilder.ts:CHARIOT_SCUTUM oval/face, ornamentZ | 1.35W/1.35tall,1.22W/1.25tall;1.8t | 477 | approved | rectangular panels, hidden rim
 unitVisuals.ts:legacy.super_boxer build + animator stance | .84,.92,1.08,1.3,.88/.8; tilt .02,stride .16,crouch 0,lean .04 | 477 | approved | 1.38 bulk,1.18 arms; crouched
-propBuilder.ts:GLOW_GLOVE seat, fit, glow | actual hand mesh centre; 2.4x hand width; glow 2.5 | 477 | approved | sword grip offset; .17s * oversize; glow .5
+propBuilder.ts:GLOW_GLOVE seat, glow | actual hand mesh centre;glow 2.5 | 477 | approved | sword grip offset; .17s * oversize; glow .5
 unitVisuals.ts:legacy.pharaoh build + animator stance | .82,.92,1.3,.88/.8; tilt .02,stride .12,crouch 0,lean .04 | 477 | approved | bulk 1.08; caster crouch
 legacyDress.ts:pharaohFalseBeard (height, diameters, y, z; half-head units) | 1.05,.55/.42,-1.05,1.17 | 477 | approved | none
 unitVisuals.ts:iconic_thor build + animator stance | .84,.92,1.06,1.3,.88/.8; tilt .02,stride .12,crouch 0,lean .04 | 477 | approved | bulk 1.18,arms 1.12; crouched
@@ -51,19 +62,19 @@ legacyDress.ts:WINGED_BAND vanes + covert | H*(1.65-.23k),W*.28,.22+.22k; W*.57,
 vehicleBuilder.ts:CHARIOT_HELM crest mechanism | 11 spokes; step .23; R*(.29,.85,.78); inner band .22,.15,.48 | 477 | approved | half-cylinder arc, rotation.x -PI/2
 vehicleBuilder.ts:CHARIOT_FRONT (rise, panels, depth, trim, leafCount, leafSize, relief) | .22, 7, .055, .07, 7 pairs/side, (.045,.14,.025), .04 | 476 | approved | plain half-cylinder, thin rim (before 476)
 
-wild_west done rows | compacted 465 | 459 | approved | values: git show 44da9220:loop/LEDGER.md
+wild_west done rows | compacted 465 | 459 | approved | ledger@768b54e7
 
 
 legacy_1 stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 8 units) | d PASS 8/8 (bearers polearm_melee 465: hp .68/.17, dmg .63, cd 2.31) | 465 | stats | values: git show 5d6b5d24
-legacy_1 done 457-459 rows | compacted 467 | 459 | approved | values: git show c07c1bca:loop/LEDGER.md
-propBuilder.ts:TEAM_GLOVE (wide, squash, band, glow, shade, palm, palmProud) + subdivisions 2 | .22, .92, .025, .1, .8, .55, .9 | 466 | approved | .11, glow .06, x.5 grey knobs (458-465); [S] rebuild 466 (critic accepted the colour move)
+legacy_1 done 457-459 rows | compacted 467 | 459 | approved | ledger@768b54e7
+propBuilder.ts:TEAM_GLOVE (wide, squash, band, glow, shade, palm, palmProud) + subdivisions 2 | .22, .92, .025, .1, .8, .55, .9 | 466 | approved | ledger@768b54e7
 unitVisuals.ts:legacy.barrel_roller build (scale, bulk, legLength, armLength, upperLegWidth, lowerLegWidth) | 1.0, .82, 1.08, 1.06, .9, .85 | 458 | approved | 1.24, 1.48 brute (before 458)
-legacyDress.ts:BEARER_RING (radius, band, flat, lift, sides, glow; BEARER_RING_COLOR flag, banner) | 2.2, .05, .012, .02, 40, .45; (.95,.6,.2), (.25,.75,.95) | 462 | approved | radius 1.6 (460, the ally stood outside the reach); team colour (459); spent for [P] (root exception used 462)
+legacyDress.ts:BEARER_RING (radius, band, flat, lift, sides, glow; BEARER_RING_COLOR flag, banner) | 2.2, .05, .012, .02, 40, .45; (.95,.6,.2), (.25,.75,.95) | 462 | approved | ledger@768b54e7
 legacyDress.ts:SHAKO (wide, flare, tall, peak, plate, plateTall, band, plume, plumeWide, shade, glow) | 1.02, 1.12, .95, .42, .42, .34, .08, .42, .22, .85, .12 | 459 | approved | bald (before 459)
 legacyDress.ts:BANNER_COATEE (shade, glow, epOut, epTo, fringe, belt, thick, span, waist, waistAt, whiteGlow) | .85, .12, 1.75, .16, .1, .16, 1.12, .82, .12, -.72, .3 | 460 | approved | plain team body (before 460)
 legacyDress.ts:FLAG_HELMET (wide, tall, dome, band, bandOut, plate, crest, crestLong, crestThin, whiteGlow) | 1.08, .18, .3, .12, 1.05, .22, .42, .8, .14, .25 | 460 | approved | bald (before 460)
 legacyDress.ts:BOXER_SHORTS (shade, glow, out, to, band, bandOut, stripes, step) | .55, .12, 1.85, .88, .24, 1.1, 4, .03 | 460 | approved | plain team body (before 460)
-legacyDress.ts:PEASANT_BELT (lumps, out, at, lump, fat, twist, cream, glow) | 14, 1.12, -.42, .5, .8, .6, (1,.95,.8), .32 | 461 | approved | 12 lumps .36 fat .42 (460, spaced shards); no further [P] (critic 461)
+legacyDress.ts:PEASANT_BELT (lumps, out, at, lump, fat, twist, cream, glow) | 14, 1.12, -.42, .5, .8, .6, (1,.95,.8), .32 | 461 | approved | ledger@768b54e7
 legacyDress.ts:POACHER_BELT (tall, at, out, buckle, bar, proud, tan, grey, glow) | .16, -.84, 1.14, .3, .24, .05, (.85,.55,.25), (.32,.32,.34), .16 | 460 | approved | none (before 460)
 runtimeUnit.ts:BEARER_AURA (haste, ring, band) + simulationSystem BEARER_AURA_KIND | 1.5, .5, .035; flag haste, banner stay | 460 | approved | support heal (before 460)
 legacyDress.ts:BANNER_CUFFS (from, to, out) | .62, 1.0, 1.45 | 461 | approved | bare forearms (before 461)
@@ -72,37 +83,37 @@ legacyDress.ts:FLAG_JACKET (shade, glow, placket, proud, collar, collarOut) | .8
 legacyDress.ts:PEASANT_LEGS (pantOut, pantTo, cuff, cuffOut, sockOut, sockTo, shade, tan, brown) | 1.35, .55, .1, 1.55, 1.2, 1.0, .8, (.8,.6,.35), (.3,.16,.08) | 461 | approved | team legs (before 461)
 legacyDress.ts:PEASANT_FRINGE (locks, lockW, thick, top, foot, sideLong, proud, gap, color) | 6, .22, .12, .92, .18, .75, .04, .5, (.07,.05,.04) | 461 | approved | none (before 461)
 legacyDress.ts:POACHER_BOOTS (from, to, out, cuffFrom, cuff, color) | .62, 1.04, 1.3, .5, 1.6, (.62,.36,.18) | 461 | approved | team feet (before 461)
-scenarios.ts:gallery_faction_legacy (columns, spacingX, spacingZ, front) | 8, 4.6, 1.85, the legacy_1 men in the near rank | 462 | evidence | spacingZ 2.35 (461, ends cropped); 6 a rank, roster order (before 461)
+scenarios.ts:gallery_faction_legacy (columns, spacingX, spacingZ, front) | 8, 4.6, 1.85, the legacy_1 men in the near rank | 462 | evidence | ledger@768b54e7
 legacyDress.ts:BLOWDARTER_HAIR (capOut, cap, side, top, foot, back, front, color, glow) | 1.12, .22, .24, .9, .75, 1.08, .35, (.16,.08,.06), .12 | 462 | approved | dark dome hat (before 462)
-simulationSystem.ts:HAND_LAUNCH (unit -> hand) | legacy.poacher bow | 462 | approved | unit.position + 1 m (before 462); blowdarter mouth rejected 462
+simulationSystem.ts:HAND_LAUNCH (unit -> hand) | legacy.poacher bow | 462 | approved | ledger@768b54e7
 unitVisuals.ts:legacy.pike hat; legacy.poacher special | cavalier_hat; quiver_back | 462 | approved | great-helm; none (before 462)
 propBuilder.ts:LONG_PIKE (long, thick, collar, blade, bladeWide, hook, hookAt, hookRake, grip, wood) | 2.8, .03, .08, .34, .07, .09, .18, .6, .12, (.7,.3,.08) | 463 | approved | spear 1.0 s (before 463)
 runtimeUnit.ts:levelsPike units | ancient.sarissa, legacy.pike | 463 | approved | sarissa only (before 463)
 propBuilder.ts:BLOWGUN (long, thick, mouth, mouthOut, band, bandsAt, dart, wood) | .55, .03, .05, 1.6, .022, [.22,.6], .07, (.9,.45,.15) | 463 | approved | .38 s stick (before 463)
 proceduralAnimation.ts:BLOWGUN_HOLD (mouthAhead, mouthDrop, side, tilt, near, far) + blowdarter posePreset default | 1.05, .3, .18, .1, .07, .42 | 463 | approved | archer pose (before 463)
-propBuilder.ts:POACHER_BOW (long, thick, taper, bow, grip, wrap, wrapAt, nockAt, wood, rope) | .62, .085, .55, .06, .1, .09, [.1,.26], .86, (.62,.3,.1), (1,.78,.45) | 464 | spent | wood (.85,.5,.25) (463); plain bow (before 463); no further [P] (critic 464)
+propBuilder.ts:POACHER_BOW (long, thick, taper, bow, grip, wrap, wrapAt, nockAt, wood, rope) | .62, .085, .55, .06, .1, .09, [.1,.26], .86, (.62,.3,.1), (1,.78,.45) | 464 | spent | ledger@768b54e7
 proceduralAnimation.ts:BOXER_JAB (guardAhead, guardUp, guardIn, reach, jabUp, cock, cockAt, drivenAt, heldTo, lean) | .45, .12, .2, .95, -.05, .15, .12, .3, .78, .12 | 463 | approved | overhead strike (before 463)
 legacyDress.ts:BARREL_RIDE (wide, long, staves, thick, alt, hoop, hoopAt, rivets, wood, iron) | .3, .44, 12, .14, .8, .035, .72, 6, (.9,.48,.2), (.38,.38,.4) | 463 | approved | barrel at the waist (before 463)
 projectileSystem.ts:BARREL_SHOT (wide, long, staves, hoop, hoopAt, wood) + rosterManifest barrel_roller projectileHint | .42, .6, 10, .05, .7, (.9,.48,.2); barrel | 463 | approved | stone (before 463)
 legacyDress.ts:PIKE_PLUME (color, glow) | (1,.72,.32), .08 | 463 | approved | team plume (before 463)
 simulationSystem.ts:HOP_BACK legacy.boxer (afterLand, dist, rise, cooldown) | .2, 2.6, 2.2, 3 | 464 | approved | none (before 464)
-simulationSystem.ts:PIKE_DROP (ahead, up, spin, ready) | .6, -2.4, 3, .6 | 464 | approved | up .8 spin 1.2 (464a, read as held)
-propBuilder.ts:CHARGE_PENNANT (wide, tall, bar, ring, ringOut, ringGap) | .15, .46, .02, .025, 1.9, .07 | 464 | approved | CHARGE_FLAG sheet .48 x .36 (before 464)
-proceduralAnimation.ts:BEARER_HOLD (ahead, out, high, low) | .42, .22, .72, .3 | 464 | approved | PRIEST_HOLD at the side (before 464)
+simulationSystem.ts:PIKE_DROP (ahead, up, spin, ready) | .6, -2.4, 3, .6 | 464 | approved | ledger@768b54e7
+propBuilder.ts:CHARGE_PENNANT (wide, tall, bar, ring, ringOut, ringGap) | .15, .46, .02, .025, 1.9, .07 | 464 | approved | ledger@768b54e7
+proceduralAnimation.ts:BEARER_HOLD (ahead, out, high, low) | .42, .22, .72, .3 | 464 | approved | ledger@768b54e7
 unitVisuals.ts:legacy.barrel_roller hat | tricorn | 464 | approved | none (before 464)
-simulationSystem.ts:BEARER_PULSE (every, holds) | 3, 3.5 | 465 | approved | aura on the support cooldown 2 x 1.5, holds +.5 (before 465)
+simulationSystem.ts:BEARER_PULSE (every, holds) | 3, 3.5 | 465 | approved | ledger@768b54e7
 projectileSystem.ts:SMALL_ARROW (long, thick, head, headWide, fletch) | .46, .03, .07, .045, .07 | 465 | approved | the .75 arrow (before 465)
 projectileSystem.ts:BLOW_DART (long, thick, needle, tuft, tuftLong) | .2, .014, .07, .06, .07 | 465 | approved | the .75 arrow (before 465)
-legacyDress.ts:PIKE_VEST (rim, rimOut, emblem, proud, emblemAt, cream, glow) | .1, 1.06, .62, .04, -.05, (.9,.76,.52), .18 | 465 | approved | cream (1,.9,.7) glow .25 (465 look, near white)
+legacyDress.ts:PIKE_VEST (rim, rimOut, emblem, proud, emblemAt, cream, glow) | .1, 1.06, .62, .04, -.05, (.9,.76,.52), .18 | 465 | approved | ledger@768b54e7
 legacyDress.ts:BARREL_VEST (shade, glow, vWide, vDeep, proud) | .7, .12, .62, .62, .03 | 465 | approved | none (before 465)
-unitVisuals.ts:legacy.boxer build (scale, bulk, torsoWidth, headSize, legLength) | 1.08, .84, .92, 1.12, 1.16 | 465 | approved | .68, .94, -, 1.32, - (before 465)
-unitVisuals.ts:legacy.peasant build (scale, bulk, torsoWidth, headSize, legLength) | 1.0, .82, .92, 1.1, 1.16 | 465 | approved | .62, .78, -, 1.44, .74 (before 465)
-propBuilder.ts:BANNER_POLE (thick, collar, collarOut, collarsAt, cross, cap, wood) | .04, .03, 1.5, [.22,.5,.74], 2.2, .04, (.55,.3,.12) | 466 | approved | .022 LEGACY_POLE + spike (before 466)
+unitVisuals.ts:legacy.boxer build (scale, bulk, torsoWidth, headSize, legLength) | 1.08, .84, .92, 1.12, 1.16 | 465 | approved | ledger@768b54e7
+unitVisuals.ts:legacy.peasant build (scale, bulk, torsoWidth, headSize, legLength) | 1.0, .82, .92, 1.1, 1.16 | 465 | approved | ledger@768b54e7
+propBuilder.ts:BANNER_POLE (thick, collar, collarOut, collarsAt, cross, cap, wood) | .04, .03, 1.5, [.22,.5,.74], 2.2, .04, (.55,.3,.12) | 466 | approved | ledger@768b54e7
 propBuilder.ts:BANNER_ARCH (wide, tall, drop, crenel, crenelTall, door, doorTall) | .78, .5, .12, .18, .12, .34, .72 | 466 | approved | tower .08 H glyph (before 466)
 propBuilder.ts:BANNER_FAN (rays, spread, long, root, tip, splay) | 5, .8, .12, .05, .012, .3 | 466 | approved | none (before 466)
 legacyDress.ts:PEASANT_SLEEVES (from, upperOut, lowerOut, lowerTo, cuffFrom, cuffOut, tan, glow) | .45, 1.2, 1.25, .8, .72, 1.75, (.85,.55,.28), .22 | 466 | approved | none (before 466)
 legacyDress.ts:FLAG_CUFFS (from, band, bandOut) | .6, .07, 1.6 | 466 | approved | none (before 466)
-runtimeUnit.ts:POISON (tint, dye, glow, seconds, dps, tick) | (.45,.9,.12), .7, .45, 6, 4, .5 | 467 | approved | none: 6 damage on the hit only (before 467)
+runtimeUnit.ts:POISON (tint, dye, glow, seconds, dps, tick) | (.45,.9,.12), .7, .45, 6, 4, .5 | 467 | approved | ledger@768b54e7
 legacyDress.ts:FLAG_BOOTS + PIKE_BELT + PIKE_HAIR + POACHER_KNEES + BARREL_WRAPS (467 dress, specs at the code) | see legacyDress | 467 | approved | none (before 467)
 
 legacyDress.ts:THOR_LEGS (pantTo, fur, furOut, tufts, bootFrom, bootOut, top, strapAt) | .34, .14, 1.85, 7, .5, 1.35, .1, .9 | 475 | approved | navy legs (before 475)

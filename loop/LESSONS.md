@@ -52,4 +52,4 @@ One line each, newest last within its heading. Read whole at step 1; merge dupli
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
 - A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
 - Sphere arc gaps: +PI turns a backward hood opening forward (457-458). A rotated half-cylinder can lie flat as a crest: explicit radial closed blocks keep its fan above the crown (477).
-- Torso bands sized only to torsoMesh can sit inside the larger yoke/pelvis hull. Slice the outer hull at both band edges to fit a closed shell (478).
+- Capture d is HALF the actor separation (spawns at +/-d): a midpoint volley frame needs both full rigs plus the sphere margins (479).
