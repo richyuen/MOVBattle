@@ -1596,13 +1596,15 @@ export function buildWingedBand(scene: Scene, W: number, H: number, seat: number
 }
 
 /*
- * [S] 470 the Pharaoh's garb (audit 468 pharaoh a.2: "torso: plain grey base vest block - TABS: team-coloured garb banded with gold across chest and
- * waist"; legacy.pharaoh.red.png: the trunk in team cloth a shade under the skin, a broad gold band round the chest under the arms and a broader gold
- * band round the waist, a thin gold line between them). PHARAOH_GARB: the trunk, its yoke and the pelvis in team times .shade; gold bands wrapped
- * round the trunk .out of its W and D: the chest band .chest H tall centred .chestAt H over the trunk's middle, the waist band .waist H tall at its
- * foot, a thin line .line H tall halfway between. Gold .gold self-lit .glow.
+ * [R] 478 Pharaoh torso dress, specified from legacy.pharaoh.red.png and .blue.png and CONFIRM 475/477:
+ * Preserve the slim long-legged build, modius, chin beard, collar, armlets and short pleated kilt (475 list).
+ * Two touching gold chest courses span about a fifth of the shoulder-to-waist height below the armpits;
+ * a separate broad gold waistband sits immediately above the kilt, with team cloth exposed between (477 list).
+ * Replace the buried box bands with closed tapered shells fitted to the OUTER trunk hull, including the yoke
+ * and chest swell. Each course samples both boundaries independently, then stands 0.025 body units proud.
+ * Four broad faces follow the body's planar sides; the lower waist lip flares slightly over the kilt top.
  */
-const PHARAOH_GARB = { shade: 0.85, out: 1.08, chest: 0.16, chestAt: 0.12, waist: 0.2, line: 0.05, gold: new Color3(0.95, 0.66, 0.16), glow: 0.2 };
+const PHARAOH_GARB = { shade: 0.85, proud: 0.025, chest: 0.22, chestAt: 0.12, waist: 0.23, flare: 1.08, gold: new Color3(0.95, 0.66, 0.16), glow: 0.2 };
 
 /** The Pharaoh's team garb banded in gold at the chest and waist (spec at PHARAOH_GARB). */
 export function pharaohGarb(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -1615,14 +1617,54 @@ export function pharaohGarb(scene: Scene, body: ArticulatedBody, teamColor: Colo
   for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = cloth;
   for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = cloth;
   const out: Mesh[] = [];
-  const { W, H, D, lay } = trunkFrame(scene, body, out);
-  const ring = (name: string, y: number, h: number): void => {
-    lay(MeshBuilder.CreateBox(name, { width: W * G.out, height: H * h, depth: D * G.out }, scene), 0, y, 0, gold);
+  const { H } = trunkFrame(scene, body, out);
+  body.torso.computeWorldMatrix(true);
+  const inverse = body.torso.getWorldMatrix().clone().invert();
+  const hull = [body.torsoMesh, ...body.torso.getChildMeshes(true).filter(m => /_yoke$/.test(m.name)),
+    ...body.hip.getChildMeshes(true).filter(m => /_pelvis$/.test(m.name))];
+  const triangles: Vector3[][] = [];
+  for (const mesh of hull) {
+    mesh.computeWorldMatrix(true);
+    const positions = mesh.getVerticesData("position")!, indices = mesh.getIndices()!;
+    const transform = mesh.getWorldMatrix().multiply(inverse);
+    const points: Vector3[] = [];
+    for (let i = 0; i < positions.length; i += 3) points.push(Vector3.TransformCoordinates(Vector3.FromArray(positions, i), transform));
+    for (let i = 0; i < indices.length; i += 3) triangles.push([points[indices[i]], points[indices[i + 1]], points[indices[i + 2]]]);
+  }
+  // Slice the actual hull rather than the smaller torsoMesh bounding box: the yoke owns its outer surface.
+  const section = (y: number): { x: number; z: number } => {
+    let x = 0, z = 0;
+    for (const triangle of triangles) for (let i = 0; i < 3; i++) {
+      const a = triangle[i], b = triangle[(i + 1) % 3];
+      if (y < Math.min(a.y, b.y) || y > Math.max(a.y, b.y)) continue;
+      const t = Math.abs(b.y - a.y) < 1e-6 ? 0 : (y - a.y) / (b.y - a.y);
+      const p = Vector3.Lerp(a, b, t);
+      x = Math.max(x, Math.abs(p.x)); z = Math.max(z, Math.abs(p.z));
+    }
+    return { x: x + G.proud, z: z + G.proud };
   };
-  const chestY = H * G.chestAt, waistY = -H / 2 + (H * G.waist) / 2;
-  ring("pharaohChestBand", chestY, G.chest);
-  ring("pharaohWaistBand", waistY, G.waist);
-  ring("pharaohGarbLine", (chestY + waistY) / 2, G.line);
+  const ring = (name: string, y0: number, y1: number, flare = 1): void => {
+    const bottom = section(y0), top = section(y1);
+    const band = MeshBuilder.CreateBox(name, { size: 1 }, scene);
+    const positions = band.getVerticesData("position")!;
+    for (let i = 0; i < positions.length; i += 3) {
+      const upper = positions[i + 1] > 0, edge = upper ? top : bottom;
+      positions[i] = Math.sign(positions[i]) * edge.x * (upper ? 1 : flare);
+      positions[i + 1] = upper ? y1 : y0;
+      positions[i + 2] = Math.sign(positions[i + 2]) * edge.z * (upper ? 1 : flare);
+    }
+    band.setVerticesData("position", positions);
+    band.refreshBoundingInfo();
+    band.parent = body.torso;
+    band.material = gold;
+    band.convertToFlatShadedMesh();
+    out.push(band);
+  };
+  const chestY = body.torsoMesh.position.y + H * G.chestAt;
+  const chestBottom = chestY - H * G.chest / 2;
+  ring("pharaohChestBandLower", chestBottom, chestY);
+  ring("pharaohChestBandUpper", chestY, chestY + H * G.chest / 2);
+  ring("pharaohWaistBand", 0, H * G.waist, G.flare);
   return out;
 }
 
