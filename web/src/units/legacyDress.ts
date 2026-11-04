@@ -1696,6 +1696,21 @@ export function thorHair(scene: Scene, body: ArticulatedBody): Mesh[] {
     lock.rotation.z = s * P.flare;
   }
   put(MeshBuilder.CreateBox("thorBackHair", { width: (e.x + t) * 2, height: tall, depth: t }, scene), c.x, midY, c.z - e.z * P.back + t / 2);
+  // [S] 477: blond pointed beard over the lower face, chin and upper chest.
+  // The render has a broad jaw wedge, two cheek locks and a single low point.
+  const beard = put(MeshBuilder.CreateCylinder("thorBeard", {
+    height: e.y * 2.0, diameterTop: e.x * 1.8, diameterBottom: 0,
+    tessellation: 5,
+  }, scene), c.x, c.y - e.y * 1.03, c.z + e.z * 1.12);
+  beard.scaling.z = 0.42;
+  for (const s of [-1, 1]) {
+    const cheek = put(MeshBuilder.CreateCylinder("thorBeardCheek", {
+      height: e.y * 1.12, diameterTop: e.x * 0.7, diameterBottom: e.x * 0.35,
+      tessellation: 4,
+    }, scene), c.x + s * e.x * 0.65, c.y - e.y * 0.45, c.z + e.z * 1.08);
+    cheek.rotation.z = s * 0.22;
+    cheek.scaling.z = 0.55;
+  }
   return out;
 }
 
