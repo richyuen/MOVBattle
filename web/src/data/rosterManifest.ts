@@ -345,13 +345,13 @@ const legacy = makeFaction(FactionId.Legacy, "legacy", [
 ]);
 
 const good = makeFaction(FactionId.Good, "good", [
-  ["devout_gauntlet", "Devout Gauntlet", 220, "light_melee", { weaponHint: "mace" }],
-  ["celestial_aegis", "Celestial Aegis", 300, "shield_melee", { shieldHint: "tower", weaponHint: "sword" }],
-  ["radiant_glaive", "Radiant Glaive", 650, "polearm_melee", { weaponHint: "halberd" }],
-  ["righteous_paladin", "Righteous Paladin", 900, "heavy_melee", { weaponHint: "greatsword", shieldHint: "kite" }],
-  ["divine_arbiter", "Divine Arbiter", 3500, "special_magic", { abilities: ["lightning_strike"], weaponHint: "lightning_bolt" }],
-  ["sacred_elephant", "Sacred Elephant", 2200, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth" }],
-  ["chronomancer", "Chronomancer", 1600, "special_magic", { abilities: ["push_force", "freeze"], weaponHint: "staff", visualPreset: "iconic_chronomancer", behaviorPreset: "iconic_chronomancer", controlStrength: 1.45, statusDurationSeconds: 3.8, cooldownMultiplier: 0.88 }],
+  ["devout_gauntlet", "Devout Gauntlet", 200, "light_melee", { weaponHint: "mace", healthMultiplier: 0.74 }],
+  ["celestial_aegis", "Celestial Aegis", 300, "shield_melee", { shieldHint: "tower", weaponHint: "sword", healthMultiplier: 0.15 }],
+  ["radiant_glaive", "Radiant Glaive", 500, "polearm_melee", { weaponHint: "halberd", healthMultiplier: 0.38, damageMultiplier: 0.59, cooldownMultiplier: 0.48 }],
+  ["righteous_paladin", "Righteous Paladin", 800, "heavy_melee", { weaponHint: "greatsword", shieldHint: "kite", healthMultiplier: 0.74, damageMultiplier: 0.43, cooldownMultiplier: 0.56 }],
+  ["divine_arbiter", "Divine Arbiter", 1000, "special_magic", { abilities: ["lightning_strike"], weaponHint: "lightning_bolt", healthMultiplier: 0.05, cooldownMultiplier: 1.53 }],
+  ["sacred_elephant", "Sacred Elephant", 2000, "giant_melee", { size: "colossal", abilities: ["giant_slam"], specialHint: "mammoth", healthMultiplier: 0.16 }],
+  ["chronomancer", "Chronomancer", 3000, "special_magic", { abilities: ["push_force", "freeze"], weaponHint: "staff", visualPreset: "iconic_chronomancer", behaviorPreset: "iconic_chronomancer", controlStrength: 1.45, statusDurationSeconds: 3.8, cooldownMultiplier: 0.27, healthMultiplier: 0.4, damageMultiplier: 0.39 }],
 ]);
 
 const evil = makeFaction(FactionId.Evil, "evil", [
