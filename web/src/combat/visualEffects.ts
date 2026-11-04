@@ -1274,11 +1274,13 @@ export class VisualEffects {
   }
 
   /** [S] 479: streaming wrist ribbons, sampled in world space so turns leave curved yellow tails. */
-  spawnWristRibbons(wrists: (() => Vector3)[], seconds: number): void {
+  spawnWristRibbons(wrists: (() => Vector3)[], seconds: number, gloves = false): void {
     const root = new TransformNode("superWristRibbons", this._scene);
-    const mat = this._fxMat(new Color3(1, 0.8, 0.14), new Color3(1.6, 1.2, 0.15));
+    const mat = gloves ? this._fxMat(new Color3(1, 0.95, 0.55), new Color3(2, 1.8, 0.8))
+      : this._fxMat(new Color3(1, 0.8, 0.14), new Color3(1.6, 1.2, 0.15));
     const histories = wrists.map(get => Array.from({ length: 14 }, () => get().clone()));
-    const paths = (points: Vector3[]) => [points.map(p => p.add(new Vector3(0, 0.045, 0))), points.map(p => p.add(new Vector3(0, -0.045, 0)))];
+    const half = gloves ? 0.09 : 0.045;
+    const paths = (points: Vector3[]) => [points.map(p => p.add(new Vector3(0, half, 0))), points.map(p => p.add(new Vector3(0, -half, 0)))];
     const ribbons = histories.map(points => {
       const m = MeshBuilder.CreateRibbon("superWristRibbon", { pathArray: paths(points), updatable: true, sideOrientation: Mesh.DOUBLESIDE }, this._scene);
       m.parent = root; m.material = mat; m.isPickable = false; return m;

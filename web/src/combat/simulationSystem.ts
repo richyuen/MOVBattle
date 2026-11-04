@@ -1694,6 +1694,11 @@ export class SimulationSystem {
         const to = enemy.position.subtract(dir.scale(0.85)); to.y = from.y;
         unit.stopMoving(); this._clearPathState(unit);
         this._boxerDashes.set(unit, { from, back, to, target: enemy, start: now });
+        // [S] 480: white-yellow tails sample both moving glove positions
+        // through the back-dash, return punch and its follow-through.
+        this.visualEffects?.spawnWristRibbons([unit.body.leftHand, unit.body.rightHand].map(hand => () => {
+          worldMatrixChain(hand); return hand.getAbsolutePosition().clone();
+        }), 0.8, true);
         this._boxerDashReady.set(unit, now + 4);
         this._logAbility(unit, "boxer_backdash", now, from);
         return;
