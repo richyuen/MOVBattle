@@ -886,16 +886,30 @@ export function superBoxerEyes(body: ArticulatedBody): void {
  */
 const THOR_BELT = { tall: 0.2, out: 1.2, at: -0.8, buckle: 0.36, proud: 0.08, boss: 0.45, studs: 2, stud: 0.06, grey: new Color3(0.55, 0.55, 0.57), dark: new Color3(0.32, 0.33, 0.36), glow: 0.25 };
 
-/** Thor's wide grey belt with a big round buckle (spec at THOR_BELT). */
+/** [R] 480: legacy.thor.red/blue.png show a broad dark belt on the PELVIS,
+ * with one round grey plate nearly half its width and four surrounding studs.
+ * Measure that owning hull directly: the torso frame put the old buckle inside
+ * the pelvis (z .183 versus hull .217). Keep coat, beard, wings and boots. */
 export function thorBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const B = THOR_BELT;
   const mf = getMaterialFactory();
   const grey = mf.get("cloth", B.grey, { emissive: B.grey.scale(B.glow) });
   const dark = mf.get("cloth", B.dark, { emissive: B.dark.scale(B.glow) });
   const out: Mesh[] = [];
-  const { W, H, D, lay } = outerTrunkFrame(scene, body, out);
-  const y = -H * 0.36, front = D * 0.56;
-  lay(MeshBuilder.CreateBox("thorBelt", { width: W * 1.06, height: H * 0.25, depth: D * 1.12 }, scene), 0, y, 0, dark);
+  const hull = body.hip.getChildMeshes(true).find(m => /_pelvis$/.test(m.name))!;
+  const box = hull.getBoundingInfo().boundingBox, e = box.extendSize;
+  const W = e.x * 2 * hull.scaling.x, H = e.y * 2 * hull.scaling.y, D = e.z * 2 * hull.scaling.z;
+  const center = hull.position.add(box.center.multiply(hull.scaling));
+  const lay = (m: Mesh, x: number, y: number, z: number, material: Material) => {
+    m.parent = hull.parent; m.position.copyFrom(center.add(new Vector3(x, y, z)));
+    m.material = material; m.convertToFlatShadedMesh(); out.push(m); return m;
+  };
+  const y = H * 0.2, front = D * 0.6 + 0.025;
+  // Separate front, back and side straps wrap outside the actual pelvis hull.
+  for (const side of [-1, 1]) {
+    lay(MeshBuilder.CreateBox("thorBelt", { width: W * 1.08, height: H * 0.4, depth: 0.045 }, scene), 0, y, side * (D * 0.55 + 0.025), dark);
+    lay(MeshBuilder.CreateBox("thorBeltSide", { width: 0.045, height: H * 0.4, depth: D * 1.1 }, scene), side * W * 0.53, y, 0, dark);
+  }
   const plate = MeshBuilder.CreateCylinder("thorBeltBuckle", { height: D * B.proud, diameter: W * 0.48, tessellation: 10 }, scene);
   plate.rotation.x = Math.PI / 2;
   lay(plate, 0, y, front + (D * B.proud) / 2, grey);
