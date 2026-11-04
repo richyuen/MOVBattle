@@ -322,6 +322,24 @@ function trunkFrame(scene: Scene, body: ArticulatedBody, out: Mesh[]) {
   return { W, H, D, lay };
 }
 
+/** A dress front outside the yoke and pelvis as well as the inset chest wedge. */
+function outerTrunkFrame(scene: Scene, body: ArticulatedBody, out: Mesh[]) {
+  const frame = trunkFrame(scene, body, out);
+  body.torso.computeWorldMatrix(true);
+  const inv = body.torso.getWorldMatrix().clone().invert();
+  let halfW = frame.W / 2, halfD = frame.D / 2;
+  for (const m of [...body.torso.getChildMeshes(true), ...body.hip.getChildMeshes(true)]) {
+    if (!/_yoke$|_pelvis$/.test(m.name)) continue;
+    m.computeWorldMatrix(true);
+    const transform = m.getWorldMatrix().multiply(inv), p = m.getVerticesData("position") ?? [];
+    for (let i = 0; i < p.length; i += 3) {
+      const v = Vector3.TransformCoordinates(Vector3.FromArray(p, i), transform);
+      halfW = Math.max(halfW, Math.abs(v.x)); halfD = Math.max(halfD, Math.abs(v.z));
+    }
+  }
+  return { ...frame, W: halfW * 2, D: halfD * 2 };
+}
+
 /*
  * [S] 460 the Banner Bearer's coatee (critic 459 a.2: "torso, plain team body - TABS: a military coatee with gold epaulettes and a white cross-belt";
  * legacy.banner_bearer.blue.png: a team coatee, a broad gold epaulette lying on each shoulder over the top of the arm, a white belt crossing the chest
@@ -875,19 +893,21 @@ export function thorBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const grey = mf.get("cloth", B.grey, { emissive: B.grey.scale(B.glow) });
   const dark = mf.get("cloth", B.dark, { emissive: B.dark.scale(B.glow) });
   const out: Mesh[] = [];
-  const { W, H, D, lay } = trunkFrame(scene, body, out);
-  const y = (H / 2) * B.at, front = (D * B.out) / 2;
-  lay(MeshBuilder.CreateBox("thorBelt", { width: W * B.out, height: H * B.tall, depth: D * B.out }, scene), 0, y, 0, grey);
-  const plate = MeshBuilder.CreateCylinder("thorBeltBuckle", { height: D * B.proud, diameter: W * B.buckle, tessellation: 8 }, scene);
+  const { W, H, D, lay } = outerTrunkFrame(scene, body, out);
+  const y = -H * 0.36, front = D * 0.56;
+  lay(MeshBuilder.CreateBox("thorBelt", { width: W * 1.06, height: H * 0.25, depth: D * 1.12 }, scene), 0, y, 0, dark);
+  const plate = MeshBuilder.CreateCylinder("thorBeltBuckle", { height: D * B.proud, diameter: W * 0.48, tessellation: 10 }, scene);
   plate.rotation.x = Math.PI / 2;
   lay(plate, 0, y, front + (D * B.proud) / 2, grey);
-  const boss = MeshBuilder.CreateCylinder("thorBeltBoss", { height: D * B.proud, diameter: W * B.buckle * B.boss, tessellation: 8 }, scene);
+  const boss = MeshBuilder.CreateCylinder("thorBeltBoss", { height: D * B.proud, diameter: W * 0.25, tessellation: 8 }, scene);
   boss.rotation.x = Math.PI / 2;
   lay(boss, 0, y, front + D * B.proud, dark);
   for (const side of [-1, 1]) {
     for (let k = 1; k <= B.studs; k++) {
-      const x = side * (W * B.buckle / 2 + k * W * B.stud * 2.2);
-      lay(MeshBuilder.CreateBox("thorBeltStud", { size: W * B.stud }, scene), x, y, front, dark);
+      const a = side * (k === 1 ? 0.65 : 2.5);
+      const stud = MeshBuilder.CreateCylinder("thorBeltStud", { height: D * B.proud, diameter: W * 0.07, tessellation: 8 }, scene);
+      stud.rotation.x = Math.PI / 2;
+      lay(stud, Math.sin(a) * W * 0.18, y + Math.cos(a) * W * 0.18, front + D * B.proud * 1.1, grey);
     }
   }
   return out;
@@ -1907,7 +1927,10 @@ export function thorLegs(scene: Scene, body: ArticulatedBody, teamColor: Color3)
   return out;
 }
 
-/** Thor's short-sleeved team coat open on his chest, gold-trimmed, with a gold chain across (spec at THOR_COAT). */
+/** [R] 479, refs legacy.thor.red/blue.png, CONFIRM 475/477: keep slim upright build, blond beard and swept wings.
+ * Dark short sleeves; gold-edged open V spans .8 trunk widths at the collar, narrows to .16 at the clasp,
+ * with exposed team abdomen below. The front clears the outer yoke. Broad dark belt .25 trunk heights,
+ * round grey .48-width buckle with raised boss and four surrounding studs (thorBelt); retain boots/pants. */
 export function thorCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const C = THOR_COAT;
   const mf = getMaterialFactory();
@@ -1917,11 +1940,20 @@ export function thorCoat(scene: Scene, body: ArticulatedBody, teamColor: Color3)
   body.torsoMesh.material = coat;
   for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = coat;
   const out: Mesh[] = [];
-  const { W, H, D, lay } = trunkFrame(scene, body, out);
-  const z = D / 2 + (D * C.proud) / 2;
-  lay(MeshBuilder.CreateBox("thorCoatOpen", { width: W * C.open, height: H * 0.98, depth: D * C.proud }, scene), 0, 0, z, body.skinMaterial);
+  const { W, H, D, lay } = outerTrunkFrame(scene, body, out);
+  const z = D / 2 + 0.035;
+  const panel = MeshBuilder.CreateBox("thorCoatOpenV", { width: W * 0.8, height: H * 0.62, depth: 0.025 }, scene);
+  const vertices = panel.getVerticesData("position")!;
+  for (let i = 0; i < vertices.length; i += 3) if (vertices[i + 1] < 0) vertices[i] *= 0.2;
+  panel.setVerticesData("position", vertices); panel.refreshBoundingInfo();
+  lay(panel, 0, H * 0.16, z, body.skinMaterial);
+  lay(MeshBuilder.CreateBox("thorCoatAbdomen", { width: W * 0.16, height: H * 0.32, depth: 0.025 }, scene), 0, -H * 0.3, z, body.skinMaterial);
   for (const s of [-1, 1]) {
-    lay(MeshBuilder.CreateBox("thorCoatTrim", { width: W * C.trim, height: H * 0.98, depth: D * C.proud * 1.6 }, scene), s * (W * C.open / 2 + W * C.trim / 2), 0, z, gold);
+    const dx = W * 0.32, dy = H * 0.62;
+    const trim = MeshBuilder.CreateBox("thorCoatTrimV", { width: W * 0.055, height: Math.hypot(dx, dy), depth: 0.035 }, scene);
+    trim.rotation.z = -s * Math.atan2(dx, dy);
+    lay(trim, s * W * 0.24, H * 0.16, z + 0.02, gold);
+    lay(MeshBuilder.CreateBox("thorCoatTrimLower", { width: W * 0.055, height: H * 0.32, depth: 0.035 }, scene), s * W * 0.08, -H * 0.3, z + 0.02, gold);
   }
   for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "thorSleeve", arm, 0, C.sleeve, C.sleeveOut, coat));
   // the chain: links across the opening, the middle one lowest
