@@ -1414,6 +1414,22 @@ export class ProceduralAnimator {
     b.leftKnee.rotation.x += knee * d;
     b.rightKnee.rotation.x += knee * d;
   }
+  /** [S] 481, legacy.super_peasant.jpg: reach both wrists well ahead of
+   * the face with nearly straight elbows. Solve after the ordinary fist layers,
+   * which otherwise fold the elbows back toward the forehead during flight. */
+  private _reachSupermanArms(): void {
+    if (!this._superman || this._state === AnimState.Dead) return;
+    const b = this._body;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.torso; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const forward = Vector3.TransformNormal(new Vector3(0, 1, 0.08).normalize(), b.torso.getWorldMatrix()).normalize();
+    for (const [shoulder, elbow, hand] of [[b.leftShoulder, b.leftElbow, b.leftHand], [b.rightShoulder, b.rightElbow, b.rightHand]]) {
+      shoulder.computeWorldMatrix(true);
+      const reach = (elbow.position.length() + hand.position.length()) * 0.98;
+      this._armTo(shoulder, elbow, hand, shoulder.getAbsolutePosition().add(forward.scale(reach)), 1, 2);
+    }
+  }
   /** The Pirate Kick (spec at PIRATE_KICK_POSE), set by the sim for the length of a kick (simulationSystem PIRATE_KICK); `windup` s to the blow. */
   private _kick = 0;
   private _kickTarget = 0;
@@ -2418,6 +2434,7 @@ export class ProceduralAnimator {
     this._reaperHover(dt);
     this._rideBarrel();
     this._holdWizardSword();
+    this._reachSupermanArms();
     // A throw cut short (knocked down mid-cock) leaves the javelin turned about: strapped on again as soon as the throw is over
     if (this._javelinStand > 0 && !(this._state === AnimState.Attacking && this._attackMotion === "throw")) this._standJavelin(this._javelin()!, 0);
     this._tendSwordRing(dt);
