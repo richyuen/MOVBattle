@@ -684,6 +684,29 @@ export class SimulationSystem {
   // Big Headbutt (BIG_HEADBUTT): each minotaur's butt under way (blow and end times) and when the next is ready
   // [S] 474 the Super Peasant's flights under way (SUPER_FLIGHT)
   private _superFlights = new Map<RuntimeUnit, { from: Vector3; to: Vector3; t0: number; dur: number; logged: boolean }>();
+  // [S] 479 Superboxer Punch: a committed 2 m back-dash (.22 s), then a .24 s
+  // forward dash to fist reach and the ordinary splash punch, logged separately.
+  private _boxerDashes = new Map<RuntimeUnit, { from: Vector3; back: Vector3; to: Vector3; target: RuntimeUnit; start: number }>();
+  private _boxerDashReady = new Map<RuntimeUnit, number>();
+  private _stepBoxerDashes(now: number): void {
+    for (const [unit, dash] of this._boxerDashes) {
+      if (unit.isDead || dash.target.isDead) { this._boxerDashes.delete(unit); continue; }
+      const age = now - dash.start;
+      const pos = age < 0.22 ? Vector3.Lerp(dash.from, dash.back, age / 0.22)
+        : Vector3.Lerp(dash.back, dash.to, Math.min(1, (age - 0.22) / 0.24));
+      unit.teleportTo(pos);
+      const dir = dash.target.position.subtract(pos); dir.y = 0; dir.normalize();
+      unit.body.root.rotation.y = Math.atan2(dir.x, dir.z);
+      if (age >= 0.46) {
+        this._boxerDashes.delete(unit);
+        const profile = getAttackProfile(unit.definition.attackProfileId);
+        unit.setAttackCooldown(now, profile.cooldown);
+        this._landMeleeBlow(unit, dash.target, profile.damage * (unit.definition.damageMultiplier ?? 1), 1.75,
+          dir.scale(profile.knockback), now, dash.target.position.clone());
+        this._logAbility(unit, "superboxer_punch", now, dash.target.position);
+      }
+    }
+  }
   /** Each Super Peasant flight under way: carried flat out along its line, .lift m up at the middle, logged "flight" at .logAt of the way, set down at its end. */
   private _stepSuperFlights(now: number): void {
     const F = SUPER_FLIGHT;
@@ -853,6 +876,7 @@ export class SimulationSystem {
   }
 
   beginSimulation(now: number): void {
+    this._boxerDashes.clear(); this._boxerDashReady.clear();
     this._burnTickAt = 0;
     this._fearHits.clear();
     this._pendingBlows = [];
@@ -929,6 +953,7 @@ export class SimulationSystem {
       unit.update(dt, now);
     }
     if (this._superFlights.size > 0) this._stepSuperFlights(now);
+    if (this._boxerDashes.size > 0) this._stepBoxerDashes(now);
     // After the animation step, so the frame a blow lands on is the frame its club is down on the man
     if (this._pendingBlows.length > 0) this._landPendingBlows(now);
     if (this._pendingLaunches.length > 0) this._fireDwelledLaunches(now);
@@ -1661,6 +1686,19 @@ export class SimulationSystem {
     const overRank = enemy.collisionBodyRadius > unit.collisionBodyRadius * 2 ? 1 : 0;
     const engageDistance = unit.definition.engageRange + this.attackRangePadding + Math.max(0, enemy.collisionBodyRadius - unit.collisionBodyRadius) + overRank;
     const distance = Vector3.Distance(unit.position, enemy.position);
+    if (unit.definition.id === "legacy.super_boxer") {
+      if (this._boxerDashes.has(unit)) return;
+      if (canAttack && canMove && distance < 4.8 && now >= (this._boxerDashReady.get(unit) ?? 0) && unit.canAttack(now)) {
+        const dir = enemy.position.subtract(unit.position); dir.y = 0; dir.normalize();
+        const from = unit.position.clone(), back = from.subtract(dir.scale(2));
+        const to = enemy.position.subtract(dir.scale(0.85)); to.y = from.y;
+        unit.stopMoving(); this._clearPathState(unit);
+        this._boxerDashes.set(unit, { from, back, to, target: enemy, start: now });
+        this._boxerDashReady.set(unit, now + 4);
+        this._logAbility(unit, "boxer_backdash", now, from);
+        return;
+      }
+    }
     // A lancer lays his couched lance on the man he rides at (aimLanceAt): at the man's chest, LANCE_AIM_REACH m out, at LANCE_CHEST of his height up
     if (distance <= engageDistance + LANCE_AIM_REACH && unit.body.rightHand?.getChildren().some((n) => n.name === "lance")) {
       unit.animator.aimLanceAt(new Vector3(enemy.position.x, enemy.position.y + (enemy.body.headTop.getAbsolutePosition().y - enemy.position.y) * LANCE_CHEST, enemy.position.z));
