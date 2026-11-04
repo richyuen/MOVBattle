@@ -1914,23 +1914,33 @@ function buildLegacyTank(scene: Scene, color: Color3, options: { showOperators?:
     const helmetMat = makeMat(scene, R.helmetColor);
     for (const seat of R.seats) {
       const parent = seat.onTurret ? turretBase : root;
-      const rider = addOperator(scene, parent, allMeshes, seat.x, 0, seat.z, color, (b) => {
+      // [S] 480: infantry-sized seated rigs replace miniature gun operators.
+      // The reference barrel rider's trunk is as tall as the .34 turret;
+      // anchor his pelvis to the seat after building full-length limbs.
+      const b = buildArticulatedBody(scene, "tankSeatedInfantry", crewProportions({
+        scale: 0.82, headSize: 1.08, armLength: 1, legLength: 1.08,
+      }), color, { detailLevel: "operator" });
+      b.root.parent = parent;
+      b.root.position.set(seat.x, seat.y - b.hip.position.y, seat.z);
+      b.root.rotation.y = seat.turn;
+      allMeshes.push(...b.allMeshes);
+      {
         for (const [hip, knee, side] of [[b.leftHip, b.leftKnee, 1], [b.rightHip, b.rightKnee, -1]] as const) {
           hip.rotation.x = -R.thigh;
           hip.rotation.z = side * (seat.astride ? R.astride : R.spread);
           knee.rotation.x = R.shin;
         }
-        b.leftShoulder.rotation.x = -0.4;
-        b.rightShoulder.rotation.x = -0.4;
-      });
-      // sit him down: his hip on the seat
-      rider.body.root.position.y = seat.y - rider.body.hip.position.y;
-      rider.body.root.rotation.y = seat.turn;
-      const hb = rider.headMesh.getBoundingInfo().boundingBox;
+        // Hands rest beside the thighs rather than hanging through the barrel.
+        b.leftShoulder.rotation.x = -0.25;
+        b.rightShoulder.rotation.x = -0.25;
+        b.leftElbow.rotation.x = -0.55;
+        b.rightElbow.rotation.x = -0.55;
+      }
+      const hb = b.headMesh.getBoundingInfo().boundingBox;
       const e = hb.extendSize, c = hb.center;
       const helmet = MeshBuilder.CreateSphere("tankRiderHelmet", { diameterX: e.x * 2 * R.helmet, diameterY: e.y * 2 * R.helmet, diameterZ: e.z * 2 * R.helmet, segments: 6, slice: 0.55 }, scene);
       helmet.position.set(c.x, c.y + e.y * 0.2, c.z - e.z * 0.04);
-      helmet.parent = rider.headMesh;
+      helmet.parent = b.headMesh;
       helmet.material = helmetMat;
       helmet.convertToFlatShadedMesh();
       allMeshes.push(helmet);
