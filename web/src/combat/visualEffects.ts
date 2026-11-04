@@ -1213,6 +1213,40 @@ export class VisualEffects {
   }
 
   /** [S] 473 the Super Boxer's burst of light where his punch lands (spec at PUNCH_BURST). */
+  /** [S] 479: fifteen hands leave the Dark Peasant's sphere in a staggered volley,
+   * each carrying a >=1 m dark streak (legacy.dark_peasant.jpg). Sphere slots return after impact. */
+  spawnDarkVolley(hands: Mesh[], to: Vector3, onHit: () => void): void {
+    const root = new TransformNode("darkVolley", this._scene);
+    const streakMat = new StandardMaterial("darkVolleyStreakMat", this._scene);
+    streakMat.disableLighting = true; streakMat.emissiveColor = new Color3(0.008, 0.006, 0.02);
+    const shots = hands.slice(0, 15).map((source, k) => {
+      source.computeWorldMatrix(true);
+      const from = source.getAbsolutePosition().clone();
+      const hand = source.clone("darkVolleyHand", root)!;
+      const rotation = Quaternion.Identity(), scale = Vector3.One();
+      source.getWorldMatrix().decompose(scale, rotation);
+      hand.scaling.copyFrom(scale); hand.rotationQuaternion = rotation; hand.position.copyFrom(from);
+      const dir = to.subtract(from).normalize(), duration = Math.max(0.22, Vector3.Distance(from, to) / 30);
+      const streak = MeshBuilder.CreateBox("darkVolleyStreak", { width: 0.045, height: 0.045, depth: 1.6 }, this._scene);
+      streak.parent = root; streak.material = streakMat; streak.setEnabled(false);
+      return { source, hand, streak, from, dir, duration, delay: k * 0.03 };
+    });
+    const life = Math.max(...shots.map(s => s.delay + s.duration), 0.6) + 0.05;
+    let landed = false;
+    this._effects.push({ root, remaining: life, update: (_dt, remaining) => {
+      const age = life - remaining;
+      for (const s of shots) {
+        const u = Math.min(1, Math.max(0, (age - s.delay) / s.duration));
+        s.source.setEnabled(age < s.delay || u >= 1);
+        s.hand.setEnabled(age >= s.delay && u < 1); s.streak.setEnabled(age >= s.delay && u < 1);
+        s.hand.position.copyFrom(Vector3.Lerp(s.from, to, u));
+        s.streak.position.copyFrom(s.hand.position.subtract(s.dir.scale(0.95)));
+        s.streak.lookAt(s.streak.position.add(s.dir));
+      }
+      if (!landed && age >= life - 0.06) { landed = true; onHit(); }
+    }, dispose: () => { for (const s of shots) if (!s.source.isDisposed()) s.source.setEnabled(true); streakMat.dispose(); } });
+  }
+
   spawnPunchBurst(at: Vector3): void {
     const P = PUNCH_BURST;
     const root = new TransformNode("punchBurst", this._scene);

@@ -2827,6 +2827,11 @@ export class SimulationSystem {
     }
 
     if (preset === "iconic_dark_peasant") {
+      this._logAbility(attacker, "dark_volley", now, target.position);
+      const hands = attacker.body.root.getChildMeshes(false).filter((m): m is Mesh => m instanceof Mesh && m.name === "darkHand");
+      this.visualEffects?.spawnDarkVolley(hands, target.position.add(new Vector3(0, 1, 0)), () => {
+        if (!target.isDead) target.applyDamage(damage, knockback);
+      });
       this._logAbility(attacker, "area_pull", now, target.position);
       this._summonUnits(attacker);
       const controlRadius = Math.max(5.2, splashRadius + 1.6);
