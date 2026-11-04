@@ -3067,9 +3067,6 @@ export class SimulationSystem {
         this.visualEffects.spawnSmokePuff(impactOrigin, new Color3(1.0, 0.9, 0.42));
       }
       this._applyAreaControl(target.position, Math.max(3.1, splashRadius + 0.9), attacker.team, damage * 1.08, knockback.scale(1.12), now);
-      const away = target.position.subtract(attacker.position); away.y = 0;
-      if (away.lengthSquared() < 1e-6) away.set(0, 0, 1);
-      target.applySuperPunchLaunch(away.normalize());
       return;
     }
 

@@ -881,16 +881,6 @@ export class RuntimeUnit {
    * Explosion fling: throws the body up and outward from a blast centre. Bypasses the shallow
    * living-hit and death lift caps, which exist to keep ordinary melee hits from ballooning.
    */
-  /** [S] 480: the Super Peasant's 15,000,000-force punch throws even a
-   * heavy or already airborne victim across the field. Normal blast launches
-   * retain their mass scaling and one-launch guard. */
-  applySuperPunchLaunch(outward: Vector3): void {
-    if (this._isAnchoredActor) return;
-    const cancelMass = Math.max(0.8, this.definition.mass) / this._ragdollProfile.impactMultiplier;
-    this._grounded = true;
-    this.applyBlastLaunch(outward, 80 * cancelMass, 25 * cancelMass);
-  }
-
   applyBlastLaunch(outward: Vector3, speed: number, lift: number): void {
     if (this._isAnchoredActor) return;
     // One launch per flight: rapid shells must not juggle a body across the map.
