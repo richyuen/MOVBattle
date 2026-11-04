@@ -12,13 +12,6 @@ for 25 iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-471 | bare chest: team-skin trunk, no pads or belt (f1bc0724, 360d7a5a) | legacy.super_boxer.a | approved (struck 2)
-471 | SUPER_BOXER_SHORTS white, team stripes, gold waistband (6b0b6c96) | legacy.super_boxer.a | approved (struck 4)
-471 | PHARAOH_KILT flared pleated kilt, bare legs (a032b635) | legacy.pharaoh.a | approved (struck 4, 6)
-471 | THOR_COAT open coat, gold trims, chain (b7ea8381) | legacy.thor.a | approved (struck 3)
-471 | TANK_RIDERS 3 seated helmeted riders (b6c89034, eab01a0d) | legacy.tank.a | approved (struck 1)
-471 | WIZARD_PIPE curved brown pipe (b29ab410, cacbecab) | legacy.wizard.a | approved (struck 3)
-471 | CHARIOT_GLADIUS short upright sword (e3104c4a, daefd9aa, b32cd4b0) | legacy.chariot.b | approved (struck 1)
 472 | TANK_PAINT tan hull, team skirts/rails/fittings (f46e36f9, 918ae7b5) | legacy.tank.a | approved (none struck; getWood greys the tan)
 472 | GLOW_GLOVE glowing gold mitts (d6551dd7, d0d1329f) | legacy.super_boxer.b | approved (none struck; off the fists)
 472 | SUPER_BOXER_EYES yellow eyes (0cd79ea7) | legacy.super_boxer.a | approved (struck 6)
@@ -52,9 +45,11 @@ for 25 iterations.
 475 | WIZARD_FIREWORK spin up then burst (2475d0af, 41a3dc3b) | legacy.wizard.c | approved (none struck; burst after he lands)
 475 | [P] wizard proportions.scale 1.76 -> 1.3 (048b6138) | legacy.wizard.a | approved (struck 5)
 
+476 | raised car front and gold laurels (b64da862, ca17191a) | legacy.chariot.a | approved (struck 3; CONFIRM failed a, b)
 ## Spent (never retry as [P])
 
 ## Rows
+vehicleBuilder.ts:CHARIOT_FRONT (rise, panels, depth, trim, leafCount, leafSize, relief) | .22, 7, .055, .07, 7 pairs/side, (.045,.14,.025), .04 | 476 | approved | plain half-cylinder, thin rim (before 476)
 
 wild_west done 444-459 rows (all dress, props, mechanics and stats; all D 459) | compacted 465 | 459 | approved | values: git show 44da9220:loop/LEDGER.md (it points to the earlier compactions)
 

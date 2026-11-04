@@ -23,10 +23,10 @@ drop a lesson once it is a comment at the code it describes.
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
 - A flat plate on a dress ribbon needs 7+ cm of stand-off (398 zeus).
-- Sim reads of joint positions: settle world matrices first.
+- Settle world matrices before reading joint positions. In Codex sandbox, a preview timeout may need an escalated capture retry (476).
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
-- The capture frames a unit by its mesh top when a prop stands over the head by more than .3 of the UNIT height (a cap may rise .7 of a head, 447): a taller prop re-frames every shot, so a RE-AUDIT follows (420).
+- Capture frames by mesh top when a prop exceeds the head by .3 of UNIT height: taller props re-frame all shots, requiring RE-AUDIT (420, 447).
 - `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches (render them after).
 - A dress change aimed at the idle must clear the rest pose: probe what covers that band first (442 queen: the hem-to-knee band sat behind her sword guards, two commits dropped). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
