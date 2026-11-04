@@ -1706,13 +1706,13 @@ export function thorHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const beard = put(MeshBuilder.CreateCylinder("thorBeard", {
     height: e.y * 2.0, diameterTop: e.x * 1.8, diameterBottom: 0,
     tessellation: 5,
-  }, scene), c.x, c.y - e.y * 1.03, c.z + e.z * 1.12);
+  }, scene), c.x, c.y - e.y * 1.25, c.z + e.z * 1.12);
   beard.scaling.z = 0.42;
   for (const s of [-1, 1]) {
     const cheek = put(MeshBuilder.CreateCylinder("thorBeardCheek", {
       height: e.y * 1.12, diameterTop: e.x * 0.7, diameterBottom: e.x * 0.35,
       tessellation: 4,
-    }, scene), c.x + s * e.x * 0.65, c.y - e.y * 0.45, c.z + e.z * 1.08);
+    }, scene), c.x + s * e.x * 0.65, c.y - e.y * 0.8, c.z + e.z * 1.08);
     cheek.rotation.z = s * 0.22;
     cheek.scaling.z = 0.55;
   }
