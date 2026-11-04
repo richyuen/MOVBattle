@@ -2110,6 +2110,18 @@ export function attachProps(
 
   // A sword is cut to the man who carries it: his fist and his standing height, handed over in the weapon's own units, under the oversize.
   const bladeFit: BladeFit = { fist: (body.metrics.hand?.width ?? 0.058 * scale) / PROP_OVERSIZE, stand: body.metrics.overallHeight / PROP_OVERSIZE };
+  // [S] 477 Super Boxer: a glove encloses the actual mitt, rather than taking
+  // the sword grip's upward/forward offset. Fit both hands independently.
+  const seatGlowGlove = (glove: Mesh, hand: TransformNode): void => {
+    const palm = hand.getChildren().find((n): n is Mesh => n instanceof Mesh && /HandM$/.test(n.name));
+    if (!palm) return;
+    const pb = palm.getBoundingInfo().boundingBox;
+    const gb = glove.getBoundingInfo().boundingBox;
+    const diameter = pb.extendSize.x * 2 * palm.scaling.x * 2.4;
+    glove.position.copyFrom(palm.position);
+    glove.rotation.set(0, 0, 0);
+    glove.scaling.setAll(diameter / (gb.extendSize.x * 2));
+  };
   const weapon = buildWeapon(scene, config.weapon, scale, accent, bladeFit, teamColor, config.weaponVariant);
   if (weapon) {
     const lift = weapon.position.y;
@@ -2117,6 +2129,7 @@ export function attachProps(
     weapon.scaling.scaleInPlace(PROP_OVERSIZE);
     applyWeaponGripPreset(weapon, config.weaponGripPreset ?? "default", scale);
     applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
+    if (config.weaponVariant === "glow_glove") seatGlowGlove(weapon, body.rightHand);
     if (config.weapon === "bomb") seatInFist(weapon, body, scale);
     if (config.weapon === "potion") seatNeckInFist(weapon, body.rightHand);
     if (config.weapon && SEATED_POLES.has(config.weapon)) seatPoleInFist(weapon, body, lift);
@@ -2132,6 +2145,7 @@ export function attachProps(
       offhand.parent = body.leftHand;
       offhand.scaling.scaleInPlace(PROP_OVERSIZE);
       applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
+      if (config.offhandVariant === "glow_glove") seatGlowGlove(offhand, body.leftHand);
       if (config.offhandWeapon === "bomb") seatInFist(offhand, body, scale);
       if (config.offhandWeapon === "potion") seatNeckInFist(offhand, body.leftHand);
       props.push(offhand);
@@ -4508,7 +4522,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         const G = GLOW_GLOVE;
         const glove = MeshBuilder.CreateIcoSphere("glowGlove", { radius: G.wide * s / 2, subdivisions: 2 }, scene);
         glove.scaling.set(1, G.squash, 1.15);
-        const m = mat(scene, G.color, G.glow, "cloth");
+        const m = mat(scene, G.color, 2.5, "cloth"); // luminous core inside the fist-fitted mitt
         glove.material = m;
         glove.convertToFlatShadedMesh();
         const thumb = MeshBuilder.CreateIcoSphere("glowGloveThumb", { radius: G.wide * s * G.thumb / 2, subdivisions: 1 }, scene);
