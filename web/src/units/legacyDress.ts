@@ -917,6 +917,19 @@ export function pharaohCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
     const w = W * C.bibW * (1 - k * 0.25);
     lay(MeshBuilder.CreateBox("pharaohCollarBib", { width: w, height: H * C.bibH, depth: D * C.proud }, scene), 0, y - H * C.thick / 2 - H * C.bibH * (k + 0.5), D / 2 + (D * C.proud) / 2, gold);
   }
+  // [S] 477: small gold false beard from the lower face onto the collar,
+  // as in legacy.pharaoh.red.png. A squared tapered pendant, not facial hair.
+  const head = body.headMesh;
+  const hb = head.getBoundingInfo().boundingBox;
+  const beard = MeshBuilder.CreateCylinder("pharaohFalseBeard", {
+    height: hb.extendSize.y * 1.05, diameterTop: hb.extendSize.x * 0.55,
+    diameterBottom: hb.extendSize.x * 0.42, tessellation: 4,
+  }, scene);
+  beard.parent = head;
+  beard.position.set(hb.center.x, hb.center.y - hb.extendSize.y * 1.05, hb.center.z + hb.extendSize.z * 1.17);
+  beard.material = gold;
+  beard.convertToFlatShadedMesh();
+  out.push(beard);
   return out;
 }
 
