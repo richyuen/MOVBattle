@@ -1187,10 +1187,15 @@ export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   // [S] 480: outer tunic overlaps the rope belt and encloses the entire
   // pelvis, then flares to mid-thigh (legacy.super_peasant.red.png).
   const { W, H, D, lay } = outerTrunkFrame(scene, body, out);
-  const drop = Math.abs(body.leftKnee.position.y) * 0.8 + H * 0.15;
-  const skirt = MeshBuilder.CreateCylinder("superTunicSkirt", { height: drop, diameterTop: W * 1.2, diameterBottom: W * 1.35, tessellation: T.sides }, scene);
-  skirt.scaling.z = D / W * 1.22;
-  lay(skirt, 0, -H * 0.3 - drop / 2 + H * 0.05, 0, white);
+  const hull = body.hip.getChildMeshes(true).find(m => /_pelvis$/.test(m.name))!;
+  const hb = hull.getBoundingInfo().boundingBox, he = hb.extendSize.multiply(hull.scaling);
+  const hc = hull.position.add(hb.center.multiply(hull.scaling));
+  const drop = he.y * 2.7;
+  const skirt = MeshBuilder.CreateCylinder("superTunicSkirt", { height: drop, diameterTop: he.x * 2.12, diameterBottom: he.x * 2.4, tessellation: T.sides }, scene);
+  skirt.scaling.z = he.z / he.x * 1.18;
+  skirt.parent = hull.parent; skirt.position.copyFrom(hc); skirt.position.y -= he.y * 0.05;
+  skirt.material = white; skirt.convertToFlatShadedMesh(); out.push(skirt);
+  for (const m of [...body.allMeshes, ...out]) if (m.material === white) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
   const slitH = H * T.slitLong, front = D / 2 + D * 0.02;
   out.push(...superPeasantRopeBelt(scene, body));
   lay(MeshBuilder.CreateBox("superTunicSlit", { width: W * T.slit, height: slitH, depth: D * 0.03 }, scene), 0, H / 2 - slitH / 2, front, lace);
