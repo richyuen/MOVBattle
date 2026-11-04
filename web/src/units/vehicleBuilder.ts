@@ -3317,7 +3317,7 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
     shield.position.set(tb.center.x - W * S.out, tb.center.y - H * S.drop, tb.center.z + D * S.ahead);
     shield.rotation.y = -S.turn;
     const face = lit(color, S.glow);
-    const panelW = (W * S.wide) / 3, tall = H * S.tall, t = W * S.slab;
+    const tall = H * S.tall, t = W * S.slab;
     const slab = (name: string, w: number, h: number, d: number, mat: Mesh["material"], parent: TransformNode, x: number, y: number, z: number, ry = 0, rz = 0): Mesh => {
       const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
       m.parent = parent;
@@ -3328,20 +3328,26 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
       allMeshes.push(m);
       return m;
     };
-    for (const k of [-1, 0, 1]) {
-      // each panel on its own pivot at the centre panel's edge, bent back about it
-      const pivot = new TransformNode("chariotScutumPanel", scene);
-      pivot.parent = shield;
-      pivot.position.x = k * panelW / 2;
-      pivot.rotation.y = -k * S.bend;
-      const x = k * panelW / 2;
-      slab("chariotScutumFace", panelW, tall, t, face, pivot, x, 0, 0);
-      slab("chariotScutumRim", panelW + (k === 0 ? 0 : W * S.rim), tall + W * S.rim * 2, t, gold, pivot, x + k * W * S.rim / 2, 0, -t * 0.8);
-    }
-    slab("chariotScutumBoss", W * S.boss, W * S.boss, t * 2.5, gold, shield, 0, 0, t * 1.2);
+    // [S] 477: a closed oval shield, shoulder to hip, with its rim in front
+    // rather than hidden behind three rectangular panels. The gold wing
+    // strokes sit proud of the bowed face. Ref: legacy.chariot.red/blue.png.
+    shield.position.x = tb.center.x - W * 0.85;
+    shield.position.y = tb.center.y + H * 0.18;
+    shield.rotation.y = -0.12;
+    const oval = (name: string, w: number, h: number, z: number, material: Mesh["material"]) => {
+      const m = MeshBuilder.CreateSphere(name, { diameterX: w, diameterY: h, diameterZ: t * 2, segments: 10 }, scene);
+      m.parent = shield;
+      m.position.z = z;
+      m.material = material;
+      m.convertToFlatShadedMesh();
+      allMeshes.push(m);
+    };
+    oval("chariotScutumRim", W * 1.35, tall * 1.35, 0, gold);
+    oval("chariotScutumFace", W * 1.22, tall * 1.25, t * 0.45, face);
+    slab("chariotScutumBoss", W * S.boss, W * S.boss, t * 2.5, gold, shield, 0, 0, t * 2.0);
     for (const [sx, sy] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
       const len = W * S.wing;
-      slab("chariotScutumWing", W * S.wingThick, len, t, gold, shield, sx * Math.sin(S.wingLean) * len * 0.62, sy * Math.cos(S.wingLean) * len * 0.62, t * 0.7, 0, -sx * sy * S.wingLean);
+      slab("chariotScutumWing", W * S.wingThick, len, t, gold, shield, sx * Math.sin(S.wingLean) * len * 0.62, sy * Math.cos(S.wingLean) * len * 0.62, t * 1.8, 0, -sx * sy * S.wingLean);
     }
   }
   /*
