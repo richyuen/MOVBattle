@@ -3381,7 +3381,7 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   return wrapAsBody(
     scene,
     root,
-    front,
+    floor,
     allMeshes,
     operator.headMesh,
     makeBodyMetrics(headTopY, 0.92, 0.6, headTopY * 0.6),
