@@ -53,4 +53,4 @@ drop a lesson once it is a comment at the code it describes.
 - A prop not in _carryProp's node regex rides the fist, so _aimBlow's raised fist points it back at the hit: lay it on _aimTip before _twoHandPole (451 miner).
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
 - A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
-- A CreateSphere arc's open gap is NOT on +z after rotation.y = PI/2 + PI*open (propBuilder's hood): it faced backward and hid the face; + PI puts it on +z (457-458 peasant).
+- Sphere arc gaps: +PI turns a backward hood opening forward (457-458). A rotated half-cylinder can lie flat as a crest: explicit radial closed blocks keep its fan above the crown (477).

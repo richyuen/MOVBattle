@@ -1,25 +1,12 @@
 # Loop ledger (v4): every value the loop has tuned
 
-Rows: `file:identifier | current value | last iter | verdict | earlier values (newest first)`. The identifier carries the unit
-(`rosterManifest.ts:tribal.clubber damageMultiplier`, `unitVisuals.ts:tribal.clubber proportions.scale`, `propBuilder.ts:club CLUB_LEN`).
-Verdicts: approved, rejected, approved, spent. A row is `spent` after two attempts without approval or when it was listed as
-never-retry; it is not pickable as [P]. The critic rejects a [P] gap that reverses or re-nudges a row approved within the last 20
-iterations ("ledger reversal"). An [S] gap that replaces the mechanism owning a row may set new values: the worker resets the row to
-approved and keeps the old value under earlier values. Stats knobs set by a `loop(N.0): [P] <batch> stats` commit are rows too
-(verdict `stats`, never reviewed by the critic, never a ledger reversal). One row per tuning knob a mechanism exposes, not per line;
-a value column is at most 80 characters. The worker updates rows at commit time (approved) and after verdicts. Drop rows untouched
-for 25 iterations.
+Rows: `file:unit identifier | current value (max 80 chars) | last iter | verdict | earlier values (newest first)`.
+Verdicts: pending, approved, rejected, spent, stats. Two unapproved [P] attempts or never-retry makes a row spent, unpickable as [P].
+[P] cannot reverse/re-nudge approvals within 20 iterations. [S] mechanism replacements may reset values, retaining earlier values.
+Script stats are exempt from critic/reversal checks. One row per knob; update at commit/verdict. Drop after 25 untouched iterations.
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-472 | TANK_PAINT tan hull, team skirts/rails/fittings (f46e36f9, 918ae7b5) | legacy.tank.a | approved (none struck; getWood greys the tan)
-472 | GLOW_GLOVE glowing gold mitts (d6551dd7, d0d1329f) | legacy.super_boxer.b | approved (none struck; off the fists)
-472 | SUPER_BOXER_EYES yellow eyes (0cd79ea7) | legacy.super_boxer.a | approved (struck 6)
-472 | [P] SUPER_BOXER_SHORTS.stripe .28 -> .12 (b86b479d) | legacy.super_boxer.a | approved
-472 | CHARIOT_SCUTUM curved team shield, gold rim/boss/wings (69122fa4) | legacy.chariot.b | approved (struck 2)
-472 | THOR_BELT wide grey belt, octagonal buckle (3212c6b0) | legacy.thor.a | approved (struck 4)
-472 | PHARAOH_COLLAR flat gold broad collar (063e6c76) | legacy.pharaoh.a | approved (struck 3)
-472 | WIZARD_ROBE team coat-robe to the knees, dark belt (731cde05) | legacy.wizard.a | approved (struck 4)
 473 | peasant lanky cut at 1.15x (f74a0207) | legacy.dark_peasant.a | approved (struck 1)
 473 | man's size 1.15x, lanky cut (1d7ba5f5) | legacy.super_peasant.a | approved (struck 1, 5)
 473 | DARK_HANDS thirty floating black hands (599bbe2e) | legacy.dark_peasant.b | approved (struck 1; b PASS)
@@ -46,16 +33,34 @@ for 25 iterations.
 475 | [P] wizard proportions.scale 1.76 -> 1.3 (048b6138) | legacy.wizard.a | approved (struck 5)
 
 476 | raised car front and gold laurels (b64da862, ca17191a) | legacy.chariot.a | approved (struck 3; CONFIRM failed a, b)
+477 | slim straight-legged build (b8d03fdd) | legacy.pharaoh.a | approved (struck 1)
+477 | gold false beard (a019aff2) | legacy.pharaoh.a | approved (struck 2)
+477 | lanky upright build (e8a90461) | legacy.thor.a | approved (struck 1)
+477 | pointed blond beard (8bdc9ab2, 74843223) | legacy.thor.a | approved (struck 2)
+477 | swept layered wings (dfbb27b2) | legacy.thor.a | approved (struck 3)
+477 | transverse crest (32545a0f) | legacy.chariot.a | approved (struck 1)
+477 | oval shield (17bfabb4) | legacy.chariot.b | approved
+477 | lanky upright build (e09e65d6) | legacy.super_boxer.a | approved (struck 1)
+477 | luminous fist-fitted mitts (533a1de9) | legacy.super_boxer.b | approved
 ## Spent (never retry as [P])
 
 ## Rows
+vehicleBuilder.ts:CHARIOT_SCUTUM oval/face, offset, turn, ornamentZ | 1.35W/1.35tall,1.22W/1.25tall; -.85W,+.18H; -.12; 1.8t | 477 | approved | rectangular panels, hidden rim
+unitVisuals.ts:legacy.super_boxer build + animator stance | .84,.92,1.08,1.3,.88/.8; tilt .02,stride .16,crouch 0,lean .04 | 477 | approved | 1.38 bulk,1.18 arms; crouched
+propBuilder.ts:GLOW_GLOVE seat, fit, glow | actual hand mesh centre; 2.4x hand width; glow 2.5 | 477 | approved | sword grip offset; .17s * oversize; glow .5
+unitVisuals.ts:legacy.pharaoh build + animator stance | .82,.92,1.3,.88/.8; tilt .02,stride .12,crouch 0,lean .04 | 477 | approved | bulk 1.08; caster crouch
+legacyDress.ts:pharaohFalseBeard (height, diameters, y, z; half-head units) | 1.05,.55/.42,-1.05,1.17 | 477 | approved | none
+unitVisuals.ts:iconic_thor build + animator stance | .84,.92,1.06,1.3,.88/.8; tilt .02,stride .12,crouch 0,lean .04 | 477 | approved | bulk 1.18,arms 1.12; crouched
+legacyDress.ts:thorBeard (height, top, depth, y, z); cheeks | 2,1.8,.42,-1.25,1.12; cheeks y -.8, height 1.12 | 477 | approved | y -1.03, cheeks -.45 (look); bare chin
+legacyDress.ts:WINGED_BAND vanes + covert | H*(1.65-.23k),W*.28,.22+.22k; W*.57,H*(.22+.04k); .16,.5,.35 | 477 | approved | cones .95H * .78^k at ear
+vehicleBuilder.ts:CHARIOT_HELM crest mechanism | 11 spokes; step .23; R*(.29,.85,.78); inner band .22,.15,.48 | 477 | approved | half-cylinder arc, rotation.x -PI/2
 vehicleBuilder.ts:CHARIOT_FRONT (rise, panels, depth, trim, leafCount, leafSize, relief) | .22, 7, .055, .07, 7 pairs/side, (.045,.14,.025), .04 | 476 | approved | plain half-cylinder, thin rim (before 476)
 
-wild_west done 444-459 rows (all dress, props, mechanics and stats; all D 459) | compacted 465 | 459 | approved | values: git show 44da9220:loop/LEDGER.md (it points to the earlier compactions)
+wild_west done rows | compacted 465 | 459 | approved | values: git show 44da9220:loop/LEDGER.md
 
 
 legacy_1 stats (cost, healthMultiplier, damageMultiplier, cooldownMultiplier, 8 units) | d PASS 8/8 (bearers polearm_melee 465: hp .68/.17, dmg .63, cd 2.31) | 465 | stats | values: git show 5d6b5d24
-legacy_1 done 457-459 rows (CHARGE_FLAG, STAY_BANNER, uprightPole, POACHER_HAT, POACHER_HAIR, PEASANT_HOOD, legacy.flag_bearer, BOXER_HEADGEAR, PEASANT_DRESS, POACHER_COAT; peasant, banner_bearer, boxer D 466; flag_bearer, pike, poacher D 467) | compacted 467 | 459 | approved | values: git show c07c1bca:loop/LEDGER.md
+legacy_1 done 457-459 rows | compacted 467 | 459 | approved | values: git show c07c1bca:loop/LEDGER.md
 propBuilder.ts:TEAM_GLOVE (wide, squash, band, glow, shade, palm, palmProud) + subdivisions 2 | .22, .92, .025, .1, .8, .55, .9 | 466 | approved | .11, glow .06, x.5 grey knobs (458-465); [S] rebuild 466 (critic accepted the colour move)
 unitVisuals.ts:legacy.barrel_roller build (scale, bulk, legLength, armLength, upperLegWidth, lowerLegWidth) | 1.0, .82, 1.08, 1.06, .9, .85 | 458 | approved | 1.24, 1.48 brute (before 458)
 legacyDress.ts:BEARER_RING (radius, band, flat, lift, sides, glow; BEARER_RING_COLOR flag, banner) | 2.2, .05, .012, .02, 40, .45; (.95,.6,.2), (.25,.75,.95) | 462 | approved | radius 1.6 (460, the ally stood outside the reach); team colour (459); spent for [P] (root exception used 462)
