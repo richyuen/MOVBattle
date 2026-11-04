@@ -468,7 +468,9 @@ async function main() {
           // [evidence 480] A lethal punch ended the duel at contact, freezing
           // its corpse before the post-impact pair. A distant reserve keeps
           // battle time advancing without entering the contact scene.
-          if (id === "legacy.super_peasant" || id === "legacy.dark_peasant") game.spawnUnit("medieval.squire", 0, { x: -80, z: 50 });
+          if (id === "legacy.super_peasant") game.spawnUnit("medieval.squire", 0, { x: -80, z: 50 });
+          // Dark Peasant selects LowestHealth: a weak reserve stole his target.
+          if (id === "legacy.dark_peasant") game.spawnUnit("medieval.king", 0, { x: -80, z: 50 });
           // Zeus's bolt conducts to nearby men (card Characteristics, a lightning chain): he spars with a squire and two mates clustered beside it (evidence 386)
           if (id === "ancient.zeus") for (const dz of [-0.9, 0.9]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.4, z: dz });
           // [evidence 425] the Pirate Queen's Bomb Spin fires when she is outnumbered (card Abilities): she faces her squire and four mates
