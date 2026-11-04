@@ -1179,13 +1179,13 @@ const SUPER_TUNIC = { white: new Color3(0.96, 0.95, 0.91), glow: 0.4, sleeveOut:
 function superPeasantTrousers(scene: Scene, body: ArticulatedBody, white: Material): Mesh[] {
   const out: Mesh[] = [];
   for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
-    out.push(limbShell(scene, "superPeasantTrouserThigh", thigh, 0, 1.08, 1.4, white));
+    out.push(limbShell(scene, "superPeasantTrouserThigh", thigh, 0, 1.04, 1.18, white));
   }
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
     shin.material = body.skinMaterial;
-    out.push(limbShell(scene, "superPeasantTrouserShin", shin, -0.04, 0.52, 1.42, white));
+    out.push(limbShell(scene, "superPeasantTrouserShin", shin, -0.04, 0.28, 1.2, white));
     for (let k = 0; k < 3; k++) {
-      out.push(limbShell(scene, "superPeasantRolledCuff", shin, 0.39 + k * 0.055, 0.45 + k * 0.055, 1.6 + (k % 2) * 0.1, white));
+      out.push(limbShell(scene, "superPeasantRolledCuff", shin, 0.16 + k * 0.04, 0.205 + k * 0.04, 1.38 + (k % 2) * 0.08, white));
     }
   }
   for (const foot of body.allMeshes) if (/_[lr]FootM$/.test(foot.name)) foot.material = body.skinMaterial;
