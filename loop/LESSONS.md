@@ -1,8 +1,6 @@
 # Lessons (loop v3): facts about the pipeline, the capture and the rig that outlive one unit
 
-One line each, newest last within its heading. Written by the worker at step 9 whenever an iteration learns something that is not about
-one unit (a rendering behaviour, a probe, a pattern that failed twice, a camera rule). Read whole at step 1. Near the cap: merge duplicates,
-drop a lesson once it is a comment at the code it describes.
+One line each, newest last within its heading. Read whole at step 1; merge duplicates near the cap.
 
 ## Rendering (swiftshader + PBR + SSAO + ACES + glow)
 - PBR colours are linear: an sRGB target c needs about c^2.2 as the code (wood (.62,.3,.2) displayed taupe). Pick values off `output/loop/palette.png` (rewritten every capture; `capture.mjs --palette` alone).
@@ -54,3 +52,4 @@ drop a lesson once it is a comment at the code it describes.
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
 - A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
 - Sphere arc gaps: +PI turns a backward hood opening forward (457-458). A rotated half-cylinder can lie flat as a crest: explicit radial closed blocks keep its fan above the crown (477).
+- Torso bands sized only to torsoMesh can sit inside the larger yoke/pelvis hull. Slice the outer hull at both band edges to fit a closed shell (478).

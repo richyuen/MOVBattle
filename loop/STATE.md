@@ -1,5 +1,5 @@
 # Loop state (v8: two auditors per batch, lists merged; up to 9 gaps; a unit with 3 or fewer blockers picked first; a c look shows the target; v7: a look list holds 6 blockers with the build first, the tail overlaps below 7 picks, a plateau [R] goes next, CONFIRM runs beside the critic; v6: one batch at a time, up to 7 structural gaps per iteration, a CONFIRM critic before D and two CONFIRM fails make a plateau, a criterion a CONFIRM passed stays passed, the critic sees the diff and never the worker's words, the capture frames a unit by its mesh top)
-Iteration: 477   Batch: legacy_2   Consecutive empty: 0   Done: 78/139   Parked: 0
+Iteration: 478   Batch: legacy_2   Consecutive empty: 0   Done: 78/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -22,54 +22,21 @@ secret_2: taekwondo ???? q | raptor_rider ???? q | cheerleader ???? q | cupid ??
 secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ???? q | wheelbarrow_dragon ???? q | skeleton_giant ???? q | bomb_cannon ???? q | cavalry ???? q | vlad ???? q | gatling_gun ???? q
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
-## Focus (iteration 477; BASE b26a5cf2)
-Nine structural gaps in three sub-batches, one commit per gap; beard follow-up after look.
-1. [S] legacy.pharaoh.a blocker 1: lanky straight-legged build (b8d03fdd) APPROVE, struck 1
-2. [S] legacy.pharaoh.a blocker 2: gold false beard (a019aff2) APPROVE, struck 2
-3. [S] legacy.thor.a blocker 1: lanky upright build (e8a90461) APPROVE, struck 1
-4. [S] legacy.thor.a blocker 2: pointed blond beard (8bdc9ab2, 74843223) APPROVE, struck 2
-5. [S] legacy.thor.a blocker 3: layered swept wings (dfbb27b2) APPROVE, struck 3
-6. [S] legacy.chariot.a blocker 1: transverse plume fan (32545a0f) APPROVE, struck 1
-7. [S] legacy.chariot.b blocker 1: oval gold-rimmed shield (17bfabb4) APPROVE, none struck
-8. [S] legacy.super_boxer.a blocker 1: lanky upright build (e09e65d6) APPROVE, struck 1
-9. [S] legacy.super_boxer.b blocker 1: luminous fist-fitted mitts (533a1de9) APPROVE, none struck
-- 9/9, 7 struck
+## Focus (iteration 478; BASE 6984e40a)
+Usage-bounded iteration: one required rebuild, no optional gaps.
+1. [R] legacy.pharaoh.a blocker 1: outer-hull fitted chest courses and waistband (faaba396) APPROVE, struck 1; CONFIRM failed a on sandals.
+- 1/1, 1 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] legacy.pharaoh (b8d03fdd)
+- GAP: [R] legacy.pharaoh.a (faaba396)
 - VERDICT: APPROVE
-- CRITERION: legacy.pharaoh.a PASS   (previous: FAIL)
-- GAP: [S] legacy.pharaoh (a019aff2)
-- VERDICT: APPROVE
-- CRITERION: legacy.pharaoh.a PASS   (previous: FAIL)
-- GAP: [S] legacy.thor (e8a90461)
-- VERDICT: APPROVE
-- CRITERION: legacy.thor.a PASS   (previous: FAIL)
-- GAP: [S] legacy.thor (8bdc9ab2, 74843223)
-- VERDICT: APPROVE
-- CRITERION: legacy.thor.a PASS   (previous: FAIL)
-- GAP: [S] legacy.thor (dfbb27b2)
-- VERDICT: APPROVE
-- CRITERION: legacy.thor.a PASS   (previous: FAIL)
-- GAP: [S] legacy.chariot (32545a0f)
-- VERDICT: APPROVE
-- CRITERION: legacy.chariot.a PASS   (previous: FAIL)
-- GAP: [S] legacy.chariot (17bfabb4)
-- VERDICT: APPROVE
-- CRITERION: legacy.chariot.b FAIL   (previous: FAIL)
-- GAP: [S] legacy.super_boxer (e09e65d6)
-- VERDICT: APPROVE
-- CRITERION: legacy.super_boxer.a PASS   (previous: FAIL)
-- GAP: [S] legacy.super_boxer (533a1de9)
-- VERDICT: APPROVE
-- CRITERION: legacy.super_boxer.b FAIL   (previous: FAIL)
+- CRITERION: legacy.pharaoh.a PASS (previous: FAIL)
 - REGRESSIONS: none
 - UNIT legacy.pharaoh: a FAIL b PASS c PASS d PASS (3/4)
-- UNIT legacy.thor: a FAIL b PASS c PASS d PASS (3/4)
 
 ## Notes for next iteration (max 5 lines)
-- Pharaoh a and Thor a are plateau after their second CONFIRM failures. Next [R] slot: Pharaoh first (same-age tie), Thor waits for the following slot. Spec each from both 475 and 477 lists; preserve cleared build/head details and confirmed b/c.
-- Chariot b: oval shield improved but face remains obstructed/cropped; re-seat clear of horse/mane and breastwork, evidence commit first if idle cannot show the full face. Its speculative CONFIRM was discarded because gap critic kept b FAIL.
-- Super Boxer b: two approved [S] without a strike; next mechanism needs broad knuckle pad/cuff/thumb. c punch and trails still open. No unit done this iteration; batch checkpoint not due.
-- Dark Peasant c volley: next try launches hands out of sphere with >=1 m streaks and an evidence commit framing him and target side-on in _ability_after. Super Peasant c needs wrist ribbons; a needs belt/tunic/trousers.
-- Wizard c: keep target aloft spinning until chest burst. Eligible [P] fallout: 475 WIZARD_STAFF .98 -> 1.25 or TANK_ROOF domeAt (.34,.14) -> (.34,.3); 474 SUPER_TUNIC fallout expired after 477.
+- Thor a is the oldest plateau (477) and takes the next [R] slot; rebuild coat/belt from CONFIRM 475/477, preserve cleared build/head and confirmed b/c. Pharaoh a remains plateau after CONFIRM 478: replace boots with team feet/gold sandal straps; torso bands cleared.
+- Chariot b: oval shield improved but face remains obstructed/cropped; re-seat clear of horse/mane and breastwork, evidence commit first if idle cannot show the full face.
+- Super Boxer b: two approved [S] without a strike; next mechanism needs broad knuckle pad/cuff/thumb. c punch and trails still open. Batch checkpoint not due.
+- At 479, starving criteria last tried 474 are Dark Peasant a/c and Super Peasant a/c. Dark c needs an evidence commit framing volley and target; Super c needs wrist ribbons.
+- Wizard c: keep target aloft spinning until chest burst. 475 [P] fallout expired after 478. Usage ~75% five-hour / 12% weekly. Push blocked by auto-review: github.com/richyuen/MOVBattle not verified trusted; explicit user approval required before retry.

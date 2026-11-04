@@ -7,13 +7,6 @@ Script stats are exempt from critic/reversal checks. One row per knob; update at
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-473 | peasant lanky cut at 1.15x (f74a0207) | legacy.dark_peasant.a | approved (struck 1)
-473 | man's size 1.15x, lanky cut (1d7ba5f5) | legacy.super_peasant.a | approved (struck 1, 5)
-473 | DARK_HANDS thirty floating black hands (599bbe2e) | legacy.dark_peasant.b | approved (struck 1; b PASS)
-473 | THOR_SKY_BOLT sky bolts on the man and the hammer (06dcdf2e, a35fddac) | legacy.thor.c | approved (struck 1, 2; c PASS)
-473 | WIZARD_SPELL glowing star bolt (aee5fce8) | legacy.wizard.c | approved (struck 1)
-473 | KNEEL_AURA gold ring, disc, wheeling rays (3f0f1952) | legacy.pharaoh.c | approved (struck 1)
-473 | PUNCH_BURST white-gold flash at contact (ca68611a) | legacy.super_boxer.c | approved (struck 3)
 474 | SUPER_FLIGHT superman flight, lift .8 (06150948, 4796acd3) | legacy.super_peasant.c | approved (struck 1)
 474 | DARK_PEASANT_HAIR bare head, brown mop (b40f53c2) | legacy.dark_peasant.a | approved (struck 2, 3)
 474 | SUPER_TUNIC white tunic, laced collar (f8accbf7) | legacy.super_peasant.a | approved (none struck; skirt hidden)
@@ -42,9 +35,11 @@ Script stats are exempt from critic/reversal checks. One row per knob; update at
 477 | oval shield (17bfabb4) | legacy.chariot.b | approved
 477 | lanky upright build (e09e65d6) | legacy.super_boxer.a | approved (struck 1)
 477 | luminous fist-fitted mitts (533a1de9) | legacy.super_boxer.b | approved
+478 | [R] outer-hull fitted chest courses and waistband (faaba396) | legacy.pharaoh.a | approved (struck 1; CONFIRM failed a: sandals)
 ## Spent (never retry as [P])
 
 ## Rows
+legacyDress.ts:PHARAOH_GARB shell (proud, chest, chestAt, waist, flare) | .025,.22,.12,.23,1.08; sliced yoke/chest/pelvis | 478 | approved | box: out 1.08,chest .16,chestAt .12,waist .2,line .05 (470)
 vehicleBuilder.ts:CHARIOT_SCUTUM oval/face, offset, turn, ornamentZ | 1.35W/1.35tall,1.22W/1.25tall; -.85W,+.18H; -.12; 1.8t | 477 | approved | rectangular panels, hidden rim
 unitVisuals.ts:legacy.super_boxer build + animator stance | .84,.92,1.08,1.3,.88/.8; tilt .02,stride .16,crouch 0,lean .04 | 477 | approved | 1.38 bulk,1.18 arms; crouched
 propBuilder.ts:GLOW_GLOVE seat, fit, glow | actual hand mesh centre; 2.4x hand width; glow 2.5 | 477 | approved | sword grip offset; .17s * oversize; glow .5
