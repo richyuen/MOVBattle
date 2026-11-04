@@ -715,12 +715,14 @@ async function main() {
         if (release) {
           // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
           if (release.tick > 9) await take(`unit_${id}_windup`, release.tick - 9, far);
-          await take(`unit_${id}_release`, release.tick, far);
+          const shotPath = id === "legacy.wizard" ? 7 : far;
+          await take(`unit_${id}_release`, release.tick, shotPath);
+          if (id === "legacy.wizard") await take(`unit_${id}_cast_origin`, release.tick, far);
           // A thrown missile at a man who has closed in (the stoner's boulder at 3 m) lands inside the motion pair's 9 ticks: its flight shot is taken
           // under half way to the hit instead, so the missile is still in the air and not yet its impact dust
           // [evidence 454] the Deadeye's bullet (speed 100) lands ~5 ticks after the shot: her flight frame is 3 ticks on, the bullet half way (CONFIRM 453 c.3)
           const flightAt = shortThrow ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : id === "wild_west.deadeye" ? 3 : 9;
-          await take(`unit_${id}_flight`, release.tick + flightAt, far);
+          await take(`unit_${id}_flight`, release.tick + flightAt, shotPath);
           await take(`unit_${id}_struck`, struckTick, shortThrow ? far : 2);
           // [evidence 480] Hold a wide camera across contact and the departing victim,
           // independently of the Super Peasant's earlier flight pair.
