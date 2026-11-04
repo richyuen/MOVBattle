@@ -3153,20 +3153,20 @@ export class SimulationSystem {
             attacker, target, shape: resolveProjectileShape(attacker, attackProfile) ?? "arrow", damage, splashRadius, knockback,
             leavesAt: now + attacker.animator.bowReleasesIn(), fromBow: true,
           });
-        } else if (staffHeadOf(attacker) && /^(fireball|leaves)$/.test(resolveProjectileShape(attacker, attackProfile) ?? "") && attacker.animator.castReleasesIn() > 0) {
+        } else if (staffHeadOf(attacker) && /^(fireball|wizard_spell|leaves)$/.test(resolveProjectileShape(attacker, attackProfile) ?? "") && attacker.animator.castReleasesIn() > 0) {
           // The cast has only started: the fireball leaves the staff's head when the staff is driven level at the man, the bone mage's leaves
           // when his staff is up over his head
           this._pendingThrows.push({
             attacker, target, shape: resolveProjectileShape(attacker, attackProfile)!, damage, splashRadius, knockback, leavesAt: now + attacker.animator.castReleasesIn(), fromStaff: true,
           });
-        } else if (staffHeadOf(attacker) && resolveProjectileShape(attacker, attackProfile) === "fireball") {
+        } else if (staffHeadOf(attacker) && /^(fireball|wizard_spell)$/.test(resolveProjectileShape(attacker, attackProfile) ?? "")) {
           // A caster keeps his staff: the fireball is lit at its head, not thrown from his hip
           const head = staffHeadOf(attacker)!;
           const chain: TransformNode[] = [];
           for (let n: Node | null = head; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
           for (const n of chain) n.computeWorldMatrix(true);
           this.projectileSystem.spawnProjectile(
-            "fireball", head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
+            resolveProjectileShape(attacker, attackProfile)!, head.getAbsolutePosition().clone(), target, damage, knockback, splashRadius, attacker.team, this._units,
             undefined, 0, { originLift: 0 },
           );
         } else if (resolveProjectileShape(attacker, attackProfile) === "leaves" && attacker.body.rightHand) {
