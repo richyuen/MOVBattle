@@ -3066,7 +3066,18 @@ export class SimulationSystem {
       if (this.visualEffects) {
         this.visualEffects.spawnSmokePuff(impactOrigin, new Color3(1.0, 0.9, 0.42));
       }
-      this._applyAreaControl(target.position, Math.max(3.1, splashRadius + 0.9), attacker.team, damage * 1.08, knockback.scale(1.12), now);
+      const radius = Math.max(3.1, splashRadius + 0.9);
+      // Save the living victims before lethal damage changes their targetability.
+      // The signature punch launches the resulting corpses as well as survivors;
+      // ordinary melee death lift remains capped in RuntimeUnit.
+      const victims = this._units.filter(v => v.team !== attacker.team && !v.isDead && v.isTargetable && Vector3.Distance(v.position, target.position) <= radius);
+      this._applyAreaControl(target.position, radius, attacker.team, damage * 1.08, knockback.scale(1.12), now);
+      for (const victim of victims) {
+        const away = victim.position.subtract(attacker.position); away.y = 0;
+        if (away.lengthSquared() < 1e-6) away.set(impulseDir.x, 0, impulseDir.z);
+        if (away.lengthSquared() < 1e-6) away.set(1, 0, 0);
+        victim.applyBlastLaunch(away.normalize(), 18, 14);
+      }
       return;
     }
 
