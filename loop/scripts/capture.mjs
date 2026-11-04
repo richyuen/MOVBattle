@@ -184,7 +184,7 @@ const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // the firework archer: her burn is logged as she shoots, so her rocket's burst where it lands is the ability shot (evidence 418)
 // [evidence 435] the candlehead's ability pair is the spirit fire's knock-up where it lands on the man (audit 434 c.2), not the burn logged as he casts
 // [evidence 426] the harpooner's ability pair is his Pirate Kick on the reeled man (audit 422 c.2), not the reel (struck at 425; its haul shows in _struck)
-const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst", "pirate.harpooner": "kick", "spooky.candlehead": "knockup", "spooky.reaper": "impale" };
+const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst", "pirate.harpooner": "kick", "spooky.candlehead": "knockup", "spooky.reaper": "impale", "legacy.super_peasant": "flight" };
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
 // swatches between a squire of each team (the skin reference): the left wall "cloth" with emissive = colour x PALETTE_GLOW (the dress
@@ -529,6 +529,9 @@ async function main() {
           const allyShot = on === 6 || (on === 2 && window.__usupport);
           if (on === 6) on = 2;
           const a = window.__ua, t = allyShot && window.__ually ? window.__ually : window.__ut;
+          // [evidence 479] a Wizard's firework victim is aloft: include his current height,
+          // rather than aiming at the ground below the chest burst.
+          if (on === 2 && a.definition.id === "legacy.wizard") on = 4;
           const pa = a.body.root.position, pt = t.body.root.position;
           // [evidence 479] Dark Peasant's outgoing hands must be distinguished from his sphere:
           // one side-on frame includes both caster and victim, held across the ability pair.
@@ -662,7 +665,7 @@ async function main() {
         }, { id, d, support, want: ABILITY_PREF[id] ?? null });
         // A thrower or caster logs "fire" at the decision and "throw"/"cast" at the let-go: the let-go is the release
         const release = det.events.find((e) => /^(throw|cast)/.test(e.kind)) ?? det.events.find((e) => PLAIN.test(e.kind)) ?? det.events[0] ?? null;
-        const ability = det.events.find((e) => e.kind === ABILITY_PREF[id] && e !== release) ?? det.events.find((e) => !PLAIN.test(e.kind) && e.kind !== "impact" && e !== release) ?? null;
+        const ability = det.events.find((e) => e.kind === ABILITY_PREF[id] && (e !== release || id === "legacy.super_peasant")) ?? det.events.find((e) => !PLAIN.test(e.kind) && e.kind !== "impact" && e !== release) ?? null;
         const impact = det.events.find((e) => e.kind === "impact") ?? null;
         // The struck frame: 20 ticks (336 ms) after a blow, the top of the thrown man's arc; for a missile, 6 ticks after it first costs the target health.
         // A short throw (the stoner's boulder at a man who has closed in, landing inside 15 ticks of the let-go): 9 ticks after the landing, and framed from
