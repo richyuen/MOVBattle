@@ -1572,19 +1572,24 @@ export function buildWingedBand(scene: Scene, W: number, H: number, seat: number
   band.convertToFlatShadedMesh();
   for (const s of [-1, 1]) {
     for (let k = 0; k < B.feathers; k++) {
-      const long = B.feather * H * Math.pow(B.shorter, k);
-      // a flat blade, wide at its root and coming to a point, its flat facing out to the side
-      const f = MeshBuilder.CreateCylinder("wingFeather", { height: u(long), diameterTop: 0, diameterBottom: u(B.blade * W), tessellation: 4 }, scene);
-      f.scaling.x = 0.45;
-      const lean = B.back + k * B.fan;
-      // its root at the band's side, its middle half its length up the leant axis
-      const dir = new Vector3(s * Math.sin(B.out), Math.cos(B.out) * Math.cos(lean), -Math.sin(lean));
-      const root = new Vector3(s * (B.wide * W) / 2, -bandH / 2 + B.rootUp * H, -k * B.blade * W * 0.4);
-      f.position.set(u(root.x + (dir.x * long) / 2), u(root.y + (dir.y * long) / 2), u(root.z + (dir.z * long) / 2));
-      f.rotation.set(-lean, 0, -s * B.out);
+      // [S] 477: long layered vanes with a raised root, rather than a tuft
+      // of cones at the ear. Reference wings extend a head above the crown.
+      const long = H * (1.65 - k * 0.23);
+      const lean = 0.22 + k * 0.22;
+      const dir = new Vector3(s * 0.2, Math.cos(lean), -Math.sin(lean));
+      const root = new Vector3(s * W * 0.57, H * (0.22 + k * 0.04), -k * W * 0.08);
+      const f = MeshBuilder.CreateCylinder("wingFeather", { height: u(long), diameterTop: 0, diameterBottom: u(W * 0.28), tessellation: 4 }, scene);
+      f.scaling.x = 0.32;
+      f.position.set(u(root.x + dir.x * long / 2), u(root.y + dir.y * long / 2), u(root.z + dir.z * long / 2));
+      f.rotation.set(-lean, 0, -s * 0.2);
       f.material = white;
       f.convertToFlatShadedMesh();
       f.parent = band;
+      const covert = MeshBuilder.CreateSphere("wingCovert", { diameterX: u(W * 0.16), diameterY: u(H * 0.5), diameterZ: u(W * 0.35), segments: 4 }, scene);
+      covert.parent = band;
+      covert.position.set(u(root.x), u(root.y), u(root.z));
+      covert.material = white;
+      covert.convertToFlatShadedMesh();
     }
   }
   return band;
