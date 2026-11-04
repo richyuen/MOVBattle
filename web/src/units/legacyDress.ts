@@ -1923,7 +1923,7 @@ export function pharaohKilt(scene: Scene, body: ArticulatedBody, teamColor: Colo
  * its front a skin panel .open W wide from top to foot, .proud D off it, edged each side by a gold strip .trim W wide; a team sleeve shell .sleeveOut round
  * each upper arm to .sleeve of it; .links gold links, a chain sagging across the opening at .chainAt H over the middle. Gold .gold self-lit .glow.
  */
-const THOR_COAT = { shade: 0.85, open: 0.3, proud: 0.04, trim: 0.06, sleeve: 0.55, sleeveOut: 1.3, links: 3, link: 0.11, chainAt: 0.22, sag: 0.06, gold: new Color3(0.95, 0.66, 0.16), glow: 0.22 };
+const THOR_COAT = { shade: 0.35, open: 0.3, proud: 0.04, trim: 0.06, sleeve: 0.55, sleeveOut: 1.3, links: 3, link: 0.11, chainAt: 0.22, sag: 0.06, gold: new Color3(0.95, 0.66, 0.16), glow: 0.22 };
 
 /*
  * [S] 475 Thor's trousers, fur cuffs and boots (audit 468 thor a.5: "plain navy legs into dark boots - TABS: knee-length trousers ending in fur cuffs over
