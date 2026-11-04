@@ -464,11 +464,11 @@ async function main() {
           // the painter dodges missiles (Painter Dodge): he spars with an archer, whose arrows are what he sidesteps (evidence 373)
           // the samurai deflects missiles (Projectile Block): he spars with an archer too (evidence 417)
           // the quick draw sidesteps missiles (Quickdraw Projectile Dodge): an archer too (evidence 445)
-          const t = game.spawnUnit(id === "renaissance.painter" || id === "dynasty.samurai" || id === "wild_west.quick_draw" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
+          const t = game.spawnUnit(id === "legacy.dark_peasant" ? "medieval.king" : id === "renaissance.painter" || id === "dynasty.samurai" || id === "wild_west.quick_draw" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
           // [evidence 480] A lethal punch ended the duel at contact, freezing
           // its corpse before the post-impact pair. A distant reserve keeps
           // battle time advancing without entering the contact scene.
-          if (id === "legacy.super_peasant") game.spawnUnit("medieval.squire", 0, { x: -80, z: 50 });
+          if (id === "legacy.super_peasant" || id === "legacy.dark_peasant") game.spawnUnit("medieval.squire", 0, { x: -80, z: 50 });
           // Zeus's bolt conducts to nearby men (card Characteristics, a lightning chain): he spars with a squire and two mates clustered beside it (evidence 386)
           if (id === "ancient.zeus") for (const dz of [-0.9, 0.9]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.4, z: dz });
           // [evidence 425] the Pirate Queen's Bomb Spin fires when she is outnumbered (card Abilities): she faces her squire and four mates
@@ -627,7 +627,7 @@ async function main() {
         const charger = def.archetype === "charge_melee" || abilities.has("charge_impact") || abilities.has("jump_charge") || abilities.has("leap_attack");
         const support = def.archetype === "support_heal" || def.archetype === "support_buff";
         // a unit that lunges on first contact (the brawler) starts 5.5 m off, so the lunge has ground to cover (evidence 418)
-        const d = id === "legacy.dark_peasant" ? 4 : def.archetype === "artillery" ? 9 : charger ? 8 : abilities.has("lunge") ? 5.5 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
+        const d = id === "legacy.dark_peasant" ? 2 : def.archetype === "artillery" ? 9 : charger ? 8 : abilities.has("lunge") ? 5.5 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
         // Detection steps 6 ticks (one render) at a time; a logged event's frame comes from its world-time stamp, exact to the tick. Only the
         // projectile-count fallback (a missile with no fire log) is 6 ticks coarse.
         const det = await page.evaluate(({ id, d, support, want }) => {
@@ -670,7 +670,7 @@ async function main() {
         }, { id, d, support, want: ABILITY_PREF[id] ?? null });
         // A thrower or caster logs "fire" at the decision and "throw"/"cast" at the let-go: the let-go is the release
         const release = det.events.find((e) => /^(throw|cast)/.test(e.kind)) ?? det.events.find((e) => PLAIN.test(e.kind)) ?? det.events[0] ?? null;
-        const ability = det.events.find((e) => e.kind === ABILITY_PREF[id] && (e !== release || id === "legacy.super_peasant")) ?? det.events.find((e) => !PLAIN.test(e.kind) && e.kind !== "impact" && e !== release) ?? null;
+        const ability = (id === "legacy.dark_peasant" ? det.events.find(e => e.kind === "dark_grab") : null) ?? det.events.find((e) => e.kind === ABILITY_PREF[id] && (e !== release || id === "legacy.super_peasant")) ?? det.events.find((e) => !PLAIN.test(e.kind) && e.kind !== "impact" && e !== release) ?? null;
         const impact = det.events.find((e) => e.kind === "impact") ?? null;
         // The struck frame: 20 ticks (336 ms) after a blow, the top of the thrown man's arc; for a missile, 6 ticks after it first costs the target health.
         // A short throw (the stoner's boulder at a man who has closed in, landing inside 15 ticks of the let-go): 9 ticks after the landing, and framed from
@@ -749,10 +749,11 @@ async function main() {
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
           // blanketed him and the re-framed camera hid the step)
           const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
-          const darkVolley = id === "legacy.dark_peasant";
-          const pair = dodge || darkVolley ? { hold: ability.tick, clean: dodge } : {};
-          await take(`unit_${id}_ability`, ability.tick, darkVolley ? 7 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
-          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), darkVolley ? 7 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
+          const darkGrab = id === "legacy.dark_peasant";
+          const pair = dodge || darkGrab ? { hold: ability.tick, clean: dodge } : {};
+          await take(`unit_${id}_ability`, ability.tick, darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
+          if (darkGrab) await take(`unit_${id}_grab_blast`, ability.tick + 36, 2, pair);
         }
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
