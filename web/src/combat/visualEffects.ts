@@ -298,11 +298,11 @@ export class VisualEffects {
    * [S] 418 the Firework Arrow's burst (FIREWORK_BURST; card: explosion radius 2.5): a bright core flash and .sparks spark streaks flung out from `at`
    * in a ball, each a thin unlit bar in one of .colors, flying to .radius over .grow of the burst and fading over its .seconds, out of the glow.
    */
-  spawnFireworkBurst(at: Vector3): void {
+  spawnFireworkBurst(at: Vector3, lift = FIREWORK_BURST.lift): void {
     const B = FIREWORK_BURST;
     const root = new TransformNode("fireworkBurst", this._scene);
     root.position.copyFrom(at);
-    root.position.y += B.lift;
+    root.position.y += lift;
     const glow = this._scene.getGlowLayerByName("glow");
     const mats: StandardMaterial[] = [];
     const unlit = (c: Color3): StandardMaterial => {
