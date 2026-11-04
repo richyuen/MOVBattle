@@ -4645,10 +4645,13 @@ export class ProceduralAnimator {
     // [S] 477 Thor stands on long straight legs, chest over the belt.
     const thor = this._body.torso.getChildMeshes(true).some((m) => m.name === "thorCoatOpen");
     if (thor) Object.assign(stance, { tilt: 0.02, stride: 0.12, crouch: 0, chin: 0 });
+    // [S] 477: the golden-haired boxer stands tall in guard, not squatting.
+    const superBoxer = this._body.headMesh.getChildMeshes(true).some((m) => m.name === "superBoxerCap");
+    if (superBoxer) Object.assign(stance, { tilt: 0.02, stride: 0.16, crouch: 0, chin: 0 });
     return {
       square,
       wide,
-      lean: pharaoh || thor ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
+      lean: pharaoh || thor || superBoxer ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14, // at 0.22-0.38 some rear men stood near vertical; at 0.32-0.52 idle heroes bowed and half squatted
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,

@@ -795,7 +795,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "legacy.super_boxer": vis(
-    { scale: 1.48, bulk: 1.38, headSize: 1.08, armLength: 1.18 }, "boxing_glove", "none", "none", "none", "#F0C24D", "boxing_glove", {
+    // [S] 477: slim shirtless trunk and long thin legs, replacing the brute cut.
+    { scale: 1.48, bulk: 0.84, torsoWidth: 0.92, headSize: 1.08, armLength: 1.08, legLength: 1.3, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "boxing_glove", "none", "none", "none", "#F0C24D", "boxing_glove", {
       weaponVariant: "glow_glove", offhandVariant: "glow_glove", // [S] 472 big glowing gold-white mitts on both fists (propBuilder GLOW_GLOVE; audit 468 b.1)
       posePreset: "boxer",
       materialPreset: "secret_hero",
