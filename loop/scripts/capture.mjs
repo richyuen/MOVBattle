@@ -535,10 +535,10 @@ async function main() {
           const pa = a.body.root.position, pt = t.body.root.position;
           // [evidence 479] Dark Peasant's outgoing hands must be distinguished from his sphere:
           // one side-on frame includes both caster and victim, held across the ability pair.
-          if (on === 7) {
+          if (on === 7 || on === 8) {
             const dx = pt.x - pa.x, dz = pt.z - pa.z;
-            window.game.frameCamera({ x: (pa.x + pt.x) / 2, y: 1.3 * s, z: (pa.z + pt.z) / 2 },
-              Math.max(6 * s, Math.hypot(dx, dz) * 1.15 + 3), Math.atan2(dx, -dz), Math.PI / 2.1);
+            window.game.frameCamera({ x: (pa.x + pt.x) / 2, y: (on === 8 ? 3 : 1.3) * s, z: (pa.z + pt.z) / 2 },
+              on === 8 ? 14 * s : Math.max(6 * s, Math.hypot(dx, dz) * 1.15 + 3), Math.atan2(dx, -dz), Math.PI / 2.1);
             return;
           }
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
@@ -717,6 +717,12 @@ async function main() {
           const flightAt = shortThrow ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : id === "wild_west.deadeye" ? 3 : 9;
           await take(`unit_${id}_flight`, release.tick + flightAt, far);
           await take(`unit_${id}_struck`, struckTick, shortThrow ? far : 2);
+          // [evidence 480] Hold a wide camera across contact and the departing victim,
+          // independently of the Super Peasant's earlier flight pair.
+          if (id === "legacy.super_peasant" && impact) {
+            await take(`unit_${id}_punch`, impact.tick, 8, { hold: impact.tick });
+            await take(`unit_${id}_punch_after`, impact.tick + 9, 8, { hold: impact.tick });
+          }
           if (RELOAD_SHOT[id]) await take(`unit_${id}_reload`, release.tick + RELOAD_SHOT[id], 1);
           // A running mechanic (the bard's Banjo Walk circles) shows over seconds, not in the motion pair: one more shot 90 ticks (1.5 s) on, both men framed
           const walk = /^banjo_walk/.test(release.kind) ? release : ability && /^banjo_walk/.test(ability.kind) ? ability : null;
