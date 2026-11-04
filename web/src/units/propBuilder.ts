@@ -2131,6 +2131,7 @@ export function attachProps(
     applyWeaponGripPreset(weapon, config.weaponGripPreset ?? "default", scale);
     applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
     if (config.weaponVariant === "glow_glove") seatGlowGlove(weapon, body.rightHand);
+    if (config.weaponVariant === "devout_gauntlet") seatDevoutGauntlet(weapon, body.rightHand);
     if (config.weapon === "bomb") seatInFist(weapon, body, scale);
     if (config.weapon === "potion") seatNeckInFist(weapon, body.rightHand);
     if (config.weapon && SEATED_POLES.has(config.weapon)) seatPoleInFist(weapon, body, lift);
@@ -2147,6 +2148,7 @@ export function attachProps(
       offhand.scaling.scaleInPlace(PROP_OVERSIZE);
       applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
       if (config.offhandVariant === "glow_glove") seatGlowGlove(offhand, body.leftHand);
+      if (config.offhandVariant === "devout_gauntlet") seatDevoutGauntlet(offhand, body.leftHand);
       if (config.offhandWeapon === "bomb") seatInFist(offhand, body, scale);
       if (config.offhandWeapon === "potion") seatNeckInFist(offhand, body.leftHand);
       props.push(offhand);
@@ -3979,6 +3981,52 @@ function buildJarlAxe(scene: Scene, fit: BladeFit): Mesh {
   knob.parent = shaft;
   return shaft;
 }
+/** [S] 481, good.devout_gauntlet.red.png: a gold fingered fist grips a
+ * vertical luminous crescent, about a third of the standing man's height.
+ * Four segmented fingers cross the palm; a separate thumb and wrist ferrule.
+ * The crescent is built as solid tapered facets, with a gold outer edge. */
+function buildDevoutGauntlet(scene: Scene, fit: BladeFit): Mesh {
+  const f = fit.fist, radius = fit.stand * 0.18;
+  const root = new Mesh("devoutGauntlet", scene);
+  const gold = mat(scene, new Color3(1, 0.7, 0.18), 0.2, "cloth");
+  const light = mat(scene, new Color3(1, 0.95, 0.72), 1.4, "cloth");
+  const put = (m: Mesh, material = gold) => { m.parent = root; m.material = material; m.convertToFlatShadedMesh(); return m; };
+  put(MeshBuilder.CreateBox("devoutPalm", { width: f * 2.8, height: f * 3.6, depth: f * 1.5 }, scene));
+  for (let k = 0; k < 4; k++) {
+    const finger = put(MeshBuilder.CreateBox("devoutFinger", { width: f * 3.1, height: f * 0.66, depth: f * 1.05 }, scene));
+    finger.position.set(0, f * (1.25 - k * 0.82), f * 0.65);
+    const tip = put(MeshBuilder.CreateBox("devoutFingerTip", { width: f * 0.65, height: f * 0.66, depth: f * 1.25 }, scene));
+    tip.position.set(f * 1.45, finger.position.y, f * 0.2);
+  }
+  const thumb = put(MeshBuilder.CreateBox("devoutThumb", { width: f * 1.1, height: f * 2, depth: f * 1.5 }, scene));
+  thumb.position.set(-f * 1.65, -f * 0.4, f * 0.1); thumb.rotation.z = -0.35;
+  const cuff = put(MeshBuilder.CreateCylinder("devoutWrist", { height: f * 1.1, diameter: f * 2.65, tessellation: 6 }, scene));
+  cuff.position.y = -f * 2.1;
+  const path = (a: number) => new Vector3(0, Math.sin(a) * radius, f * 1.4 + Math.cos(a) * radius * 0.5);
+  for (let k = 0; k < 10; k++) {
+    const a = -Math.PI / 2 + k * Math.PI / 10, b = a + Math.PI / 10;
+    const p = path(a), q = path(b), dir = q.subtract(p), taper = Math.max(0.12, Math.cos((a + b) / 2));
+    for (const [material, wide, x] of [[gold, f * 2.9, 0], [light, f * 2.2, f * 0.15]] as const) {
+      const blade = put(MeshBuilder.CreateCylinder("devoutCrescent", { height: dir.length() * 1.1, diameterBottom: wide * taper, diameterTop: wide * Math.max(0.08, Math.cos(b)), tessellation: 4 }, scene), material);
+      blade.position.copyFrom(Vector3.Center(p, q)); blade.position.x += x;
+      blade.scaling.x = 0.35;
+      blade.rotationQuaternion = Quaternion.Identity();
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir.normalize(), blade.rotationQuaternion);
+    }
+  }
+  return root;
+}
+
+function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
+  hand.computeWorldMatrix(true);
+  const fist = hand.getChildMeshes(true).find(m => /HandM$/.test(m.name));
+  if (fist) {
+    fist.computeWorldMatrix(true);
+    glove.position.copyFrom(Vector3.TransformCoordinates(fist.getBoundingInfo().boundingBox.centerWorld, hand.getWorldMatrix().clone().invert()));
+  } else glove.position.setAll(0);
+  glove.rotation.setAll(0);
+}
+
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3, variant?: UnitVisualConfig["weaponVariant"]): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -4541,6 +4589,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return handle;
     }
     case "boxing_glove": {
+      if (variant === "devout_gauntlet") return buildDevoutGauntlet(scene, fit);
       if (variant === "glow_glove") {
         const G = GLOW_GLOVE;
         const glove = MeshBuilder.CreateIcoSphere("glowGlove", { radius: G.wide * s / 2, subdivisions: 2 }, scene);
