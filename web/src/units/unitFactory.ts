@@ -981,7 +981,7 @@ export class UnitFactory {
       propMeshes.push(...dressSuperPeasant(this._scene, body));
     }
     // [S] 474 the Dark Peasant's messy brown hair over a bare head (audit 468 dark_peasant a.2; legacyDress DARK_PEASANT_HAIR)
-    if ((definition.id === "legacy.dark_peasant" || definition.id === "custom.dark_peasant") && !shouldUseVehicleBody) propMeshes.push(...darkPeasantHair(this._scene, body));
+    if ((definition.id === "legacy.dark_peasant" || definition.id === "custom.dark_peasant") && !shouldUseVehicleBody) propMeshes.push(...darkPeasantHair(this._scene, body, definition.id === "legacy.dark_peasant"));
     // [S] 473 the Dark Peasant's sphere of big black floating hands (audit 468 dark_peasant b.1; legacyDress DARK_HANDS)
     if ((definition.id === "legacy.dark_peasant" || definition.id === "custom.dark_peasant") && !shouldUseVehicleBody) propMeshes.push(...darkPeasantHands(this._scene, body));
     // [S] 468 the Super Peasant's glowing gold wrist cuffs (legacyDress SUPER_CUFFS)

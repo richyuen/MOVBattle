@@ -1052,7 +1052,7 @@ export function darkPeasantHands(scene: Scene, body: ArticulatedBody): Mesh[] {
 const DARK_PEASANT_HAIR = { cap: 1.08, thick: 0.32, back: 1.08, brow: 0.85, tufts: 8, tuft: 0.55, fringe: 4, fringeTo: 0.45, side: 0.25, color: new Color3(0.3, 0.17, 0.08), glow: 0.14 };
 
 /** The Dark Peasant's messy brown mop over a bare head (spec at DARK_PEASANT_HAIR), hung on the head. */
-export function darkPeasantHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+export function darkPeasantHair(scene: Scene, body: ArticulatedBody, dressJerkin = false): Mesh[] {
   const H = DARK_PEASANT_HAIR;
   const hair = getMaterialFactory().get("cloth", H.color, { emissive: H.color.scale(H.glow) });
   const head = body.headMesh;
@@ -1086,7 +1086,7 @@ export function darkPeasantHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const sd of [-1, 1]) {
     put(MeshBuilder.CreateBox("darkPeasantHairSide", { width: e.x * H.side, height: e.y * 0.9, depth: e.z * 1.3 }, scene), c.x + sd * (e.x + (e.x * H.side) / 2), c.y + e.y * 0.45, c.z - e.z * 0.15, 0, sd * 0.12);
   }
-  out.push(...darkPeasantJerkin(scene, body));
+  if (dressJerkin) out.push(...darkPeasantJerkin(scene, body));
   return out;
 }
 
