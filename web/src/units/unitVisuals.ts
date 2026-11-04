@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -779,7 +779,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "legacy.wizard": vis(
     { scale: 1.3, bulk: 0.82, torsoWidth: 0.92, headSize: 1.12, legLength: 1.3, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "staff", "wizard_hat", // [S] 480: lanky legs under the open knee coat
     "none", "cape", "#7BA0FF", "sword", {
-      offhandVariant: "longsword", // [S] 470 a slim longsword in his left hand beside the staff (audit 468 wizard b.2; legacy.wizard.red.png, card Off Hand Wizard Sword)
+      offhandVariant: "wizard_sword", // One-hand leaf-guard sword with its own upright carry.
       weaponVariant: "wizard_staff", // [S] 475 a twisted wooden staff with a curled head set with pale-blue crystals (propBuilder WIZARD_STAFF; audit 468 b.1)
       posePreset: "caster",
       materialPreset: "secret_holy",

@@ -4133,6 +4133,25 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "sword":
     case "cutlass": {
+      if (variant === "wizard_sword") {
+        // 481, legacy.wizard.red.png: a slim one-hand blade from the low fist
+        // toward the hat, silver swept quillons and a round pommel.
+        const { blade, hilt } = buildSlabSword(scene, "blade", fit, new Color3(0.72, 0.7, 0.56), false,
+          { long: 0.62, wide: 0.027, grip: 1.65, point: 0.16 });
+        blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
+        const silver = mat(scene, new Color3(0.72, 0.7, 0.56), 0.12, "cloth");
+        const guard = blade.getChildMeshes(true).find(m => m.name === "guard")!;
+        guard.setEnabled(false);
+        for (const side of [-1, 1]) {
+          const quillon = MeshBuilder.CreateCylinder("wizardSwordQuillon", { height: fit.fist * 3.5, diameterBottom: fit.fist * 0.75, diameterTop: fit.fist * 0.25, tessellation: 4 }, scene);
+          quillon.parent = blade; quillon.position.set(side * fit.fist * 1.5, -hilt + fit.fist * 0.6, 0);
+          quillon.rotation.z = -side * 1.1; quillon.material = silver; quillon.convertToFlatShadedMesh();
+        }
+        const pommel = blade.getChildMeshes(true).find(m => m.name === "pommel")!;
+        pommel.material = silver;
+        new TransformNode("wizardSwordHold", scene).parent = blade;
+        return blade;
+      }
       // [S] 470b the Pharaoh's flail held in the off fist as a sword is, rod up and forward where it reads (from the staff hold it pointed at the camera)
       if (type === "sword" && variant === "pharaoh_flail") return buildPharaohFlail(scene, fit, teamColor ?? accent);
       const cut = type === "sword" ? (variant === "longsword" ? LONGSWORD : variant === "valkyrie_sword" ? VALKYRIE_SWORD : undefined) : undefined;

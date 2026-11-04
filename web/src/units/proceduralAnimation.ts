@@ -2376,6 +2376,7 @@ export class ProceduralAnimator {
     this._squareShield();
     this._carrySpear();
     this._carryProp(dt);
+    this._holdWizardSword();
     this._holdForkStab(dt);
     this._turnFork();
     this._holdBanjo();
@@ -3377,6 +3378,26 @@ export class ProceduralAnimator {
     return Math.atan2(Math.hypot(local.z, local.x), local.y);
   }
   private _pressTip = new Vector3(0, 0, 1);
+
+  /** The Wizard's low off fist carries its long blade up beside the face;
+   * it is independent of the casting staff and never uses a two-hand sword grip. */
+  private _holdWizardSword(): void {
+    const hand = this._body.leftHand;
+    const blade = hand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some(c => c.name === "wizardSwordHold"));
+    if (!blade || this._state === AnimState.Dead) return;
+    const grip = blade.getChildMeshes(true).find(m => m.name === "grip");
+    if (!grip) return;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const direction = Vector3.TransformNormal(new Vector3(-0.14, 1, 0.12).normalize(), this._body.root.getWorldMatrix());
+    const local = Vector3.TransformNormal(direction, hand.getWorldMatrix().clone().invert()).normalize();
+    const q = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(Vector3.Up(), local, q);
+    blade.rotationQuaternion = q;
+    const rotation = Matrix.Identity(); q.toRotationMatrix(rotation);
+    blade.position.copyFrom(Vector3.TransformNormal(grip.position.multiply(blade.scaling), rotation).scale(-1));
+  }
 
   private _carryProp(dt: number): void {
     const ready = this._carry?.ready;
