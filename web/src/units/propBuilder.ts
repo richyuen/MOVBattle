@@ -4525,6 +4525,14 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         const m = mat(scene, G.color, 2.5, "cloth"); // luminous core inside the fist-fitted mitt
         glove.material = m;
         glove.convertToFlatShadedMesh();
+        // [S] 479: broad knuckle padding and a distinct cuff turn the fitted core
+        // into a boxing mitt (legacy.super_boxer.red.png), rather than a wrist ball.
+        const pad = MeshBuilder.CreateSphere("glowGloveKnuckles", { diameterX: G.wide * s * 1.38, diameterY: G.wide * s, diameterZ: G.wide * s * 0.8, segments: 8 }, scene);
+        pad.position.set(0, G.wide * s * 0.18, G.wide * s * 0.24);
+        pad.parent = glove; pad.material = m; pad.convertToFlatShadedMesh();
+        const cuff = MeshBuilder.CreateCylinder("glowGloveCuff", { height: G.wide * s * 0.4, diameter: G.wide * s * 0.9, tessellation: 8 }, scene);
+        cuff.position.y = -G.wide * s * 0.48;
+        cuff.parent = glove; cuff.material = m; cuff.convertToFlatShadedMesh();
         const thumb = MeshBuilder.CreateIcoSphere("glowGloveThumb", { radius: G.wide * s * G.thumb / 2, subdivisions: 1 }, scene);
         thumb.position.set(G.wide * s * 0.42, G.wide * s * 0.12, G.wide * s * 0.1);
         thumb.parent = glove;
