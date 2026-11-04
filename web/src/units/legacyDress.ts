@@ -1171,7 +1171,7 @@ export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
  * standing clear of the outer hull, not an inset band (legacy.super_peasant.red.png). */
 function superPeasantRopeBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const out: Mesh[] = [], { W, H, D, lay } = outerTrunkFrame(scene, body, out);
-  const color = new Color3(0.7, 0.665, 0.56), cream = getMaterialFactory().get("unlit", color);
+  const color = new Color3(0.7, 0.665, 0.56), cream = getMaterialFactory().get("unlit", color, { emissive: color });
   for (let k = 0; k < 16; k++) {
     const a = k * Math.PI / 8;
     const knot = MeshBuilder.CreateIcoSphere("superRopeBraid", { radius: 0.5, subdivisions: 1, flat: true }, scene);
