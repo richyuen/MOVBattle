@@ -3137,15 +3137,44 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
   // Car: a floor, a curved team-coloured front (a half cylinder, its arc on -z, turned to the horse), two side boards, a gold band round the rim
   const floor = add(MeshBuilder.CreateBox("chariotFloor", { width: CHARIOT_CAR_WIDE, height: 0.08, depth: 0.78 }, scene), teamDark);
   floor.position.set(0, CHARIOT_FLOOR, CHARIOT_CAR_Z - 0.06);
-  const wallTall = CHARIOT_RIM - CHARIOT_FLOOR;
-  const front = add(MeshBuilder.CreateCylinder("chariotCart", { height: wallTall, diameter: CHARIOT_CAR_WIDE, arc: 0.5, tessellation: 12, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene), teamPrimary);
-  front.rotation.y = Math.PI;
-  front.scaling.z = 0.9;
-  front.position.set(0, CHARIOT_FLOOR + wallTall / 2, CHARIOT_CAR_Z);
-  const band = add(MeshBuilder.CreateCylinder("chariotRim", { height: 0.08, diameter: CHARIOT_CAR_WIDE + 0.05, arc: 0.5, tessellation: 12, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene), gold);
-  band.rotation.y = Math.PI;
-  band.scaling.z = 0.9;
-  band.position.set(0, CHARIOT_RIM - 0.02, CHARIOT_CAR_Z);
+  // [S] 476: reference front is a tall curved breastwork with two rising gold
+  // laurel sprays. Closed faceted slabs avoid the inward-face SSAO of an arc.
+  // Seven panels span a half circle; leaf pairs follow each curved stem, clear
+  // of the face by 4 cm so the relief survives the idle three-quarter view.
+  const wallTall = CHARIOT_RIM - CHARIOT_FLOOR + 0.22;
+  const radius = CHARIOT_CAR_WIDE / 2;
+  const faceAt = (x: number, y: number) => new Vector3(x, y,
+    CHARIOT_CAR_Z + Math.sqrt(Math.max(0, radius * radius - x * x)) * 0.9 + 0.04);
+  for (let i = 0; i < 7; i++) {
+    const angle = -Math.PI / 2 + Math.PI * (i + 0.5) / 7;
+    const width = 2 * radius * Math.sin(Math.PI / 14) + 0.012;
+    const panel = add(MeshBuilder.CreateBox("chariotFrontPanel", { width, height: wallTall, depth: 0.055 }, scene), teamPrimary);
+    panel.position.set(Math.sin(angle) * radius, CHARIOT_FLOOR + wallTall / 2, CHARIOT_CAR_Z + Math.cos(angle) * radius * 0.9);
+    panel.rotation.y = angle;
+    for (const y of [CHARIOT_FLOOR + 0.035, CHARIOT_FLOOR + wallTall - 0.035]) {
+      const trim = add(MeshBuilder.CreateBox("chariotFrontTrim", { width: width + 0.015, height: 0.07, depth: 0.075 }, scene), gold);
+      trim.position.set(panel.position.x, y, panel.position.z);
+      trim.rotation.y = angle;
+    }
+  }
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 7; i++) {
+      const t = i / 6;
+      const x = side * (0.065 + t * 0.32);
+      const y = CHARIOT_FLOOR + 0.25 + t * t * 0.32;
+      const stem = faceAt(x, y);
+      if (i < 6) {
+        const nextT = (i + 1) / 6;
+        seg("chariotLaurelStem", stem, faceAt(side * (0.065 + nextT * 0.32), CHARIOT_FLOOR + 0.25 + nextT * nextT * 0.32), 0.015, 0.012, gold);
+      }
+      for (const branch of [-1, 1]) {
+        const tip = faceAt(x + side * (branch > 0 ? 0.015 : -0.08), y + (branch > 0 ? 0.14 : 0.045));
+        const leaf = add(MeshBuilder.CreateSphere("chariotLaurelLeaf", { diameterX: 0.045, diameterY: 0.14, diameterZ: 0.025, segments: 4 }, scene), gold);
+        leaf.position.copyFrom(stem.add(tip).scale(0.5));
+        leaf.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), tip.subtract(stem).normalize(), new Quaternion());
+      }
+    }
+  }
   for (const side of [-1, 1]) {
     const board = add(MeshBuilder.CreateBox("chariotSide", { width: 0.05, height: wallTall * 0.7, depth: 0.36 }, scene), teamPrimary);
     board.position.set(side * (CHARIOT_CAR_WIDE / 2 - 0.02), CHARIOT_FLOOR + wallTall * 0.35, CHARIOT_CAR_Z - 0.2);
