@@ -2879,18 +2879,18 @@ export class SimulationSystem {
       this.visualEffects?.spawnDarkVolley(hands, target.position.add(new Vector3(0, 1, 0)), () => {
         if (!target.isDead) target.applyDamage(damage, knockback);
       });
-      this._logAbility(attacker, "area_pull", now, target.position);
-      this._summonUnits(attacker);
-      const controlRadius = Math.max(5.2, splashRadius + 1.6);
-      const controlDuration = attacker.definition.statusDurationSeconds ?? 3.2;
-      const pullForce = knockback.scale(-2.15 * controlStrength);
-      const secondaryCenter = target.position.add(impulseDir.scale(-1.2));
-      this._applyAreaControl(target.position, controlRadius, attacker.team, damage * 0.9, pullForce, now, 0.28, controlDuration);
-      this._applyAreaControl(secondaryCenter, Math.max(3.6, controlRadius * 0.7), attacker.team, damage * 0.55, pullForce.scale(0.78), now, 0.34, Math.max(2.4, controlDuration - 0.4));
-      if (this.visualEffects) {
-        this.visualEffects.spawnSmokePuff(target.position, new Color3(0.35, 0.24, 0.52));
-        this.visualEffects.spawnSmokePuff(secondaryCenter, new Color3(0.28, 0.2, 0.42));
-        this.visualEffects.spawnSmokePuff(attacker.position.add(impulseDir.scale(1.2)), new Color3(0.24, 0.18, 0.38));
+      // Only the TABS original owns hand seizure. Custom keeps its summon/pull below.
+      if (Vector3.Distance(attacker.position, target.position) <= 5 && this.visualEffects) {
+        target.applySlow(0.02, 0.5, now);
+        this._logAbility(attacker, "dark_grab", now, target.position);
+        this.visualEffects.spawnDarkGrab(hands, () => target.position.add(new Vector3(0, 1.1, 0)), () => {
+          if (!this._units.includes(target) || target.isDead) return;
+          const away = target.position.subtract(attacker.position); away.y = 0;
+          if (away.lengthSquared() < 1e-6) away.set(1, 0, 0);
+          target.applyDamage(1000, Vector3.Zero());
+          target.applyBlastLaunch(away.normalize(), 18, 9);
+          this._logAbility(attacker, "dark_annihilate", RuntimeUnit.timeNowSeconds(), target.position);
+        });
       }
       return;
     }

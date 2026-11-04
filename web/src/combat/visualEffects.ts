@@ -1273,6 +1273,41 @@ export class VisualEffects {
     }, dispose: () => { for (const s of shots) if (!s.source.isDisposed()) s.source.setEnabled(true); streakMat.dispose(); } });
   }
 
+  /** [S] 481 Dark Peasant Hands: six actual hand silhouettes clamp the victim's
+   * chest and head, follow its body, then close into a black annihilation flash. */
+  spawnDarkGrab(hands: Mesh[], victim: () => Vector3, onBlast: () => void): void {
+    const root = new TransformNode("darkGrab", this._scene);
+    const grabs = hands.slice(15, 21).map((source, k) => {
+      source.computeWorldMatrix(true);
+      const scale = Vector3.One(); source.getWorldMatrix().decompose(scale);
+      const hand = source.clone("darkGrabHand", root)!;
+      hand.setEnabled(true); hand.scaling.copyFrom(scale.scale(1.2));
+      hand.rotationQuaternion = null;
+      return { hand, angle: k * Math.PI / 3 };
+    });
+    const place = (age: number) => {
+      root.position.copyFrom(victim());
+      const radius = 0.55 - 0.25 * Math.min(1, age / 0.4);
+      for (const { hand, angle } of grabs) {
+        hand.position.set(Math.cos(angle) * radius, Math.sin(angle) * 0.55, Math.sin(angle * 2) * 0.25);
+        hand.rotation.set(0, -Math.PI / 2 + angle, angle - Math.PI / 2);
+        hand.scaling.scaleInPlace(age >= 0.45 ? 0.7 : 1);
+      }
+    };
+    place(0);
+    let blasted = false;
+    this._effects.push({ root, remaining: 0.7, update: (_dt, remaining) => {
+      const age = 0.7 - remaining;
+      place(age);
+      if (!blasted && age >= 0.45) {
+        blasted = true;
+        this.spawnSmokePuff(victim(), new Color3(0.025, 0.015, 0.04));
+        this.spawnExplosionBurst(victim(), 1.4);
+        onBlast();
+      }
+    } });
+  }
+
   /** [S] 479: streaming wrist ribbons, sampled in world space so turns leave curved yellow tails. */
   spawnWristRibbons(wrists: (() => Vector3)[], seconds: number, gloves = false): void {
     const root = new TransformNode("superWristRibbons", this._scene);
