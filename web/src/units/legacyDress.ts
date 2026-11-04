@@ -1104,12 +1104,36 @@ export function darkPeasantHair(scene: Scene, body: ArticulatedBody, dressJerkin
   for (const sd of [-1, 1]) {
     put(MeshBuilder.CreateBox("darkPeasantHairSide", { width: e.x * H.side, height: e.y * 0.9, depth: e.z * 1.3 }, scene), c.x + sd * (e.x + (e.x * H.side) / 2), c.y + e.y * 0.45, c.z - e.z * 0.15, 0, sd * 0.12);
   }
-  if (dressJerkin) out.push(...darkPeasantJerkin(scene, body));
+  if (dressJerkin) out.push(...darkPeasantJerkin(scene, body), ...darkPeasantLowerDress(scene, body));
   return out;
 }
 
 /** [S] 479: legacy.dark_peasant.red.png, open grey-brown jerkin over team undershirt,
  * two patchy front panels, four crossed stitches and pointed ragged waist tails. */
+function darkPeasantLowerDress(scene: Scene, body: ArticulatedBody): Mesh[] {
+  // [S] 480: ragged black braies to the knees, team hosen with rolled tops,
+  // pale low shoes (legacy.dark_peasant.red.png). This is legacy-only dress.
+  const out: Mesh[] = [], mf = getMaterialFactory();
+  const black = mf.get("cloth", new Color3(0.012, 0.012, 0.02));
+  const cream = new Color3(0.7, 0.665, 0.56), shoes = mf.get("unlit", cream, { emissive: cream });
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    thigh.material = black;
+    const rag = limbShell(scene, "darkRaggedBraies", thigh, 0, 1.02, 1.35, black);
+    const p = rag.getVerticesData("position")!, lo = rag.getBoundingInfo().boundingBox.minimum.y;
+    for (let i = 0; i < p.length; i += 3) if (p[i + 1] < lo + 0.001) p[i + 1] += ((i / 3) % 3) * 0.035;
+    rag.setVerticesData("position", p); rag.refreshBoundingInfo(); out.push(rag);
+  }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = body.skinMaterial;
+    out.push(limbShell(scene, "darkRolledHosen", shin, 0.25, 0.4, 1.65, body.skinMaterial));
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) for (const foot of knee.getChildMeshes(true)) {
+    if (!/_[lr]FootM$/.test(foot.name)) continue;
+    foot.material = shoes; scene.getGlowLayerByName("glow")?.addExcludedMesh(foot);
+  }
+  return out;
+}
+
 function darkPeasantJerkin(scene: Scene, body: ArticulatedBody): Mesh[] {
   const out: Mesh[] = [];
   const mf = getMaterialFactory(), brown = new Color3(0.17, 0.13, 0.1);
