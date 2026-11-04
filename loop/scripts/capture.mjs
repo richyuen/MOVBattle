@@ -541,8 +541,9 @@ async function main() {
           // one side-on frame includes both caster and victim, held across the ability pair.
           if (on === 7 || on === 8) {
             const dx = pt.x - pa.x, dz = pt.z - pa.z;
-            window.game.frameCamera({ x: (pa.x + pt.x) / 2, y: (on === 8 ? 3 : 1.3) * s, z: (pa.z + pt.z) / 2 },
-              on === 8 ? 14 * s : Math.max(6 * s, Math.hypot(dx, dz) * 1.15 + 3), Math.atan2(dx, -dz), Math.PI / 2.1);
+            const forward = on === 8 ? 6 / Math.max(0.01, Math.hypot(dx, dz)) : 0;
+            window.game.frameCamera({ x: (pa.x + pt.x) / 2 + dx * forward, y: (on === 8 ? 3 : 1.3) * s, z: (pa.z + pt.z) / 2 + dz * forward },
+              on === 8 ? 22 * s : Math.max(6 * s, Math.hypot(dx, dz) * 1.15 + 3), Math.atan2(dx, -dz), Math.PI / 2.1);
             return;
           }
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
