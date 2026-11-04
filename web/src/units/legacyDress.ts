@@ -1128,7 +1128,7 @@ function darkPeasantLowerDress(scene: Scene, body: ArticulatedBody): Mesh[] {
     out.push(limbShell(scene, "darkRolledHosen", shin, 0.25, 0.4, 1.65, body.skinMaterial));
   }
   for (const knee of [body.leftKnee, body.rightKnee]) for (const foot of knee.getChildMeshes(true)) {
-    if (!/_[lr]FootM$/.test(foot.name)) continue;
+    if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
     foot.material = shoes; scene.getGlowLayerByName("glow")?.addExcludedMesh(foot);
   }
   return out;
