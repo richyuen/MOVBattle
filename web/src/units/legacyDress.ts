@@ -1,5 +1,6 @@
 import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, type Material } from "@babylonjs/core";
 import { limbShell } from "./medievalDress";
+import { strapSandals } from "./ancientDress";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -1927,6 +1928,25 @@ export function superBoxerShorts(scene: Scene, body: ArticulatedBody, teamColor:
  */
 const PHARAOH_KILT = { sides: 10, waist: 1.15, flare: 1.9, long: 0.62, shade: 0.9, pleatShade: 0.72, pleats: 10, pleatWide: 0.35, glow: 0.12 };
 
+/** [R] 481 sandal specification, legacy.pharaoh.red/blue.png:
+ * Exposed team feet/ankles, a narrow gold sole and instep straps, one thin gold
+ * ring a quarter-shin above the foot, connected by a narrow frontal gold run.
+ * Replaces the closed dark boot presentation; all upper dress stays on its joints. */
+function pharaohSandals(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const color = new Color3(1, 0.7, 0.18);
+  const gold = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.12) });
+  const out = strapSandals(scene, body, color, 0.12, "pharaoh");
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "pharaohSandalAnkle", shin, 0.78, 0.815, 1.1, gold));
+    const bb = shin.getBoundingInfo().boundingBox;
+    const e = bb.extendSize.multiply(shin.scaling), c = shin.position.add(bb.center.multiply(shin.scaling));
+    const run = MeshBuilder.CreateBox("pharaohSandalFront", { width: e.x * 0.28, height: e.y * 0.42, depth: e.z * 0.16 }, scene);
+    run.parent = shin.parent; run.position.set(c.x, c.y - e.y * 0.76, c.z + e.z * 1.03);
+    run.material = gold; out.push(run);
+  }
+  return out;
+}
+
 /** The Pharaoh's flared team kilt to mid-thigh over bare legs (spec at PHARAOH_KILT). */
 export function pharaohKilt(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const K = PHARAOH_KILT;
@@ -1946,7 +1966,7 @@ export function pharaohKilt(scene: Scene, body: ArticulatedBody, teamColor: Colo
   kilt.position.y = pelvis.position.y + size.y - drop / 2;
   kilt.parent = body.hip;
   kilt.material = cloth;
-  const out: Mesh[] = [kilt];
+  const out: Mesh[] = [kilt, ...pharaohSandals(scene, body)];
   // pleats: darker strips on every other face of the bell, leaning out with it
   const lean = Math.atan2((hem - top) / 2, drop);
   for (let k = 0; k < K.pleats; k += 2) {
