@@ -464,7 +464,7 @@ async function main() {
           // the painter dodges missiles (Painter Dodge): he spars with an archer, whose arrows are what he sidesteps (evidence 373)
           // the samurai deflects missiles (Projectile Block): he spars with an archer too (evidence 417)
           // the quick draw sidesteps missiles (Quickdraw Projectile Dodge): an archer too (evidence 445)
-          const t = game.spawnUnit(id === "legacy.dark_peasant" ? "medieval.king" : id === "renaissance.painter" || id === "dynasty.samurai" || id === "wild_west.quick_draw" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
+          const t = game.spawnUnit(id === "legacy.dark_peasant" ? "medieval.knight" : id === "renaissance.painter" || id === "dynasty.samurai" || id === "wild_west.quick_draw" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
           // [evidence 480] A lethal punch ended the duel at contact, freezing
           // its corpse before the post-impact pair. A distant reserve keeps
           // battle time advancing without entering the contact scene.
