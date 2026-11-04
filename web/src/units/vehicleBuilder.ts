@@ -3256,13 +3256,22 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
     }
     const topY = c.y + e.y * (C.lift + C.cap) + e.y * C.crestUp;
     const R = e.x * C.crest;
-    // a half cylinder of arc .5 turned so its flat face stands across the head (side to side) and its curve rises over it (rotation.x -pi/2 lifts +z to +y)
-    const fan = put(MeshBuilder.CreateCylinder("chariotHelmCrest", { height: e.z * C.crestThick, diameter: R * 2, arc: 0.5, tessellation: 14 }, scene), crest, c.x, topY, c.z - e.z * 0.05);
-    fan.rotation.x = -Math.PI / 2;
-    const rim = put(MeshBuilder.CreateCylinder("chariotHelmCrestRim", { height: e.z * C.crestThick * 1.15, diameter: R * 2 * C.rim, arc: 0.5, tessellation: 14 }, scene), rimMat, c.x, topY, c.z - e.z * 0.05);
-    rim.rotation.x = -Math.PI / 2;
-    const inner = put(MeshBuilder.CreateCylinder("chariotHelmCrestCore", { height: e.z * C.crestThick * 1.3, diameter: R * 2 * C.rim * 0.82, arc: 0.5, tessellation: 14 }, scene), crest, c.x, topY, c.z - e.z * 0.05);
-    inner.rotation.x = -Math.PI / 2;
+    // [S] 477: closed radial plume blocks in the head's x/y plane. The old
+    // cylinder arc lay on the cap; this fan is explicitly above the crown.
+    // Eleven facets form a broad team fan with a pale inner curved band.
+    for (let k = 0; k < 11; k++) {
+      const angle = (k - 5) * 0.23;
+      const spoke = put(MeshBuilder.CreateBox("chariotHelmCrest", {
+        width: R * 0.29, height: R * 0.85, depth: e.z * C.crestThick * 1.5,
+      }, scene), crest, c.x + Math.sin(angle) * R * 0.78,
+      topY + Math.cos(angle) * R * 0.78, c.z);
+      spoke.rotation.z = -angle;
+      const stripe = put(MeshBuilder.CreateBox("chariotHelmCrestRim", {
+        width: R * 0.22, height: R * 0.15, depth: e.z * C.crestThick * 1.65,
+      }, scene), rimMat, c.x + Math.sin(angle) * R * 0.48,
+      topY + Math.cos(angle) * R * 0.48, c.z + e.z * 0.02);
+      stripe.rotation.z = -angle;
+    }
   }
   /*
    * [S] 471 the driver's gladius (audit 468 chariot b.1: "gladius missing from the driver's right hand - TABS: a short sword held upright";
