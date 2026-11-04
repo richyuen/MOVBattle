@@ -3331,9 +3331,10 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
     // [S] 477: a closed oval shield, shoulder to hip, with its rim in front
     // rather than hidden behind three rectangular panels. The gold wing
     // strokes sit proud of the bowed face. Ref: legacy.chariot.red/blue.png.
-    shield.position.x = tb.center.x - W * 0.85;
-    shield.position.y = tb.center.y + H * 0.18;
-    shield.rotation.y = -0.12;
+    // [S] 479: a rigid forearm mount holds the shield outside the breastwork and
+    // horse silhouette. Its face turns toward the driver's weapon-side three-quarter.
+    shield.position.set(tb.center.x - W * 1.35, tb.center.y + H * 0.62, tb.center.z + D * 1.4);
+    shield.rotation.y = 0.62;
     const oval = (name: string, w: number, h: number, z: number, material: Mesh["material"]) => {
       const m = MeshBuilder.CreateSphere(name, { diameterX: w, diameterY: h, diameterZ: t * 2, segments: 10 }, scene);
       m.parent = shield;
@@ -3342,6 +3343,8 @@ function buildChariot(scene: Scene, color: Color3): ArticulatedBody {
       m.convertToFlatShadedMesh();
       allMeshes.push(m);
     };
+    slab("chariotScutumForearmMount", W * 0.9, W * 0.12, W * 0.12, lit(new Color3(0.12, 0.13, 0.16), 0.1), torso,
+      tb.center.x - W * 0.85, tb.center.y + H * 0.48, tb.center.z + D * 1.4, 0, -0.25);
     oval("chariotScutumRim", W * 1.35, tall * 1.35, 0, gold);
     oval("chariotScutumFace", W * 1.22, tall * 1.25, t * 0.45, face);
     slab("chariotScutumBoss", W * S.boss, W * S.boss, t * 2.5, gold, shield, 0, 0, t * 2.0);
