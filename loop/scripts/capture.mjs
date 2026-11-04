@@ -530,6 +530,14 @@ async function main() {
           if (on === 6) on = 2;
           const a = window.__ua, t = allyShot && window.__ually ? window.__ually : window.__ut;
           const pa = a.body.root.position, pt = t.body.root.position;
+          // [evidence 479] Dark Peasant's outgoing hands must be distinguished from his sphere:
+          // one side-on frame includes both caster and victim, held across the ability pair.
+          if (on === 7) {
+            const dx = pt.x - pa.x, dz = pt.z - pa.z;
+            window.game.frameCamera({ x: (pa.x + pt.x) / 2, y: 1.3 * s, z: (pa.z + pt.z) / 2 },
+              Math.max(6 * s, Math.hypot(dx, dz) * 0.8 + 2), Math.atan2(dx, -dz), Math.PI / 2.1);
+            return;
+          }
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
           // the protector's slab hides his head from the front: his idle swings round to his side, where the head shows beside the slab (evidence 366)
           // [evidence 403] the halfling's wide side-by-side stance read as a walk stride from .6 rad off his front (critic 397-402 a.1; probe: his
@@ -727,9 +735,10 @@ async function main() {
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
           // blanketed him and the re-framed camera hid the step)
           const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
-          const pair = dodge ? { hold: ability.tick, clean: true } : {};
-          await take(`unit_${id}_ability`, ability.tick, aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
-          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
+          const darkVolley = id === "legacy.dark_peasant";
+          const pair = dodge || darkVolley ? { hold: ability.tick, clean: dodge } : {};
+          await take(`unit_${id}_ability`, ability.tick, darkVolley ? 7 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), darkVolley ? 7 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
         }
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
