@@ -3608,8 +3608,8 @@ function buildPharaohFlail(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  * .twist turns round the axis .round H out, gathered into a pointed tip .tip H that leans .lean rad; .crystals pale-blue slivers .crystal H long between
  * the strands; brown wood self-lit .glow; the fist .grip of the way up; a hidden "orb" at the head's middle, where his spell leaves.
  */
-const WIZARD_STAFF = { long: 0.98, thick: 0.034, foot: 0.7, wander: 0.012, waves: 3, head: 0.14, strands: 3, strand: 0.026, twist: 0.9, round: 0.02, tip: 0.07, lean: 0.5, crystals: 3, crystal: 0.08,
-  wood: new Color3(0.34, 0.19, 0.08), glow: 0.14, ice: new Color3(0.62, 0.86, 1), iceGlow: 1.1, grip: 0.42 };
+const WIZARD_STAFF = { long: 1.3, thick: 0.034, foot: 0.7, wander: 0.012, waves: 3, head: 0.14, strands: 3, strand: 0.026, twist: 0.9, round: 0.02, tip: 0.07, lean: 0.5, crystals: 3, crystal: 0.08,
+  wood: new Color3(0.34, 0.19, 0.08), glow: 0.14, ice: new Color3(0.62, 0.86, 1), iceGlow: 1.1, grip: 0.3 };
 function buildWizardStaff(scene: Scene, fit: BladeFit): Mesh {
   const S = WIZARD_STAFF, H = fit.stand, L = S.long * H;
   const wood = mat(scene, S.wood, S.glow, "cloth"), ice = mat(scene, S.ice, S.iceGlow, "cloth");
@@ -3624,6 +3624,9 @@ function buildWizardStaff(scene: Scene, fit: BladeFit): Mesh {
   const r0 = S.thick * H / 2;
   const shaft = MeshBuilder.CreateTube("staff", { path, radiusFunction: (i) => r0 * (S.foot + (1 - S.foot) * (i / n)), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
   shaft.id = "wizardStaff";
+  // [S] 480: the grip is measured up from the planted butt, and the rod uses
+  // the grounded upright carry solver instead of a seeded support slant.
+  new TransformNode("uprightPole", scene).parent = shaft;
   shaft.material = wood;
   shaft.convertToFlatShadedMesh();
   const top = path[n];
