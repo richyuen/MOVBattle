@@ -535,7 +535,7 @@ async function main() {
           if (on === 7) {
             const dx = pt.x - pa.x, dz = pt.z - pa.z;
             window.game.frameCamera({ x: (pa.x + pt.x) / 2, y: 1.3 * s, z: (pa.z + pt.z) / 2 },
-              Math.max(6 * s, Math.hypot(dx, dz) * 0.8 + 2), Math.atan2(dx, -dz), Math.PI / 2.1);
+              Math.max(6 * s, Math.hypot(dx, dz) * 1.15 + 3), Math.atan2(dx, -dz), Math.PI / 2.1);
             return;
           }
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
