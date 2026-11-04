@@ -989,16 +989,20 @@ export function wizardRobe(scene: Scene, body: ArticulatedBody, teamColor: Color
   for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = coat;
   for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) limb.material = coat;
   const out: Mesh[] = [];
-  const { W, H, D, lay } = trunkFrame(scene, body, out);
+  const { W, H, D, lay } = outerTrunkFrame(scene, body, out);
   const beltY = -H / 2 + (H * R.belt) / 2;
   lay(MeshBuilder.CreateBox("wizardRobeBelt", { width: W * R.beltOut, height: H * R.belt, depth: D * R.beltOut }, scene), 0, beltY, 0, leather);
   lay(MeshBuilder.CreateBox("wizardRobeBuckle", { width: W * R.buckle, height: H * R.belt * 1.2, depth: D * 0.08 }, scene), 0, beltY, (D * R.beltOut) / 2 + D * 0.03, steel);
-  // the skirts: a bell from the trunk foot down past the knee
-  const drop = Math.abs(body.leftKnee.position.y) * R.long;
-  const top = W * R.waist, hem = W * R.flare;
-  const skirt = MeshBuilder.CreateCylinder("wizardRobeSkirt", { height: drop, diameterTop: top, diameterBottom: hem, tessellation: R.sides }, scene);
-  skirt.scaling.z = Math.max(0.7, D / W);
-  lay(skirt, 0, -H / 2 - drop / 2 + H * R.belt * 0.5, 0, coat);
+  // [S] 480: two solid open coat tails from the outer pelvis to the knees.
+  // A closed bell concealed the long legs and the inset trunk left a vest rim.
+  const drop = Math.abs(body.leftKnee.position.y) * 1.16;
+  for (const side of [-1, 1]) {
+    const skirt = MeshBuilder.CreateBox("wizardOpenCoatTail", { width: W * 0.55, height: drop, depth: D * 1.2 }, scene);
+    const vertices = skirt.getVerticesData("position")!;
+    for (let i = 0; i < vertices.length; i += 3) if (vertices[i + 1] < 0) vertices[i] += side * W * 0.14;
+    skirt.setVerticesData("position", vertices); skirt.refreshBoundingInfo();
+    lay(skirt, side * W * 0.33, beltY - drop / 2, 0, coat);
+  }
   return out;
 }
 
