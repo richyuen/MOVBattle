@@ -2117,7 +2117,8 @@ export function attachProps(
     if (!palm) return;
     const pb = palm.getBoundingInfo().boundingBox;
     const gb = glove.getBoundingInfo().boundingBox;
-    const diameter = pb.extendSize.x * 2 * palm.scaling.x * 2.4;
+    const head = body.headMesh, hb = head.getBoundingInfo().boundingBox;
+    const diameter = Math.max(pb.extendSize.x * 2 * palm.scaling.x * 2.4, hb.extendSize.x * 2 * head.scaling.x);
     glove.position.copyFrom(palm.position);
     glove.rotation.set(0, 0, 0);
     glove.scaling.setAll(diameter / (gb.extendSize.x * 2));
