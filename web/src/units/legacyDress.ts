@@ -1,6 +1,5 @@
 import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, type Material } from "@babylonjs/core";
 import { limbShell } from "./medievalDress";
-import { strapSandals } from "./ancientDress";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -1959,7 +1958,23 @@ const PHARAOH_KILT = { sides: 10, waist: 1.15, flare: 1.9, long: 0.62, shade: 0.
 function pharaohSandals(scene: Scene, body: ArticulatedBody): Mesh[] {
   const color = new Color3(1, 0.7, 0.18);
   const gold = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.12) });
-  const out = strapSandals(scene, body, color, 0.12, "pharaoh");
+  const out: Mesh[] = [];
+  for (const foot of body.allMeshes) {
+    if (!/_[lr]FootM$/.test(foot.name)) continue;
+    foot.material = body.skinMaterial;
+    const bb = foot.getBoundingInfo().boundingBox, e = bb.extendSize;
+    const put = (name: string, w: number, h: number, d: number, x: number, y: number, z: number) => {
+      const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+      m.parent = foot; m.position.set(x, y, z); m.material = gold; out.push(m);
+    };
+    put("pharaohSandalSole", e.x * 2.06, e.y * 0.07, e.z * 2.03, bb.center.x, bb.minimum.y + e.y * 0.035, bb.center.z);
+    // Closed ankle ring is made of thin bars, leaving the whole team ankle exposed.
+    for (const side of [-1, 1]) {
+      put("pharaohSandalAnkleSide", e.x * 0.1, e.y * 0.1, e.z * 0.85, bb.center.x + side * e.x, bb.maximum.y, bb.minimum.z + e.z * 0.45);
+      put("pharaohSandalAnkleCross", e.x * 2.08, e.y * 0.1, e.z * 0.08, bb.center.x, bb.maximum.y, bb.minimum.z + e.z * (0.45 + side * 0.42));
+    }
+    put("pharaohSandalToeStrap", e.x * 1.95, e.y * 0.1, e.z * 0.14, bb.center.x, bb.minimum.y + e.y * 0.66, bb.maximum.z - e.z * 0.35);
+  }
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
     out.push(limbShell(scene, "pharaohSandalAnkle", shin, 0.78, 0.815, 1.1, gold));
     const bb = shin.getBoundingInfo().boundingBox;
