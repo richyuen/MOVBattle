@@ -1247,6 +1247,24 @@ export class VisualEffects {
     }, dispose: () => { for (const s of shots) if (!s.source.isDisposed()) s.source.setEnabled(true); streakMat.dispose(); } });
   }
 
+  /** [S] 479: streaming wrist ribbons, sampled in world space so turns leave curved yellow tails. */
+  spawnWristRibbons(wrists: (() => Vector3)[], seconds: number): void {
+    const root = new TransformNode("superWristRibbons", this._scene);
+    const mat = this._fxMat(new Color3(1, 0.8, 0.14), new Color3(1.6, 1.2, 0.15));
+    const histories = wrists.map(get => Array.from({ length: 14 }, () => get().clone()));
+    const paths = (points: Vector3[]) => [points.map(p => p.add(new Vector3(0, 0.045, 0))), points.map(p => p.add(new Vector3(0, -0.045, 0)))];
+    const ribbons = histories.map(points => {
+      const m = MeshBuilder.CreateRibbon("superWristRibbon", { pathArray: paths(points), updatable: true, sideOrientation: Mesh.DOUBLESIDE }, this._scene);
+      m.parent = root; m.material = mat; m.isPickable = false; return m;
+    });
+    this._effects.push({ root, remaining: seconds, update: () => {
+      histories.forEach((points, i) => {
+        points.pop(); points.unshift(wrists[i]().clone());
+        MeshBuilder.CreateRibbon("", { pathArray: paths(points), instance: ribbons[i] }, this._scene);
+      });
+    }, dispose: () => mat.dispose() });
+  }
+
   spawnPunchBurst(at: Vector3): void {
     const P = PUNCH_BURST;
     const root = new TransformNode("punchBurst", this._scene);

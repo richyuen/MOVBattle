@@ -1694,6 +1694,10 @@ export class SimulationSystem {
       unit.stopMoving();
       this._clearPathState(unit);
       unit.animator.setSuperman(true);
+      this.visualEffects?.spawnWristRibbons([unit.body.leftHand, unit.body.rightHand].map(hand => () => {
+        worldMatrixChain(hand);
+        return hand.getAbsolutePosition().clone();
+      }), Math.max(SUPER_FLIGHT.minDur, Vector3.Distance(from, to) / SUPER_FLIGHT.speed) + 0.1);
       if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position, new Color3(1.0, 0.88, 0.35));
       return;
     }
