@@ -1,19 +1,17 @@
 # legacy.wizard
-Status: open   Audited: 468, 475 (CONFIRM: passed c; failed a, b)   Done: -
+Status: open   Audited: 468, 475 (CONFIRM: passed c; failed a, b), 480 (c RE-AUDIT x2)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
-a FAIL (0 since 475)
- 1. build in unit_legacy.wizard_idle: squat and slab-torsoed, with a wide body and short legs below a robe ending near mid-thigh — TABS: lanky and tall, with long legs under a knee-length open coat (ref: legacy.wizard.red.png)
+a FAIL (1 since 475)
  2. beard colour in unit_legacy.wizard_idle: a near-white wedge beard — TABS: a mid-to-dark grey long beard (ref: legacy.wizard.red.png, card Appearance "very long, gray beard")
-b FAIL (0 since 475)
- 1. staff length in unit_legacy.wizard_idle: the staff tip reaches only about shoulder or chin height, so it is shorter than the man — TABS: the staff stands well above the hat tip, about 1.3x the unit's height (ref: legacy.wizard.red.png)
-c FAIL (3 since 468)
- 2. explodes like a firework (card Characteristics)
-d PASS (cost 1200=1200, hp 11.53x vs 11.57x (0%), dmg 45.00 (wiki none, skipped), cd 1.80x vs 2.00x (-10%); 479 stats)
+b PASS (480: grounded staff above the hat)
+c PASS (480: victim-centered radial spark detonation)
+d PASS (cost 1200=1200, hp 11.53x vs 11.57x (0%), dmg 45.00 (wiki none, skipped), cd 1.80x vs 2.00x (-10%); 480 stats)
 ## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] legacy.wizard.a build — blocker 1: long-leg body and knee-length open coat mechanism — ref: legacy.wizard.red.png — ours: unit_legacy.wizard_idle.png
-2. [S] legacy.wizard.b staff — blocker 1: grounded tall staff grip extending above hat — ref: legacy.wizard.red.png — ours: unit_legacy.wizard_idle.png
-3. [S] legacy.wizard.c airborne firework — blocker 2: expanding radial burst with distinct post-burst frame — ref: card Characteristics and legacy.wizard.png — ours: unit_legacy.wizard_ability.png
+1. [P] a.2 grey beard material (0.35,0.35,0.36), low emission; critic lists fallout of dc1ce591,d824f304; ours unit_legacy.wizard_idle.png, chest.
 ## Attempts (iter | gap | criterion | verdict)
+480 | lanky stance, open knee coat (dc1ce591,d824f304) | a | approved
+480 | planted tall staff grip (c8592c0a) | b | approved
+480 | radial detonation (88770cd1) | c | approved
 479 | sustained spell lift and lethal chest burst (0117757c, c67e45e9) | c | approved (airborne clause struck; explosion stands)
 475 | WIZARD_STAFF twisted staff, crystal head (c4906faa) | b | approved (struck 1; b PASS, then CONFIRM failed b)
 475 | WIZARD_FIREWORK spin up, burst (2475d0af, 41a3dc3b) | c | approved (none struck: the burst is over a man already landed)
@@ -23,8 +21,8 @@ d PASS (cost 1200=1200, hp 11.53x vs 11.57x (0%), dmg 45.00 (wiki none, skipped)
 472 | WIZARD_ROBE team coat-robe to the knees, dark belt (731cde05) | a | approved (struck 4)
 471 | WIZARD_PIPE curved brown pipe (b29ab410, cacbecab) | a | approved (struck 3)
 470 | offhand longsword (f309bcf8) | b | approved (struck 2)
-468 | WIZARD_BEARD grey wedge to mid-chest, moustache (9c6d188f, shared) | a | approved (struck 2)
+468-470 | WIZARD_BEARD, offhand sword | a,b | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 479 APPROVE: airborne spin clause cleared mechanically; explosion clause stands. Burst is a pale chest flash without expanding radial sparks/distinct after-frame.
-- Evidence f4f4e00d follows airborne victim. Next c mechanism: explicit lift/spin/detonate state with expanding sparks.
+- 480 cleared build, staff and firework lists; bright beard remains visible in lineup.
+- Taller staff reframes idle/motion (rig 1.8->2.9 m): next RE-AUDIT a/b/c scoped to Wizard; 475 c confirmation was reopened by 480 audit.

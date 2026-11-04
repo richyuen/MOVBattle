@@ -1,15 +1,16 @@
 # legacy.super_boxer
-Status: open   Audited: 468   Done: -
+Status: open   Audited: 468, 480 (CONFIRM: passed b, c; failed a)   Done: -
 ## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
 
-a PASS (477: lanky upright build)
-b PASS (479: fitted glowing padded mitts with knuckles, cuff and thumb)
-c FAIL (2 since 468)
- 2. glove trails missing in unit_legacy.super_boxer_release: a plain punch — TABS: glowing white-yellow trails behind the gloves (ref: legacy.super_boxer.jpg)
-d PASS (cost 10000=10000, hp 58.99x vs 57.86x (+2%), dmg 2.98x vs 3.00x (-1%), cd 0.11x vs 0.13x (-8%); 479 stats)
-## Ranked gaps (the critic's entries for this unit, pruned as they are taken)
-1. [S] legacy.super_boxer.c glove trails — blocker 2: sampled fading glove ribbons — ref: legacy.super_boxer.jpg — ours: unit_legacy.super_boxer_release.png
+a FAIL (0 since 480)
+ 1. lower-leg dress in unit_legacy.super_boxer_idle and lineup_legacy: dark navy shins ending in plain dark shoe blocks — TABS: tall team-tinted boxing boots with conspicuous pale horizontal wraps across the shins (ref: reference/units/legacy.super_boxer.blue.png, reference/units/legacy.super_boxer.red.png).
+b PASS (479: fitted luminous padded mitts; CONFIRM 480)
+c PASS (480: sampled glove trails; CONFIRM 480)
+d PASS (cost 10000=10000, hp 58.99x vs 57.86x (+2%), dmg 2.98x vs 3.00x (-1%), cd 0.11x vs 0.13x (-8%); 480 stats)
+## Ranked gaps
+1. [S] a.1 tall team boxing boots with pale shin wraps — ref: legacy.super_boxer.red.png — ours: unit_legacy.super_boxer_idle.png and lineup_legacy.png (CONFIRM 480).
 ## Attempts (iter | gap | criterion | verdict)
+480 | sampled glove trails (db753c81) | c | approved (struck 2)
 479 | padded glove knuckles/cuffs, head-relative fit (36730de3, cc74e96d) | b | approved (struck 1; b PASS)
 479 | back-dash, forward exploding punch (d2432f2a) | c | approved (struck 1)
 477 | lanky upright build (e09e65d6) | a | approved (struck 1)
@@ -23,4 +24,4 @@ d PASS (cost 10000=10000, hp 58.99x vs 57.86x (+2%), dmg 2.98x vs 3.00x (-1%), c
 470 | SUPER_BOXER_HAIR gold spikes, headband (8bcd54e9, shared) | a | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 479 gloves and back/forward exploding punch cleared; wrist/glove trails remain absent.
+- 480 c cleared; first CONFIRM failed a on wrapped boots, replaced list. b/c confirmed; no a plateau yet.

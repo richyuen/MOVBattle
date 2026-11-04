@@ -7,16 +7,6 @@ Script stats are exempt from critic/reversal checks. One row per knob; update at
 
 ## Structural attempts (last 5 iterations; `iter | gap | unit.criterion | verdict`)
 
-475 | df66d71e | legacy.thor.a | approved (struck 5; CONFIRM failed a)
-475 | e0b2e72e | legacy.tank.a | approved (struck 3)
-475 | 841dc9fc | legacy.chariot.b | approved (struck 3; b PASS)
-475 | 7a612df2 | legacy.tank.a | approved (struck 4; CONFIRM failed a)
-475 | 89b096f6 | legacy.chariot.a | approved (struck 2)
-475 | c4906faa | legacy.wizard.b | approved (struck 1; CONFIRM failed b)
-475 | b994faf3 | legacy.pharaoh.b | approved (struck 3; b PASS)
-475 | a5a5db73 | legacy.pharaoh.c | approved (struck 2; c PASS)
-475 | 2475d0af, 41a3dc3b | legacy.wizard.c | approved (none struck; burst after he lands)
-475 | 048b6138 | legacy.wizard.a | approved (struck 5)
 
 476 | b64da862, ca17191a | legacy.chariot.a | approved (struck 3; CONFIRM failed a, b)
 477 | b8d03fdd | legacy.pharaoh.a | approved (struck 1)
@@ -28,20 +18,38 @@ Script stats are exempt from critic/reversal checks. One row per knob; update at
 477 | 17bfabb4 | legacy.chariot.b | approved
 477 | e09e65d6 | legacy.super_boxer.a | approved (struck 1)
 477 | 533a1de9 | legacy.super_boxer.b | approved
-478 | [R] outer-hull fitted chest courses and waistband (faaba396) | legacy.pharaoh.a | approved (struck 1; CONFIRM failed a: sandals)
-479 | [R] open V coat, broad studded Viking belt (288e2eb7, ddec1562) | legacy.thor.a | approved (struck 1)
-479 | exposed shield forearm mount (b4856556) | legacy.chariot.b | approved (struck 1; b PASS)
-479 | padded glove knuckles/cuffs, head-relative fit (36730de3, cc74e96d) | legacy.super_boxer.b | approved (struck 1; b PASS)
-479 | back-dash, forward exploding punch (d2432f2a) | legacy.super_boxer.c | approved (struck 1)
-479 | patchy open laced jerkin (663b3f2d, 5fa80d38) | legacy.dark_peasant.a | approved (struck 4)
-479 | fifteen streaking thrown hands (1eb610b3; evidence b83edf3d, ff152789, fc7c5263) | legacy.dark_peasant.c | approved (struck 1)
-479 | white interlocking rope belt (0fb715a1, 3f642c6a) | legacy.super_peasant.a | approved (struck 3)
-479 | streaming wrist ribbons (909a9f7c) | legacy.super_peasant.c | approved (struck 2)
-479 | sustained spell lift until lethal chest burst (0117757c, c67e45e9) | legacy.wizard.c | approved (airborne clause struck)
+478 | [R] faaba396 | legacy.pharaoh.a | approved (struck 1; CONFIRM failed a: sandals)
+479 | [R] 288e2eb7,ddec1562 | legacy.thor.a | approved (struck 1)
+479 | b4856556 | legacy.chariot.b | approved (struck 1; b PASS)
+479 | 36730de3,cc74e96d | legacy.super_boxer.b | approved (struck 1; b PASS)
+479 | d2432f2a | legacy.super_boxer.c | approved (struck 1)
+479 | 663b3f2d,5fa80d38 | legacy.dark_peasant.a | approved (struck 4)
+479 | 1eb610b3 | legacy.dark_peasant.c | approved (struck 1)
+479 | 0fb715a1,3f642c6a | legacy.super_peasant.a | approved (struck 3)
+479 | 909a9f7c | legacy.super_peasant.c | approved (struck 2)
+479 | 0117757c,c67e45e9 | legacy.wizard.c | approved (airborne clause struck)
+480 | c444ddc5 [R] | legacy.thor.a | approved
+480 | 1b06021b | legacy.tank.a | approved
+480 | dc1ce591,d824f304 | legacy.wizard.a | approved
+480 | c8592c0a | legacy.wizard.b | approved
+480 | 88770cd1 | legacy.wizard.c | approved
+480 | db753c81 | legacy.super_boxer.c | approved
+480 | 09453b8f,3656bb73 | legacy.dark_peasant.a | approved
+480 | a70e65b3,b2acc355,4a6cb2c2 | legacy.super_peasant.a | approved
+480 | 2861b99c | legacy.super_peasant.c | dropped (victim not visible)
 ## Spent (never retry as [P])
 
 ## Rows
-legacyDress.ts:THOR_COAT front + THOR_BELT | outer hull V .8->.16W; belt .25H, buckle .48W,4 studs; shade .35 | 479 | approved | inset parallel strips, belt .2H,buckle .36W,shade .85
+legacyDress.ts:thorBelt owner/straps | pelvis .4H band, .48W plate, z .6D+.025 | 480 | approved | torso band .25H,z .56D (479)
+vehicleBuilder.ts:tankSeatedInfantry | own .82 rig, head1.08, legs1.08, pelvis on seat | 480 | approved | addOperator .46 (471)
+unitVisuals.ts:wizard build; legacyDress open tails; stance | .82bulk,.92W,legs1.3,.88/.8;2 tails,1.16knee;upright | 480 | approved | bulk1.08,closed bell,seeded crouch
+propBuilder.ts:WIZARD_STAFF long/grip/carry | 1.3,.3,uprightPole grounded hold | 480 | approved | .98,.42,seeded slant (475)
+visualEffects.ts:spawnWizardDetonation | 28 radial .6 tails, reach .4->2.2 in .3s,1.1s life | 480 | approved | shared compact firework (479)
+visualEffects.ts:glove ribbons + simulation dash | .8s,.18wide,white-yellow,14 world samples | 480 | approved | none
+legacyDress.ts:dark lower dress | ragged thigh shells1.35,rolled calf1.65,cream shoes | 480 | approved | lavender legs
+legacyDress.ts:super tunic outer shell | pelvis1.06->1.2W,1.18D,1.35H;unlit .85,noglow | 480 | approved | inset cloth .62knee;torso shell hidden
+runtimeUnit.ts:super punch | reverted | 480 | dropped | 80/25: victim lost
+legacyDress.ts:THOR_COAT front | outer hull V .8->.16W;shade .35 | 479 | approved | inset strips,shade .85;belt history@288e2eb7
 vehicleBuilder.ts:CHARIOT_SCUTUM mount (x,y,z,turn) | -1.35W,+.62H,+1.4D,.62; forearm bracket | 479 | approved | -.85W,+.18H,.9D,-.12 (477)
 propBuilder.ts:GLOW_GLOVE knuckles,cuff,fit | pad 1.38x1x.8, cuff .4x.9; core max(2.4 hands,1 head) | 479 | approved | core ball + thumb,2.4 hands (477)
 legacyDress.ts:DARK_JERKIN (panel,tail,laces,leather) | .32W,.93H; .42H;4;(.17,.13,.1) | 479 | approved | none
@@ -121,8 +129,6 @@ vehicleBuilder.ts:TANK_TURRET (wide, top, tall, foot, long, ahead, bustle, inset
 vehicleBuilder.ts:TANK_ROOF (roof, commander, cupola, cupolaTall, domeAt, dome, hatchAt, antennas, antenna) | .33, [-.3,-.28], .34, .2, [.34,.14], .3, [-.12,.3], [+-.26,-.55], 1.35 | 475 | approved | two flat discs (before 475)
 vehicleBuilder.ts:CHARIOT_SCYTHE (collar, out, long, root, tip, flat, curl) | .1, .08, 1.25, .11, .012, .28, .06 | 475 | approved | bare hubs (before 475)
 vehicleBuilder.ts:CHARIOT_LORICA (hoops, line, out, hoopFrom, hoopTo, strap, strapAt, plates, plate, plateOut) | 4, .045, 1.06, .42, .88, .07, .22, 3, .16, 1.45 | 475 | approved | bare team torso (before 475)
-propBuilder.ts:WIZARD_STAFF (long, thick, foot, head, strands, twist, round, tip, lean, crystals, grip) | .98, .034, .7, .14, 3, .9, .02, .07, .5, 3, .42 | 475 | approved | .85 s pole + orb (before 475)
 propBuilder.ts:FLAIL_HOLD (hand axes, aim) | probed idle lHand, aim (-.7,.62,.35) | 475 | approved | rod along the fist (before 475)
 runtimeUnit.ts:KNEEL_POSE (hip, knee, drop, bow, arms) + simulationSystem PHARAOH_KNEEL (radius, seconds) | .1, 1.55, .9, .35, .25; 2.4, 3 | 475 | approved | none (before 475)
 projectileSystem.ts:WIZARD_FIREWORK (up, spin, tip, delay, over) | 6.5, 16, .5, .75, .9 | 475 | approved | blast fling (before 475)
-unitVisuals.ts:legacy.wizard proportions.scale | 1.3 | 475 | approved | 1.76 (before 475)
