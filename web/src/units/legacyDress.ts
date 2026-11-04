@@ -1174,6 +1174,24 @@ function darkPeasantJerkin(scene: Scene, body: ArticulatedBody): Mesh[] {
 const SUPER_TUNIC = { white: new Color3(0.96, 0.95, 0.91), glow: 0.4, sleeveOut: 1.35, sleeveTo: 0.55, sides: 10, waist: 1.08, flare: 1.32, long: 0.62, slit: 0.06, slitLong: 0.2, laces: 2, lace: new Color3(0.36, 0.2, 0.08) };
 
 /** The Super Peasant's white mid-thigh tunic with a laced collar (spec at SUPER_TUNIC). */
+/** [S] 481, legacy.super_peasant.red.png: white thigh trousers continue over
+ * the knees, with three chunky rolled folds at mid-shin; lower shins/feet are bare. */
+function superPeasantTrousers(scene: Scene, body: ArticulatedBody, white: Material): Mesh[] {
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    out.push(limbShell(scene, "superPeasantTrouserThigh", thigh, 0, 1.08, 1.4, white));
+  }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = body.skinMaterial;
+    out.push(limbShell(scene, "superPeasantTrouserShin", shin, -0.04, 0.52, 1.42, white));
+    for (let k = 0; k < 3; k++) {
+      out.push(limbShell(scene, "superPeasantRolledCuff", shin, 0.39 + k * 0.055, 0.45 + k * 0.055, 1.6 + (k % 2) * 0.1, white));
+    }
+  }
+  for (const foot of body.allMeshes) if (/_[lr]FootM$/.test(foot.name)) foot.material = body.skinMaterial;
+  return out;
+}
+
 export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   const T = SUPER_TUNIC;
   const mf = getMaterialFactory();
@@ -1182,7 +1200,7 @@ export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   body.torsoMesh.material = white;
   for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = white;
   for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = white;
-  const out: Mesh[] = [];
+  const out: Mesh[] = superPeasantTrousers(scene, body, white);
   for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "superTunicSleeve", arm, 0, T.sleeveTo, T.sleeveOut, white));
   // [S] 480: outer tunic overlaps the rope belt and encloses the entire
   // pelvis, then flares to mid-thigh (legacy.super_peasant.red.png).
