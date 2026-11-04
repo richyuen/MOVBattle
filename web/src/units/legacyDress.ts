@@ -1888,6 +1888,30 @@ export function thorHair(scene: Scene, body: ArticulatedBody): Mesh[] {
 const SUPER_BOXER_SHORTS = { out: 1.7, to: 0.72, stripe: 0.12, white: new Color3(0.96, 0.95, 0.92), glow: 0.3, band: 0.22, bandOut: 1.1, stripes: 4, step: 0.03 };
 
 /** The Super Boxer's white shorts with team side stripes under a gold waistband (spec at SUPER_BOXER_SHORTS). */
+/** [S] 481, legacy.super_boxer.red.png: tall team boxing boots cover most
+ * of each shin, four pale horizontal fastening wraps face forward, short team toes. */
+function superBoxerBoots(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
+  const mf = getMaterialFactory();
+  const team = mf.get("cloth", teamColor, { emissive: teamColor.scale(0.15) });
+  const cream = new Color3(0.85, 0.82, 0.7);
+  const pale = mf.get("unlit", cream, { emissive: cream });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "superBoxerBoot", shin, 0.18, 1.05, 1.3, team));
+    const bb = shin.getBoundingInfo().boundingBox;
+    const e = bb.extendSize.multiply(shin.scaling), c = shin.position.add(bb.center.multiply(shin.scaling));
+    for (let k = 0; k < 4; k++) {
+      const wrap = MeshBuilder.CreateBox("superBoxerBootWrap", { width: e.x * 2.25, height: e.y * 0.14, depth: e.z * 0.22 }, scene);
+      wrap.parent = shin.parent;
+      wrap.position.set(c.x, c.y + e.y * (0.34 - k * 0.3), c.z + e.z * 1.48);
+      wrap.material = pale; out.push(wrap);
+      scene.getGlowLayerByName("glow")?.addExcludedMesh(wrap);
+    }
+  }
+  for (const foot of body.allMeshes) if (/_[lr]FootM$/.test(foot.name)) foot.material = team;
+  return out;
+}
+
 export function superBoxerShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const S = SUPER_BOXER_SHORTS;
   const mf = getMaterialFactory();
@@ -1897,7 +1921,7 @@ export function superBoxerShorts(scene: Scene, body: ArticulatedBody, teamColor:
   const deep = COATEE_GOLD.scale(0.7);
   const gold2 = mf.get("cloth", deep, { emissive: deep.scale(0.2) });
   for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = white;
-  const out: Mesh[] = [];
+  const out: Mesh[] = superBoxerBoots(scene, body, teamColor);
   for (const [thigh, side] of [[body.leftUpperLeg, 1], [body.rightUpperLeg, -1]] as const) {
     const shell = limbShell(scene, "superBoxerShorts", thigh, 0, S.to, S.out, white);
     out.push(shell);
