@@ -1086,6 +1086,37 @@ export function darkPeasantHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const sd of [-1, 1]) {
     put(MeshBuilder.CreateBox("darkPeasantHairSide", { width: e.x * H.side, height: e.y * 0.9, depth: e.z * 1.3 }, scene), c.x + sd * (e.x + (e.x * H.side) / 2), c.y + e.y * 0.45, c.z - e.z * 0.15, 0, sd * 0.12);
   }
+  out.push(...darkPeasantJerkin(scene, body));
+  return out;
+}
+
+/** [S] 479: legacy.dark_peasant.red.png, open grey-brown jerkin over team undershirt,
+ * two patchy front panels, four crossed stitches and pointed ragged waist tails. */
+function darkPeasantJerkin(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const out: Mesh[] = [];
+  const mf = getMaterialFactory(), brown = new Color3(0.17, 0.13, 0.1);
+  const leather = mf.get("cloth", brown, { emissive: brown.scale(0.15) });
+  const stitch = mf.get("cloth", new Color3(0.06, 0.045, 0.03));
+  const patch = mf.get("cloth", new Color3(0.38, 0.32, 0.22));
+  body.torsoMesh.material = body.skinMaterial;
+  for (const m of body.torso.getChildMeshes(true)) if (/_yoke$/.test(m.name)) m.material = body.skinMaterial;
+  const { W, H, D, lay } = outerTrunkFrame(scene, body, out), front = D / 2 + 0.04;
+  for (const side of [-1, 1]) {
+    const panel = MeshBuilder.CreateBox("darkJerkinPanel", { width: W * 0.32, height: H * 0.93, depth: 0.045 }, scene);
+    panel.rotation.z = side * -0.06;
+    lay(panel, side * W * 0.32, 0, front, leather);
+    lay(MeshBuilder.CreateBox("darkJerkinSide", { width: W * 0.06, height: H * 0.92, depth: D * 1.1 }, scene), side * W * 0.49, 0, 0, leather);
+    const tail = MeshBuilder.CreateCylinder("darkJerkinTail", { height: H * 0.42, diameterTop: W * 0.43, diameterBottom: 0, tessellation: 4 }, scene);
+    tail.scaling.z = 0.18;
+    lay(tail, side * W * 0.28, -H * 0.62, front, leather);
+    lay(MeshBuilder.CreateBox("darkJerkinPatch", { width: W * 0.1, height: H * 0.17, depth: 0.018 }, scene), side * W * 0.34, side * H * 0.19, front + 0.03, patch);
+  }
+  lay(MeshBuilder.CreateBox("darkJerkinBack", { width: W, height: H * 0.94, depth: 0.04 }, scene), 0, 0, -front, leather);
+  for (let k = 0; k < 4; k++) {
+    const lace = MeshBuilder.CreateBox("darkJerkinLace", { width: W * 0.36, height: H * 0.018, depth: 0.025 }, scene);
+    lace.rotation.z = (k % 2 ? -1 : 1) * 0.4;
+    lay(lace, 0, H * (0.26 - k * 0.15), front + 0.035, stitch);
+  }
   return out;
 }
 
