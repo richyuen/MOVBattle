@@ -4011,7 +4011,7 @@ function buildDevoutGauntlet(scene: Scene, fit: BladeFit): Mesh {
       blade.position.copyFrom(Vector3.Center(p, q)); blade.position.x += x;
       blade.scaling.x = 0.35;
       blade.rotationQuaternion = Quaternion.Identity();
-      Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir.normalize(), blade.rotationQuaternion);
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir.clone().normalize(), blade.rotationQuaternion);
     }
   }
   return root;
