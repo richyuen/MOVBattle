@@ -3076,7 +3076,7 @@ export class SimulationSystem {
         const away = victim.position.subtract(attacker.position); away.y = 0;
         if (away.lengthSquared() < 1e-6) away.set(impulseDir.x, 0, impulseDir.z);
         if (away.lengthSquared() < 1e-6) away.set(1, 0, 0);
-        victim.applyBlastLaunch(away.normalize(), 18, 14);
+        victim.applyBlastLaunch(away.normalize(), 18, 14, true);
       }
       return;
     }

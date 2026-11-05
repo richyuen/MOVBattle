@@ -881,10 +881,13 @@ export class RuntimeUnit {
    * Explosion fling: throws the body up and outward from a blast centre. Bypasses the shallow
    * living-hit and death lift caps, which exist to keep ordinary melee hits from ballooning.
    */
-  applyBlastLaunch(outward: Vector3, speed: number, lift: number): void {
+  applyBlastLaunch(outward: Vector3, speed: number, lift: number, replaceVelocity = false): void {
     if (this._isAnchoredActor) return;
+    // A signature launch can own the whole trajectory after lethal damage;
+    // otherwise the shallow death impulse still supplies an enormous side slide.
+    if (replaceVelocity) this._velocity.setAll(0);
     // One launch per flight: rapid shells must not juggle a body across the map.
-    if (!this._grounded && this.position.y > 0.2) return;
+    if (!replaceVelocity && !this._grounded && this.position.y > 0.2) return;
     const scale = this._ragdollProfile.impactMultiplier / Math.max(0.8, this.definition.mass);
     // Per-body spread keyed on the runtime id (deterministic): each body gets its own height,
     // heading and tumble rate, so a blast scatters a group instead of lifting it as one plane.
