@@ -1,18 +1,17 @@
 # legacy.super_peasant
-Status: open   Audited: 468, 480 (c RE-AUDIT x2)   Done: -
-## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
-a FAIL (4 since 468)
+Status: open   Audited: 468, 480 (c RE-AUDIT x2), 481 (c RE-AUDIT x2)   Done: -
+## Verdicts
+a FAIL (5 since 468)
  2. shirt in unit_legacy.super_peasant_idle: a grey vest block — TABS: a white peasant tunic to mid-thigh with a laced collar (ref: legacy.super_peasant.red.png)
- 4. legs in unit_legacy.super_peasant_idle: bare team legs — TABS: white rolled-up trousers to the shin (ref: legacy.super_peasant.red.png; card Appearance)
-b PASS (468: glowing gold cuffs on both wrists, bare fists; SUPER_CUFFS)
-c FAIL (0 since 480)
- 1. punch result in unit_legacy.super_peasant_punch and unit_legacy.super_peasant_punch_after: the knight sits beside the attacker on the ground — TABS: the Super Peasant Punch has force 15,000,000 and sends its victim flying away (ref: loop/cards/legacy.super_peasant.md Weapons).
-d PASS (cost 9999999=9999999, hp 1719.84x vs 1653.13x (+4%), dmg 500.00x vs 500.00x (+0%), cd 0.09x vs 0.10x (-8%); 480 stats)
+b PASS (468 cuffs)
+c PASS (481 punch launch and reaching flight arms)
+d PASS (481 stats)
 ## Ranked gaps
-1. [S] a.4 white rolled trouser shells — ref: legacy.super_peasant.red.png — ours: unit_legacy.super_peasant_idle.png.
-2. [S] c.1 launch continuity through death/ragdoll, victim-relative airborne root — ref: card Weapons — ours: unit_legacy.super_peasant_punch_after.png; evidence first.
-3. Critic NEXT proposes [R] a whole tunic/lower dress; not plateau: 479 struck blocker 3, breaking the no-strike run.
+1. Critic proposes [R] a.2 continuous chest-to-mid-thigh white tunic around rope, unit_legacy.super_peasant_idle; not plateau, so [R] is not yet eligible. Remaining blocker 2 is structural.
 ## Attempts (iter | gap | criterion | verdict)
+481 | punch corpse launch (5bc36110,ea254d1a) | c | approved
+481 | reaching flight arms (30f43e5f) | c | approved
+481 | rolled white trousers (0224cf8c,a894d4ee) | a | approved
 480 | outer tunic (a70e65b3,b2acc355,4a6cb2c2) | a | approved (none struck)
 480 | ballistic punch launch (2861b99c) | c | dropped (victim not visible)
 479 | white interlocking rope belt (0fb715a1, 3f642c6a) | a | approved (struck 3)
@@ -23,5 +22,5 @@ d PASS (cost 9999999=9999999, hp 1719.84x vs 1653.13x (+4%), dmg 500.00x vs 500.
 468 | SUPER_CUFFS gold cuffs, bright rims (9c6d188f, shared) | b | approved (struck 1; b PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 480 a APPROVE: white laced chest closer, grey hip skirt and trousers blockers stand verbatim.
-- c launch dropped/reverted 93e1b1e9: victim not readable in pair. Evidence f97c47a0/66973e9e/c32f6740 adds held punch pair/reserve; next RE-AUDIT c.
+- 481 trouser blocker 4 and c blockers 1/2 struck. Shirt blocker 2 stands; new cuff strike resets no-strike run, not plateau.
+- Punch launch replaces death velocity; inherited side speed previously threw corpse out of the held pair.

@@ -1,15 +1,16 @@
 # legacy.super_boxer
-Status: open   Audited: 468, 480 (CONFIRM: passed b, c; failed a)   Done: -
-## Verdicts (a-c critic, d stats; FAIL carries a closed list, max 4 (6 on a), and the count of approved [S] since the list was written)
-
-a FAIL (0 since 480)
- 1. lower-leg dress in unit_legacy.super_boxer_idle and lineup_legacy: dark navy shins ending in plain dark shoe blocks — TABS: tall team-tinted boxing boots with conspicuous pale horizontal wraps across the shins (ref: reference/units/legacy.super_boxer.blue.png, reference/units/legacy.super_boxer.red.png).
-b PASS (479: fitted luminous padded mitts; CONFIRM 480)
-c PASS (480: sampled glove trails; CONFIRM 480)
-d PASS (cost 10000=10000, hp 58.99x vs 57.86x (+2%), dmg 2.98x vs 3.00x (-1%), cd 0.11x vs 0.13x (-8%); 480 stats)
+Status: open   Audited: 468; 480 CONFIRM passed b/c, failed a; 481 CONFIRM passed b/c, failed a   Done: -
+## Verdicts
+a FAIL (0 since 481) plateau
+ 1. Untapered rectangular bare torso in unit_legacy.super_boxer_idle.png — TABS: broad shoulders narrow substantially to the gold waistband, giving an athletic inverted-triangle silhouette (ref: reference/units/legacy.super_boxer.blue.png).
+ 2. Thin needle hair spikes in unit_legacy.super_boxer_idle.png — TABS: a dense crown of broad faceted golden locks standing on end (ref: reference/units/legacy.super_boxer.blue.png).
+b PASS (CONFIRM 480, 481)
+c PASS (CONFIRM 480, 481)
+d PASS (481 stats)
 ## Ranked gaps
-1. [S] a.1 tall team boxing boots with pale shin wraps — ref: legacy.super_boxer.red.png — ours: unit_legacy.super_boxer_idle.png and lineup_legacy.png (CONFIRM 480).
+1. [R] a whole look: tapered athletic bare torso and broad solid golden hair locks; spec from reference/units/legacy.super_boxer.blue.png; unit_legacy.super_boxer_idle.png, lineup_legacy.
 ## Attempts (iter | gap | criterion | verdict)
+481 | tall team boots/pale shin wraps (6c55aaf4) | a | approved
 480 | sampled glove trails (db753c81) | c | approved (struck 2)
 479 | padded glove knuckles/cuffs, head-relative fit (36730de3, cc74e96d) | b | approved (struck 1; b PASS)
 479 | back-dash, forward exploding punch (d2432f2a) | c | approved (struck 1)
@@ -24,4 +25,4 @@ d PASS (cost 10000=10000, hp 58.99x vs 57.86x (+2%), dmg 2.98x vs 3.00x (-1%), c
 470 | SUPER_BOXER_HAIR gold spikes, headband (8bcd54e9, shared) | a | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 480 c cleared; first CONFIRM failed a on wrapped boots, replaced list. b/c confirmed; no a plateau yet.
+- Wrapped boots cleared. Second a CONFIRM failure marks plateau; next a pick is one whole-list [R].

@@ -1,6 +1,6 @@
 # Lessons (loop v3): facts about the pipeline, the capture and the rig that outlive one unit
 
-One line each, newest last within its heading. Read whole at step 1; merge duplicates near the cap.
+Read whole at step 1; one fact per line, merge near cap.
 
 ## Rendering (swiftshader + PBR + SSAO + ACES + glow)
 - PBR colours are linear: an sRGB target c needs about c^2.2 as the code (wood (.62,.3,.2) displayed taupe). Pick values off `output/loop/palette.png` (rewritten every capture; `capture.mjs --palette` alone).
@@ -15,7 +15,7 @@ One line each, newest last within its heading. Read whole at step 1; merge dupli
 ## Capture and probes
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is written by stats.mjs, not by capture; every non-regression capture wipes iter-N (stats.json, a tail-overlap batch's audit.md too) and each stats run overwrites it: copy audit.md out before step 5 and restore it, rerun `stats.mjs <id,id,...> --iter N` once with every unit after the final capture (422).
-- Probes (`loop/scripts/probes/`, repo root, `--build` after a source change): probe_bbox (--unit --pat --frame=torso), probe_mat <unit> <regex>, probe_near, probe_close (--aim=head|torso|y:<y> --dist --yaw; --noglow), probe_head, probe_local, probe_axes (--unit --pat: a prop's axes in the unit frame), probe_impale, probe_bowdraw.
+- Probes in loop/scripts/probes/, repo root (--build after source changes): probe_bbox (--unit --pat --frame=torso), probe_mat <unit> <regex>, probe_near/close/head/local/axes/impale/bowdraw. probe_close takes --aim=head|torso|y:<y>, --dist, --yaw, --noglow.
 - capture's PLAIN regex takes any ability kind starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475 wizard firework: no ability shot).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
@@ -33,6 +33,8 @@ One line each, newest last within its heading. Read whole at step 1; merge dupli
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
 - An idle hold gated on Attacking+throw stays on through a long-cooldown windup: gate it on the fire (451). RuntimeUnit._applyPoseOverlay (posePreset gunner, archer...) runs AFTER the animator's layers and re-turns a held aim: probe the final frame (455 barrel 17° up).
+- Vector3.normalize() mutates: clone a reused segment before normalizing, or later meshes inherit length 1.
+
 ## Rig and dress
 - A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen). The `_yoke` hull spans the whole trunk, not a collar: never anchor a chest piece to its foot (444).
