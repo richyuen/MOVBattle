@@ -977,7 +977,10 @@ export function pharaohCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const WIZARD_ROBE = { shade: 0.9, sides: 10, waist: 1.1, flare: 1.45, long: 1.15, belt: 0.12, beltOut: 1.14, buckle: 0.2, leather: new Color3(0.22, 0.12, 0.06), steel: new Color3(0.5, 0.5, 0.52), glow: 0.12 };
 
-/** The Wizard's long team coat-robe to the knees with a dark belt (spec at WIZARD_ROBE). */
+/** [R] 482 whole-look spec (legacy.wizard.blue/red.png): preserve the lanky
+ * knee-length open coat, belt, hat and beard. Replace the exposed arm mechanism
+ * with broad six-facet sleeves, shoulder to wrist, widening into bell cuffs.
+ * Upper sleeves are 1.7 limb widths; forearms flare from 1.65 to 2.4 widths. */
 export function wizardRobe(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const R = WIZARD_ROBE;
   const mf = getMaterialFactory();
@@ -989,6 +992,15 @@ export function wizardRobe(scene: Scene, body: ArticulatedBody, teamColor: Color
   for (const m of body.torso.getChildMeshes(true)) if (/_yoke/.test(m.name) && m instanceof Mesh) m.material = coat;
   for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) limb.material = coat;
   const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    out.push(limbShell(scene, "wizardRobeUpperSleeve", arm, 0, 1.04, 1.7, coat));
+  }
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    // An articulated shell follows each bone; the overlapping elbow keeps
+    // the robe continuous through staff and sword poses.
+    out.push(limbShell(scene, "wizardRobeForeSleeve", arm, -0.04, 1, 1.65, coat));
+    out.push(limbShell(scene, "wizardRobeBellCuff", arm, 0.68, 1.02, 2.4, coat));
+  }
   const { W, H, D, lay } = outerTrunkFrame(scene, body, out);
   const beltY = -H / 2 + (H * R.belt) / 2;
   lay(MeshBuilder.CreateBox("wizardRobeBelt", { width: W * R.beltOut, height: H * R.belt, depth: D * R.beltOut }, scene), 0, beltY, 0, leather);
