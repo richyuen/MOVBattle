@@ -827,7 +827,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "good.righteous_paladin": vis(
-    { scale: 1.34, bulk: 1.36 }, "hammer", "great_helm", "kite", "cape", "#E8D89B", undefined, {
+    { scale: 1.34, bulk: 1.36 }, "hammer", "none", "kite", "cape", "#E8D89B", undefined, {
       weaponVariant: "paladin_hammer", weaponGripPreset: "default",
       posePreset: "monarch",
       materialPreset: "good_gold",

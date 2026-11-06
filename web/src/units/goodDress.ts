@@ -32,6 +32,29 @@ export function devoutCirclet(scene: Scene, body: ArticulatedBody): Mesh[] {
   return [band, front, gem];
 }
 
+/** Paladin's open face has a center part, long grey side locks, a tied
+ * ponytail, and three lighter outward-pointing wing locks on each temple. */
+export function paladinHair(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const b=body.headMesh.getBoundingInfo().boundingBox,W=b.extendSize.x*2,H=b.extendSize.y*2,D=b.extendSize.z*2;
+  const grey=new Color3(.48,.52,.55), pale=new Color3(.8,.83,.83);
+  const hair=getMaterialFactory().get("unlit",grey,{emissive:grey}), wing=getMaterialFactory().get("unlit",pale,{emissive:pale});
+  const out:Mesh[]=[];
+  for(const side of [-1,1]) {
+    const crown=ornament(scene,"paladinPartedHair",[[0,H*.55],[side*W*.14,H*.76],[side*W*.58,H*.4],[side*W*.53,-H*.66],[side*W*.36,-H*.75],[side*W*.38,H*.29],[side*W*.04,H*.37]],D*.94,body.headMesh,hair);
+    crown.position.copyFrom(b.center); crown.position.z-=D*.05; out.push(crown);
+    for(let k=0;k<3;k++) {
+      const feather=ornament(scene,"paladinWingLock",[[side*W*.42,H*(.19-k*.22)],[side*W*(.9-k*.07),H*(.58-k*.35)],[side*W*.62,H*(-.06-k*.2)],[side*W*.43,H*(-.13-k*.2)]],D*.25,body.headMesh,wing);
+      feather.position.copyFrom(b.center); feather.position.z-=D*.15; out.push(feather);
+    }
+  }
+  const tail=MeshBuilder.CreateSphere("paladinPonytail",{diameterX:W*.5,diameterY:H*1.3,diameterZ:D*.45,segments:5},scene);
+  tail.parent=body.headMesh;tail.position.copyFrom(b.center);tail.position.addInPlace(new Vector3(0,-H*.32,-D*.65));tail.material=hair;out.push(tail);
+  const tie=MeshBuilder.CreateBox("paladinHairTie",{width:W*.51,height:H*.12,depth:D*.46},scene);
+  tie.parent=body.headMesh;tie.position.copyFrom(tail.position);tie.position.y+=H*.31;tie.material=getMaterialFactory().get("cloth",team);out.push(tie);
+  for(const m of out) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  return out;
+}
+
 /** Two pale yellow moustache wings curl up at their outer tips below the eyes. */
 export function devoutMoustache(scene: Scene, body: ArticulatedBody): Mesh[] {
   const b=body.headMesh.getBoundingInfo().boundingBox, W=b.extendSize.x*2,H=b.extendSize.y*2,D=b.extendSize.z*2;
