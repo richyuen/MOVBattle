@@ -813,7 +813,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "good.celestial_aegis": vis(
-    { scale: 1.12, bulk: 1.2 }, "sword", "plume_helmet", "tower", "none", "#F0D87A", undefined, {
+    { scale: 1.12, bulk: 1.2 }, "none", "plume_helmet", "none", "none", "#F0D87A", undefined, {
+      // Empty casting hands, not a soldier's sword-and-board grip.
+      posePreset: "caster",
       materialPreset: "good_gold",
     },
   ),
