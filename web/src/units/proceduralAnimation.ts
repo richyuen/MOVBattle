@@ -2411,6 +2411,7 @@ export class ProceduralAnimator {
     this._restNorseBoard();
     this._aimPick();
     this._twoHandPole();
+    this._holdArbiterBook();
     this._levelPike();
     this._holdBlowgun();
     this._boxerJab();
@@ -3414,6 +3415,26 @@ export class ProceduralAnimator {
     blade.rotationQuaternion = q;
     const rotation = Matrix.Identity(); q.toRotationMatrix(rotation);
     blade.position.copyFrom(Vector3.TransformNormal(grip.position.multiply(blade.scaling), rotation).scale(-1));
+  }
+
+  /** A two-hand open book, kept before the abdomen through the cast. */
+  private _holdArbiterBook(): void {
+    const b = this._body;
+    const book = b.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.name === "arbiterBook");
+    if (!book || this._state === AnimState.Dead) return;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = b.torso; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const { fwd, right } = this._heading(), h = b.metrics.overallHeight * b.root.scaling.y;
+    const at = b.torso.getAbsolutePosition().add(fwd.scale(h * 0.22)).add(right.scale(h * 0.12));
+    at.y -= h * 0.13;
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, at, 1, 2);
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
+    const local = b.root.getWorldMatrix().multiply(b.rightHand.getWorldMatrix().clone().invert());
+    const q = Quaternion.Identity(); local.decompose(undefined, q);
+    book.rotationQuaternion = q; book.position.setAll(0); book.computeWorldMatrix(true);
+    const grip = book.getChildren().find(n => n.name === "arbiterBookLeftGrip") as TransformNode | undefined;
+    if (grip) { grip.computeWorldMatrix(true); this._offArmTo(grip.getAbsolutePosition(), 1, 2); }
   }
 
   private _carryProp(dt: number): void {

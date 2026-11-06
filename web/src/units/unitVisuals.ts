@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "paladin_hammer"
+  | "paladin_hammer" | "arbiter_book"
   | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet";
 
 function vis(
@@ -835,6 +835,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "good.divine_arbiter": vis(
     { scale: 1.86, bulk: 1.22, headSize: 1.16 }, "lightning_bolt", "laurel", "none", "halo", "#F5D971", undefined, {
       posePreset: "caster",
+      weaponVariant: "arbiter_book", weaponGripPreset: "default",
       materialPreset: "secret_holy",
       attachmentPreset: "storm_halo",
       fxPreset: "solar",

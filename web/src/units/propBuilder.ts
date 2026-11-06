@@ -4030,6 +4030,30 @@ function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3, variant?: UnitVisualConfig["weaponVariant"]): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
+  if (variant === "arbiter_book") {
+    // Thick open volume: two gold-edged brown covers, cream page blocks and
+    // raised page leaves. The right fist takes its right lower corner.
+    const L = fit.stand, root = new Mesh("arbiterBook", scene);
+    const cover = mat(scene, new Color3(0.2, 0.09, 0.035), 0.12, "cloth");
+    const paper = mat(scene, new Color3(0.86, 0.83, 0.7), 0.25, "cloth");
+    const gold = mat(scene, new Color3(1, 0.7, 0.18), 0.2, "cloth");
+    for (const side of [-1, 1]) {
+      const leaf = new TransformNode("arbiterBookLeaf", scene); leaf.parent = root;
+      leaf.position.x = -L * 0.16; leaf.rotation.y = side * 0.32;
+      const put = (name: string, w: number, h: number, d: number, z: number, material: Mesh["material"]) => {
+        const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+        m.parent = leaf; m.position.set(side * L * 0.085, L * 0.1, z); m.material = material;
+        m.convertToFlatShadedMesh(); return m;
+      };
+      put("arbiterBookCover", L * 0.18, L * 0.29, L * 0.025, -L * 0.02, cover);
+      put("arbiterBookPages", L * 0.16, L * 0.265, L * 0.035, L * 0.008, paper);
+      for (const y of [-0.025, 0.225]) {
+        put("arbiterBookGoldCorner", L * 0.18, L * 0.025, L * 0.028, L * 0.015, gold).position.y = y * L;
+      }
+    }
+    const grip = new TransformNode("arbiterBookLeftGrip", scene); grip.parent = root; grip.position.x = -L * 0.32;
+    return root;
+  }
   switch (type) {
     case "none": return null;
 
