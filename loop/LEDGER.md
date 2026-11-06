@@ -4,8 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+483 | [R] ecabf523 | legacy.super_boxer.a | approved (struck 2; CONFIRM D)
+483 | fc2bd780 | good.devout_gauntlet.c | approved (struck 1; c PASS)
+483 | 6671dac9 | good.devout_gauntlet.a | approved (struck 2)
+483 | 1ac698d2,e03d2881 | good.devout_gauntlet.a | approved (struck 1)
+483 | aa07d7e5 | good.radiant_glaive.b | approved (struck 1; added b.3)
+483 | 8dd2ba33 | good.righteous_paladin.b | approved (struck 1; b PASS)
+483 | 11f730f5 | good.celestial_aegis.a | approved (struck 1)
+483 | e73fec72 | good.divine_arbiter.a | approved (struck 1)
 
-478 | [R] faaba396 | legacy.pharaoh.a | approved (struck 1; CONFIRM failed a: sandals)
+
 479 | [R] 288e2eb7,ddec1562 | legacy.thor.a | approved (struck 1)
 479 | b4856556 | legacy.chariot.b | approved (struck 1; b PASS)
 479 | 36730de3,cc74e96d | legacy.super_boxer.b | approved (struck 1; b PASS)
@@ -47,6 +55,14 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+goodDress:AEGIS_BUTTERFLY | white crown/temples/4-knot braid;four team lobes,upper1.32H/lower.4H | 483 | approved | steel cap
+goodDress:ARBITER_COLLAR | 10 closed rising gold petals,rim1.2-1.3W,opening.35W,unlit(.85,.55,.12) | 483 | approved | bare neck outline
+LD:SUPER_BOXER_REBUILD | eight-sided torso waist .64W;8 broad bent locks,1.6-2.45 half-head tall | 483 | approved | box torso,12 needle cones
+PA:DEVOUT_PUNCH | alternating level jabs,charging lean .28;boxer overlay | 483 | approved | overhead duelist swing
+UV:DEVOUT build/stance | 1.08scale,.8bulk,.9torsoW,1.4legs,.88/.8;upright,no vest/pads | 483 | approved | 1.02,1.12,1.08arms;duelist
+goodDress:DEVOUT_TROUSERS | six-sided articulated flares1.08/1.55/2.2,beige unlit(.8,.72,.56),team hem5.5% | 483 | approved | dark tight legs,grey boots
+PB:RADIANT_SHIELD | .46stand faceted team disc,gold rim,four luminous cusps,torso bracket | 483 | approved | no shield
+PB:PALADIN_SHIELD | .5stand pale16-sided board,gold rim,broken chevrons,hex seal | 483 | approved | kite cross shield
 LD:WIZARD_SLEEVES | upper1.7,fore1.65,cuff2.4,shoulder-to-wrist articulated shells | 482 | approved | recolored bare arms
 LD:SUPER_TUNIC_SHELL | continuous lathe .64W hem to .54W chest;D/W*1.14;hem .56knee;sack overlay hidden | 482 | approved | pelvis-only frustum 480
 UV:AEGIS equipment | none/none,caster | 482 | approved | sword/tower

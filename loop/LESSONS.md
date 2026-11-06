@@ -21,7 +21,8 @@ Read whole at step 1; one fact per line, merge near cap.
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
 - A flat plate on a dress ribbon needs 7+ cm of stand-off (398 zeus).
-- Settle ancestor matrices before joint reads; retry preview timeouts outside sandbox (476).
+- Settle joint matrices; retry preview outside sandbox (476).
+- Checkpoint keeps PNGs but replaces summary.json: back up unit evidence first (483).
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - Capture frames by mesh top when a prop exceeds the head by .3 of UNIT height: taller props re-frame all shots, requiring RE-AUDIT (420, 447).
@@ -54,6 +55,6 @@ Read whole at step 1; one fact per line, merge near cap.
 - A prop not in _carryProp's node regex rides the fist, so _aimBlow's raised fist points it back at the hit: lay it on _aimTip before _twoHandPole (451 miner).
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
 - A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
-- Sphere arc gaps: +PI turns a backward hood opening forward (457-458). A rotated half-cylinder can lie flat as a crest: explicit radial closed blocks keep its fan above the crown (477).
+- A torso-rooted shield can seem held in idle but detach from the trailing offhand in windup; inspect both before review (483).
 - Capture d is HALF the actor separation (spawns at +/-d): a midpoint volley frame needs both full rigs plus the sphere margins (479).
 - A lethal duel freezes post-impact shots; a distant reserve keeps corpse time advancing (480).
