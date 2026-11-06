@@ -834,11 +834,11 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "good.divine_arbiter": vis(
-    { scale: 1.86, bulk: 1.22, headSize: 1.16 }, "lightning_bolt", "laurel", "none", "halo", "#F5D971", undefined, {
+    { scale: 1.86, bulk: 1.22, headSize: 1.16 }, "lightning_bolt", "none", "none", "none", "#F5D971", undefined, {
       posePreset: "caster",
       weaponVariant: "arbiter_book", weaponGripPreset: "default",
       materialPreset: "secret_holy",
-      attachmentPreset: "storm_halo",
+      attachmentPreset: "none",
       fxPreset: "solar",
       stateVariants: { attacking: ["storm_flare"], "ability-active": ["storm_flare"] },
     },
