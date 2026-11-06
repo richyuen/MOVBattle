@@ -4261,11 +4261,28 @@ function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
     rider.rightShoulder.rotation.x = -1.2;
     rider.rightElbow.rotation.x = -0.9;
     rider.neck.rotation.x = 0.1;
-    const limb = Array.from({ length: 9 }, (_, i) => { const a = (i / 8 - 0.5) * 2.2; return new Vector3(0, Math.sin(a) * 0.26, Math.cos(a) * 0.26 - 0.16); });
-    const bow = MeshBuilder.CreateTube("elephantRiderBow", { path: limb, radius: 0.016, tessellation: 5 }, scene);
-    bow.parent = rider.leftHand;
-    bow.material = gold;
-    rider.allMeshes.push(bow);
+    // [S] 482: two long golden spears, a separate shaft and luminous
+    // diamond point in each fist (good.sacred_elephant.red.png).
+    rider.leftShoulder.rotation.set(-0.8, 0, -0.5);
+    rider.rightShoulder.rotation.set(-0.8, 0, 0.5);
+    rider.rightElbow.rotation.x = -0.35;
+    const pointMat = getMaterialFactory().get("cloth", new Color3(1, 0.94, 0.68), { emissive: new Color3(0.8, 0.7, 0.4) });
+    for (const [side, hand] of [[-1, rider.leftHand], [1, rider.rightHand]] as const) {
+      const shaft = MeshBuilder.CreateCylinder("elephantRiderSpear", { height: 1.2, diameter: 0.022, tessellation: 6 }, scene);
+      shaft.parent = hand; shaft.material = gold;
+      for (const end of [-1, 1]) {
+        const tip = MeshBuilder.CreateCylinder("elephantSpearPoint", { height: 0.2, diameterBottom: 0.08, diameterTop: 0, tessellation: 4 }, scene);
+        tip.parent = shaft; tip.position.y = end * 0.68; tip.rotation.z = end < 0 ? Math.PI : 0;
+        tip.material = pointMat; rider.allMeshes.push(tip);
+      }
+      const chain: TransformNode[] = [];
+      for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      const wanted = Vector3.TransformNormal(new Vector3(side * 0.55, 0.85, 0.1).normalize(), rider.root.getWorldMatrix());
+      const local = Vector3.TransformNormal(wanted, hand.getWorldMatrix().clone().invert()).normalize();
+      shaft.rotationQuaternion = Quaternion.Identity(); Quaternion.FromUnitVectorsToRef(Vector3.Up(), local, shaft.rotationQuaternion);
+      rider.allMeshes.push(shaft);
+    }
   });
   // Seat the man by his hips on the throne seat
   saddle.position.set(0, THRONE_SEAT.y + 0.04 - hipY * RIDER_SCALE, THRONE_SEAT.z - 0.02);
