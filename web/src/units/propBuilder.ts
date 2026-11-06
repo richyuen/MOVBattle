@@ -4030,6 +4030,32 @@ function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3, variant?: UnitVisualConfig["weaponVariant"]): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
+  if (variant === "radiant_glaive") {
+    // Compact one-hand curved throwing blade, two opposed swept gold wings
+    // and pale luminous inner edges (good.radiant_glaive.red.png).
+    const L = fit.stand * 0.44, root = new Mesh("radiantGlaive", scene);
+    const gold = mat(scene, new Color3(1, 0.7, 0.18), 0.2, "cloth");
+    const light = mat(scene, new Color3(1, 0.94, 0.65), 0.8, "cloth");
+    const grip = MeshBuilder.CreateCylinder("glaiveGrip", { height: L * 0.25, diameter: fit.fist * 0.8, tessellation: 6 }, scene);
+    grip.parent = root; grip.material = gold;
+    for (const side of [-1, 1]) {
+      const points = [[0, 0], [0.16, 0.1], [0.21, 0.28], [0.05, 0.52]];
+      for (let k = 0; k < points.length - 1; k++) {
+        const p = new Vector3(points[k][0] * L * side, points[k][1] * L * side, 0);
+        const q = new Vector3(points[k + 1][0] * L * side, points[k + 1][1] * L * side, 0);
+        const dir = q.subtract(p), length = dir.length();
+        for (const [material, wide, z] of [[gold, 0.18, 0], [light, 0.1, 0.018]] as const) {
+          const blade = MeshBuilder.CreateCylinder("radiantGlaiveWing", { height: length * 1.08, diameterBottom: L * wide, diameterTop: L * (k === 2 ? 0.005 : wide * 0.75), tessellation: 4 }, scene);
+          blade.parent = root; blade.material = material; blade.scaling.z = 0.2;
+          blade.position.copyFrom(Vector3.Center(p, q)); blade.position.z = L * z;
+          blade.rotationQuaternion = Quaternion.Identity();
+          Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir.clone().normalize(), blade.rotationQuaternion);
+          blade.convertToFlatShadedMesh();
+        }
+      }
+    }
+    return root;
+  }
   if (variant === "arbiter_book") {
     // Thick open volume: two gold-edged brown covers, cream page blocks and
     // raised page leaves. The right fist takes its right lower corner.
