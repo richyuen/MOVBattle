@@ -2239,11 +2239,20 @@ export function attachProps(
     body.rightPupil?.setEnabled(false);
   }
 
-  const shield = buildShield(scene, config.shield, scale, accent, teamColor ?? accent);
+  const radiantShield = config.weaponVariant === "radiant_glaive";
+  const shield = radiantShield
+    ? buildRadiantShield(scene, body.metrics.overallHeight, teamColor ?? accent)
+    : buildShield(scene, config.shield, scale, accent, teamColor ?? accent);
   if (shield) {
     shield.parent = body.leftHand;
     // TABS shields cover neck to knee and overlap along a line; bucklers stay small on purpose
-    if (config.shield === "aspis") {
+    if (radiantShield) {
+      // An offhand board carried upright ahead of the body, with a forearm
+      // bracket; the blade hand remains free to cast its glaive.
+      shield.parent = body.torso;
+      shield.position.set(-body.metrics.shoulderWidth * 0.58, body.neck.position.y * 0.35, body.torsoMesh.getBoundingInfo().boundingBox.maximum.z + scale * 0.23);
+      shield.rotation.y = -0.2;
+    } else if (config.shield === "aspis") {
       // strapped to the trunk, upright and face-forward whatever the arm does (ASPIS)
       shield.parent = body.torso;
       shield.position.set(ASPIS.x * scale, ASPIS.y * scale, ASPIS.z * scale);
@@ -6934,6 +6943,31 @@ const HEATER = { wide: 0.26, tall: 0.36, side: 0.35, rim: 0.012, thick: 0.025 };
 const HEATER_GRIP_SIZE = 1.3;
 const HEATER_YELLOW = new Color3(0.95, 0.72, 0.12);
 const HEATER_RIM = new Color3(0.62, 0.42, 0.08);
+/** [S] 483, radiant_glaive.red.png: a round faceted team board ~.45
+ * standing heights across, a broad gold perimeter and four luminous cusps.
+ * Build a closed plate facing +Z so the face stays readable without SSAO seams. */
+function buildRadiantShield(scene: Scene, stand: number, teamColor: Color3): Mesh {
+  const r = stand * 0.23;
+  const gold = mat(scene, new Color3(1, 0.7, 0.18), 0.18, "cloth");
+  const paint = mat(scene, teamColor, 0.12, "cloth");
+  const light = mat(scene, new Color3(1, 0.96, 0.7), 1.1, "cloth");
+  const outline = (radius: number): number[][] => Array.from({ length: 12 }, (_, i) => {
+    const a = i * Math.PI / 6; return [Math.cos(a) * radius, Math.sin(a) * radius];
+  });
+  const rim = flatPlate(scene, "radiantShield", outline(r), stand * 0.025);
+  rim.material = gold;
+  const face = flatPlate(scene, "radiantShieldFace", outline(r * 0.89), stand * 0.014);
+  face.material = paint; face.parent = rim; face.position.z = stand * 0.019;
+  const points: number[][] = [];
+  for (let i = 0; i < 8; i++) {
+    const a = Math.PI * i / 4, reach = r * (i % 2 ? 0.19 : 0.89);
+    points.push([Math.cos(a) * reach, Math.sin(a) * reach]);
+  }
+  const star = flatPlate(scene, "radiantShieldLight", points, stand * 0.008);
+  star.material = light; star.parent = rim; star.position.z = stand * 0.031;
+  return rim;
+}
+
 function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, teamColor: Color3): Mesh | null {
   // A cool team colour is held as deep as the plate behind it and not washed with white: the sky-blue team colour paled is a slate board.
   const teamHsv = teamColor.toHSV();
