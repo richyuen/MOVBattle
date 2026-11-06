@@ -4713,12 +4713,16 @@ export class ProceduralAnimator {
     // [S] 477: the golden-haired boxer stands tall in guard, not squatting.
     const superBoxer = this._body.headMesh.getChildMeshes(true).some((m) => m.name === "superBoxerCap");
     if (superBoxer) Object.assign(stance, { tilt: 0.02, stride: 0.16, crouch: 0, chin: 0 });
+    // [S] 483: the Devout's rendered silhouette is a long straight-legged
+    // fighter. Keep the idle pelvis above both planted feet from spawn.
+    const devout = this._devoutGauntlets();
+    if (devout) Object.assign(stance, { tilt: 0.02, stride: 0.12, crouch: 0, chin: 0, cock: 0 });
     const wizard = this._body.torso.getChildMeshes(true).some(m => m.name === "wizardOpenCoatTail");
     if (wizard) Object.assign(stance, { tilt: 0.02, stride: 0.12, crouch: 0, chin: 0 });
     return {
       square,
       wide,
-      lean: pharaoh || thor || superBoxer || wizard ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
+      lean: pharaoh || thor || superBoxer || wizard || devout ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,

@@ -439,8 +439,8 @@ export class UnitFactory {
           detailLevel: visual.bodyDetailLevel ?? "standard",
           showNeck: true,
           // [S] 471b the Super Boxer is shirtless: no armour pads or belt plate (audit 468 super_boxer a.2)
-          showShoulderPads: isArmored && !isZeus && definition.id !== "legacy.super_boxer",
-          showBelt: isArmored && definition.id !== "legacy.super_boxer",
+          showShoulderPads: isArmored && !isZeus && definition.id !== "legacy.super_boxer" && definition.id !== "good.devout_gauntlet",
+          showBelt: isArmored && definition.id !== "legacy.super_boxer" && definition.id !== "good.devout_gauntlet",
         },
       );
       // Attach weapon, hat, shield, special props
@@ -525,6 +525,15 @@ export class UnitFactory {
 
     if (SKELETON_UNITS.has(definition.id) && !shouldUseVehicleBody) {
       propMeshes.push(...dressSkeleton(this._scene, body, teamColor, definition.id));
+    }
+    if (definition.id === "good.devout_gauntlet" && !shouldUseVehicleBody) {
+      // His narrow chest is bare team skin, including the shoulder hull.
+      body.torsoMesh.material = body.skinMaterial;
+      for (const mesh of body.torso.getChildMeshes(true)) {
+        if (mesh.name.endsWith("_yoke") || mesh.name.endsWith("_UpperArm")) mesh.material = body.skinMaterial;
+      }
+      body.leftUpperArm.material = body.skinMaterial;
+      body.rightUpperArm.material = body.skinMaterial;
     }
     if (definition.id === "spooky.reaper" && !shouldUseVehicleBody) {
       propMeshes.push(...dressReaper(this._scene, body, teamColor));
