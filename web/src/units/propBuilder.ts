@@ -4515,6 +4515,25 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "hammer":
     case "mace": {
+      if (variant === "paladin_hammer") {
+        // Righteous Paladin render: a pale one-hand haft and two tall squared
+        // hammer cheeks, a team socket between them, luminous outer faces.
+        const L = fit.stand * 0.48;
+        const pale = mat(scene, new Color3(0.72, 0.73, 0.7), 0.15, "cloth");
+        const light = mat(scene, new Color3(1, 0.94, 0.74), 1.2, "cloth");
+        const team = mat(scene, teamColor ?? accent, 0.12, "cloth");
+        const haft = MeshBuilder.CreateCylinder("paladinHammer", { height: L, diameter: L * 0.065, tessellation: 6 }, scene);
+        haft.material = pale; haft.position.y = L * 0.18;
+        const put = (m: Mesh, x: number, y: number, material: Mesh["material"]) => {
+          m.parent = haft; m.position.set(x, y, 0); m.material = material; m.convertToFlatShadedMesh();
+        };
+        put(MeshBuilder.CreateBox("paladinHammerSocket", { width: L * 0.18, height: L * 0.2, depth: L * 0.17 }, scene), 0, L * 0.42, team);
+        for (const side of [-1, 1]) {
+          put(MeshBuilder.CreateBox("paladinHammerCheek", { width: L * 0.18, height: L * 0.4, depth: L * 0.21 }, scene), side * L * 0.15, L * 0.43, pale);
+          put(MeshBuilder.CreateBox("paladinHammerFace", { width: L * 0.025, height: L * 0.35, depth: L * 0.2 }, scene), side * L * 0.245, L * 0.43, light);
+        }
+        return haft;
+      }
       if (type === "hammer" && variant === "mjolnir") {
         // [S] 474 Thor's Mjolnir (audit 468 thor b.1: "hammer: a long-shafted sledge with a small flat head - TABS: a short mallet whose block head is as big
         // as his chest"; legacy.thor.red.png, card Appearance): MJOLNIR in s, a short dark-wrapped haft .haft long, .thick across, a pale grey block head
