@@ -2240,13 +2240,15 @@ export function attachProps(
   }
 
   const radiantShield = config.weaponVariant === "radiant_glaive";
+  const paladinShield = config.weaponVariant === "paladin_hammer";
   const shield = radiantShield
     ? buildRadiantShield(scene, body.metrics.overallHeight, teamColor ?? accent)
+    : paladinShield ? buildPaladinShield(scene, body.metrics.overallHeight)
     : buildShield(scene, config.shield, scale, accent, teamColor ?? accent);
   if (shield) {
     shield.parent = body.leftHand;
     // TABS shields cover neck to knee and overlap along a line; bucklers stay small on purpose
-    if (radiantShield) {
+    if (radiantShield || paladinShield) {
       // An offhand board carried upright ahead of the body, with a forearm
       // bracket; the blade hand remains free to cast its glaive.
       shield.parent = body.torso;
@@ -6965,6 +6967,35 @@ function buildRadiantShield(scene: Scene, stand: number, teamColor: Color3): Mes
   }
   const star = flatPlate(scene, "radiantShieldLight", points, stand * 0.008);
   star.material = light; star.parent = rim; star.position.z = stand * 0.031;
+  return rim;
+}
+
+/** [S] 483, righteous_paladin.blue.png: pale circular board about half
+ * the man's height; gold rim encloses two opposing broken chevrons around
+ * a central hexagonal medallion, with lozenge openings at top and bottom. */
+function buildPaladinShield(scene: Scene, stand: number): Mesh {
+  const r = stand * 0.25;
+  const gold = mat(scene, new Color3(1, 0.7, 0.18), 0.18, "cloth");
+  const pale = mat(scene, new Color3(0.85, 0.87, 0.83), 0.16, "cloth");
+  const circle = (radius: number): number[][] => Array.from({ length: 16 }, (_, i) => {
+    const a = i * Math.PI / 8; return [Math.cos(a) * radius, Math.sin(a) * radius];
+  });
+  const rim = flatPlate(scene, "paladinShield", circle(r), stand * 0.025); rim.material = gold;
+  const face = flatPlate(scene, "paladinShieldFace", circle(r * 0.93), stand * 0.015);
+  face.parent = rim; face.material = pale; face.position.z = stand * 0.02;
+  const motif = (name: string, points: number[][]): Mesh => {
+    const m = flatPlate(scene, name, points.map(([x,y]) => [x*r,y*r]), stand * 0.006);
+    m.parent = rim; m.material = gold; m.position.z = stand * 0.032; return m;
+  };
+  for (const sign of [-1, 1]) {
+    // Broken rings sweep from the center into broad arrow-shaped flanks.
+    const pts = [[0,.82],[.46,.56],[.34,.43],[0,.63],[-.34,.43],[-.46,.56]];
+    motif("paladinCrownChevron", pts.map(([x,y]) => [x,y*sign]));
+    for (const side of [-1, 1]) {
+      motif("paladinFlankChevron", [[.07,.05],[.51,.43],[.65,.13],[.59,.25],[.48,-.15],[.06,-.43],[.06,-.25],[.33,-.04]].map(([x,y]) => [x*side,y*sign]));
+    }
+  }
+  motif("paladinCenterSeal", Array.from({length:6},(_,i)=>[Math.cos(i*Math.PI/3)*.13,Math.sin(i*Math.PI/3)*.13]));
   return rim;
 }
 
