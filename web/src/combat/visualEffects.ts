@@ -996,6 +996,16 @@ export class VisualEffects {
   }
   private _softDisc: DynamicTexture | null = null;
 
+  /** A straight white-gold shaft arriving vertically, no lightning or dome. */
+  spawnDivineRay(position: Vector3): void {
+    const root=new TransformNode("divineRay",this._scene);root.position.copyFrom(position);
+    const mat=new StandardMaterial("divineRayGold",this._scene);mat.emissiveColor=new Color3(1.7,1.4,.65);mat.disableLighting=true;
+    const beam=MeshBuilder.CreateCylinder("divineRayShaft",{height:12,diameterTop:.18,diameterBottom:.4,tessellation:8},this._scene);
+    beam.parent=root;beam.position.y=6;beam.material=mat;
+    const rim=MeshBuilder.CreateTorus("divineRayFoot",{diameter:2,thickness:.08,tessellation:32},this._scene);rim.parent=root;rim.position.y=.08;rim.material=mat;
+    this._effects.push({root,remaining:.65,update:(_dt,left)=>{mat.alpha=Math.min(1,left/.25);beam.scaling.x=beam.scaling.z=.7+left;},dispose:()=>mat.dispose()});
+  }
+
   // ══════════════════ SPELL DOME ══════════════════
   /**
    * A magic strike's area as one graphic shape (tabs_screenshot_09): a whole hemisphere of one flat colour standing on the ground over the area the spell

@@ -2784,6 +2784,16 @@ export class SimulationSystem {
     let knockback = impulseDir.scale(attackProfile.knockback);
     const controlStrength = attacker.definition.controlStrength ?? 1;
 
+    // Five homing book lights carry no contact damage; their arrivals call
+    // down the damaging rays (Divine Arbiter Book, card Weapons).
+    if (attacker.definition.id === "good.divine_arbiter" && this.projectileSystem) {
+      const book=attacker.body.rightHand.getChildMeshes(false).find(m=>m.name==="arbiterBook");
+      const source=book ?? attacker.body.rightHand;worldMatrixChain(source);
+      const from=source.getAbsolutePosition().clone().add(new Vector3(0,.2,0));
+      for(let k=0;k<5;k++) this.projectileSystem.spawnProjectile("arbiter_light",from,target,damage,knockback,2,attacker.team,this._units,new Vector3(0,k*.09,0),k*.1,{originLift:0,targetLift:1,arc:.16+k*.035});
+      this._logAbility(attacker,"volley_book",now,target.position); return;
+    }
+
     // [S] a longship hurls itself instead of swinging (LONGSHIP_HURL)
     if (this._tryHurlLongship(attacker, target, damage, now)) return;
     // [S] 444 a vampire does not swing: he jumps onto the man's neck and drinks (VAMPIRE_LATCH)

@@ -83,7 +83,7 @@ const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, flet
  * (audit 457 blowdarter c.2: the dart flew as a full arrow).
  */
 const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
-export type ProjectileShape = "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
+export type ProjectileShape = "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -414,6 +414,7 @@ export class ProjectileSystem {
     let arcHeight: number;
     switch (shape) {
       case "aegis_orb": speed = 18; arcHeight = dist*.04; break;
+      case "arbiter_light": speed = 18; arcHeight = dist*.16; break;
       case "arrow":   speed = 35; arcHeight = dist * 0.08; break;
       case "small_arrow": speed = 35; arcHeight = dist * 0.08; break;
       case "blowdart": speed = 32; arcHeight = dist * 0.04; break;
@@ -956,6 +957,13 @@ export class ProjectileSystem {
   }
 
   private _onImpact(p: ActiveProjectile): void {
+    if(p.shape==="arbiter_light") {
+      this.visualEffects?.spawnDivineRay(p.targetPos);
+      // The ray, rather than the missile, hurts everyone in its footprint.
+      for(const unit of p.allUnits) if(!unit.isDead && Vector3.DistanceSquared(unit.position,p.targetPos)<=4) unit.applyDamage(p.damage,p.knockback);
+      this.abilityHook?.("good.divine_arbiter","divine_ray",p.targetPos);
+      return;
+    }
     if (p.drunk) {
       this._drunkSplash(p);
       return;
@@ -1664,6 +1672,12 @@ export class ProjectileSystem {
         tail.material = mf.get("unlit", W.shell, { emissive: W.shell, alpha: 0.5 });
         tail.parent = root;
         break;
+      }
+      case "arbiter_light": {
+        const light=new Color3(1.6,1.25,.45),mat=getMaterialFactory().get("unlit",light,{emissive:light});
+        const core=MeshBuilder.CreateIcoSphere("arbiterMissileCore",{radius:.13,subdivisions:1},this._scene);core.parent=root;core.material=mat;
+        const tail=MeshBuilder.CreateCylinder("arbiterMissileTail",{height:.7,diameterTop:.15,diameterBottom:0,tessellation:5},this._scene);
+        tail.parent=root;tail.rotation.x=Math.PI/2;tail.position.z=-.35;tail.material=mat;break;
       }
       case "aegis_orb": {
         const orb=MeshBuilder.CreateIcoSphere("aegisThrownOrb",{radius:.21,subdivisions:2},this._scene);
