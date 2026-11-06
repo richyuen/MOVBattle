@@ -8,16 +8,16 @@ a FAIL (1 since 481)
  5. wrist ornaments in unit_good.celestial_aegis_idle: bare wrists — TABS: butterfly bracelets (ref: reference/units/good.celestial_aegis.jpg; card Appearance).
  6. wrist dress in unit_good.celestial_aegis_idle: plain wrists — TABS: gold butterfly bracelets (ref: reference/units/good.celestial_aegis.jpg).
 b PASS (482 gap review)
-c FAIL (0 since 481)
- 1. protection in unit_good.celestial_aegis_release and unit_good.celestial_aegis_flight: no enclosing field — TABS: a translucent yellow-bordered projectile-deflecting force field around the caster (ref: loop/cards/good.celestial_aegis.md Characteristics; reference/units/good.celestial_aegis.blue.png).
- 2. attack in unit_good.celestial_aegis_release and unit_good.celestial_aegis_flight: a sword blow at touching range — TABS: thrown glowing team orbs orbiting within the field (ref: loop/cards/good.celestial_aegis.md Characteristics/Appearance).
-d PASS (483 stats)
+c PASS (484 field and orb casting)
+d PASS (484 stats)
 ## Ranked gaps
-6. [S] good.celestial_aegis.c protective field — blocker 1: enclosing translucent gold-bordered field with projectile deflection and recharge — ref: loop/cards/good.celestial_aegis.md Characteristics — ours: unit_good.celestial_aegis_release.png and unit_good.celestial_aegis_flight.png.
-7. [S] good.celestial_aegis.c orb casting — blocker 2: thrown team orbs replace contact melee — ref: loop/cards/good.celestial_aegis.md Characteristics — ours: unit_good.celestial_aegis_release.png and unit_good.celestial_aegis_flight.png.
+5. [S] good.celestial_aegis.a cropped hoodie — blocker 3: sleeveless cropped team shell with exposed waist and gold front pieces — ref: reference/units/good.celestial_aegis.blue.png — ours: unit_good.celestial_aegis_idle.png.
+6. [S] good.celestial_aegis.a skirt — blocker 4: flared team skirt with black waist, gold hem and bordered trapezoid — ref: reference/units/good.celestial_aegis.red.png — ours: unit_good.celestial_aegis_idle.png.
 ## Attempts (iter | gap | criterion | verdict)
+484 | protective field (aca3f94b), orb casting (b52aff2f) | c | approved (2 struck; c PASS)
 483 | white hair/butterfly (11f730f5) | a | approved (struck 1)
 482 | empty casting hands (4f58b14a) | b | approved (struck 1)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 483 white hair and four-lobed team butterfly cleared a.2. Remaining a/c lists stand verbatim.
+- 484 c.1-2 struck on full-field path pair (9c64a5c9); existing cameras unchanged. a list stands verbatim.
+- Deterministic 18-archer probe: shield reflected at 1.95s, depleted, recharged at 11.98s; no capture errors.

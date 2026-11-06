@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+484 | bd4ab456 | good.devout_gauntlet.a | approved (blocker 4)
+484 | 83882d91 | good.devout_gauntlet.a | approved (blocker 6)
+484 | b9d412bc | good.devout_gauntlet.a | approved (blocker 5)
+484 | 76412962 | good.radiant_glaive.b | approved (blocker 3)
+484 | cf178b1e | good.righteous_paladin.a | approved (blocker 2)
+484 | aca3f94b | good.celestial_aegis.c | approved (blocker 1)
+484 | b52aff2f | good.celestial_aegis.c | approved (blocker 2)
+484 | 212ed7e2 | good.divine_arbiter.a | approved (blocker 2)
+484 | 9f62f67c | good.divine_arbiter.c | approved (blocker 1)
+
 483 | [R] ecabf523 | legacy.super_boxer.a | approved (struck 2; CONFIRM D)
 483 | fc2bd780 | good.devout_gauntlet.c | approved (struck 1; c PASS)
 483 | 6671dac9 | good.devout_gauntlet.a | approved (struck 2)
@@ -14,15 +24,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 483 | e73fec72 | good.divine_arbiter.a | approved (struck 1)
 
 
-479 | [R] 288e2eb7,ddec1562 | legacy.thor.a | approved (struck 1)
-479 | b4856556 | legacy.chariot.b | approved (struck 1; b PASS)
-479 | 36730de3,cc74e96d | legacy.super_boxer.b | approved (struck 1; b PASS)
-479 | d2432f2a | legacy.super_boxer.c | approved (struck 1)
-479 | 663b3f2d,5fa80d38 | legacy.dark_peasant.a | approved (struck 4)
-479 | 1eb610b3 | legacy.dark_peasant.c | approved (struck 1)
-479 | 0fb715a1,3f642c6a | legacy.super_peasant.a | approved (struck 3)
-479 | 909a9f7c | legacy.super_peasant.c | approved (struck 2)
-479 | 0117757c,c67e45e9 | legacy.wizard.c | approved (airborne clause struck)
 480 | c444ddc5 [R] | legacy.thor.a | approved
 480 | 1b06021b | legacy.tank.a | approved
 480 | dc1ce591,d824f304 | legacy.wizard.a | approved
@@ -55,6 +56,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+goodDress:DEVOUT_CIRCLET | 8-sided hoop,triangular .85H front,.38H ivory gem | 484 | approved | laurel/hair
+goodDress:DEVOUT_SHOULDERS | two solid curled plates span2.68W,3-point chest band | 484 | approved | absent
+goodDress:DEVOUT_MOUSTACHE | paired closed pale-yellow curled wings,1.12headW | 484 | approved | absent
+PB:RADIANT_SHIELD mount | leftHand,STIFFY_UPRIGHT axes,grip bracket | 484 | approved | torso bracket (483 approved)
+goodDress:PALADIN_HAIR | center-part grey locks,3 pale winglets/side,tied ponytail | 484 | approved | great helm
+SS/PS:AEGIS_FIELD | radius3,500damage capacity,10s recharge,enemy projectile reflection | 484 | approved | absent
+SS/PS:AEGIS_ORBS | 6 orbit lights,hand-origin team orb,range10,cooldown2,speed18,push8 | 484 | approved | contact melee
+goodDress:ARBITER_MITRE | team8-sided rounded crown1.05H,gold .88H panel,diamond | 484 | approved | laurel/hair/halo
+SS/PS/FX:ARBITER_LIGHTS | 5 book-origin lights,.1delay,18speed,radius2 ray friendly fire | 484 | approved | instant lightning/dome
 goodDress:AEGIS_BUTTERFLY | white crown/temples/4-knot braid;four team lobes,upper1.32H/lower.4H | 483 | approved | steel cap
 goodDress:ARBITER_COLLAR | 10 closed rising gold petals,rim1.2-1.3W,opening.35W,unlit(.85,.55,.12) | 483 | approved | bare neck outline
 LD:SUPER_BOXER_REBUILD | eight-sided torso waist .64W;8 broad bent locks,1.6-2.45 half-head tall | 483 | approved | box torso,12 needle cones

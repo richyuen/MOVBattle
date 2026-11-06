@@ -13,6 +13,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 
 ## Capture and probes
+- Supplementary fixed-camera pairs show full fields/late volleys without changing existing cameras (484).
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is written by stats.mjs, not by capture; every non-regression capture wipes iter-N (stats.json, a tail-overlap batch's audit.md too) and each stats run overwrites it: copy audit.md out before step 5 and restore it, rerun `stats.mjs <id,id,...> --iter N` once with every unit after the final capture (422).
 - Probes in loop/scripts/probes/, repo root (--build after source changes): probe_bbox (--unit --pat --frame=torso), probe_mat <unit> <regex>, probe_near/close/head/local/axes/impale/bowdraw. probe_close takes --aim=head|torso|y:<y>, --dist, --yaw, --noglow.
@@ -56,5 +57,4 @@ Read whole at step 1; one fact per line, merge near cap.
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
 - A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
 - A torso-rooted shield can seem held in idle but detach from the trailing offhand in windup; inspect both before review (483).
-- Capture d is HALF the actor separation (spawns at +/-d): a midpoint volley frame needs both full rigs plus the sphere margins (479).
 - A lethal duel freezes post-impact shots; a distant reserve keeps corpse time advancing (480).
