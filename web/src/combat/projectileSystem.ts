@@ -83,7 +83,7 @@ const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, flet
  * (audit 457 blowdarter c.2: the dart flew as a full arrow).
  */
 const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
-export type ProjectileShape = "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
+export type ProjectileShape = "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -413,6 +413,7 @@ export class ProjectileSystem {
     let speed: number;
     let arcHeight: number;
     switch (shape) {
+      case "aegis_orb": speed = 18; arcHeight = dist*.04; break;
       case "arrow":   speed = 35; arcHeight = dist * 0.08; break;
       case "small_arrow": speed = 35; arcHeight = dist * 0.08; break;
       case "blowdart": speed = 32; arcHeight = dist * 0.04; break;
@@ -1662,6 +1663,11 @@ export class ProjectileSystem {
         tail.position.z = -W.tail / 2;
         tail.material = mf.get("unlit", W.shell, { emissive: W.shell, alpha: 0.5 });
         tail.parent = root;
+        break;
+      }
+      case "aegis_orb": {
+        const orb=MeshBuilder.CreateIcoSphere("aegisThrownOrb",{radius:.21,subdivisions:2},this._scene);
+        orb.parent=root;orb.material=getMaterialFactory().get("unlit",palette.primary,{emissive:palette.primary.scale(1.6)});
         break;
       }
       case "spirit_fire":

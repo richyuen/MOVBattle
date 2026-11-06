@@ -17,7 +17,7 @@ import { buildGroundSnake, type GroundSnake } from "../units/ancientDress";
 import { reaperSpear } from "../units/spookyDress";
 import { lassoRope } from "../units/wildWestDress";
 import { bearerReach } from "../units/legacyDress";
-import { aegisField } from "./goodMagic";
+import { aegisField, aegisOrbits } from "./goodMagic";
 
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
@@ -1688,6 +1688,21 @@ export class SimulationSystem {
     const overRank = enemy.collisionBodyRadius > unit.collisionBodyRadius * 2 ? 1 : 0;
     const engageDistance = unit.definition.engageRange + this.attackRangePadding + Math.max(0, enemy.collisionBodyRadius - unit.collisionBodyRadius) + overRank;
     const distance = Vector3.Distance(unit.position, enemy.position);
+    // Orb Casting Spell: throw from a casting hand rather than contact melee.
+    if (unit.definition.id === "good.celestial_aegis") {
+      unit.faceTarget(enemy.position);
+      if (distance > 10) { if(canMove) this._moveUnitToward(unit,enemy.position,10,now); return; }
+      unit.stopMoving();this._clearPathState(unit);
+      if(canAttack && unit.canAttack(now) && this.projectileSystem) {
+        unit.setAttackCooldown(now,2);unit.triggerAttackVisual(.55);
+        worldMatrixChain(unit.body.rightHand);
+        const from=unit.body.rightHand.getAbsolutePosition().clone();
+        const dir=enemy.position.subtract(unit.position).normalize();
+        this.projectileSystem.spawnProjectile("aegis_orb",from,enemy,attackProfile.damage*(unit.definition.damageMultiplier??1),dir.scale(8),0,unit.team,this._units,undefined,0,{originLift:0,targetLift:1,arc:.04});
+        this._logAbility(unit,"cast_orb",now,enemy.position);
+      }
+      return;
+    }
     if (unit.definition.id === "legacy.super_boxer") {
       if (this._boxerDashes.has(unit)) return;
       if (canAttack && canMove && distance < 4.8 && now >= (this._boxerDashReady.get(unit) ?? 0) && unit.canAttack(now)) {
@@ -3356,7 +3371,7 @@ export class SimulationSystem {
   private _lunged = new Set<RuntimeUnit>();
 
   /** Projectile Block (SAMURAI_BLOCK): each ready samurai with a missile about to reach him cuts it out of the air with a bright slash. */
-  private _aegisState = new WeakMap<RuntimeUnit, { field: TransformNode; health: number; recharge: number }>();
+  private _aegisState = new WeakMap<RuntimeUnit, { field: TransformNode; health: number; recharge: number; orbits?: TransformNode }>();
 
   private _aegisFields(now: number): void {
     for (const unit of this._units) {
@@ -3364,6 +3379,8 @@ export class SimulationSystem {
       let state = this._aegisState.get(unit);
       if (!state) { state = { field: aegisField(unit), health: 500, recharge: 0 }; this._aegisState.set(unit,state); }
       if (unit.isDead) { state.field.setEnabled(false); continue; }
+      state.orbits ??= aegisOrbits(unit);
+      state.orbits.rotation.y=now*.8;
       if (state.health <= 0 && now >= state.recharge) { state.health=500; state.field.setEnabled(true); this._logAbility(unit,"aegis_recharge",now,unit.position); }
       if (state.health <= 0) continue;
       const damage = this.projectileSystem?.deflectField(unit.position.add(new Vector3(0,1.7,0)),3,unit.team) ?? 0;
