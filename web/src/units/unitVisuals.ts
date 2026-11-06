@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "paladin_hammer" | "arbiter_book" | "radiant_glaive"
+  | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet"
   | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet";
 
 function vis(
@@ -994,7 +994,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "duelist", materialPreset: "secret_bandit",
       });
     case "iconic_chronomancer":
-      return vis({ scale: 1.3, bulk: 0.96, headSize: 1.1 }, "staff", "laurel", "none", "halo", "#b8e6ff", undefined, {
+      return vis({ scale: 1.3, bulk: 0.96, headSize: 1.1 }, "boxing_glove", "laurel", "none", "halo", "#b8e6ff", "boxing_glove", {
+        weaponVariant: "time_gauntlet", offhandVariant: "time_gauntlet", weaponGripPreset: "default",
         posePreset: "caster", materialPreset: "secret_ice", attachmentPreset: "chrono_ring", fxPreset: "wind",
         stateVariants: { attacking: ["chrono_ring"], "ability-active": ["chrono_ring"] },
       });

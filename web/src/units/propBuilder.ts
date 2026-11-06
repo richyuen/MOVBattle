@@ -2132,6 +2132,7 @@ export function attachProps(
     applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
     if (config.weaponVariant === "glow_glove") seatGlowGlove(weapon, body.rightHand);
     if (config.weaponVariant === "devout_gauntlet") seatDevoutGauntlet(weapon, body.rightHand);
+    if (config.weaponVariant === "time_gauntlet") { weapon.position.setAll(0); weapon.rotation.setAll(0); }
     if (config.weapon === "bomb") seatInFist(weapon, body, scale);
     if (config.weapon === "potion") seatNeckInFist(weapon, body.rightHand);
     if (config.weapon && SEATED_POLES.has(config.weapon)) seatPoleInFist(weapon, body, lift);
@@ -2149,6 +2150,7 @@ export function attachProps(
       applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
       if (config.offhandVariant === "glow_glove") seatGlowGlove(offhand, body.leftHand);
       if (config.offhandVariant === "devout_gauntlet") seatDevoutGauntlet(offhand, body.leftHand);
+      if (config.offhandVariant === "time_gauntlet") { offhand.position.setAll(0); offhand.rotation.setAll(0); }
       if (config.offhandWeapon === "bomb") seatInFist(offhand, body, scale);
       if (config.offhandWeapon === "potion") seatNeckInFist(offhand, body.leftHand);
       props.push(offhand);
@@ -4030,6 +4032,17 @@ function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3, variant?: UnitVisualConfig["weaponVariant"]): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
+  if (variant === "time_gauntlet") {
+    // Gold faceted wrist bracers with flared elbow ends; fists remain bare.
+    const f = fit.fist, root = new Mesh("timeNinjaGauntlet", scene);
+    const gold = mat(scene, new Color3(1, 0.7, 0.18), 0.2, "cloth");
+    const light = mat(scene, new Color3(1, 0.95, 0.72), 0.5, "cloth");
+    const cuff = MeshBuilder.CreateCylinder("timeGauntletCuff", { height: f * 4.5, diameterBottom: f * 2.3, diameterTop: f * 3.4, tessellation: 6 }, scene);
+    cuff.parent = root; cuff.position.y = f * 2.2; cuff.material = gold;
+    const ridge = MeshBuilder.CreateBox("timeGauntletRidge", { width: f * 0.8, height: f * 4, depth: f * 0.5 }, scene);
+    ridge.parent = root; ridge.position.set(0, f * 2.2, f * 1.25); ridge.material = light;
+    return root;
+  }
   if (variant === "radiant_glaive") {
     // Compact one-hand curved throwing blade, two opposed swept gold wings
     // and pale luminous inner edges (good.radiant_glaive.red.png).
