@@ -45,7 +45,7 @@ export function devoutTrousers(scene: Scene, body: ArticulatedBody, team: Color3
     }
   }
   const pelvis = body.hip.getChildMeshes(true).find(m => m.name.endsWith("_pelvis"));
-  if (pelvis) {
+  if (pelvis instanceof Mesh) {
     pelvis.material = cloth;
     const P = limbBox(pelvis), W = P.wide * 2.12, D = P.deep * 2.18;
     put(MeshBuilder.CreateBox("devoutTrouserWaistband", { width: W, height: P.half * 0.38, depth: D }, scene), body.hip, trim, P.mid + P.half * 0.65);
