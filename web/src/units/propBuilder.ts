@@ -2248,7 +2248,16 @@ export function attachProps(
   if (shield) {
     shield.parent = body.leftHand;
     // TABS shields cover neck to knee and overlap along a line; bucklers stay small on purpose
-    if (radiantShield || paladinShield) {
+    if (radiantShield) {
+      // The hand owns the board through the entire windup, so its bracket
+      // cannot stay on the chest when the throwing pose draws the arm back.
+      shield.parent = body.leftHand;
+      Quaternion.FromRotationMatrix(Matrix.FromValues(...STIFFY_UPRIGHT.x, 0, ...STIFFY_UPRIGHT.y, 0, ...STIFFY_UPRIGHT.z, 0, 0, 0, 0, 1)).toEulerAnglesToRef(shield.rotation);
+      shield.position.set(0.04 * scale, 0, 0.1 * scale);
+      const strap = MeshBuilder.CreateBox("radiantShieldGrip", { width: scale * 0.13, height: scale * 0.07, depth: scale * 0.14 }, scene);
+      strap.parent = body.leftHand; strap.position.set(0.02 * scale, 0, 0.04 * scale);
+      strap.material = mat(scene, new Color3(.45,.27,.06)); props.push(strap);
+    } else if (paladinShield) {
       // An offhand board carried upright ahead of the body, with a forearm
       // bracket; the blade hand remains free to cast its glaive.
       shield.parent = body.torso;
