@@ -1,4 +1,4 @@
-import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, type Material } from "@babylonjs/core";
+import { Scene, Color3, Mesh, MeshBuilder, TransformNode, Vector3, VertexData, type Material } from "@babylonjs/core";
 import { limbShell } from "./medievalDress";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
@@ -1818,14 +1818,44 @@ export function pharaohGarb(scene: Scene, body: ArticulatedBody, teamColor: Colo
   return out;
 }
 
-/*
- * [S] 470 the Super Boxer's hair (audit 468 super_boxer a.3: "hair missing: bare team head - TABS: tall golden super-saiyan spikes over a headband";
- * legacy.super_boxer.red.png: a pale gold mop of a dozen long spikes standing near straight up off the crown, the tallest about a head high, fanning a
- * little outward at the sides; a team headband round the brow under them). SUPER_BOXER_HAIR on the head box (half sizes e, centre c, +z the face): a
- * gold cap .cap e.y thick on the crown, .capOut e across; .spikes spikes rooted on the crown in rows, each .spike to .spikeMax e.y*2 tall and .base e.x
- * across at its foot, leant .fan rad out from the middle and .back rad back; a team band .band e.y tall round the brow, .bandOut e across. Gold .gold.
- */
-const SUPER_BOXER_HAIR = { cap: 0.32, capOut: 1.08, spikes: 12, spike: 0.55, spikeMax: 1.0, base: 0.5, fan: 0.35, back: 0.18, band: 0.22, bandOut: 1.08, bandAt: 0.42, gold: new Color3(1, 0.88, 0.5), glow: 0.35 };
+/** [R] 483 whole-look specification, legacy.super_boxer.red/blue.png:
+ * A bare athletic trunk has a waist about 0.64 of the shoulder span, straight
+ * sloping sides, and sloping trapezius planes up to the neck. Replace the
+ * overlapping stock trunk/yoke with one eight-sided skin hull; its lower ring
+ * meets the existing gold belt. The hair is one dense crown, about one head
+ * high: eight broad bent faceted locks, each roughly 0.35 head-width across,
+ * sharing solid roots; three heights produce the jagged standing silhouette.
+ * Each lock retains substantial width until its upper third, then ends in a
+ * point. Keep the team brow band and leave both luminous eyes uncovered. */
+const SUPER_BOXER_HAIR = { cap: 0.32, capOut: 1.08, band: 0.22, bandOut: 1.08, bandAt: 0.42, gold: new Color3(1, 0.88, 0.5), glow: 0.35 };
+
+function superBoxerTorso(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const yoke = body.torso.getChildMeshes(true).find(m => /_yoke$/.test(m.name)) as Mesh | undefined;
+  if (!yoke) return [];
+  const bb = yoke.getBoundingInfo().boundingBox, e = bb.extendSize, c = bb.center;
+  const W = e.x * 2, D = e.z * 2;
+  const top = bb.maximum.y, bottom = bb.minimum.y;
+  const raw = yoke.getVerticesData("position")!;
+  let shoulderY = bottom;
+  for (let i = 0; i < raw.length; i += 3) if (Math.abs(raw[i] - c.x) > e.x * 0.98) shoulderY = Math.max(shoulderY, raw[i + 1]);
+  const positions: number[] = [], indices: number[] = [];
+  const octagon = [[-.5,-.3],[-.3,-.5],[.3,-.5],[.5,-.3],[.5,.3],[.3,.5],[-.3,.5],[-.5,.3]];
+  for (const [y, width, depth] of [[bottom, W * .64, D * .82], [shoulderY, W, D], [top, W * .31, D * .62]]) {
+    for (const [x,z] of octagon) positions.push(c.x + x * width, y, c.z + z * depth);
+  }
+  for (let ring = 0; ring < 2; ring++) for (let k = 0; k < 8; k++) {
+    const a = ring * 8 + k, b = ring * 8 + (k + 1) % 8;
+    indices.push(a, a + 8, b, b, a + 8, b + 8);
+  }
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  const data = new VertexData(); data.positions = positions; data.indices = indices; data.normals = normals;
+  const hull = new Mesh("superBoxerAthleticTorso", scene); data.applyToMesh(hull);
+  hull.parent = yoke.parent; hull.position.copyFrom(yoke.position); hull.rotation.copyFrom(yoke.rotation); hull.scaling.copyFrom(yoke.scaling);
+  hull.material = body.leftUpperArm.material; hull.convertToFlatShadedMesh();
+  body.torsoMesh.isVisible = false; yoke.isVisible = false;
+  return [hull];
+}
 
 /** The Super Boxer's tall pale-gold spiked hair over a team headband (spec at SUPER_BOXER_HAIR), hung on the head. */
 export function superBoxerHair(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
@@ -1848,17 +1878,26 @@ export function superBoxerHair(scene: Scene, body: ArticulatedBody, teamColor: C
   const topY = c.y + e.y;
   put(MeshBuilder.CreateBox("superBoxerCap", { width: e.x * 2 * P.capOut, height: e.y * P.cap, depth: e.z * 2 * P.capOut }, scene), gold, c.x, topY - e.y * P.cap * 0.3, c.z - e.z * 0.05);
   put(MeshBuilder.CreateBox("superBoxerBand", { width: e.x * 2 * P.bandOut, height: e.y * P.band, depth: e.z * 2 * P.bandOut }, scene), team, c.x, c.y + e.y * P.bandAt, c.z);
-  // rows of spikes across the crown, front to back; the middle ones the tallest
-  const cols = 4, rows = Math.ceil(P.spikes / cols);
-  for (let i = 0; i < P.spikes; i++) {
-    const u = (i % cols) / (cols - 1) * 2 - 1, v = Math.floor(i / cols) / Math.max(1, rows - 1) * 2 - 1;
-    const tall = e.y * 2 * (P.spikeMax - (P.spikeMax - P.spike) * (Math.abs(u) * 0.7 + ((i * 7) % 5) / 10));
-    const lean = u * P.fan, back = P.back - v * 0.1;
-    const x = c.x + u * e.x * 0.75, z = c.z - v * e.z * 0.6 - e.z * 0.1;
-    const s = put(MeshBuilder.CreateCylinder("superBoxerSpike", { height: tall, diameterTop: 0, diameterBottom: e.x * P.base, tessellation: 4 }, scene), gold,
-      x + Math.sin(lean) * tall / 2, topY + Math.cos(lean) * tall / 2 - e.y * 0.05, z - Math.sin(back) * tall / 2);
-    s.rotation.set(-back, 0, -lean);
+  // A closed four-facet bent lock has a broad middle, rather than a cone's
+  // steadily shrinking needle. Adjacent bases overlap into a continuous crown.
+  for (let row = 0; row < 2; row++) for (let col = 0; col < 4; col++) {
+    const u = col / 3 * 2 - 1, x = c.x + u * e.x * .74, z = c.z + (row ? -.55 : .32) * e.z;
+    const tall = e.y * (1.6 + (1 - Math.abs(u)) * .65 + (row ? .2 : 0));
+    const positions: number[] = [], indices: number[] = [];
+    for (const [rise, wide, bend] of [[0, .7, 0], [.47, .76, .06], [.76, .42, .18], [1, .015, .3]]) {
+      for (const [dx,dz] of [[-1,-1],[1,-1],[1,1],[-1,1]]) positions.push(x + dx * e.x * wide * .5 + u * e.x * bend, topY + tall * rise - e.y * .1, z + dz * e.z * wide * .62 - e.z * bend);
+    }
+    for (let ring = 0; ring < 3; ring++) for (let k = 0; k < 4; k++) {
+      const a = ring * 4 + k, b = ring * 4 + (k + 1) % 4;
+      indices.push(a, a + 4, b, b, a + 4, b + 4);
+    }
+    indices.push(0, 1, 2, 0, 2, 3, 12, 14, 13, 12, 15, 14);
+    const normals: number[] = []; VertexData.ComputeNormals(positions, indices, normals);
+    const data = new VertexData(); data.positions = positions; data.indices = indices; data.normals = normals;
+    const lock = new Mesh("superBoxerBroadLock", scene); data.applyToMesh(lock);
+    put(lock, gold, 0, 0, 0);
   }
+  out.push(...superBoxerTorso(scene, body));
   return out;
 }
 
