@@ -4269,7 +4269,11 @@ export class ProceduralAnimator {
   /** True while a jab drives the arms (the runtime's boxer pose overlay stands aside). */
   get jabbing(): boolean {
     // any blow: the glove infers the blade slash (unitVisuals inferWeaponPresentationFamily), the bare fist the strike
-    return this.jabs && this._state === AnimState.Attacking;
+    return (this.jabs || this._devoutGauntlets()) && this._state === AnimState.Attacking;
+  }
+
+  private _devoutGauntlets(): boolean {
+    return this._body.rightHand.getChildren().some(n => n.name === "devoutGauntlet");
   }
 
   /** [S] 463 the boxer's straight jab, the other glove at the guard (spec at BOXER_JAB). */
@@ -4285,7 +4289,9 @@ export class ProceduralAnimator {
     const ext = p < J.cockAt ? -J.cock * ease(p / J.cockAt)
       : p < J.drivenAt ? -J.cock + (1 + J.cock) * ease((p - J.cockAt) / (J.drivenAt - J.cockAt))
       : p < J.heldTo ? 1 : 1 - ease((p - J.heldTo) / (1 - J.heldTo));
-    b.torso.rotation.x += J.lean * Math.max(0, ext) * w;
+    // [S] 483: Devout's long warm-up becomes a level charging punch, with the
+    // opposite luminous fist held at the chest rather than a mace overhead.
+    b.torso.rotation.x += (this._devoutGauntlets() ? 0.28 : J.lean) * Math.max(0, ext) * w;
     for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
     const hip = b.hip.getAbsolutePosition();
     const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - hip.y);
