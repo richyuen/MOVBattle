@@ -1,7 +1,36 @@
-import { Color3, Mesh, MeshBuilder, Scene, VertexData, type Material, type TransformNode } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Scene, Vector3, VertexData, type Material, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox } from "./medievalDress";
+
+/** Closed faceted ornament in its parent's XY plane, with a real back face. */
+function ornament(scene: Scene, name: string, points: number[][], depth: number, parent: TransformNode, material: Material): Mesh {
+  const positions: number[] = [], indices: number[] = [];
+  for (const z of [-depth / 2, depth / 2]) for (const [x, y] of points) positions.push(x, y, z);
+  const n = points.length;
+  for (let j = 1; j < n - 1; j++) indices.push(0, j + 1, j, n, n + j, n + j + 1);
+  for (let j = 0; j < n; j++) { const k = (j + 1) % n; indices.push(j, k, k + n, j, k + n, j + n); }
+  const normals: number[] = []; VertexData.ComputeNormals(positions, indices, normals);
+  const data = new VertexData(); Object.assign(data, { positions, indices, normals });
+  const mesh = new Mesh(name, scene); data.applyToMesh(mesh); mesh.parent = parent; mesh.material = material;
+  mesh.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh); return mesh;
+}
+
+/** Devout's gold brow hoop rises into one triangular front, with an ivory gem.
+ * Ref red render: bare scalp, tip ~.6 head heights above the crown. */
+export function devoutCirclet(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const b = body.headMesh.getBoundingInfo().boundingBox, W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const color = new Color3(1, 0.7, 0.18), gold = getMaterialFactory().get("unlit", color, { emissive: color });
+  const band = MeshBuilder.CreateTorus("devoutCircletBand", { diameter: W * 1.12, thickness: H * 0.11, tessellation: 8 }, scene);
+  band.parent = body.headMesh; band.position.copyFrom(b.center); band.position.y += H * 0.3; band.scaling.z = D / W;
+  band.material = gold; scene.getGlowLayerByName("glow")?.addExcludedMesh(band);
+  const front = ornament(scene, "devoutCircletFront", [[-W*.58,0], [0,H*.85], [W*.58,0], [0,H*.12]], D*.12, body.headMesh, gold);
+  front.position.set(b.center.x, b.center.y + H*.29, b.center.z + D*.56);
+  const ivory = new Color3(1.2,1.1,.65), gemMat = getMaterialFactory().get("unlit", ivory, { emissive: ivory });
+  const gem = MeshBuilder.CreateSphere("devoutCircletGem", { diameterX: W*.22, diameterY:H*.38, diameterZ:D*.16, segments:4 }, scene);
+  gem.parent = body.headMesh; gem.position.copyFrom(front.position); gem.position.y += H*.43; gem.position.z += D*.1; gem.material = gemMat;
+  return [band, front, gem];
+}
 
 /** [S] 483, good.celestial_aegis.red.png: white hair frames the temples,
  * with a short tied braid behind. The team butterfly has two upright oval

@@ -807,7 +807,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ GOOD ═══════════════════════
   "good.devout_gauntlet": vis(
-    { scale: 1.08, bulk: 0.8, torsoWidth: 0.9, armLength: 1.08, legLength: 1.4, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "boxing_glove", "laurel", "none", "none", "#E3C76A", "boxing_glove", {
+    { scale: 1.08, bulk: 0.8, torsoWidth: 0.9, armLength: 1.08, legLength: 1.4, upperLegWidth: 0.88, lowerLegWidth: 0.8 }, "boxing_glove", "none", "none", "none", "#E3C76A", "boxing_glove", {
       posePreset: "boxer",
       weaponVariant: "devout_gauntlet", offhandVariant: "devout_gauntlet",
       materialPreset: "good_gold",
