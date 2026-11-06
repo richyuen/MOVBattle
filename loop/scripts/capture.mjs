@@ -539,6 +539,13 @@ async function main() {
           // rather than aiming at the ground below the chest burst.
           if (on === 2 && a.definition.id === "legacy.wizard") on = 4;
           const pa = a.body.root.position, pt = t.body.root.position;
+          // [evidence 484] Additional caster/target pair: the full Aegis field
+          // and book missile path, without changing the existing shot cameras.
+          if (on === 9) {
+            const dx=pt.x-pa.x,dz=pt.z-pa.z;
+            window.game.frameCamera({x:(pa.x+pt.x)/2,y:1.7,z:(pa.z+pt.z)/2},Math.max(13,Math.hypot(dx,dz)*1.3+6),Math.atan2(dx,-dz),Math.PI/2.1);
+            return;
+          }
           // [evidence 479] Dark Peasant's outgoing hands must be distinguished from his sphere:
           // one side-on frame includes both caster and victim, held across the ability pair.
           if (on === 7 || on === 8) {
@@ -725,6 +732,10 @@ async function main() {
           // [evidence 454] the Deadeye's bullet (speed 100) lands ~5 ticks after the shot: her flight frame is 3 ticks on, the bullet half way (CONFIRM 453 c.3)
           const flightAt = shortThrow ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : id === "wild_west.deadeye" ? 3 : 9;
           await take(`unit_${id}_flight`, release.tick + flightAt, shotPath);
+          if (id === "good.celestial_aegis" || id === "good.divine_arbiter") {
+            await take(`unit_${id}_path`,release.tick,9,{hold:release.tick});
+            await take(`unit_${id}_path_after`,release.tick+9,9,{hold:release.tick});
+          }
           await take(`unit_${id}_struck`, struckTick, shortThrow ? far : 2);
           // [evidence 480] Hold a wide camera across contact and the departing victim,
           // independently of the Super Peasant's earlier flight pair.
