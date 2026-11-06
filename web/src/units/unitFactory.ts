@@ -24,6 +24,7 @@ import { skeletonBone, unglowBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
+import { devoutTrousers } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
@@ -527,6 +528,7 @@ export class UnitFactory {
       propMeshes.push(...dressSkeleton(this._scene, body, teamColor, definition.id));
     }
     if (definition.id === "good.devout_gauntlet" && !shouldUseVehicleBody) {
+      propMeshes.push(...devoutTrousers(this._scene, body, teamColor));
       // His narrow chest is bare team skin, including the shoulder hull.
       body.torsoMesh.material = body.skinMaterial;
       for (const mesh of body.torso.getChildMeshes(true)) {
@@ -1110,7 +1112,7 @@ export class UnitFactory {
         ? null
         // [R] 430 no tunic skirt on the Monkey King: his waist wrap sits straight on the puffy shorts, and the skirt was the maroon panel (MONKEY_ROBE)
         // [S] 453 nor the Quick Draw: his vest stops at the belt and the team trousers run straight down from it (CONFIRM 451 quick_draw a.2)
-        : definition.id === "dynasty.monkey_king" || definition.id === "wild_west.miner" || definition.id === "wild_west.quick_draw" // [S] 448 the Miner's overalls hang no skirt (MINER_OVERALLS)
+        : definition.id === "dynasty.monkey_king" || definition.id === "wild_west.miner" || definition.id === "wild_west.quick_draw" || definition.id === "good.devout_gauntlet" // Devout's trousers have their own waist folds.
         ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
