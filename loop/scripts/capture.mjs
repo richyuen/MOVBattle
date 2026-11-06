@@ -735,6 +735,10 @@ async function main() {
           if (id === "good.celestial_aegis" || id === "good.divine_arbiter") {
             await take(`unit_${id}_path`,release.tick,9,{hold:release.tick});
             await take(`unit_${id}_path_after`,release.tick+9,9,{hold:release.tick});
+            if (id === "good.divine_arbiter") {
+              await take(`unit_${id}_volley`,release.tick+24,9,{hold:release.tick});
+              await take(`unit_${id}_volley_after`,release.tick+33,9,{hold:release.tick});
+            }
           }
           await take(`unit_${id}_struck`, struckTick, shortThrow ? far : 2);
           // [evidence 480] Hold a wide camera across contact and the departing victim,
