@@ -3,6 +3,46 @@ import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox } from "./medievalDress";
 
+/** [S] 483, good.celestial_aegis.red.png: white hair frames the temples,
+ * with a short tied braid behind. The team butterfly has two upright oval
+ * wings (~1.4 head heights) and two smaller horizontal lower wings; its full
+ * span is about 2.8 head widths. All four are solid flattened faceted lobes. */
+export function aegisButterflyHair(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const head = body.headMesh, box = head.getBoundingInfo().boundingBox;
+  const W = box.extendSize.x * 2, H = box.extendSize.y * 2, D = box.extendSize.z * 2, c = box.center;
+  const white = new Color3(0.85, 0.88, 0.95);
+  const hair = getMaterialFactory().get("unlit", white, { emissive: white });
+  const wing = getMaterialFactory().get("cloth", team, { emissive: team.scale(0.12) });
+  const out: Mesh[] = [];
+  const put = (mesh: Mesh, material: Material, x: number, y: number, z: number): Mesh => {
+    mesh.parent = head; mesh.position.set(c.x + x, c.y + y, c.z + z); mesh.material = material;
+    mesh.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+    out.push(mesh); return mesh;
+  };
+  put(MeshBuilder.CreateSphere("aegisWhiteCrown", { diameterX: W * 1.12, diameterY: H * 0.4, diameterZ: D * 1.1, segments: 6 }, scene), hair, 0, H * 0.47, 0);
+  for (const side of [-1, 1]) {
+    put(MeshBuilder.CreateBox("aegisWhiteTemple", { width: W * 0.17, height: H * 0.6, depth: D * 0.8 }, scene), hair, side * W * 0.49, H * 0.13, -D * 0.1);
+    const upper = put(MeshBuilder.CreateSphere("aegisButterflyUpperWing", {
+      diameterX: W * 0.78, diameterY: H * 1.32, diameterZ: W * 0.13, segments: 6,
+    }, scene), wing, side * W * 0.79, H * 0.95, -D * 0.44);
+    upper.rotation.z = side * -0.6;
+    const lower = put(MeshBuilder.CreateSphere("aegisButterflyLowerWing", {
+      diameterX: W * 1.03, diameterY: H * 0.4, diameterZ: W * 0.14, segments: 6,
+    }, scene), wing, side * W * 0.9, H * 0.18, -D * 0.43);
+    lower.rotation.z = side * 0.16;
+    const antenna = put(MeshBuilder.CreateCylinder("aegisButterflyAntenna", {
+      height: H * 0.65, diameterTop: W * 0.025, diameterBottom: W * 0.045, tessellation: 5,
+    }, scene), wing, side * W * 0.13, H * 1.02, -D * 0.42);
+    antenna.rotation.z = side * -0.2;
+  }
+  for (let k = 0; k < 4; k++) {
+    put(MeshBuilder.CreateSphere("aegisWhiteBraid", { diameterX: W * (0.24 - k * 0.025), diameterY: H * 0.22, diameterZ: D * 0.24, segments: 4 }, scene), hair,
+      k % 2 ? W * 0.025 : -W * 0.025, -H * (0.05 + k * 0.16), -D * 0.55);
+  }
+  put(MeshBuilder.CreateBox("aegisBraidTie", { width: W * 0.22, height: H * 0.08, depth: D * 0.25 }, scene), wing, 0, -H * 0.4, -D * 0.55);
+  return out;
+}
+
 /** [S] 483, good.devout_gauntlet.red.png: each beige trouser leg expands
  * continuously from the hip to a broad ankle hem, with a slim team border.
  * Two articulated six-sided frusta meet at the knee; ankle width is 2.2 thigh
