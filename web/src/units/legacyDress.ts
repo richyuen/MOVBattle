@@ -1214,17 +1214,17 @@ export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of body.hip.getChildMeshes(true)) if (/_pelvis$/.test(m.name) && m instanceof Mesh) m.material = white;
   const out: Mesh[] = superPeasantTrousers(scene, body, white);
   for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "superTunicSleeve", arm, 0, T.sleeveTo, T.sleeveOut, white));
-  // [S] 480: outer tunic overlaps the rope belt and encloses the entire
-  // pelvis, then flares to mid-thigh (legacy.super_peasant.red.png).
+  // [S] 482: a continuous outer garment spans chest, waist and mid-thigh.
+  // The old pelvis-only skirt left an exposed dark band below the rope.
   const { W, H, D, lay } = outerTrunkFrame(scene, body, out);
-  const hull = body.hip.getChildMeshes(true).find(m => /_pelvis$/.test(m.name))!;
-  const hb = hull.getBoundingInfo().boundingBox, he = hb.extendSize.multiply(hull.scaling);
-  const hc = hull.position.add(hb.center.multiply(hull.scaling));
-  const drop = he.y * 2.7;
-  const skirt = MeshBuilder.CreateCylinder("superTunicSkirt", { height: drop, diameterTop: he.x * 2.12, diameterBottom: he.x * 2.4, tessellation: T.sides }, scene);
-  skirt.scaling.z = he.z / he.x * 1.18;
-  skirt.parent = hull.parent; skirt.position.copyFrom(hc); skirt.position.y -= he.y * 0.05;
-  skirt.material = white; skirt.convertToFlatShadedMesh(); out.push(skirt);
+  const hemY = -H / 2 - Math.abs(body.leftKnee.position.y) * 0.56;
+  const skirt = MeshBuilder.CreateLathe("superTunicContinuousShell", {
+    shape: [new Vector3(W * 0.64, hemY, 0), new Vector3(W * 0.52, -H * 0.48, 0),
+      new Vector3(W * 0.54, H * 0.42, 0)], tessellation: T.sides,
+    cap: Mesh.NO_CAP,
+  }, scene);
+  skirt.scaling.z = D / W * 1.14;
+  lay(skirt, 0, 0, 0, white); skirt.convertToFlatShadedMesh();
   for (const m of [...body.allMeshes, ...out]) if (m.material === white) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
   const slitH = H * T.slitLong, front = D / 2 + D * 0.02;
   out.push(...superPeasantRopeBelt(scene, body));
