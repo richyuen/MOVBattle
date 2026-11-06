@@ -1206,6 +1206,9 @@ function superPeasantTrousers(scene: Scene, body: ArticulatedBody, white: Materi
 
 export function superPeasantTunic(scene: Scene, body: ArticulatedBody): Mesh[] {
   const T = SUPER_TUNIC;
+  // Retire the earlier hip-hung sack overlay; it protruded through the new
+  // continuous shell and left the old shaded waist/rope visible.
+  for (const mesh of body.root.getChildMeshes(false)) if (mesh.name === "sackSkirt" || mesh.name === "sackRope") mesh.isVisible = false;
   const mf = getMaterialFactory();
   const white = mf.get("unlit", T.white, { emissive: T.white.scale(0.85) });
   const lace = mf.get("cloth", T.lace, { emissive: T.lace.scale(0.15) });
