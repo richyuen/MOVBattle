@@ -360,6 +360,22 @@ export class ProjectileSystem {
   }
 
   /** Every missile flying at `unit` stops following him: each comes down where he stood (Painter Dodge). */
+  deflectField(center: Vector3, radius: number, team: number): number {
+    let absorbed=0;
+    for (const p of this._active) {
+      if(p.attackerTeam===team || p.elapsed<0 || Vector3.DistanceSquared(p.mesh.position,center)>radius*radius) continue;
+      absorbed+=p.damage;
+      const enemy=p.allUnits.filter(u=>!u.isDead && u.team!==team).sort((a,b)=>Vector3.DistanceSquared(a.position,p.origin)-Vector3.DistanceSquared(b.position,p.origin))[0];
+      if(!enemy) { p.damage=0; p.elapsed=p.flightTime; continue; }
+      p.origin.copyFrom(p.mesh.position);p.target=enemy;p.targetPos.copyFrom(enemy.position);p.attackerTeam=team;
+      p.elapsed=0;p.flightTime=Math.max(.1,Vector3.Distance(p.origin,p.targetPos)/p.speed);p.knockback.scaleInPlace(-1);p.loose=false;
+      // A projectile over 500 damage is still reflected before the field breaks.
+      if(absorbed>=500) break;
+    }
+    return absorbed;
+  }
+
+  /** Every missile flying at `unit` stops following him: each comes down where he stood (Painter Dodge). */
   loseTarget(unit: RuntimeUnit): void {
     for (const p of this._active) if (p.target === unit) p.loose = true;
   }

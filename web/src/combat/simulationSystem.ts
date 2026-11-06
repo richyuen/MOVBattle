@@ -17,6 +17,7 @@ import { buildGroundSnake, type GroundSnake } from "../units/ancientDress";
 import { reaperSpear } from "../units/spookyDress";
 import { lassoRope } from "../units/wildWestDress";
 import { bearerReach } from "../units/legacyDress";
+import { aegisField } from "./goodMagic";
 
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
@@ -977,6 +978,7 @@ export class SimulationSystem {
     this._resolveLivingCollisions();
     this._painterDodges(now);
     this._samuraiBlocks(now);
+    this._aegisFields(now);
     this._firstLunges(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
@@ -3354,6 +3356,24 @@ export class SimulationSystem {
   private _lunged = new Set<RuntimeUnit>();
 
   /** Projectile Block (SAMURAI_BLOCK): each ready samurai with a missile about to reach him cuts it out of the air with a bright slash. */
+  private _aegisState = new WeakMap<RuntimeUnit, { field: TransformNode; health: number; recharge: number }>();
+
+  private _aegisFields(now: number): void {
+    for (const unit of this._units) {
+      if (unit.definition.id !== "good.celestial_aegis") continue;
+      let state = this._aegisState.get(unit);
+      if (!state) { state = { field: aegisField(unit), health: 500, recharge: 0 }; this._aegisState.set(unit,state); }
+      if (unit.isDead) { state.field.setEnabled(false); continue; }
+      if (state.health <= 0 && now >= state.recharge) { state.health=500; state.field.setEnabled(true); this._logAbility(unit,"aegis_recharge",now,unit.position); }
+      if (state.health <= 0) continue;
+      const damage = this.projectileSystem?.deflectField(unit.position.add(new Vector3(0,1.7,0)),3,unit.team) ?? 0;
+      if (damage > 0) {
+        state.health -= damage; this._logAbility(unit,"aegis_deflect",now,unit.position);
+        if (state.health <= 0) { state.recharge=now+10; state.field.setEnabled(false); }
+      }
+    }
+  }
+
   private _samuraiBlocks(now: number): void {
     const B = SAMURAI_BLOCK;
     const missiles = this.projectileSystem;
