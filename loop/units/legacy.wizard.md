@@ -1,14 +1,14 @@
 # legacy.wizard
-Status: open   Audited: 468; 475 CONFIRM passed c, failed a/b; 480 c RE-AUDIT x2; 481 a/b/c RE-AUDIT x2, CONFIRM passed b/c, failed a   Done: -
+Status: done   Audited: 468; 475 CONFIRM passed c, failed a/b; 480 c RE-AUDIT x2; 481 a/b/c RE-AUDIT x2, CONFIRM passed b/c, failed a ; 482 (CONFIRM: passed a, b, c)   Done: 482
 ## Verdicts
-a FAIL (0 since 481) plateau
- 1. Exposed thin blue arms in unit_legacy.wizard_idle.png — TABS: the arms are enclosed in broad long robe sleeves down to the hands (ref: reference/units/legacy.wizard.blue.png).
+a PASS (482 gap review + CONFIRM)
 b PASS (CONFIRM 481)
 c PASS (CONFIRM 481, after cast reframing)
-d PASS (481 stats)
+d PASS (482 stats)
 ## Ranked gaps
-1. [R] a whole look: broad long robe sleeves down to hands; retain cleared build/head/coat, spec reference/units/legacy.wizard.blue.png; unit_legacy.wizard_idle, lineup_legacy.
+None (confirmed done 482).
 ## Attempts (iter | gap | criterion | verdict)
+482 | [R] broad articulated sleeves (8be7b98c) | a | approved (struck 1)
 481 | [P] grey beard (292f6201) | a | approved
 481 | crystal-origin star (fcea338b) | c | approved
 481 | one-hand sword/upright carry (3d14f448,45bdb226) | b | approved
@@ -22,10 +22,8 @@ d PASS (481 stats)
 474 | WIZARD_HAT floppy bent-tip hat (7c149002) | a | approved (struck 1)
 473 | WIZARD_SPELL glowing star bolt (aee5fce8) | c | approved (struck 1)
 472 | WIZARD_ROBE team coat-robe to the knees, dark belt (731cde05) | a | approved (struck 4)
-471 | WIZARD_PIPE curved brown pipe (b29ab410, cacbecab) | a | approved (struck 3)
-470 | offhand longsword (f309bcf8) | b | approved (struck 2)
-468-470 | WIZARD_BEARD, offhand sword | a,b | approved
+468-471 | beard and curved pipe | a | approved
+468-470 | offhand longsword | b | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 481 sword, crystal cast and noglow grey beard cleared; second a CONFIRM failure marks plateau on sleeves.
-- CONFIRM cannot place beard in idle (head turned); swatch proves grey. Future face work needs evidence first.
+- 482 sleeves cleared a; b/c copied from 481 confirmation. Fresh CONFIRM passed a.

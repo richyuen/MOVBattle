@@ -1,14 +1,14 @@
 # legacy.dark_peasant
-Status: open   Audited: 468, 480 (c RE-AUDIT x2)   Done: -
+Status: done   Audited: 468, 480 (c RE-AUDIT x2), 482 (c RE-AUDIT x2) ; 482 (CONFIRM: passed a, b, c)   Done: 482
 ## Verdicts
 a PASS (480: ragged braies, rolled hosen and pale shoes)
 b PASS (473: a sphere of thirty black floating hands; DARK_HANDS)
-c FAIL (1 since 480)
- 1. victim grab-blast in unit_legacy.dark_peasant_ability_after: three horned minions stand beside the caster while the knight closes in without hands gripping it — TABS: the surrounding dark hands grab their victim to annihilate it (ref: loop/cards/legacy.dark_peasant.md Appearance, Abilities Dark Peasant Hands).
-d PASS (481 stats)
+c PASS (482 gap review + CONFIRM)
+d PASS (482 stats)
 ## Ranked gaps
-1. [S] c.1 victim-facing palms and contacting finger closure on head/chest, held through unit_legacy.dark_peasant_ability_after.png — reference card Appearance; spawnDarkGrab.
+None (confirmed done 482).
 ## Attempts (iter | gap | criterion | verdict)
+482 | contacting palms/hooked fingers (4635a717) | c | approved (struck 1)
 481 | victim hand seizure/blast (82bb4a43) | c | approved
 480 | ragged braies, rolled hosen, light shoes (09453b8f,3656bb73) | a | approved (struck 5)
 479 | patchy open laced jerkin (663b3f2d, 5fa80d38) | a | approved (struck 4)
@@ -20,6 +20,4 @@ d PASS (481 stats)
 ## Rejected (last 4)
 volley [S] [1] - 474: fifteen thrown dark hands (18b8467d, d8702ccb) - read as the sphere, no streak, target not framed
 ## Notes (max 3 lines)
-- 481 seizure/burst APPROVE, no strike: hands flank victim but do not contact. Horned-minion clause closer; blocker retained verbatim.
-- Next step 2: RE-AUDIT c after victim/camera evidence changes. LowestHealth chooses a weak distant reserve; reserve must be tougher than victim.
-- Pre-spawned CONFIRM not applied: gap review did not propose D. Custom summon/pull remains isolated.
+- 482 c RE-AUDIT x2 replaced the old list; contacting palms and curled fingers cleared it. Fresh CONFIRM passed a/b/c; Custom summon/pull preserved.

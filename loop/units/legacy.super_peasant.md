@@ -1,14 +1,14 @@
 # legacy.super_peasant
-Status: open   Audited: 468, 480 (c RE-AUDIT x2), 481 (c RE-AUDIT x2)   Done: -
+Status: done   Audited: 468, 480 (c RE-AUDIT x2), 481 (c RE-AUDIT x2) ; 482 (CONFIRM: passed a, b, c)   Done: 482
 ## Verdicts
-a FAIL (5 since 468)
- 2. shirt in unit_legacy.super_peasant_idle: a grey vest block — TABS: a white peasant tunic to mid-thigh with a laced collar (ref: legacy.super_peasant.red.png)
+a PASS (482 gap review + CONFIRM)
 b PASS (468 cuffs)
 c PASS (481 punch launch and reaching flight arms)
-d PASS (481 stats)
+d PASS (482 stats)
 ## Ranked gaps
-1. Critic proposes [R] a.2 continuous chest-to-mid-thigh white tunic around rope, unit_legacy.super_peasant_idle; not plateau, so [R] is not yet eligible. Remaining blocker 2 is structural.
+None (confirmed done 482).
 ## Attempts (iter | gap | criterion | verdict)
+482 | continuous tunic shell (2979a450,76a27267) | a | approved (struck 2)
 481 | punch corpse launch (5bc36110,ea254d1a) | c | approved
 481 | reaching flight arms (30f43e5f) | c | approved
 481 | rolled white trousers (0224cf8c,a894d4ee) | a | approved
@@ -22,5 +22,4 @@ d PASS (481 stats)
 468 | SUPER_CUFFS gold cuffs, bright rims (9c6d188f, shared) | b | approved (struck 1; b PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 481 trouser blocker 4 and c blockers 1/2 struck. Shirt blocker 2 stands; new cuff strike resets no-strike run, not plateau.
-- Punch launch replaces death velocity; inherited side speed previously threw corpse out of the held pair.
+- 482 continuous white tunic and retired sack overlay cleared a. Fresh CONFIRM passed a/b/c.

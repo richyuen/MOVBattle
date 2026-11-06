@@ -8,16 +8,16 @@ a FAIL (0 since 481)
  4. torso dress in unit_good.divine_arbiter_idle: a brown-grey sleeveless vest — TABS: a team robe with puffy elbow sleeves and yellow gloves (ref: reference/units/good.divine_arbiter.blue.png).
  5. lower dress in unit_good.divine_arbiter_idle: dark short skirt over dark trousers and grey boots — TABS: a short split team robe with gold hem over tight grey pants and bare team feet (ref: reference/units/good.divine_arbiter.red.png).
  6. facial hair in unit_good.divine_arbiter_idle: bare chin and upper lip — TABS: a pale curling moustache above a pointed team-colored beard (ref: reference/units/good.divine_arbiter.red.png).
-b FAIL (0 since 481)
- 1. held prop in unit_good.divine_arbiter_idle and unit_good.divine_arbiter_windup: a zigzag lightning bolt in one fist — TABS: an open thick enchanted book supported by both golden-gloved hands (ref: reference/units/good.divine_arbiter.jpg; card Weapon Type/Main Hand).
+b PASS (482 gap review)
 c FAIL (0 since 481)
  1. attack sequence in unit_good.divine_arbiter_release and unit_good.divine_arbiter_flight: an immediate blue lightning sheet from the caster — TABS: five homing light missiles from the book call down rays from above (ref: loop/cards/good.divine_arbiter.md Characteristics/Weapons).
  2. impact in unit_good.divine_arbiter_struck: a purple dome around the victim — TABS: powerful descending shafts of light (ref: loop/cards/good.divine_arbiter.md Characteristics).
-d PASS (481 stats)
+d PASS (482 stats)
 ## Ranked gaps
-4. [S] good.divine_arbiter.b open two-hand book — blocker 1: replace the lightning bolt with a thick open book carried by both hands — ref: reference/units/good.divine_arbiter.jpg — ours: unit_good.divine_arbiter_idle.png.
-11. [S] good.divine_arbiter.a petal collar — blocker 3: a broad raised gold collar frames the head — ref: reference/units/good.divine_arbiter.blue.png — ours: unit_good.divine_arbiter_idle.png.
+6. [S] good.divine_arbiter.c book missiles — blocker 1: launch five homing light missiles from the held volume — ref: loop/cards/good.divine_arbiter.md Weapons — ours: unit_good.divine_arbiter_release.png and unit_good.divine_arbiter_flight.png.
+7. [S] good.divine_arbiter.a raised petal collar — blocker 3: broad upturned gold petals frame the head — ref: reference/units/good.divine_arbiter.blue.png — ours: unit_good.divine_arbiter_idle.png.
 ## Attempts (iter | gap | criterion | verdict)
+482 | two-hand open book (b15c4843) | b | approved (struck 1)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Lists merge both 481 audits; additions only on previously unnamed elements.
+- 482 held equipment blocker cleared; existing a/c lists stand verbatim.
