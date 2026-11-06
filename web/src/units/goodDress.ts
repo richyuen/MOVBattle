@@ -32,6 +32,18 @@ export function devoutCirclet(scene: Scene, body: ArticulatedBody): Mesh[] {
   return [band, front, gem];
 }
 
+/** Two pale yellow moustache wings curl up at their outer tips below the eyes. */
+export function devoutMoustache(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const b=body.headMesh.getBoundingInfo().boundingBox, W=b.extendSize.x*2,H=b.extendSize.y*2,D=b.extendSize.z*2;
+  const c=new Color3(1,.9,.3), mat=getMaterialFactory().get("unlit",c,{emissive:c});
+  return [-1,1].map(side=>{
+    const points=[[0,.03],[.15,.07],[.35,.01],[.49,.03],[.56,.14],[.55,-.02],[.43,-.11],[.2,-.09],[0,-.04]].map(([x,y])=>[side*x*W,y*H]);
+    if(side<0) points.reverse();
+    const m=ornament(scene,"devoutCurledMoustache",points,D*.15,body.headMesh,mat);
+    m.position.set(b.center.x,b.center.y-H*.15,b.center.z+D*.59); return m;
+  });
+}
+
 /** Devout shoulder plates sweep sideways, then curl upward; a narrow gold
  * band crosses the collarbones. Ref: horn span ~2.6 torso widths, solid facets. */
 export function devoutShoulders(scene: Scene, body: ArticulatedBody): Mesh[] {

@@ -24,7 +24,7 @@ import { skeletonBone, unglowBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
-import { aegisButterflyHair, arbiterPetalCollar, devoutCirclet, devoutShoulders, devoutTrousers } from "./goodDress";
+import { aegisButterflyHair, arbiterPetalCollar, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
@@ -533,6 +533,7 @@ export class UnitFactory {
       propMeshes.push(...devoutTrousers(this._scene, body, teamColor));
       propMeshes.push(...devoutCirclet(this._scene, body));
       propMeshes.push(...devoutShoulders(this._scene, body));
+      propMeshes.push(...devoutMoustache(this._scene, body));
       // His narrow chest is bare team skin, including the shoulder hull.
       body.torsoMesh.material = body.skinMaterial;
       for (const mesh of body.torso.getChildMeshes(true)) {
