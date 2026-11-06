@@ -1,4 +1,4 @@
-import { Color3, Mesh, MeshBuilder, Scene, type Material, type TransformNode } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Scene, VertexData, type Material, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox } from "./medievalDress";
@@ -40,6 +40,42 @@ export function aegisButterflyHair(scene: Scene, body: ArticulatedBody, team: Co
       k % 2 ? W * 0.025 : -W * 0.025, -H * (0.05 + k * 0.16), -D * 0.55);
   }
   put(MeshBuilder.CreateBox("aegisBraidTie", { width: W * 0.22, height: H * 0.08, depth: D * 0.25 }, scene), wing, 0, -H * 0.4, -D * 0.55);
+  return out;
+}
+
+/** [S] 483, good.divine_arbiter.blue.png: a broad gold flower collar cups
+ * the neck. Its low front forms a V under the chin; side/back petals lift to
+ * the cheeks. Ten closed pentagonal slabs flare from .35 head widths at the
+ * throat to 1.3 at the rim (2.6 widths across), with pointed raised tips. */
+export function arbiterPetalCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const box = body.headMesh.getBoundingInfo().boundingBox;
+  const W = box.extendSize.x * 2, H = box.extendSize.y * 2;
+  const goldColor = new Color3(0.85, 0.55, 0.12);
+  const gold = getMaterialFactory().get("unlit", goldColor, { emissive: goldColor });
+  const out: Mesh[] = [], count = 10, step = Math.PI * 2 / count;
+  const point = (a: number, r: number, y: number): number[] => [Math.sin(a) * r, y, Math.cos(a) * r];
+  for (let k = 0; k < count; k++) {
+    const a = k * step, left = a - step * 0.51, right = a + step * 0.51;
+    const lift = H * (0.13 + 0.48 * (1 - Math.cos(a)));
+    const rim = W * (1.2 + 0.1 * (1 - Math.cos(a)) / 2);
+    const polygon = [point(left, W * 0.35, -H * 0.07), point(left, rim * 0.92, lift - H * 0.12),
+      point(a, rim, lift + H * 0.05), point(right, rim * 0.92, lift - H * 0.12), point(right, W * 0.35, -H * 0.07)];
+    const positions: number[] = [], indices: number[] = [];
+    for (const offset of [H * 0.03, -H * 0.03]) for (const p of polygon) positions.push(p[0], p[1] + offset, p[2]);
+    // The upper and lower faces are separate, outward-facing solid surfaces,
+    // rather than a double-sided ribbon that produces SSAO cloth darkening.
+    for (let j = 1; j < 4; j++) indices.push(0, j, j + 1, 5, j + 6, j + 5);
+    for (let j = 0; j < 5; j++) {
+      const next = (j + 1) % 5;
+      indices.push(j, next + 5, next, j, j + 5, next + 5);
+    }
+    const normals: number[] = [];
+    VertexData.ComputeNormals(positions, indices, normals);
+    const data = new VertexData(); data.positions = positions; data.indices = indices; data.normals = normals;
+    const petal = new Mesh("arbiterGoldCollarPetal", scene); data.applyToMesh(petal);
+    petal.parent = body.neck; petal.material = gold; petal.convertToFlatShadedMesh();
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(petal); out.push(petal);
+  }
   return out;
 }
 

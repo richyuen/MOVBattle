@@ -24,7 +24,7 @@ import { skeletonBone, unglowBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
-import { aegisButterflyHair, devoutTrousers } from "./goodDress";
+import { aegisButterflyHair, arbiterPetalCollar, devoutTrousers } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
@@ -528,6 +528,7 @@ export class UnitFactory {
       propMeshes.push(...dressSkeleton(this._scene, body, teamColor, definition.id));
     }
     if (definition.id === "good.celestial_aegis" && !shouldUseVehicleBody) propMeshes.push(...aegisButterflyHair(this._scene, body, teamColor));
+    if (definition.id === "good.divine_arbiter" && !shouldUseVehicleBody) propMeshes.push(...arbiterPetalCollar(this._scene, body));
     if (definition.id === "good.devout_gauntlet" && !shouldUseVehicleBody) {
       propMeshes.push(...devoutTrousers(this._scene, body, teamColor));
       // His narrow chest is bare team skin, including the shoulder hull.
