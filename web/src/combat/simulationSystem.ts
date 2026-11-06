@@ -2883,7 +2883,11 @@ export class SimulationSystem {
       if (Vector3.Distance(attacker.position, target.position) <= 5 && this.visualEffects) {
         target.applySlow(0.02, 0.5, now);
         this._logAbility(attacker, "dark_grab", now, target.position);
-        this.visualEffects.spawnDarkGrab(hands, () => target.position.add(new Vector3(0, 1.1, 0)), () => {
+        this.visualEffects.spawnDarkGrab(hands, () => [target.body.torsoMesh, target.body.headMesh].map(mesh => {
+          mesh.computeWorldMatrix(true);
+          const box = mesh.getBoundingInfo().boundingBox;
+          return { center: box.centerWorld.clone(), radius: Math.max(box.extendSizeWorld.x, box.extendSizeWorld.z) * 0.85 };
+        }), () => {
           if (!this._units.includes(target) || target.isDead) return;
           const away = target.position.subtract(attacker.position); away.y = 0;
           if (away.lengthSquared() < 1e-6) away.set(1, 0, 0);

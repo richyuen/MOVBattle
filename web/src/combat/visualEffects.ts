@@ -1275,23 +1275,38 @@ export class VisualEffects {
 
   /** [S] 481 Dark Peasant Hands: six actual hand silhouettes clamp the victim's
    * chest and head, follow its body, then close into a black annihilation flash. */
-  spawnDarkGrab(hands: Mesh[], victim: () => Vector3, onBlast: () => void): void {
+  spawnDarkGrab(hands: Mesh[], anchors: () => { center: Vector3; radius: number }[], onBlast: () => void): void {
     const root = new TransformNode("darkGrab", this._scene);
-    const grabs = hands.slice(15, 21).map((source, k) => {
-      source.computeWorldMatrix(true);
-      const scale = Vector3.One(); source.getWorldMatrix().decompose(scale);
-      const hand = source.clone("darkGrabHand", root)!;
-      hand.setEnabled(true); hand.scaling.copyFrom(scale.scale(1.2));
-      hand.rotationQuaternion = null;
-      return { hand, angle: k * Math.PI / 3 };
+    // Palms face into the armor; two bent phalanges wrap over it instead of
+    // cloning the sphere's merged, permanently splayed hand silhouettes.
+    const grabs = Array.from({ length: 4 }, (_, k) => {
+      const hand = new TransformNode("darkContactPalm", this._scene); hand.parent = root;
+      const part = (name: string, w: number, h: number, d: number, x: number, y: number, z: number) => {
+        const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, this._scene);
+        m.parent = hand; m.position.set(x, y, z); m.material = hands[0]?.material ?? null;
+        return m;
+      };
+      part("darkGripPalm", 0.24, 0.26, 0.085, 0, 0, 0);
+      const tips: Mesh[] = [];
+      for (let f = 0; f < 4; f++) {
+        part("darkGripKnuckle", 0.047, 0.14, 0.065, (f - 1.5) * 0.058, 0.16, 0.045).rotation.x = 0.65;
+        const tip = part("darkGripHook", 0.047, 0.14, 0.06, (f - 1.5) * 0.058, 0.19, 0.14);
+        tip.rotation.x = 1.5; tips.push(tip);
+      }
+      const thumb = part("darkGripThumb", 0.07, 0.18, 0.075, -0.14, -0.03, 0.09);
+      thumb.rotation.z = -0.7; thumb.rotation.x = 0.8;
+      part("darkGripCuff", 0.27, 0.085, 0.11, 0, -0.17, -0.025);
+      return { hand, tips, k };
     });
     const place = (age: number) => {
-      root.position.copyFrom(victim());
-      const radius = 0.55 - 0.25 * Math.min(1, age / 0.4);
-      for (const { hand, angle } of grabs) {
-        hand.position.set(Math.cos(angle) * radius, Math.sin(angle) * 0.55, Math.sin(angle * 2) * 0.25);
-        hand.rotation.set(0, -Math.PI / 2 + angle, angle - Math.PI / 2);
-        hand.scaling.scaleInPlace(age >= 0.45 ? 0.7 : 1);
+      const points = anchors();
+      for (const { hand, tips, k } of grabs) {
+        const { center, radius } = points[Math.floor(k / 2)];
+        const angle = (k % 2) * Math.PI + Math.PI / 4;
+        const distance = radius + 0.025 + 0.08 * (1 - Math.min(1, age / 0.12));
+        hand.position.copyFrom(center.add(new Vector3(Math.cos(angle) * distance, 0, Math.sin(angle) * distance)));
+        hand.lookAt(center);
+        for (const tip of tips) tip.rotation.x = 1.1 + 0.5 * Math.min(1, age / 0.12);
       }
     };
     place(0);
@@ -1301,8 +1316,9 @@ export class VisualEffects {
       place(age);
       if (!blasted && age >= 0.45) {
         blasted = true;
-        this.spawnSmokePuff(victim(), new Color3(0.025, 0.015, 0.04));
-        this.spawnExplosionBurst(victim(), 1.4);
+        const at = anchors()[0].center;
+        this.spawnSmokePuff(at, new Color3(0.025, 0.015, 0.04));
+        this.spawnExplosionBurst(at, 1.4);
         onBlast();
       }
     } });
