@@ -32,6 +32,23 @@ export function devoutCirclet(scene: Scene, body: ArticulatedBody): Mesh[] {
   return [band, front, gem];
 }
 
+/** Devout shoulder plates sweep sideways, then curl upward; a narrow gold
+ * band crosses the collarbones. Ref: horn span ~2.6 torso widths, solid facets. */
+export function devoutShoulders(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const b = body.torsoMesh.getBoundingInfo().boundingBox, W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const c = new Color3(1,.7,.18), gold = getMaterialFactory().get("unlit", c, { emissive:c });
+  const out: Mesh[] = [];
+  for (const side of [-1,1]) {
+    const points = [[.33,.02],[.56,.13],[.9,.07],[1.16,.23],[1.27,.55],[1.34,.58],[1.32,.29],[1.19,.08],[.85,-.06],[.44,-.08]].map(([x,y])=>[side*x*W,y*W]);
+    if (side < 0) points.reverse();
+    const horn = ornament(scene,"devoutShoulderHorn",points,D*.85,body.torso,gold);
+    horn.position.set(0,body.neck.position.y-H*.08,0); out.push(horn);
+  }
+  const band = MeshBuilder.CreateTube("devoutChestBand", { path:[new Vector3(-W*.49,body.neck.position.y-H*.08,D*.53),new Vector3(0,body.neck.position.y-H*.02,D*.62),new Vector3(W*.49,body.neck.position.y-H*.08,D*.53)],radius:H*.035,tessellation:5,cap:Mesh.CAP_ALL },scene);
+  band.parent=body.torso; band.material=gold; scene.getGlowLayerByName("glow")?.addExcludedMesh(band); out.push(band);
+  return out;
+}
+
 /** [S] 483, good.celestial_aegis.red.png: white hair frames the temples,
  * with a short tied braid behind. The team butterfly has two upright oval
  * wings (~1.4 head heights) and two smaller horizontal lower wings; its full
