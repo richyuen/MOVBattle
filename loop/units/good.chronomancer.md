@@ -1,26 +1,26 @@
 # good.chronomancer
 Status: open   Audited: 481 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (1 since 481)
- 2. back ornament in unit_good.chronomancer_idle: no back wheel — TABS: a huge vertical golden spiked clock ring with white winglets around the shoulders (ref: reference/units/good.chronomancer.red.png).
+a FAIL (2 since 481)
  3. upper dress in unit_good.chronomancer_idle: a plain grey torso covering the waist — TABS: a cropped white gold-trimmed top above an exposed team midriff (ref: reference/units/good.chronomancer.blue.png).
  4. lower dress in unit_good.chronomancer_idle: tight grey legs and generic boots — TABS: baggy white knee breeches, a broad white belt with gold center and tall white gold-banded boots (ref: reference/units/good.chronomancer.red.png).
  5. arm ornaments in unit_good.chronomancer_idle: bare blue arms — TABS: multiple gold arm bands carrying white winglets (ref: reference/units/good.chronomancer.blue.png).
  6. build in unit_good.chronomancer_idle: a short-legged crouched caster — TABS: an upright slender figure with long white lower legs (ref: reference/units/good.chronomancer.red.png).
 b PASS (482 gap review)
-c FAIL (1 since 481)
- 2. transformation in unit_good.chronomancer_release and unit_good.chronomancer_flight: the staff-bearing body remains unchanged — TABS: Chronomancer Transformation with the large luminous clock-ring state (ref: loop/cards/good.chronomancer.md Abilities; reference/units/good.chronomancer.png).
-d PASS (485 stats)
+c PASS (486 transformation lights the clock ring)
+d PASS (486 stats)
 ## Ranked gaps
-1. [S] good.chronomancer.a back clock ring — blocker 2: vertical gold spiked ring with white winglets behind the shoulders (goodDress.ts) — ref: reference/units/good.chronomancer.red.png — ours: unit_good.chronomancer_idle.png.
-2. [S] good.chronomancer.c transformation — blocker 2: Chronomancer Transformation state that lights the large clock ring in combat — ref: reference/units/good.chronomancer.png — ours: unit_good.chronomancer_release.png.
-9. [S] good.chronomancer.a upper dress — blocker 3: cropped white gold-trimmed top over a bare team midriff — ref: reference/units/good.chronomancer.blue.png — ours: unit_good.chronomancer_idle.png.
+3. [S] good.chronomancer.a crop top — blocker 3: white cropped gold-trimmed top over a bare team midriff — ref: good.chronomancer.blue.png — ours: unit_good.chronomancer_idle.png.
+4. [S] good.chronomancer.a breeches — blocker 4: baggy white knee breeches, white belt with gold centre, tall white gold-banded boots — ref: good.chronomancer.red.png — ours: unit_good.chronomancer_idle.png.
+5. [S] good.chronomancer.a arm bands — blocker 5: gold arm bands with white winglets — ref: good.chronomancer.blue.png — ours: unit_good.chronomancer_idle.png.
 ## Attempts (iter | gap | criterion | verdict)
+486 | back clock ring (20a4e925) | a | approved (struck 2)
+486 | transformation (1813eeb8,ec63e03e) | c | approved (struck 2; c PASS)
 485 | paired clock bolts (e9a4084a) | c | approved (struck 1)
 485 | gold spiked crown (0412f565) | a | approved (struck 1)
 482 | paired wrist gauntlets (81f139f6) | b | approved (struck 1)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Evidence 485: lineup_good_wide steps him clear of the elephant; lineup_good does not show him.
-- 485 critic DEFECTS: crown spikes read tall and ragged (TABS low rim, one tall point); left bolt fires after _flight.
-- A visual attachmentPreset chrono_ring exists in unitVisuals (stateVariants attacking): check what it draws before building the back ring.
+- Ring is goodDress chronoBackRing (torso child "chronoBackRing" > "chronoRingSpin"); the sim's CHRONO_TRANSFORM moves/lights it at first cast. Old chrono_ring hoop retired.
+- 486 critic DEFECTS: ring tube thin and pale at lineup distance; TABS action shot also has a screen-sized white ring.
+- He shows only in lineup_good_wide, not lineup_good.

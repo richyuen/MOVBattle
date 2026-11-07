@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+486 | 2b940c2b | good.righteous_paladin.a | approved (blocker 1)
+486 | 86c5d31f | good.righteous_paladin.a | approved (blocker 3)
+486 | 3287a3d9,5af5b18b | good.righteous_paladin.a | approved (no strike; CONFIRM failed a)
+486 | 20a4e925 | good.chronomancer.a | approved (blocker 2)
+486 | 1813eeb8,ec63e03e | good.chronomancer.c | approved (blocker 2; c PASS)
+486 | c2ee629c,39b3ed63 | good.radiant_glaive.a | approved (blocker 3)
+486 | b0e178f4 | good.celestial_aegis.a | approved (blockers 5-6 lineup)
+486 | 2176add5 | good.celestial_aegis.a | approved (blocker 4)
+486 | c2caca9d | good.sacred_elephant.a | approved (blocker 4)
+
 485 | cf4041df | good.devout_gauntlet.a | approved (blocker 1)
 485 | 11dabf78 | good.devout_gauntlet.a | approved (blockers 2-3; a PASS)
 485 | 594e02aa | good.radiant_glaive.c | approved (blocker 1; c PASS)
@@ -34,15 +44,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 483 | e73fec72 | good.divine_arbiter.a | approved (struck 1)
 
 
-481 | [R] 6b438aa3,d4e92c92 | legacy.pharaoh.a | approved (struck 1; CONFIRM D)
-481 | 6c55aaf4 | legacy.super_boxer.a | approved (struck 1; CONFIRM failed a)
-481 | 3d14f448,45bdb226 | legacy.wizard.b | approved
-481 | fcea338b | legacy.wizard.c | approved
-481 | 82bb4a43 | legacy.dark_peasant.c | approved (no strike)
-481 | 0224cf8c,a894d4ee | legacy.super_peasant.a | approved (struck 4)
-481 | 5bc36110,ea254d1a | legacy.super_peasant.c | approved
-481 | 30f43e5f | legacy.super_peasant.c | approved
-481 | 2e8189ba,105e9532 | good.devout_gauntlet.b | approved
 482 | [R] 8be7b98c | legacy.wizard.a | approved (struck 1)
 482 | 2979a450,76a27267 | legacy.super_peasant.a | approved (struck 2)
 482 | 4f58b14a | good.celestial_aegis.b | approved (struck 1)
@@ -57,6 +58,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+goodDress:PALADIN_CUIRASS | grey slabs .58D,1.16W,.04D slot,brown straps,gold hex+chevrons;team sleeves .55 | 486 | approved | white body plate,shoulder pads
+goodDress:PALADIN_LEG_ARMOUR | thigh 2.15w lower .6,knee cop 2.2w gold V,shin 2.25w,puffs 1.6w,brown straps | 486 | approved | white legs,gold knee band/poleyn
+UV:PALADIN build/stance | 1.3,.92bulk,.92W,legs1.38,.76/.7;upright,no pads/belt | 486 | approved | 1.34,1.36bulk;seeded crouch
+goodDress:CHRONO_RING | ring2.5W,tube.07W,spikes.18W,top.55W,3/9 spikes+winglets | 486 | approved | small attack-only torso hoop
+SS/goodMagic:CHRONO_TRANSFORM | settle.2,drop1.45H,tilt1.15,grow.25,spin1.6;10 cubes r1.4 orbit.9 | 486 | approved | none
+goodDress:RADIANT_VEST | team vest,white V .5W x .55H,gold trim+hem;sleeves 1.7/1.9,left .45 | 486 | approved | dark vest,pads
+goodDress:AEGIS_HOODIE | skin waist .28H,lip1.08W,rolled hood.62W,gold strip/toggle | 486 | approved | soldier vest,pads
+goodDress:AEGIS_SKIRT | 8-sided1.1P->1.85P,.62T,black waist,gold hem,trapezoid.5->.26P | 486 | approved | trousers,grey boots
+goodDress:ELEPHANT_RIDER_DRESS | white hair,team cap,gold crystal,white top gold bands,shorts1.6 | 486 | approved | bald team soldier
+UV:ARBITER scale | 1.12,bulk.96 | 486 | approved | 1.86,1.22
 goodDress:DEVOUT_ARM_WRAPS | upper .45-1 x1.45,fore 0-.94 x1.7,3 ridges,unlit(.62,.64,.68) | 485 | approved | bare forearms
 goodDress:DEVOUT_WAIST_COLLAR | front W points .48 torsoH,V to band,sides/back;pelvis out of glow;band 1.04W | 485 | approved | two 4-sided fold cones
 SS/PS:RADIANT_THROW | range12,cd1.25,speed25,3 hops reach7,heavy>.8 costs2;held glaive back 1s | 485 | approved | halberd melee
@@ -133,13 +144,9 @@ LD:thorBeard (height, top, depth, y, z); cheeks | 2,1.8,.42,-1.25,1.12; cheeks y
 LD:WINGED_BAND vanes + covert | H*(1.65-.23k),W*.28,.22+.22k; W*.57,H*(.22+.04k); .16,.5,.35 | 477 | approved | cones .95H * .78^k at ear
 VB:CHARIOT_HELM crest mechanism | 11 spokes; step .23; R*(.29,.85,.78); inner band .22,.15,.48 | 477 | approved | half-cylinder arc, rotation.x -PI/2
 VB:CHARIOT_FRONT (rise, panels, depth, trim, leafCount, leafSize, relief) | .22, 7, .055, .07, 7 pairs/side, (.045,.14,.025), .04 | 476 | approved | plain half-cylinder, thin rim (before 476)
-
-
-
 PA:BLOWGUN_HOLD (spec in code; ledger@46cf26f6) + blowdarter posePreset default | 1.05, .3, .18, .1, .07, .42 | 463 | approved | archer pose (before 463)
 PA:BOXER_JAB (spec in code; ledger@46cf26f6) | .45, .12, .2, .95, -.05, .15, .12, .3, .78, .12 | 463 | approved | overhead strike (before 463)
 PA:BEARER_HOLD (ahead, out, high, low) | .42, .22, .72, .3 | 464 | approved | ledger@768b54e7
-
 LD:THOR_LEGS (spec in code; prior ledger@46cf26f6) | .34, .14, 1.85, 7, .5, 1.35, .1, .9 | 475 | approved | navy legs (before 475)
 VB:TANK_TURRET (wide, top, tall, foot, long, ahead, bustle, inset) | 1.56, .8, .34, -.02, 1.18, .06, .72, .86 | 475 | approved | stepped box turret (before 475)
 VB:TANK_ROOF (spec in code; prior ledger@46cf26f6) | .33, [-.3,-.28], .34, .2, [.34,.14], .3, [-.12,.3], [+-.26,-.55], 1.35 | 475 | approved | two flat discs (before 475)
