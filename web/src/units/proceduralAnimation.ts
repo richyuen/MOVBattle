@@ -4728,10 +4728,13 @@ export class ProceduralAnimator {
     // [S] 487: the Celestial Aegis stands tall and slim (good.celestial_aegis.blue.png), found by her rolled hood.
     const aegis = this._body.torso.getChildMeshes(true).some(m => m.name === "aegisRolledHood");
     if (aegis) Object.assign(stance, { tilt: 0.02, stride: 0.12, crouch: 0, chin: 0, cock: 0 });
+    // [S] 488: the Divine Arbiter stands tall over his book on straight legs (good.divine_arbiter.red.png), found by his mitre.
+    const arbiter = this._body.headMesh.getChildMeshes(true).some(m => m.name === "arbiterMitre");
+    if (arbiter) Object.assign(stance, { tilt: 0.02, stride: 0.12, crouch: 0, chin: 0, cock: 0 });
     return {
       square,
       wide,
-      lean: pharaoh || thor || superBoxer || wizard || devout || paladin || glaive || aegis ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
+      lean: pharaoh || thor || superBoxer || wizard || devout || paladin || glaive || aegis || arbiter ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,

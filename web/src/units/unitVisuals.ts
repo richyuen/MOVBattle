@@ -838,7 +838,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "good.divine_arbiter": vis(
     // [P] 486 card Size 1.00x: a slender caster below the Paladin (reference/factions/good.jpg), not a giant
-    { scale: 1.12, bulk: 0.96, headSize: 1.16 }, "lightning_bolt", "none", "none", "none", "#F5D971", undefined, {
+    // [S] 488 (CONFIRM 487 a.1, red.png: long grey legs ~40% of his height): the Aegis's long-legged wobbler build, upright
+    { scale: 1.12, bulk: 0.92, headSize: 1.16, torsoWidth: 0.92, legLength: 1.42, upperLegWidth: 0.78, lowerLegWidth: 0.72 }, "lightning_bolt", "none", "none", "none", "#F5D971", undefined, {
       posePreset: "caster",
       weaponVariant: "arbiter_book", weaponGripPreset: "default",
       materialPreset: "secret_holy",
