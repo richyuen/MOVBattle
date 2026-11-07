@@ -812,3 +812,36 @@ export function arbiterCoatSkirt(scene: Scene, body: ArticulatedBody, team: Colo
   for (const m of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
   return out;
 }
+
+/** [S] 488, good.chronomancer.blue.png/.red.png: a white sleeveless crop top
+ * with gold trim over a bare team midriff. Spec (torso widths W, heights H,
+ * depths D): the trunk and its yoke hull are bare team skin (the head's); a
+ * flat white shell from .15H under the torso's centre to its top, 1.06W (or
+ * the yoke's width) x 1.08D; a gold hem band .07H tall standing 4% proud; a
+ * gold neck ring .5W across at the top; gold armhole bands .08W x .26H down
+ * each shoulder edge. All flat (unlit) and out of the glow. */
+export function chronoCropTop(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const W = tb.extendSize.x * 2 * s.x, H = tb.extendSize.y * 2 * s.y, D = tb.extendSize.z * 2 * s.z;
+  const cy = tm.position.y + tb.center.y * s.y, cz = tm.position.z + tb.center.z * s.z;
+  const mf = getMaterialFactory();
+  const whiteC = new Color3(1, 1, 1), white = mf.get("unlit", whiteC, { emissive: whiteC });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  const skin = body.headMesh.material ?? body.skinMaterial;
+  tm.material = skin;
+  const yoke = body.torso.getChildMeshes(true).find(m => m.name.endsWith("_yoke"));
+  if (yoke) yoke.material = skin;
+  const yb = yoke?.getBoundingInfo().boundingBox, ys = yoke?.scaling;
+  const SW = Math.max(W * 1.06, yb && ys ? yb.extendSize.x * 2 * ys.x * 1.04 : 0), SD = Math.max(D * 1.08, yb && ys ? yb.extendSize.z * 2 * ys.z * 1.04 : 0);
+  const out: Mesh[] = [];
+  const add = (m: Mesh, y: number, z: number, mat: Material): Mesh => { m.parent = body.torso; m.position.set(0, y, z); m.material = mat; out.push(m); return m; };
+  const hem = cy - H * 0.15, top = cy + H * 0.5;
+  add(MeshBuilder.CreateBox("chronoCropTop", { width: SW, height: top - hem, depth: SD }, scene), (hem + top) / 2, cz, white);
+  add(MeshBuilder.CreateBox("chronoCropHem", { width: SW * 1.04, height: H * 0.07, depth: SD * 1.04 }, scene), hem + H * 0.03, cz, gold);
+  const neck = add(MeshBuilder.CreateTorus("chronoCropNeck", { diameter: W * 0.5, thickness: H * 0.07, tessellation: 10 }, scene), top, cz, gold);
+  neck.scaling.z = D / W * 1.2;
+  for (const side of [-1, 1]) add(MeshBuilder.CreateBox("chronoCropArmhole", { width: W * 0.08, height: H * 0.26, depth: SD * 1.02 }, scene), top - H * 0.15, cz, gold).position.x = side * SW * 0.49;
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(tm);
+  return out;
+}
