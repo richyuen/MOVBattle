@@ -2995,13 +2995,14 @@ export class SimulationSystem {
       return;
     }
 
-    if (preset === "iconic_chronomancer") {
-      this._logAbility(attacker, "slow_dome", now, target.position);
-      this._applyAreaControl(target.position, Math.max(3.6, splashRadius + 1.1), attacker.team, damage * 0.72, knockback.scale(0.55 * controlStrength), now, 0.34, attacker.definition.statusDurationSeconds ?? 3.8);
-      if (this.visualEffects) {
-        this.visualEffects.spawnSmokePuff(target.position);
-        this.visualEffects.spawnSpellDome(target.position, Math.max(3.6, splashRadius + 1.1), new Color3(0.55, 0.62, 0.95));
-      }
+    // [S] 485 Time Ninja Gauntlets (card Weapons: one Time Ninja Projectile from each gauntlet, 150 damage, range 15): a bolt leaves the
+    // right wrist, then the left .25 s on; each flies straight to the man and strikes him alone (no dome)
+    if (preset === "iconic_chronomancer" && this.projectileSystem) {
+      [attacker.body.rightHand, attacker.body.leftHand].forEach((hand, k) => {
+        worldMatrixChain(hand);
+        this.projectileSystem!.spawnProjectile("time_bolt", hand.getAbsolutePosition().clone(), target, damage, knockback.scale(0.4), 0, attacker.team, this._units, undefined, k * 0.25, { originLift: 0, targetLift: 1, arc: .03 });
+      });
+      this._logAbility(attacker, "cast_time_bolts", now, target.position);
       return;
     }
 

@@ -83,7 +83,7 @@ const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, flet
  * (audit 457 blowdarter c.2: the dart flew as a full arrow).
  */
 const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
-export type ProjectileShape = "radiant_glaive" | "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
+export type ProjectileShape = "time_bolt" | "radiant_glaive" | "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -424,6 +424,7 @@ export class ProjectileSystem {
       case "aegis_orb": speed = 18; arcHeight = dist*.04; break;
       case "arbiter_light": speed = 18; arcHeight = dist*.16; break;
       case "radiant_glaive": speed = 25; arcHeight = dist*.05; break;
+      case "time_bolt": speed = 22; arcHeight = dist*.03; break;
       case "arrow":   speed = 35; arcHeight = dist * 0.08; break;
       case "small_arrow": speed = 35; arcHeight = dist * 0.08; break;
       case "blowdart": speed = 32; arcHeight = dist * 0.04; break;
@@ -768,6 +769,7 @@ export class ProjectileSystem {
         }
       }
 
+      if (p.shape === "time_bolt") { const face = p.mesh.getChildren().find((c) => c.name === "timeBoltFace") as TransformNode | undefined; if (face) face.rotation.z += dt * 14; }
       if (p.shape === "radiant_glaive") { const spin = p.mesh.getChildren().find((c) => c.name === "glaiveSpin") as TransformNode | undefined; if (spin) spin.rotation.y += dt * 22; }
       // Shuriken spin
       if (p.shape === "shuriken") {
@@ -1724,6 +1726,22 @@ export class ProjectileSystem {
         tail.position.z = -W.tail / 2;
         tail.material = mf.get("unlit", W.shell, { emissive: W.shell, alpha: 0.5 });
         tail.parent = root;
+        break;
+      }
+      case "time_bolt": {
+        // [S] 485 the Time Ninja Projectile: a glowing clock face .5 m across - pale gold rim, white dial, two dark hands - edge-first,
+        // its face to the side, rolling like a wheel as it flies
+        const face = new TransformNode("timeBoltFace", this._scene); face.parent = root; face.rotation.y = Math.PI / 2;
+        const rimC = new Color3(1.4, 1.0, .35), dialC = new Color3(1.5, 1.5, 1.4), handC = new Color3(.08, .1, .2);
+        const rim = MeshBuilder.CreateTorus("timeBoltRim", { diameter: .5, thickness: .07, tessellation: 12 }, this._scene);
+        rim.parent = face; rim.rotation.x = Math.PI / 2; rim.material = getMaterialFactory().get("unlit", rimC, { emissive: rimC });
+        const dial = MeshBuilder.CreateCylinder("timeBoltDial", { height: .03, diameter: .44, tessellation: 12 }, this._scene);
+        dial.parent = face; dial.rotation.x = Math.PI / 2; dial.material = getMaterialFactory().get("unlit", dialC, { emissive: dialC });
+        const ink = getMaterialFactory().get("unlit", handC, { emissive: handC });
+        for (const [len, ang] of [[.18, .4], [.12, 2.1]]) {
+          const hand = MeshBuilder.CreateBox("timeBoltHand", { width: .03, height: len, depth: .05 }, this._scene);
+          hand.parent = face; hand.rotation.z = ang; hand.position.set(-Math.sin(ang) * len / 2, Math.cos(ang) * len / 2, 0); hand.material = ink;
+        }
         break;
       }
       case "radiant_glaive": {
