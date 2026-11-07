@@ -4722,10 +4722,13 @@ export class ProceduralAnimator {
     // [S] 486: the Paladin stands tall on straight legs (good.righteous_paladin.red.png), found by his ponytail.
     const paladin = this._body.headMesh.getChildMeshes(true).some(m => m.name === "paladinPonytail");
     if (paladin) Object.assign(stance, { tilt: 0.02, stride: 0.14, crouch: 0, chin: 0, cock: 0 });
+    // [S] 487: the Radiant Glaive stands tall on straight legs (good.radiant_glaive.red.png), found by his gold helmet.
+    const glaive = this._body.headMesh.getChildMeshes(true).some(m => m.name === "radiantHelmCrown");
+    if (glaive) Object.assign(stance, { tilt: 0.02, stride: 0.14, crouch: 0, chin: 0, cock: 0 });
     return {
       square,
       wide,
-      lean: pharaoh || thor || superBoxer || wizard || devout || paladin ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
+      lean: pharaoh || thor || superBoxer || wizard || devout || paladin || glaive ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,
