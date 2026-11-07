@@ -3643,6 +3643,32 @@ function mammothEars(scene: Scene, neck: TransformNode, fur: Material, allMeshes
   }
 }
 /*
+ * [S] 489 the sacred elephant's ears (good.sacred_elephant.jpg: a smaller irregular hide flap on each side of the head, hanging close against the skull
+ * behind the eye, its top edge folded over outward; audit 481 a.2: ours were two large flat round discs flared off the head). Spec in neck units:
+ *   - the flap a jittered faceted plate ELEPHANT_EAR.tall high, .long front to back, .thick thick, its middle at (.out, .y, .z), swung only .flare rad
+ *     so it hugs the skull, hanging .droop rad off plumb, its back edge a little out;
+ *   - the fold a thinner jittered roll .foldTall high along the flap's top, set .foldOut further out and tipped .foldTip rad outward over it;
+ *   - both named "ear" so they take the elephant's hide (ELEPHANT_HIDE_PIECES), not a separate colour.
+ */
+const ELEPHANT_EAR = { tall: 0.62, long: 0.5, thick: 0.1, out: 0.64, y: -0.06, z: -0.06, flare: 0.3, droop: 0.12, jitter: 0.1,
+  foldTall: 0.16, foldLong: 0.46, foldThick: 0.07, foldOut: 0.06, foldTip: 0.6 };
+/** The sacred elephant's ears (spec at ELEPHANT_EAR). */
+function elephantEars(scene: Scene, neck: TransformNode, hide: Material, allMeshes: Mesh[]): void {
+  const E = ELEPHANT_EAR;
+  for (const side of [-1, 1]) {
+    const flap = MeshBuilder.CreateIcoSphere("ear", { radius: 1, subdivisions: 1, flat: true }, scene);
+    jitterVertices(flap, E.jitter, 83.7 + side, E.thick * 0.5, E.tall * 0.5, E.long * 0.5);
+    flap.rotation.set(0, -side * E.flare, side * E.droop);
+    flap.position.set(side * E.out, E.y, E.z);
+    flap.parent = neck; flap.material = hide; allMeshes.push(flap);
+    const fold = MeshBuilder.CreateIcoSphere("ear", { radius: 1, subdivisions: 1, flat: true }, scene);
+    jitterVertices(fold, E.jitter * 0.6, 91.1 + side, E.foldThick * 0.5, E.foldTall * 0.5, E.foldLong * 0.5);
+    fold.rotation.set(0, -side * E.flare, side * (E.droop + E.foldTip));
+    fold.position.set(side * (E.out + E.foldOut), E.y + E.tall * 0.42, E.z - 0.02);
+    fold.parent = neck; fold.material = hide; allMeshes.push(fold);
+  }
+}
+/*
  * [S] the mammoth's tusk paint (366; tribal.mammoth.blue.png: dull bone-tan tusks, not glowing ivory; from the tip back a team-coloured tip about a quarter of
  * the tusk, a short bare tan gap, a thin team stripe round the tusk, then tan to the root). The tusk's pieces are MAMMOTH_TUSK.tan, self-lit only .glow;
  * the last .tip pieces of each are the team tip; .gap pieces short of the tip a team ring .stripe of that piece long and .proud of its girth across
@@ -4008,14 +4034,7 @@ function buildMammoth(scene: Scene, color: Color3, hide: Color3 = MAMMOTH_HIDE, 
   // ── Ears (parented to neck): faceted fur fans flaring off the skull, not team slabs ──
   // [S] the mammoth's ears (367; spec at MAMMOTH_EAR): a small rounded fur flap on each side of the head behind the eye; the elephant keeps the fans below
   if (mammoth) mammothEars(scene, neck, shaggyFur, allMeshes);
-  else for (const side of [-1, 1]) {
-    const ear = MeshBuilder.CreateCylinder("ear", { height: 0.1, diameter: 0.95, tessellation: 7 }, scene);
-    ear.position.set(side * 0.74, 0.0, 0.0);
-    ear.scaling.set(0.8, 1, 1.1);
-    ear.rotation.x = Math.PI / 2;
-    ear.rotation.y = side * 0.55;
-    ear.parent = neck; ear.material = shaggyFur; allMeshes.push(ear);
-  }
+  else elephantEars(scene, neck, shaggyFur, allMeshes);
 
   // ── Legs (parented to leg joints) ──
   const legJoints: [TransformNode, TransformNode][] = [
