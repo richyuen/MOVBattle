@@ -32,22 +32,31 @@ export function devoutCirclet(scene: Scene, body: ArticulatedBody): Mesh[] {
   return [band, front, gem];
 }
 
-/** Arbiter's tall rounded team mitre, a broad gold forehead panel and inset
- * diamond; the crown rises about one head height above the brow. */
+/** [S] 488 (CONFIRM 487 a.2; good.divine_arbiter.red.png, .jpg): a pope's
+ * rounded team mitre, not a straight cylinder. Spec (head widths W, heights H,
+ * depths D): an egg-topped dome, the upper half of an ellipsoid 1.12W x 2H x
+ * 1.12D, its rim at .36H over the head's centre so it rises about one head
+ * height over the crown; a gold band round the rim 1.16W across, .16H tall; on
+ * the front a gold crown point .6W wide at the band rising .55H to a peak,
+ * tilted back to the dome, with a team diamond .24W x .32H in a gold frame. */
 export function arbiterMitre(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const b=body.headMesh.getBoundingInfo().boundingBox,W=b.extendSize.x*2,H=b.extendSize.y*2,D=b.extendSize.z*2;
   const cloth=getMaterialFactory().get("cloth",team,{emissive:team.scale(.12)});
   const c=new Color3(1,.7,.18),gold=getMaterialFactory().get("unlit",c,{emissive:c});
-  const hat=MeshBuilder.CreateCylinder("arbiterMitre",{height:H*1.05,diameterTop:W*.76,diameterBottom:W*1.15,tessellation:8},scene);
-  hat.parent=body.headMesh;hat.position.copyFrom(b.center);hat.position.y+=H*.92;hat.scaling.z=D/W;hat.material=cloth;
-  const cap=MeshBuilder.CreateSphere("arbiterMitreCrown",{diameterX:W*.77,diameterY:H*.36,diameterZ:D*.77,segments:6},scene);
-  cap.parent=body.headMesh;cap.position.copyFrom(hat.position);cap.position.y+=H*.52;cap.material=cloth;
-  const panel=ornament(scene,"arbiterMitreForehead",[[-W*.39,0],[-W*.36,H*.55],[-W*.24,H*.77],[0,H*.88],[W*.24,H*.77],[W*.36,H*.55],[W*.39,0]],D*.12,body.headMesh,gold);
-  panel.position.set(b.center.x,b.center.y+H*.31,b.center.z+D*.6);
-  const jewel=ornament(scene,"arbiterMitreDiamond",[[0,H*.12],[-W*.1,0],[0,-H*.12],[W*.1,0]],D*.07,body.headMesh,cloth);
-  jewel.position.copyFrom(panel.position);jewel.position.y+=H*.38;jewel.position.z+=D*.08;
-  for(const m of [hat,cap,panel,jewel]) { m.convertToFlatShadedMesh();scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
-  return [hat,cap,panel,jewel];
+  const rim=b.center.y+H*.36;
+  const hat=MeshBuilder.CreateSphere("arbiterMitre",{diameterX:W*1.12,diameterY:H*2,diameterZ:D*1.12,segments:5,slice:.5},scene);
+  hat.parent=body.headMesh;hat.position.set(b.center.x,rim,b.center.z);hat.material=cloth;
+  const band=MeshBuilder.CreateCylinder("arbiterMitreBand",{height:H*.16,diameter:W*1.16,tessellation:10},scene);
+  band.parent=body.headMesh;band.position.set(b.center.x,rim+H*.05,b.center.z);band.scaling.z=D/W;band.material=gold;
+  const front=b.center.z+D*.56;
+  const panel=ornament(scene,"arbiterMitreForehead",[[-W*.3,0],[W*.3,0],[W*.3,H*.26],[0,H*.55],[-W*.3,H*.26]],D*.1,body.headMesh,gold);
+  panel.position.set(b.center.x,rim-H*.03,front+D*.04);panel.rotation.x=-.28;
+  const frame=ornament(scene,"arbiterMitreDiamondFrame",[[0,H*.2],[-W*.15,0],[0,-H*.2],[W*.15,0]],D*.06,panel,gold);
+  frame.position.set(0,H*.26,D*.06);
+  const jewel=ornament(scene,"arbiterMitreDiamond",[[0,H*.16],[-W*.12,0],[0,-H*.16],[W*.12,0]],D*.06,panel,cloth);
+  jewel.position.set(0,H*.26,D*.1);
+  for(const m of [hat,band]) { m.convertToFlatShadedMesh();scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return [hat,band,panel,frame,jewel];
 }
 
 /** Paladin's open face has a center part, long grey side locks, a tied
