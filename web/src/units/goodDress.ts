@@ -151,40 +151,68 @@ export function aegisButterflyHair(scene: Scene, body: ArticulatedBody, team: Co
   return out;
 }
 
-/** [S] 483, good.divine_arbiter.blue.png: a broad gold flower collar cups
- * the neck. Its low front forms a V under the chin; side/back petals lift to
- * the cheeks. Ten closed pentagonal slabs flare from .35 head widths at the
- * throat to 1.3 at the rim (2.6 widths across), with pointed raised tips. */
+/** Closed solid from quads given as [inner, outer] vertex rings; each triangle is wound so its
+ * Babylon face normal ((a-b)x(c-b)) points along `out(centroid)`, so the shell has no back faces. */
+function solidFromTris(scene: Scene, name: string, tris: number[][][], out: (c: number[]) => number[]): Mesh {
+  const positions: number[] = [], indices: number[] = [];
+  for (const [a, b, c] of tris) {
+    const u = [a[0] - b[0], a[1] - b[1], a[2] - b[2]], v = [c[0] - b[0], c[1] - b[1], c[2] - b[2]];
+    const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    const o = out([(a[0] + b[0] + c[0]) / 3, (a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3]);
+    const flip = n[0] * o[0] + n[1] * o[1] + n[2] * o[2] < 0;
+    const base = positions.length / 3;
+    for (const p of flip ? [a, c, b] : [a, b, c]) positions.push(p[0], p[1], p[2]);
+    indices.push(base, base + 1, base + 2);
+  }
+  const normals: number[] = []; VertexData.ComputeNormals(positions, indices, normals);
+  const data = new VertexData(); Object.assign(data, { positions, indices, normals });
+  const mesh = new Mesh(name, scene); data.applyToMesh(mesh); return mesh;
+}
+
+/** [R] 490 good.divine_arbiter.a (robe rebuild, blockers 1-3; CONFIRM 487/488 lists).
+ * Spec read off good.divine_arbiter.red.png/.blue.png (front view, ~945 px tall):
+ * - Collar: one smooth gold Medici collar, not separate petals. It closes in a V under the chin
+ *   and rises round the head into two broad wings whose outer corners stand at eye level about
+ *   1.6 head widths out each side (collar ~3.2 head widths across, wider than the shoulders); the
+ *   back rim reaches the top of the head. Spec (head widths W, heights H, neck frame, angle a from
+ *   the front): throat ring .45W at -.05H; rim radius W*(.8 + .8*exp(-((|a|-95deg)/40deg)^2));
+ *   rim height H*min(1, ((|a|-30deg)/65deg)^.8), 0 inside 30deg of the chin (the V), so the wings
+ *   rise beside the face, not over it; 30 facets, .07W thick, closed.
+ * - Sleeves: a faceted balloon on each upper arm, ~4.6 arm radii across at its widest, from the
+ *   shoulder to just above the elbow, so the shoulders stand past the torso; the forearm a team
+ *   sleeve 1.7r to .45 of its length, then the flared yellow glove cuff (unchanged).
+ * - Coat: the skirt stops at the knee (the hem anchored to the knee joint, not a share of the
+ *   thigh mesh, which runs past it), wide open at the front from the belt so the grey legs show
+ *   between the panels; panels flare to an A-line: back 1.15P -> 2.1P, fronts .1P->.55P inner,
+ *   .62P->1.2P outer, tilted out; gold bands on every hem and the split. Grey legs, skin feet. */
 export function arbiterPetalCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
   const box = body.headMesh.getBoundingInfo().boundingBox;
   const W = box.extendSize.x * 2, H = box.extendSize.y * 2;
   const goldColor = new Color3(0.85, 0.55, 0.12);
   const gold = getMaterialFactory().get("unlit", goldColor, { emissive: goldColor });
-  const out: Mesh[] = [], count = 10, step = Math.PI * 2 / count;
-  const point = (a: number, r: number, y: number): number[] => [Math.sin(a) * r, y, Math.cos(a) * r];
-  for (let k = 0; k < count; k++) {
-    const a = k * step, left = a - step * 0.51, right = a + step * 0.51;
-    const lift = H * (0.13 + 0.48 * (1 - Math.cos(a)));
-    const rim = W * (1.2 + 0.1 * (1 - Math.cos(a)) / 2);
-    const polygon = [point(left, W * 0.35, -H * 0.07), point(left, rim * 0.92, lift - H * 0.12),
-      point(a, rim, lift + H * 0.05), point(right, rim * 0.92, lift - H * 0.12), point(right, W * 0.35, -H * 0.07)];
-    const positions: number[] = [], indices: number[] = [];
-    for (const offset of [H * 0.03, -H * 0.03]) for (const p of polygon) positions.push(p[0], p[1] + offset, p[2]);
-    // The upper and lower faces are separate, outward-facing solid surfaces,
-    // rather than a double-sided ribbon that produces SSAO cloth darkening.
-    for (let j = 1; j < 4; j++) indices.push(0, j, j + 1, 5, j + 6, j + 5);
-    for (let j = 0; j < 5; j++) {
-      const next = (j + 1) % 5;
-      indices.push(j, next + 5, next, j, j + 5, next + 5);
-    }
-    const normals: number[] = [];
-    VertexData.ComputeNormals(positions, indices, normals);
-    const data = new VertexData(); data.positions = positions; data.indices = indices; data.normals = normals;
-    const petal = new Mesh("arbiterGoldCollarPetal", scene); data.applyToMesh(petal);
-    petal.parent = body.neck; petal.material = gold; petal.convertToFlatShadedMesh();
-    scene.getGlowLayerByName("glow")?.addExcludedMesh(petal); out.push(petal);
+  const N = 30, t = W * 0.07, deg = Math.PI / 180;
+  const ring = (a: number, r: number, y: number): number[] => [Math.sin(a) * r, y, Math.cos(a) * r];
+  const rimR = (a: number) => W * (0.8 + 0.8 * Math.exp(-(((Math.abs(a) - 95 * deg) / (40 * deg)) ** 2)));
+  const rimH = (a: number) => H * Math.min(1, Math.max(0, (Math.abs(a) - 30 * deg) / (65 * deg)) ** 0.8) - H * 0.05;
+  const r0 = W * 0.45, y0 = -H * 0.05;
+  const tris: number[][][] = [];
+  for (let k = 0; k < N; k++) {
+    const a0 = -Math.PI + k * 2 * Math.PI / N, a1 = a0 + 2 * Math.PI / N;
+    const ib0 = ring(a0, r0, y0), ib1 = ring(a1, r0, y0), ir0 = ring(a0, rimR(a0), rimH(a0)), ir1 = ring(a1, rimR(a1), rimH(a1));
+    const ob0 = ring(a0, r0 + t, y0 - t * 0.3), ob1 = ring(a1, r0 + t, y0 - t * 0.3), or0 = ring(a0, rimR(a0) + t, rimH(a0) - t * 0.6), or1 = ring(a1, rimR(a1) + t, rimH(a1) - t * 0.6);
+    tris.push([ib0, ir0, ir1], [ib0, ir1, ib1], [ob0, or0, or1], [ob0, or1, ob1], [ir0, or0, or1], [ir0, or1, ir1], [ib0, ob0, ob1], [ib0, ob1, ib1]);
   }
-  return out;
+  // Outward: the outer layer faces away from the axis, the inner layer toward it, the rim up, the throat down.
+  const outer = (c: number[]) => {
+    const a = Math.atan2(c[0], c[2]), rc = Math.hypot(c[0], c[2]), ri = r0 + (rimR(a) - r0) * Math.max(0, Math.min(1, (c[1] - y0) / Math.max(1e-4, rimH(a) - y0)));
+    if (c[1] > rimH(a) - t * 0.9) return [0, 1, 0];
+    if (c[1] < y0 + t * 0.05 && rc < r0 + t * 1.1) return [0, -1, 0];
+    return rc > ri + t * 0.5 ? [c[0], 0, c[2]] : [-c[0], 0, -c[2]];
+  };
+  const collar = solidFromTris(scene, "arbiterGoldCollar", tris, outer);
+  collar.parent = body.neck; collar.material = gold; collar.convertToFlatShadedMesh();
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(collar);
+  return [collar];
 }
 
 /** [S] 485, good.devout_gauntlet.blue.png: pale grey cloth wraps cover the
@@ -749,15 +777,14 @@ export function arbiterRobe(scene: Scene, body: ArticulatedBody, team: Color3): 
   for (const m of body.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = robe;
   const out: Mesh[] = [];
   for (const [upperArm, lowerArm, hand] of [[body.leftUpperArm, body.leftLowerArm, body.leftHand], [body.rightUpperArm, body.rightLowerArm, body.rightHand]] as const) {
-    out.push(limbShell(scene, "arbiterSleeveUpper", upperArm, 0, 0.75, 1.75, robe));
+    // [R] 490: the balloon puff sits on the upper arm (shoulder to just above the elbow), where the
+    // idle camera sees it past the book, instead of elbow puffs hidden behind the book.
     const U = limbBox(upperArm), L = limbBox(lowerArm), r = Math.max(U.wide, U.deep, L.wide, L.deep);
-    const elbowTop = U.mid + U.half - U.half * 2 * 0.7, elbow = U.mid - U.half;
-    const swell = MeshBuilder.CreateCylinder("arbiterElbowPuff", { height: elbowTop - elbow, diameterTop: r * 3.5, diameterBottom: r * 5, tessellation: 8 }, scene);
-    swell.parent = upperArm.parent; swell.position.y = (elbowTop + elbow) / 2; swell.material = robe; out.push(swell);
-    const L0 = L.mid + L.half, lPuff = L.half * 2 * 0.25;
-    const tuck = MeshBuilder.CreateCylinder("arbiterElbowPuffLower", { height: lPuff, diameterTop: r * 5, diameterBottom: r * 3.2, tessellation: 8 }, scene);
-    tuck.parent = lowerArm.parent; tuck.position.y = L0 - lPuff / 2; tuck.material = robe; out.push(tuck);
-    out.push(limbShell(scene, "arbiterSleeveFore", lowerArm, 0.2, 0.45, 1.5, robe));
+    const uTop = U.mid + U.half + U.half * 2 * 0.08, uBot = U.mid + U.half - U.half * 2 * 0.88;
+    const balloon = MeshBuilder.CreateSphere("arbiterSleeveBalloon", { diameterX: r * 5.2, diameterZ: r * 4.6, diameterY: uTop - uBot, segments: 3 }, scene);
+    balloon.parent = upperArm.parent; balloon.position.y = (uTop + uBot) / 2; balloon.material = robe; out.push(balloon);
+    const L0 = L.mid + L.half;
+    out.push(limbShell(scene, "arbiterSleeveFore", lowerArm, 0, 0.45, 1.7, robe));
     const gTop = L0 - L.half * 2 * 0.45, gBot = L.mid - L.half;
     const cuff = MeshBuilder.CreateCylinder("arbiterGloveCuff", { height: gTop - gBot, diameterTop: r * 3.4, diameterBottom: r * 4.4, tessellation: 6 }, scene);
     cuff.parent = lowerArm.parent; cuff.position.y = (gTop + gBot) / 2; cuff.material = glove; out.push(cuff);
@@ -782,8 +809,10 @@ export function arbiterCoatSkirt(scene: Scene, body: ArticulatedBody, team: Colo
   const robe = mf.get("cloth", team, { emissive: team.scale(0.12) });
   const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
   const greyC = new Color3(0.62, 0.64, 0.68), grey = mf.get("unlit", greyC, { emissive: greyC });
-  const P = limbBox(pelvis), PW = P.wide * 2, PD = P.deep * 2, T = limbBox(body.leftUpperLeg);
-  const top = P.mid + P.half, len = top - (body.leftHip.position.y - T.half * 2 * 0.85), band = len * 0.07, t = PD * 0.06;
+  const P = limbBox(pelvis), PW = P.wide * 2, PD = P.deep * 2;
+  // [R] 490: the hem sits just above the knee joint (hip frame), not at a share of the thigh mesh.
+  const kneeY = body.leftHip.position.y + body.leftKnee.position.y * body.leftHip.scaling.y;
+  const top = P.mid + P.half, len = top - (kneeY + PD * 0.25), band = len * 0.07, t = PD * 0.06;
   pelvis.material = robe;
   const out: Mesh[] = [];
   const panel = (name: string, pts: number[][], mat: Material, x: number, z: number, rx: number, ry = 0, rz = 0, depth = t): Mesh => {
@@ -794,16 +823,16 @@ export function arbiterCoatSkirt(scene: Scene, body: ArticulatedBody, team: Colo
   const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
   const k = 1 - band / len;
   const back = -PD * 0.56;
-  panel("arbiterSkirtBack", trap(-PW * 0.575, -PW * 0.95, PW * 0.575, PW * 0.95), robe, 0, back, 0.2);
-  panel("arbiterSkirtBackHem", trap(-PW * lerp(0.575, 0.95, k), -PW * 0.96, PW * lerp(0.575, 0.95, k), PW * 0.96, -len * k), gold, 0, back - t, 0.2, 0, 0, t * 1.2);
+  panel("arbiterSkirtBack", trap(-PW * 0.575, -PW * 1.05, PW * 0.575, PW * 1.05), robe, 0, back, 0.28);
+  panel("arbiterSkirtBackHem", trap(-PW * lerp(0.575, 1.05, k), -PW * 1.06, PW * lerp(0.575, 1.05, k), PW * 1.06, -len * k), gold, 0, back - t, 0.28, 0, 0, t * 1.2);
   const front = PD * 0.56;
   for (const side of [-1, 1]) {
-    const inner = (y: number) => side * PW * lerp(0.12, 0.35, y), outer = (y: number) => side * PW * lerp(0.6, 1.0, y);
-    panel("arbiterSkirtFront", trap(inner(0), inner(1), outer(0), outer(1)), robe, 0, front, -0.2);
-    panel("arbiterSkirtFrontHem", trap(inner(k), inner(1), outer(k), outer(1) * 1.01, -len * k), gold, 0, front + t, -0.2, 0, 0, t * 1.2);
+    const inner = (y: number) => side * PW * lerp(0.1, 0.55, y), outer = (y: number) => side * PW * lerp(0.62, 1.2, y);
+    panel("arbiterSkirtFront", trap(inner(0), inner(1), outer(0), outer(1)), robe, 0, front, -0.24);
+    panel("arbiterSkirtFrontHem", trap(inner(k), inner(1), outer(k), outer(1) * 1.01, -len * k), gold, 0, front + t, -0.24, 0, 0, t * 1.2);
     const w = PW * 0.07;
-    panel("arbiterSkirtSplitHem", trap(inner(0), inner(1), inner(0) + side * w, inner(1) + side * w), gold, 0, front + t, -0.2, 0, 0, t * 1.2);
-    panel("arbiterSkirtSide", trap(-PD * 0.55, -PD * 0.85, PD * 0.55, PD * 0.85), robe, side * PW * 0.58, 0, 0, side * Math.PI / 2, side * 0.25);
+    panel("arbiterSkirtSplitHem", trap(inner(0), inner(1), inner(0) + side * w, inner(1) + side * w), gold, 0, front + t, -0.24, 0, 0, t * 1.2);
+    panel("arbiterSkirtSide", trap(-PD * 0.55, -PD * 0.95, PD * 0.55, PD * 0.95), robe, side * PW * 0.58, 0, 0, side * Math.PI / 2, side * 0.32);
   }
   for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) thigh.material = grey;
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) shin.material = grey;
