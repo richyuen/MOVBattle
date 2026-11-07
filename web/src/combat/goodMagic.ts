@@ -15,7 +15,8 @@ export function aegisField(root0: TransformNode): TransformNode {
   root.parent = root0; root.position.y = 1.7;
   const glass = new StandardMaterial("aegisGlass",scene);
   glass.diffuseColor = new Color3(1,.86,.32); glass.emissiveColor = new Color3(1,.84,.36);
-  glass.alpha=.7; glass.backFaceCulling=false; glass.disableLighting=true;
+  // only the outer shell: its inner faces read their fresnel as all rim and filled the bubble brown (look 488)
+  glass.alpha=.7; glass.backFaceCulling=true; glass.disableLighting=true;
   // the rim: opaque-ish yellow at the edge, all but clear face-on
   glass.opacityFresnelParameters = new FresnelParameters({ leftColor: Color3.White(), rightColor: new Color3(.03,.03,.03), bias: 0, power: 2.6 });
   glass.emissiveFresnelParameters = new FresnelParameters({ leftColor: new Color3(1,.86,.4), rightColor: new Color3(.5,.42,.16), bias: 0, power: 1.4 });
