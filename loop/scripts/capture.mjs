@@ -801,6 +801,21 @@ async function main() {
             } else window.game.frameCamera(cam.target, cam.radius, -0.25, Math.PI / 2.25);
           }, `gallery_faction_${faction}`);
           await shot(page, `lineup_${faction}`);
+          // [evidence 485] lineup_good crops the Chronomancer and the elephant's rider at its right edge: a supplementary wide shot of the same
+          // rank, aimed at the rank's middle and pulled back so every man is whole (lineup_good itself is unchanged)
+          if (faction === "good") {
+            await page.evaluate(() => {
+              // the Chronomancer's slot (1.8 m past the elephant) lies inside the elephant's bulk: he steps 4.5 m on along the rank
+              const chrono = window.game.listLiveUnits().find((u) => u.definition.id === "good.chronomancer");
+              if (chrono) { const p = chrono.body.root.position.clone(); p.z += 4.5; p.x += 1; chrono.teleportTo(p); chrono.holdHeading(Math.PI / 2 - 0.35); }
+              window.advanceTime(50);
+              const cam = window.game.getGalleryCamera("gallery_faction_good");
+              const zs = window.game.listLiveUnits().filter((u) => !u.linkedParent).map((u) => u.body.root.position.z);
+              const lo = Math.min(...zs) - 1, hi = Math.max(...zs) + 4;
+              window.game.frameCamera({ ...cam.target, z: (lo + hi) / 2, y: cam.target.y + 1.2 }, cam.radius * 1.7, -0.25, Math.PI / 2.25);
+            });
+            await shot(page, "lineup_good_wide");
+          }
         }
       }
       await page.evaluate(() => {
