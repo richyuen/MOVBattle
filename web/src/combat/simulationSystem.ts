@@ -1706,6 +1706,22 @@ export class SimulationSystem {
       }
       return;
     }
+    // [S] 485 the Sacred Elephant's rider throws his two spears in turn (card Characteristics: "throws two deadly spears"); the empty fist is
+    // re-armed .rearm s on. Each lands with a pull on the men round it (ProjectileSystem SPEAR_SUCK). The elephant walks and stomps meanwhile.
+    if (unit.definition.id === "good.sacred_elephant") {
+      const spears = unit.body.root.getChildMeshes(false).filter((m) => m.name === "elephantRiderSpear");
+      for (const s of spears) if (!s.isEnabled() && now >= (this._spearBack.get(s) ?? 0)) s.setEnabled(true);
+      const ready = spears.find((s) => s.isEnabled());
+      if (ready && canAttack && distance <= 16 && now >= (this._spearReady.get(unit) ?? 0) && this.projectileSystem) {
+        this._spearReady.set(unit, now + 1.2);
+        worldMatrixChain(ready);
+        const from = ready.getAbsolutePosition().clone();
+        const dir = enemy.position.subtract(unit.position); dir.y = 0; dir.normalize();
+        this.projectileSystem.spawnProjectile("spear", from, enemy, attackProfile.damage * (unit.definition.damageMultiplier ?? 1) * 0.5, dir.scale(4), 0, unit.team, this._units, undefined, 0, { originLift: 0, targetLift: 1, suck: "good.sacred_elephant" });
+        ready.setEnabled(false); this._spearBack.set(ready, now + 3);
+        this._logAbility(unit, "throw_spear", now, enemy.position);
+      }
+    }
     // [S] 485 Shockwave Hammer: once in reach the Paladin raises his arm and a giant hammer smashes onto the man (PALADIN_HAMMER)
     if (unit.definition.id === "good.righteous_paladin" && canAttack && distance <= PALADIN_HAMMER.reach && now >= (this._hammerReady.get(unit) ?? 0)) {
       this._hammerReady.set(unit, now + PALADIN_HAMMER.cooldown);
@@ -3416,6 +3432,8 @@ export class SimulationSystem {
   /** [S] 485 when a Radiant Glaive's thrown glaive is back in his fist (world seconds). */
   private _glaiveBack = new WeakMap<RuntimeUnit, number>();
   private _hammerReady = new WeakMap<RuntimeUnit, number>();
+  private _spearReady = new WeakMap<RuntimeUnit, number>();
+  private _spearBack = new WeakMap<object, number>();
   private _hammers: { unit: RuntimeUnit; hinge: TransformNode; at: Vector3; t0: number; damage: number; dir: Vector3; struck: boolean }[] = [];
 
   /** PALADIN_HAMMER: the summoned hammer hangs raised for .hang s, falls through .fall s onto its man, hurts every enemy within .radius m

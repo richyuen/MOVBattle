@@ -126,6 +126,7 @@ interface ActiveProjectile {
   snake?: boolean;
   bounces?: number;
   bounced?: RuntimeUnit[];
+  suck?: string;
   /** Dodged (Painter Dodge): it no longer follows its man and comes down where he stood; it strikes him only if he is still there. */
   loose?: boolean;
 }
@@ -237,6 +238,8 @@ interface ProjectileSpawnOptions {
   /** [S] 485 A radiant glaive: hops left after this hit, and the men it has already struck (RADIANT_BOUNCE). */
   bounces?: number;
   bounced?: RuntimeUnit[];
+  /** [S] 485 A sucking spear, carrying its thrower's unit id: where it lands it pulls the men round it in (SPEAR_SUCK). */
+  suck?: string;
   /** Seconds of flight in place of the shape's own speed (a slow lob). */
   flight?: number;
 }
@@ -522,7 +525,7 @@ export class ProjectileSystem {
       targetLift: options.targetLift ?? 0.5,
       balloons: options.balloons, fireArrow: options.fireArrow && shape === "arrow", drunk: options.drunk, snake: options.snake && shape === "arrow" && !held,
       trailSystem, trailStarted,
-      half: held?.half, bounces: options.bounces, bounced: options.bounced,
+      half: held?.half, bounces: options.bounces, bounced: options.bounced, suck: options.suck,
       rope: options.tether ? this._buildRope() : undefined,
       tether: options.tether,
       hover: options.hover,
@@ -963,6 +966,20 @@ export class ProjectileSystem {
     return true;
   }
 
+  /** [S] 485 SPEAR_SUCK (card good.sacred_elephant: "sucking nearby units and doing minor damage"): every other enemy within .radius m of
+   * the landing is hauled .pull toward it and takes .minor of the spear's damage; a gold dome of the radius flashes there. */
+  private _spearSuck(p: ActiveProjectile): void {
+    const S = { radius: 3.5, pull: 7, minor: 0.1 };
+    this.visualEffects?.spawnSpellDome(p.targetPos, S.radius, new Color3(1, 0.8, 0.3));
+    for (const u of p.allUnits) {
+      if (u.isDead || u.team === p.attackerTeam || u === p.target) continue;
+      const to = p.targetPos.subtract(u.position); to.y = 0;
+      const d = to.length(); if (d > S.radius || d < 1e-3) continue;
+      u.applyDamage(p.damage * S.minor, to.scale(S.pull / d).add(new Vector3(0, 1, 0)));
+    }
+    this.abilityHook?.(p.suck!, "spear_suck", p.targetPos);
+  }
+
   /**
    * [S] 485 RADIANT_BOUNCE (card Characteristics: "its projectile can bounce between units ... the higher [the weight], the less it will bounce"):
    * the glaive strikes its man, then flies on from him to the nearest enemy it has not struck within .reach m, .hops times at most; a heavy man
@@ -992,6 +1009,7 @@ export class ProjectileSystem {
 
   private _onImpact(p: ActiveProjectile): void {
     if (p.shape === "radiant_glaive") { this._radiantBounce(p); return; }
+    if (p.suck) this._spearSuck(p);
     if(p.shape==="arbiter_light") {
       this.visualEffects?.spawnDivineRay(p.targetPos);
       // The ray, rather than the missile, hurts everyone in its footprint.
