@@ -487,7 +487,7 @@ export function radiantVest(scene: Scene, body: ArticulatedBody, team: Color3): 
     const len = Math.hypot(W * 0.25, H * 0.55);
     const edge = MeshBuilder.CreateBox("radiantVestTrim", { width: W * 0.05, height: len, depth: D * 0.06 }, scene);
     edge.parent = body.torso; edge.position.set(side * W * 0.13, top - H * 0.275, front + D * 0.01);
-    edge.rotation.z = side * Math.atan2(W * 0.25, H * 0.55); edge.material = gold; out.push(edge);
+    edge.rotation.z = -side * Math.atan2(W * 0.25, H * 0.55); edge.material = gold; out.push(edge);
   }
   const hem = MeshBuilder.CreateBox("radiantVestHem", { width: W * 1.06, height: H * 0.1, depth: D * 1.08 }, scene);
   hem.parent = body.torso; hem.position.set(0, cy - H * 0.45, cz); hem.material = gold; out.push(hem);
