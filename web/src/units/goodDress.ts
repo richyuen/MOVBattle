@@ -542,10 +542,12 @@ export function aegisHoodie(scene: Scene, body: ArticulatedBody, team: Color3): 
   const W = tb.extendSize.x * 2 * s.x, H = tb.extendSize.y * 2 * s.y, D = tb.extendSize.z * 2 * s.z;
   const cy = tm.position.y + tb.center.y * s.y, cz = tm.position.z + tb.center.z * s.z;
   const mf = getMaterialFactory();
-  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  // 487: a flat deeper team than the glowing skin (blue.png: the hoodie reads darker than the bare waist and arms).
+  const deep = team.scale(0.4), cloth = mf.get("unlit", deep, { emissive: deep });
   const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
   tm.material = body.leftUpperArm.material ?? body.skinMaterial;
-  for (const m of body.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = cloth;
+  // The _yoke hull spans the whole trunk: it is bare skin too, so only the shell below reads as cloth.
+  for (const m of body.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = tm.material;
   const out: Mesh[] = [];
   const add = (m: Mesh, y: number, z: number, mat: Material): Mesh => { m.parent = body.torso; m.position.set(0, y, z); m.material = mat; out.push(m); return m; };
   const hem = cy + H * 0.1, top = cy + H * 0.5;
