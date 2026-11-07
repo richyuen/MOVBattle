@@ -332,3 +332,51 @@ export function chronoCrown(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/** [S] 486, good.righteous_paladin.red.png/.blue.png: pale grey plate front
+ * and back over a team short-sleeve shirt. Spec (torso widths W, heights H,
+ * depths D): each plate is a slab .58D deep, 1.16W across at the waist, with
+ * sloped shoulder tops and a neck notch; the two leave a .04D slot over each
+ * shoulder, bridged by a brown band. On the front a gold device like the
+ * shield's: a hexagon ring round a hex boss with chevrons above and below.
+ * Team sleeves cover the upper arm to .55 of its length. */
+export function paladinCuirass(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const W = tb.extendSize.x * 2 * s.x, H = tb.extendSize.y * 2 * s.y, D = tb.extendSize.z * 2 * s.z;
+  const cy = tm.position.y + tb.center.y * s.y, cz = tm.position.z + tb.center.z * s.z;
+  const mf = getMaterialFactory();
+  const greyC = new Color3(0.8, 0.82, 0.84), plate = mf.get("unlit", greyC, { emissive: greyC });
+  const brownC = new Color3(0.43, 0.21, 0.14), strap = mf.get("unlit", brownC, { emissive: brownC });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  const shirt = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  tm.material = shirt;
+  for (const m of body.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = shirt;
+  const out: Mesh[] = [];
+  const outline = [[-0.56, -0.5], [-0.58, 0.3], [-0.47, 0.5], [-0.17, 0.53], [0, 0.45], [0.17, 0.53], [0.47, 0.5], [0.58, 0.3], [0.56, -0.5]].map(([x, y]) => [x * W, y * H]);
+  for (const side of [1, -1]) {
+    const slab = ornament(scene, "paladinCuirassPlate", outline, D * 0.58, body.torso, plate);
+    slab.position.set(0, cy, cz + side * D * 0.31); out.push(slab);
+  }
+  for (const side of [-1, 1]) {
+    const band = MeshBuilder.CreateBox("paladinShoulderStrap", { width: W * 0.2, height: H * 0.08, depth: D * 0.3 }, scene);
+    band.parent = body.torso; band.position.set(side * W * 0.32, cy + H * 0.52, cz); band.material = strap; out.push(band);
+  }
+  const face = cz + D * 0.6 + D * 0.02, t = D * 0.04;
+  const piece = (name: string, pts: number[][], y: number, mat: Material, z = face): void => {
+    const m = ornament(scene, name, pts.map(([x, py]) => [x * W, py * H]), t, body.torso, mat);
+    m.position.set(0, cy + y * H, z); out.push(m);
+  };
+  const hex = (r: number) => Array.from({ length: 6 }, (_, k) => [Math.cos(k * Math.PI / 3 + Math.PI / 6) * r, Math.sin(k * Math.PI / 3 + Math.PI / 6) * r * 0.9]);
+  piece("paladinCuirassRing", hex(0.2), 0.08, gold);
+  piece("paladinCuirassRingInset", hex(0.13), 0.08, plate, face + t);
+  piece("paladinCuirassBoss", hex(0.07), 0.08, gold, face + t * 2);
+  for (const [y, dir] of [[0.3, 1], [-0.16, -1]] as const) {
+    piece("paladinCuirassChevron", [[-0.32, 0], [0, dir * 0.13], [0.32, 0], [0.32, -dir * 0.07], [0, dir * 0.06], [-0.32, -dir * 0.07]], y, gold);
+  }
+  for (const upper of [body.leftUpperArm, body.rightUpperArm]) {
+    const sleeve = limbShell(scene, "paladinShortSleeve", upper, 0, 0.55, 1.35, shirt);
+    out.push(sleeve);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}

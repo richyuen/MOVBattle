@@ -24,7 +24,7 @@ import { skeletonBone, unglowBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
-import { aegisButterflyHair, arbiterMitre, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet } from "./goodDress";
+import { aegisButterflyHair, arbiterMitre, paladinCuirass, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
@@ -987,6 +987,8 @@ export class UnitFactory {
     if (definition.id === "good.righteous_paladin" && !shouldUseVehicleBody) {
       propMeshes.push(...dressPaladin(this._scene, body, propMeshes));
       propMeshes.push(...paladinHair(this._scene, body, teamColor));
+      // [S] 486 split grey cuirass, brown shoulder straps, gold device, team sleeves (goodDress)
+      propMeshes.push(...paladinCuirass(this._scene, body, teamColor));
     }
     if (definition.id === "medieval.healer" && !shouldUseVehicleBody) {
       const robe = hangSkirt(this._scene, body, "healerRobe", HEALER_ROBE.long, HEALER_ROBE.hem, getMaterialFactory().get("cloth", teamColor));
