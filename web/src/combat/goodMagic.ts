@@ -14,12 +14,13 @@ export function aegisField(root0: TransformNode): TransformNode {
   const scene = root0.getScene(), root = new TransformNode("aegisField", scene);
   root.parent = root0; root.position.y = 1.7;
   const glass = new StandardMaterial("aegisGlass",scene);
-  glass.diffuseColor = new Color3(1,.86,.32); glass.emissiveColor = new Color3(1,.84,.36);
+  glass.diffuseColor = new Color3(1,.86,.32); glass.emissiveColor = Color3.White();
   // only the outer shell: its inner faces read their fresnel as all rim and filled the bubble brown (look 488)
-  glass.alpha=.7; glass.backFaceCulling=true; glass.disableLighting=true;
-  // the rim: opaque-ish yellow at the edge, all but clear face-on
-  glass.opacityFresnelParameters = new FresnelParameters({ leftColor: Color3.White(), rightColor: new Color3(.03,.03,.03), bias: 0, power: 2.6 });
-  glass.emissiveFresnelParameters = new FresnelParameters({ leftColor: new Color3(1,.86,.4), rightColor: new Color3(.5,.42,.16), bias: 0, power: 1.4 });
+  // the opacity fresnel ADDS to alpha (Babylon: alpha += right*(1-t) + left*t), so the base is ~0: .04 face-on, ~.5 at the rim
+  glass.alpha=.01; glass.backFaceCulling=true; glass.disableLighting=true;
+  glass.opacityFresnelParameters = new FresnelParameters({ leftColor: new Color3(.5,.5,.5), rightColor: new Color3(.03,.03,.03), bias: 0, power: 3 });
+  // the emissive is multiplied by the fresnel colour: pale yellow at the rim, near white face-on
+  glass.emissiveFresnelParameters = new FresnelParameters({ leftColor: new Color3(1,.88,.45), rightColor: new Color3(1,.96,.8), bias: 0, power: 2 });
   const sphere=MeshBuilder.CreateSphere("aegisTransparentField",{diameter:6,segments:24},scene);
   sphere.parent=root;sphere.material=glass;sphere.isPickable=false;
   scene.getGlowLayerByName("glow")?.addExcludedMesh(sphere);
