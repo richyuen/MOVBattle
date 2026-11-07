@@ -383,9 +383,9 @@ export function paladinCuirass(scene: Scene, body: ArticulatedBody, team: Color3
 
 /** [S] 486, good.righteous_paladin.blue.png: puffed team trousers under three
  * pale plates down the front of each leg. Spec (limb half-widths w, depths d,
- * lengths L): thigh plate over the lower .6 of the thigh, 2.15w across with a
- * gold top band; a knee cop 2.2w across with a gold V and top bar; the shin
- * plate, the longest, from the knee to .95 of the shin, 2.25w across. Team
+ * lengths L): thigh plate over the lower .6 of the thigh, 1.7w across with a
+ * gold top band; a knee cop 1.8w across with a gold V and top bar; the shin
+ * plate, the longest, from the knee to .95 of the shin, 1.75w across. Team
  * cloth puffs out 1.6w above the thigh plate and behind the knee; brown
  * straps cross the back of the thigh once and the shin twice. */
 export function paladinLegArmour(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
@@ -409,18 +409,25 @@ export function paladinLegArmour(scene: Scene, body: ArticulatedBody, team: Colo
     const T = limbBox(thigh), S = limbBox(shin);
     out.push(limbShell(scene, "paladinPuffedThigh", thigh, 0, 0.45, 1.6, pants));
     out.push(limbShell(scene, "paladinPuffedKnee", shin, 0, 0.2, 1.3, pants));
-    const tTop = T.mid + T.half - T.half * 2 * 0.4, tBot = T.mid - T.half * 0.95, tH = tTop - tBot;
-    box("paladinThighPlate", hip, plate, T.wide * 2.15, tH, T.deep * 1.3, (tTop + tBot) / 2, T.deep * 0.5);
-    box("paladinThighGold", hip, gold, T.wide * 2.25, tH * 0.12, T.deep * 1.36, tTop - tH * 0.06, T.deep * 0.5);
-    box("paladinThighStrap", hip, strap, T.wide * 2.3, tH * 0.1, T.deep * 0.5, tBot + tH * 0.4, -T.deep * 0.75);
-    const kTop = S.mid + S.half, kw = S.wide * 2.2;
-    const cop = ornament(scene, "paladinKneeCop", [[-0.5, 0.25], [0.5, 0.25], [0.55, -0.2], [0, -0.5], [-0.55, -0.2]].map(([x, y]) => [x * kw, y * kw]), S.deep * 0.5, knee, plate);
-    cop.position.set(0, kTop - kw * 0.05, S.deep * 1.0); out.push(cop);
-    for (const side of [-1, 1]) box("paladinKneeGoldV", knee, gold, kw * 0.6, kw * 0.1, S.deep * 0.2, kTop - kw * 0.08, S.deep * 1.27, side * 0.55).position.x = side * kw * 0.24;
-    box("paladinKneeGoldBar", knee, gold, kw * 1.05, kw * 0.1, S.deep * 0.2, kTop + kw * 0.2, S.deep * 1.27);
-    const sTop = kTop - kw * 0.45, sBot = S.mid - S.half * 0.95, sH = sTop - sBot;
-    box("paladinShinPlate", knee, plate, S.wide * 2.25, sH, S.deep * 1.4, (sTop + sBot) / 2, S.deep * 0.4);
-    for (const at of [0.3, 0.7]) box("paladinShinStrap", knee, strap, S.wide * 2.35, sH * 0.07, S.deep * 0.5, sTop - sH * at, -S.deep * 0.65);
+    // [S] 487 (CONFIRM 486 a.2, red.png knees): every plate is narrower than
+    // its limb's spacing (thigh 1.7w, shin 1.75w), so the legs part; the thigh
+    // plate stops .2 of the thigh over the knee, leaving team cloth; each knee
+    // carries its own cop, a six-sided cap 1.8w across standing .9d proud,
+    // with two gold bars meeting in a V across its face under a gold top rim.
+    const tTop = T.mid + T.half - T.half * 2 * 0.4, tBot = T.mid - T.half * 0.6, tH = tTop - tBot;
+    box("paladinThighPlate", hip, plate, T.wide * 1.7, tH, T.deep * 1.3, (tTop + tBot) / 2, T.deep * 0.5);
+    box("paladinThighGold", hip, gold, T.wide * 1.8, tH * 0.12, T.deep * 1.36, tTop - tH * 0.06, T.deep * 0.5);
+    box("paladinThighStrap", hip, strap, T.wide * 1.85, tH * 0.1, T.deep * 0.5, tBot + tH * 0.4, -T.deep * 0.75);
+    const kTop = S.mid + S.half, kw = S.wide * 1.8, kz = S.deep * 0.75, kLen = S.deep * 0.9;
+    const cop = MeshBuilder.CreateCylinder("paladinKneeCop", { height: kLen, diameterBottom: kw, diameterTop: kw * 0.5, tessellation: 6 }, scene);
+    cop.parent = knee; cop.rotation.x = Math.PI / 2; cop.position.set(0, kTop - kw * 0.2, kz); cop.material = plate;
+    cop.convertToFlatShadedMesh(); out.push(cop);
+    const face = kz + kLen * 0.5;
+    for (const side of [-1, 1]) box("paladinKneeGoldV", knee, gold, kw * 0.55, kw * 0.12, S.deep * 0.25, kTop - kw * 0.12, face - S.deep * 0.12, side * 0.6).position.x = side * kw * 0.2;
+    box("paladinKneeGoldBar", knee, gold, kw * 1.02, kw * 0.1, kLen * 0.9, kTop + kw * 0.28, kz);
+    const sTop = kTop - kw * 0.55, sBot = S.mid - S.half * 0.95, sH = sTop - sBot;
+    box("paladinShinPlate", knee, plate, S.wide * 1.75, sH, S.deep * 1.4, (sTop + sBot) / 2, S.deep * 0.4);
+    for (const at of [0.3, 0.7]) box("paladinShinStrap", knee, strap, S.wide * 1.85, sH * 0.07, S.deep * 0.5, sTop - sH * at, -S.deep * 0.65);
   }
   for (const m of out) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
   return out;
