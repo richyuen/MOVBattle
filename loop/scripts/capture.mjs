@@ -640,7 +640,9 @@ async function main() {
         const charger = def.archetype === "charge_melee" || abilities.has("charge_impact") || abilities.has("jump_charge") || abilities.has("leap_attack");
         const support = def.archetype === "support_heal" || def.archetype === "support_buff";
         // a unit that lunges on first contact (the brawler) starts 5.5 m off, so the lunge has ground to cover (evidence 418)
-        const d = id === "legacy.dark_peasant" ? 2 : def.archetype === "artillery" ? 9 : charger ? 8 : abilities.has("lunge") ? 5.5 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
+        // [evidence 485] the elephant rider throws his spears from range (card Characteristics): from 2.5 m his man stood under the trunk and the
+        // spear's flight was a few pixels; from 8 m it crosses the open ground (only the motion shots re-frame)
+        const d = id === "good.sacred_elephant" ? 8 : id === "legacy.dark_peasant" ? 2 : def.archetype === "artillery" ? 9 : charger ? 8 : abilities.has("lunge") ? 5.5 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
         // Detection steps 6 ticks (one render) at a time; a logged event's frame comes from its world-time stamp, exact to the tick. Only the
         // projectile-count fallback (a missile with no fire log) is 6 ticks coarse.
         const det = await page.evaluate(({ id, d, support, want }) => {
