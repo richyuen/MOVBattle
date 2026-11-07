@@ -563,6 +563,12 @@ export function aegisHoodie(scene: Scene, body: ArticulatedBody, team: Color3): 
   add(MeshBuilder.CreateBox("aegisHoodieStrip", { width: W * 0.06, height: H * 0.3, depth: D * 0.06 }, scene), cy + H * 0.29, cz + SD * 0.53, gold);
   add(MeshBuilder.CreateCylinder("aegisHoodieToggle", { height: D * 0.08, diameter: W * 0.12, tessellation: 6 }, scene), cy + H * 0.42, cz + SD * 0.56, gold).rotation.x = Math.PI / 2;
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  // [S] 488 (CONFIRM 487 a.2, red.png: the hoodie ends over a slim bare waist):
+  // the bare trunk under the shell narrows to .76 of the shell's width and .8
+  // of its depth, so the hoodie's hem stands out over it as a step all round
+  // and the skin band between hem and waistband reads as a waist, not more top.
+  tm.scaling.x *= SW * 0.76 / W; tm.scaling.z *= SD * 0.8 / D;
+  if (yoke && yb && ys) { ys.x *= SW * 0.76 / (yb.extendSize.x * 2 * ys.x); ys.z *= SD * 0.8 / (yb.extendSize.z * 2 * ys.z); }
   return out;
 }
 
