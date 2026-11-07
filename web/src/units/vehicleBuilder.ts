@@ -4161,6 +4161,7 @@ const ELEPHANT_GEM = new Color3(0.16, 0.26, 0.85);
 const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "maneLock", "browPaint", "facePaint", "trunkDot", "paintDaub", "hump", "ankleStripe", "ankleDot"]);
 const ELEPHANT_HIDE_PIECES = new Set(["backRidge", "furHem", "ear", "legCuff", "trunk", "trunkTip"]);
 const TUSK_RING_PIECE = 4;
+const ELEPHANT_TRUNK = { root: [0, -0.12, 0.76], pitch: [0.55, 0.35, 0.2, 0.1, 0.05, 0.05, 0.15, 0.35], piece: 0.17, rootR: 0.27, tipR: 0.12, flare: 0.15 };
 const BLANKET_RADII = new Vector3(0.92, 0.8, 0.74);
 const BLANKET_AT = new Vector3(0, 0.16, -0.46);
 const THRONE_SEAT = new Vector3(0, 0.9, 0.12);
@@ -4186,6 +4187,19 @@ function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
     body.allMeshes.push(mesh);
     return mesh;
   };
+
+  // [S] 485 ELEPHANT_TRUNK (good.sacred_elephant.red.png): one continuous faceted tube in the hide replaces the eight separate pieces and
+  // their hooked tip. It leaves the face as wide as the gap between the eyes, hangs almost straight to just over the ground and turns only a
+  // little forward at its flared snout. Pitches from straight down (+ forward), pieces .piece long, radius .rootR easing to .tipR, end .flare.
+  const T = ELEPHANT_TRUNK;
+  body.allMeshes = body.allMeshes.filter((mesh) => {
+    if (mesh.name !== "trunk" && mesh.name !== "trunkTip") return true;
+    mesh.dispose(); return false;
+  });
+  const path = [new Vector3(T.root[0], T.root[1], T.root[2])];
+  for (const p of T.pitch) path.push(path[path.length - 1].add(new Vector3(0, -Math.cos(p) * T.piece, Math.sin(p) * T.piece)));
+  const last = path.length - 1;
+  add(MeshBuilder.CreateTube("trunk", { path, radiusFunction: (i) => (i >= last ? T.flare : T.rootR + (T.tipR - T.rootR) * (i / (last - 1))), tessellation: 8, cap: Mesh.CAP_ALL }, scene), body.neck, hide);
 
   // Tusks: ivory to the tip, a broad gold ring round each a third of the way out
   const tusks = body.allMeshes.filter((mesh) => mesh.name === "tusk");
