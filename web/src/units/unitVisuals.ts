@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet"
+  | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
   | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet";
 
 function vis(
@@ -859,6 +859,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   // ═══════════════════════ EVIL ═══════════════════════
   "evil.shadow_walker": vis(
     { scale: 1.0, bulk: 0.84, armLength: 1.12 }, "dagger", "none", "none", "cape", "#5A487A", "dagger", {
+      // [S] 489 (b.1, evil.shadow_walker.red.png): the curved bone dagger, held point-down, in his main hand
+      weaponVariant: "bone_dagger",
       posePreset: "duelist",
       materialPreset: "secret_ghost",
       attachmentPreset: "shadow_orbit",

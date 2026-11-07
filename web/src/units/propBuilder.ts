@@ -4063,6 +4063,40 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     ridge.parent = root; ridge.position.set(0, f * 2.2, f * 1.25); ridge.material = light;
     return root;
   }
+  if (variant === "bone_dagger") {
+    /*
+     * [S] 489 the Shadow Walker's dagger (evil.shadow_walker.red.png, .png; card Main Hand "Shadow Walker Dagger"): a long curved bone-tan blade
+     * held point-down out of the fist, about a forearm and a hand long, its edge swept forward into a hooked point, a row of short jagged teeth
+     * standing off its back (spine) edge, a dark wrapped grip in the fist. BONE_DAGGER in fit.stand: .long blade, .wide at its root, .curve
+     * forward sweep at the tip, .teeth spine teeth .tooth long; grip .grip fists. Built down -y from the fist (a reverse grip).
+     */
+    const D = { long: 0.42, wide: 0.075, thick: 0.022, curve: 0.11, segs: 5, teeth: 4, tooth: 0.05, grip: 2.4 };
+    const L = fit.stand * D.long, f = fit.fist, root = new Mesh("boneDagger", scene);
+    const bone = mat(scene, new Color3(0.62, 0.55, 0.36), 0.18, "cloth");
+    const wrap = mat(scene, new Color3(0.12, 0.08, 0.08), 0.05, "cloth");
+    const grip = MeshBuilder.CreateCylinder("boneDaggerGrip", { height: f * D.grip, diameter: f * 0.9, tessellation: 6 }, scene);
+    grip.parent = root; grip.material = wrap;
+    const pommel = MeshBuilder.CreateCylinder("boneDaggerPommel", { height: f * 0.7, diameterBottom: f * 1.4, diameterTop: 0, tessellation: 4 }, scene);
+    pommel.parent = root; pommel.position.y = f * D.grip * 0.5 + f * 0.35; pommel.material = bone;
+    // the blade: segments bending forward (+z) as they run down, each narrower, the last a point
+    let y = -f * D.grip * 0.5, z = 0;
+    for (let k = 0; k < D.segs; k++) {
+      const t0 = k / D.segs, t1 = (k + 1) / D.segs, h = L / D.segs;
+      const w0 = L * D.wide * (1 - t0 * 0.55), w1 = k === D.segs - 1 ? 0 : L * D.wide * (1 - t1 * 0.55);
+      const dz = L * D.curve * (t1 * t1 - t0 * t0);
+      const seg = MeshBuilder.CreateCylinder("boneDaggerBlade", { height: h * 1.04, diameterTop: w0, diameterBottom: w1, tessellation: 4 }, scene);
+      seg.scaling.x = D.thick / D.wide; seg.rotation.y = Math.PI / 4;
+      const tilt = new Mesh("boneDaggerBend", scene); tilt.parent = root; tilt.position.set(0, y - h / 2, z + dz / 2); tilt.rotation.x = -Math.atan2(dz, h);
+      seg.parent = tilt; seg.material = bone; seg.convertToFlatShadedMesh();
+      // a jagged tooth off the spine (-z), raked back up toward the grip
+      if (k < D.teeth) {
+        const tooth = MeshBuilder.CreateCylinder("boneDaggerTooth", { height: L * D.tooth, diameterBottom: L * 0.035, diameterTop: 0, tessellation: 4 }, scene);
+        tooth.parent = tilt; tooth.position.set(0, h * 0.1, -w0 * 0.42 - L * D.tooth * 0.3); tooth.rotation.x = -2.2; tooth.scaling.x = 0.4; tooth.material = bone;
+      }
+      y -= h; z += dz;
+    }
+    return root;
+  }
   if (variant === "radiant_glaive") {
     // Compact one-hand curved throwing blade, two opposed swept gold wings
     // and pale luminous inner edges (good.radiant_glaive.red.png).
