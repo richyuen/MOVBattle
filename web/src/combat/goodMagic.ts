@@ -2,42 +2,53 @@ import { Color3, FresnelParameters, MeshBuilder, StandardMaterial, TransformNode
 import { TEAM_COLORS } from "../data/factionColors";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 
-/** [S] 488 Aegis Shield (good.celestial_aegis.red.png, card Appearance): it
- * stands round her from spawn, not only once the battle runs. Spec: a
- * see-through sphere 6 m across (three units), centred 1.7 m up, clear where
- * it faces the eye and fading to a pale yellow rim at its silhouette (an
- * opacity and emissive fresnel, no drawn rings); no collision with bodies.
+/** [R] 489 Aegis Shield rebuild (good.celestial_aegis.red.png, reference/factions/good.jpg, card Appearance
+ * "see through shield with a faded yellow border"; six team-coloured orbs inside).
+ * Spec read off the renders:
+ * - a sphere 6 m across (three units), centred 1.7 m up, standing from spawn; no collision with bodies.
+ * - near-clear glass: everything behind and inside keeps its colour. Face-on alpha ~.02; the alpha stays
+ *   under ~.1 out to 90% of the disc radius and climbs to ~.6 only in the last few percent: a thin rim.
+ * - the rim is a faded pale yellow; face-on the (nearly invisible) tint is cream. No drawn rings.
+ * - six soft orbs at chest height, ~1.8 m out, in the team colour lifted a quarter toward white,
+ *   never over 1 in any channel (at 1.6x the blue team's orbs blew out white).
+ * Babylon fresnel term t = |n.v|^power is 1 face-on and 0 at the silhouette; the opacity fresnel ADDS
+ * left*(1-t) + right*t to alpha. A power under 1 keeps t near 1 until the very edge, so the rim is thin;
+ * at power 3 (488) half the disc sat at alpha .2-.5 and read as an opaque amber wash.
  * Built once per unit: a second call returns the field already on her root. */
+const AEGIS = { diameter: 6, lift: 1.7, power: .25, rimAlpha: .62, faceAlpha: .02,
+  rim: new Color3(1, .82, .3), face: new Color3(1, .97, .86), orbs: 6, orbOut: 1.8, orbBob: .45, orbR: .17, orbWhite: .25 };
 export function aegisField(root0: TransformNode): TransformNode {
   const had = root0.getChildren().find(n => n.name === "aegisField");
   if (had instanceof TransformNode) return had;
   const scene = root0.getScene(), root = new TransformNode("aegisField", scene);
-  root.parent = root0; root.position.y = 1.7;
-  const glass = new StandardMaterial("aegisGlass",scene);
-  glass.diffuseColor = new Color3(1,.86,.32); glass.emissiveColor = Color3.White();
-  // only the outer shell: its inner faces read their fresnel as all rim and filled the bubble brown (look 488)
-  // the opacity fresnel ADDS to alpha (Babylon: alpha += right*(1-t) + left*t), so the base is ~0: .04 face-on, ~.5 at the rim
-  glass.alpha=.01; glass.backFaceCulling=true; glass.disableLighting=true;
-  glass.opacityFresnelParameters = new FresnelParameters({ leftColor: new Color3(.5,.5,.5), rightColor: new Color3(.03,.03,.03), bias: 0, power: 3 });
-  // the emissive is multiplied by the fresnel colour: pale yellow at the rim, near white face-on
-  glass.emissiveFresnelParameters = new FresnelParameters({ leftColor: new Color3(1,.88,.45), rightColor: new Color3(1,.96,.8), bias: 0, power: 2 });
-  const sphere=MeshBuilder.CreateSphere("aegisTransparentField",{diameter:6,segments:24},scene);
-  sphere.parent=root;sphere.material=glass;sphere.isPickable=false;
+  root.parent = root0; root.position.y = AEGIS.lift;
+  const glass = new StandardMaterial("aegisGlass", scene);
+  // all colour from the emissive (diffuse black, unlit), so the sun and the IBL never tint the glass
+  glass.diffuseColor = Color3.Black(); glass.specularColor = Color3.Black(); glass.emissiveColor = Color3.White();
+  glass.alpha = 0; glass.backFaceCulling = true; glass.disableLighting = true;
+  const a = (v: number) => new Color3(v, v, v);
+  glass.opacityFresnelParameters = new FresnelParameters({ leftColor: a(AEGIS.rimAlpha), rightColor: a(AEGIS.faceAlpha), bias: 0, power: AEGIS.power });
+  glass.emissiveFresnelParameters = new FresnelParameters({ leftColor: AEGIS.rim, rightColor: AEGIS.face, bias: 0, power: AEGIS.power });
+  // only the outer shell: inner faces would read their fresnel as all rim (look 488)
+  const sphere = MeshBuilder.CreateSphere("aegisTransparentField", { diameter: AEGIS.diameter, segments: 32 }, scene);
+  sphere.parent = root; sphere.material = glass; sphere.isPickable = false;
   scene.getGlowLayerByName("glow")?.addExcludedMesh(sphere);
   return root;
 }
 
-/** Six team-light satellites float inside the field at chest height (from spawn; the battle spins them). */
+/** Six soft team-light satellites float inside the field at chest height (from spawn; the battle spins them). */
 export function aegisOrbits(root0: TransformNode, team: Color3): TransformNode {
   const had = root0.getChildren().find(n => n.name === "aegisOrbit");
   if (had instanceof TransformNode) return had;
-  const scene=root0.getScene(),root=new TransformNode("aegisOrbit",scene);
-  root.parent=root0;root.position.y=1.7;
-  const mat=new StandardMaterial("aegisOrbitLight",scene);
-  mat.emissiveColor=team.scale(1.6);mat.disableLighting=true;
-  for(let k=0;k<6;k++) {
-    const a=k*Math.PI/3,orb=MeshBuilder.CreateIcoSphere("aegisOrbitOrb",{radius:.17,subdivisions:1},scene);
-    orb.parent=root;orb.position.set(Math.sin(a)*1.8,Math.sin(a*2)*.45,Math.cos(a)*1.8);orb.material=mat;
+  const scene = root0.getScene(), root = new TransformNode("aegisOrbit", scene);
+  root.parent = root0; root.position.y = AEGIS.lift;
+  const mat = new StandardMaterial("aegisOrbitLight", scene);
+  const tint = Color3.Lerp(team, Color3.White(), AEGIS.orbWhite);
+  mat.diffuseColor = Color3.Black(); mat.specularColor = Color3.Black();
+  mat.emissiveColor = new Color3(Math.min(1, tint.r), Math.min(1, tint.g), Math.min(1, tint.b)); mat.disableLighting = true;
+  for (let k = 0; k < AEGIS.orbs; k++) {
+    const ang = k * 2 * Math.PI / AEGIS.orbs, orb = MeshBuilder.CreateSphere("aegisOrbitOrb", { diameter: AEGIS.orbR * 2, segments: 8 }, scene);
+    orb.parent = root; orb.position.set(Math.sin(ang) * AEGIS.orbOut, Math.sin(ang * 2) * AEGIS.orbBob, Math.cos(ang) * AEGIS.orbOut); orb.material = mat;
   }
   return root;
 }
