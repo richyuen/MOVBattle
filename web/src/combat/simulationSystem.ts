@@ -17,7 +17,7 @@ import { buildGroundSnake, type GroundSnake } from "../units/ancientDress";
 import { reaperSpear } from "../units/spookyDress";
 import { lassoRope } from "../units/wildWestDress";
 import { bearerReach } from "../units/legacyDress";
-import { aegisField, aegisOrbits } from "./goodMagic";
+import { aegisField, aegisOrbits, paladinGiantHammer } from "./goodMagic";
 
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
@@ -29,6 +29,8 @@ import { NavigationGrid } from "../map/navigation";
 const BEARER_AURA_KIND: Record<string, "haste" | "stay"> = { "legacy.flag_bearer": "haste", "legacy.banner_bearer": "stay" };
 /** [S] 465 a bearer is a melee man (his pole is his weapon, Stay Banner / Charge Flag): the ring's aura is a pulse of its own, every `every` s, held `holds` s. */
 const BEARER_PULSE = { every: 3, holds: 3.5 };
+// [S] 485 Shockwave Hammer (SimulationSystem._stepHammers): reach m, cooldown s, power x the mace blow, splash radius m, push, daze s, hinge angles rad, hang/fall/linger s
+const PALADIN_HAMMER = { reach: 7, cooldown: 8, power: 1.5, radius: 2.5, push: 5, daze: 1.2, raised: -0.35, down: 1.5, hang: 0.4, fall: 0.3, linger: 0.35 };
 
 export interface SpawnUnitOptions {
   role?: RuntimeSpawnRole;
@@ -979,6 +981,7 @@ export class SimulationSystem {
     this._painterDodges(now);
     this._samuraiBlocks(now);
     this._aegisFields(now);
+    if (this._hammers.length > 0) this._stepHammers(now);
     this._firstLunges(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
@@ -1701,6 +1704,18 @@ export class SimulationSystem {
         this.projectileSystem.spawnProjectile("aegis_orb",from,enemy,attackProfile.damage*(unit.definition.damageMultiplier??1),dir.scale(8),0,unit.team,this._units,undefined,0,{originLift:0,targetLift:1,arc:.04});
         this._logAbility(unit,"cast_orb",now,enemy.position);
       }
+      return;
+    }
+    // [S] 485 Shockwave Hammer: once in reach the Paladin raises his arm and a giant hammer smashes onto the man (PALADIN_HAMMER)
+    if (unit.definition.id === "good.righteous_paladin" && canAttack && distance <= PALADIN_HAMMER.reach && now >= (this._hammerReady.get(unit) ?? 0)) {
+      this._hammerReady.set(unit, now + PALADIN_HAMMER.cooldown);
+      unit.faceTarget(enemy.position); unit.triggerAttackVisual(.6);
+      const dir = enemy.position.subtract(unit.position); dir.y = 0; dir.normalize();
+      const hinge = paladinGiantHammer(unit);
+      hinge.position.copyFrom(enemy.position.subtract(dir.scale(2.6))); hinge.position.y = enemy.position.y + .35;
+      hinge.rotation.y = Math.atan2(dir.x, dir.z); hinge.rotation.x = PALADIN_HAMMER.raised;
+      this._hammers.push({ unit, hinge, at: enemy.position.clone(), t0: now, damage: attackProfile.damage * (unit.definition.damageMultiplier ?? 1) * PALADIN_HAMMER.power, dir, struck: false });
+      this._logAbility(unit, "cast_hammer", now, enemy.position);
       return;
     }
     // [S] 485 Radiant Glaive Throw (card Weapons: range 12, cooldown 1.25 s): the glaive leaves the hand as a spinning missile that
@@ -3400,6 +3415,30 @@ export class SimulationSystem {
   private _lunged = new Set<RuntimeUnit>();
   /** [S] 485 when a Radiant Glaive's thrown glaive is back in his fist (world seconds). */
   private _glaiveBack = new WeakMap<RuntimeUnit, number>();
+  private _hammerReady = new WeakMap<RuntimeUnit, number>();
+  private _hammers: { unit: RuntimeUnit; hinge: TransformNode; at: Vector3; t0: number; damage: number; dir: Vector3; struck: boolean }[] = [];
+
+  /** PALADIN_HAMMER: the summoned hammer hangs raised for .hang s, falls through .fall s onto its man, hurts every enemy within .radius m
+   * (knocked off along the blow) and holds off their next attack .daze s (card: "can cancel their attacks"); it fades .linger s after. */
+  private _stepHammers(now: number): void {
+    const H = PALADIN_HAMMER;
+    this._hammers = this._hammers.filter((h) => {
+      const t = now - h.t0;
+      const u = Math.min(1, Math.max(0, (t - H.hang) / H.fall));
+      h.hinge.rotation.x = H.raised + (H.down - H.raised) * u * u;
+      if (u >= 1 && !h.struck) {
+        h.struck = true;
+        this.visualEffects?.spawnTrampleRing(h.at, H.radius); this.visualEffects?.spawnImpactDust(h.at, 2);
+        for (const e of this._units) {
+          if (e.isDead || e.team === h.unit.team || Vector3.DistanceSquared(e.position, h.at) > H.radius * H.radius) continue;
+          e.applyDamage(h.damage, h.dir.scale(H.push).add(new Vector3(0, 2, 0))); e.setAttackCooldown(now, H.daze);
+        }
+        this._logAbility(h.unit, "hammer_smash", now, h.at);
+      }
+      if (t < H.hang + H.fall + H.linger) return true;
+      h.hinge.dispose(false, true); return false;
+    });
+  }
 
   /** Projectile Block (SAMURAI_BLOCK): each ready samurai with a missile about to reach him cuts it out of the air with a bright slash. */
   private _aegisState = new WeakMap<RuntimeUnit, { field: TransformNode; health: number; recharge: number; orbits?: TransformNode }>();

@@ -33,3 +33,25 @@ export function aegisOrbits(unit: RuntimeUnit): TransformNode {
   }
   return root;
 }
+
+/** [S] 485 Shockwave Hammer (card Characteristics: "summon a giant glowing
+ * hammer on top of enemy units, in which will smash down"). Spec: a pale-gold
+ * see-through hammer about 1.5 men tall: haft 2.6 m, head 1.5 x .8 x .8 m with
+ * brighter faces, hinged at the haft's foot (the returned node's origin) and
+ * standing along its +Y; the caller swings the hinge's x rotation. */
+export function paladinGiantHammer(unit: RuntimeUnit): TransformNode {
+  const scene = unit.body.root.getScene(), hinge = new TransformNode("paladinHammerHinge", scene);
+  const glow = new StandardMaterial("paladinHammerGlow", scene);
+  glow.emissiveColor = new Color3(1, .86, .45); glow.alpha = .78; glow.disableLighting = true;
+  const face = new StandardMaterial("paladinHammerFace", scene);
+  face.emissiveColor = new Color3(1.25, 1.15, .8); face.alpha = .9; face.disableLighting = true;
+  const haft = MeshBuilder.CreateCylinder("paladinGiantHaft", { height: 2.6, diameter: .2, tessellation: 6 }, scene);
+  haft.parent = hinge; haft.position.y = 1.3; haft.material = glow;
+  const head = MeshBuilder.CreateBox("paladinGiantHead", { width: .8, height: .8, depth: 1.5 }, scene);
+  head.parent = hinge; head.position.y = 2.6; head.material = glow;
+  for (const side of [-1, 1]) {
+    const plate = MeshBuilder.CreateBox("paladinGiantFace", { width: .62, height: .62, depth: .06 }, scene);
+    plate.parent = head; plate.position.z = side * .76; plate.material = face;
+  }
+  return hinge;
+}
