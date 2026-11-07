@@ -858,7 +858,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
 
   // ═══════════════════════ EVIL ═══════════════════════
   "evil.shadow_walker": vis(
-    { scale: 1.0, bulk: 0.84, armLength: 1.12 }, "dagger", "none", "none", "cape", "#5A487A", "dagger", {
+    // [S] 489 (b.2, card Off Hand None; evil.shadow_walker.blue.png): the off hand is empty, no second star
+    { scale: 1.0, bulk: 0.84, armLength: 1.12 }, "dagger", "none", "none", "cape", "#5A487A", undefined, {
       // [S] 489 (b.1, evil.shadow_walker.red.png): the curved bone dagger, held point-down, in his main hand
       weaponVariant: "bone_dagger",
       posePreset: "duelist",
