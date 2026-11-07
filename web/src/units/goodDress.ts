@@ -885,3 +885,28 @@ export function chronoBreeches(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
   return out;
 }
+
+/** [S] 488, good.chronomancer.blue.png: gold bands stacked down each bare
+ * arm, the upper ones carrying small white winglets. Spec (limb radii r,
+ * upper-arm length U): upper arm bands 1.4r at .18-.3 and .5-.62 down, a
+ * forearm band 1.35r at .1-.22; from the outer face of each upper band a
+ * closed white feather wing .5U long, .2U tall at its tip, swept up and back
+ * .5 rad. All flat. */
+export function chronoArmBands(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const mf = getMaterialFactory();
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  const whiteC = new Color3(1, 1, 1), white = mf.get("unlit", whiteC, { emissive: whiteC });
+  const out: Mesh[] = [];
+  for (const [side, upper, lower] of [[-1, body.leftUpperArm, body.leftLowerArm], [1, body.rightUpperArm, body.rightLowerArm]] as const) {
+    const U = limbBox(upper), r = Math.max(U.wide, U.deep), len = U.half * 2;
+    for (const [a, b] of [[0.18, 0.3], [0.5, 0.62]]) {
+      out.push(limbShell(scene, "chronoArmBand", upper, a, b, 1.4, gold));
+      const y = U.mid + U.half - (a + b) / 2 * len;
+      const wing = ornament(scene, "chronoArmWinglet", [[0, -len * 0.04], [len * 0.22, len * 0.02], [len * 0.5, len * 0.2], [len * 0.3, len * 0.08], [len * 0.36, len * 0.16], [0, len * 0.05]].map(([x, yy]) => [side * x, yy]), r * 0.25, upper.parent as TransformNode, white);
+      wing.position.set(side * r * 1.3, y, -r * 0.4); wing.rotation.set(0, side * 0.5, side * 0.25); out.push(wing);
+    }
+    out.push(limbShell(scene, "chronoForearmBand", lower, 0.1, 0.22, 1.35, gold));
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}

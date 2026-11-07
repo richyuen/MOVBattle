@@ -25,7 +25,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches } from "./goodDress";
+import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
@@ -548,6 +548,8 @@ export class UnitFactory {
     if (definition.id === "good.chronomancer" && !shouldUseVehicleBody) propMeshes.push(...chronoCropTop(this._scene, body));
     // [S] 488 baggy white knee breeches, belt with gold buckle, white gold-banded boots (goodDress)
     if (definition.id === "good.chronomancer" && !shouldUseVehicleBody) propMeshes.push(...chronoBreeches(this._scene, body));
+    // [S] 488 gold arm bands with white winglets (goodDress)
+    if (definition.id === "good.chronomancer" && !shouldUseVehicleBody) propMeshes.push(...chronoArmBands(this._scene, body));
     if (definition.id === "good.divine_arbiter" && !shouldUseVehicleBody) propMeshes.push(...arbiterPetalCollar(this._scene, body));
     if (definition.id === "good.divine_arbiter" && !shouldUseVehicleBody) propMeshes.push(...arbiterMitre(this._scene, body, teamColor));
     // [S] 487 team robe with puffed elbow sleeves and yellow gloves (goodDress)
