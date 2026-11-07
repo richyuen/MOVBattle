@@ -13,7 +13,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 
 ## Capture and probes
-- Supplementary fixed-camera pairs show full fields/late volleys without changing existing cameras (484).
+- Supplementary shots (fixed-camera pairs, lineup_good_wide) show full fields, late volleys or cropped units without changing existing cameras (484, 485).
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is written by stats.mjs, not by capture; every non-regression capture wipes iter-N (stats.json, a tail-overlap batch's audit.md too) and each stats run overwrites it: copy audit.md out before step 5 and restore it, rerun `stats.mjs <id,id,...> --iter N` once with every unit after the final capture (422).
 - Probes in loop/scripts/probes/, repo root (--build after source changes): probe_bbox (--unit --pat --frame=torso), probe_mat <unit> <regex>, probe_near/close/head/local/axes/impale/bowdraw. probe_close takes --aim=head|torso|y:<y>, --dist, --yaw, --noglow.
@@ -22,7 +22,6 @@ Read whole at step 1; one fact per line, merge near cap.
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
 - A flat plate on a dress ribbon needs 7+ cm of stand-off (398 zeus).
-- Settle joint matrices; retry preview outside sandbox (476).
 - Checkpoint keeps PNGs but replaces summary.json: back up unit evidence first (483).
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
@@ -35,8 +34,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
 - An idle hold gated on Attacking+throw stays on through a long-cooldown windup: gate it on the fire (451). RuntimeUnit._applyPoseOverlay (posePreset gunner, archer...) runs AFTER the animator's layers and re-turns a held aim: probe the final frame (455 barrel 17° up).
-- Vector3.normalize() mutates; clone reused segments (481).
-
+- Dispose sim-spawned free meshes in endSimulation: the idle shot resets without a battle start (485 hammer).
 ## Rig and dress
 - Retire superseded hip skirts/ropes: old overlays can protrude through a new torso shell (482).
 - A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.

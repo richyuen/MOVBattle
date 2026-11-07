@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+485 | cf4041df | good.devout_gauntlet.a | approved (blocker 1)
+485 | 11dabf78 | good.devout_gauntlet.a | approved (blockers 2-3; a PASS)
+485 | 594e02aa | good.radiant_glaive.c | approved (blocker 1; c PASS)
+485 | 4da0b53d,d1c4d6d0 | good.righteous_paladin.c | approved (blocker 1; c PASS)
+485 | 784a2fdd | good.radiant_glaive.a | approved (blocker 2)
+485 | c9266f24 | good.sacred_elephant.c | approved (blocker 1; c PASS)
+485 | e9a4084a | good.chronomancer.c | approved (blocker 1)
+485 | 0412f565 | good.chronomancer.a | approved (blocker 1)
+485 | a18bb6c5 | good.sacred_elephant.a | approved (blocker 1)
+
 484 | bd4ab456 | good.devout_gauntlet.a | approved (blocker 4)
 484 | 83882d91 | good.devout_gauntlet.a | approved (blocker 6)
 484 | b9d412bc | good.devout_gauntlet.a | approved (blocker 5)
@@ -24,15 +34,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 483 | e73fec72 | good.divine_arbiter.a | approved (struck 1)
 
 
-480 | c444ddc5 [R] | legacy.thor.a | approved
-480 | 1b06021b | legacy.tank.a | approved
-480 | dc1ce591,d824f304 | legacy.wizard.a | approved
-480 | c8592c0a | legacy.wizard.b | approved
-480 | 88770cd1 | legacy.wizard.c | approved
-480 | db753c81 | legacy.super_boxer.c | approved
-480 | 09453b8f,3656bb73 | legacy.dark_peasant.a | approved
-480 | a70e65b3,b2acc355,4a6cb2c2 | legacy.super_peasant.a | approved
-480 | 2861b99c | legacy.super_peasant.c | dropped (victim not visible)
 481 | [R] 6b438aa3,d4e92c92 | legacy.pharaoh.a | approved (struck 1; CONFIRM D)
 481 | 6c55aaf4 | legacy.super_boxer.a | approved (struck 1; CONFIRM failed a)
 481 | 3d14f448,45bdb226 | legacy.wizard.b | approved
@@ -56,6 +57,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+goodDress:DEVOUT_ARM_WRAPS | upper .45-1 x1.45,fore 0-.94 x1.7,3 ridges,unlit(.62,.64,.68) | 485 | approved | bare forearms
+goodDress:DEVOUT_WAIST_COLLAR | front W points .48 torsoH,V to band,sides/back;pelvis out of glow;band 1.04W | 485 | approved | two 4-sided fold cones
+SS/PS:RADIANT_THROW | range12,cd1.25,speed25,3 hops reach7,heavy>.8 costs2;held glaive back 1s | 485 | approved | halberd melee
+SS/goodMagic:PALADIN_HAMMER | reach7,cd8,power1.5,radius2.5,push5,daze1.2,hang.4,fall.3 | 485 | approved | none
+goodDress:RADIANT_HELMET | gold box crown/sides/back,1H gold diamond,team .8 inset .6 shade,strand | 485 | approved | laurel/hair
+SS/PS:ELEPHANT_SPEARS throw | range16,cd1.2,rearm3,.5x dmg;suck radius3.5 pull7 minor.1 | 485 | approved | rider idle
+SS/PS:CHRONO_BOLTS | right then left .25s,speed22,clock face .5 | 485 | approved | slow dome
+goodDress:CHRONO_CROWN | 8-sided band1.12W,9 spikes.22H,front .95H,ear guards;gold(.85,.55,.12) | 485 | approved | laurel/halo
+VB:ELEPHANT_TRUNK | one 8-sided tube,piece.17,root.27->tip.12,flare.15 | 485 | approved | 8 separate cylinders,hooked tip
 goodDress:DEVOUT_CIRCLET | 8-sided hoop,triangular .85H front,.38H ivory gem | 484 | approved | laurel/hair
 goodDress:DEVOUT_SHOULDERS | two solid curled plates span2.68W,3-point chest band | 484 | approved | absent
 goodDress:DEVOUT_MOUSTACHE | paired closed pale-yellow curled wings,1.12headW | 484 | approved | absent
