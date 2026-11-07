@@ -636,3 +636,49 @@ export function elephantRiderDress(scene: Scene, rider: ArticulatedBody, team: C
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/** [S] 487, good.radiant_glaive.red.png: team trousers with gold inlays over
+ * short white shoes. Spec (pelvis widths P, limb half-widths w, lengths L):
+ * the pelvis, thighs and shins in team cloth; a gold half-diamond 1.1P across
+ * at the belt falls point-down to .55 of the thigh between the legs; a gold
+ * triangle .6L tall on the outside of each upper thigh; a gold band 2.4w at
+ * each knee with a small gold fin on its front, another at .78 of the shin;
+ * the feet white, closed by a gold band 2.5w at the ankle. */
+export function radiantTrousers(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  const whiteC = new Color3(0.9, 0.9, 0.92), white = mf.get("unlit", whiteC, { emissive: whiteC });
+  const out: Mesh[] = [];
+  const pelvis = body.hip.getChildMeshes(true).find(m => m.name.endsWith("_pelvis"));
+  const T0 = limbBox(body.leftUpperLeg), thighLen = T0.half * 2;
+  if (pelvis instanceof Mesh) {
+    pelvis.material = cloth;
+    const P = limbBox(pelvis), PW = P.wide * 2, top = P.mid + P.half * 0.7;
+    const drop = top - (body.leftHip.position.y - thighLen * 0.55);
+    const diamond = ornament(scene, "radiantTrouserDiamond", [[-PW * 0.55, 0], [PW * 0.55, 0], [0, -drop]], P.deep * 0.12, body.hip, gold);
+    diamond.position.set(0, top, P.deep * 1.08); out.push(diamond);
+  }
+  for (const [hip, thigh, knee, shin, side] of [
+    [body.leftHip, body.leftUpperLeg, body.leftKnee, body.leftLowerLeg, -1],
+    [body.rightHip, body.rightUpperLeg, body.rightKnee, body.rightLowerLeg, 1],
+  ] as const) {
+    thigh.material = cloth; shin.material = cloth;
+    const T = limbBox(thigh), S = limbBox(shin), tw = Math.max(T.wide, T.deep), sw = Math.max(S.wide, S.deep);
+    const flank = ornament(scene, "radiantTrouserFlank", [[0, 0], [0, -T.half * 1.2], [side * tw * 0.9, 0]], T.deep * 0.5, hip, gold);
+    flank.rotation.y = side * Math.PI / 2; flank.position.set(side * T.wide * 1.02, T.mid + T.half * 0.95, 0); out.push(flank);
+    const ring = (name: string, y: number, h: number, d: number, mat: Material): Mesh => {
+      const m = MeshBuilder.CreateCylinder(name, { height: h, diameter: d, tessellation: 6 }, scene);
+      m.parent = knee; m.position.y = y; m.scaling.z = S.deep / sw * 1.1; m.material = mat; out.push(m); return m;
+    };
+    const kTop = S.mid + S.half;
+    ring("radiantKneeBand", kTop - S.half * 0.06, S.half * 0.14, sw * 2.4, gold);
+    const fin = ornament(scene, "radiantKneeFin", [[-sw * 0.5, 0], [sw * 0.5, 0], [0, -S.half * 0.3]], S.deep * 0.2, knee, gold);
+    fin.position.set(0, kTop - S.half * 0.1, S.deep * 1.15); out.push(fin);
+    ring("radiantShinBand", S.mid + S.half - S.half * 2 * 0.78, S.half * 0.12, sw * 2.3, gold);
+    ring("radiantAnkleBand", S.mid - S.half * 0.97, S.half * 0.1, sw * 2.5, gold);
+    for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) m.material = white;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
