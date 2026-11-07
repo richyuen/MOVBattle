@@ -383,10 +383,10 @@ export function paladinCuirass(scene: Scene, body: ArticulatedBody, team: Color3
 
 /** [S] 486, good.righteous_paladin.blue.png: puffed team trousers under three
  * pale plates down the front of each leg. Spec (limb half-widths w, depths d,
- * lengths L): thigh plate over the lower .6 of the thigh, 1.7w across with a
+ * lengths L): thigh plate from mid-thigh, 1.7w across with a
  * gold top band; a knee cop 1.8w across with a gold V and top bar; the shin
  * plate, the longest, from the knee to .95 of the shin, 1.75w across. Team
- * cloth puffs out 1.6w above the thigh plate and behind the knee; brown
+ * shorts blouse out above the thigh plate (below), cloth behind the knee; brown
  * straps cross the back of the thigh once and the shin twice. */
 export function paladinLegArmour(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const mf = getMaterialFactory();
@@ -400,21 +400,38 @@ export function paladinLegArmour(scene: Scene, body: ArticulatedBody, team: Colo
     m.parent = parent; m.position.set(0, y, z); m.rotation.z = rz; m.material = mat; out.push(m); return m;
   };
   const pelvis = body.hip.getChildMeshes(true).find(m => m.name.endsWith("_pelvis"));
-  if (pelvis) pelvis.material = pants;
+  // [S] 487 (CONFIRM 486 a.1, red.png "pants ... baggy and puffs out"): big
+  // bloused team shorts from the waist to mid-thigh. Spec (pelvis widths P,
+  // limb radii r): a pelvis puff 8-sided, 1.08P at the belt flaring to 1.3P;
+  // each leg a bloused pair of 8-sided frusta from the hip, 3.2r -> 4.1r at
+  // a quarter down the thigh, gathered back to 3r at its hem .48 down, just
+  // over the thigh plate's gold top band.
+  if (pelvis instanceof Mesh) {
+    pelvis.material = pants;
+    const P = limbBox(pelvis), PW = P.wide * 2;
+    const puff = MeshBuilder.CreateCylinder("paladinShortsSeat", { height: P.half * 2, diameterTop: PW * 1.08, diameterBottom: PW * 1.3, tessellation: 8 }, scene);
+    puff.parent = body.hip; puff.position.y = P.mid; puff.rotation.y = Math.PI / 8; puff.scaling.z = P.deep / P.wide * 1.2;
+    puff.material = pants; puff.convertToFlatShadedMesh(); out.push(puff);
+  }
   for (const [hip, thigh, knee, shin] of [
     [body.leftHip, body.leftUpperLeg, body.leftKnee, body.leftLowerLeg],
     [body.rightHip, body.rightUpperLeg, body.rightKnee, body.rightLowerLeg],
   ] as const) {
     thigh.material = pants; shin.material = pants;
     const T = limbBox(thigh), S = limbBox(shin);
-    out.push(limbShell(scene, "paladinPuffedThigh", thigh, 0, 0.45, 1.6, pants));
+    const r = Math.max(T.wide, T.deep), top = T.mid + T.half, bulge = top - T.half * 2 * 0.25, hem = top - T.half * 2 * 0.48;
+    for (const [name, y0, y1, d0, d1] of [["paladinShortsUpper", bulge, top, 4.1, 3.2], ["paladinShortsHem", hem, bulge, 3, 4.1]] as const) {
+      const leg = MeshBuilder.CreateCylinder(name, { height: y1 - y0, diameterBottom: r * d0, diameterTop: r * d1, tessellation: 8 }, scene);
+      leg.parent = hip; leg.position.y = (y0 + y1) / 2; leg.rotation.y = Math.PI / 8; leg.scaling.z = T.deep / r * 1.1;
+      leg.material = pants; leg.convertToFlatShadedMesh(); out.push(leg);
+    }
     out.push(limbShell(scene, "paladinPuffedKnee", shin, 0, 0.2, 1.3, pants));
     // [S] 487 (CONFIRM 486 a.2, red.png knees): every plate is narrower than
     // its limb's spacing (thigh 1.7w, shin 1.75w), so the legs part; the thigh
     // plate stops .2 of the thigh over the knee, leaving team cloth; each knee
     // carries its own cop, a six-sided cap 1.8w across standing .9d proud,
     // with two gold bars meeting in a V across its face under a gold top rim.
-    const tTop = T.mid + T.half - T.half * 2 * 0.4, tBot = T.mid - T.half * 0.6, tH = tTop - tBot;
+    const tTop = T.mid + T.half - T.half * 2 * 0.5, tBot = T.mid - T.half * 0.6, tH = tTop - tBot;
     box("paladinThighPlate", hip, plate, T.wide * 1.7, tH, T.deep * 1.3, (tTop + tBot) / 2, T.deep * 0.5);
     box("paladinThighGold", hip, gold, T.wide * 1.8, tH * 0.12, T.deep * 1.36, tTop - tH * 0.06, T.deep * 0.5);
     box("paladinThighStrap", hip, strap, T.wide * 1.85, tH * 0.1, T.deep * 0.5, tBot + tH * 0.4, -T.deep * 0.75);
