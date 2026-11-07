@@ -551,13 +551,17 @@ export function aegisHoodie(scene: Scene, body: ArticulatedBody, team: Color3): 
   const out: Mesh[] = [];
   const add = (m: Mesh, y: number, z: number, mat: Material): Mesh => { m.parent = body.torso; m.position.set(0, y, z); m.material = mat; out.push(m); return m; };
   const hem = cy + H * 0.1, top = cy + H * 0.5;
-  add(MeshBuilder.CreateBox("aegisHoodieShell", { width: W * 1.05, height: top - hem, depth: D * 1.07 }, scene), (hem + top) / 2, cz, cloth);
-  add(MeshBuilder.CreateBox("aegisHoodieLip", { width: W * 1.1, height: H * 0.07, depth: D * 1.12 }, scene), hem + H * 0.02, cz, cloth);
+  // The shell must also cover the yoke hull, which outgrows the torso on a slim build (487).
+  const yoke = body.torso.getChildMeshes(true).find(m => m.name.endsWith("_yoke"));
+  const yb = yoke?.getBoundingInfo().boundingBox, ys = yoke?.scaling;
+  const SW = Math.max(W * 1.05, yb && ys ? yb.extendSize.x * 2 * ys.x * 1.04 : 0), SD = Math.max(D * 1.07, yb && ys ? yb.extendSize.z * 2 * ys.z * 1.04 : 0);
+  add(MeshBuilder.CreateBox("aegisHoodieShell", { width: SW, height: top - hem, depth: SD }, scene), (hem + top) / 2, cz, cloth);
+  add(MeshBuilder.CreateBox("aegisHoodieLip", { width: SW * 1.05, height: H * 0.07, depth: SD * 1.05 }, scene), hem + H * 0.02, cz, cloth);
   const hood = add(MeshBuilder.CreateTorus("aegisRolledHood", { diameter: W * 0.62, thickness: H * 0.2, tessellation: 8 }, scene), cy + H * 0.52, cz - D * 0.05, cloth);
   hood.scaling.z = D / W * 1.3;
   add(MeshBuilder.CreateBox("aegisHoodBack", { width: W * 0.55, height: H * 0.3, depth: D * 0.2 }, scene), cy + H * 0.36, cz - D * 0.6, cloth).rotation.x = -0.2;
-  add(MeshBuilder.CreateBox("aegisHoodieStrip", { width: W * 0.06, height: H * 0.3, depth: D * 0.06 }, scene), cy + H * 0.29, cz + D * 0.56, gold);
-  add(MeshBuilder.CreateCylinder("aegisHoodieToggle", { height: D * 0.08, diameter: W * 0.12, tessellation: 6 }, scene), cy + H * 0.42, cz + D * 0.6, gold).rotation.x = Math.PI / 2;
+  add(MeshBuilder.CreateBox("aegisHoodieStrip", { width: W * 0.06, height: H * 0.3, depth: D * 0.06 }, scene), cy + H * 0.29, cz + SD * 0.53, gold);
+  add(MeshBuilder.CreateCylinder("aegisHoodieToggle", { height: D * 0.08, diameter: W * 0.12, tessellation: 6 }, scene), cy + H * 0.42, cz + SD * 0.56, gold).rotation.x = Math.PI / 2;
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }

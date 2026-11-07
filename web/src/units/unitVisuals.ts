@@ -814,7 +814,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "good.celestial_aegis": vis(
-    { scale: 1.12, bulk: 1.2 }, "none", "none", "none", "none", "#F0D87A", undefined, {
+    // [S] 487: a slim upright long-legged caster (good.celestial_aegis.blue.png), not a blocky crouched soldier.
+    { scale: 1.12, bulk: 0.88, torsoWidth: 0.9, legLength: 1.4, upperLegWidth: 0.76, lowerLegWidth: 0.7 }, "none", "none", "none", "none", "#F0D87A", undefined, {
       // Empty casting hands, not a soldier's sword-and-board grip.
       posePreset: "caster",
       materialPreset: "good_gold",
