@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+488 | 3d214b80,90d5416e,f63699d0 | good.celestial_aegis.a | approved (blocker 1)
+488 | 51b500fc | good.celestial_aegis.a | approved (blocker 2; CONFIRM failed a: plateau)
+488 | db9eceee | good.divine_arbiter.a | approved (blocker 1)
+488 | 05f78f9f | good.divine_arbiter.a | approved (blocker 2; CONFIRM failed a: plateau)
+488 | dba0cb7a | good.righteous_paladin.a | dropped (shield not moved; reverted bf730ed5)
+488 | 57449aa1 | good.righteous_paladin.a | approved (blocker 2)
+488 | a58de409 | good.chronomancer.a | approved (blocker 3)
+488 | aa380788 | good.chronomancer.a | approved (blocker 4)
+488 | b6a91fc9 | good.chronomancer.a | approved (blocker 5)
+
 487 | 215e62cb,d89418f7 | good.celestial_aegis.a | approved (blocker 3)
 487 | 2b127af7 | good.righteous_paladin.a | approved (no strike)
 487 | 6c3892a7 | good.righteous_paladin.a | approved (no strike)
@@ -44,14 +54,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 484 | 212ed7e2 | good.divine_arbiter.a | approved (blocker 2)
 484 | 9f62f67c | good.divine_arbiter.c | approved (blocker 1)
 
-483 | [R] ecabf523 | legacy.super_boxer.a | approved (struck 2; CONFIRM D)
-483 | fc2bd780 | good.devout_gauntlet.c | approved (struck 1; c PASS)
-483 | 6671dac9 | good.devout_gauntlet.a | approved (struck 2)
-483 | 1ac698d2,e03d2881 | good.devout_gauntlet.a | approved (struck 1)
-483 | aa07d7e5 | good.radiant_glaive.b | approved (struck 1; added b.3)
-483 | 8dd2ba33 | good.righteous_paladin.b | approved (struck 1; b PASS)
-483 | 11f730f5 | good.celestial_aegis.a | approved (struck 1)
-483 | e73fec72 | good.divine_arbiter.a | approved (struck 1)
 
 ## Spent (never retry as [P])
 
@@ -61,6 +63,12 @@ Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuil
 UV:RADIANT build/stance | 1.24,.92bulk,.92W,legs1.38,.76/.7;upright | 487 | approved | 1.16bulk;seeded crouch
 goodDress:RADIANT_TROUSERS | team legs,gold half-diamond1.1P to .55T,flank tri .6L,knee band2.4w+fin,shin.78,white feet,ankle2.5w | 487 | approved | dark pants,grey boots
 goodDress:RADIANT_CAPE | team*.75 slab1.1->1.4W,1.9H,tilt.1,gold hem.1H,clasps.14W | 487 | approved | none
+goodMagic:AEGIS_FIELD look | built at spawn;6m sphere,alpha.01+opacity fresnel .03->.5 p3,emissive fresnel cream->yellow,culled back;no rings | 488 | approved | alpha.055 fill + two gold great circles (sim only)
+goodDress:CHRONO_CROP | white unlit shell from -.15H to top,1.06W;gold hem.07H,neck ring.5W,armholes;trunk head skin | 488 | approved | icy body torso
+goodDress:CHRONO_BREECHES | thigh shell1.5r,knee puff1.55r to .2S,gold band1.45r .24-.34S,boot1.22r;belt8-sided1.15P grey,gold buckle.3P,white ring | 488 | approved | icy legs
+goodDress:CHRONO_ARMBANDS | upper bands1.4r .18-.3/.5-.62,fore1.35r .1-.22;white winglets .5U long .2U tip,yaw.5 | 488 | approved | bare arms
+PA:PALADIN stance | square,PALADIN_SPLAY.15,sink 1-cos | 488 | approved | upright stride.14
+PA:ARBITER stance | upright hook on arbiterMitre,crouch0,lean.04 | 488 | approved | seeded crouch
 UV:AEGIS build/stance | 1.12,.88bulk,.9W,legs1.4,.76/.7;upright | 487 | approved | bulk1.2;seeded crouch
 goodDress:ARBITER_ROBE | team torso/yoke,sleeve1.75r,elbow puff to 5r,fore1.5r,glove cuff3.4->4.4r,unlit(1,.62,.12) | 487 | approved | dark vest
 goodDress:ARBITER_SKIRT | split panels back1.15->1.9P,front .12-.6->.35-1P,sides,gold.07,len to .85T;grey(.62,.64,.68) legs,skin feet | 487 | approved | dark skirt,trousers,boots
@@ -70,10 +78,10 @@ UV:PALADIN build/stance | 1.3,.92bulk,.92W,legs1.38,.76/.7;upright,no pads/belt 
 goodDress:CHRONO_RING | ring2.5W,tube.07W,spikes.18W,top.55W,3/9 spikes+winglets | 486 | approved | small attack-only torso hoop
 SS/goodMagic:CHRONO_TRANSFORM | settle.2,drop1.45H,tilt1.15,grow.25,spin1.6;10 cubes r1.4 orbit.9 | 486 | approved | none
 goodDress:RADIANT_VEST | team vest,white V .5W x .55H,gold trim+hem;sleeves 1.7/1.9,left .45 | 486 | approved | dark vest,pads
-goodDress:AEGIS_HOODIE | bare torso+yoke (arm skin);unlit team*.4 shell from .1H,>=yoke W;lip1.05;hood.62W | 487 | approved | skin box,lit cloth shell (486)
+goodDress:AEGIS_HOODIE | bare torso+yoke (arm skin) narrowed to .76SW x .8SD;unlit team*.4 shell from .1H,>=yoke W;lip1.05;hood.62W | 488 | approved | full-width bare trunk (487),skin box,lit cloth shell (486)
 goodDress:AEGIS_SKIRT | 8-sided1.1P->1.85P,.62T,black waist,gold hem,trapezoid.5->.26P | 486 | approved | trousers,grey boots
 goodDress:ELEPHANT_RIDER_DRESS | white hair,team cap,gold crystal,white top gold bands,shorts1.6 | 486 | approved | bald team soldier
-UV:ARBITER scale | 1.12,bulk.96 | 486 | approved | 1.86,1.22
+UV:ARBITER scale/build | 1.12,bulk.92,torso.92,legs1.42,.78/.72 | 488 | approved | bulk.96 legs1 (486);1.86,1.22
 goodDress:DEVOUT_ARM_WRAPS | upper .45-1 x1.45,fore 0-.94 x1.7,3 ridges,unlit(.62,.64,.68) | 485 | approved | bare forearms
 goodDress:DEVOUT_WAIST_COLLAR | front W points .48 torsoH,V to band,sides/back;pelvis out of glow;band 1.04W | 485 | approved | two 4-sided fold cones
 SS/PS:RADIANT_THROW | range12,cd1.25,speed25,3 hops reach7,heavy>.8 costs2;held glaive back 1s | 485 | approved | halberd melee
@@ -90,7 +98,7 @@ PB:RADIANT_SHIELD mount | leftHand,STIFFY_UPRIGHT axes,grip bracket | 484 | appr
 goodDress:PALADIN_HAIR | center-part grey locks,3 pale winglets/side,tied ponytail | 484 | approved | great helm
 SS/PS:AEGIS_FIELD | radius3,500damage capacity,10s recharge,enemy projectile reflection | 484 | approved | absent
 SS/PS:AEGIS_ORBS | 6 orbit lights,hand-origin team orb,range10,cooldown2,speed18,push8 | 484 | approved | contact melee
-goodDress:ARBITER_MITRE | team8-sided rounded crown1.05H,gold .88H panel,diamond | 484 | approved | laurel/hair/halo
+goodDress:ARBITER_MITRE | half-ellipsoid dome1.12W x2H rim.36H,gold band1.16W .16H,gold point.6W .55H tilt.28,team diamond in gold frame | 488 | approved | team8-sided cylinder1.05H+shield panel (484);laurel/hair/halo
 SS/PS/FX:ARBITER_LIGHTS | 5 book-origin lights,.1delay,18speed,radius2 ray friendly fire | 484 | approved | instant lightning/dome
 goodDress:AEGIS_BUTTERFLY | white crown/temples/4-knot braid;four team lobes,upper1.32H/lower.4H | 483 | approved | steel cap
 goodDress:ARBITER_COLLAR | 10 closed rising gold petals,rim1.2-1.3W,opening.35W,unlit(.85,.55,.12) | 483 | approved | bare neck outline

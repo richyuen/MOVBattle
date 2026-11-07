@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 487   Batch: good   Consecutive empty: 0   Done: 88/139   Parked: 0
+Iteration: 488   Batch: good   Consecutive empty: 0   Done: 88/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -22,34 +22,34 @@ secret_2: taekwondo ???? q | raptor_rider ???? q | cheerleader ???? q | cupid ??
 secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ???? q | wheelbarrow_dragon ???? q | skeleton_giant ???? q | bomb_cannon ???? q | cavalry ???? q | vlad ???? q | gatling_gun ???? q
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
-## Focus (iteration 487; BASE b9daeaea)
-1. [S] good.celestial_aegis.a blocker 3 (215e62cb, d89418f7) APPROVE, struck 3.
-2. [S] good.righteous_paladin.a blocker 2 (2b127af7) APPROVE, no strike.
-3. [S] good.righteous_paladin.a blocker 1 (6c3892a7) APPROVE, no strike.
-4. [S] good.radiant_glaive.a blocker 1 (7436497a) APPROVE, struck 1.
-5. [S] good.radiant_glaive.a blocker 5 (13702a7e, 8cb2ef91) APPROVE, struck 5.
-6. [S] good.radiant_glaive.a blocker 4 (5cc46687, 02948277) APPROVE, struck 4; a PASS; CONFIRM passed a-d: D.
-7. [S] good.divine_arbiter.a blocker 4 (5822e7c7) APPROVE, struck 4.
-8. [S] good.divine_arbiter.a blocker 5 (353aa34c) APPROVE, struck 5; a PASS; CONFIRM failed a: new a list (2).
-9. [S] good.celestial_aegis.a blocker 1 (50a6fe6b) APPROVE, struck 1; a PASS; CONFIRM failed a: new a list (2).
-- 9/9, 7 struck
+## Focus (iteration 488; BASE 78f47dd9)
+0. evidence 8b2cd5dd: unit_good.celestial_aegis_field shot; field meshes out of __rig.
+1. [S] good.celestial_aegis.a blocker 1 (3d214b80, 90d5416e, f63699d0) APPROVE, struck 1.
+2. [S] good.celestial_aegis.a blocker 2 (51b500fc) APPROVE, struck 2; a PASS; CONFIRM failed a (2nd): plateau.
+3. [S] good.divine_arbiter.a blocker 1 (db9eceee) APPROVE, struck 1.
+4. [S] good.divine_arbiter.a blocker 2 (05f78f9f) APPROVE, struck 2; a PASS; CONFIRM failed a (2nd): plateau.
+5. [S] good.righteous_paladin.a blocker 1 (dba0cb7a) dropped at the look (shield did not move), reverted bf730ed5.
+6. [S] good.righteous_paladin.a blocker 2 (57449aa1) APPROVE, struck 2.
+7. [S] good.chronomancer.a blocker 3 (a58de409) APPROVE, struck 3.
+8. [S] good.chronomancer.a blocker 4 (aa380788) APPROVE, struck 4.
+9. [S] good.chronomancer.a blocker 5 (b6a91fc9) APPROVE, struck 5.
+- 8/9, 8 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] good.celestial_aegis (215e62cb, d89418f7) | VERDICT: APPROVE | CRITERION: good.celestial_aegis.a FAIL   (previous: FAIL)
-- GAP: [S] good.righteous_paladin (2b127af7) | VERDICT: APPROVE | CRITERION: good.righteous_paladin.a FAIL   (previous: FAIL)
-- GAP: [S] good.righteous_paladin (6c3892a7) | VERDICT: APPROVE | CRITERION: good.righteous_paladin.a FAIL   (previous: FAIL)
-- GAP: [S] good.radiant_glaive (7436497a) | VERDICT: APPROVE | CRITERION: good.radiant_glaive.a FAIL   (previous: FAIL)
-- GAP: [S] good.radiant_glaive (13702a7e, 8cb2ef91) | VERDICT: APPROVE | CRITERION: good.radiant_glaive.a FAIL   (previous: FAIL)
-- GAP: [S] good.radiant_glaive (5cc46687, 02948277) | VERDICT: APPROVE | CRITERION: good.radiant_glaive.a PASS   (previous: FAIL)
-- GAP: [S] good.divine_arbiter (5822e7c7) | VERDICT: APPROVE | CRITERION: good.divine_arbiter.a FAIL   (previous: FAIL)
-- GAP: [S] good.divine_arbiter (353aa34c) | VERDICT: APPROVE | CRITERION: good.divine_arbiter.a PASS   (previous: FAIL)
-- GAP: [S] good.celestial_aegis (50a6fe6b) | VERDICT: APPROVE | CRITERION: good.celestial_aegis.a PASS   (previous: FAIL)
+- GAP: [S] good.celestial_aegis (3d214b80, 90d5416e, f63699d0) | VERDICT: APPROVE | CRITERION: good.celestial_aegis.a PASS   (previous: FAIL)
+- GAP: [S] good.celestial_aegis (51b500fc) | VERDICT: APPROVE | CRITERION: good.celestial_aegis.a PASS   (previous: FAIL)
+- GAP: [S] good.divine_arbiter (db9eceee) | VERDICT: APPROVE | CRITERION: good.divine_arbiter.a FAIL -> see next gap   (previous: FAIL)
+- GAP: [S] good.divine_arbiter (05f78f9f) | VERDICT: APPROVE | CRITERION: good.divine_arbiter.a PASS   (previous: FAIL)
+- GAP: [S] good.righteous_paladin (57449aa1) | VERDICT: APPROVE | CRITERION: good.righteous_paladin.a FAIL   (previous: FAIL)
+- GAP: [S] good.chronomancer (a58de409) | VERDICT: APPROVE | CRITERION: good.chronomancer.a FAIL   (previous: FAIL)
+- GAP: [S] good.chronomancer (aa380788) | VERDICT: APPROVE | CRITERION: good.chronomancer.a FAIL   (previous: FAIL)
+- GAP: [S] good.chronomancer (b6a91fc9) | VERDICT: APPROVE | CRITERION: good.chronomancer.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM: UNIT good.celestial_aegis: a FAIL b PASS c PASS d PASS (3/4) | good.radiant_glaive: 4/4 | good.divine_arbiter: a FAIL (3/4) | (paladin 4/4 discarded: not would-be-done)
+- CONFIRM: UNIT good.celestial_aegis: a FAIL b PASS c PASS d PASS (3/4) | good.divine_arbiter: a FAIL b PASS c PASS d PASS (3/4)
 
 ## Notes for next iteration (max 5 lines)
-- 9/9 approved, 7 struck; radiant_glaive D (88/139). Aegis and Arbiter a carry CONFIRM lists with no ranked gaps: pick their first blockers.
-- Aegis a.1 = standing field bubble + six orbs in the idle; a.2 = blue-team hoodie must read deeper than the skin. Arbiter a.1 build/height, a.2 domed mitre.
-- Paladin a: 2 unstruck approvals since the 486 list; a third unstruck one makes it plateau ([R]). Elephant, Chrono had no picks in 487.
-- LEDGER rows of finished legacy units archived to one line (ledger@b9daeaea).
-- Type-check, 31 shots, stats 4/4 PASS, budget passed; no browser errors.
+- 8/9 approved, 8 struck; Done stays 88/139. Aegis a and Arbiter a are plateau (CONFIRM failed a twice): one [R] per iteration, Aegis (field fill) first, Arbiter (coat/collar/sleeves) at 490.
+- Paladin a.1 shorts: the shield-raise via _buildCarry board did not move the idle shield; critic wants a team shorts hull 1.5P proud of the plates.
+- Chrono a.6 upright build is his last blocker (stance hook by chronoCrown). Elephant a (blockers 2,3,5,6) has had no pick since 486: starving at 491.
+- Tail overlap not run: 12 pickable incl. CONFIRM-list blockers, 5 open units; evil audits once fewer than 9 [S] are pickable.
+- Type-check, 33 shots, stats 4/4 PASS, budget passed; no browser errors.
