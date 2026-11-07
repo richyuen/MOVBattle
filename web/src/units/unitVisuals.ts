@@ -835,7 +835,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "good.divine_arbiter": vis(
-    { scale: 1.86, bulk: 1.22, headSize: 1.16 }, "lightning_bolt", "none", "none", "none", "#F5D971", undefined, {
+    // [P] 486 card Size 1.00x: a slender caster below the Paladin (reference/factions/good.jpg), not a giant
+    { scale: 1.12, bulk: 0.96, headSize: 1.16 }, "lightning_bolt", "none", "none", "none", "#F5D971", undefined, {
       posePreset: "caster",
       weaponVariant: "arbiter_book", weaponGripPreset: "default",
       materialPreset: "secret_holy",
