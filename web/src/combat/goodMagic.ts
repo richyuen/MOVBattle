@@ -55,3 +55,30 @@ export function paladinGiantHammer(unit: RuntimeUnit): TransformNode {
   }
   return hinge;
 }
+
+/** [S] 486 Chronomancer Transformation (good.chronomancer.png): bright white
+ * and pale-gold cubes drift round the transformed man. Spec: ten cubes .14-.26
+ * m, on a 1.4 m circle round his root, at .3-2.1 m, every second one gold;
+ * the caller turns the node. */
+export function chronoLights(unit: RuntimeUnit): TransformNode {
+  const scene = unit.body.root.getScene(), root = new TransformNode("chronoLights", scene);
+  root.parent = unit.body.root;
+  const white = new StandardMaterial("chronoLightWhite", scene);
+  white.emissiveColor = new Color3(1.3, 1.3, 1.2); white.disableLighting = true;
+  const gold = new StandardMaterial("chronoLightGold", scene);
+  gold.emissiveColor = new Color3(1.2, .95, .4); gold.disableLighting = true;
+  for (let k = 0; k < 10; k++) {
+    const a = k * Math.PI * 2 / 10, size = .14 + (k % 3) * .06;
+    const cube = MeshBuilder.CreateBox("chronoLightCube", { size }, scene);
+    cube.parent = root; cube.position.set(Math.sin(a) * 1.4, .3 + ((k * 7) % 10) * .2, Math.cos(a) * 1.4);
+    cube.rotation.set(k * .7, k * 1.1, k * .4); cube.material = k % 2 ? gold : white;
+  }
+  return root;
+}
+
+/** The lit ring of the transformed Chronomancer: the gold turns to glowing gold-white. */
+export function chronoRingLit(scene: import("@babylonjs/core").Scene): StandardMaterial {
+  const lit = new StandardMaterial("chronoRingLit", scene);
+  lit.emissiveColor = new Color3(1.35, 1.1, .55); lit.disableLighting = true;
+  return lit;
+}

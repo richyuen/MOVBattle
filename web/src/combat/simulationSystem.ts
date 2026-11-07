@@ -1,4 +1,4 @@
-import { Color3, Mesh, Node, Quaternion, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, Mesh, Node, Quaternion, TransformNode, Vector3, type Material } from "@babylonjs/core";
 import { CREW_FIGHT, flyLongshipHull, heaveLongshipCrew, isVehicleUnit, landedOarsmenAt, landLongshipCrew, poseWheelbarrowCrew, swingLongshipCrew, wheelbarrowCrew } from "../units/vehicleBuilder";
 import { RuntimeUnit } from "../units/runtimeUnit";
 import { AnimState } from "../units/proceduralAnimation";
@@ -17,7 +17,7 @@ import { buildGroundSnake, type GroundSnake } from "../units/ancientDress";
 import { reaperSpear } from "../units/spookyDress";
 import { lassoRope } from "../units/wildWestDress";
 import { bearerReach } from "../units/legacyDress";
-import { aegisField, aegisOrbits, paladinGiantHammer } from "./goodMagic";
+import { aegisField, aegisOrbits, chronoLights, chronoRingLit, paladinGiantHammer } from "./goodMagic";
 
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
@@ -30,6 +30,7 @@ const BEARER_AURA_KIND: Record<string, "haste" | "stay"> = { "legacy.flag_bearer
 /** [S] 465 a bearer is a melee man (his pole is his weapon, Stay Banner / Charge Flag): the ring's aura is a pulse of its own, every `every` s, held `holds` s. */
 const BEARER_PULSE = { every: 3, holds: 3.5 };
 // [S] 485 Shockwave Hammer (SimulationSystem._stepHammers): reach m, cooldown s, power x the mace blow, splash radius m, push, daze s, hinge angles rad, hang/fall/linger s
+const CHRONO_TRANSFORM = { settle: 0.6, drop: 1.45, tilt: 1.15, grow: 0.25, spin: 1.6, orbit: 0.9 };
 const PALADIN_HAMMER = { reach: 7, cooldown: 8, power: 1.5, radius: 2.5, push: 5, daze: 1.2, raised: -0.35, down: 1.5, hang: 0.4, fall: 0.3, linger: 0.35 };
 
 export interface SpawnUnitOptions {
@@ -890,6 +891,7 @@ export class SimulationSystem {
     this._fans = [];
     for (const h of this._hammers) h.hinge.dispose(false, true);
     this._hammers = [];
+    this._clearChrono();
     for (const imp of this._impales.values()) imp.spear.dispose();
     this._impales.clear();
     for (const l of this._lassos.values()) { l.rope.dispose(); l.loop.dispose(); }
@@ -942,6 +944,7 @@ export class SimulationSystem {
     // a summoned Paladin hammer is a free node: it goes with the battle, or a reset leaves it hanging in the next scene
     for (const h of this._hammers) h.hinge.dispose(false, true);
     this._hammers = [];
+    this._clearChrono();
     for (const unit of this._units) {
       unit.stopMoving();
       unit.setSpinning(false);
@@ -987,6 +990,7 @@ export class SimulationSystem {
     this._samuraiBlocks(now);
     this._aegisFields(now);
     if (this._hammers.length > 0) this._stepHammers(now);
+    if (this._chrono.size > 0) this._stepChrono(now);
     this._firstLunges(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
@@ -3008,6 +3012,7 @@ export class SimulationSystem {
         this.projectileSystem!.spawnProjectile("time_bolt", hand.getAbsolutePosition().clone(), target, damage, knockback.scale(0.4), 0, attacker.team, this._units, undefined, k * 0.25, { originLift: 0, targetLift: 1, arc: .03 });
       });
       this._logAbility(attacker, "cast_time_bolts", now, target.position);
+      if (!this._chrono.has(attacker)) this._chronoTransform(attacker, now);
       return;
     }
 
@@ -3465,6 +3470,40 @@ export class SimulationSystem {
   }
 
   /** Projectile Block (SAMURAI_BLOCK): each ready samurai with a missile about to reach him cuts it out of the air with a bright slash. */
+  /** [S] 486 Chronomancer Transformation (card Abilities; good.chronomancer.png): at his first cast the back clock ring drops from his shoulders to
+   * ring his hips, tilts toward level, grows a quarter and lights gold-white, turning like a clock face, while glowing cubes drift round him.
+   * CHRONO_TRANSFORM: .settle s to move, the ring .drop torso heights down, tilted .tilt rad, .grow larger, .spin rad/s; cubes turn .orbit rad/s. */
+  private _chrono = new Map<RuntimeUnit, { at: number; ring: TransformNode; spin: TransformNode; home: Vector3; drop: number; lights: TransformNode; mats: Map<Mesh, Material | null> }>();
+  private _chronoTransform(unit: RuntimeUnit, now: number): void {
+    const ring = unit.body.torso.getChildren().find(n => n.name === "chronoBackRing") as TransformNode | undefined;
+    const spin = ring?.getChildren().find(n => n.name === "chronoRingSpin") as TransformNode | undefined;
+    if (!ring || !spin) return;
+    const tm = unit.body.torsoMesh, H = tm.getBoundingInfo().boundingBox.extendSize.y * 2 * tm.scaling.y;
+    const lit = chronoRingLit(ring.getScene()), mats = new Map<Mesh, Material | null>();
+    for (const m of spin.getChildMeshes(false)) { if (!(m instanceof Mesh)) continue; mats.set(m, m.material); m.material = lit; ring.getScene().getGlowLayerByName("glow")?.removeExcludedMesh(m); }
+    this._chrono.set(unit, { at: now, ring, spin, home: ring.position.clone(), drop: H * CHRONO_TRANSFORM.drop, lights: chronoLights(unit), mats });
+    this._logAbility(unit, "chrono_transform", now, unit.position);
+  }
+  private _stepChrono(now: number): void {
+    const C = CHRONO_TRANSFORM;
+    for (const [unit, st] of this._chrono) {
+      if (unit.isDead) { st.lights.setEnabled(false); continue; }
+      const t = Math.min(1, (now - st.at) / C.settle), e = t * t * (3 - 2 * t);
+      st.ring.position.set(st.home.x, st.home.y - st.drop * e, st.home.z * (1 - e));
+      st.ring.rotation.x = C.tilt * e;
+      st.ring.scaling.setAll(1 + C.grow * e);
+      st.spin.rotation.z = -(now - st.at) * C.spin;
+      st.lights.rotation.y = (now - st.at) * C.orbit;
+    }
+  }
+  private _clearChrono(): void {
+    for (const st of this._chrono.values()) {
+      st.ring.position.copyFrom(st.home); st.ring.rotation.x = 0; st.ring.scaling.setAll(1); st.spin.rotation.z = 0;
+      for (const [m, mat] of st.mats) { m.material = mat; m.getScene().getGlowLayerByName("glow")?.addExcludedMesh(m); }
+      st.lights.dispose(false, true);
+    }
+    this._chrono.clear();
+  }
   private _aegisState = new WeakMap<RuntimeUnit, { field: TransformNode; health: number; recharge: number; orbits?: TransformNode }>();
 
   private _aegisFields(now: number): void {
