@@ -1703,6 +1703,25 @@ export class SimulationSystem {
       }
       return;
     }
+    // [S] 485 Radiant Glaive Throw (card Weapons: range 12, cooldown 1.25 s): the glaive leaves the hand as a spinning missile that
+    // bounces on between enemies (ProjectileSystem RADIANT_BOUNCE); the held one is gone from the fist until it would be back.
+    if (unit.definition.id === "good.radiant_glaive") {
+      const held = unit.body.rightHand.getChildMeshes(false).find((m) => m.name === "radiantGlaive");
+      if (held && !held.isEnabled() && now >= (this._glaiveBack.get(unit) ?? 0)) held.setEnabled(true);
+      unit.faceTarget(enemy.position);
+      if (distance > 12) { if (canMove) this._moveUnitToward(unit, enemy.position, 12, now); return; }
+      unit.stopMoving(); this._clearPathState(unit);
+      if (canAttack && unit.canAttack(now) && this.projectileSystem) {
+        unit.setAttackCooldown(now, 1.25); unit.triggerAttackVisual(.5);
+        worldMatrixChain(unit.body.rightHand);
+        const from = unit.body.rightHand.getAbsolutePosition().clone();
+        const dir = enemy.position.subtract(unit.position); dir.y = 0; dir.normalize();
+        this.projectileSystem.spawnProjectile("radiant_glaive", from, enemy, attackProfile.damage * (unit.definition.damageMultiplier ?? 1), dir.scale(6), 0, unit.team, this._units, undefined, 0, { originLift: 0, targetLift: 1, arc: .05, bounces: 3 });
+        if (held) { held.setEnabled(false); this._glaiveBack.set(unit, now + 1); }
+        this._logAbility(unit, "throw_glaive", now, enemy.position);
+      }
+      return;
+    }
     if (unit.definition.id === "legacy.super_boxer") {
       if (this._boxerDashes.has(unit)) return;
       if (canAttack && canMove && distance < 4.8 && now >= (this._boxerDashReady.get(unit) ?? 0) && unit.canAttack(now)) {
@@ -3379,6 +3398,8 @@ export class SimulationSystem {
     }
   }
   private _lunged = new Set<RuntimeUnit>();
+  /** [S] 485 when a Radiant Glaive's thrown glaive is back in his fist (world seconds). */
+  private _glaiveBack = new WeakMap<RuntimeUnit, number>();
 
   /** Projectile Block (SAMURAI_BLOCK): each ready samurai with a missile about to reach him cuts it out of the air with a bright slash. */
   private _aegisState = new WeakMap<RuntimeUnit, { field: TransformNode; health: number; recharge: number; orbits?: TransformNode }>();

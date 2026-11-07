@@ -83,7 +83,7 @@ const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, flet
  * (audit 457 blowdarter c.2: the dart flew as a full arrow).
  */
 const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
-export type ProjectileShape = "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
+export type ProjectileShape = "radiant_glaive" | "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -124,6 +124,8 @@ interface ActiveProjectile {
   drunk?: string;
   /** A snake archer's snake: where it lands it is handed to the simulation as a live snake (snakeLand), not left standing as a shaft. */
   snake?: boolean;
+  bounces?: number;
+  bounced?: RuntimeUnit[];
   /** Dodged (Painter Dodge): it no longer follows its man and comes down where he stood; it strikes him only if he is still there. */
   loose?: boolean;
 }
@@ -232,6 +234,9 @@ interface ProjectileSpawnOptions {
   drunk?: string;
   /** [S] 427 A ground point the missile comes down on instead of the man (the Pirate Queen's Bomb Spin bombs, lobbed out all round her): it does not follow him. */
   at?: Vector3;
+  /** [S] 485 A radiant glaive: hops left after this hit, and the men it has already struck (RADIANT_BOUNCE). */
+  bounces?: number;
+  bounced?: RuntimeUnit[];
   /** Seconds of flight in place of the shape's own speed (a slow lob). */
   flight?: number;
 }
@@ -415,6 +420,7 @@ export class ProjectileSystem {
     switch (shape) {
       case "aegis_orb": speed = 18; arcHeight = dist*.04; break;
       case "arbiter_light": speed = 18; arcHeight = dist*.16; break;
+      case "radiant_glaive": speed = 25; arcHeight = dist*.05; break;
       case "arrow":   speed = 35; arcHeight = dist * 0.08; break;
       case "small_arrow": speed = 35; arcHeight = dist * 0.08; break;
       case "blowdart": speed = 32; arcHeight = dist * 0.04; break;
@@ -516,7 +522,7 @@ export class ProjectileSystem {
       targetLift: options.targetLift ?? 0.5,
       balloons: options.balloons, fireArrow: options.fireArrow && shape === "arrow", drunk: options.drunk, snake: options.snake && shape === "arrow" && !held,
       trailSystem, trailStarted,
-      half: held?.half,
+      half: held?.half, bounces: options.bounces, bounced: options.bounced,
       rope: options.tether ? this._buildRope() : undefined,
       tether: options.tether,
       hover: options.hover,
@@ -759,6 +765,7 @@ export class ProjectileSystem {
         }
       }
 
+      if (p.shape === "radiant_glaive") { const spin = p.mesh.getChildren().find((c) => c.name === "glaiveSpin") as TransformNode | undefined; if (spin) spin.rotation.y += dt * 22; }
       // Shuriken spin
       if (p.shape === "shuriken") {
         const spin = p.mesh.getChildren().find((c): c is TransformNode => c.name === "shurikenSpin");
@@ -956,7 +963,35 @@ export class ProjectileSystem {
     return true;
   }
 
+  /**
+   * [S] 485 RADIANT_BOUNCE (card Characteristics: "its projectile can bounce between units ... the higher [the weight], the less it will bounce"):
+   * the glaive strikes its man, then flies on from him to the nearest enemy it has not struck within .reach m, .hops times at most; a heavy man
+   * (collision radius over .heavy m) costs two hops. Each hop is logged so the capture can read the chain.
+   */
+  private _radiantBounce(p: ActiveProjectile): void {
+    const B = { reach: 7, hops: 3, heavy: .8 };
+    const struck = [...(p.bounced ?? []), p.target];
+    if (!p.target.isDead && Vector3.DistanceSquared(p.target.position, p.targetPos) < 4) {
+      const delta = p.target.applyDamage(p.damage, p.knockback);
+      this.impactPresentation?.recordImpact({ source: "projectile", path: "projectile-direct", position: p.target.position, target: p.target, impactDelta: delta, damage: p.damage, impulse: p.knockback, radius: 0, falloff: 1, attackerTeam: p.attackerTeam });
+    }
+    const left = (p.bounces ?? B.hops) - (p.target.collisionBodyRadius > B.heavy ? 2 : 1);
+    if (left < 0) return;
+    let next: RuntimeUnit | null = null, best = B.reach * B.reach;
+    for (const u of p.allUnits) {
+      if (u.isDead || u.team === p.attackerTeam || struck.includes(u)) continue;
+      const d = Vector3.DistanceSquared(u.position, p.targetPos);
+      if (d < best) { best = d; next = u; }
+    }
+    if (!next) return;
+    const dir = next.position.subtract(p.targetPos); dir.y = 0; if (dir.lengthSquared() > 1e-6) dir.normalize();
+    this.spawnProjectile("radiant_glaive", p.targetPos.clone(), next, p.damage, dir.scale(p.knockback.length()), 0, p.attackerTeam, p.allUnits, undefined, 0,
+      { originLift: p.targetLift, targetLift: 1, arc: .05, bounces: left, bounced: struck });
+    this.abilityHook?.("good.radiant_glaive", "glaive_bounce", p.targetPos);
+  }
+
   private _onImpact(p: ActiveProjectile): void {
+    if (p.shape === "radiant_glaive") { this._radiantBounce(p); return; }
     if(p.shape==="arbiter_light") {
       this.visualEffects?.spawnDivineRay(p.targetPos);
       // The ray, rather than the missile, hurts everyone in its footprint.
@@ -1671,6 +1706,20 @@ export class ProjectileSystem {
         tail.position.z = -W.tail / 2;
         tail.material = mf.get("unlit", W.shell, { emissive: W.shell, alpha: 0.5 });
         tail.parent = root;
+        break;
+      }
+      case "radiant_glaive": {
+        // [S] 485 the thrown Radiant Glaive (good.radiant_glaive.jpg): a flat gold ring with two swept blades and a white core, spun about
+        // its upright like a discus. Spec: ring .62 m across, blades .42 m long; unlit so the gold reads in flight.
+        const spin = new TransformNode("glaiveSpin", this._scene); spin.parent = root;
+        const goldC = new Color3(1.3, .85, .2), gold = getMaterialFactory().get("unlit", goldC, { emissive: goldC });
+        const coreC = new Color3(1.6, 1.5, 1.1), core = getMaterialFactory().get("unlit", coreC, { emissive: coreC });
+        const ring = MeshBuilder.CreateTorus("glaiveRing", { diameter: .62, thickness: .07, tessellation: 12 }, this._scene); ring.parent = spin; ring.material = gold;
+        for (const side of [-1, 1]) {
+          const blade = MeshBuilder.CreateCylinder("glaiveBlade", { height: .42, diameterBottom: .16, diameterTop: 0, tessellation: 3 }, this._scene);
+          blade.parent = spin; blade.scaling.z = .3; blade.rotation.z = side * -Math.PI / 2; blade.rotation.y = side * .5; blade.position.set(side * .42, 0, side * .1); blade.material = gold;
+        }
+        const hub = MeshBuilder.CreateIcoSphere("glaiveCore", { radius: .1, subdivisions: 1 }, this._scene); hub.parent = spin; hub.material = core;
         break;
       }
       case "arbiter_light": {
