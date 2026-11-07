@@ -20,4 +20,4 @@ d PASS (488 stats)
 ## Notes (max 3 lines)
 - Shield (kite board, posePreset monarch) covers waist to mid-thigh in idle; the carry board pose (_buildCarry board) did not move it: the idle board is placed elsewhere - probe before trying the shield again.
 - 488 stance: square with PALADIN_SPLAY .15 (proceduralAnimation p.spread); the legs part, cops read on both.
-- Shorts must show below/beside the shield to clear blocker 1.
+- Shorts must show below/beside the shield to clear blocker 1. 489: gap 1 has 2 attempts (487, 488 dropped): not pickable; shorts are hidden behind the centred idle shield.

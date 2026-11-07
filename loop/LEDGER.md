@@ -4,6 +4,14 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+489 | 5df4161c | good.celestial_aegis.a | approved ([R] blocker 1; a PASS; CONFIRM D)
+489 | f0e9a4e5 | good.chronomancer.a | approved (blocker 6; CONFIRM failed a)
+489 | 504716a7,b6f1d5ba | good.sacred_elephant.a | approved (blocker 2)
+489 | 2c327ce9 | evil.shadow_walker.b | approved (no strike)
+489 | 48281a0d | evil.shadow_walker.b | approved (blocker 2)
+489 | ab3c3690 | evil.exiled_sentinel.a | approved (blocker 1)
+489 | a755e889 | evil.exiled_sentinel.b | approved (blocker 2)
+
 488 | 3d214b80,90d5416e,f63699d0 | good.celestial_aegis.a | approved (blocker 1)
 488 | 51b500fc | good.celestial_aegis.a | approved (blocker 2; CONFIRM failed a: plateau)
 488 | db9eceee | good.divine_arbiter.a | approved (blocker 1)
@@ -44,26 +52,22 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 485 | 0412f565 | good.chronomancer.a | approved (blocker 1)
 485 | a18bb6c5 | good.sacred_elephant.a | approved (blocker 1)
 
-484 | bd4ab456 | good.devout_gauntlet.a | approved (blocker 4)
-484 | 83882d91 | good.devout_gauntlet.a | approved (blocker 6)
-484 | b9d412bc | good.devout_gauntlet.a | approved (blocker 5)
-484 | 76412962 | good.radiant_glaive.b | approved (blocker 3)
-484 | cf178b1e | good.righteous_paladin.a | approved (blocker 2)
-484 | aca3f94b | good.celestial_aegis.c | approved (blocker 1)
-484 | b52aff2f | good.celestial_aegis.c | approved (blocker 2)
-484 | 212ed7e2 | good.divine_arbiter.a | approved (blocker 2)
-484 | 9f62f67c | good.divine_arbiter.c | approved (blocker 1)
-
 
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+UV:CHRONO build/stance | 1.3,.9bulk,.9W,legs1.4,.76/.7;upright hook on chronoCrownBand,lean.04 | 489 | approved | .96bulk;seeded crouch
+VB:ELEPHANT_EAR | jittered flap .74H x.6L x.1,out.68 z.1 flare.5 droop.12;fold roll on top tipped.6 | 489 | approved | 7-sided disc .95 flare.55
+PB:BONE_DAGGER | .42stand curved 5-seg blade,sweep.11,4 spine teeth,tan(.62,.55,.36) lit;offhand none | 489 | approved | dark shuriken pair
+PB:PAVISE | coffin .42H x.17W,dark team .42,bone rim,2 studded bands;torso mount -.36SW,top .92neck | 489 | approved | tower slab on hand
+evilDress:SENTINEL_CONE | black 8-sided cone 1.06W->.2W,1.75H,brim.36H,lean.12;3 rows x6 team spikes | 489 | approved | great_helm
+evil stats cost/hm/dm/cm (7 units, 3666e25c) | d PASS 7/7 | 489 | stats | initial manifest
 UV:RADIANT build/stance | 1.24,.92bulk,.92W,legs1.38,.76/.7;upright | 487 | approved | 1.16bulk;seeded crouch
 goodDress:RADIANT_TROUSERS | team legs,gold half-diamond1.1P to .55T,flank tri .6L,knee band2.4w+fin,shin.78,white feet,ankle2.5w | 487 | approved | dark pants,grey boots
 goodDress:RADIANT_CAPE | team*.75 slab1.1->1.4W,1.9H,tilt.1,gold hem.1H,clasps.14W | 487 | approved | none
-goodMagic:AEGIS_FIELD look | built at spawn;6m sphere,alpha.01+opacity fresnel .03->.5 p3,emissive fresnel cream->yellow,culled back;no rings | 488 | approved | alpha.055 fill + two gold great circles (sim only)
+goodMagic:AEGIS look | 6m sphere unlit,diffuse black;opacity fresnel power.25 face.02 rim.62;emissive rim(1,.82,.3) face(1,.97,.86);orbs team lerp .25 white,<=1 | 489 | approved | power3 alpha.01+.03->.5 amber wash (488);alpha.055 + gold circles
 goodDress:CHRONO_CROP | white unlit shell from -.15H to top,1.06W;gold hem.07H,neck ring.5W,armholes;trunk head skin | 488 | approved | icy body torso
 goodDress:CHRONO_BREECHES | thigh shell1.5r,knee puff1.55r to .2S,gold band1.45r .24-.34S,boot1.22r;belt8-sided1.15P grey,gold buckle.3P,white ring | 488 | approved | icy legs
 goodDress:CHRONO_ARMBANDS | upper bands1.4r .18-.3/.5-.62,fore1.35r .1-.22;white winglets .5U long .2U tip,yaw.5 | 488 | approved | bare arms
