@@ -24,6 +24,7 @@ import { skeletonBone, unglowBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
+import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -531,6 +532,8 @@ export class UnitFactory {
     if (definition.id === "good.celestial_aegis" && !shouldUseVehicleBody) propMeshes.push(...aegisHoodie(this._scene, body, teamColor));
     // [S] 486 flared team skirt with black waist, gold hem and bordered gold front (goodDress)
     if (definition.id === "good.celestial_aegis" && !shouldUseVehicleBody) propMeshes.push(...aegisSkirt(this._scene, body, teamColor));
+    // [S] 488 her field bubble and six orbs stand round her from spawn (goodMagic; the battle finds and runs them)
+    if (definition.id === "good.celestial_aegis" && !shouldUseVehicleBody) { aegisField(body.root); aegisOrbits(body.root, teamColor); }
     if (definition.id === "good.radiant_glaive" && !shouldUseVehicleBody) propMeshes.push(...radiantHelmet(this._scene, body, teamColor));
     // [S] 486 gold-trimmed team vest over baggy white uneven sleeves (goodDress)
     if (definition.id === "good.radiant_glaive" && !shouldUseVehicleBody) propMeshes.push(...radiantVest(this._scene, body, teamColor));

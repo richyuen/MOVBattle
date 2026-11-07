@@ -18,6 +18,7 @@ import { reaperSpear } from "../units/spookyDress";
 import { lassoRope } from "../units/wildWestDress";
 import { bearerReach } from "../units/legacyDress";
 import { aegisField, aegisOrbits, chronoLights, chronoRingLit, paladinGiantHammer } from "./goodMagic";
+import { TEAM_COLORS } from "../data/factionColors";
 
 import type { HazardRegion } from "../map/hazards";
 import { isPointInsideHazard } from "../map/hazards";
@@ -3510,9 +3511,10 @@ export class SimulationSystem {
     for (const unit of this._units) {
       if (unit.definition.id !== "good.celestial_aegis") continue;
       let state = this._aegisState.get(unit);
-      if (!state) { state = { field: aegisField(unit), health: 500, recharge: 0 }; this._aegisState.set(unit,state); }
-      if (unit.isDead) { state.field.setEnabled(false); continue; }
-      state.orbits ??= aegisOrbits(unit);
+      // [S] 488 the field and orbs are built at spawn (unitFactory): these find them on her root
+      if (!state) { state = { field: aegisField(unit.body.root), health: 500, recharge: 0 }; this._aegisState.set(unit,state); }
+      if (unit.isDead) { state.field.setEnabled(false); state.orbits?.setEnabled(false); continue; }
+      state.orbits ??= aegisOrbits(unit.body.root, TEAM_COLORS[unit.team] ?? Color3.White());
       state.orbits.rotation.y=now*.8;
       if (state.health <= 0 && now >= state.recharge) { state.health=500; state.field.setEnabled(true); this._logAbility(unit,"aegis_recharge",now,unit.position); }
       if (state.health <= 0) continue;

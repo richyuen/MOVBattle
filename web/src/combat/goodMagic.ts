@@ -1,32 +1,38 @@
-import { Color3, MeshBuilder, StandardMaterial, TransformNode } from "@babylonjs/core";
+import { Color3, FresnelParameters, MeshBuilder, StandardMaterial, TransformNode } from "@babylonjs/core";
 import { TEAM_COLORS } from "../data/factionColors";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 
-/** Aegis Shield: transparent enclosing sphere with a faded yellow border,
- * three ordinary units across (card Appearance); no collision with bodies. */
-export function aegisField(unit: RuntimeUnit): TransformNode {
-  const scene = unit.body.root.getScene(), root = new TransformNode("aegisField", scene);
-  root.parent = unit.body.root; root.position.y = 1.7;
+/** [S] 488 Aegis Shield (good.celestial_aegis.red.png, card Appearance): it
+ * stands round her from spawn, not only once the battle runs. Spec: a
+ * see-through sphere 6 m across (three units), centred 1.7 m up, clear where
+ * it faces the eye and fading to a pale yellow rim at its silhouette (an
+ * opacity and emissive fresnel, no drawn rings); no collision with bodies.
+ * Built once per unit: a second call returns the field already on her root. */
+export function aegisField(root0: TransformNode): TransformNode {
+  const had = root0.getChildren().find(n => n.name === "aegisField");
+  if (had instanceof TransformNode) return had;
+  const scene = root0.getScene(), root = new TransformNode("aegisField", scene);
+  root.parent = root0; root.position.y = 1.7;
   const glass = new StandardMaterial("aegisGlass",scene);
-  glass.diffuseColor = new Color3(1,.86,.32); glass.emissiveColor = new Color3(.35,.27,.06);
-  glass.alpha=.055; glass.backFaceCulling=false; glass.disableLighting=true;
-  const sphere=MeshBuilder.CreateSphere("aegisTransparentField",{diameter:6,segments:16},scene);
-  sphere.parent=root;sphere.material=glass;
-  const gold = new StandardMaterial("aegisFieldBorder",scene);
-  gold.emissiveColor=new Color3(1,.78,.22); gold.alpha=.48; gold.disableLighting=true;
-  for(const axis of [0,1]) {
-    const ring=MeshBuilder.CreateTorus("aegisGoldBorder",{diameter:6,thickness:.035,tessellation:64},scene);
-    ring.parent=root;ring.rotation.x=Math.PI/2;ring.rotation.y=axis*Math.PI/2;ring.material=gold;
-  }
+  glass.diffuseColor = new Color3(1,.86,.32); glass.emissiveColor = new Color3(1,.84,.36);
+  glass.alpha=.7; glass.backFaceCulling=false; glass.disableLighting=true;
+  // the rim: opaque-ish yellow at the edge, all but clear face-on
+  glass.opacityFresnelParameters = new FresnelParameters({ leftColor: Color3.White(), rightColor: new Color3(.03,.03,.03), bias: 0, power: 2.6 });
+  glass.emissiveFresnelParameters = new FresnelParameters({ leftColor: new Color3(1,.86,.4), rightColor: new Color3(.5,.42,.16), bias: 0, power: 1.4 });
+  const sphere=MeshBuilder.CreateSphere("aegisTransparentField",{diameter:6,segments:24},scene);
+  sphere.parent=root;sphere.material=glass;sphere.isPickable=false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(sphere);
   return root;
 }
 
-/** Six team-light satellites orbit inside the field at chest height. */
-export function aegisOrbits(unit: RuntimeUnit): TransformNode {
-  const scene=unit.body.root.getScene(),root=new TransformNode("aegisOrbit",scene);
-  root.parent=unit.body.root;root.position.y=1.7;
+/** Six team-light satellites float inside the field at chest height (from spawn; the battle spins them). */
+export function aegisOrbits(root0: TransformNode, team: Color3): TransformNode {
+  const had = root0.getChildren().find(n => n.name === "aegisOrbit");
+  if (had instanceof TransformNode) return had;
+  const scene=root0.getScene(),root=new TransformNode("aegisOrbit",scene);
+  root.parent=root0;root.position.y=1.7;
   const mat=new StandardMaterial("aegisOrbitLight",scene);
-  mat.emissiveColor=(TEAM_COLORS[unit.team] ?? Color3.White()).scale(1.6);mat.disableLighting=true;
+  mat.emissiveColor=team.scale(1.6);mat.disableLighting=true;
   for(let k=0;k<6;k++) {
     const a=k*Math.PI/3,orb=MeshBuilder.CreateIcoSphere("aegisOrbitOrb",{radius:.17,subdivisions:1},scene);
     orb.parent=root;orb.position.set(Math.sin(a)*1.8,Math.sin(a*2)*.45,Math.cos(a)*1.8);orb.material=mat;
