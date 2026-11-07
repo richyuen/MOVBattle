@@ -13,7 +13,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 
 ## Capture and probes
-- Supplementary shots (fixed-camera pairs, lineup_good_wide) show full fields, late volleys or cropped units without changing existing cameras (484, 485).
+- Supplementary shots (fixed-camera pairs, lineup_good_wide) show fields, late volleys or cropped units without moving cameras (484).
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is written by stats.mjs, not by capture; every non-regression capture wipes iter-N (stats.json, a tail-overlap batch's audit.md too) and each stats run overwrites it: copy audit.md out before step 5 and restore it, rerun `stats.mjs <id,id,...> --iter N` once with every unit after the final capture (422).
 - Probes in loop/scripts/probes/, repo root (--build after source changes): probe_bbox (--unit --pat --frame=torso), probe_mat <unit> <regex>, probe_near/close/head/local/axes/impale/bowdraw. probe_close takes --aim=head|torso|y:<y>, --dist, --yaw, --noglow.
@@ -28,15 +28,14 @@ Read whole at step 1; one fact per line, merge near cap.
 - Capture frames by mesh top when a prop exceeds the head by .3 of UNIT height: taller props re-frame all shots, requiring RE-AUDIT (420, 447).
 - `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches (render them after).
 - A dress change aimed at the idle must clear the rest pose: probe what covers that band first (442 queen: the hem-to-knee band sat behind her sword guards, two commits dropped). A giant's metrics.overallHeight is pre-hover: use headTop world y.
-- Two gaps in one file: commit them apart by staging a hunk subset (git diff > f.patch, keep the hunks, git apply --cached), so each reverts alone (406).
+- Two gaps in one file: commit apart by staging a hunk subset (git diff > f.patch, keep hunks, git apply --cached) so each reverts alone (406).
 - Logged at the swing start / let-go, not the landing: a preset's instant "slam" (use the pending blow, 426); a special logged as a missile leaves owns that missile (427 queen). A status logged at the cast (fire_dot) makes _struck precede the missile: an on-landing mechanic needs ABILITY_PREF (435 candlehead).
 - The _ability/_release shots are the log tick itself, before RuntimeUnit.update: a swap or pose set at the log shows only after (437 bat). A latch reads in _release when it pins at the decision and its plain hits come from the draughts .3 s on (444 vampire).
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
 - An idle hold gated on Attacking+throw stays on through a long-cooldown windup: gate it on the fire (451). RuntimeUnit._applyPoseOverlay (posePreset gunner, archer...) runs AFTER the animator's layers and re-turns a held aim: probe the final frame (455 barrel 17° up).
-- Dispose sim-spawned free meshes in endSimulation: the idle shot resets without a battle start (485 hammer).
 ## Rig and dress
-- Retire superseded hip skirts/ropes: old overlays can protrude through a new torso shell (482).
+- Retire superseded hip skirts/ropes (482). The `_yoke` hull spans the trunk, wider than a slim torso: re-skin it for a bare waist, size shells from it (487).
 - A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen). The `_yoke` hull spans the whole trunk, not a collar: never anchor a chest piece to its foot (444).
 - A one-sided disc flipped by its summed normal (faceFront) can face away (390 halfling): build small flat dress pieces as thin closed slabs.
@@ -54,5 +53,6 @@ Read whole at step 1; one fact per line, merge near cap.
 - A prop not in _carryProp's node regex rides the fist, so _aimBlow's raised fist points it back at the hit: lay it on _aimTip before _twoHandPole (451 miner).
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
 - A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
-- A torso-rooted shield can seem held in idle but detach from the trailing offhand in windup; inspect both before review (483).
+- A torso-rooted shield can look held in idle but detach in windup; inspect both (483).
+- Dispose sim-spawned meshes in endSimulation: the idle shot resets without a battle start (485).
 - A lethal duel freezes post-impact shots; a distant reserve keeps corpse time advancing (480).
