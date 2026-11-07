@@ -3648,9 +3648,10 @@ function mammothEars(scene: Scene, neck: TransformNode, fur: Material, allMeshes
  *   - the flap a jittered faceted plate ELEPHANT_EAR.tall high, .long front to back, .thick thick, its middle at (.out, .y, .z), swung only .flare rad
  *     so it hugs the skull, hanging .droop rad off plumb, its back edge a little out;
  *   - the fold a thinner jittered roll .foldTall high along the flap's top, set .foldOut further out and tipped .foldTip rad outward over it;
+ *   - (489b) just behind the eye, not at the skull's back: at z -.06 the flaps sat behind the skull and hull and the look showed no ear;
  *   - both named "ear" so they take the elephant's hide (ELEPHANT_HIDE_PIECES), not a separate colour.
  */
-const ELEPHANT_EAR = { tall: 0.62, long: 0.5, thick: 0.1, out: 0.64, y: -0.06, z: -0.06, flare: 0.3, droop: 0.12, jitter: 0.1,
+const ELEPHANT_EAR = { tall: 0.74, long: 0.6, thick: 0.1, out: 0.68, y: -0.04, z: 0.1, flare: 0.5, droop: 0.12, jitter: 0.1,
   foldTall: 0.16, foldLong: 0.46, foldThick: 0.07, foldOut: 0.06, foldTip: 0.6 };
 /** The sacred elephant's ears (spec at ELEPHANT_EAR). */
 function elephantEars(scene: Scene, neck: TransformNode, hide: Material, allMeshes: Mesh[]): void {
