@@ -888,6 +888,8 @@ export class SimulationSystem {
     this._latches.clear();
     this._rains = [];
     this._fans = [];
+    for (const h of this._hammers) h.hinge.dispose(false, true);
+    this._hammers = [];
     for (const imp of this._impales.values()) imp.spear.dispose();
     this._impales.clear();
     for (const l of this._lassos.values()) { l.rope.dispose(); l.loop.dispose(); }
@@ -937,6 +939,9 @@ export class SimulationSystem {
     }
     this._isRunning = false;
     this._clearSnakes();
+    // a summoned Paladin hammer is a free node: it goes with the battle, or a reset leaves it hanging in the next scene
+    for (const h of this._hammers) h.hinge.dispose(false, true);
+    this._hammers = [];
     for (const unit of this._units) {
       unit.stopMoving();
       unit.setSpinning(false);
