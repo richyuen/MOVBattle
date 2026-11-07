@@ -531,3 +531,41 @@ export function aegisHoodie(scene: Scene, body: ArticulatedBody, team: Color3): 
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/** [S] 486, good.celestial_aegis.red.png: a flared team skirt to mid-thigh
+ * over bare team legs and tall team boots. Spec (pelvis widths P, thigh
+ * lengths T): 8-sided frustum 1.1P at the waist to 1.85P at the hem, .62T
+ * below the hip joints; black waistband .12 of the skirt; gold hem .09; a
+ * gold trapezoid .5P to .26P across the front, .8 of the skirt long, inside
+ * a black border .06P; the thighs are bare skin, the shins boot cloth. */
+export function aegisSkirt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const pelvis = body.hip.getChildMeshes(true).find(m => m.name.endsWith("_pelvis"));
+  if (!(pelvis instanceof Mesh)) return [];
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  const blackC = new Color3(0.08, 0.08, 0.1), black = mf.get("unlit", blackC, { emissive: blackC });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  const P = limbBox(pelvis), PW = P.wide * 2, PD = P.deep * 2;
+  const thigh = limbBox(body.leftUpperLeg), top = P.mid + P.half, bottom = body.leftHip.position.y - thigh.half * 2 * 0.62;
+  const h = top - bottom, out: Mesh[] = [];
+  const ring = (name: string, y0: number, y1: number, d0: number, d1: number, mat: Material): Mesh => {
+    const m = MeshBuilder.CreateCylinder(name, { height: y1 - y0, diameterTop: d1, diameterBottom: d0, tessellation: 8 }, scene);
+    m.parent = body.hip; m.position.y = (y0 + y1) / 2; m.scaling.z = PD / PW * 1.15; m.rotation.y = Math.PI / 8; m.material = mat; out.push(m); return m;
+  };
+  const at = (y: number) => PW * (1.85 - 0.75 * (y - bottom) / h);
+  ring("aegisSkirt", bottom, top, at(bottom), at(top), cloth);
+  ring("aegisSkirtWaist", top - h * 0.12, top + h * 0.02, at(top - h * 0.12) * 1.03, at(top) * 1.03, black);
+  ring("aegisSkirtHem", bottom - h * 0.01, bottom + h * 0.09, at(bottom) * 1.03, at(bottom + h * 0.09) * 1.03, gold);
+  const panelTop = top - h * 0.12, len = h * 0.8, front = (y: number) => at(y) * 0.5 * PD / PW * 1.15 * 0.93;
+  const trap = (w0: number, w1: number) => [[-w0 / 2, 0], [w0 / 2, 0], [w1 / 2, -len], [-w1 / 2, -len]];
+  const border = ornament(scene, "aegisSkirtPanelBorder", trap(PW * 0.62, PW * 0.38).map(([x, y]) => [x, y + PW * 0.03]), PD * 0.04, body.hip, black);
+  border.position.set(0, panelTop, front(panelTop - len / 2) + PD * 0.02); border.rotation.x = -Math.atan2(PW * 0.375 * PD / PW, h); out.push(border);
+  const panel = ornament(scene, "aegisSkirtPanel", trap(PW * 0.5, PW * 0.26), PD * 0.04, body.hip, gold);
+  panel.position.set(0, panelTop, border.position.z + PD * 0.03); panel.rotation.x = border.rotation.x; out.push(panel);
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  body.leftUpperLeg.material = body.skinMaterial; body.rightUpperLeg.material = body.skinMaterial;
+  body.leftLowerLeg.material = cloth; body.rightLowerLeg.material = cloth;
+  for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) m.material = cloth;
+  pelvis.material = cloth;
+  return out;
+}

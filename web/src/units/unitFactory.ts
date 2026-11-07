@@ -24,7 +24,7 @@ import { skeletonBone, unglowBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
-import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet } from "./goodDress";
+import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
@@ -529,6 +529,8 @@ export class UnitFactory {
     if (definition.id === "good.celestial_aegis" && !shouldUseVehicleBody) propMeshes.push(...aegisButterflyHair(this._scene, body, teamColor));
     // [S] 486 cropped sleeveless team hoodie, bare waist, gold toggle (goodDress)
     if (definition.id === "good.celestial_aegis" && !shouldUseVehicleBody) propMeshes.push(...aegisHoodie(this._scene, body, teamColor));
+    // [S] 486 flared team skirt with black waist, gold hem and bordered gold front (goodDress)
+    if (definition.id === "good.celestial_aegis" && !shouldUseVehicleBody) propMeshes.push(...aegisSkirt(this._scene, body, teamColor));
     if (definition.id === "good.radiant_glaive" && !shouldUseVehicleBody) propMeshes.push(...radiantHelmet(this._scene, body, teamColor));
     // [S] 486 gold-trimmed team vest over baggy white uneven sleeves (goodDress)
     if (definition.id === "good.radiant_glaive" && !shouldUseVehicleBody) propMeshes.push(...radiantVest(this._scene, body, teamColor));
