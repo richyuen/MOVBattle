@@ -355,13 +355,13 @@ const good = makeFaction(FactionId.Good, "good", [
 ]);
 
 const evil = makeFaction(FactionId.Evil, "evil", [
-  ["shadow_walker", "Shadow Walker", 220, "light_melee", { abilities: ["teleport"], weaponHint: "dagger" }],
-  ["exiled_sentinel", "Exiled Sentinel", 300, "shield_melee", { shieldHint: "tower", weaponHint: "sword" }],
-  ["mad_mechanic", "Mad Mechanic", 650, "thrower", { weaponHint: "hammer", projectileHint: "bomb" }],
-  ["void_cultist", "Void Cultist", 800, "special_magic", { abilities: ["summon"], weaponHint: "staff", summonUnitIds: ["evil.exiled_sentinel"], summonCount: 1 }],
-  ["tempest_lich", "Tempest Lich", 1500, "special_magic", { abilities: ["lightning_strike", "push_force"], weaponHint: "staff" }],
-  ["death_bringer", "Death Bringer", 2500, "boss_melee", { weaponHint: "greatsword", abilities: ["fear"] }],
-  ["void_monarch", "Void Monarch", 4000, "special_magic", { abilities: ["summon", "fear"], weaponHint: "staff", size: "giant", summonUnitIds: ["evil.shadow_walker"], summonCount: 2 }],
+  ["shadow_walker", "Shadow Walker", 200, "light_melee", { abilities: ["teleport"], weaponHint: "dagger", healthMultiplier: 0.27, damageMultiplier: 0.17, cooldownMultiplier: 1.5 }],
+  ["exiled_sentinel", "Exiled Sentinel", 300, "shield_melee", { shieldHint: "tower", weaponHint: "sword", healthMultiplier: 1.27, damageMultiplier: 0.26, cooldownMultiplier: 0.77 }],
+  ["mad_mechanic", "Mad Mechanic", 500, "thrower", { weaponHint: "hammer", projectileHint: "bomb", healthMultiplier: 0.7, damageMultiplier: 0.01, cooldownMultiplier: 0.45 }],
+  ["void_cultist", "Void Cultist", 800, "special_magic", { abilities: ["summon"], weaponHint: "staff", summonUnitIds: ["evil.exiled_sentinel"], summonCount: 1, damageMultiplier: 0.53, cooldownMultiplier: 0.56 }],
+  ["tempest_lich", "Tempest Lich", 1000, "special_magic", { abilities: ["lightning_strike", "push_force"], weaponHint: "staff", healthMultiplier: 0.08, damageMultiplier: 2.72, cooldownMultiplier: 3.33 }],
+  ["death_bringer", "Death Bringer", 2000, "boss_melee", { weaponHint: "greatsword", abilities: ["fear"], healthMultiplier: 0.39, damageMultiplier: 0.37, cooldownMultiplier: 0.22 }],
+  ["void_monarch", "Void Monarch", 3000, "special_magic", { abilities: ["summon", "fear"], weaponHint: "staff", size: "giant", summonUnitIds: ["evil.shadow_walker"], summonCount: 2, healthMultiplier: 0.23, damageMultiplier: 0.53, cooldownMultiplier: 0.56 }],
 ]);
 
 // Our own versions of units, kept as they were before the TABS-fidelity loop reworked the originals. The loop never audits this faction
