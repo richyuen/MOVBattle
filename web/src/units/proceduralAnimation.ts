@@ -200,6 +200,8 @@ const BOARD_PLANE_MAX_OUT = 0.7;
 const BOARD_SEAT_HEIGHT = 0.62;
 // The shield fist is reached to this far behind the board's seat, at its back, so it does not come through the face.
 const BOARD_GRIP_BACK = 0.12;
+// The Paladin's shield arm at rest (shoulder pitch forward, out, elbow fold; rad): the fist at the lower chest, so the board rides chest to crotch.
+const PALADIN_BOARD = { raise: -0.62, out: 0.08, elbow: -1.75 };
 /** The front man's couched spear arm: the upper arm hangs forward of plumb by this much and the elbow folds the forearm up to carry the fist at the waist. */
 const SPEAR_COUCH_RAISE = -0.45;
 const SPEAR_COUCH_ELBOW = -1.25;
@@ -2682,7 +2684,9 @@ export class ProceduralAnimator {
         ? { raise: ICE_UPRIGHT.raise, out: ICE_UPRIGHT.out, elbow: ICE_UPRIGHT.elbow, tip: lean(...ICE_UPRIGHT.tip), left: { ...ICE_UPRIGHT.left }, prop: stave, yaw: ICE_UPRIGHT.yaw, stagger: ICE_UPRIGHT.stagger, give: ICE_UPRIGHT.give }
         : armed ? { ...hold, prop: stave, yaw: 0.6 + h(89) * 0.35, stagger: 0.4 + h(90) * 0.2, give: 0.1 + h(91) * 0.16 }
         : rodHold ? { ...rodHold, prop: rodProp, yaw: 0.1 + h(89) * 0.25, stagger: 0, give: 0, cast: true, overhead: rod?.id === "boneStaff" } : null,
-      board: this._shieldBoard() ? { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 } : null,
+      // [S] 488 the Paladin holds his round shield up at the chest, his forearm across the belly (good.righteous_paladin.red.png: its foot at the
+      // crotch, the puffed team shorts below it), not hung to mid-thigh over them (PALADIN_BOARD)
+      board: this._shieldBoard() ? (this._body.headMesh.getChildMeshes(true).some(m => m.name === "paladinPonytail") ? { ...PALADIN_BOARD } : { raise: -0.3 - h(85) * 0.4, out: -0.15 + h(86) * 0.3, elbow: -0.8 - h(87) * 0.5 }) : null,
       bob: 0.08 + h(84) * 0.1,
       beat: h(88) * Math.PI,
     };
