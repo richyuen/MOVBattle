@@ -1,7 +1,7 @@
 import { Color3, Mesh, MeshBuilder, Scene, Vector3, VertexData, type Material, type TransformNode } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
-import { limbBox } from "./medievalDress";
+import { limbBox, limbShell } from "./medievalDress";
 
 /** Closed faceted ornament in its parent's XY plane, with a real back face. */
 function ornament(scene: Scene, name: string, points: number[][], depth: number, parent: TransformNode, material: Material): Mesh {
@@ -175,6 +175,32 @@ export function arbiterPetalCollar(scene: Scene, body: ArticulatedBody): Mesh[] 
     petal.parent = body.neck; petal.material = gold; petal.convertToFlatShadedMesh();
     scene.getGlowLayerByName("glow")?.addExcludedMesh(petal); out.push(petal);
   }
+  return out;
+}
+
+/** [S] 485, good.devout_gauntlet.blue.png: pale grey cloth wraps cover the
+ * lower two thirds of each arm, from mid upper arm to the gold fist. Spec:
+ * upper-arm shell .45->1 of the bone at 1.45 bone widths, forearm shell
+ * 0->.94 at 1.7 widths, three proud wrap ridges a
+ * shade darker. Six-sided, closed, out of the glow layer. */
+export function devoutArmWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const pale = new Color3(0.62, 0.64, 0.68), dark = new Color3(0.46, 0.48, 0.52);
+  const wrap = getMaterialFactory().get("unlit", pale, { emissive: pale });
+  const ridge = getMaterialFactory().get("unlit", dark, { emissive: dark });
+  const out: Mesh[] = [];
+  for (const [upperArm, lowerArm] of [[body.leftUpperArm, body.leftLowerArm], [body.rightUpperArm, body.rightLowerArm]] as const) {
+    const upper = limbShell(scene, "devoutUpperArmWrap", upperArm, 0.45, 1, 1.45, wrap);
+    const fore = limbShell(scene, "devoutForearmWrap", lowerArm, 0, 0.94, 1.7, wrap);
+    fore.scaling.z = Math.max(fore.scaling.z, 0.9);
+    out.push(upper, fore);
+    const L = limbBox(lowerArm), r = Math.max(L.wide, L.deep) * 1.86;
+    for (const at of [0.22, 0.5, 0.78]) {
+      const band = MeshBuilder.CreateCylinder("devoutWrapRidge", { height: L.half * 0.12, diameter: r * 2 * (1 - at * 0.1), tessellation: 6 }, scene);
+      band.parent = lowerArm.parent; band.position.y = L.mid + L.half - at * L.half * 2; band.scaling.z = fore.scaling.z;
+      band.rotation.z = 0.12; band.material = ridge; band.convertToFlatShadedMesh(); out.push(band);
+    }
+  }
+  for (const m of out) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
   return out;
 }
 
