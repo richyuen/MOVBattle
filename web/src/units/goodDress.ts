@@ -247,17 +247,34 @@ export function devoutTrousers(scene: Scene, body: ArticulatedBody, team: Color3
   }
   const pelvis = body.hip.getChildMeshes(true).find(m => m.name.endsWith("_pelvis"));
   if (pelvis instanceof Mesh) {
-    pelvis.material = cloth;
+    // The emissive beige pelvis bloomed white over the band unless kept out of the glow.
+    pelvis.material = cloth; scene.getGlowLayerByName("glow")?.addExcludedMesh(pelvis);
     const P = limbBox(pelvis), W = P.wide * 2.12, D = P.deep * 2.18;
-    put(MeshBuilder.CreateBox("devoutTrouserWaistband", { width: W, height: P.half * 0.38, depth: D }, scene), body.hip, trim, P.mid + P.half * 0.65);
-    for (const side of [-1, 1]) {
-      const fold = put(MeshBuilder.CreateCylinder("devoutTrouserWaistFold", {
-        height: P.half * 1.55, diameterTop: 0, diameterBottom: W * 0.6, tessellation: 4,
-      }, scene), body.hip, cloth, P.mid + P.half * 1.2);
-      fold.scaling.z = D / W;
-      fold.position.x = side * W * 0.29;
-      fold.rotation.z = side * -0.28;
-    }
+    const bandH = P.half * 0.38, bandY = P.mid + P.half * 0.65;
+    put(MeshBuilder.CreateBox("devoutTrouserWaistband", { width: W * 1.04, height: bandH, depth: D * 1.06 }, scene), body.hip, trim, bandY);
+    out.push(...devoutWaistCollar(scene, body, cloth, W, D, bandY + bandH * 0.5));
+  }
+  return out;
+}
+
+/** [S] 485, good.devout_gauntlet.blue.png/.red.png: above the team band the
+ * trouser cloth rises as an open collar round the bare torso. Spec: front
+ * plate's outer points reach .48 torso heights over the band (elbow height),
+ * its edge falling in straight lines to a V that touches the band at centre;
+ * the side plates stand as tall; the back rises .3. The collar's half-width is
+ * 1.18 torso half-widths, so the torso shows inside it. Closed slabs. */
+function devoutWaistCollar(scene: Scene, body: ArticulatedBody, cloth: Material, W: number, D: number, y0: number): Mesh[] {
+  const tb = body.torsoMesh.getBoundingInfo().boundingBox, ts = body.torsoMesh.scaling;
+  const Ht = tb.extendSize.y * 2 * ts.y, hw = Math.max(W * 0.54, tb.extendSize.x * ts.x * 1.18), hd = Math.max(D * 0.54, tb.extendSize.z * ts.z * 1.2);
+  const h = Ht * 0.48, t = hd * 0.12;
+  const front = ornament(scene, "devoutTrouserTopFront", [[-hw, 0], [-hw * 1.08, h], [-hw * 0.72, h * 0.62], [0, h * 0.04], [hw * 0.72, h * 0.62], [hw * 1.08, h], [hw, 0]], t, body.hip, cloth);
+  front.position.set(0, y0, hd);
+  const back = ornament(scene, "devoutTrouserTopBack", [[-hw, 0], [-hw * 1.06, h * 0.62], [0, h * 0.3], [hw * 1.06, h * 0.62], [hw, 0]], t, body.hip, cloth);
+  back.position.set(0, y0, -hd);
+  const out = [front, back];
+  for (const side of [-1, 1]) {
+    const flank = ornament(scene, "devoutTrouserTopSide", [[-hd, 0], [-hd, h * 0.62], [hd * 0.2, h * 0.75], [hd * 1.02, h], [hd, 0]], t, body.hip, cloth);
+    flank.rotation.y = -Math.PI / 2; flank.position.set(side * hw * 1.04, y0, 0); out.push(flank);
   }
   return out;
 }
