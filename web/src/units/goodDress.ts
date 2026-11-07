@@ -845,3 +845,43 @@ export function chronoCropTop(scene: Scene, body: ArticulatedBody): Mesh[] {
   scene.getGlowLayerByName("glow")?.addExcludedMesh(tm);
   return out;
 }
+
+/** [S] 488, good.chronomancer.red.png: baggy white knee breeches, a broad
+ * white belt with a gold buckle and white ring, tall white boots under a gold
+ * band. Spec (limb radii r, pelvis widths P, depths Q): each thigh in a white
+ * shell 1.5r from the hip to the knee, gathered by a 1.55r puff over the top
+ * .2 of the shin; a gold band 1.45r from .24 to .34 down the shin; the boot a
+ * white 1.22r shell to the ankle, feet white; the belt an 8-sided pale-grey
+ * band 1.15P x 1.15Q, .45 of the pelvis half-height tall at its top; a gold
+ * buckle .3P across with a white ring .16P on its face. All flat. */
+export function chronoBreeches(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const mf = getMaterialFactory();
+  const whiteC = new Color3(1, 1, 1), white = mf.get("unlit", whiteC, { emissive: whiteC });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  const beltC = new Color3(0.78, 0.8, 0.84), belt = mf.get("unlit", beltC, { emissive: beltC });
+  const out: Mesh[] = [];
+  for (const [thigh, shin, knee] of [[body.leftUpperLeg, body.leftLowerLeg, body.leftKnee], [body.rightUpperLeg, body.rightLowerLeg, body.rightKnee]] as const) {
+    thigh.material = white; shin.material = white;
+    out.push(limbShell(scene, "chronoBreechThigh", thigh, 0, 1, 1.5, white));
+    out.push(limbShell(scene, "chronoBreechKnee", shin, 0, 0.2, 1.55, white));
+    out.push(limbShell(scene, "chronoBootBand", shin, 0.24, 0.34, 1.45, gold));
+    out.push(limbShell(scene, "chronoBootTop", shin, 0.34, 1, 1.22, white));
+    for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) { m.material = white; scene.getGlowLayerByName("glow")?.addExcludedMesh(m as Mesh); }
+  }
+  const pelvis = body.hip.getChildMeshes(true).find(m => m.name.endsWith("_pelvis"));
+  if (pelvis instanceof Mesh) {
+    pelvis.material = white;
+    const P = limbBox(pelvis), PW = P.wide * 2, h = P.half * 0.9, y = P.mid + P.half - h / 2;
+    const band = MeshBuilder.CreateCylinder("chronoBelt", { height: h, diameter: PW * 1.15, tessellation: 8 }, scene);
+    band.parent = body.hip; band.position.y = y; band.rotation.y = Math.PI / 8; band.scaling.z = P.deep / P.wide * 1.15; band.material = belt; out.push(band);
+    const front = P.deep * 1.15 * 1.02;
+    const buckle = MeshBuilder.CreateBox("chronoBeltBuckle", { width: PW * 0.3, height: h * 1.15, depth: P.deep * 0.14 }, scene);
+    buckle.parent = body.hip; buckle.position.set(0, y, front); buckle.material = gold; out.push(buckle);
+    const ring = MeshBuilder.CreateTorus("chronoBeltRing", { diameter: PW * 0.16, thickness: PW * 0.04, tessellation: 10 }, scene);
+    ring.parent = body.hip; ring.position.set(0, y, front + P.deep * 0.08); ring.rotation.x = Math.PI / 2; ring.material = white; out.push(ring);
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(pelvis);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  for (const m of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  return out;
+}
