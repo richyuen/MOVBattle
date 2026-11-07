@@ -997,8 +997,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "iconic_chronomancer":
       return vis({ scale: 1.3, bulk: 0.96, headSize: 1.1 }, "boxing_glove", "none", "none", "none", "#b8e6ff", "boxing_glove", {
         weaponVariant: "time_gauntlet", offhandVariant: "time_gauntlet", weaponGripPreset: "default",
-        posePreset: "caster", materialPreset: "secret_ice", attachmentPreset: "chrono_ring", fxPreset: "wind",
-        stateVariants: { attacking: ["chrono_ring"], "ability-active": ["chrono_ring"] },
+        // [S] 486 the small attack-only torso hoop gives way to the big back ring (goodDress chronoBackRing)
+        posePreset: "caster", materialPreset: "secret_ice", attachmentPreset: "none", fxPreset: "wind",
       });
     case "iconic_dark_peasant":
       // [S] 473 the generic Wobbler peasant body at card Size 1.15x (audit 468 dark_peasant a.1: "build: a hulking slab-armoured giant - TABS: the lanky
