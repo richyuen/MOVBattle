@@ -679,7 +679,7 @@ export function radiantTrousers(scene: Scene, body: ArticulatedBody, team: Color
     fin.position.set(0, kTop - S.half * 0.1, S.deep * 1.15); out.push(fin);
     ring("radiantShinBand", S.mid + S.half - S.half * 2 * 0.78, S.half * 0.12, sw * 2.3, gold);
     ring("radiantAnkleBand", S.mid - S.half * 0.97, S.half * 0.1, sw * 2.5, gold);
-    for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) m.material = white;
+    for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) { m.material = white; scene.getGlowLayerByName("glow")?.addExcludedMesh(m as Mesh); }
   }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
