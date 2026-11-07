@@ -714,3 +714,36 @@ export function radiantCape(scene: Scene, body: ArticulatedBody, team: Color3): 
   }
   return out;
 }
+
+/** [S] 487, good.divine_arbiter.blue.png/.red.png: a team robe with big puffed
+ * sleeves and yellow gloves. Spec (limb radii r): the torso and yoke in team
+ * cloth (no vest); each upper arm a team sleeve 1.75r; at the elbow a puff of
+ * two 8-sided frusta swelling to 2.5r over the lower .3 of the upper arm and
+ * the top .25 of the forearm; the rest of the forearm a team sleeve 1.5r to
+ * .45 of its length, then a flared yellow glove cuff 1.7r -> 2.2r to the
+ * wrist; the hands yellow. */
+export function arbiterRobe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const mf = getMaterialFactory();
+  const robe = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  const yellowC = new Color3(1, 0.62, 0.12), glove = mf.get("unlit", yellowC, { emissive: yellowC });
+  body.torsoMesh.material = robe;
+  for (const m of body.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = robe;
+  const out: Mesh[] = [];
+  for (const [upperArm, lowerArm, hand] of [[body.leftUpperArm, body.leftLowerArm, body.leftHand], [body.rightUpperArm, body.rightLowerArm, body.rightHand]] as const) {
+    out.push(limbShell(scene, "arbiterSleeveUpper", upperArm, 0, 0.75, 1.75, robe));
+    const U = limbBox(upperArm), L = limbBox(lowerArm), r = Math.max(U.wide, U.deep, L.wide, L.deep);
+    const elbowTop = U.mid + U.half - U.half * 2 * 0.7, elbow = U.mid - U.half;
+    const swell = MeshBuilder.CreateCylinder("arbiterElbowPuff", { height: elbowTop - elbow, diameterTop: r * 3.5, diameterBottom: r * 5, tessellation: 8 }, scene);
+    swell.parent = upperArm.parent; swell.position.y = (elbowTop + elbow) / 2; swell.material = robe; out.push(swell);
+    const L0 = L.mid + L.half, lPuff = L.half * 2 * 0.25;
+    const tuck = MeshBuilder.CreateCylinder("arbiterElbowPuffLower", { height: lPuff, diameterTop: r * 5, diameterBottom: r * 3.2, tessellation: 8 }, scene);
+    tuck.parent = lowerArm.parent; tuck.position.y = L0 - lPuff / 2; tuck.material = robe; out.push(tuck);
+    out.push(limbShell(scene, "arbiterSleeveFore", lowerArm, 0.2, 0.45, 1.5, robe));
+    const gTop = L0 - L.half * 2 * 0.45, gBot = L.mid - L.half;
+    const cuff = MeshBuilder.CreateCylinder("arbiterGloveCuff", { height: gTop - gBot, diameterTop: r * 3.4, diameterBottom: r * 4.4, tessellation: 6 }, scene);
+    cuff.parent = lowerArm.parent; cuff.position.y = (gTop + gBot) / 2; cuff.material = glove; out.push(cuff);
+    for (const m of hand.getChildMeshes(true)) if (/_[lr]HandM$/.test(m.name)) { m.material = glove; scene.getGlowLayerByName("glow")?.addExcludedMesh(m as Mesh); }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
