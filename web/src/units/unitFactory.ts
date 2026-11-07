@@ -24,7 +24,7 @@ import { skeletonBone, unglowBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
-import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers } from "./goodDress";
+import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
@@ -536,6 +536,8 @@ export class UnitFactory {
     if (definition.id === "good.radiant_glaive" && !shouldUseVehicleBody) propMeshes.push(...radiantVest(this._scene, body, teamColor));
     // [S] 487 team trousers with gold half-diamond, knee and shin bands, white gold-banded shoes (goodDress)
     if (definition.id === "good.radiant_glaive" && !shouldUseVehicleBody) propMeshes.push(...radiantTrousers(this._scene, body, teamColor));
+    // [S] 487 team cape with a gold bottom line and gold shoulder clasps (goodDress)
+    if (definition.id === "good.radiant_glaive" && !shouldUseVehicleBody) propMeshes.push(...radiantCape(this._scene, body, teamColor));
     if (definition.id === "good.chronomancer" && !shouldUseVehicleBody) propMeshes.push(...chronoCrown(this._scene, body));
     // [S] 486 the huge gold spiked clock ring behind his shoulders (goodDress)
     if (definition.id === "good.chronomancer" && !shouldUseVehicleBody) propMeshes.push(...chronoBackRing(this._scene, body));

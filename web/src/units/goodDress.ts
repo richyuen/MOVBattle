@@ -684,3 +684,33 @@ export function radiantTrousers(scene: Scene, body: ArticulatedBody, team: Color
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/** [S] 487, good.radiant_glaive card Appearance ("a cape") and .jpg: a team
+ * cape with a gold bottom line hangs from the shoulders behind the vest.
+ * Spec (torso widths W, heights H, depths D): a closed trapezoid slab 1.15W
+ * across at the shoulders flaring to 2W, 1.9H long (to mid-thigh), .06D
+ * thick, hung .07D behind the back and tilted .16 rad out at the hem, so
+ * its flared edges show past the hips from the front; a gold hem band .1H
+ * tall across its foot; a gold clasp .14W on the front of each shoulder. */
+export function radiantCape(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const W = tb.extendSize.x * 2 * s.x, H = tb.extendSize.y * 2 * s.y, D = tb.extendSize.z * 2 * s.z;
+  const cy = tm.position.y + tb.center.y * s.y, cz = tm.position.z + tb.center.z * s.z;
+  const mf = getMaterialFactory();
+  const deep = team.scale(0.75), cloth = mf.get("cloth", deep, { emissive: deep.scale(0.15) });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  const len = H * 1.9, top = cy + H * 0.48, back = cz - D * 0.5 - D * 0.07, t = D * 0.06;
+  const at = (y: number) => W * (1.15 + 0.85 * y / len);
+  const out: Mesh[] = [];
+  const cape = ornament(scene, "radiantCape", [[-at(0) / 2, 0], [at(0) / 2, 0], [at(len) / 2, -len], [-at(len) / 2, -len]], t, body.torso, cloth);
+  cape.position.set(0, top, back); cape.rotation.x = 0.16; out.push(cape);
+  const h0 = len - H * 0.1;
+  const hem = ornament(scene, "radiantCapeHem", [[-at(h0) / 2, -h0], [at(h0) / 2, -h0], [at(len) / 2 * 1.01, -len], [-at(len) / 2 * 1.01, -len]], t * 1.6, body.torso, gold);
+  hem.position.set(0, top, back); hem.rotation.x = 0.16; out.push(hem);
+  for (const side of [-1, 1]) {
+    const clasp = MeshBuilder.CreateCylinder("radiantCapeClasp", { height: D * 0.08, diameter: W * 0.14, tessellation: 6 }, scene);
+    clasp.parent = body.torso; clasp.position.set(side * W * 0.36, cy + H * 0.42, cz + D * 0.54); clasp.rotation.x = Math.PI / 2; clasp.material = gold;
+    clasp.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(clasp); out.push(clasp);
+  }
+  return out;
+}
