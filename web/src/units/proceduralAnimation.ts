@@ -202,6 +202,8 @@ const BOARD_SEAT_HEIGHT = 0.62;
 const BOARD_GRIP_BACK = 0.12;
 // The Paladin's shield arm at rest (shoulder pitch forward, out, elbow fold; rad): the fist at the lower chest, so the board rides chest to crotch.
 const PALADIN_BOARD = { raise: -0.62, out: 0.08, elbow: -1.75 };
+// The Paladin's square stance: each leg out this far at the hip (rad), feet about a foot apart.
+const PALADIN_SPLAY = 0.15;
 /** The front man's couched spear arm: the upper arm hangs forward of plumb by this much and the elbow folds the forearm up to carry the fist at the waist. */
 const SPEAR_COUCH_RAISE = -0.45;
 const SPEAR_COUCH_ELBOW = -1.25;
@@ -4666,7 +4668,7 @@ export class ProceduralAnimator {
   // bent knees with the hips let down and the free hand out in front, or at ease on easy knees with the free arm hung back), and on top of it his lean, which leg is the free one,
   // where the head is turned, and for an arm with nothing to hold its hang off the ribs and the reach, pace and phase of its swing. Hashed from the wobble phase like the shove pose, so it consumes no random numbers.
   private _idlePose: {
-    lean: number; side: number; stride: number; tilt: number; turn: number; crouch: number; chin: number; cock: number; square: boolean; wide: boolean;
+    lean: number; side: number; stride: number; tilt: number; turn: number; crouch: number; chin: number; cock: number; square: boolean; wide: boolean; spread?: number;
     off: { raise: number; out: number; elbow: number };
     arms: Array<{ out: number; elbow: number; swing: number; rate: number; phase: number }>;
   } | null = null;
@@ -4735,9 +4737,12 @@ export class ProceduralAnimator {
     // [S] 488: the Divine Arbiter stands tall over his book on straight legs (good.divine_arbiter.red.png), found by his mitre.
     const arbiter = this._body.headMesh.getChildMeshes(true).some(m => m.name === "arbiterMitre");
     if (arbiter) Object.assign(stance, { tilt: 0.02, stride: 0.12, crouch: 0, chin: 0, cock: 0 });
+    // [S] 488 he stands square with his feet parted (good.righteous_paladin.red.png: a hand's width of air between the knees, each cop
+    // on its own leg), not one white column: the square stance at PALADIN_SPLAY rad out at each hip
     return {
-      square,
+      square: square || paladin,
       wide,
+      spread: paladin ? PALADIN_SPLAY : undefined,
       lean: pharaoh || thor || superBoxer || wizard || devout || paladin || glaive || aegis || arbiter ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
@@ -4845,7 +4850,7 @@ export class ProceduralAnimator {
       const sway = Math.sin(t * 0.9) * wobble * 0.4;
       b.leftHip.rotation.x = (p.wide ? 0 : -p.stride * 0.5) + sway;
       b.rightHip.rotation.x = (p.wide ? 0 : p.stride * 0.3) - sway;
-      const spread = p.wide ? HALFLING_STANCE.spread : HALBERD_SQUARE.spread, knee = p.wide ? HALFLING_STANCE.knee : HALBERD_SQUARE.knee;
+      const spread = p.wide ? HALFLING_STANCE.spread : p.spread ?? HALBERD_SQUARE.spread, knee = p.wide ? HALFLING_STANCE.knee : HALBERD_SQUARE.knee;
       const ankle = p.wide ? spread * HALFLING_STANCE.ankle : 0;
       b.leftHip.rotation.z = -tilt - spread;
       b.rightHip.rotation.z = -tilt + spread;
@@ -4854,7 +4859,7 @@ export class ProceduralAnimator {
       b.leftKnee.rotation.z = ankle;
       b.rightKnee.rotation.z = -ankle;
       // feet set wide: the hips come down by what the splay takes off the legs' height, so the soles stay on the ground
-      this._idleSink = p.wide ? (this._hipRest ?? b.hip.position.y) * (1 - Math.cos(spread * (1 - HALFLING_STANCE.ankle * 0.5))) : 0;
+      this._idleSink = p.wide ? (this._hipRest ?? b.hip.position.y) * (1 - Math.cos(spread * (1 - HALFLING_STANCE.ankle * 0.5))) : p.spread ? (this._hipRest ?? b.hip.position.y) * (1 - Math.cos(spread)) : 0;
     }
   }
 
