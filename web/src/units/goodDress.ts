@@ -278,3 +278,32 @@ function devoutWaistCollar(scene: Scene, body: ArticulatedBody, cloth: Material,
   }
   return out;
 }
+
+/** [S] 485, good.radiant_glaive.blue.png: a square gold helmet boxes the
+ * crown, temples and back of the head, leaving the face open. Spec (head
+ * widths W, heights H): crown slab 1.16W x .3H; side and back plates reach
+ * from the crown to .55H under the head's centre; a gold diamond 1H tall
+ * stands on the brow with a team diamond (.8 of it) proud of its face; a team
+ * strand trails out of the back plate, falling .9H behind the neck. */
+export function radiantHelmet(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const goldC = new Color3(1, 0.7, 0.18), gold = getMaterialFactory().get("unlit", goldC, { emissive: goldC });
+  const deep = team.scale(0.6), cloth = getMaterialFactory().get("unlit", deep, { emissive: deep });
+  const out: Mesh[] = [];
+  const slab = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat: Material): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.parent = head; m.position.set(c.x + x, c.y + y, c.z + z); m.material = mat; out.push(m); return m;
+  };
+  slab("radiantHelmCrown", W * 1.16, H * 0.3, D * 1.14, 0, H * 0.5, -D * 0.02, gold);
+  for (const side of [-1, 1]) slab("radiantHelmSide", W * 0.1, H * 1.05, D * 1.05, side * W * 0.58, -H * 0.05, -D * 0.04, gold);
+  slab("radiantHelmBack", W * 1.16, H * 1.05, D * 0.1, 0, -H * 0.05, -D * 0.58, gold);
+  const plate = ornament(scene, "radiantHelmDiamond", [[0, H], [-W * 0.3, H * 0.45], [0, 0], [W * 0.3, H * 0.45]], D * 0.1, head, gold);
+  plate.position.set(c.x, c.y + H * 0.3, c.z + D * 0.5); out.push(plate);
+  const gem = ornament(scene, "radiantHelmTeamDiamond", [[0, H * 0.8], [-W * 0.2, H * 0.4], [0, H * 0.05], [W * 0.2, H * 0.4]], D * 0.1, head, cloth);
+  gem.position.set(c.x, c.y + H * 0.38, c.z + D * 0.58); out.push(gem);
+  const strand = MeshBuilder.CreateCylinder("radiantHelmStrand", { height: H * 1.1, diameterTop: W * 0.2, diameterBottom: W * 0.05, tessellation: 5 }, scene);
+  strand.parent = head; strand.position.set(c.x, c.y + H * 0.05, c.z - D * 0.85); strand.rotation.x = -0.55; strand.material = cloth; out.push(strand);
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}

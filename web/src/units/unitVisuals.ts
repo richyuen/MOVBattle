@@ -821,7 +821,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "good.radiant_glaive": vis(
-    { scale: 1.24, bulk: 1.16, armLength: 1.16 }, "shuriken_hand", "laurel", "none", "none", "#F2D55D", undefined, {
+    { scale: 1.24, bulk: 1.16, armLength: 1.16 }, "shuriken_hand", "none", "none", "none", "#F2D55D", undefined, {
       weaponVariant: "radiant_glaive", weaponGripPreset: "default",
       materialPreset: "good_gold",
     },
