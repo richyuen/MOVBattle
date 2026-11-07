@@ -503,3 +503,31 @@ export function radiantVest(scene: Scene, body: ArticulatedBody, team: Color3): 
   for (const m of out) { if (!m.name.startsWith("radiantShirtV")) m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/** [S] 486, good.celestial_aegis.red.png: a cropped sleeveless team hoodie
+ * that leaves the waist bare, with a gold front toggle. Spec (torso widths
+ * W, heights H, depths D): the torso's lower .28H shows team skin under a
+ * cloth lip 1.08W; a hood rolled round the neck .62W across, .2H tall,
+ * hanging .3H down the back; a gold strip .06W wide runs .5H down the
+ * front from a gold toggle .12W across under the chin. */
+export function aegisHoodie(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const W = tb.extendSize.x * 2 * s.x, H = tb.extendSize.y * 2 * s.y, D = tb.extendSize.z * 2 * s.z;
+  const cy = tm.position.y + tb.center.y * s.y, cz = tm.position.z + tb.center.z * s.z;
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  tm.material = cloth;
+  for (const m of body.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = cloth;
+  const out: Mesh[] = [];
+  const add = (m: Mesh, y: number, z: number, mat: Material): Mesh => { m.parent = body.torso; m.position.set(0, y, z); m.material = mat; out.push(m); return m; };
+  add(MeshBuilder.CreateBox("aegisBareWaist", { width: W * 1.02, height: H * 0.28, depth: D * 1.02 }, scene), cy - H * 0.36, cz, body.skinMaterial);
+  add(MeshBuilder.CreateBox("aegisHoodieLip", { width: W * 1.08, height: H * 0.07, depth: D * 1.1 }, scene), cy - H * 0.2, cz, cloth);
+  const hood = add(MeshBuilder.CreateTorus("aegisRolledHood", { diameter: W * 0.62, thickness: H * 0.2, tessellation: 8 }, scene), cy + H * 0.52, cz - D * 0.05, cloth);
+  hood.scaling.z = D / W * 1.3;
+  add(MeshBuilder.CreateBox("aegisHoodBack", { width: W * 0.55, height: H * 0.3, depth: D * 0.2 }, scene), cy + H * 0.36, cz - D * 0.6, cloth).rotation.x = -0.2;
+  add(MeshBuilder.CreateBox("aegisHoodieStrip", { width: W * 0.06, height: H * 0.5, depth: D * 0.06 }, scene), cy + H * 0.15, cz + D * 0.52, gold);
+  add(MeshBuilder.CreateCylinder("aegisHoodieToggle", { height: D * 0.08, diameter: W * 0.12, tessellation: 6 }, scene), cy + H * 0.4, cz + D * 0.56, gold).rotation.x = Math.PI / 2;
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
