@@ -828,7 +828,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "good.righteous_paladin": vis(
     // [S] 486: tall long-legged armoured man, not the squat block (red.png: legs ~half his height).
-    { scale: 1.3, bulk: 0.92, torsoWidth: 0.92, legLength: 1.38, upperLegWidth: 1.0, lowerLegWidth: 0.92 }, "hammer", "none", "kite", "cape", "#E8D89B", undefined, {
+    { scale: 1.3, bulk: 0.92, torsoWidth: 0.92, legLength: 1.38, upperLegWidth: 0.76, lowerLegWidth: 0.7 }, "hammer", "none", "kite", "cape", "#E8D89B", undefined, {
       weaponVariant: "paladin_hammer", weaponGripPreset: "default",
       posePreset: "monarch",
       materialPreset: "good_gold",
