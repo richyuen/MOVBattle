@@ -30,7 +30,7 @@ const BEARER_AURA_KIND: Record<string, "haste" | "stay"> = { "legacy.flag_bearer
 /** [S] 465 a bearer is a melee man (his pole is his weapon, Stay Banner / Charge Flag): the ring's aura is a pulse of its own, every `every` s, held `holds` s. */
 const BEARER_PULSE = { every: 3, holds: 3.5 };
 // [S] 485 Shockwave Hammer (SimulationSystem._stepHammers): reach m, cooldown s, power x the mace blow, splash radius m, push, daze s, hinge angles rad, hang/fall/linger s
-const CHRONO_TRANSFORM = { settle: 0.6, drop: 1.45, tilt: 1.15, grow: 0.25, spin: 1.6, orbit: 0.9 };
+const CHRONO_TRANSFORM = { settle: 0.2, drop: 1.45, tilt: 1.15, grow: 0.25, spin: 1.6, orbit: 0.9 };
 const PALADIN_HAMMER = { reach: 7, cooldown: 8, power: 1.5, radius: 2.5, push: 5, daze: 1.2, raised: -0.35, down: 1.5, hang: 0.4, fall: 0.3, linger: 0.35 };
 
 export interface SpawnUnitOptions {
