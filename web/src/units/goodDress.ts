@@ -461,3 +461,45 @@ export function chronoBackRing(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { if (m.name !== "chronoRingWinglet") m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/** [S] 486, good.radiant_glaive.red.png: a team vest trimmed in gold over a
+ * baggy white undershirt with uneven sleeves. Spec (torso widths W, heights
+ * H, depths D): the vest is the torso in team cloth with a gold hem .1H; a
+ * white shirt V .5W wide falls .55H from the neck, edged by gold lines .05W;
+ * the right sleeve runs shoulder to wrist (upper 1.7, fore 1.9 limb
+ * half-widths, flaring), the left stops half down the forearm; gold cuffs
+ * close each sleeve. */
+export function radiantVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const W = tb.extendSize.x * 2 * s.x, H = tb.extendSize.y * 2 * s.y, D = tb.extendSize.z * 2 * s.z;
+  const cy = tm.position.y + tb.center.y * s.y, cz = tm.position.z + tb.center.z * s.z;
+  const mf = getMaterialFactory();
+  const vest = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  const whiteC = new Color3(0.86, 0.87, 0.88), shirt = mf.get("unlit", whiteC, { emissive: whiteC });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  tm.material = vest;
+  for (const m of body.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = vest;
+  const out: Mesh[] = [];
+  const front = cz + D * 0.5 + D * 0.03, top = cy + H * 0.5;
+  const v = ornament(scene, "radiantShirtV", [[-W * 0.25, 0], [0, -H * 0.55], [W * 0.25, 0]], D * 0.05, body.torso, shirt);
+  v.position.set(0, top, front); out.push(v);
+  for (const side of [-1, 1]) {
+    const len = Math.hypot(W * 0.25, H * 0.55);
+    const edge = MeshBuilder.CreateBox("radiantVestTrim", { width: W * 0.05, height: len, depth: D * 0.06 }, scene);
+    edge.parent = body.torso; edge.position.set(side * W * 0.13, top - H * 0.275, front + D * 0.01);
+    edge.rotation.z = side * Math.atan2(W * 0.25, H * 0.55); edge.material = gold; out.push(edge);
+  }
+  const hem = MeshBuilder.CreateBox("radiantVestHem", { width: W * 1.06, height: H * 0.1, depth: D * 1.08 }, scene);
+  hem.parent = body.torso; hem.position.set(0, cy - H * 0.45, cz); hem.material = gold; out.push(hem);
+  const arms = [[body.rightUpperArm, body.rightLowerArm, 1], [body.leftUpperArm, body.leftLowerArm, 0.45]] as const;
+  for (const [upper, lower, reach] of arms) {
+    out.push(limbShell(scene, "radiantSleeveUpper", upper, 0, 1, 1.7, shirt));
+    const fore = limbShell(scene, "radiantSleeveFore", lower, 0, reach * 0.9, 1.9, shirt);
+    fore.scaling.x = 1.15; out.push(fore);
+    const L = limbBox(lower), r = Math.max(L.wide, L.deep) * 2.05;
+    const cuff = MeshBuilder.CreateCylinder("radiantSleeveCuff", { height: L.half * 0.22, diameter: r * 2, tessellation: 6 }, scene);
+    cuff.parent = lower.parent; cuff.position.y = L.mid + L.half - reach * 0.9 * L.half * 2 + L.half * 0.1; cuff.material = gold; out.push(cuff);
+  }
+  for (const m of out) { if (!m.name.startsWith("radiantShirtV")) m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
