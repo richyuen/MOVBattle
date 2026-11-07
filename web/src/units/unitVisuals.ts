@@ -870,7 +870,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.exiled_sentinel": vis(
-    { scale: 1.14, bulk: 1.2 }, "sword", "great_helm", "tower", "cape", "#7B3434", undefined, {
+    // [S] 489 (a.1): no great helm; his spiked cone hat is evilDress sentinelConeHat
+    { scale: 1.14, bulk: 1.2 }, "sword", "none", "tower", "cape", "#7B3434", undefined, {
       materialPreset: "evil_void",
     },
   ),
