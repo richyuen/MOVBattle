@@ -4733,13 +4733,16 @@ export class ProceduralAnimator {
     // [S] 488: the Divine Arbiter stands tall over his book on straight legs (good.divine_arbiter.red.png), found by his mitre.
     const arbiter = this._body.headMesh.getChildMeshes(true).some(m => m.name === "arbiterMitre");
     if (arbiter) Object.assign(stance, { tilt: 0.02, stride: 0.12, crouch: 0, chin: 0, cock: 0 });
+    // [S] 489: the Chronomancer stands upright on straight knees (good.chronomancer.red.png), found by his gold crown.
+    const chrono = this._body.headMesh.getChildMeshes(true).some(m => m.name === "chronoCrownBand");
+    if (chrono) Object.assign(stance, { tilt: 0.02, stride: 0.12, crouch: 0, chin: 0, cock: 0 });
     // [S] 488 he stands square with his feet parted (good.righteous_paladin.red.png: a hand's width of air between the knees, each cop
     // on its own leg), not one white column: the square stance at PALADIN_SPLAY rad out at each hip
     return {
       square: square || paladin,
       wide,
       spread: paladin ? PALADIN_SPLAY : undefined,
-      lean: pharaoh || thor || superBoxer || wizard || devout || paladin || glaive || aegis || arbiter ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
+      lean: pharaoh || thor || superBoxer || wizard || devout || paladin || glaive || aegis || arbiter || chrono ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,

@@ -999,7 +999,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "duelist", materialPreset: "secret_bandit",
       });
     case "iconic_chronomancer":
-      return vis({ scale: 1.3, bulk: 0.96, headSize: 1.1 }, "boxing_glove", "none", "none", "none", "#b8e6ff", "boxing_glove", {
+      // [S] 489 (a.6, good.chronomancer.red.png: an upright slender figure, the belt-to-sole about half his height): the long-legged slim build
+      return vis({ scale: 1.3, bulk: 0.9, headSize: 1.1, torsoWidth: 0.9, legLength: 1.4, upperLegWidth: 0.76, lowerLegWidth: 0.7 }, "boxing_glove", "none", "none", "none", "#b8e6ff", "boxing_glove", {
         weaponVariant: "time_gauntlet", offhandVariant: "time_gauntlet", weaponGripPreset: "default",
         // [S] 486 the small attack-only torso hoop gives way to the big back ring (goodDress chronoBackRing)
         posePreset: "caster", materialPreset: "secret_ice", attachmentPreset: "none", fxPreset: "wind",
