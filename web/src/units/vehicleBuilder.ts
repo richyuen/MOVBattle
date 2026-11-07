@@ -10,7 +10,7 @@ import { dressBallistaCrew } from "./ancientDress";
 import { longshipCarrierDress } from "./vikingDress";
 import { cannonBandanna, cannonShirt } from "./pirateDress";
 import { skeletonCrew } from "./spookyDress";
-import { elephantRiderDress } from "./goodDress";
+import { elephantRiderDress, elephantBlanket } from "./goodDress";
 import { buildFacetedBoulder } from "./propBuilder";
 import { getUnit } from "../data/unitDefinitions";
 
@@ -4183,8 +4183,6 @@ const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "maneLock", "browPa
 const ELEPHANT_HIDE_PIECES = new Set(["backRidge", "furHem", "ear", "legCuff", "trunk", "trunkTip"]);
 const TUSK_RING_PIECE = 4;
 const ELEPHANT_TRUNK = { root: [0, -0.12, 0.76], pitch: [0.55, 0.35, 0.2, 0.1, 0.05, 0.05, 0.15, 0.35], piece: 0.17, rootR: 0.27, tipR: 0.12, flare: 0.15 };
-const BLANKET_RADII = new Vector3(0.92, 0.8, 0.74);
-const BLANKET_AT = new Vector3(0, 0.16, -0.46);
 const THRONE_SEAT = new Vector3(0, 0.9, 0.12);
 const THRONE_BACK_TALL = 0.62;
 const RIDER_SCALE = 2.4;
@@ -4247,22 +4245,8 @@ function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
   strap.rotation.z = Math.PI / 2;
   strap.scaling.set(1, 1, 0.92);
 
-  // Blanket: a half shell over the back (a cylinder's arc runs on its negative z, so it is turned +90 degrees to lie over the top) behind the shoulders, team cloth with a gold hem along each flank and a gold band across each end
-  const blanket = add(MeshBuilder.CreateCylinder("elephantBlanket", { height: 0.9, diameter: 2, arc: 0.5, tessellation: 18, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene), body.torso, cloth);
-  blanket.rotation.x = Math.PI / 2;
-  blanket.scaling.copyFrom(BLANKET_RADII);
-  blanket.position.copyFrom(BLANKET_AT);
-  for (const end of [-1, 1]) {
-    const band = add(MeshBuilder.CreateCylinder("elephantBlanketBand", { height: 0.08, diameter: 2.04, arc: 0.5, tessellation: 18, enclose: false, sideOrientation: Mesh.DOUBLESIDE }, scene), body.torso, gold);
-    band.rotation.x = Math.PI / 2;
-    band.scaling.copyFrom(BLANKET_RADII);
-    band.position.set(BLANKET_AT.x, BLANKET_AT.y, BLANKET_AT.z + end * 0.43);
-    const hem = add(MeshBuilder.CreateBox("elephantBlanketHem", { width: 0.06, height: 0.1, depth: 0.92 }, scene), body.torso, gold);
-    hem.position.set(end * BLANKET_RADII.x, BLANKET_AT.y + 0.03, BLANKET_AT.z);
-    // A tassel off each hem's back corner
-    const tassel = add(MeshBuilder.CreateCylinder("elephantTassel", { height: 0.18, diameterTop: 0.03, diameterBottom: 0.1, tessellation: 5 }, scene), body.torso, cloth);
-    tassel.position.set(end * BLANKET_RADII.x, BLANKET_AT.y - 0.1, BLANKET_AT.z - 0.4);
-  }
+  // [S] 490 Blanket: a team drape over the back and down both flanks, gold-toothed hems, four corner tassels (spec at goodDress elephantBlanket)
+  body.allMeshes.push(...elephantBlanket(scene, body.torso, color));
 
   // Throne on the shoulders: a gold seat, a team-cloth high back in a gold frame with a round gold crest, gold arms
   const seat = add(MeshBuilder.CreateBox("elephantThroneSeat", { width: 0.42, height: 0.08, depth: 0.36 }, scene), body.torso, gold);

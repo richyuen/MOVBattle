@@ -648,6 +648,80 @@ export function aegisSkirt(scene: Scene, body: ArticulatedBody, team: Color3): M
   return out;
 }
 
+/** Closed slab between two matching vertex grids [i][j] (outer and inner faces), every triangle
+ * wound to face out: the faces along outer-inner, the four rims away from the grid. */
+function gridSlab(scene: Scene, name: string, outer: number[][][], inner: number[][][]): Mesh {
+  const tris: number[][][] = [], hints: number[][] = [];
+  const sub = (a: number[], b: number[]) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  const I = outer.length, J = outer[0].length;
+  for (let i = 0; i + 1 < I; i++) for (let j = 0; j + 1 < J; j++) {
+    const n = sub(outer[i][j], inner[i][j]);
+    for (const [g, h] of [[outer, n], [inner, [-n[0], -n[1], -n[2]]]] as [number[][][], number[]][]) {
+      tris.push([g[i][j], g[i + 1][j], g[i + 1][j + 1]], [g[i][j], g[i + 1][j + 1], g[i][j + 1]]); hints.push(h, h);
+    }
+  }
+  const rim = (a: number[], b: number[], c: number[], d: number[], h: number[]) => { tris.push([a, b, c], [a, c, d]); hints.push(h, h); };
+  for (let i = 0; i + 1 < I; i++) {
+    rim(outer[i][0], outer[i + 1][0], inner[i + 1][0], inner[i][0], sub(outer[i][0], outer[i][1]));
+    rim(outer[i][J - 1], outer[i + 1][J - 1], inner[i + 1][J - 1], inner[i][J - 1], sub(outer[i][J - 1], outer[i][J - 2]));
+  }
+  for (let j = 0; j + 1 < J; j++) {
+    rim(outer[0][j], outer[0][j + 1], inner[0][j + 1], inner[0][j], sub(outer[0][j], outer[1][j]));
+    rim(outer[I - 1][j], outer[I - 1][j + 1], inner[I - 1][j + 1], inner[I - 1][j], sub(outer[I - 1][j], outer[I - 2][j]));
+  }
+  let k = 0;
+  return solidFromTris(scene, name, tris, () => hints[k++]);
+}
+
+/** [S] 490 good.sacred_elephant.a blocker 6 (good.sacred_elephant.jpg): a large team blanket draped
+ * over the back from behind the throne to the rump, hanging down both flanks below the body's
+ * middle, edged in gold with a row of angular gold teeth along each flank hem and a gold band at
+ * each end, a team tassel with a gold cap hanging from each of its four lower corners.
+ * Spec (torso frame of the 1.8-scaled rig; the hull an ellipsoid rx .85, ry .68 about y .12,
+ * rz 1.16 about z -.05): the drape follows the hull .05 proud over the top quarter-arcs, then
+ * hangs straight down .42 below the middle; z from -1.0 to .15; .035 thick; gold hem .1 tall,
+ * teeth .2 wide x .17 tall every .25; end bands .07 wide; tassels .26 long. */
+export function elephantBlanket(scene: Scene, torso: TransformNode, team: Color3): Mesh[] {
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  const goldC = new Color3(0.95, 0.66, 0.16), gold = mf.get("cloth", goldC, { emissive: goldC.scale(0.22) });
+  const rx = 0.85, ry = 0.68, yc = 0.12, rz = 1.16, zc = -0.05, a = 0.62, hang = 0.42, z0 = -1.0, z1 = 0.15, th = 0.035;
+  const P = (s: number, z: number, off: number): number[] => {
+    const k = Math.sqrt(Math.max(0.2, 1 - ((z - zc) / rz) ** 2)), sg = Math.sign(s) || 1, u = Math.abs(s);
+    if (u <= a) { const f = (u / a) * Math.PI / 2; return [sg * Math.sin(f) * (rx * k + off), yc + Math.cos(f) * (ry * k + off), z]; }
+    return [sg * (rx * k + off), yc - ((u - a) / (1 - a)) * hang, z];
+  };
+  const out: Mesh[] = [];
+  const drape = (name: string, s0: number, s1: number, za: number, zb: number, off: number, mat: Material, ns = 24, nz = 8): void => {
+    const grid = (o: number) => Array.from({ length: ns + 1 }, (_, i) => Array.from({ length: nz + 1 }, (_, j) => P(s0 + (s1 - s0) * i / ns, za + (zb - za) * j / nz, o)));
+    const m = gridSlab(scene, name, grid(off + th), grid(off)); m.parent = torso; m.material = mat; out.push(m);
+  };
+  drape("elephantBlanket", -1, 1, z0, z1, 0.05, cloth, 32, 10);
+  for (const sg of [-1, 1]) {
+    // Flank hem: the lowest .1 of each hanging side, a shade proud of the cloth
+    const sHem = 1 - 0.1 / hang * (1 - a);
+    drape("elephantBlanketHem", sg * sHem, sg * 1, z0, z1, 0.05 + th, gold, 2, 10);
+    // Angular gold teeth standing up from the hem on the flank's face
+    for (let z = z0 + 0.14; z < z1 - 0.08; z += 0.25) {
+      const base = P(sg, z, 0.05 + th * 2.2), yb = yc - hang + 0.1;
+      const tooth = ornament(scene, "elephantBlanketTooth", [[-0.1, 0], [0.1, 0], [0, 0.17]], 0.02, torso, gold);
+      tooth.position.set(base[0], yb, z); tooth.rotation.y = sg * Math.PI / 2; out.push(tooth);
+    }
+  }
+  // Gold bands across both ends, over the top and down the sides
+  drape("elephantBlanketBand", -1, 1, z0, z0 + 0.07, 0.05 + th, gold, 32, 1);
+  drape("elephantBlanketBand", -1, 1, z1 - 0.07, z1, 0.05 + th, gold, 32, 1);
+  for (const sg of [-1, 1]) for (const z of [z0 + 0.04, z1 - 0.04]) {
+    const corner = P(sg, z, 0.05 + th);
+    const cap = MeshBuilder.CreateCylinder("elephantTasselCap", { height: 0.07, diameterTop: 0.05, diameterBottom: 0.09, tessellation: 6 }, scene);
+    cap.parent = torso; cap.position.set(corner[0], corner[1] - 0.04, z); cap.material = gold; out.push(cap);
+    const tassel = MeshBuilder.CreateCylinder("elephantTassel", { height: 0.26, diameterTop: 0.07, diameterBottom: 0.15, tessellation: 6 }, scene);
+    tassel.parent = torso; tassel.position.set(corner[0], corner[1] - 0.2, z); tassel.material = cloth; out.push(tassel);
+  }
+  for (const m of out) if (m.name !== "elephantBlanketTooth") m.convertToFlatShadedMesh();
+  return out;
+}
+
 /** [S] 486, good.sacred_elephant.red.png: the seated rider in white. Spec
  * (head widths W, heights H, depths D; torso likewise): white hair falls
  * .7H at the sides and back; a team cap 1.1W tied with a band, a gold oval
