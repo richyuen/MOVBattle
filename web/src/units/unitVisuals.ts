@@ -994,7 +994,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "duelist", materialPreset: "secret_bandit",
       });
     case "iconic_chronomancer":
-      return vis({ scale: 1.3, bulk: 0.96, headSize: 1.1 }, "boxing_glove", "laurel", "none", "halo", "#b8e6ff", "boxing_glove", {
+      return vis({ scale: 1.3, bulk: 0.96, headSize: 1.1 }, "boxing_glove", "none", "none", "none", "#b8e6ff", "boxing_glove", {
         weaponVariant: "time_gauntlet", offhandVariant: "time_gauntlet", weaponGripPreset: "default",
         posePreset: "caster", materialPreset: "secret_ice", attachmentPreset: "chrono_ring", fxPreset: "wind",
         stateVariants: { attacking: ["chrono_ring"], "ability-active": ["chrono_ring"] },

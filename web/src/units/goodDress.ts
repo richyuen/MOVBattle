@@ -307,3 +307,28 @@ export function radiantHelmet(scene: Scene, body: ArticulatedBody, team: Color3)
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/** [S] 485, good.chronomancer.blue.png: a gold crown sits on the bare head
+ * above the eyes. Spec (head widths W, heights H): an 8-sided band 1.12W
+ * across, .2H tall; nine small spikes .22H round its rim; one tall front
+ * diamond .95H; ear guards .45H tall standing proud of each temple. */
+export function chronoCrown(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const goldC = new Color3(0.85, 0.55, 0.12), gold = getMaterialFactory().get("unlit", goldC, { emissive: goldC });
+  const out: Mesh[] = [];
+  const at = (m: Mesh, x: number, y: number, z: number): Mesh => { m.parent = head; m.position.set(c.x + x, c.y + y, c.z + z); m.material = gold; out.push(m); return m; };
+  const bandY = H * 0.42;
+  const band = at(MeshBuilder.CreateCylinder("chronoCrownBand", { height: H * 0.2, diameter: W * 1.12, tessellation: 8 }, scene), 0, bandY, 0);
+  band.scaling.z = D / W;
+  for (let k = 0; k < 9; k++) {
+    const a = (k / 9) * Math.PI * 2;
+    at(MeshBuilder.CreateCylinder("chronoCrownSpike", { height: H * 0.22, diameterBottom: W * 0.12, diameterTop: 0, tessellation: 4 }, scene),
+      Math.sin(a) * W * 0.54, bandY + H * 0.2, Math.cos(a) * D * 0.54);
+  }
+  const front = ornament(scene, "chronoCrownPoint", [[0, H * 0.95], [-W * 0.17, H * 0.3], [0, 0], [W * 0.17, H * 0.3]], D * 0.1, head, gold);
+  front.position.set(c.x, c.y + bandY, c.z + D * 0.58); out.push(front);
+  for (const side of [-1, 1]) at(MeshBuilder.CreateBox("chronoEarGuard", { width: W * 0.1, height: H * 0.45, depth: D * 0.4 }, scene), side * W * 0.58, H * 0.08, -D * 0.05);
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
