@@ -489,9 +489,10 @@ export function paladinLegArmour(scene: Scene, body: ArticulatedBody, team: Colo
 
 /** [S] 486, good.chronomancer.red.png: a huge vertical gold clock ring stands
  * behind the shoulders. Spec (torso widths W, heights H, depths D): ring
- * 2.5W across, tube .07W, centred .1H over the torso top and .75D behind its
- * centre; 12 small outward spikes .18W, a tall top spike .55W; at 3 and 9
- * o'clock a .35W spike with two white winglets beyond it. The node
+ * 3.2W across, a bold faceted band .17W thick (490: the 2.5W ring of a .07W
+ * wire barely showed at lineup distance), centred .1H over the torso top and
+ * .75D behind its centre; 8 outward spikes .3W, a tall top spike .85W; at 3
+ * and 9 o'clock a .5W spike with two big white winglets beyond it. The node
  * "chronoBackRing" (torso child) holds a "chronoRingSpin" node with every
  * piece, so the transformation can move, tilt, spin and light it. */
 export function chronoBackRing(scene: Scene, body: ArticulatedBody): Mesh[] {
@@ -503,20 +504,20 @@ export function chronoBackRing(scene: Scene, body: ArticulatedBody): Mesh[] {
   const root = new TransformNode("chronoBackRing", scene);
   root.parent = body.torso; root.position.set(0, cy + H * 0.6, cz - D * 0.75);
   const spin = new TransformNode("chronoRingSpin", scene); spin.parent = root;
-  const R = W * 1.25, out: Mesh[] = [];
-  const ring = MeshBuilder.CreateTorus("chronoRingBand", { diameter: R * 2, thickness: W * 0.07, tessellation: 28 }, scene);
+  const R = W * 1.6, out: Mesh[] = [];
+  const ring = MeshBuilder.CreateTorus("chronoRingBand", { diameter: R * 2, thickness: W * 0.17, tessellation: 24 }, scene);
   ring.parent = spin; ring.rotation.x = Math.PI / 2; ring.material = gold; out.push(ring);
   const spike = (a: number, len: number, base: number): void => {
     const m = MeshBuilder.CreateCylinder("chronoRingSpike", { height: len, diameterBottom: base, diameterTop: 0, tessellation: 4 }, scene);
     m.parent = spin; m.position.set(Math.sin(a) * (R + len * 0.45), Math.cos(a) * (R + len * 0.45), 0); m.rotation.z = -a; m.material = gold; out.push(m);
   };
-  for (let k = 0; k < 12; k++) if (k % 3 !== 0) spike((k / 12) * Math.PI * 2, W * 0.18, W * 0.09);
-  spike(0, W * 0.55, W * 0.2); spike(Math.PI, W * 0.18, W * 0.09);
+  for (let k = 0; k < 12; k++) if (k % 3 !== 0) spike((k / 12) * Math.PI * 2, W * 0.3, W * 0.16);
+  spike(0, W * 0.85, W * 0.32); spike(Math.PI, W * 0.3, W * 0.16);
   for (const side of [-1, 1]) {
-    spike(side * Math.PI / 2, W * 0.35, W * 0.16);
+    spike(side * Math.PI / 2, W * 0.5, W * 0.26);
     for (const tilt of [0.35, -0.35]) {
-      const wing = ornament(scene, "chronoRingWinglet", [[0, 0], [side * W * 0.3, W * 0.12], [side * W * 0.42, W * 0.02], [side * W * 0.3, -W * 0.07]], W * 0.05, spin, white);
-      wing.position.set(side * (R + W * 0.36), 0, 0); wing.rotation.z = tilt; out.push(wing);
+      const wing = ornament(scene, "chronoRingWinglet", [[0, 0], [side * W * 0.42, W * 0.17], [side * W * 0.6, W * 0.03], [side * W * 0.42, -W * 0.1]], W * 0.07, spin, white);
+      wing.position.set(side * (R + W * 0.5), 0, 0); wing.rotation.z = tilt; out.push(wing);
     }
   }
   for (const m of out) { if (m.name !== "chronoRingWinglet") m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
