@@ -24,7 +24,7 @@ import { skeletonBone, unglowBone } from "./spookyDress";
 import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
-import { aegisButterflyHair, arbiterMitre, paladinCuirass, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet } from "./goodDress";
+import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
@@ -214,14 +214,13 @@ const PAINTER_SHOE = new Color3(0.66, 0.22, 0.12);
  * chest, hips, thighs, greaves and feet; bare team-skin arms; bright orange-gold bands at the waist and round each knee with a pointed gold knee plate on the
  * front; a white-steel helm with a gold band round its rim and a gold comb over its crown; a white shield with a gold rim and a gold device on the face.
  *   white PALADIN_WHITE and gold PALADIN_GOLD are self-lit (PALADIN_GLOW, PALADIN_GOLD_GLOW) so they stay white and gold in the lineup shade;
- *   waist band PALADIN_BELT of the chest's height, knee bands PALADIN_KNEE legs across, helm band PALADIN_HELM_BAND of the helm's height.
+ *   waist band PALADIN_BELT of the chest's height, helm band PALADIN_HELM_BAND of the helm's height.
  */
 const PALADIN_WHITE = new Color3(0.93, 0.94, 0.96);
 const PALADIN_GOLD = new Color3(0.95, 0.52, 0.06);
 const PALADIN_GLOW = 0.2;
 const PALADIN_GOLD_GLOW = 0.22;
 const PALADIN_BELT = 0.14;
-const PALADIN_KNEE = 1.15;
 const PALADIN_HELM_BAND = 0.16;
 /*
  * The void cultist (units/evil.void_cultist): a bald, bearded priest in a long dark robe, not a man in a plain hood. Read off the reference: a dark
@@ -989,6 +988,8 @@ export class UnitFactory {
       propMeshes.push(...paladinHair(this._scene, body, teamColor));
       // [S] 486 split grey cuirass, brown shoulder straps, gold device, team sleeves (goodDress)
       propMeshes.push(...paladinCuirass(this._scene, body, teamColor));
+      // [S] 486 front thigh, knee and shin plates over puffed team trousers (goodDress)
+      propMeshes.push(...paladinLegArmour(this._scene, body, teamColor));
     }
     if (definition.id === "medieval.healer" && !shouldUseVehicleBody) {
       const robe = hangSkirt(this._scene, body, "healerRobe", HEALER_ROBE.long, HEALER_ROBE.hem, getMaterialFactory().get("cloth", teamColor));
@@ -2465,9 +2466,6 @@ function dressPaladin(scene: Scene, body: ArticulatedBody, props: Mesh[]): Mesh[
   body.bodyMaterial.emissiveColor = PALADIN_WHITE.scale(PALADIN_GLOW);
   const white = mf.get("cloth", PALADIN_WHITE, { emissiveIntensity: PALADIN_GLOW });
   const gold = mf.get("cloth", PALADIN_GOLD, { emissiveIntensity: PALADIN_GOLD_GLOW });
-  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
-    leg.material = white;
-  }
   const sabaton = mf.get("cloth", PALADIN_WHITE.scale(0.86), { emissiveIntensity: PALADIN_GLOW });
   for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
     if (/_[lr]FootM$/.test(mesh.name)) mesh.material = sabaton;
@@ -2481,23 +2479,7 @@ function dressPaladin(scene: Scene, body: ArticulatedBody, props: Mesh[]): Mesh[
   belt.material = gold;
   belt.parent = body.torso;
   added.push(belt);
-  // A gold band round each knee and a pointed gold knee plate on its front
-  for (const [knee, shin] of [[body.leftKnee, body.leftLowerLeg], [body.rightKnee, body.rightLowerLeg]] as const) {
-    const sx = shin.getBoundingInfo().boundingBox.extendSize;
-    const across = Math.max(sx.x * shin.scaling.x, sx.z * shin.scaling.z) * 2 * PALADIN_KNEE;
-    const band = MeshBuilder.CreateCylinder(`${knee.name}_paladinKnee`, { height: across * 0.28, diameter: across, tessellation: 6 }, scene);
-    band.position.set(0, -across * 0.1, 0);
-    band.material = gold;
-    band.convertToFlatShadedMesh();
-    band.parent = knee;
-    added.push(band);
-    const plate = MeshBuilder.CreateCylinder(`${knee.name}_paladinPoleyn`, { height: across * 0.75, diameterTop: across * 0.8, diameterBottom: 0, tessellation: 3 }, scene);
-    plate.scaling.z = 0.35;
-    plate.position.set(0, across * 0.3, across * 0.48);
-    plate.material = gold;
-    plate.parent = knee;
-    added.push(plate);
-  }
+  // [S] 486 the leg plates and puffed team trousers are goodDress paladinLegArmour
   // The helm goes white steel with a gold band round its rim and a gold ridge up the face
   const helm = props.find((m) => m.name === "ghelm");
   if (helm) {
