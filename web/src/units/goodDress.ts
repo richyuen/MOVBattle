@@ -569,3 +569,42 @@ export function aegisSkirt(scene: Scene, body: ArticulatedBody, team: Color3): M
   pelvis.material = cloth;
   return out;
 }
+
+/** [S] 486, good.sacred_elephant.red.png: the seated rider in white. Spec
+ * (head widths W, heights H, depths D; torso likewise): white hair falls
+ * .7H at the sides and back; a team cap 1.1W tied with a band, a gold oval
+ * crystal .3W x .4H on its front; a white tank top over the torso with gold
+ * bands .08H at its top and hem and team arms left bare; baggy white shorts
+ * flare 1.6 thigh half-widths over the upper .7 of each thigh. */
+export function elephantRiderDress(scene: Scene, rider: ArticulatedBody, team: Color3): Mesh[] {
+  const mf = getMaterialFactory();
+  const whiteC = new Color3(0.88, 0.88, 0.9), white = mf.get("unlit", whiteC, { emissive: whiteC });
+  const hairC = new Color3(0.95, 0.95, 0.95), hair = mf.get("unlit", hairC, { emissive: hairC });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  const out: Mesh[] = [];
+  const head = rider.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
+  const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
+  const onHead = (m: Mesh, x: number, y: number, z: number, mat: Material): Mesh => { m.parent = head; m.position.set(c.x + x, c.y + y, c.z + z); m.material = mat; out.push(m); return m; };
+  for (const side of [-1, 1]) onHead(MeshBuilder.CreateBox("elephantRiderHairSide", { width: W * 0.14, height: H * 0.75, depth: D * 0.8 }, scene), side * W * 0.55, -H * 0.12, -D * 0.08, hair);
+  onHead(MeshBuilder.CreateBox("elephantRiderHairBack", { width: W * 1.08, height: H * 0.8, depth: D * 0.14 }, scene), 0, -H * 0.12, -D * 0.55, hair);
+  const cap = onHead(MeshBuilder.CreateCylinder("elephantRiderCap", { height: H * 0.42, diameterBottom: W * 1.12, diameterTop: W * 0.9, tessellation: 8 }, scene), 0, H * 0.42, -D * 0.02, cloth);
+  cap.scaling.z = D / W;
+  const tie = onHead(MeshBuilder.CreateBox("elephantRiderCapTie", { width: W * 0.22, height: H * 0.3, depth: D * 0.1 }, scene), 0, H * 0.2, -D * 0.62, cloth);
+  tie.rotation.x = 0.4;
+  onHead(MeshBuilder.CreateSphere("elephantRiderCrystal", { diameterX: W * 0.3, diameterY: H * 0.4, diameterZ: D * 0.14, segments: 4 }, scene), 0, H * 0.42, D * 0.56, gold);
+  const tm = rider.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const TW = tb.extendSize.x * 2 * s.x, TH = tb.extendSize.y * 2 * s.y, TD = tb.extendSize.z * 2 * s.z;
+  const cy = tm.position.y + tb.center.y * s.y, cz = tm.position.z + tb.center.z * s.z;
+  tm.material = white;
+  for (const m of rider.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = white;
+  for (const y of [0.42, -0.45]) {
+    const band = MeshBuilder.CreateBox("elephantRiderTopBand", { width: TW * 1.06, height: TH * 0.08, depth: TD * 1.08 }, scene);
+    band.parent = rider.torso; band.position.set(0, cy + y * TH, cz); band.material = gold; out.push(band);
+  }
+  const pelvis = rider.hip.getChildMeshes(true).find(m => m.name.endsWith("_pelvis"));
+  if (pelvis) pelvis.material = white;
+  for (const thigh of [rider.leftUpperLeg, rider.rightUpperLeg]) out.push(limbShell(scene, "elephantRiderShorts", thigh, 0, 0.7, 1.6, white));
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}

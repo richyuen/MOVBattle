@@ -10,6 +10,7 @@ import { dressBallistaCrew } from "./ancientDress";
 import { longshipCarrierDress } from "./vikingDress";
 import { cannonBandanna, cannonShirt } from "./pirateDress";
 import { skeletonCrew } from "./spookyDress";
+import { elephantRiderDress } from "./goodDress";
 import { buildFacetedBoulder } from "./propBuilder";
 import { getUnit } from "../data/unitDefinitions";
 
@@ -4275,6 +4276,8 @@ function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
     rider.rightShoulder.rotation.x = -1.2;
     rider.rightElbow.rotation.x = -0.9;
     rider.neck.rotation.x = 0.1;
+    // [S] 486 white hair, tied team cap with gold crystal, white gold-banded tank top, baggy white shorts (goodDress)
+    rider.allMeshes.push(...elephantRiderDress(scene, rider, color));
     // [S] 482: two long golden spears, a separate shaft and luminous
     // diamond point in each fist (good.sacred_elephant.red.png).
     rider.leftShoulder.rotation.set(-0.8, 0, -0.5);
