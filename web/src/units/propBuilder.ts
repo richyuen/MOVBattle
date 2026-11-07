@@ -2241,9 +2241,11 @@ export function attachProps(
 
   const radiantShield = config.weaponVariant === "radiant_glaive";
   const paladinShield = config.weaponVariant === "paladin_hammer";
+  const pavise = config.shield === "pavise";
   const shield = radiantShield
     ? buildRadiantShield(scene, body.metrics.overallHeight, teamColor ?? accent)
     : paladinShield ? buildPaladinShield(scene, body.metrics.overallHeight)
+    : pavise ? buildPavise(scene, body.metrics.overallHeight, teamColor ?? accent)
     : buildShield(scene, config.shield, scale, accent, teamColor ?? accent);
   if (shield) {
     shield.parent = body.leftHand;
@@ -2263,6 +2265,12 @@ export function attachProps(
       shield.parent = body.torso;
       shield.position.set(-body.metrics.shoulderWidth * 0.58, body.neck.position.y * 0.35, body.torsoMesh.getBoundingInfo().boundingBox.maximum.z + scale * 0.23);
       shield.rotation.y = -0.2;
+    } else if (pavise) {
+      // [S] 489 the pavise stands upright ahead of his off side as a wall, its top at the shoulder and its foot by the shin (PAVISE)
+      const tall = body.metrics.overallHeight * PAVISE.tall;
+      shield.parent = body.torso;
+      shield.position.set(-body.metrics.shoulderWidth * 0.36, body.neck.position.y * 0.92 - tall / 2, body.torsoMesh.getBoundingInfo().boundingBox.maximum.z + scale * 0.16);
+      shield.rotation.y = -0.12;
     } else if (config.shield === "aspis") {
       // strapped to the trunk, upright and face-forward whatever the arm does (ASPIS)
       shield.parent = body.torso;
@@ -7016,6 +7024,46 @@ function buildRadiantShield(scene: Scene, stand: number, teamColor: Color3): Mes
 /** [S] 483, righteous_paladin.blue.png: pale circular board about half
  * the man's height; gold rim encloses two opposing broken chevrons around
  * a central hexagonal medallion, with lozenge openings at top and bottom. */
+/*
+ * [S] 489 the Exiled Sentinel's pavise (evil.exiled_sentinel.red.png, .blue.png, .jpg; audit 489 b.2: "a flat, bright-blue rectangular slab held
+ * horizontally across the chest - TABS: a matching upright coffin-shaped pavise, dark team face with a bone-coloured rim and two spiked cross-bands").
+ * PAVISE in the unit's standing height: a coffin outline .tall high, .wide across at its shoulders (.shoulder of the way up), .top and .foot of that
+ * across at its flat top and foot, .thick deep; a dark team face (.dark of the team colour) proud of a bone rim board .rim larger all round; two bone
+ * cross-bands .band high at .bandsAt of the height with .studs dark pyramid studs each. Face +z, up +y. Stood upright ahead of his off side (attach).
+ */
+const PAVISE = { tall: 0.42, wide: 0.17, shoulder: 0.82, top: 0.78, foot: 0.62, thick: 0.02, dark: 0.42, rim: 0.012, band: 0.022, bandsAt: [0.73, 0.22], studs: 3,
+  bone: new Color3(0.66, 0.62, 0.5), stud: new Color3(0.08, 0.06, 0.08) };
+function coffinPlate(scene: Scene, name: string, w: number, h: number, d: number): Mesh {
+  const P = PAVISE, outline = [[-w * P.foot / 2, -h / 2], [w * P.foot / 2, -h / 2], [w / 2, h * (P.shoulder - 0.5)], [w * P.top / 2, h / 2], [-w * P.top / 2, h / 2], [-w / 2, h * (P.shoulder - 0.5)]];
+  const pos: number[] = [], idx: number[] = [], n = outline.length;
+  for (const z of [d / 2, -d / 2]) for (const [x, y] of outline) pos.push(x, y, z);
+  for (let j = 1; j < n - 1; j++) idx.push(0, j, j + 1, n, n + j + 1, n + j);
+  for (let j = 0; j < n; j++) { const k = (j + 1) % n; idx.push(j, k + n, k, j, j + n, k + n); }
+  const normals: number[] = []; VertexData.ComputeNormals(pos, idx, normals);
+  const data = new VertexData(); data.positions = pos; data.indices = idx; data.normals = normals;
+  const mesh = new Mesh(name, scene); data.applyToMesh(mesh); mesh.convertToFlatShadedMesh();
+  return mesh;
+}
+function buildPavise(scene: Scene, stand: number, teamColor: Color3): Mesh {
+  const P = PAVISE, H = stand * P.tall, W = stand * P.wide, D = stand * P.thick, R = stand * P.rim;
+  const root = new Mesh("paviseShield", scene);
+  const bone = mat(scene, P.bone, 0.16, "cloth");
+  const rim = coffinPlate(scene, "paviseRim", W + R * 2, H + R * 2, D);
+  rim.parent = root; rim.material = bone;
+  const face = coffinPlate(scene, "paviseFace", W, H, D);
+  face.parent = root; face.position.z = D * 0.6; face.material = mat(scene, teamColor.scale(P.dark), 0.06, "cloth");
+  const studMat = mat(scene, P.stud, 0.04, "cloth");
+  for (const at of P.bandsAt) {
+    const y = H * (at - 0.5), across = W * (at > P.shoulder ? P.top : P.foot + (1 - P.foot) * (at / P.shoulder));
+    const band = MeshBuilder.CreateBox("paviseBand", { width: across + R, height: stand * P.band, depth: D * 0.6 }, scene);
+    band.parent = root; band.position.set(0, y, D * 1.2); band.material = bone;
+    for (let k = 0; k < P.studs; k++) {
+      const stud = MeshBuilder.CreateCylinder("paviseStud", { height: stand * P.band * 1.1, diameterBottom: stand * P.band * 0.9, diameterTop: 0, tessellation: 4 }, scene);
+      stud.parent = root; stud.rotation.x = Math.PI / 2; stud.position.set((k - (P.studs - 1) / 2) * across * 0.32, y, D * 1.5 + stand * P.band * 0.5); stud.material = studMat;
+    }
+  }
+  return root;
+}
 function buildPaladinShield(scene: Scene, stand: number): Mesh {
   const r = stand * 0.25;
   const gold = mat(scene, new Color3(1, 0.7, 0.18), 0.18, "cloth");

@@ -28,7 +28,7 @@ export type HatType =
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "crusader_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "hoplite_helm" | "legion_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
-export type ShieldType = "none" | "round" | "norse" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum" | "aspis" | "stiffy";
+export type ShieldType = "none" | "round" | "norse" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum" | "aspis" | "stiffy" | "pavise";
 
 export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
@@ -871,7 +871,7 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "evil.exiled_sentinel": vis(
     // [S] 489 (a.1): no great helm; his spiked cone hat is evilDress sentinelConeHat
-    { scale: 1.14, bulk: 1.2 }, "sword", "none", "tower", "cape", "#7B3434", undefined, {
+    { scale: 1.14, bulk: 1.2 }, "sword", "none", "pavise", "cape", "#7B3434", undefined, {
       materialPreset: "evil_void",
     },
   ),
