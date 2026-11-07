@@ -747,3 +747,49 @@ export function arbiterRobe(scene: Scene, body: ArticulatedBody, team: Color3): 
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/** [S] 487, good.divine_arbiter.red.png/.blue.png: the robe's skirt is short,
+ * split up the front over tight grey trousers, flaring out with gold hems;
+ * the feet are bare. Spec (pelvis widths P, depths Q, thigh lengths T): from
+ * the belt to .85T under the hips; a back panel 1.15P -> 1.9P tilted .2 rad
+ * back; two front panels from .12P -> .35P (the split) out to .6P -> 1P,
+ * tilted .2 rad forward; side panels 1.1Q -> 1.7Q leaning out .25 rad; gold
+ * bands .07 of the skirt along every hem and up both edges of the split.
+ * Thighs and shins pale grey (flat), feet the arms' bare skin. */
+export function arbiterCoatSkirt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const pelvis = body.hip.getChildMeshes(true).find(m => m.name.endsWith("_pelvis"));
+  if (!(pelvis instanceof Mesh)) return [];
+  const mf = getMaterialFactory();
+  const robe = mf.get("cloth", team, { emissive: team.scale(0.12) });
+  const goldC = new Color3(1, 0.7, 0.18), gold = mf.get("unlit", goldC, { emissive: goldC });
+  const greyC = new Color3(0.62, 0.64, 0.68), grey = mf.get("unlit", greyC, { emissive: greyC });
+  const P = limbBox(pelvis), PW = P.wide * 2, PD = P.deep * 2, T = limbBox(body.leftUpperLeg);
+  const top = P.mid + P.half, len = top - (body.leftHip.position.y - T.half * 2 * 0.85), band = len * 0.07, t = PD * 0.06;
+  pelvis.material = robe;
+  const out: Mesh[] = [];
+  const panel = (name: string, pts: number[][], mat: Material, x: number, z: number, rx: number, ry = 0, rz = 0, depth = t): Mesh => {
+    const m = ornament(scene, name, pts, depth, body.hip, mat);
+    m.position.set(x, top, z); m.rotation.set(rx, ry, rz); out.push(m); return m;
+  };
+  const trap = (a0: number, a1: number, b0: number, b1: number, y0 = 0, y1 = -len) => [[a0, y0], [b0, y0], [b1, y1], [a1, y1]];
+  const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
+  const k = 1 - band / len;
+  const back = -PD * 0.56;
+  panel("arbiterSkirtBack", trap(-PW * 0.575, -PW * 0.95, PW * 0.575, PW * 0.95), robe, 0, back, 0.2);
+  panel("arbiterSkirtBackHem", trap(-PW * lerp(0.575, 0.95, k), -PW * 0.96, PW * lerp(0.575, 0.95, k), PW * 0.96, -len * k), gold, 0, back - t, 0.2, 0, 0, t * 1.2);
+  const front = PD * 0.56;
+  for (const side of [-1, 1]) {
+    const inner = (y: number) => side * PW * lerp(0.12, 0.35, y), outer = (y: number) => side * PW * lerp(0.6, 1.0, y);
+    panel("arbiterSkirtFront", trap(inner(0), inner(1), outer(0), outer(1)), robe, 0, front, -0.2);
+    panel("arbiterSkirtFrontHem", trap(inner(k), inner(1), outer(k), outer(1) * 1.01, -len * k), gold, 0, front + t, -0.2, 0, 0, t * 1.2);
+    const w = PW * 0.07;
+    panel("arbiterSkirtSplitHem", trap(inner(0), inner(1), inner(0) + side * w, inner(1) + side * w), gold, 0, front + t, -0.2, 0, 0, t * 1.2);
+    panel("arbiterSkirtSide", trap(-PD * 0.55, -PD * 0.85, PD * 0.55, PD * 0.85), robe, side * PW * 0.58, 0, 0, side * Math.PI / 2, side * 0.25);
+  }
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) thigh.material = grey;
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) shin.material = grey;
+  const skin = body.leftUpperArm.material ?? body.skinMaterial;
+  for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) m.material = skin;
+  for (const m of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  return out;
+}
