@@ -473,6 +473,8 @@ async function main() {
           if (id === "legacy.dark_peasant") game.spawnUnit("medieval.king", 0, { x: -80, z: 50 });
           // Zeus's bolt conducts to nearby men (card Characteristics, a lightning chain): he spars with a squire and two mates clustered beside it (evidence 386)
           if (id === "ancient.zeus") for (const dz of [-0.9, 0.9]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.4, z: dz });
+          // [evidence 485] the Radiant Glaive's glaive bounces between enemies (card Characteristics): two mates stand behind and beside his squire
+          if (id === "good.radiant_glaive") for (const dz of [-1.8, 1.8]) game.spawnUnit("medieval.squire", 0, { x: -d - 1.2, z: dz });
           // [evidence 425] the Pirate Queen's Bomb Spin fires when she is outnumbered (card Abilities): she faces her squire and four mates
           // in a file beside it (five to one), so the mechanic can show once it exists (audit 422 c.2)
           if (id === "pirate.pirate_queen") for (const dz of [-1.8, -0.9, 0.9, 1.8]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.3, z: dz });
