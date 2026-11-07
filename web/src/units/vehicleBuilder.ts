@@ -4207,6 +4207,21 @@ function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
     return mesh;
   };
 
+  // [S] 490 ELEPHANT_FOOT (good.sacred_elephant.blue.png): no dark sole band; each pillar ends in a pale foot pad in the hide, continuous with the
+  // leg and flaring out at the ground. Per leg (knee frame): a 10-sided frustum from .6 across at the pillar's foot (y -.26) to .78 at the ground
+  // (y -.44), and a slightly paler flat rim .8 across, .04 tall, at its base so the pad reads as a foot and not a straight column.
+  const padRim = getMaterialFactory().get("cloth", ELEPHANT_HIDE.scale(1.12), { emissive: ELEPHANT_HIDE.scale(0.18) });
+  const oldFeet = body.allMeshes.filter((mesh) => mesh.name === "foot");
+  body.allMeshes = body.allMeshes.filter((mesh) => mesh.name !== "foot");
+  for (const mesh of oldFeet) {
+    const knee = mesh.parent as TransformNode;
+    const pad = add(MeshBuilder.CreateCylinder("elephantFootPad", { height: 0.18, diameterTop: 0.6, diameterBottom: 0.78, tessellation: 10 }, scene), knee, hide);
+    pad.position.set(0, -0.35, 0);
+    const rim = add(MeshBuilder.CreateCylinder("elephantFootRim", { height: 0.04, diameter: 0.8, tessellation: 10 }, scene), knee, padRim);
+    rim.position.set(0, -0.42, 0);
+    mesh.dispose();
+  }
+
   // [S] 485 ELEPHANT_TRUNK (good.sacred_elephant.red.png): one continuous faceted tube in the hide replaces the eight separate pieces and
   // their hooked tip. It leaves the face as wide as the gap between the eyes, hangs almost straight to just over the ground and turns only a
   // little forward at its flared snout. Pitches from straight down (+ forward), pieces .piece long, radius .rootR easing to .tipR, end .flare.
