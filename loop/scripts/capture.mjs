@@ -522,6 +522,8 @@ async function main() {
             let meshTop = head;
             for (const m of u.body.root.getChildMeshes(false)) {
               if (!m.isEnabled() || !m.isVisible) continue;
+              // [evidence 488] the Aegis field (a 6 m bubble and its orbs) is not the unit's height: it keeps her body framing
+              if (/^aegis(TransparentField|GoldBorder|OrbitOrb)$/.test(m.name)) continue;
               window.__wp(m);
               const y = m.getBoundingInfo().boundingBox.maximumWorld.y;
               if (y - base < 3 * (head - base)) meshTop = Math.max(meshTop, y);
@@ -538,6 +540,9 @@ async function main() {
           // 6: the ally alone, framed as 2 (a bearer's aura on the man inside his ring; his 2, the struck shot, stays on the squire he hits)
           const allyShot = on === 6 || (on === 2 && window.__usupport);
           if (on === 6) on = 2;
+          // [evidence 488] 10: the idle's angle pulled back to show a field round the unit (the Aegis bubble is 6 m across; the idle sits inside it)
+          const fieldShot = on === 10;
+          if (on === 10) on = 1;
           const a = window.__ua, t = allyShot && window.__ually ? window.__ually : window.__ut;
           // [evidence 479] a Wizard's firework victim is aloft: include his current height,
           // rather than aiming at the ground below the chest burst.
@@ -615,6 +620,7 @@ async function main() {
             const si = window.__rig(a) < 1.2 ? Math.max(0.4, window.__rig(a) / 1.8) : s;
             // the small rig looks down steeper, so the ground and not the horizon's boulder sits behind his head (evidence 383: a navy beret again)
             // evidence 387: PI/2.9 (28 deg down) foreshortened his legs to a crouch; PI/2.45 is 17 deg down
+            if (fieldShot) { window.game.frameCamera({ x: pa.x, y: 1.5, z: pa.z }, 11, alpha, Math.PI / 2.3); return; }
             window.game.frameCamera({ x: pa.x, y: (fencer || big > 1 || ballista ? 0.72 : 0.55) * si + 0.45 * Math.min(1, si), z: pa.z }, 3.8 * si * big * (ballista ? 1.12 : 1), alpha, ballista ? Math.PI / 2.65 : fencer ? Math.PI / 1.97 : si < s ? Math.PI / 2.45 : Math.PI / 2.3);
             return;
           }
@@ -727,6 +733,7 @@ async function main() {
         const bearer = id === "legacy.flag_bearer" || id === "legacy.banner_bearer";
         const far = support ? 1 : d >= 6 || id === "pirate.blunderbuss" ? 3 : 0;
         await take(`unit_${id}_idle`, null, 1);
+        if (id === "good.celestial_aegis") await take(`unit_${id}_field`, null, 10);
         if (release) {
           // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
           if (release.tick > 9) await take(`unit_${id}_windup`, release.tick - 9, far);
