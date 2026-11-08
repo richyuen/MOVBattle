@@ -316,3 +316,51 @@ export function mechanicGoggles(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 494 the Exiled Sentinel's spiked leggings (evil.exiled_sentinel.red.png; card "a spiked uniform ... bracers and leggings ... all covered in
+ * spikes"; audit 489 a.4: "smooth armoured legs - TABS: dark leggings covered in rows of team-coloured diamond spikes").
+ * Spec in each leg mesh's own frame (its box half-extents e, radius r = the larger of e.x, e.z): the thigh, shin and foot go near-black cloth;
+ * on each shin .shinRows rows and on each thigh .thighRows rows, evenly from .from to .to of the mesh's height (top to bottom), each row .perRow
+ * team diamonds round the front half and the sides (from -.arc to +.arc rad off the front, rows turned half a step apart): a diamond is a
+ * 4-sided double point (two pyramids base to base) .long r tall up the leg, .wide r across, standing .proud r out of the leg's surface.
+ */
+const SENTINEL_LEGGINGS = { shinRows: 4, thighRows: 2, from: 0.82, to: 0.12, perRow: 4, arc: 1.75, long: 0.95, wide: 0.6, proud: 0.42 };
+export function sentinelLeggings(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const S = SENTINEL_LEGGINGS, mf = getMaterialFactory();
+  const blackC = new Color3(0.07, 0.05, 0.07), black = mf.get("cloth", blackC, { emissive: blackC.scale(0.4) });
+  const spikeMat = mf.get("cloth", team, { emissive: team.scale(0.18) });
+  const out: Mesh[] = [];
+  const legs: [Mesh, number][] = [[body.leftLowerLeg, S.shinRows], [body.rightLowerLeg, S.shinRows], [body.leftUpperLeg, S.thighRows], [body.rightUpperLeg, S.thighRows]];
+  for (const [leg, rows] of legs) {
+    leg.material = black;
+    const bb = leg.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z);
+    for (let row = 0; row < rows; row++) {
+      const t = rows === 1 ? 0.5 : S.from + (S.to - S.from) * (row / (rows - 1));
+      const y = cc.y - e.y + e.y * 2 * t;
+      for (let k = 0; k < S.perRow; k++) {
+        const a = -S.arc + (2 * S.arc) * ((k + (row % 2) * 0.5) / S.perRow);
+        const half = (r * S.long) / 2;
+        for (const up of [1, -1]) {
+          // one pyramid of the pair: its base at the diamond's middle, its point up (or down) the leg; the pair flattened onto the leg
+          const p = MeshBuilder.CreateCylinder("sentinelLegSpike", { height: half, diameterBottom: r * S.wide, diameterTop: 0, tessellation: 4 }, scene);
+          p.parent = leg; p.material = spikeMat;
+          p.rotation.set(up > 0 ? 0 : Math.PI, a, 0);
+          const out1 = r * (1 + S.proud * 0.35);
+          p.position.set(cc.x + Math.sin(a) * out1, y + up * half * 0.5, cc.z + Math.cos(a) * out1);
+          p.scaling.z = 0.55; // flattened toward the leg (z is its depth after the yaw)
+          out.push(p);
+        }
+        // the diamond's point standing out of the leg
+        const tip = MeshBuilder.CreateCylinder("sentinelLegSpikeTip", { height: r * S.proud, diameterBottom: r * S.wide * 0.55, diameterTop: 0, tessellation: 4 }, scene);
+        tip.parent = leg; tip.material = spikeMat;
+        tip.rotation.set(Math.PI / 2, a, 0);
+        tip.position.set(cc.x + Math.sin(a) * (r + r * S.proud * 0.5), y, cc.z + Math.cos(a) * (r + r * S.proud * 0.5));
+        out.push(tip);
+      }
+    }
+  }
+  for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(false)) if (/_[lr]FootM$/.test(m.name)) m.material = black;
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
