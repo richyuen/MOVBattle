@@ -29,7 +29,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
+import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
 import { shouterHelm } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
@@ -2740,7 +2740,8 @@ function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilS
   for (const mesh of [...body.leftKnee.getChildMeshes(false), ...body.rightKnee.getChildMeshes(false)]) {
     if (/_[lr]FootM$/.test(mesh.name)) mesh.material = boot;
   }
-  const bone = mf.get("cloth", style.bone ?? EVIL_BONE, { emissiveIntensity: EVIL_BONE_GLOW });
+  // [S] 501 (a.3) the evil monarch's bone is the crown's tan, its own material out of the glow (evilDress monarchBone); custom keeps the grey bone
+  const bone = style.harness ? monarchBone(scene) : mf.get("cloth", style.bone ?? EVIL_BONE, { emissiveIntensity: EVIL_BONE_GLOW });
   const hornMat = mf.get("cloth", style.hornColor, { emissiveIntensity: style.skull ? EVIL_GLOW * 2 : EVIL_BONE_GLOW });
   const head = body.headMesh;
   const hExt = head.getBoundingInfo().boundingBox.extendSize;
@@ -2929,6 +2930,10 @@ function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilS
         keep(rag, skirt, robe);
       }
     }
+  }
+  if (style.harness) {
+    const glow = scene.getGlowLayerByName("glow");
+    for (const m of [...added, ...body.allMeshes]) for (const k of [m, ...m.getChildMeshes(false)]) if (k.material === bone) glow?.addExcludedMesh(k as Mesh);
   }
   return added;
 }

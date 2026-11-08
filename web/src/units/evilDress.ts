@@ -1738,6 +1738,17 @@ export function monarchElbowBalls(scene: Scene, body: ArticulatedBody, bone: Mat
  * .knob W under a bone point .tip H; round the pole at .ringAt of its height a flat pink ring .ring W across, .ringT W thick, tilted .ringTilt rad,
  * flat unlit pink (DEATH_SLASH's hue). Bone-tan lit cloth .tan self-lit .12 (the shared bone (.6,.6,.46) read pale grey); all out of the glow.
  */
+/**
+ * [S] 501 the Void Monarch's bone (evil.void_monarch.red.png: harness, chevron ribs, belt studs, knee plates and elbow balls are all the crown's
+ * bone-tan; CONFIRM 500 a.3: "the spiked thigh pads are light grey/silver"). HORNED_EVIL's shared bone (.6,.6,.46) lit and self-lit through the
+ * glow read pale grey; the evil preset takes its own lit cloth in the crown's tan (MONARCH_CROWN.tan, palette 500), self-lit .12, roughness 1,
+ * and unitFactory keeps every mesh wearing it out of the glow (the halo paled it). The custom copy keeps the grey bone.
+ */
+export function monarchBone(_scene: Scene): Material {
+  const C = MONARCH_CROWN;
+  return getMaterialFactory().get("cloth", C.tan, { emissive: C.tan.scale(0.12), roughness: 1 });
+}
+
 const MONARCH_CROWN = {
   // 500 look: tan (.72,.56,.3) read pale grey on the rays, pole 2.0 H stood about one head over the band (render: ~2.4 H)
   tan: new Color3(0.66, 0.5, 0.2), band: 1.22, bandLo: 0.28, bandHi: 0.56, rays: 6, rayW: 0.24, rayT: 0.1, ray: 0.95, rayBack: 0.2,
