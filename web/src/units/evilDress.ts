@@ -366,6 +366,44 @@ export function sentinelLeggings(scene: Scene, body: ArticulatedBody, team: Colo
 }
 
 /**
+ * [S] 495 the Exiled Sentinel's dark uniform (evil.exiled_sentinel.blue.png; card "a spiked uniform ... bracers and leggings"; audit 489 a.3: "plain
+ * team-blue plate armour all over - TABS: a dark uniform with team skin at the face and hands only").
+ * Spec: the trunk, yoke, pelvis, neck, upper and lower arms (the body cloth and the arm skin) go near-black lit cloth .dark self-lit .4, roughness 1
+ * (the cultist robe's cloth, LESSONS: near-black); the head and the fists keep the team skin; on each forearm a bracer, an 8-sided near-black cuff
+ * .cuffW of the forearm's width across and .cuffL of its length long at the wrist end, ringed by .spikes team pyramid spikes .spike forearm widths
+ * long standing straight out (the leggings' spike cloth); a near-black collar ring .collar torso widths across round the neck's foot.
+ */
+const SENTINEL_UNIFORM = { dark: new Color3(0.08, 0.06, 0.07), cuffW: 1.3, cuffL: 0.55, spikes: 5, spike: 0.45, collar: 0.62 };
+export function sentinelUniform(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = SENTINEL_UNIFORM, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
+  const spikeMat = mf.get("cloth", team, { emissive: team.scale(0.18) });
+  for (const m of body.allMeshes) if (/_(torsoM|yoke|pelvis|neckM|[lr](Upper|Lower)Arm(_stub)?)$/.test(m.name)) { m.material = dark; glow?.addExcludedMesh(m); }
+  const out: Mesh[] = [];
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    const bb = arm.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center;
+    // the forearm runs along its local y; the wrist is its lower end (toward the hand)
+    const r = Math.max(e.x, e.z), len = e.y * 2 * C.cuffL;
+    const root = new TransformNode("sentinelBracer", scene);
+    root.parent = arm; root.position.set(cc.x, cc.y - e.y + len / 2, cc.z);
+    const cuff = MeshBuilder.CreateCylinder("sentinelBracerCuff", { height: len, diameterTop: r * 2 * C.cuffW * 0.9, diameterBottom: r * 2 * C.cuffW, tessellation: 8 }, scene);
+    cuff.parent = root; cuff.material = dark; out.push(cuff);
+    for (let k = 0; k < C.spikes; k++) {
+      const a = (k / C.spikes) * Math.PI * 2;
+      const sp = MeshBuilder.CreateCylinder("sentinelBracerSpike", { height: r * 2 * C.spike, diameterBottom: r * 0.7, diameterTop: 0, tessellation: 4 }, scene);
+      const out1 = r * C.cuffW + r * C.spike * 0.8;
+      sp.parent = root; sp.rotation.set(Math.PI / 2, a, 0); sp.position.set(Math.sin(a) * out1, 0, Math.cos(a) * out1); sp.material = spikeMat; out.push(sp);
+    }
+  }
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling, W = tb.extendSize.x * 2 * s.x;
+  const top = tm.position.y + (tb.center.y + tb.extendSize.y) * s.y;
+  const collar = MeshBuilder.CreateCylinder("sentinelCollar", { height: W * 0.12, diameterBottom: W * C.collar, diameterTop: W * C.collar * 0.8, tessellation: 8 }, scene);
+  collar.parent = body.torso; collar.position.set(0, top + W * 0.03, tm.position.z + tb.center.z * s.z); collar.material = dark; out.push(collar);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 494 the Void Cultist's dark priest robe (evil.void_cultist.red.png, .blue.png; card "dark priest clothing"; audit 489 a.3: "a grey-lilac robe
  * - TABS: a near-black priest robe with a team-coloured stripe down the front"). The lit maroon robe read grey-lilac under the evil_void cloth.
  * Spec: every mesh in the body's own cloth or in the robe cloth (trunk, yoke, sleeves, legs, the hip skirt) goes near-black cloth .dark, self-lit .4

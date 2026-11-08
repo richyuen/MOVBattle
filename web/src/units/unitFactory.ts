@@ -26,6 +26,7 @@ import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBuckler, cultistDarkRobe, cultistHalo, lichStaffCrystal, lichTunic, mechanicGoggles, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
+import { sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -550,7 +551,7 @@ export class UnitFactory {
     if (definition.id === "good.radiant_glaive" && !shouldUseVehicleBody) propMeshes.push(...radiantCape(this._scene, body, teamColor));
     if (definition.id === "good.chronomancer" && !shouldUseVehicleBody) propMeshes.push(...chronoCrown(this._scene, body));
     // [S] 489 tall black cone hat studded with team spikes (evilDress)
-    if (definition.id === "evil.exiled_sentinel" && !shouldUseVehicleBody) { propMeshes.push(...sentinelConeHat(this._scene, body, teamColor)); propMeshes.push(...sentinelMane(this._scene, body)); propMeshes.push(...sentinelShoulderSpikes(this._scene, body)); propMeshes.push(...sentinelLeggings(this._scene, body, teamColor)); }
+    if (definition.id === "evil.exiled_sentinel" && !shouldUseVehicleBody) { propMeshes.push(...sentinelConeHat(this._scene, body, teamColor)); propMeshes.push(...sentinelMane(this._scene, body)); propMeshes.push(...sentinelShoulderSpikes(this._scene, body)); propMeshes.push(...sentinelLeggings(this._scene, body, teamColor)); propMeshes.push(...sentinelUniform(this._scene, body, teamColor)); }
     // [S] 486 the huge gold spiked clock ring behind his shoulders (goodDress)
     if (definition.id === "good.chronomancer" && !shouldUseVehicleBody) propMeshes.push(...chronoBackRing(this._scene, body));
     // [S] 488 white gold-trimmed crop top over a bare team midriff (goodDress)
