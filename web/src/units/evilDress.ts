@@ -317,7 +317,7 @@ export function cultistBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 // [S] 496 (b.2) 1.85 chests across, wider than the shoulders (was 1.3; 1.6 read torso-wide in the three-quarter idle, look 496); proceduralAnimation
 // _seatBuckler centres it chin to hip
-const CULTIST_BUCKLER = { across: 1.85, thick: 0.06, rimT: 0.07, ring: 0.62, rim: 10, spike: 0.2, face: 5, faceSpike: 0.16, boss: 0.26 };
+const CULTIST_BUCKLER = { across: 2.6, thick: 0.06, rimT: 0.07, ring: 0.62, rim: 10, spike: 0.2, face: 5, faceSpike: 0.16, boss: 0.26 };
 export function cultistBuckler(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = CULTIST_BUCKLER, tm = body.torsoMesh, te = tm.getBoundingInfo().boundingBox.extendSize;
   body.torso.computeWorldMatrix(true); body.leftHand.computeWorldMatrix(true);
