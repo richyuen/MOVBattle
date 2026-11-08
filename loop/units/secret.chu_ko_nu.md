@@ -8,14 +8,14 @@ a FAIL (0 since 500)
  4. belt in unit_secret.chu_ko_nu_idle — none; TABS a dark belt with a buckle and a hanging end (ref: secret.chu_ko_nu.red.png)
  5. leggings in unit_secret.chu_ko_nu_idle — plain legs; TABS banded wrapped leggings (ref: secret.chu_ko_nu.red.png)
 b PASS (501 repeating crossbow across the chest)
-c FAIL (0 since 500; audit2 PASS: the 5-bolt burst reads)
- 1. bolt origin in unit_secret.chu_ko_nu_release — the bolt appears in front of the face at head height, well above the weapon at the hip; TABS's bolts leave the crossbow's track (ref: secret.chu_ko_nu.jpg; card Weapons)
-d PASS (500 stats)
+c PASS (502 bolts leave the crossbow's nose)
+d PASS (502 stats)
 ## Ranked gaps
-1. [S] secret.chu_ko_nu.a topknot — blocker 1: a hair bun and a black/team headband in place of the conical hat — ref: secret.chu_ko_nu.red.png — ours: unit_secret.chu_ko_nu_idle
-2. [S] secret.chu_ko_nu.c bolt origin — blocker 1: launch the 5 bolts from the magazine's nose on the new stock — ref: secret.chu_ko_nu.jpg — ours: unit_secret.chu_ko_nu_release
+1. [S] secret.chu_ko_nu.a topknot — blocker 1: replace the conical hat with a black bun and a black/team headband — ref: secret.chu_ko_nu.red.png — ours: unit_secret.chu_ko_nu_idle.png
+2. [S] secret.chu_ko_nu.a robe — blocker 2: knee-length team robe with orange hem bands — ref: secret.chu_ko_nu.red.png — ours: unit_secret.chu_ko_nu_idle.png
 ## Attempts (iter | gap | criterion | verdict)
-501 | box stock, studded magazine with lever, wide swept bow arm, crossbow variant, propBuilder REPEATING_CROSSBOW (87af4842) | b | approved (struck 1; b PASS)
+502 | "rcbMuzzle" slot on the crossbow nose, HAND_LAUNCH muzzle (b1963ee9) | c | approved (struck 1; c PASS)
+501 | box stock, studded magazine with lever, wide swept bow arm, propBuilder REPEATING_CROSSBOW (87af4842) | b | approved (struck 1; b PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 501 DEFECTS: in _windup the crossbow stands upright behind the shoulder like a board while he runs.
+- 501/502 DEFECTS: in _windup/_flight the crossbow rides upright behind the shoulder, prod pointing back, arm hanging (TABS level across the chest in both hands); a CONFIRM may fail b on it.

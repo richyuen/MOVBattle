@@ -32,7 +32,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - The _ability/_release shots are the log tick itself, before RuntimeUnit.update: a swap or pose set at the log shows only after (437 bat). A latch reads in _release when it pins at the decision and its plain hits come from the draughts .3 s on (444 vampire).
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
-- An idle hold gated on Attacking+throw stays on through a long-cooldown windup: gate it on the fire (451). RuntimeUnit._applyPoseOverlay (posePreset gunner, archer...) runs AFTER the animator's layers and re-turns a held aim: probe the final frame (455 barrel 17° up).
+- Gate an idle hold on the fire, not Attacking+throw (451). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 ## Rig and dress
 - A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
 - Retire superseded hip skirts (482). The `_yoke` hull spans the trunk: re-skin it for a bare waist, size shells from it (487).
@@ -54,7 +54,8 @@ Read whole at step 1; one fact per line, merge near cap.
 - A short effect child (cloud bolts) can die inside one capture advance: tie its life to its owner (492).
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
 - A ground-length skirt hides a hover lift: robe below the knee rides each shin (493, 499 lich).
-- A sliced faction's lineup shows the batch slice of its first unit (501); at r 12 the first man fell out of frame.
+- A man flat in a shot whose probe_eval root.rotation is 0 and physicsState steady is tipped by a pose layer (502 monarch).
+- hpoint without "haxe" gives the shouldered carry: _twoHandPole's off fist lands over the crown (502 bomb stick).
 - In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
