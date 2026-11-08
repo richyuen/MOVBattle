@@ -886,6 +886,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   "evil.void_cultist": vis(
     { scale: 1.08, bulk: 0.96, headSize: 1.08 }, "staff", "none", "none", "none", "#6B52A8", undefined, {
       weaponVariant: "cultist_mace", // [S] 490 (b.1) a thin dark spiked-ball mace with team bands (propBuilder CULTIST_MACE)
+      // [S] 493 (c.1, card "Bludgeon - Melee"): the mace is brought down in a heavy swing, not poked like a spear; it keeps its default grip
+      weaponPresentationFamily: "heavy_swing", weaponGripPreset: "default",
       posePreset: "caster",
       materialPreset: "evil_void",
       attachmentPreset: "summoner",
