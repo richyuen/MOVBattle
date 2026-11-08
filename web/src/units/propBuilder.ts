@@ -2267,17 +2267,26 @@ export function attachProps(
       shield.rotation.y = -0.2;
     } else if (pavise) {
       // [S] 489 the pavise stands upright ahead of his off side as a wall, its top at the shoulder and its foot by the shin (PAVISE)
-      const tall = body.metrics.overallHeight * PAVISE.tall;
-      shield.parent = body.torso;
-      shield.position.set(-body.metrics.shoulderWidth * 0.36, body.neck.position.y * 0.92 - tall / 2, body.torsoMesh.getBoundingInfo().boundingBox.maximum.z + scale * 0.16);
-      shield.rotation.y = -0.12;
+      // [S] 496 (b.2, CONFIRM 495: "the two shields hang low, side by side in front of the hips, with their tops at the belly - TABS: the shield
+      // tops sit at the shoulder line, flanking the neck"; evil.exiled_sentinel.red.png): the boards are stood on the body's root, not the trunk,
+      // so the trunk's forward lean no longer tips them back and drops their tops to the belly. Each stands bolt upright with its top on the
+      // shoulder line (read off the shoulder joint in the root frame at build), its inner edge a hand's gap off the body's middle so the pair
+      // flanks the neck, its top splayed a little out (PAVISE_STAND), just clear of the leaning chest.
+      const tall = body.metrics.overallHeight * PAVISE.tall, wide = body.metrics.overallHeight * PAVISE.wide;
+      const toRoot = body.root.computeWorldMatrix(true).clone().invert();
+      body.leftShoulder.computeWorldMatrix(true); body.torsoMesh.computeWorldMatrix(true);
+      const shoulderAt = Vector3.TransformCoordinates(body.leftShoulder.getAbsolutePosition(), toRoot);
+      const chest = body.torsoMesh.getBoundingInfo().boundingBox.vectorsWorld.reduce((m, v) => Math.max(m, Vector3.TransformCoordinates(v, toRoot).z), -Infinity);
+      shield.parent = body.root;
+      shield.position.set(-(wide * PAVISE_STAND.gap + wide / 2), shoulderAt.y + PAVISE_STAND.lift * tall - tall / 2, chest + tall * PAVISE_STAND.ahead);
+      shield.rotation.set(0, -0.12, PAVISE_STAND.splay);
       // [S] 490 (b.1, evil.exiled_sentinel.red.png; card Main Hand "Sentinel Right Shield Axe"): the main hand carries the matching pavise, the
       // mirror of the off one, so two coffin boards stand side by side before him; his sword stays in the fist unseen (the blow and a later
       // shield-to-axe swap keep a hand weapon to work with). The node "paviseShieldRight" names it.
       const right = buildPavise(scene, body.metrics.overallHeight, teamColor ?? accent);
-      right.name = "paviseShieldRight"; right.parent = body.torso;
+      right.name = "paviseShieldRight"; right.parent = body.root;
       right.position.set(-shield.position.x, shield.position.y, shield.position.z);
-      right.rotation.y = 0.12;
+      right.rotation.set(0, 0.12, -PAVISE_STAND.splay);
       props.push(right);
       if (weapon) for (const m of [weapon, ...weapon.getChildMeshes(false)]) m.isVisible = false;
       // [S] 493 (c.1, card Characteristics "two protective shields ... which will turn into deadly axes when within melee range"; Appearance "two
@@ -7263,6 +7272,9 @@ function buildRadiantShield(scene: Scene, stand: number, teamColor: Color3): Mes
  */
 const PAVISE = { tall: 0.58, wide: 0.18, shoulder: 0.86, top: 0.8, foot: 0.74, thick: 0.02, dark: 0.42, rim: 0.012, band: 0.022, bandsAt: [0.8, 0.13], studs: 3,
   bone: new Color3(0.66, 0.62, 0.5), stud: new Color3(0.08, 0.06, 0.08) };
+/** [S] 496 the pavises' stand on the root: inner edge .gap of a board's width off the middle, top .lift of its height over the shoulder line,
+ * face .ahead of its height before the chest, top splayed out .splay rad (the render's slight V) */
+const PAVISE_STAND = { gap: 0.12, lift: 0.07, ahead: 0.21, splay: 0.06 };
 function coffinPlate(scene: Scene, name: string, w: number, h: number, d: number): Mesh {
   const P = PAVISE, outline = [[-w * P.foot / 2, -h / 2], [w * P.foot / 2, -h / 2], [w / 2, h * (P.shoulder - 0.5)], [w * P.top / 2, h / 2], [-w * P.top / 2, h / 2], [-w / 2, h * (P.shoulder - 0.5)]];
   const pos: number[] = [], idx: number[] = [], n = outline.length;
