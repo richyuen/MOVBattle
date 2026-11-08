@@ -1106,6 +1106,48 @@ export function deathBringerShinWraps(scene: Scene, body: ArticulatedBody, team:
 }
 
 /**
+ * [S] 500 the Death Bringer's bone belt (evil.death_bringer.red.png, card Appearance "a belt with bones"; audit 489 a.6: "belt: no bones - TABS: a
+ * dark belt hung with bone tusks"). The render: a dark belt round the waist under the hair's foot, three pale curved tusks per side over each hip,
+ * hung point-down and curling out and up, about a fifth of the chest across each.
+ * Spec in the trunk box (trunkBox: W across, H high, D deep): a near-black belt .beltH H tall round the trunk's foot, .out W proud all round;
+ * per side .tusks tusks at .at W out from the middle (front and side of the hip), each a tapered 4-segment curve rooted on the belt's front face,
+ * running .drop W down then .hook W out and up to a point, .long W in all, .root W thick at the belt. Tan bone (DEATH_MASK.tan), out of the glow.
+ */
+const DEATH_BELT = { beltH: 0.12, out: 0.05, tusks: 3, at: [0.3, 0.42, 0.5], fwd: [1, 0.75, 0.35], drop: 0.14, hook: 0.1, root: 0.07, lift: 0.04 };
+export function deathBringerBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = DEATH_BELT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const { lo, hi } = trunkBox(body), W = hi.x - lo.x, H = hi.y - lo.y, D = hi.z - lo.z, cx = (lo.x + hi.x) / 2, cz = (lo.z + hi.z) / 2;
+  const blackC = new Color3(0.03, 0.025, 0.03), black = mf.get("cloth", blackC, { emissive: blackC.scale(0.4), roughness: 1 });
+  const tan = mf.get("cloth", DEATH_MASK.tan, { emissive: DEATH_MASK.tan.scale(0.12) });
+  const out: Mesh[] = [];
+  const beltY = lo.y + (H * C.beltH) / 2;
+  const belt = MeshBuilder.CreateBox("deathBelt", { width: W * (1 + C.out * 2), height: H * C.beltH, depth: D + W * C.out * 2 }, scene);
+  belt.parent = body.torso; belt.position.set(cx, beltY, cz); belt.material = black; out.push(belt);
+  const up = new Vector3(0, 1, 0);
+  for (const side of [-1, 1]) for (let i = 0; i < C.tusks; i++) {
+    const x = cx + side * W * C.at[i], z = cz + (D / 2 + W * C.out) * C.fwd[i] + W * 0.02;
+    const root = new Vector3(x, beltY - H * C.beltH * 0.3, z);
+    const pts = [
+      root,
+      root.add(new Vector3(side * W * C.hook * 0.3, -W * C.drop, W * 0.03)),
+      root.add(new Vector3(side * W * C.hook * 0.8, -W * C.drop * 1.2, W * 0.05)),
+      root.add(new Vector3(side * W * C.hook * 1.3, -W * C.drop * 0.8 + W * C.lift, W * 0.06)),
+      root.add(new Vector3(side * W * C.hook * 1.5, -W * C.drop * 0.2 + W * C.lift, W * 0.06)),
+    ];
+    for (let k = 0; k < pts.length - 1; k++) {
+      const a = pts[k], e = pts[k + 1], d = e.subtract(a), n = pts.length - 1;
+      const seg = MeshBuilder.CreateCylinder("deathTusk", { height: d.length() * 1.08, diameterBottom: W * C.root * (1 - k / n), diameterTop: W * C.root * (1 - (k + 1) / n), tessellation: 5 }, scene);
+      seg.parent = body.torso; seg.material = tan;
+      seg.position.copyFrom(a.add(e).scale(0.5));
+      seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, d.normalize(), new Quaternion());
+      out.push(seg);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 495 the Tempest Lich's Hover (card Abilities "Hover"; ref evil.tempest_lich.jpg: he floats a shin's height over the ground, legs hanging; audit
  * 489 c.2: "he strides on the ground"). The 493 try (the Reaper's mark at its .15 lift) was hidden by the ground-length skirt; the tunic (494) now
  * leaves the legs open. A "reaperHover" node under the hip marks him for the animator's hover (proceduralAnimation REAPER_HOVER: legs hang, no
