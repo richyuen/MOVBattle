@@ -1,8 +1,7 @@
 # secret.ballooner
 Status: open   Audited: 500 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (0 since 500)
- 1. balloon backpack in unit_secret.ballooner_idle — ours is one head-sized pink sphere at head height, hiding the head; TABS a small satchel backpack with a cluster of mini balloons rising above it (ref: secret.ballooner.png icon; card Appearance)
+a FAIL (1 since 500, 1 struck)
  2. forearms in unit_secret.ballooner_idle — thin bare team arms; TABS huge lumpy beige glue-covered forearms, wider than the torso (ref: secret.ballooner.red.png)
  3. doublet in unit_secret.ballooner_idle — a plain pale-blue tunic block; TABS a puffy slashed team doublet with cream slashes, a cream V front and a belt (ref: secret.ballooner.red.png)
  4. collar in unit_secret.ballooner_idle — none; TABS a wide grey ruff collar under the chin (ref: secret.ballooner.red.png)
@@ -16,8 +15,11 @@ c FAIL (0 since 500)
  2. grab in unit_secret.ballooner_release — a shuriken poke from 1 m; TABS dives in and glues onto the target's body (ref: card Characteristics)
 d PASS (500 stats)
 ## Ranked gaps
-1. [S] secret.ballooner.a balloon backpack — blocker 1: small back satchel and a cluster of 4-5 small balloons on strings above the head, replacing the pink sphere — ref: secret.ballooner.png — ours: unit_secret.ballooner_idle.png
+1. [S] secret.ballooner.b mitts — blocker 1: drop the shuriken, empty glue-covered mitts — ref: secret.ballooner.red.png — ours: unit_secret.ballooner_windup
+2. [S] secret.ballooner.a glue arms — blocker 2: lumpy beige faceted forearm shells wider than the torso (secretDress balloonerGlueArms) — ref: secret.ballooner.red.png — ours: unit_secret.ballooner_idle
 ## Attempts (iter | gap | criterion | verdict)
+501 | leather satchel, straps, 5 small balloons on strings, pink sphere off, secretDress balloonerPack (2c5f720b) | a | approved (struck 1)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
 - Audit 500: the shuriken looks like a leftover ninja prop in its visual entry (also on the jester).
+- 501: lineup_secret (slice framing 501.0) cut him off the left edge; blockers 2-7 kept unplaced (not struck) pending the evidence re-aim.

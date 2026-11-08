@@ -54,7 +54,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A short effect child (cloud bolts) can die inside one capture advance: tie its life to its owner (492).
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
 - A ground-length skirt hides a hover lift: robe below the knee rides each shin (493, 499 lich).
-- A missile catch or dodge needs archers 8 m off, a charger a rank 9 m on (494-499); 2nd ability pair: SECOND_ABILITY.
+- A sliced faction's lineup shows the batch slice of its first unit (501); at r 12 the first man fell out of frame.
 - In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
