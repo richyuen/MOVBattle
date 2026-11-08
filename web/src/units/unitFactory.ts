@@ -3,6 +3,7 @@ import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuir
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteBandanna, dynamiteBoots, dynamiteShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerShoes, gunslingerSideburns, gunslingerSuit, lassoMoustache, lassoShirt, lassoShirtCloth, minerBoots, minerLegs, minerMoustache, minerSleeves, minerOveralls, quickDrawShirt, quickDrawVest, westernBraid, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
 import { bannerCoatee, bannerCuffs, blowdarterHair, bearerRing, boxerBoots, boxerShorts, flagJacket, peasantBelt, peasantDress, peasantFringe, peasantLegs, pikePlume, pikeVest, barrelVest, peasantSleeves, boxerBareChest, flagCuffs, flagBoots, pikeBelt, pikeHair, poacherKnees, barrelWraps, blowdarterScarf, blowdarterShorts, barrelHair, barrelLegs, superPeasantCuffs, wizardBeard, pharaohGarb, superBoxerHair, thorHair, superBoxerShorts, superBoxerEyes, pharaohKilt, pharaohCollar, pharaohBands, thorCoat, thorBelt, thorLegs, wizardPipe, wizardRobe, darkPeasantHands, darkPeasantHair, superPeasantTunic, poacherBelt, poacherBoots, peasantDressCloth, peasantDressPoint, poacherCoat, poacherCoatCloth, poacherHair, PEASANT_DRESS, POACHER_COAT } from "./legacyDress";
+import { deathBringerHair } from "./evilDress";
 import {
   Scene, Vector3, Color3, Mesh, MeshBuilder, Quaternion, TransformNode, VertexBuffer, VertexData,
   type Material, type ShadowGenerator,
@@ -1040,6 +1041,9 @@ export class UnitFactory {
     if (HORNED_EVIL[definition.id] && !shouldUseVehicleBody) {
       propMeshes.push(...dressHornedEvil(this._scene, body, HORNED_EVIL[definition.id]));
       if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerHelm(this._scene, body));
+      // [S] 495 (a.3): long black hair from the crown over the chest to the waist (evilDress deathBringerHair)
+      if (definition.id === "evil.death_bringer") propMeshes.push(...deathBringerHair(this._scene, body));
+
       if (definition.id === "evil.mad_mechanic") propMeshes.push(...mechanicGoggles(this._scene, body), ...mechanicHair(this._scene, body));
       if (definition.id === "evil.tempest_lich") propMeshes.push(...lichTunic(this._scene, body, teamColor));
       // [S] 495 (a.2): headless; black tendrils rise from the neck (evilDress lichTendrils hides the head, cap and tines)

@@ -629,6 +629,66 @@ export function lichTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 495 the Death Bringer's long black hair (evil.death_bringer.red.png; audit 489 a.3: "hair: none - TABS: long black hair falling over the chest to
+ * the waist"). Built in two parts (LESSONS: a head-hung piece cannot run on down the torso): the crown head-hung, the fall over the chest and back
+ * torso-parented.
+ * Spec. Head part, in head widths W, heights H, depths D (the head box, its centre c; the skull mask is 1.15 W across): a near-black cap .capW W
+ * across over the crown and the back of the head, from .capTop H over the centre down to the head's foot, .rear D behind the centre; per side a
+ * strand slab .sideT W thick, .sideD D deep, just outside the mask (.side W out) from the cap down to the head's foot. Torso part, in torso widths TW
+ * and heights TH (the torso box, torso frame): .front strands down the chest from the collar, spread over .spread TW across, each .strandW TW wide,
+ * .strandT TW thick, .long TH long (varied by .vary) to a point at the waist, standing .proud TW off the chest's front, tipped .lean rad out at the
+ * foot; .back strands the same down the back, .backLong TH long. Lit near-black cloth self-lit .4, roughness 1, out of the glow.
+ */
+const DEATH_HAIR = {
+  capW: 1.3, capTop: 0.62, rear: 0.58, sideT: 0.18, sideD: 0.85, side: 0.66,
+  front: 7, spread: 0.66, strandW: 0.2, strandT: 0.07, long: 1.0, vary: 0.18, proud: 0.05, lean: 0.06, back: 5, backLong: 0.8,
+};
+export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = DEATH_HAIR, mf = getMaterialFactory();
+  // darker than the robe recipe: the chest strands face the lit field and the .08 cloth read brown (probe 495)
+  const blackC = new Color3(0.025, 0.02, 0.025), black = mf.get("cloth", blackC, { emissive: blackC.scale(0.5), roughness: 1 });
+  // the fall over the chest sits in the fxPreset ember light, which turned lit black cloth leather-brown (probe 495): flat unlit black
+  const fallC = new Color3(0.02, 0.015, 0.02), fall = mf.get("unlit", fallC, { emissive: fallC });
+  const out: Mesh[] = [];
+  const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
+  const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
+  const put = (m: Mesh, parent: TransformNode, x: number, y: number, z: number): Mesh => { m.parent = parent; m.position.set(x, y, z); m.material = black; out.push(m); return m; };
+  const capH = H * (C.capTop + 0.5);
+  put(MeshBuilder.CreateBox("deathHairCap", { width: W * C.capW, height: capH, depth: D * 0.5 }, scene), head, c.x, c.y + H * C.capTop - capH / 2, c.z - D * C.rear);
+  put(MeshBuilder.CreateBox("deathHairCrown", { width: W * C.capW, height: H * 0.16, depth: D * 0.9 }, scene), head, c.x, c.y + H * (C.capTop - 0.08), c.z - D * 0.2);
+  for (const side of [-1, 1]) {
+    const s = put(MeshBuilder.CreateBox("deathHairSide", { width: W * C.sideT, height: capH, depth: D * C.sideD }, scene), head, c.x + side * W * C.side, c.y + H * C.capTop - capH / 2, c.z - D * 0.12);
+    s.rotation.z = side * 0.05;
+  }
+  // the "cape" prop hung over his chest read as a brown cuirass and hid the fall (probe 495): TABS has none
+  for (const m of body.torso.getChildMeshes(true)) if (m.name === "cape") m.setEnabled(false);
+  // the self-lit skull mask's glow halo washed the black fall leather-brown (probe 495: black with --noglow): keep the mask out of the glow
+  for (const m of head.getChildMeshes(true)) if (/^evil(Skull|Jaw)$/.test(m.name)) scene.getGlowLayerByName("glow")?.addExcludedMesh(m as Mesh);
+  // and the self-lit body cloth under it glowed through the fall the same way: out of the glow
+  for (const m of body.allMeshes) if (m.material === body.bodyMaterial) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  // the fall over the chest and the back, in the torso joint's frame
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, sc = tm.scaling;
+  const TW = tb.extendSize.x * 2 * sc.x, TH = tb.extendSize.y * 2 * sc.y, TD = tb.extendSize.z * 2 * sc.z;
+  const top = tm.position.y + (tb.center.y + tb.extendSize.y) * sc.y, cz = tm.position.z + tb.center.z * sc.z;
+  const strands = (n: number, z: number, long: number, dir: number): void => {
+    for (let i = 0; i < n; i++) {
+      const t = n === 1 ? 0 : i / (n - 1) - 0.5, len = TH * long * (1 - C.vary * ((i * 5) % 3) / 2);
+      // a 4-sided frustum turned an eighth (baked) so its faces are square, flattened in z: a flat strand, wide at the collar, a point at its foot
+      const m = MeshBuilder.CreateCylinder("deathHairStrand", { height: len, diameterTop: TW * C.strandW * Math.SQRT2, diameterBottom: TW * C.strandW * 0.25, tessellation: 4 }, scene);
+      m.rotation.y = Math.PI / 4; m.bakeCurrentTransformIntoVertices(); m.rotation.y = 0;
+      m.scaling.z = C.strandT / C.strandW;
+      put(m, body.torso, t * TW * C.spread + Math.sin(t * C.lean * 4) * len * 0.5, top + TW * 0.04 - len / 2, z);
+      m.material = fall;
+      m.rotation.set(dir * 0.04, 0, -t * C.lean * 4);
+    }
+  };
+  strands(C.front, cz + TD / 2 + TW * C.proud, C.long, 1);
+  strands(C.back, cz - TD / 2 - TW * C.proud, C.backLong, -1);
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 495 the Tempest Lich's Hover (card Abilities "Hover"; ref evil.tempest_lich.jpg: he floats a shin's height over the ground, legs hanging; audit
  * 489 c.2: "he strides on the ground"). The 493 try (the Reaper's mark at its .15 lift) was hidden by the ground-length skirt; the tunic (494) now
  * leaves the legs open. A "reaperHover" node under the hip marks him for the animator's hover (proceduralAnimation REAPER_HOVER: legs hang, no
