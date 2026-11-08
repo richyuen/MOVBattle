@@ -367,6 +367,51 @@ export class ProjectileSystem {
     return null;
   }
 
+  /**
+   * [S] 494 the Exiled Sentinel's pavises (simulationSystem SENTINEL_CATCH; card "two protective shields that blocks most incoming projectiles"): the
+   * first shaft (arrow, bolt, dart or spear) in flight at `unit` that will reach him within `within` s and comes at his front (its line within
+   * acos(frontCos) of his facing, reversed) stops in one of `boards` and does not strike him. It is carried on along its own line to the board it meets
+   * (else straight at the nearest board's middle), left standing out of the board's face with its head sunk in, and goes with the board (litter: a
+   * board put away for the axes takes its arrows with it). Returns where it struck, or null.
+   */
+  catchOnBoards(unit: RuntimeUnit, within: number, facing: Vector3, frontCos: number, boards: TransformNode[]): Vector3 | null {
+    const hide = boards.flatMap((b) => [...(b instanceof Mesh ? [b] : []), ...b.getChildMeshes(false)]).filter((m) => m.isVisible && m.isEnabled());
+    if (!hide.length) return null;
+    for (let i = 0; i < this._active.length; i++) {
+      const p = this._active[i];
+      if (p.target !== unit || p.loose || p.elapsed < 0 || p.drunk || p.snake) continue;
+      if (p.shape !== "arrow" && p.shape !== "bolt" && p.shape !== "spear" && p.shape !== "small_arrow" && p.shape !== "blowdart") continue;
+      if (p.flightTime - p.elapsed > within) continue;
+      const line = new Vector3(p.targetPos.x - p.origin.x, 0, p.targetPos.z - p.origin.z);
+      if (line.lengthSquared() < 1e-6) continue;
+      line.normalize();
+      if (-(line.x * facing.x + line.z * facing.z) < frontCos) continue;
+      const mesh = p.mesh;
+      const level = Math.cos(mesh.rotation.x);
+      const along = new Vector3(Math.sin(mesh.rotation.y) * level, -Math.sin(mesh.rotation.x), Math.cos(mesh.rotation.y) * level);
+      for (const b of boards) b.computeWorldMatrix(true);
+      for (const m of hide) m.computeWorldMatrix(true);
+      const from = mesh.position.clone();
+      let met = new Ray(from, along, 8).intersectsMeshes(hide)[0];
+      if (!met?.pickedPoint) {
+        const mid = boards.map((b) => b.getAbsolutePosition()).sort((a, c) => Vector3.DistanceSquared(a, from) - Vector3.DistanceSquared(c, from))[0];
+        met = new Ray(from, mid.subtract(from).normalize(), 8).intersectsMeshes(hide)[0];
+      }
+      if (!met?.pickedPoint || !met.pickedMesh) continue;
+      if (p.trailSystem) { p.trailSystem.stop(); p.trailSystem.dispose(false); }
+      p.rope?.dispose();
+      mesh.getChildMeshes().find((m) => m.name === "streak")?.dispose();
+      const half = p.half ?? (p.shape === "spear" ? 0.5 : p.shape === "arrow" ? 0.4 : p.shape === "small_arrow" ? SMALL_ARROW.long / 2 : p.shape === "blowdart" ? BLOW_DART.long / 2 : 0.24);
+      mesh.position.copyFrom(met.pickedPoint).subtractInPlace(along.scale(half - 0.07));
+      mesh.setParent(met.pickedMesh);
+      this._litter.push({ mesh, owner: unit });
+      if (this._litter.length > 60) this._litter.shift()!.mesh.dispose();
+      this._active.splice(i, 1);
+      return met.pickedPoint.clone();
+    }
+    return null;
+  }
+
   /** Every missile flying at `unit` stops following him: each comes down where he stood (Painter Dodge). */
   deflectField(center: Vector3, radius: number, team: number): number {
     let absorbed=0;

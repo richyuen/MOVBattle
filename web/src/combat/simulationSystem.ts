@@ -622,6 +622,13 @@ const FIRST_LUNGE = { within: 3.2, closest: 1.2, dist: 2.4, stopShort: 0.8, seco
  * violet shell collapses on the point (visualEffects spawnImplosion). Logged as .kind.
  */
 const CULTIST_IMPLOSION = { first: 1.2, every: 7, reach: 5, radius: 4.5, pull: 2.4, lift: 1.4, minor: 6, kind: "implosion" };
+/**
+ * [S] 494 the Exiled Sentinel's pavises (card Characteristics: "two protective shields that blocks most incoming projectiles"; evil.exiled_sentinel.jpg:
+ * arrows stuck in the boards; audit 489 c.2). While his boards are out (not swapped for the axes, RuntimeUnit _tendSentinelAxes), a shaft that will
+ * reach him within .warn s and comes at his front (its line within acos(.front) of his facing) stops in a board, stuck in its face, and does not hurt
+ * him (projectileSystem catchOnBoards). Logged as .kind.
+ */
+const SENTINEL_CATCH = { warn: 0.15, front: 0.4, kind: "pavise_block" };
 const SAMURAI_BLOCK = { warn: 0.5, reach: 1.3, ahead: 0.6, chest: 1.0, flick: 0.3, cooldown: 0.5, kind: "block" };
 const PAINTER_DODGE = { warn: 0.3, dist: 1.6, seconds: 0.2, cooldown: 1.2, kind: "dodge" };
 /*
@@ -1017,6 +1024,7 @@ export class SimulationSystem {
     this._painterDodges(now);
     this._samuraiBlocks(now);
     this._cultistImplosions(now);
+    this._sentinelCatches(now);
     this._aegisFields(now);
     if (this._hammers.length > 0) this._stepHammers(now);
     if (this._chrono.size > 0) this._stepChrono(now);
@@ -3625,6 +3633,20 @@ export class SimulationSystem {
     }
   }
   private _implodeAt = new Map<RuntimeUnit, number>();
+
+  private _sentinelCatches(now: number): void {
+    const C = SENTINEL_CATCH;
+    const missiles = this.projectileSystem;
+    if (!missiles) return;
+    for (const unit of this._units) {
+      if (unit.definition.id !== "evil.exiled_sentinel" || unit.isDead || unit.isToppled || unit.isDowned) continue;
+      const boards = (unit.body.root.getDescendants(false, (n) => n.name === "paviseShield" || n.name === "paviseShieldRight") as TransformNode[]).filter((b) => b.isEnabled());
+      if (!boards.length) continue;
+      const yaw = unit.body.root.rotation.y;
+      const at = missiles.catchOnBoards(unit, C.warn, new Vector3(Math.sin(yaw), 0, Math.cos(yaw)), C.front, boards);
+      if (at) this._logAbility(unit, C.kind, now, at);
+    }
+  }
 
   /**
    * Painter Dodge (PAINTER_DODGE): each ready painter with a missile about to reach him sidesteps off its line, and it comes down on air.
