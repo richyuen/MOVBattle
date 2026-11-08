@@ -871,7 +871,9 @@ async function main() {
                 p.x = x0 - row * 3.2; p.z = z0 + (k - (per - 1) / 2) * 3.2 + row * 1.6; u.teleportTo(p);
               });
               const cam = window.game.getGalleryCamera(`gallery_faction_${mine[0].definition.id.split(".")[0]}`);
-              const t = { x: x0 - 1.6, y: cam.target.y + 1.1, z: z0 + 0.8 }, r = 12, al = -0.25, be = Math.PI / 2.25;
+              // [evidence 502] at r 12 the front rank's first man (z0 - 6.4) fell off the frame's left edge (501): pulled back to 15 and aimed
+              // at the slice's middle (z0 + .2), every man whole
+              const t = { x: x0 - 1.6, y: cam.target.y + 1.1, z: z0 + 0.2 }, r = 15, al = -0.25, be = Math.PI / 2.25;
               const cx = t.x + r * Math.cos(al) * Math.sin(be), cz = t.z + r * Math.sin(al) * Math.sin(be);
               // each man turns .6 rad off his own line to the camera (the perspective of a close rank turned the edge men side-on)
               for (const u of mine) u.holdHeading(Math.atan2(cx - u.body.root.position.x, cz - u.body.root.position.z) - 0.6);
