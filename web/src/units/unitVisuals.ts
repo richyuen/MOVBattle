@@ -896,7 +896,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.tempest_lich": vis(
-    { scale: 1.42, bulk: 1.04, headSize: 1.14 }, "staff", "none", "none", "none", "#86A7FF", undefined, {
+    // [S] 494 (a.4, evil.tempest_lich.red.png): thin dark legs under the tunic (evilDress lichTunic)
+    { scale: 1.42, bulk: 1.04, headSize: 1.14, upperLegWidth: 0.68, lowerLegWidth: 0.6 }, "staff", "none", "none", "none", "#86A7FF", undefined, {
       posePreset: "caster",
       materialPreset: "evil_void",
       attachmentPreset: "storm_halo",

@@ -417,3 +417,46 @@ export function cultistDarkRobe(scene: Scene, body: ArticulatedBody, team: Color
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 494 the Tempest Lich's tunic (evil.tempest_lich.red.png; audit 489 a.4: "a wide purple bell skirt down to the ground - TABS: a team tunic over
+ * thin dark legs, with long black tattered strips trailing"). It replaces the ground-length bell skirt and its rags (HORNED_EVIL tempest_lich
+ * skirt 0) and opens the legs for the Hover lift (c.2, LESSONS 58).
+ * Spec in pelvis widths P (the pelvis box's x extent) and knee drops K (the knee joint's depth under the hip): an 8-sided team tunic skirt from the
+ * pelvis top, .waist P across there, flaring to .hem P across at .long K down (above the knee), its depth the pelvis's ratio; under its hem
+ * .strips near-black strips round the back half and the sides (from .arc rad off the back either way), each a flat 3-sided blade .stripW P wide at
+ * the hem tapering to a point .stripLong K below it (lengths varied by .vary), hanging a little out (.flare rad); the thighs, shins and feet go
+ * near-black cloth (the thin legs are UV lowerLegWidth/upperLegWidth).
+ */
+const LICH_TUNIC = { waist: 1.12, hem: 1.42, long: 0.78, strips: 7, arc: 2.2, stripW: 0.26, stripLong: 1.05, vary: 0.3, flare: 0.12 };
+export function lichTunic(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = LICH_TUNIC, mf = getMaterialFactory();
+  const pelvis = body.allMeshes.find((m) => /_pelvis$/.test(m.name));
+  if (!pelvis) return [];
+  const size = pelvis.getBoundingInfo().boundingBox.extendSize, P = size.x * 2, K = Math.abs(body.leftKnee.position.y);
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.18) });
+  const blackC = new Color3(0.05, 0.035, 0.05), black = mf.get("unlit", blackC, { emissive: blackC });
+  const legC = new Color3(0.07, 0.05, 0.08), legs = mf.get("cloth", legC, { emissive: legC.scale(0.4) });
+  const out: Mesh[] = [];
+  const drop = K * C.long, depth = Math.max(0.7, (size.z / size.x) * 1.2);
+  const root = new TransformNode("lichTunic", scene);
+  root.parent = body.hip; root.position.y = pelvis.position.y + size.y; root.scaling.z = depth;
+  const skirt = MeshBuilder.CreateCylinder("lichTunicSkirt", { height: drop, diameterTop: P * C.waist, diameterBottom: P * C.hem, tessellation: 8 }, scene);
+  skirt.parent = root; skirt.position.y = -drop / 2; skirt.rotation.y = Math.PI / 8; skirt.material = cloth; out.push(skirt);
+  const hemR = (P * C.hem) / 2;
+  for (let i = 0; i < C.strips; i++) {
+    // round the back (angle PI is straight behind) from -arc to +arc
+    const a = Math.PI + C.arc * (i / (C.strips - 1) * 2 - 1);
+    const long = K * C.stripLong * (1 - C.vary * (((i * 5) % 3) / 2));
+    const s = MeshBuilder.CreateCylinder("lichTunicStrip", { height: long, diameterTop: P * C.stripW, diameterBottom: 0, tessellation: 3 }, scene);
+    s.parent = root; s.material = black; s.scaling.z = 0.25;
+    // tipped about its own x before the yaw: its point swings out (+z is outward once yawed onto a)
+    s.rotation.set(-C.flare, a, 0);
+    s.position.set(Math.sin(a) * hemR * 0.92, -drop - long / 2 + K * 0.08, Math.cos(a) * hemR * 0.92);
+    out.push(s);
+  }
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = legs;
+  for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(false)) if (/_[lr]FootM$/.test(m.name)) m.material = legs;
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
