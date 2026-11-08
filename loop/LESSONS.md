@@ -52,8 +52,8 @@ Read whole at step 1; one fact per line, merge near cap.
 - An effect child of a longer one (a cloud's .3 s bolts) can die inside one capture advance before _struck: tie its life to its owner (492 lich).
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
 - A ground-length skirt hides a hover lift: shorten the dress first (493 lich).
-- Near-black cloth: "unlit" near-black and smooth lit near-black both read plum in the field haze (494 cultist robe); use lit cloth (.08,.06,.07), self-lit .4, roughness 1.
 - A missile catch needs arrows before contact: spar against archers (494 sentinel).
 - In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake before parenting (495).
-- Black in front of self-lit cloth or bone reads brown: the glow halo (black with --noglow); exclude the neighbours from the glow (495).
+- Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
+- A torso-rooted board tips back with the idle lean: stand a wall board on body.root, top off the shoulder joint (496 pavise).

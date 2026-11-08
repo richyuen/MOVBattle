@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+496 | cb86b6ef | evil.exiled_sentinel.b | approved (blocker 1)
+496 | 1a6a70d4 | evil.exiled_sentinel.b | approved (blocker 2; b PASS; CONFIRM D)
+496 | 94c8cd58 | evil.void_cultist.a | approved (blocker 2; a PASS; CONFIRM passed a, b)
+496 | 55ee1043,a3943b02 | evil.void_cultist.b | approved (no strike; disc reads edge-on)
+496 | 4f58d007 | evil.void_monarch.a | approved (blocker 3)
+496 | 7c0bfd4f,4b82d4a0 | evil.shadow_walker.a | approved (blocker 3)
+496 | e89b1570 | evil.mad_mechanic.a | approved (blocker 3)
+496 | f724af18 | evil.tempest_lich.a | approved (blocker 3)
+496 | da898f4f | evil.death_bringer.a | approved (horn clause of 2; 7 struck by lineup)
+
 495 | 5d269f55 | evil.exiled_sentinel.a | approved (blocker 3; a PASS, CONFIRM failed b)
 495 | 7d131c39 | evil.mad_mechanic.a | approved (blocker 2)
 495 | 978009c4 | evil.void_cultist.a | approved (blocker 1)
@@ -43,21 +53,18 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 492 | a91f8594 | evil.tempest_lich.c | approved (blocker 1)
 492 | 2117c98a,421014cc | evil.void_monarch.c | approved (dart clause of blocker 1)
 
-491 | 65568848 | good.divine_arbiter.a | approved (blocker 3; a PASS; CONFIRM D)
-491 | 67a1ba53 | evil.shadow_walker.a | approved (blocker 1)
-491 | d2525821 | evil.exiled_sentinel.a | approved (blocker 2)
-491 | a395751d,287847f9 | evil.mad_mechanic.b | approved (no strike; claw inside out)
-491 | 4dfe45ac | evil.void_cultist.b | approved (blocker 2; b PASS)
-491 | cdb92fd0,ddf16a33 | evil.death_bringer.b | approved (blockers 1, 2; b PASS)
-491 | 071b5f23 | evil.void_monarch.b | approved (blockers 1, 2; b PASS)
-491 | 6a770969,f86388a0 | evil.tempest_lich.c | approved (no strike; bolts unseen)
-491 | 20f7342f | good.sacred_elephant.a | approved ([P] blocker 5; CONFIRM failed a)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+evilDress:CULTIST_COAT | skirt to .3K over the rest knee (cultistCoatLength);boots .5 shin dark(.06,.045,.04) 2.25r,team cuff.13 2.5r | 496 | approved | VOID_SKIRT 1.75K (ankle bell)
+evilDress:MONARCH_HARNESS | bone V straps .13W foot.06H to shoulders .44W;tube wings .16W via mid(.74,.22,-.05) tip(1.05,.38,-.12),4 spikes.17W;evil preset harness flag | 496 | approved | pauldrons (custom keeps)
+evilDress:WALKER_VEST | trunk/yoke/upper arms team skin out of glow;near-black shell 1.1W x1.25D .62H..-.22H,12 hem teeth.2H,5 crown.16H,straps.22W at.3W | 496 | approved | navy body cloth jacket
+evilDress:MECHANIC_OVERALLS | trunk grey(.2,.2,.21) self-lit.3;collar.62W+flaps;bib.66W .74H dark;straps.13W;unlit bone wrench+hammer X .42W at.5H | 496 | approved | dark body cloth vest
+evilDress:LICH_COLLAR | ochre(.45,.31,.08) band.16H .98W at socket foot;8 down .3H,8 up .2H,vary.35 | 496 | approved | none
+UV:tempest_lich scale | 1.05 | 496 | approved [P] | 1.42
+evilDress:DEATH_MASK | tan(.8,.6,.35) prism brow1.04W@.56H cheek1.18W chin.42W@-.62H deep1.12D;sockets.3x.11 droop.35;nose.14W;horns team x.5;skull/jaw boxes off | 496 | approved (mask reads square, pale) | cream skull+jaw boxes
 evilDress:SENTINEL_UNIFORM | trunk,yoke,pelvis,neck,arms lit(.08,.06,.07) self-lit.4 rough1;bracer cuff1.3r x.55 forearm,5 team spikes.45;collar.62W | 495 | approved | team plate body,team arms
 evilDress:MECHANIC_HAIR | ginger-brown cloth(.7,.3,.07) .12;sides +.3H..-.62H,.72D,.24W at .6W;back 1.08W .2D at .5D;3+4 tips | 495 | approved | none
 evilDress:CULTIST_SLEEVE | arms robe-dark;forearm bell .top2.3r->3.1r,.6r past wrist,team band.22 | 495 | approved | bare team arms
@@ -91,13 +98,13 @@ manifest:void_monarch archetype | boss_melee (boss.legendary splash 2),weaponHin
 UV/unitFactory:WALKER_HORN | path out to 2.2 heads at .24-.4H, up to 1.5H | 491 | approved | out 1.6, up 2.0 (U)
 evilDress:SENTINEL_MANE | 11 ico lumps .36-.62W, lit cloth ginger(.85,.3,.06) self-lit .2 | 491 | approved | none
 PB:MECHANIC_CLAW | cuff3.4f x2.5f,housing2.3f,3 cyan lights,jaws2.9f open.32;clawFrame rot.x PI | 492 | approved | built backwards (491);hammer+bomb
-evilDress:CULTIST_BUCKLER | 1.3W world-sized board,rim+.62 ring,10 rim/5 face spikes,boss | 491 | approved | 1.5W hand-frame disc
+evilDress/PA:CULTIST_BUCKLER | 1.85W world-sized board,rim+.62 ring,10 rim/5 face spikes,boss;PA _seatBuckler CULTIST_SEAT side.1W drop.12H ahead.3W | 496 | approved (no strike, edge-on) | 1.3W hand-seated (491);1.5W hand-frame disc
 PB:WARGLAIVE | chord.33H sweep.95,wide.05H,hot edge unlit(1.6,.22,.32),gold self-lit.4 | 491 | approved | greatsword
 PB:MONARCH_SWORD | blade.5H wide.05H,ball.075H 10 spikes,unlit bone(.78,.7,.44) | 491 | approved | orb staff
 FX:STORM_CLOUD | high3.2,11 puffs1.3,bolts5 every.3,life1.7;bolts held to cloud end (zeus hold) | 492 | approved | .3 s bolts (491);horizontal staff bolt
 PB:CULTIST_MACE | shaft.66H x.022H dark,grip.4,team wrap.16H+band,ball.12H ico+12 spikes.075H,butt.07H;staff+orb rod | 490 | approved | plain staff+orb
 PB:BONE_DAGGER | eighth-turn baked then flattened;long.46 wide.17 thick.035 curve.24 segs6,4 teeth.11 | 495 | approved | long.42 wide.075 curve.11 (rhombus, 489-490);point-down (490)
-PB:PAVISE | coffin .42H x.17W,dark team .42,bone rim,2 studded bands;torso mount -.36SW,top .92neck;mirrored paviseShieldRight +.36SW,sword isVisible false | 490 | approved | one board (489);tower slab on hand
+PB:PAVISE | coffin .58H x.18W,shoulder.86 top.8 foot.74,bands.8/.13;dark team .42,bone rim;root mount PAVISE_STAND gap.12 lift.07 ahead.21 splay.06,top on the shoulder joint;mirrored paviseShieldRight,sword isVisible false | 496 | approved | .42H x.17W torso mount -.36SW top .92neck (490);one board (489)
 evilDress:SENTINEL_CONE | black 8-sided cone 1.06W->.2W,1.75H,brim.36H,lean.12;3 rows x6 team spikes | 489 | approved | great_helm
 evil stats cost/hm/dm/cm (7 units, 3666e25c) | d PASS 7/7 | 489 | stats | initial manifest
 Completed good, legacy_2 and earlier rows | specs in owning code; ledger@7b0ae2f6 (legacy_2@b9daeaea, legacy_1@7090fef5) | 494 | archived values | unchanged
