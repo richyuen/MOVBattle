@@ -1189,7 +1189,8 @@ export function mechanicOveralls(scene: Scene, body: ArticulatedBody): Mesh[] {
  * bone toward the shoulder): upper arm and forearm both go shirt; the rolled cuff, a 7-sided ring .cuffR r out and .cuffH h tall, sits on the
  * FOREARM .at h under its top (the elbow), a darker grey .fold so the roll reads; the claw gauntlet covers the wrist below it.
  */
-export const MECHANIC_SLEEVE = { shirt: new Color3(0.5, 0.5, 0.51), fold: new Color3(0.32, 0.32, 0.33), cuffR: 1.5, cuffH: 0.26, at: 0.3 };
+// look 499: (.5,.5,.51) read near-white in the sun; (.36,.36,.37) the mid-light grey of the render
+export const MECHANIC_SLEEVE = { shirt: new Color3(0.36, 0.36, 0.37), fold: new Color3(0.22, 0.22, 0.23), cuffR: 1.5, cuffH: 0.26, at: 0.3 };
 export function mechanicSleeves(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = MECHANIC_SLEEVE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const shirt = mf.get("unlit", C.shirt, { emissive: C.shirt });
