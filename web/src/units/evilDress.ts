@@ -122,7 +122,8 @@ export function walkerHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
  * back a slab .backW W across behind the head; and .strands 4-sided strands .strandW W thick tapering to points, spread round the sides and back,
  * hanging .strandL H below the slabs, so the ends are ragged. Lit near-black cloth (LESSONS 494), out of the glow next to the team skin.
  */
-const WALKER_HAIR = { root: 0.42, long: 0.62, sideW: 0.16, sideD: 0.7, out: 0.56, backW: 1.06, strands: 9, strandW: 0.13, strandL: 0.34 };
+// look 497: .56 out and set back behind the centre, the curtains hid behind the helm and vest; out past the helm's side, level with the centre
+const WALKER_HAIR = { root: 0.42, long: 0.8, sideW: 0.22, sideD: 0.8, out: 0.68, backW: 1.3, strands: 9, strandW: 0.16, strandL: 0.38 };
 export function walkerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = WALKER_HAIR, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
   const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
@@ -130,7 +131,7 @@ export function walkerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const out: Mesh[] = [];
   const put = (m: Mesh, x: number, y: number, z: number): Mesh => { m.parent = head; m.position.set(c.x + x, c.y + y, c.z + z); m.material = hair; out.push(m); return m; };
   const top = -H * C.root, mid = top - (H * C.long) / 2;
-  for (const s of [-1, 1]) put(MeshBuilder.CreateBox("walkerHair", { width: W * C.sideW, height: H * C.long, depth: D * C.sideD }, scene), s * W * C.out, mid, -D * 0.12);
+  for (const s of [-1, 1]) put(MeshBuilder.CreateBox("walkerHair", { width: W * C.sideW, height: H * C.long, depth: D * C.sideD }, scene), s * W * C.out, mid, -D * 0.02);
   put(MeshBuilder.CreateBox("walkerHair", { width: W * C.backW, height: H * C.long, depth: D * 0.16 }, scene), 0, mid, -D * 0.56);
   const bottom = top - H * C.long;
   for (let i = 0; i < C.strands; i++) {
