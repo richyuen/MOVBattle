@@ -134,6 +134,7 @@ const HOVER = { lift: 0.13, bob: 0.025, rate: 2.4, beat: 0.28, rateIn: 3 };
  * loose under him: each thigh eased .hang of the way back to straight down (a .sway rad swing, the legs out of step), the knee .knee rad bent.
  */
 const REAPER_HOVER = { lift: 0.15, bob: 0.02, rate: 1.8, hang: 0.85, sway: 0.12, knee: 0.12 };
+const DEMON_RISE = 0.6;
 /*
  * [S] the Valkyrie's flight (392 re-run 393; viking.valkyrie.png, card Characteristics "flies": she hangs above the ground, the boots drawn up under her,
  * and beats the big pale wings once a second or so; critic 392: no flight/leap event and both boots planted in every shot). A body marked `valkyrieFly`
@@ -3655,6 +3656,8 @@ export class ProceduralAnimator {
 
   // The Reaper's hover (REAPER_HOVER): whether this body is marked for it (read once), and the bob's clock
   private _reaperHoverOn: boolean | undefined;
+  /** The Demon Transformation's float, a share of his height (0: not transformed); set by the simulation */
+  demonForm = 0;
   private _reaperHoverT = 0;
   private _reaperLift = REAPER_HOVER.lift;
   /** The Reaper held off the ground with his legs hanging loose (spec at REAPER_HOVER). */
@@ -3665,6 +3668,11 @@ export class ProceduralAnimator {
       this._reaperHoverOn = !!mark;
       // [S] 495 a mark set above the hip carries its own lift (share of height): the Tempest Lich floats higher than the Reaper (evilDress LICH_HOVER)
       this._reaperLift = mark && mark.position.y > 0 ? mark.position.y : REAPER_HOVER.lift;
+    }
+    // [S] 498 the Void Monarch's Demon Transformation (simulationSystem DEMON_FORM): once set, he rises into the hover over DEMON_RISE s
+    if (this.demonForm > 0) {
+      if (!this._reaperHoverOn) { this._reaperHoverOn = true; this._reaperLift = 0; }
+      this._reaperLift = Math.min(this.demonForm, this._reaperLift + (dt * this.demonForm) / DEMON_RISE);
     }
     if (!this._reaperHoverOn || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
     const R = REAPER_HOVER;

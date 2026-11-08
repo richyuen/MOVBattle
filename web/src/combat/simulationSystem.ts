@@ -631,6 +631,8 @@ const CULTIST_IMPLOSION = { first: 1.2, every: 7, reach: 5, radius: 4.5, pull: 2
 const SENTINEL_CATCH = { warn: 0.15, front: 0.4, kind: "pavise_block" };
 const SAMURAI_BLOCK = { warn: 0.5, reach: 1.3, ahead: 0.6, chest: 1.0, flick: 0.3, cooldown: 0.5, kind: "block" };
 const PAINTER_DODGE = { warn: 0.3, dist: 1.6, seconds: 0.2, cooldown: 1.2, kind: "dodge" };
+// [S] 498 the Void Monarch's Demon Transformation (spec at _countDemonDamage): 800 / 97.5 of his own blows, a 3.5 m burst, floating .3 of his height
+const DEMON_FORM = { blows: 800 / 97.5, burst: 3.5, lift: 0.3, kind: "demon_form" };
 /*
  * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
  * in circles"; Appearance "It doesn't attack unless ... a unit gets particularly close"). The bard walks at his man until he is .lure m past his reach, then
@@ -3685,6 +3687,32 @@ export class SimulationSystem {
     }
   }
 
+  /**
+   * [S] 498 the Void Monarch's Demon Transformation (card Abilities: "After dealing 800 damage ... the Unit with this ability will begin to float";
+   * evil.void_monarch.jpg; audit 489 c.2). Every blow adds its damage to his tally, once for the struck man and once more for each other enemy inside
+   * his sword's splash (MONARCH_BURST.radius) round him. When the tally reaches DEMON_FORM.blows of his own first blow (800 over the sword's 97.5
+   * average), he transforms once: a wide pink burst where he stands (MONARCH_BURST look, .burst m) and he rises into the air, floating .lift of his
+   * height off the ground from then on (proceduralAnimation demonForm, the Reaper's hover with its legs hanging). Logged as .kind.
+   */
+  private _demonTally = new WeakMap<RuntimeUnit, { dealt: number; blow: number; done: boolean }>();
+  private _countDemonDamage(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, now: number): void {
+    const D = DEMON_FORM;
+    const t = this._demonTally.get(attacker) ?? { dealt: 0, blow: damage, done: false };
+    this._demonTally.set(attacker, t);
+    if (t.done) return;
+    let struck = 1;
+    for (const u of this._units) {
+      if (u === target || u.isDead || u.team === attacker.team) continue;
+      if (Vector3.DistanceSquared(u.position, target.position) <= MONARCH_BURST.radius * MONARCH_BURST.radius) struck++;
+    }
+    t.dealt += damage * struck;
+    if (t.dealt < D.blows * t.blow) return;
+    t.done = true;
+    attacker.animator.demonForm = D.lift;
+    if (this.visualEffects) this.visualEffects.spawnReaperBurst(attacker.position.clone(), D.burst, MONARCH_BURST);
+    this._logAbility(attacker, D.kind, now, attacker.position);
+  }
+
   /** Moves each sliding fencer (recover or dodge) along his slide: speed falling linearly from twice the mean to zero over the slide's seconds. */
   private _slideRecovers(dt: number, now: number): void {
     for (const [unit, r] of this._recovers) {
@@ -3787,6 +3815,7 @@ export class SimulationSystem {
     if (this.visualEffects && attacker.definition.id === "evil.void_monarch") {
       this.visualEffects.spawnReaperBurst(new Vector3(target.position.x, target.position.y, target.position.z), MONARCH_BURST.radius, MONARCH_BURST);
     }
+    if (attacker.definition.id === "evil.void_monarch") this._countDemonDamage(attacker, target, damage, now);
     // [S] 493 each warglaive cut leaves a pink trail across the man (DEATH_SLASH), turned over on alternate blows as the other blade cuts
     if (this.visualEffects && attacker.definition.id === "evil.death_bringer") {
       const across = target.position.subtract(attacker.position); across.y = 0;
