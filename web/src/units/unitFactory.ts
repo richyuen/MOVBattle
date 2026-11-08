@@ -15,6 +15,7 @@ import { attachProps, buildPerchedCrow } from "./propBuilder";
 import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type WheelbarrowCrew } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
+import { mechanicHair } from "./evilDress";
 import { getLinkedActorPreset } from "./linkedActorPresets";
 import { vampireClaws, vampireBat, vampireHair, swordcasterBowl, reaperTendrils, candleArms, candleTower, swordcasterCuirass, swordcasterSkirt, stiffyHelmet, skeletonArcherHood, skeletonArcherBelt, stiffyShorts, skeletonArcherKit, candleRobe, vampireCollar, reaperLegs } from "./spookyDress";
 import { stiffyGreaves } from "./spookyDress";
@@ -1036,7 +1037,7 @@ export class UnitFactory {
     if (HORNED_EVIL[definition.id] && !shouldUseVehicleBody) {
       propMeshes.push(...dressHornedEvil(this._scene, body, HORNED_EVIL[definition.id]));
       if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerHelm(this._scene, body));
-      if (definition.id === "evil.mad_mechanic") propMeshes.push(...mechanicGoggles(this._scene, body));
+      if (definition.id === "evil.mad_mechanic") propMeshes.push(...mechanicGoggles(this._scene, body), ...mechanicHair(this._scene, body));
       if (definition.id === "evil.tempest_lich") propMeshes.push(...lichTunic(this._scene, body, teamColor));
       // [S] 494 (b.1): the staff's orb gives way to a jagged team crystal blade (evilDress lichStaffCrystal)
       const lichStaff = definition.id === "evil.tempest_lich" ? propMeshes.find((m) => m.name === "staff") : undefined;

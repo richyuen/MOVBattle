@@ -292,7 +292,7 @@ export function mechanicGoggles(scene: Scene, body: ArticulatedBody): Mesh[] {
   const mf = getMaterialFactory();
   const leatherC = new Color3(0.07, 0.05, 0.05), leather = mf.get("cloth", leatherC, { emissive: leatherC.scale(0.3) });
   const lensC = new Color3(0.3, 0.03, 0.03), lens = mf.get("cloth", lensC, { emissive: lensC.scale(0.4) });
-  const hairC = new Color3(0.95, 0.5, 0.15), hair = mf.get("cloth", hairC, { emissive: hairC.scale(0.12) });
+  const hairC = MECHANIC_HAIR.hair, hair = mf.get("cloth", hairC, { emissive: hairC.scale(0.12) }); // [S] 495 the bun shares the long hair's ginger-brown
   const out: Mesh[] = [];
   const put = (m: Mesh, x: number, y: number, z: number, material: typeof leather): Mesh => {
     m.parent = head; m.position.set(x, y, z); m.material = material; out.push(m); return m;
@@ -313,6 +313,54 @@ export function mechanicGoggles(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   put(MeshBuilder.CreateIcoSphere("mechanicBun", { radius: (W * C.bun) / 2, subdivisions: 1 }, scene), c.x, c.y + H * 0.5 + W * C.bun * 0.3, c.z - D * C.bunBack, hair);
   put(MeshBuilder.CreateIcoSphere("mechanicBunKnot", { radius: (W * C.knot) / 2, subdivisions: 1 }, scene), c.x, c.y + H * 0.5 + W * (C.bun * 0.75 + C.knot * 0.2), c.z - D * C.bunBack, hair);
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
+ * [S] 495 the Mad Mechanic's long hair (evil.mad_mechanic.blue.png; audit 489 a.2: "hair: none - TABS: long ginger-blond hair falling past the ears
+ * to the shoulders"). It hangs under the goggles' strap (mechanicGoggles) and shares the bun's colour.
+ * Spec in head widths W, heights H, depths D (the head box, its centre c): per side a faceted 4-sided panel from under the strap (.top H over the
+ * centre) down to .low H under it (the shoulder), .sideD D deep at the top narrowing to .sideD*.7 at its foot, .sideW W thick, hung just outside
+ * the cheek (.out W from the middle), .back D behind the centre, its foot flared out .flare rad; a back panel .backW W across widening to
+ * .backW*1.15, .backT D thick, from the strap down to .low, .rear D behind the centre; the ends cut into .tips points per side. Ginger-brown cloth
+ * .hair self-lit .12 (palette: orange x.7 reads ginger-brown; the bun at (.95,.5,.15) read pale tan, look 494).
+ */
+export const MECHANIC_HAIR = { hair: new Color3(0.7, 0.3, 0.07), top: 0.3, low: 0.62, sideD: 0.72, sideW: 0.24, out: 0.6, back: 0.1, flare: 0.12, backW: 1.08, backT: 0.2, rear: 0.5, tips: 3 };
+export function mechanicHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = MECHANIC_HAIR, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const hair = getMaterialFactory().get("cloth", C.hair, { emissive: C.hair.scale(0.12) });
+  const out: Mesh[] = [];
+  const tall = H * (C.top + C.low), midY = c.y + H * (C.top - C.low) / 2;
+  const panel = (name: string, x: number, z: number, top: number, foot: number, thick: number, rz: number, alongX: boolean): Mesh => {
+    // a 4-sided frustum turned so its faces are square to the axes, then squashed to a slab
+    const m = MeshBuilder.CreateCylinder(name, { height: tall, diameterTop: top * Math.SQRT2, diameterBottom: foot * Math.SQRT2, tessellation: 4 }, scene);
+    // bake the eighth-turn before parenting: the bake takes the world matrix
+    m.rotation.set(0, Math.PI / 4, 0); m.material = hair;
+    const k = thick / top;
+    m.bakeCurrentTransformIntoVertices();
+    m.rotation.set(0, 0, 0); m.parent = head;
+    if (alongX) m.scaling.z = k; else m.scaling.x = k;
+    m.rotation.z = rz; m.position.set(x, midY, z); out.push(m); return m;
+  };
+  for (const side of [-1, 1]) {
+    panel("mechanicHairSide", c.x + side * W * C.out, c.z - D * C.back, D * C.sideD, D * C.sideD * 0.7, W * C.sideW, side * C.flare, false);
+    for (let k = 0; k < C.tips; k++) {
+      // points along the side panel's foot, front to back
+      const tip = MeshBuilder.CreateCylinder("mechanicHairTip", { height: H * 0.28, diameterTop: D * C.sideD * 0.7 / C.tips * 1.2, diameterBottom: 0, tessellation: 4 }, scene);
+      tip.parent = head; tip.material = hair; tip.scaling.x = 0.6;
+      tip.position.set(c.x + side * (W * C.out + Math.sin(C.flare) * tall * 0.5), c.y - H * C.low - H * 0.12, c.z - D * C.back + D * C.sideD * 0.7 * ((k + 0.5) / C.tips - 0.5));
+      out.push(tip);
+    }
+  }
+  panel("mechanicHairBack", c.x, c.z - D * C.rear, W * C.backW, W * C.backW * 1.15, D * C.backT, 0, true);
+  for (let k = 0; k < C.tips + 1; k++) {
+    const tip = MeshBuilder.CreateCylinder("mechanicHairTip", { height: H * 0.3, diameterTop: W * C.backW * 1.15 / (C.tips + 1) * 1.2, diameterBottom: 0, tessellation: 4 }, scene);
+    tip.parent = head; tip.material = hair; tip.scaling.z = 0.6;
+    tip.position.set(c.x + W * C.backW * 1.15 * ((k + 0.5) / (C.tips + 1) - 0.5), c.y - H * C.low - H * 0.13, c.z - D * C.rear);
+    out.push(tip);
+  }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
