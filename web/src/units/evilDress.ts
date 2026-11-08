@@ -506,6 +506,35 @@ export function cultistDarkRobe(scene: Scene, body: ArticulatedBody, team: Color
 }
 
 /**
+ * [S] 495 the Void Cultist's coat sleeves (evil.void_cultist.red.png, both arms; CONFIRM 494 a.1: "bare team-coloured arms, no sleeve - TABS: dark
+ * priest-coat sleeves to the wrist, team colour only on a cuff band and the mitt").
+ * Spec in each arm mesh's own frame (its box half-extents e, r the larger of e.x, e.z; the limb runs along y): the upper and lower arm meshes and
+ * their stubs go the robe's near-black cloth; over each lower arm a sleeve, an 8-sided near-black frustum from the elbow end (.top r across) widening
+ * to a bell .bell r across at the wrist end, .over r past the wrist; a team cuff band .band of the sleeve long round its open end (the hand's own
+ * voidCuff band sits just under it), standing a little proud.
+ */
+const CULTIST_SLEEVE = { top: 2.3, bell: 3.1, over: 0.6, band: 0.22 };
+export function cultistSleeves(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = CULTIST_SLEEVE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const dark = mf.get("cloth", CULTIST_ROBE.dark, { emissive: CULTIST_ROBE.dark.scale(0.4), roughness: 1 });
+  const teamM = mf.get("cloth", team, { emissive: team.scale(0.18) });
+  for (const m of body.allMeshes) if (/_[lr](Upper|Lower)Arm(_stub)?$/.test(m.name)) { m.material = dark; glow?.addExcludedMesh(m); }
+  const out: Mesh[] = [];
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    const bb = arm.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z);
+    // the wrist is the arm's lower end (-y); the sleeve runs from the top of the forearm to .over r past the wrist
+    const y0 = cc.y + e.y, y1 = cc.y - e.y - r * C.over, long = y0 - y1;
+    const sleeve = MeshBuilder.CreateCylinder("cultistSleeve", { height: long, diameterTop: r * C.top, diameterBottom: r * C.bell, tessellation: 8 }, scene);
+    sleeve.parent = arm; sleeve.position.set(cc.x, (y0 + y1) / 2, cc.z); sleeve.material = dark; out.push(sleeve);
+    const bandL = long * C.band;
+    const band = MeshBuilder.CreateCylinder("cultistSleeveBand", { height: bandL, diameterTop: r * C.bell * 0.97 + r * 0.12, diameterBottom: r * C.bell + r * 0.14, tessellation: 8 }, scene);
+    band.parent = arm; band.position.set(cc.x, y1 + bandL / 2, cc.z); band.material = teamM; out.push(band);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 494 the Tempest Lich's tunic (evil.tempest_lich.red.png; audit 489 a.4: "a wide purple bell skirt down to the ground - TABS: a team tunic over
  * thin dark legs, with long black tattered strips trailing"). It replaces the ground-length bell skirt and its rags (HORNED_EVIL tempest_lich
  * skirt 0) and opens the legs for the Hover lift (c.2, LESSONS 58).

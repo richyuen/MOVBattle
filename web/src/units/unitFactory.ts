@@ -7,6 +7,7 @@ import {
   type Material, type ShadowGenerator,
 } from "@babylonjs/core";
 import type { UnitDefinition } from "../data/unitDefinitions";
+import { cultistSleeves } from "./evilDress";
 import { getCrowdPhysicsProfile, getRagdollProfile } from "../data/combatProfiles";
 import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody, crewProportions, type ArticulatedBody } from "./bodyBuilder";
@@ -2603,6 +2604,8 @@ function dressVoidCultist(scene: Scene, body: ArticulatedBody, teamColor: Color3
   }
   // [S] 494 (a.3) the robe goes unlit near-black with a team stripe down the front (evilDress cultistDarkRobe, CULTIST_ROBE)
   added.push(...cultistDarkRobe(scene, body, teamColor, robe, skirt));
+  // [S] 495 (a.1) dark coat sleeves to the wrist with a team cuff band (evilDress cultistSleeves, CULTIST_SLEEVE)
+  added.push(...cultistSleeves(scene, body, teamColor));
   // [S] 493 (a.2) the beard is evilDress cultistBeard (CULTIST_BEARD): a big dark pointed beard to mid-chest with a drooping moustache
   added.push(...cultistBeard(scene, body));
   // [S] 492 (a.1) the spoked wheel is evilDress cultistHalo (CULTIST_HALO): a dark ring with inward black spikes
