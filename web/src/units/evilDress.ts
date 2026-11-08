@@ -77,3 +77,52 @@ export function sentinelMane(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 491 the Void Cultist's buckler (evil.void_cultist.jpg, .red.png; audit 489 b.2: "a small brown disc - TABS: a large dark round buckler,
+ * shoulder-wide, with a raised rim ring and spikes around the rim and face"). It replaces the 1.5-chest disc that was cut in the hand's own
+ * (shrunken) frame and read head-sized.
+ * Spec in torso widths W, sized in the world, not the hand's frame (the hand's scale is divided out): a near-black 12-sided board .across W
+ * across and .thick W thick on the off hand, its face out from the fist; a raised iron rim ring (a torus .rimT W thick) at its edge and a second
+ * raised ring .ring of the radius in; .rim iron spikes .spike W long standing out round the edge; .face spikes .faceSpike W long on the inner
+ * ring's line, half a step round from the rim's; a boss spike .boss W long out of the middle.
+ */
+const CULTIST_BUCKLER = { across: 1.3, thick: 0.06, rimT: 0.07, ring: 0.62, rim: 10, spike: 0.2, face: 5, faceSpike: 0.16, boss: 0.26 };
+export function cultistBuckler(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CULTIST_BUCKLER, tm = body.torsoMesh, te = tm.getBoundingInfo().boundingBox.extendSize;
+  body.torso.computeWorldMatrix(true); body.leftHand.computeWorldMatrix(true);
+  // torso-frame lengths into the hand's frame
+  const k = body.torso.absoluteScaling.x / Math.max(1e-4, body.leftHand.absoluteScaling.x);
+  const W = te.x * 2 * tm.scaling.x * k, R = (W * C.across) / 2;
+  const mf = getMaterialFactory();
+  const boardC = new Color3(0.13, 0.08, 0.07), board = mf.get("cloth", boardC, { emissive: boardC.scale(0.15) });
+  const ironC = new Color3(0.2, 0.16, 0.15), iron = mf.get("cloth", ironC, { emissive: ironC.scale(0.15) });
+  const root = new TransformNode("cultistBuckler", scene);
+  // where the 489 disc sat: an offset in the hand frame (torso widths unscaled), so the board stays off the face
+  root.parent = body.leftHand; root.position.set((W / k) * 0.25, (W / k) * 0.55, (W / k) * 0.45);
+  // the face points +z (out from the body in front of the fist): the disc lies in x-y
+  const out: Mesh[] = [];
+  const add = (m: Mesh, material: typeof board): Mesh => { m.parent = root; m.material = material; out.push(m); return m; };
+  const disc = add(MeshBuilder.CreateCylinder("cultistBucklerBoard", { height: W * C.thick, diameter: R * 2, tessellation: 12 }, scene), board);
+  disc.rotation.x = Math.PI / 2;
+  for (const [r, name] of [[R * 0.97, "cultistBucklerRim"], [R * C.ring, "cultistBucklerRing"]] as const) {
+    const ring = add(MeshBuilder.CreateTorus(name, { diameter: r * 2, thickness: W * C.rimT, tessellation: 12 }, scene), iron);
+    ring.rotation.x = Math.PI / 2; ring.position.z = W * C.thick * 0.5;
+  }
+  const spike = (name: string, len: number, x: number, y: number, z: number, rx: number, rz: number): void => {
+    const m = add(MeshBuilder.CreateCylinder(name, { height: len, diameterTop: 0, diameterBottom: W * 0.08, tessellation: 4 }, scene), iron);
+    m.position.set(x, y, z); m.rotation.set(rx, 0, rz);
+  };
+  for (let i = 0; i < C.rim; i++) {
+    // out along the radius in the disc's plane: +y turned by -a about z points at angle a
+    const a = (i / C.rim) * Math.PI * 2, r = R + W * C.spike * 0.45;
+    spike("cultistBucklerSpike", W * C.spike, Math.sin(a) * r, Math.cos(a) * r, 0, 0, -a);
+  }
+  for (let i = 0; i < C.face; i++) {
+    const a = ((i + 0.5) / C.face) * Math.PI * 2, r = R * C.ring;
+    spike("cultistBucklerFaceSpike", W * C.faceSpike, Math.sin(a) * r, Math.cos(a) * r, W * (C.thick * 0.5 + C.faceSpike * 0.45), Math.PI / 2, 0);
+  }
+  spike("cultistBucklerBoss", W * C.boss, 0, 0, W * (C.thick * 0.5 + C.boss * 0.45), Math.PI / 2, 0);
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}

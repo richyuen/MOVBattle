@@ -25,7 +25,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { sentinelConeHat, sentinelMane } from "./evilDress";
+import { cultistBuckler, sentinelConeHat, sentinelMane } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -2622,26 +2622,8 @@ function dressVoidCultist(scene: Scene, body: ArticulatedBody, teamColor: Color3
     spoke.position.set(-Math.sin(a) * wheelD * 0.25, Math.cos(a) * wheelD * 0.25, 0);
     keep(spoke, wheel, wood);
   }
-  // The round shield on the off hand: a dark wooden board, a rim, spikes round it and one at the boss (not named *shield: it is no wall board)
-  const shieldD = W * VOID_SHIELD;
-  const board = MeshBuilder.CreateCylinder("voidBoard", { height: headSize * 0.1, diameter: shieldD, tessellation: 12 }, scene);
-  board.rotation.x = Math.PI / 2;
-  board.position.set(W * 0.25, W * 0.55, W * 0.45);
-  keep(board, body.leftHand, wood);
-  const boardRim = MeshBuilder.CreateTorus("voidBoardRim", { diameter: shieldD, thickness: headSize * 0.12, tessellation: 12 }, scene);
-  keep(boardRim, board, iron);
-  for (let i = 0; i <= VOID_STUDS; i++) {
-    const a = (i / VOID_STUDS) * Math.PI * 2;
-    const boss = i === VOID_STUDS;
-    const spike = MeshBuilder.CreateCylinder("voidBoardSpike", { height: headSize * (boss ? 0.4 : 0.3), diameterTop: 0, diameterBottom: headSize * 0.14, tessellation: 4 }, scene);
-    // The board's own +y is its face (it is a cylinder turned up onto +z): rim spikes point out round the edge, the boss spike out of the face
-    if (boss) spike.position.y = headSize * 0.22;
-    else {
-      spike.position.set(Math.cos(a) * shieldD * 0.56, 0, Math.sin(a) * shieldD * 0.56);
-      spike.rotation.set(0, -a, -Math.PI / 2);
-    }
-    keep(spike, board, iron);
-  }
+  // [S] 491 (b.2) the off-hand shield is evilDress cultistBuckler (CULTIST_BUCKLER), sized in the world, not the hand's frame
+  added.push(...cultistBuckler(scene, body));
   // The staff's glowing orb gives way to a spiked iron ball
   const staff = props.find((m) => m.name === "staff");
   if (staff) {
