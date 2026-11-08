@@ -937,6 +937,13 @@ export class RuntimeUnit {
     const dirZ = outward.x * sin + outward.z * cos;
     // Never faster sideways than the base throw: rapid shells have to keep finding the body.
     const throwSpeed = speed * (0.7 + 0.3 * spread(3)) * scale;
+    // [S] 503 (void_monarch c.1) a steadfast man (the demon form, standFirm) is slid back a little and keeps floating upright: no lift, no
+    // tumble, no sprawl (probe 503: a blast .4 s after the form flung him end over end, root pitched 1.5 rad, "downed" in _ability_after)
+    if (this.steadfast && !this._isDead) {
+      this._velocity.x += dirX * throwSpeed * 0.2;
+      this._velocity.z += dirZ * throwSpeed * 0.2;
+      return;
+    }
     if (isVehicleUnit(this.definition.id)) {
       // A vehicle is rocked back along the ground by a blast, not flung end over end.
       this._velocity.x += dirX * throwSpeed * 0.35;
