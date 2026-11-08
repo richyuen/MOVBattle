@@ -179,6 +179,31 @@ export function walkerBoots(scene: Scene, body: ArticulatedBody, worn: Mesh[]): 
 }
 
 /**
+ * [S] 498 the Shadow Walker's knee pads (evil.shadow_walker.red.png: over each knee a round dark faceted pad, wider than the leg, with one tan
+ * spike standing straight out of its front; re-audit 498 a.5: "no knee pads").
+ * Spec in each shin mesh's own box (r its radius, h its length, +y up the bone, +z its front): a near-black faceted ball .pad r across, squashed
+ * to .deep in depth, centred .up h over the shin's top (on the knee) and .fwd r in front of its axis; from its front a tan 4-sided spike .spike r long.
+ */
+const WALKER_KNEES = { pad: 1.65, deep: 0.62, up: 0.02, fwd: 0.55, spike: 1.1 };
+export function walkerKneePads(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = WALKER_KNEES, mf = getMaterialFactory();
+  const darkC = new Color3(0.08, 0.06, 0.07), dark = mf.get("cloth", darkC, { emissive: darkC.scale(0.4), roughness: 1 });
+  const tanC = new Color3(0.6, 0.42, 0.18), tan = mf.get("cloth", tanC, { emissive: tanC.scale(0.3) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const bb = shin.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z), h = e.y * 2;
+    const y = cc.y + e.y + h * C.up, z = cc.z + r * C.fwd;
+    const pad = MeshBuilder.CreateIcoSphere("walkerKneePad", { radius: r * C.pad, subdivisions: 1 }, scene);
+    pad.parent = shin; pad.scaling.z = C.deep; pad.position.set(cc.x, y, z); pad.material = dark; out.push(pad);
+    const spike = MeshBuilder.CreateCylinder("walkerKneeSpike", { height: r * C.spike, diameterTop: 0, diameterBottom: r * 0.7, tessellation: 4 }, scene);
+    spike.parent = shin; spike.rotation.x = Math.PI / 2; spike.material = tan;
+    spike.position.set(cc.x, y, z + r * C.pad * C.deep + r * C.spike * 0.4); out.push(spike);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 492 the Exiled Sentinel's shoulder spikes (evil.exiled_sentinel.red.png; audit 489 a.5: "rounded pauldrons - TABS: a row of tall black
  * spikes standing up over both shoulders, behind the shields").
  * Spec in torso widths W and heights TH (the torso box, torso frame): per shoulder a row of .count near-black 4-sided spikes along the shoulder
