@@ -639,6 +639,8 @@ export class VisualEffects {
    * of that tall) scattered over a disc .spread of the strike radius, lit by nothing (unlit, a deep slate, so it reads dark against the sky); a
    * Zeus-style bolt (spawnZeusBolt) from the cloud's underside to the ground every .every s, the first on the target and the rest at random points
    * inside the radius, .bolts in all; the cloud stays .life s, opaque throughout (no see-through fade), then goes.
+   * [S] 492 (c.1, 491 DEFECTS: the .3 s bolts were gone by the struck frame): each bolt the cloud drops is held, standing from the cloud's underside
+   * to the ground, until the cloud itself goes (spawnZeusBolt's `hold`), so the strikes gather under it into a storm of up to .bolts columns.
    */
   spawnStormCloud(center: Vector3, radius: number): void {
     // 491b: high 5.5 put the cloud out of the struck shot; 3.2 m sits it just over the struck man's head in frame
@@ -664,7 +666,7 @@ export class VisualEffects {
       if (fired > 0) { const a = Math.random() * Math.PI * 2, r = radius * Math.sqrt(Math.random()); spot.x += Math.cos(a) * r; spot.z += Math.sin(a) * r; }
       // straight down from the cloud's underside; spawnZeusBolt aims its end .9 m up (a chest), so the ground spot is passed .9 m low
       const from = new Vector3(spot.x + (Math.random() - 0.5) * 0.4, center.y + S.high - S.puff * S.squash * 0.4, spot.z + (Math.random() - 0.5) * 0.4);
-      this.spawnZeusBolt(from, new Vector3(spot.x, center.y - 0.9, spot.z));
+      this.spawnZeusBolt(from, new Vector3(spot.x, center.y - 0.9, spot.z), false, Math.max(0.3, S.life - fired * S.every));
       fired++;
     };
     strike();
@@ -803,13 +805,15 @@ export class VisualEffects {
    * [S] 386 (card Characteristics: the thunderbolt "will conduct to nearby units, causing a lightning chain"; critic 378/385: in _struck the man just
    * falls, no burst or arcs): the burst at the strike is its own effect that stays .burstLife s, and `chain` draws a chain arc instead, from one man's
    * chest to the next: .chainScale of the bolt's size, .chainKinks joints, .chainSparks spikes at its end, the whole arc staying .burstLife s.
+   * `hold` (s): the bolt and its burst both stay that long instead (a storm cloud's bolts last as long as the cloud).
    */
-  spawnZeusBolt(from: Vector3, target: Vector3, chain = false): void {
+  spawnZeusBolt(from: Vector3, target: Vector3, chain = false, hold?: number): void {
     const Z = { kinks: 7, amp: 0.28, core: 0.075, tip: 0.03, rim: 2.2, chest: 0.9, sparks: 6, spark: 0.35, life: 0.3, burstLife: 0.6, chainScale: 0.6, chainKinks: 5, chainSparks: 3 };
     if (chain) {
       Z.kinks = Z.chainKinks; Z.amp *= Z.chainScale; Z.core *= Z.chainScale; Z.tip *= Z.chainScale; Z.sparks = Z.chainSparks; Z.spark *= Z.chainScale;
       Z.life = Z.burstLife;
     }
+    if (hold !== undefined) { Z.life = hold; Z.burstLife = hold; }
     const root = new TransformNode("zeusBolt", this._scene);
     const burst = new TransformNode("zeusBurst", this._scene);
     const mf = getMaterialFactory();
