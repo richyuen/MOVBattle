@@ -464,7 +464,7 @@ async function main() {
           // the painter dodges missiles (Painter Dodge): he spars with an archer, whose arrows are what he sidesteps (evidence 373)
           // the samurai deflects missiles (Projectile Block): he spars with an archer too (evidence 417)
           // the quick draw sidesteps missiles (Quickdraw Projectile Dodge): an archer too (evidence 445)
-          const t = game.spawnUnit(id === "legacy.dark_peasant" ? "medieval.knight" : id === "renaissance.painter" || id === "dynasty.samurai" || id === "wild_west.quick_draw" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
+          const t = game.spawnUnit(id === "legacy.dark_peasant" ? "medieval.knight" : id === "renaissance.painter" || id === "dynasty.samurai" || id === "wild_west.quick_draw" || id === "evil.exiled_sentinel" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
           // [evidence 480] A lethal punch ended the duel at contact, freezing
           // its corpse before the post-impact pair. A distant reserve keeps
           // battle time advancing without entering the contact scene.
@@ -484,8 +484,9 @@ async function main() {
           if (id === "wild_west.quick_draw") for (const dz of [-1.8, -0.9, 0.9, 1.8]) game.spawnUnit("medieval.archer", 0, { x: -d - 1.5, z: dz });
           // [evidence 494] the Void Cultist's Sword Implosion sucks the enemies round him into one point (card Characteristics): two mates beside his squire
           if (id === "evil.void_cultist") for (const dz of [-2, 2]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.8, z: dz });
-          // [evidence 494] two archers behind the Exiled Sentinel's squire: their arrows (not his own missiles) are what his pavises catch
-          if (id === "evil.exiled_sentinel") for (const dz of [-1.5, 1.5]) game.spawnUnit("medieval.archer", 0, { x: -d - 4, z: dz });
+          // [evidence 494] the Exiled Sentinel spars with an archer, two more beside it: their arrows (not his own missiles) are what his pavises catch.
+          // Behind a squire the first arrows came at 2.7 s, after contact had swapped his boards for axes (probe 494); from 16 m they meet him on the way in
+          if (id === "evil.exiled_sentinel") for (const dz of [-1.5, 1.5]) game.spawnUnit("medieval.archer", 0, { x: -d - 1, z: dz });
           let ally = null;
           // [evidence 465] a bearer fights (polearm_melee, his pole's blow) and his ring's aura pulses beside it: he spars with his squire and has the
           // hurt ally beside him too, inside the ring, so the blow is the release and the aura the ability pair
