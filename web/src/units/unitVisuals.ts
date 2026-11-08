@@ -897,7 +897,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "evil.tempest_lich": vis(
     // [S] 494 (a.4, evil.tempest_lich.red.png): thin dark legs under the tunic (evilDress lichTunic)
-    { scale: 1.42, bulk: 1.04, headSize: 1.14, upperLegWidth: 0.68, lowerLegWidth: 0.6 }, "staff", "none", "none", "none", "#86A7FF", undefined, {
+    // [P] 496 (a.1, card Size 1.00x; lineup_evil): a man's height beside the 0.95x Shadow Walker (scale 1.0), not a head over the line (was 1.42)
+    { scale: 1.05, bulk: 1.04, headSize: 1.14, upperLegWidth: 0.68, lowerLegWidth: 0.6 }, "staff", "none", "none", "none", "#86A7FF", undefined, {
       posePreset: "caster",
       materialPreset: "evil_void",
       attachmentPreset: "storm_halo",
