@@ -29,7 +29,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, lichStaffCrystal, lichTunic, mechanicGoggles, mechanicOveralls, mechanicTank, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm, walkerVest } from "./evilDress";
+import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, lichStaffCrystal, lichStaffPole, lichTunic, mechanicGoggles, mechanicOveralls, mechanicTank, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm, walkerVest } from "./evilDress";
 import { sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
@@ -1065,6 +1065,8 @@ export class UnitFactory {
       // [S] 494 (b.1): the staff's orb gives way to a jagged team crystal blade (evilDress lichStaffCrystal)
       const lichStaff = definition.id === "evil.tempest_lich" ? propMeshes.find((m) => m.name === "staff") : undefined;
       if (lichStaff) propMeshes.push(...lichStaffCrystal(this._scene, lichStaff, teamColor));
+      // [S] 497 (b.3): a thin near-black banded pole in place of the thick grey rod (evilDress lichStaffPole)
+      if (lichStaff) propMeshes.push(...lichStaffPole(this._scene, lichStaff));
     }
     if (definition.id === "legacy.super_peasant" && !shouldUseVehicleBody) {
       propMeshes.push(...dressSuperPeasant(this._scene, body));

@@ -863,6 +863,31 @@ export function lichStaffCrystal(scene: Scene, staff: Mesh, team: Color3): Mesh[
 }
 
 /**
+ * [S] 497 the Tempest Lich's staff shaft (evil.tempest_lich.blue.png, .red.png: a thin near-black pole, a few bands along it; audit 489 b.3: "a thick
+ * grey tube"). The rod mesh itself is hidden (its children, the crystal and the hidden orb, still ride it: it stays the planted "staff" rod) and a
+ * new pole stands in its place.
+ * Spec in staff lengths L (the rod's own height, +y up the shaft): a 6-sided near-black pole .thick L across from the rod's foot to its top; .bands
+ * slightly wider dark-iron bands .bandW L across and .bandH L tall at .bandsAt of its length (the grip at chest and waist, one under the head).
+ */
+const LICH_POLE = { thick: 0.022, bands: [0.38, 0.55, 0.9], bandW: 0.034, bandH: 0.025 };
+export function lichStaffPole(scene: Scene, staff: Mesh): Mesh[] {
+  const C = LICH_POLE, bb = staff.getBoundingInfo().boundingBox, L = bb.maximum.y - bb.minimum.y;
+  staff.isVisible = false;
+  const mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const poleC = new Color3(0.05, 0.04, 0.05), pole = mf.get("cloth", poleC, { emissive: poleC.scale(0.4), roughness: 1 });
+  const ironC = new Color3(0.14, 0.12, 0.13), iron = mf.get("cloth", ironC, { emissive: ironC.scale(0.3), roughness: 1 });
+  const out: Mesh[] = [];
+  const shaft = MeshBuilder.CreateCylinder("lichStaffPole", { height: L, diameter: L * C.thick, tessellation: 6 }, scene);
+  shaft.parent = staff; shaft.position.y = (bb.minimum.y + bb.maximum.y) / 2; shaft.material = pole; out.push(shaft);
+  for (const at of C.bands) {
+    const band = MeshBuilder.CreateCylinder("lichStaffBand", { height: L * C.bandH, diameter: L * C.bandW, tessellation: 6 }, scene);
+    band.parent = staff; band.position.y = bb.minimum.y + L * at; band.material = iron; out.push(band);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 496 the Shadow Walker's vest (evil.shadow_walker.red.png; audit 489 a.3: "a team-blue jacket with a dark spiked plate on the chest - TABS: a dark
  * sleeveless tattered vest with a jagged hem over team skin").
  * Spec in the trunk's box in the torso joint frame (the larger of the torso box and the yoke hull, LESSONS 487: W across, H high, D deep, its
