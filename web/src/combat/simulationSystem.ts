@@ -631,6 +631,12 @@ const CULTIST_IMPLOSION = { first: 1.2, every: 7, reach: 5, radius: 4.5, pull: 2
 const SENTINEL_CATCH = { warn: 0.15, front: 0.4, kind: "pavise_block" };
 const SAMURAI_BLOCK = { warn: 0.5, reach: 1.3, ahead: 0.6, chest: 1.0, flick: 0.3, cooldown: 0.5, kind: "block" };
 const PAINTER_DODGE = { warn: 0.3, dist: 1.6, seconds: 0.2, cooldown: 1.2, kind: "dodge" };
+/*
+ * [S] 498 the Death Bringer's Quick Dodge (card Characteristics: "the ability to dodge projectiles, moving to the side then back in almost an
+ * instant"; audit 489 c.2): as the Painter Dodge, a missile reaching him within .warn s throws him .dist m off its line in .seconds s, and .back s
+ * after he lands he slides the same way back onto his line. Logged as .kind (the sidestep).
+ */
+const QUICK_DODGE = { warn: 0.3, dist: 1.4, seconds: 0.12, back: 0.06, cooldown: 0.8, kind: "quick_dodge" };
 // [S] 498 the Void Monarch's Demon Transformation (spec at _countDemonDamage): 800 / 97.5 of his own blows, a 3.5 m burst, floating .3 of his height
 const DEMON_FORM = { blows: 800 / 97.5, burst: 3.5, lift: 0.3, kind: "demon_form" };
 /*
@@ -799,6 +805,7 @@ export class SimulationSystem {
   // Fencer Dodge (FENCER_DODGE): when each fencer may dodge again, and which side he goes next
   private _dodgeReadyAt = new Map<RuntimeUnit, number>();
   private _dodgeSide = new Map<RuntimeUnit, number>();
+  private _dodgeBack = new Map<RuntimeUnit, { at: number; dir: Vector3; foe: RuntimeUnit }>();
   // [S] 369 balloon arrows loosed from the draw fist (renaissanceDress heldBalloonArrow): each held arrow and when the next is back in the hand
   private _arrowsAway = new Map<Node, number>();
   // Live snakes on the ground (SNAKE_LIVE), by team
@@ -3659,12 +3666,20 @@ export class SimulationSystem {
    * [S] 445 the Quick Draw has the same instinct (card "Quickdraw Projectile Dodge ... sidestep away when faced with projectiles"; audit 444 c.1).
    */
   private _painterDodges(now: number): void {
-    const D = PAINTER_DODGE;
     const missiles = this.projectileSystem;
     if (!missiles) return;
+    // [S] 498 the Death Bringer's Quick Dodge steps back onto his line once the shaft has passed (QUICK_DODGE.back)
+    for (const [unit, back] of this._dodgeBack) {
+      if (unit.isDead) { this._dodgeBack.delete(unit); continue; }
+      if (now < back.at || this._recovers.has(unit)) continue;
+      this._recovers.set(unit, { dir: back.dir, from: now, foe: back.foe, dist: QUICK_DODGE.dist, seconds: QUICK_DODGE.seconds });
+      this._dodgeBack.delete(unit);
+    }
     for (const unit of this._units) {
       const id = unit.definition.id;
-      if ((id !== "renaissance.painter" && id !== "wild_west.quick_draw") || unit.isDead || unit.isToppled || unit.isDowned || this._recovers.has(unit)) continue;
+      const quick = id === "evil.death_bringer";
+      const D = quick ? QUICK_DODGE : PAINTER_DODGE;
+      if ((id !== "renaissance.painter" && id !== "wild_west.quick_draw" && !quick) || unit.isDead || unit.isToppled || unit.isDowned || this._recovers.has(unit) || this._dodgeBack.has(unit)) continue;
       if (now < (this._dodgeReadyAt.get(unit) ?? 0)) continue;
       const incoming = missiles.incomingAt(unit, D.warn);
       if (!incoming) continue;
@@ -3682,6 +3697,7 @@ export class SimulationSystem {
       this._clearPathState(unit);
       this._recovers.set(unit, { dir, from: now, foe, dist: D.dist, seconds: D.seconds });
       this._dodgeReadyAt.set(unit, now + D.cooldown);
+      if (quick) this._dodgeBack.set(unit, { at: now + D.seconds + QUICK_DODGE.back, dir: dir.scale(-1), foe });
       missiles.loseTarget(unit);
       this._logAbility(unit, D.kind, now, unit.position);
     }

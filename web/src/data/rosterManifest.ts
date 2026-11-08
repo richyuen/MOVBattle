@@ -364,7 +364,7 @@ const evil = makeFaction(FactionId.Evil, "evil", [
   // [S] 494 (c.2): no summon; his Sword Implosion pulls the enemies round him into one point (simulationSystem CULTIST_IMPLOSION)
   ["void_cultist", "Void Cultist", 800, "heavy_melee", { abilities: [], weaponHint: "mace", healthMultiplier: 0.76, damageMultiplier: 0.43, cooldownMultiplier: 0.56 }],
   ["tempest_lich", "Tempest Lich", 1000, "special_magic", { abilities: ["lightning_strike", "push_force"], weaponHint: "staff", healthMultiplier: 0.08, damageMultiplier: 2.72, cooldownMultiplier: 3.33 }],
-  ["death_bringer", "Death Bringer", 2000, "boss_melee", { weaponHint: "greatsword", abilities: ["fear"], healthMultiplier: 0.39, damageMultiplier: 0.37, cooldownMultiplier: 0.22 }],
+  ["death_bringer", "Death Bringer", 2000, "boss_melee", { weaponHint: "greatsword", abilities: [], healthMultiplier: 0.39, damageMultiplier: 0.37, cooldownMultiplier: 0.22 }],
   // [S] 492 (c.1, card Weapons "Void Monarch Sword": Sword - Melee, range 2.5, explosion radius 2): a melee swordsman whose blows burst in a radius-2
   // splash (boss.legendary), not a caster firing darts
   // [S] 493 (c.1): no summon (the card has none; custom.void_monarch keeps his); each blow bursts pink (simulationSystem MONARCH_BURST)
