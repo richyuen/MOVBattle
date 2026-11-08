@@ -3580,10 +3580,16 @@ function buildCultistMace(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  * band .band H tall at its foot; a short pommel spike .pommel H under it. Named "staff" with an "orb" child (the ball) so the hold keeps it
  * upright as a planted rod; the fist sits on the grip's middle.
  */
-const MONARCH_SWORD = { blade: 0.5, wide: 0.05, belly: 1.15, thick: 0.014, ball: 0.075, spike: 0.035, grip: 0.1, gripW: 0.024, band: 0.022, pommel: 0.04 };
+// [S] 501 (b.1, CONFIRM 500: "thin pale rapier-like blades about torso length"; the red render: broad khaki bone blades with a jagged edge, from the
+// fist at the hip to over the head): blade .62 H long, .085 H across, a khaki unlit bone (palette 501 unlit yellow row x .5, not the pale (.78,.7,.44)),
+// and .teeth jagged teeth per edge, each a flat 3-sided wedge .tooth H long raked .rake rad toward the point, alternating long and short
+const MONARCH_SWORD = {
+  blade: 0.62, wide: 0.085, belly: 1.12, thick: 0.014, ball: 0.075, spike: 0.035, grip: 0.1, gripW: 0.024, band: 0.022, pommel: 0.04,
+  bone: new Color3(0.5, 0.45, 0.2), teeth: 7, tooth: 0.032, rake: 0.6,
+};
 function buildMonarchSword(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const C = MONARCH_SWORD, H = fit.stand;
-  const boneC = new Color3(0.78, 0.7, 0.44), bone = getMaterialFactory().get("unlit", boneC, { emissive: boneC });
+  const boneC = C.bone, bone = getMaterialFactory().get("unlit", boneC, { emissive: boneC });
   const dark = mat(scene, new Color3(0.08, 0.06, 0.09), 0.04, "cloth");
   const band = mat(scene, team, 0.15, "cloth");
   const glow = scene.getGlowLayerByName("glow");
@@ -3615,6 +3621,18 @@ function buildMonarchSword(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   ] as const) {
     const seg = part(MeshBuilder.CreateCylinder(name, { height: y1 - y0, diameterBottom: d0, diameterTop: d1, tessellation: 4 }, scene), bone, (y0 + y1) / 2);
     seg.scaling.z = (C.thick / C.wide) * 1.4;
+  }
+  // the jagged edges: teeth up both sides of the blade from its root to the point's foot, set on the edge's line, raked toward the point
+  const halfAt = (y: number): number => {
+    const t = (y - root0) / L;
+    return t < 0.33 ? (w0 + (w1 - w0) * t / 0.33) / 2 : t < 0.86 ? (w1 + (w0 * 0.6 - w1) * (t - 0.33) / 0.53) / 2 : w0 * 0.3 * (1 - (t - 0.86) / 0.14);
+  };
+  for (const side of [-1, 1]) for (let i = 0; i < C.teeth; i++) {
+    const y = root0 + L * (0.1 + 0.72 * (i + (side > 0 ? 0.25 : 0.75)) / C.teeth), len = C.tooth * H * (i % 2 ? 0.65 : 1);
+    const tooth = part(MeshBuilder.CreateCylinder("monarchSwordTooth", { height: len, diameterBottom: len * 0.8, diameterTop: 0, tessellation: 3 }, scene), bone, y);
+    tooth.position.x = side * (halfAt(y) * 0.92 + len * 0.4);
+    tooth.rotation.z = -side * (Math.PI / 2 - C.rake);
+    tooth.scaling.z = 0.35;
   }
   return grip;
 }
