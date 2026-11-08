@@ -79,6 +79,34 @@ export function sentinelMane(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 492 the Exiled Sentinel's shoulder spikes (evil.exiled_sentinel.red.png; audit 489 a.5: "rounded pauldrons - TABS: a row of tall black
+ * spikes standing up over both shoulders, behind the shields").
+ * Spec in torso widths W and heights TH (the torso box, torso frame): per shoulder a row of .count near-black 4-sided spikes along the shoulder
+ * top from .from to .to W out from the middle, a little behind the centre (.back of the torso depth), each rooted at the torso's top and standing
+ * up .tall TH (the middle ones tallest, the ends .endShare of that), .wide W across at the root, leaning out .splay rad toward its own side.
+ */
+const SENTINEL_SPIKES = { count: 4, from: 0.26, to: 0.56, back: 0.12, tall: 0.62, endShare: 0.72, wide: 0.12, splay: 0.22 };
+export function sentinelShoulderSpikes(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = SENTINEL_SPIKES, tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const W = tb.extendSize.x * 2 * s.x, TH = tb.extendSize.y * 2 * s.y, TD = tb.extendSize.z * 2 * s.z;
+  const top = tm.position.y + (tb.center.y + tb.extendSize.y) * s.y, cz = tm.position.z + tb.center.z * s.z;
+  const blackC = new Color3(0.07, 0.05, 0.07), black = getMaterialFactory().get("cloth", blackC, { emissive: blackC.scale(0.4) });
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) for (let k = 0; k < S.count; k++) {
+    const t = k / (S.count - 1), mid = 1 - Math.abs(t - 0.45) * 2;
+    const tall = TH * S.tall * (S.endShare + (1 - S.endShare) * Math.max(0, mid));
+    const m = MeshBuilder.CreateCylinder("sentinelShoulderSpike", { height: tall, diameterBottom: W * S.wide, diameterTop: 0, tessellation: 4 }, scene);
+    m.parent = body.torso;
+    const x = side * W * (S.from + (S.to - S.from) * t), lean = side * S.splay * (0.5 + t);
+    m.rotation.set(-0.1, 0, -lean);
+    m.position.set(x + Math.sin(lean) * tall * 0.5, top - TH * 0.04 + Math.cos(lean) * tall * 0.5, cz - TD * S.back);
+    m.material = black; out.push(m);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 491 the Void Cultist's buckler (evil.void_cultist.jpg, .red.png; audit 489 b.2: "a small brown disc - TABS: a large dark round buckler,
  * shoulder-wide, with a raised rim ring and spikes around the rim and face"). It replaces the 1.5-chest disc that was cut in the hand's own
  * (shrunken) frame and read head-sized.
