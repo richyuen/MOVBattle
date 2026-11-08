@@ -1058,7 +1058,9 @@ const DEATH_HAIR = {
   fall: 11, fallSpread: 0.62, fallW: [0.07, 0.11, 0.06, 0.09, 0.12, 0.07, 0.1, 0.06, 0.11, 0.08, 0.07], fallLong: 1.25, fallVary: 0.38,
   kink: 0.035, kinkAt: 0.55, shoulder: 2, shoulderX: 0.4, shoulderLong: 0.42,
   // [S] 502 crown-rooted side locks and back fall (a.2)
-  locks: 4, lockX: 0.58, lockY: 0.45, lockLong: 0.8, lockW: [0.16, 0.2, 0.14, 0.18], backFall: 9, backSpread: 0.8, backFallLong: 1.0,
+  // [R] 503: the locks were .14-.2 TW wide across x on the head's side, planks standing out sideways (the slab); now .lockT TW across x and
+  // .lockW TW deep, lying flat on the head's side, .locks of them per side from the scalp's edge
+  locks: 6, lockX: 0.52, lockY: 0.38, lockLong: 0.8, lockT: 0.045, lockW: [0.09, 0.12, 0.08, 0.11, 0.1, 0.12], backFall: 9, backSpread: 0.8, backFallLong: 1.0,
 };
 export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = DEATH_HAIR, mf = getMaterialFactory();
@@ -1113,13 +1115,15 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const side of [-1, 1]) for (let k = 0; k < C.locks; k++) {
     const t = k / (C.locks - 1) - 0.5, p = inTorso(c.x + side * W * C.lockX, c.y + H * C.lockY, c.z + t * D * 0.8);
     const foot = top - TH * C.lockLong * (1 - Math.abs(t) * 0.3), w = C.lockW[k % C.lockW.length];
-    strand(p.x, w, p.y - foot, side * C.kink * (1 + k), p.z, p.y, C.strandT * 1.4);
+    strand(p.x, C.lockT, p.y - foot, side * C.kink * (1 + k % 3), p.z, p.y, w);
   }
   const crown = inTorso(c.x, c.y + H * C.lockY, c.z - D * 0.45);
+  const headW = Vector3.Distance(inTorso(c.x - W / 2, c.y, c.z), inTorso(c.x + W / 2, c.y, c.z));
   for (let i = 0; i < C.backFall; i++) {
     const t = i / (C.backFall - 1) - 0.5, w = C.fallW[(i + 3) % C.fallW.length];
     const foot = top - TH * C.backFallLong * (1 - C.fallVary * 0.6 * (((i * 3) % 4) / 3));
-    strand(t * TW * C.backSpread, w * 1.2, crown.y - foot, C.kink * (i % 2 ? 1 : -1), Math.min(crown.z, cz - TD / 2 - TW * C.proud), crown.y);
+    // [R] 503: rooted inside the head's width at the crown (.8 TW across stood out either side of the head as a block), fanning out below
+    strand(t * Math.min(TW * C.backSpread, headW * 0.8), w * 1.2, crown.y - foot, t * TW * 0.25 + C.kink * (i % 2 ? 1 : -1), Math.min(crown.z, cz - TD / 2 - TW * C.proud), crown.y);
   }
   for (let i = 0; i < C.fall; i++) {
     const t = i / (C.fall - 1) - 0.5, w = C.fallW[i % C.fallW.length];
@@ -1150,13 +1154,13 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
 // [R] 503 (a.2, CONFIRM 500 and 502: "chunky grey segmented plates, wider than the thigh, that read as heavy armoured greaves"). Spec read off
 // evil.death_bringer.blue.png and .red.png: under the baggy knee pants each shin is thin, narrower than the pants above it, wound tight in pale
 // off-white bandage from the cuff to the ankle, the winding shown by fine slanted seams, not raised rings; small team feet below. So: the wrap
-// a shell .wrap of the shin's own half-girth (tight, no wider than the shin), pale off-white flat unlit .pale (LESSONS 442: lit cream greys in
+// is the shin mesh itself (no wider than the shin), pale off-white flat unlit .pale (LESSONS 442: lit cream greys in
 // the shade; code value off palette.png, between the unlit white x.7 and tan x.7 swatches) out of the glow; .bands thin seams .bandOut over the
 // wrap (a hair proud), .bandH of the shin tall, a little darker .seam, alternately slanted .slant about x; the foot meshes under them take the
 // team skin (the dark shoe read as a boot under a greave).
 const DEATH_LEGS = {
   hemAt: 0.04, cuff: 1.35, cuffH: 0.07,
-  shade: 0.32, thigh: 1.55, puff: 1.95, puffFrom: 0.3, pale: new Color3(0.62, 0.58, 0.5), wrap: 1.02, bands: 6, bandOut: 1.07, bandH: 0.035,
+  shade: 0.32, thigh: 1.55, puff: 1.95, puffFrom: 0.3, pale: new Color3(0.62, 0.58, 0.5), bands: 6, bandOut: 1.1, bandH: 0.035,
   seam: new Color3(0.4, 0.37, 0.32), slant: 0.22,
 };
 export function deathBringerShinWraps(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
@@ -1176,9 +1180,12 @@ export function deathBringerShinWraps(scene: Scene, body: ArticulatedBody, team:
     const puff = limbShell(scene, "deathShortsPuff", thigh, hem * C.puffFrom, hem - C.cuffH, C.puff, shorts);
     out.push(puff);
     out.push(limbShell(scene, "deathShortsCuff", thigh, hem - C.cuffH, hem, C.cuff, shorts));
+    // [R] 503: the thigh mesh runs on past the knee under the cuff, a dark band mid-shin (look 503): bandage over that stub
+    if (hem < 1) out.push(limbShell(scene, "deathShinWrap", thigh, hem, 1, 1.03, grey));
   }
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
-    out.push(limbShell(scene, "deathShinWrap", shin, 0, 1, C.wrap, grey));
+    // the shin mesh itself is the bandage (a shell at the shin's girth let its calf poke through, look 503)
+    shin.material = grey; glow?.addExcludedMesh(shin);
     for (let i = 0; i < C.bands; i++) {
       const at = (i + 0.5) / C.bands;
       const b = limbShell(scene, "deathShinBand", shin, at - C.bandH / 2, at + C.bandH / 2, C.bandOut, band);
