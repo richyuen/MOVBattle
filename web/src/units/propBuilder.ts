@@ -2131,7 +2131,7 @@ export function attachProps(
     applyWeaponGripPreset(weapon, config.weaponGripPreset ?? "default", scale);
     applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
     if (config.weaponVariant === "glow_glove") seatGlowGlove(weapon, body.rightHand);
-    if (config.weaponVariant === "devout_gauntlet") seatDevoutGauntlet(weapon, body.rightHand);
+    if (config.weaponVariant === "devout_gauntlet" || config.weaponVariant === "mechanic_claw") seatDevoutGauntlet(weapon, body.rightHand);
     if (config.weaponVariant === "time_gauntlet") { weapon.position.setAll(0); weapon.rotation.setAll(0); }
     if (config.weapon === "bomb") seatInFist(weapon, body, scale);
     if (config.weapon === "potion") seatNeckInFist(weapon, body.rightHand);
@@ -2149,7 +2149,7 @@ export function attachProps(
       offhand.scaling.scaleInPlace(PROP_OVERSIZE);
       applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
       if (config.offhandVariant === "glow_glove") seatGlowGlove(offhand, body.leftHand);
-      if (config.offhandVariant === "devout_gauntlet") seatDevoutGauntlet(offhand, body.leftHand);
+      if (config.offhandVariant === "devout_gauntlet" || config.offhandVariant === "mechanic_claw") seatDevoutGauntlet(offhand, body.leftHand);
       if (config.offhandVariant === "time_gauntlet") { offhand.position.setAll(0); offhand.rotation.setAll(0); }
       if (config.offhandWeapon === "bomb") seatInFist(offhand, body, scale);
       if (config.offhandWeapon === "potion") seatNeckInFist(offhand, body.leftHand);
@@ -4093,6 +4093,41 @@ function buildDevoutGauntlet(scene: Scene, fit: BladeFit): Mesh {
   return root;
 }
 
+/*
+ * [S] 491 the Mad Mechanic's claw (evil.mad_mechanic.red.png, .blue.png; card Main/Off Hand "Mad Mechanic Fire", Appearance "two mechanical
+ * claws"): on each hand a dark boxy gauntlet from the knuckles halfway up the forearm with three small cyan lights down its outer side, and a pair of
+ * big bone-white pincer jaws standing past the fist, a little open. MECHANIC_CLAW in fists f (hand frame, +y past the knuckles, -y up the arm):
+ * cuff .cuff f long, .wide f across (6-sided), its top .top f under the fist's middle; a dark knuckle housing .house f cube over the fist; three
+ * cyan lights .light f tall on the cuff's outer face; two jaws .jawL f long, .jawW f wide, .jawT f thick, opened .open rad apart from the
+ * housing's front and back, each with a hooked tip block .tip f long turned in toward the other.
+ */
+const MECHANIC_CLAW = { cuff: 5.2, wide: 3.3, top: 1.1, house: 3, light: 0.75, jawL: 3.6, jawW: 2.7, jawT: 1.15, open: 0.32, tip: 1.3 };
+function buildMechanicClaw(scene: Scene, fit: BladeFit): Mesh {
+  const C = MECHANIC_CLAW, f = fit.fist;
+  const root = new Mesh("mechanicClaw", scene);
+  const dark = mat(scene, new Color3(0.08, 0.075, 0.085), 0.05, "cloth");
+  const bone = mat(scene, new Color3(0.86, 0.84, 0.78), 0.35, "cloth");
+  const cyan = getMaterialFactory().get("unlit", new Color3(0.35, 0.95, 1.2), { emissive: new Color3(0.35, 0.95, 1.2) });
+  const put = (m: Mesh, material: PBRMetallicRoughnessMaterial): Mesh => { m.parent = root; m.material = material; m.convertToFlatShadedMesh(); return m; };
+  const cuff = put(MeshBuilder.CreateCylinder("clawCuff", { height: C.cuff * f, diameterTop: C.wide * f, diameterBottom: C.wide * f * 1.12, tessellation: 6 }, scene), dark);
+  cuff.position.y = -C.top * f - C.cuff * f / 2; cuff.rotation.y = Math.PI / 6;
+  put(MeshBuilder.CreateBox("clawHousing", { width: C.house * f, height: C.house * f * 0.9, depth: C.house * f }, scene), dark);
+  for (let k = 0; k < 3; k++) {
+    const light = put(MeshBuilder.CreateBox("clawLight", { width: f * 0.35, height: C.light * f, depth: f * 0.35 }, scene), cyan);
+    light.position.set(C.wide * f * 0.5, cuff.position.y + (k - 1) * C.cuff * f * 0.26, 0);
+  }
+  for (const side of [-1, 1]) {
+    // a jaw hinged at the housing's top edge, front (+z) and back (-z), opened apart; the hooked tip turns in
+    const hinge = new Mesh("clawHinge", scene); hinge.parent = root;
+    hinge.position.set(0, C.house * f * 0.4, side * C.house * f * 0.3); hinge.rotation.x = side * C.open;
+    const jaw = put(MeshBuilder.CreateBox("clawJaw", { width: C.jawW * f, height: C.jawL * f, depth: C.jawT * f }, scene), bone);
+    jaw.parent = hinge; jaw.position.y = C.jawL * f / 2;
+    const tip = put(MeshBuilder.CreateCylinder("clawJawTip", { height: C.tip * f, diameterTop: 0, diameterBottom: C.jawW * f, tessellation: 4 }, scene), bone);
+    tip.parent = hinge; tip.position.set(0, C.jawL * f + C.tip * f * 0.3, -side * C.jawT * f * 0.4); tip.rotation.x = -side * 0.9; tip.scaling.z = 0.5;
+  }
+  return root;
+}
+
 function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
   hand.computeWorldMatrix(true);
   const fist = hand.getChildMeshes(true).find(m => /HandM$/.test(m.name));
@@ -4785,6 +4820,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "boxing_glove": {
       if (variant === "devout_gauntlet") return buildDevoutGauntlet(scene, fit);
+      if (variant === "mechanic_claw") return buildMechanicClaw(scene, fit); // [S] 491 (MECHANIC_CLAW)
       if (variant === "glow_glove") {
         const G = GLOW_GLOVE;
         const glove = MeshBuilder.CreateIcoSphere("glowGlove", { radius: G.wide * s / 2, subdivisions: 2 }, scene);

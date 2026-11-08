@@ -178,7 +178,7 @@ export interface UnitVisualConfig {
 
 export type WeaponVariant =
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -876,11 +876,11 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.mad_mechanic": vis(
-    { scale: 1.18, bulk: 1.16, headSize: 1.04 }, "hammer", "none", "none", "none", "#8E5A3A", "bomb", {
+    // [S] 491 (b.1, b.2; evil.mad_mechanic.red.png): a mechanical claw gauntlet on each hand (propBuilder MECHANIC_CLAW), no hammer or held bomb
+    { scale: 1.18, bulk: 1.16, headSize: 1.04 }, "boxing_glove", "none", "none", "none", "#8E5A3A", "boxing_glove", {
+      weaponVariant: "mechanic_claw", offhandVariant: "mechanic_claw",
       posePreset: "support",
       materialPreset: "secret_bandit",
-      attachmentPreset: "bomb_lit",
-      stateVariants: { attacking: ["lit_fuse"], "ability-active": ["lit_fuse"] },
     },
   ),
   "evil.void_cultist": vis(
