@@ -781,6 +781,59 @@ export function lichStaffCrystal(scene: Scene, staff: Mesh, team: Color3): Mesh[
 }
 
 /**
+ * [S] 496 the Shadow Walker's vest (evil.shadow_walker.red.png; audit 489 a.3: "a team-blue jacket with a dark spiked plate on the chest - TABS: a dark
+ * sleeveless tattered vest with a jagged hem over team skin").
+ * Spec in the trunk's box in the torso joint frame (the larger of the torso box and the yoke hull, LESSONS 487: W across, H high, D deep, its
+ * bottom y0): the trunk, yoke and upper arms go team skin (the head's material); the pelvis goes the leg cloth; a near-black open 8-sided shell
+ * (one-sided, facing out) .wide W x .deep D from .top H up the trunk down to .hem H under its bottom; .teeth flat 3-sided points hang from its hem
+ * all round (.toothL H long, varied by .vary), .crown points stand up off its top across the front, so the skin chest shows over a jagged edge;
+ * two straps .strap W wide run up the front and over each shoulder, .strapX W out.
+ */
+const WALKER_VEST = { cloth: new Color3(0.08, 0.06, 0.07), wide: 1.1, deep: 1.25, top: 0.62, hem: 0.22, teeth: 12, toothL: 0.2, vary: 0.4, crown: 5, crownL: 0.16, strap: 0.22, strapX: 0.3 };
+export function walkerVest(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = WALKER_VEST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const dark = mf.get("cloth", C.cloth, { emissive: C.cloth.scale(0.4), roughness: 1 });
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name)), pelvis = body.allMeshes.find((m) => /_pelvis$/.test(m.name));
+  const chain: TransformNode[] = [];
+  for (let n: TransformNode | null = body.torsoMesh; n; n = n.parent as TransformNode | null) chain.unshift(n);
+  for (const n of chain) n.computeWorldMatrix(true);
+  yoke?.computeWorldMatrix(true);
+  const inv = body.torso.getWorldMatrix().clone().invert();
+  const lo = new Vector3(Infinity, Infinity, Infinity), hi = new Vector3(-Infinity, -Infinity, -Infinity);
+  for (const m of [body.torsoMesh, yoke]) {
+    if (!m) continue;
+    for (const v of m.getBoundingInfo().boundingBox.vectorsWorld) { const p = Vector3.TransformCoordinates(v, inv); lo.minimizeInPlace(p); hi.maximizeInPlace(p); }
+  }
+  const W = hi.x - lo.x, H = hi.y - lo.y, D = hi.z - lo.z, cx = (lo.x + hi.x) / 2, cz = (lo.z + hi.z) / 2;
+  for (const m of [body.torsoMesh, yoke, body.leftUpperArm, body.rightUpperArm]) if (m) m.material = body.skinMaterial;
+  if (pelvis) pelvis.material = body.leftUpperLeg.material;
+  const out: Mesh[] = [];
+  const add = (m: Mesh): Mesh => { m.parent = body.torso; m.material = dark; out.push(m); return m; };
+  const yTop = lo.y + H * C.top, yHem = lo.y - H * C.hem, rx = (W * C.wide) / 2, rz = (D * C.deep) / 2;
+  const shell = add(MeshBuilder.CreateCylinder("walkerVest", { height: yTop - yHem, diameter: 2, tessellation: 8, cap: Mesh.NO_CAP }, scene));
+  shell.scaling.set(rx, 1, rz); shell.position.set(cx, (yTop + yHem) / 2, cz); shell.rotation.y = Math.PI / 8;
+  // flat points round the rim: angle a from the front (+z), pointing down (hem) or up (crown)
+  const point = (a: number, y: number, long: number, dir: 1 | -1): void => {
+    const p = add(MeshBuilder.CreateCylinder("walkerVestTooth", { height: long, diameterBottom: W * 0.2, diameterTop: 0, tessellation: 3 }, scene));
+    p.scaling.z = 0.25; p.rotation.set(dir < 0 ? Math.PI : 0, a, 0);
+    p.position.set(cx + Math.sin(a) * rx * 0.97, y + dir * long / 2, cz + Math.cos(a) * rz * 0.97);
+  };
+  for (let i = 0; i < C.teeth; i++) point((i / C.teeth) * Math.PI * 2, yHem + H * 0.02, H * C.toothL * (1 - C.vary * ((i * 5) % 3) / 2), -1);
+  for (let i = 0; i < C.crown; i++) point(((i / (C.crown - 1)) - 0.5) * 1.6, yTop - H * 0.02, H * C.crownL * (1 - C.vary * ((i * 7) % 3) / 2), 1);
+  for (const side of [-1, 1]) {
+    const x = cx + side * W * C.strapX, up = hi.y + H * 0.02 - yTop;
+    for (const z of [cz + rz, cz - rz]) {
+      const s = add(MeshBuilder.CreateBox("walkerVestStrap", { width: W * C.strap, height: up, depth: D * 0.08 }, scene));
+      s.position.set(x, yTop + up / 2, z);
+    }
+    const over = add(MeshBuilder.CreateBox("walkerVestStrap", { width: W * C.strap, height: D * 0.08, depth: rz * 2 + D * 0.08 }, scene));
+    over.position.set(x, hi.y + H * 0.02, cz);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 496 the Void Monarch's bone harness (evil.void_monarch.blue.png; audit 489 a.3: "a single grey antler branch behind one shoulder - TABS: a bone
  * V harness whose spiked wing-arms reach out over both shoulders"). It replaces the evil preset's bone pauldrons (custom.void_monarch keeps them).
  * Spec in trunk-box widths W, heights H, depths D (torso joint frame; read off the render: a 200 px chest, the V's foot on the belt, its arms
