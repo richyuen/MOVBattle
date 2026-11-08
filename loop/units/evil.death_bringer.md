@@ -1,25 +1,26 @@
 # evil.death_bringer
-Status: open   Audited: 489 (AUDIT x2)   Done: -
+Status: open   Audited: 489 (AUDIT x2), 500 (CONFIRM: passed b, c, d; failed a)   Done: -
 ## Verdicts
-a FAIL (4 since 489, 5 struck)
- 5. shins in unit_evil.death_bringer_idle: white plate greaves — TABS: grey cloth wraps below dark puffed shorts (ref: evil.death_bringer.red.png)
- 6. belt in unit_evil.death_bringer_idle: no bones — TABS: a dark belt hung with bone tusks (ref: evil.death_bringer.red.png)
-b PASS (491 twin gold warglaives)
-c PASS (499 charge through the line, cutting each man passed)
-d PASS (499 stats)
+a FAIL (0 since 500; CONFIRM 500 list)
+ 1. leg build in unit_evil.death_bringer_idle: the pants block runs almost to the ankles over a short wrapped shin stub, so the legs are short of half the height and the unit is squat — TABS: long lanky legs, with knee-length baggy pants above long bandaged shins that are about a third of his height (ref: reference/units/evil.death_bringer.red.png)
+ 2. hair in unit_evil.death_bringer_idle: a short black bob framing the head (a flat black block on the back of the head in unit_evil.death_bringer_flight) — TABS: long straggly black hair hanging over the chest and back to the waist, the unit's dominant dark mass (ref: reference/units/evil.death_bringer.red.png)
+ 3. skull mask in unit_evil.death_bringer_idle: a flat square tan plate with two slit eyes on a cube head — TABS: a sculpted demon skull with a brow ridge, hollow drooping eye sockets, a nose hole and a narrowing jaw (ref: reference/units/evil.death_bringer.red.png)
+ 4. chest in unit_evil.death_bringer_idle: a maroon tabard bib with strips down the front of the torso — TABS: no bib; the black hair falls over a dark chest (ref: reference/units/evil.death_bringer.blue.png)
+b PASS (491 twin gold warglaives; CONFIRM 500)
+c PASS (499 charge through the line, cutting each man passed; CONFIRM 500)
+d PASS (500 stats; CONFIRM 500)
 ## Ranked gaps
-1. [S] evil.death_bringer.a shins — blocker 5: grey banded cloth wraps knee to ankle in place of the white greaves (HORNED_EVIL wraps + evilBreech), under dark puffed shorts ending at the knee (evilDress deathBringerShinWraps) — ref: evil.death_bringer.red.png — ours: unit_evil.death_bringer_idle.png
-2. [S] evil.death_bringer.a belt — blocker 6: dark belt hung with pale bone tusks at the hips (evilDress) — ref: evil.death_bringer.red.png — ours: unit_evil.death_bringer_idle.png
+1. [S] evil.death_bringer.a leg build — blocker 1: shorts end at the knee (anchor to knee.position.y, LESSONS 41) and the shins run long under them, wraps over the whole shin — ref: evil.death_bringer.red.png — ours: unit_evil.death_bringer_idle.png
+2. [S] evil.death_bringer.a chest — blocker 4: the maroon bib (HORNED_EVIL cape/tabard remnant) off; hair falls over a dark chest — ref: evil.death_bringer.blue.png — ours: unit_evil.death_bringer_idle.png
 ## Attempts (iter | gap | criterion | verdict)
-499 | bare team trunk and arms, front hair narrowed to the middle, evilDress deathBringerBareTorso (3a3576d4) | a | approved (struck 4; 2 struck by lineup)
-499 | charge: a run through the line cutting each man passed, simulationSystem DEATH_CHARGE (fe3430c4; evidence 9b31f638) | c | approved (struck 3; c PASS)
-498 | Quick Dodge, sidestep and straight back, QUICK_DODGE (b42cc679) | c | approved (struck 2)
-496 | tan faceted skull mask, evilDress deathBringerMask (da898f4f) | a | approved (horn clause of 2)
-495 | long black hair to the waist, evilDress deathBringerHair (3218b350) | a | approved (struck 3)
-495 | [P] default stand in place of duelist (65d585c3, reverted) | a | rejected (ledger reversal)
-491-494 | lanky build (a); twin warglaives (b PASS); TWIN_SLASH (c) | a, b, c | approved
+500 | dark team shorts over grey banded shin wraps, evilDress deathBringerShinWraps (5483a3d7) | a | approved (struck 5)
+500 | dark belt with bone tusks over each hip, evilDress deathBringerBelt (6e0424e3, 8643adb8) | a | approved (struck 6; critic a PASS, CONFIRM failed a)
+499 | bare team trunk and arms, evilDress deathBringerBareTorso (3a3576d4) | a | approved (struck 4)
+499 | charge through the line, DEATH_CHARGE (fe3430c4) | c | approved (struck 3; c PASS)
+498 | Quick Dodge, QUICK_DODGE (b42cc679) | c | approved (struck 2)
+491-496 | lanky build, hair, mask (a); twin warglaives (b PASS); TWIN_SLASH (c) | a, b, c | approved
 ## Rejected (last 4)
 495 | [P] stance default | a | attempts 1 | ledger reversal of UV:DEATH (approved 494); wants an [S] idle pose of its own, square with arms out low
 ## Notes (max 3 lines)
-- 496 DEFECTS: the mask reads a flat pale square; wants bone-tan, a narrower jaw (blocker 2 struck by lineup 499).
-- Weapon "greatsword" both hands (variant warglaive). Look is HORNED_EVIL "evil.death_bringer" (wraps, skirt .55) + evilDress deathBringerHair, deathBringerMask, deathBringerBareTorso. Capture: 8 m from three archers, two more 9 m behind (evidence 499).
+- 500 DEFECTS: shorts one boxy slab, not puffed per thigh; wraps short stacked rings; tusks mostly at the sides.
+- Weapon "greatsword" both hands (variant warglaive). Look is HORNED_EVIL "evil.death_bringer" + evilDress deathBringerHair, Mask, BareTorso, ShinWraps, Belt. Capture: 8 m from three archers, two more 9 m behind.

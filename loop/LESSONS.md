@@ -13,6 +13,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 
 ## Capture and probes
+- stats.mjs rounds knobs to .01: under .005 prints 0 (NaN next run); set the exact ratio.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is stats.mjs's; every non-regression capture wipes iter-N (stats.json, a tail batch's audit.md): back audit.md up before step 5, rerun `stats.mjs <ids> --iter N` after the final capture (422). Checkpoint replaces summary.json: back up first (483).
 - Probes in loop/scripts/probes/, repo root (--build after source changes): probe_bbox (--unit --pat --frame=torso), probe_near/close/head/local/axes/impale/bowdraw; probe_close takes --aim=head|torso|y:<y>, --dist, --yaw, --noglow; probe_eval --unit --expr=<file> runs a function body on the spawned unit (u, game, scene) and prints its JSON (materials, a scene with extra men, event timing).
@@ -20,7 +21,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
-- Babylon fresnel t=|n.v|^power is 1 face-on: opacity fresnel ADDS left*(1-t)+right*t, so a thin rim wants power<1 (.25; 3 washed a field amber, 489). Cull back faces; give a 6 m field a pulled-back shot. Probing in-page: swap in a new material (prop edits do not recompile).
+- Fresnel t=|n.v|^power is 1 face-on and ADDS left*(1-t)+right*t: a thin rim wants power<1 (.25, 489). Cull back faces; probing in-page, swap in a new material.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change). A faceless unit at .6 rad reads as a back: .25 (497).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - Capture frames by mesh top once a prop tops the head by .3 unit height: re-frames all shots, RE-AUDIT (420, 447).
@@ -33,7 +34,8 @@ Read whole at step 1; one fact per line, merge near cap.
 
 - An idle hold gated on Attacking+throw stays on through a long-cooldown windup: gate it on the fire (451). RuntimeUnit._applyPoseOverlay (posePreset gunner, archer...) runs AFTER the animator's layers and re-turns a held aim: probe the final frame (455 barrel 17° up).
 ## Rig and dress
-- Retire superseded hip skirts/ropes (482). The `_yoke` hull spans the trunk, wider than a slim torso: re-skin it for a bare waist, size shells from it (487).
+- A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
+- Retire superseded hip skirts (482). The `_yoke` hull spans the trunk: re-skin it for a bare waist, size shells from it (487).
 - A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
@@ -52,8 +54,8 @@ Read whole at step 1; one fact per line, merge near cap.
 - A short effect child (cloud bolts) can die inside one capture advance: tie its life to its owner (492).
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
 - A ground-length skirt hides a hover lift: robe below the knee rides each shin (493, 499 lich).
-- A missile catch or dodge needs archers 8 m off (494, 498); a charger kills them first: add a rank 9 m on. 2nd ability pair: capture SECOND_ABILITY (499).
+- A missile catch or dodge needs archers 8 m off, a charger a rank 9 m on (494-499); 2nd ability pair: SECOND_ABILITY.
 - In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
-- bakeCurrentTransformIntoVertices bakes the world matrix: bake before parenting (495).
+- bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
 - A torso-rooted board tips back with the idle lean: stand a wall board on body.root, top off the shoulder joint (496 pavise).
