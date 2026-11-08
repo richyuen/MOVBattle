@@ -918,6 +918,33 @@ export function lichStaffPole(scene: Scene, staff: Mesh): Mesh[] {
 }
 
 /**
+ * [S] 497 the Tempest Lich's lightning-bolt staff foot (card: "the symbol of a lightning bolt on the bottom"; evil.tempest_lich.red.png: a flat
+ * team-coloured zig-zag bolt below the shaft's foot, as long as a forearm; audit 489 b.2: "a plain round end").
+ * Spec in staff lengths L (+y up the shaft): a flat bolt in the staff's x-y plane hanging from the rod's foot: .segs straight 4-sided strips
+ * .stripW L wide and .flat of that thick, joined end to end through the points .path (x, y in L, y down from the foot), narrowing to a point at the
+ * tip; team cloth self-lit .3 like the crystal, out of the glow.
+ */
+const LICH_BOLT = { path: [[0, 0], [0.035, -0.07], [-0.03, -0.1], [0.025, -0.19]] as const, stripW: 0.03, flat: 0.45 };
+export function lichStaffFoot(scene: Scene, staff: Mesh, team: Color3): Mesh[] {
+  const C = LICH_BOLT, bb = staff.getBoundingInfo().boundingBox, L = bb.maximum.y - bb.minimum.y, y0 = bb.minimum.y;
+  const bolt = getMaterialFactory().get("cloth", team, { emissive: team.scale(0.3) });
+  const out: Mesh[] = [];
+  for (let i = 0; i < C.path.length - 1; i++) {
+    const a = new Vector3(C.path[i][0] * L, y0 + C.path[i][1] * L, 0), b = new Vector3(C.path[i + 1][0] * L, y0 + C.path[i + 1][1] * L, 0);
+    const run = b.subtract(a), last = i === C.path.length - 2;
+    const w0 = L * C.stripW * (1 - i * 0.18), w1 = last ? 0 : L * C.stripW * (1 - (i + 1) * 0.18);
+    const m = MeshBuilder.CreateCylinder("lichStaffBolt", { height: run.length() + (last ? 0 : w0 * 0.5), diameterTop: w0, diameterBottom: w1 || 0, tessellation: 4 }, scene);
+    m.parent = staff; m.material = bolt; m.scaling.z = C.flat;
+    m.position.copyFrom(a.add(b).scale(0.5));
+    // +y (the wide top) turned onto b->a: rotation.z t takes +y to (-sin t, cos t)
+    m.rotation.z = Math.atan2(run.x, -run.y);
+    out.push(m);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 496 the Shadow Walker's vest (evil.shadow_walker.red.png; audit 489 a.3: "a team-blue jacket with a dark spiked plate on the chest - TABS: a dark
  * sleeveless tattered vest with a jagged hem over team skin").
  * Spec in the trunk's box in the torso joint frame (the larger of the torso box and the yoke hull, LESSONS 487: W across, H high, D deep, its

@@ -29,7 +29,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, monarchTunic, lichStaffCrystal, lichStaffPole, lichTunic, mechanicGoggles, mechanicOveralls, mechanicSleeves, mechanicTank, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHair, walkerHelm, walkerVest } from "./evilDress";
+import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, monarchTunic, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicOveralls, mechanicSleeves, mechanicTank, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHair, walkerHelm, walkerVest } from "./evilDress";
 import { sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
@@ -1071,6 +1071,8 @@ export class UnitFactory {
       if (lichStaff) propMeshes.push(...lichStaffCrystal(this._scene, lichStaff, teamColor));
       // [S] 497 (b.3): a thin near-black banded pole in place of the thick grey rod (evilDress lichStaffPole)
       if (lichStaff) propMeshes.push(...lichStaffPole(this._scene, lichStaff));
+      // [S] 497 (b.2): a flat team lightning bolt hangs from the staff's foot (evilDress lichStaffFoot)
+      if (lichStaff) propMeshes.push(...lichStaffFoot(this._scene, lichStaff, teamColor));
     }
     if (definition.id === "legacy.super_peasant" && !shouldUseVehicleBody) {
       propMeshes.push(...dressSuperPeasant(this._scene, body));
