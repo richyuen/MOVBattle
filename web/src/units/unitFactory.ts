@@ -1,3 +1,4 @@
+import { lichTendrils } from "./evilDress";
 import { archerHair, archerLegs, archerRobe, dragonForm, dragonTrim, samuraiCuirass, samuraiHakama, monkArmPlates, monkeyCrown, monkeyFace, monkeyHair, monkeyRobe, monkeyShorts, monkeyStaff, monkeyTail, monkeyTrunk, monkStaff, monkTrousers, ninjaGi, ninjaHood, ninjaTrousers, samuraiKabuto, tenguMask } from "./dynastyDress";
 import { barrelArmour, barrelBracers, barrelGreaves, captainLegs, flintlockLocks, harpoonerPants, harpoonerShoes, blunderbussHair, bombSash, cannonBandanna, captainBeard, captainCoat, captainParrots, queenHair, queenShirt, queenBoots, queenSkirt, queenFrame, flintlockSocks, openCoat, pirateBeard, pirateBelt,pirateHair, piratePants, pirateShorts, pirateSocks, pirateVest, plankHat, queenBandana, queenSash } from "./pirateDress";
 import { cactusBoots, cactusFlower, cactusRobe, cactusSleeves, deadeyeShirt, dynamiteBandanna, dynamiteBoots, dynamiteShirt, dynamiteSkirtCloth, dynamiteSkirtTrim, gunBelt, gunslingerJacket, gunslingerShoes, gunslingerSideburns, gunslingerSuit, lassoMoustache, lassoShirt, lassoShirtCloth, minerBoots, minerLegs, minerMoustache, minerSleeves, minerOveralls, quickDrawShirt, quickDrawVest, westernBraid, CACTUS_ROBE, DYNAMITE_SKIRT, GUNSLINGER_JACKET } from "./wildWestDress";
@@ -1040,6 +1041,8 @@ export class UnitFactory {
       if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerHelm(this._scene, body));
       if (definition.id === "evil.mad_mechanic") propMeshes.push(...mechanicGoggles(this._scene, body), ...mechanicHair(this._scene, body));
       if (definition.id === "evil.tempest_lich") propMeshes.push(...lichTunic(this._scene, body, teamColor));
+      // [S] 495 (a.2): headless; black tendrils rise from the neck (evilDress lichTendrils hides the head, cap and tines)
+      if (definition.id === "evil.tempest_lich") propMeshes.push(...lichTendrils(this._scene, body));
       // [S] 494 (b.1): the staff's orb gives way to a jagged team crystal blade (evilDress lichStaffCrystal)
       const lichStaff = definition.id === "evil.tempest_lich" ? propMeshes.find((m) => m.name === "staff") : undefined;
       if (lichStaff) propMeshes.push(...lichStaffCrystal(this._scene, lichStaff, teamColor));

@@ -1,4 +1,4 @@
-import { Color3, Mesh, MeshBuilder, Scene, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -573,6 +573,55 @@ export function lichTunic(scene: Scene, body: ArticulatedBody, team: Color3): Me
   }
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = legs;
   for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(false)) if (/_[lr]FootM$/.test(m.name)) m.material = legs;
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
+ * [S] 495 the Tempest Lich's tendrils (evil.tempest_lich.red.png; audit 489 a.2: "a blue head with bead eyes under a dark box crown sprouting brown
+ * twigs - TABS: headless; tall black tendrils rise from the neck in place of a head"). The block head, its bead eyes, the box cap and dome and the
+ * brown tines (HORNED_EVIL tempest_lich) are hidden; the head mesh stays as the anchor.
+ * Spec in head widths W and heights H (the head box, its centre c): a near-black 8-sided socket from the head's foot up .socket H, .sockW W across;
+ * out of its top .count black tendrils, each a chain of 5-sided tapered segments through LICH_TENDRILS points [x W, y H over the socket top, z D],
+ * rooted .root H thick and tapering to a point; the middle one tallest (about 2.4 H, the old tines' height, so the capture's framing holds), two
+ * flanking ones near 2 H leaning out, the rest shorter and curling outward. Lit near-black cloth self-lit .4, roughness 1 (LESSONS near-black).
+ */
+const LICH_SOCKET = { socket: 0.42, sockW: 0.78, root: 0.2 };
+const LICH_TENDRILS: [number, number, number][][] = [
+  [[0, 0, 0], [0.05, 0.7, 0.02], [-0.06, 1.4, 0], [0.04, 2.0, -0.04], [0.02, 2.45, -0.02]],
+  [[-0.18, 0, 0.05], [-0.3, 0.6, 0.06], [-0.32, 1.2, 0.04], [-0.45, 1.75, 0], [-0.5, 2.0, -0.02]],
+  [[0.18, 0, 0.05], [0.28, 0.65, 0.06], [0.36, 1.25, 0], [0.42, 1.7, -0.04], [0.55, 1.95, -0.04]],
+  [[-0.25, 0, -0.15], [-0.42, 0.45, -0.2], [-0.5, 0.9, -0.24], [-0.68, 1.15, -0.26]],
+  [[0.25, 0, -0.15], [0.44, 0.5, -0.2], [0.52, 0.95, -0.22], [0.72, 1.2, -0.25]],
+  [[-0.1, 0, 0.22], [-0.16, 0.4, 0.34], [-0.28, 0.8, 0.42], [-0.36, 0.95, 0.5]],
+  [[0.1, 0, -0.25], [0.14, 0.55, -0.4], [0.08, 1.05, -0.52], [0.15, 1.35, -0.6]],
+];
+export function lichTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = LICH_SOCKET, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  head.isVisible = false;
+  body.leftEye?.setEnabled(false);
+  body.rightEye?.setEnabled(false);
+  for (const m of head.getChildMeshes(false)) if (/^(evilCap|evilCapDome|lichTine|lichTwig)/.test(m.name)) m.isVisible = false;
+  const blackC = new Color3(0.08, 0.06, 0.07), black = getMaterialFactory().get("cloth", blackC, { emissive: blackC.scale(0.4), roughness: 1 });
+  const out: Mesh[] = [];
+  const foot = c.y - H * 0.5, top = foot + H * C.socket;
+  const socket = MeshBuilder.CreateCylinder("lichSocket", { height: H * C.socket, diameterBottom: W * C.sockW * 0.9, diameterTop: W * C.sockW, tessellation: 8 }, scene);
+  socket.parent = head; socket.position.set(c.x, (foot + top) / 2, c.z); socket.material = black; out.push(socket);
+  const up = new Vector3(0, 1, 0);
+  for (const path of LICH_TENDRILS) {
+    const pts = path.map(([x, y, z]) => new Vector3(c.x + x * W, top + y * H - H * 0.05, c.z + z * D));
+    const n = pts.length - 1;
+    for (let k = 0; k < n; k++) {
+      const a = pts[k], e = pts[k + 1], d = e.subtract(a), len = d.length();
+      const r0 = H * C.root * (1 - k / n), r1 = k === n - 1 ? 0 : H * C.root * (1 - (k + 1) / n);
+      const seg = MeshBuilder.CreateCylinder("lichTendril", { height: len * 1.06, diameterBottom: r0, diameterTop: r1, tessellation: 5 }, scene);
+      seg.parent = head; seg.material = black;
+      seg.position.copyFrom(a.add(e).scale(0.5));
+      seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, d.normalize(), new Quaternion());
+      out.push(seg);
+    }
+  }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
