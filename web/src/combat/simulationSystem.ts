@@ -17,6 +17,7 @@ import { buildGroundSnake, type GroundSnake } from "../units/ancientDress";
 import { reaperSpear } from "../units/spookyDress";
 import { lassoRope } from "../units/wildWestDress";
 import { bearerReach } from "../units/legacyDress";
+import { monarchDemonForm } from "../units/evilDress";
 import { aegisField, aegisOrbits, chronoLights, chronoRingLit, paladinGiantHammer } from "./goodMagic";
 import { TEAM_COLORS } from "../data/factionColors";
 
@@ -3797,6 +3798,10 @@ export class SimulationSystem {
     if (t.dealt < D.blows * t.blow) return;
     t.done = true;
     attacker.animator.demonForm = D.lift;
+    // [S] 502 (c.1) ...and visibly changes form: he rights himself into the hover and stays steadfast, his body turns a pink-lit void with pink
+    // eyes and a ring-and-shard aura (evilDress monarchDemonForm)
+    attacker.standFirm();
+    monarchDemonForm(attacker.body.root.getScene(), attacker.body);
     if (this.visualEffects) this.visualEffects.spawnReaperBurst(attacker.position.clone(), D.burst, MONARCH_BURST);
     this._logAbility(attacker, D.kind, now, attacker.position);
   }

@@ -1878,3 +1878,40 @@ export function monarchBeak(scene: Scene, body: ArticulatedBody, bone: Material)
   for (const m of out) glow?.addExcludedMesh(m);
   return out;
 }
+
+/**
+ * [S] 502 the Void Monarch's demon form (card Demon Transformation: "will begin to float" and transform; evil.void_monarch.jpg: pink shards
+ * hang in the air round him; CONFIRM 500 c.1: "shows only the unit tipping flat inside the melee pile, with no change of form"). Called once at
+ * the transformation (simulationSystem DEMON_FORM): every mesh in his team skin or body cloth turns a near-black void (.voidC lit cloth, a faint
+ * pink self-light), the bead eyes glow pink (.eyeC unlit), and an aura hangs on his torso joint: .rings pink unlit rings .ring TW across round
+ * the waist and the knees, tilted .tilt, and .shards flat pink diamond shards .shard TW long floating .orbit TW out round his chest, tipped
+ * outward. All out of the glow except the eyes, rings and shards.
+ */
+const MONARCH_DEMON = {
+  voidC: new Color3(0.05, 0.02, 0.06), eyeC: new Color3(1.6, 0.25, 0.85), auraC: new Color3(1.2, 0.2, 0.6),
+  rings: [[0.0, 3.2], [-1.6, 3.8]] as [number, number][], ringT: 0.07, tilt: 0.25, shards: 7, shard: 0.9, orbit: 1.7, shardY: 0.4,
+};
+export function monarchDemonForm(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = MONARCH_DEMON, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const voidM = mf.get("cloth", C.voidC, { emissive: new Color3(0.12, 0.02, 0.08), roughness: 1 });
+  for (const m of body.allMeshes) if (m.material === body.skinMaterial || m.material === body.bodyMaterial) { m.material = voidM; glow?.addExcludedMesh(m); }
+  const eye = mf.get("unlit", C.eyeC, { emissive: C.eyeC });
+  for (const e of [body.leftEye, body.rightEye]) if (e) { e.material = eye; for (const k of e.getChildMeshes(false)) k.material = eye; }
+  const aura = mf.get("unlit", C.auraC, { emissive: C.auraC });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, sc = tm.scaling;
+  const TW = tb.extendSize.x * 2 * sc.x, TH = tb.extendSize.y * 2 * sc.y, mid = tm.position.y + tb.center.y * sc.y;
+  const out: Mesh[] = [];
+  for (const [y, d] of C.rings) {
+    const r = MeshBuilder.CreateTorus("monarchDemonRing", { diameter: TW * d, thickness: TW * C.ringT, tessellation: 20 }, scene);
+    r.parent = body.torso; r.material = aura; r.position.set(0, mid + TH * y * 0.5 - TH * 0.5, 0); r.rotation.set(C.tilt, 0, C.tilt * 0.5); out.push(r);
+  }
+  for (let i = 0; i < C.shards; i++) {
+    const a = (i / C.shards) * Math.PI * 2, y = mid + TH * (C.shardY + 0.35 * Math.sin(i * 2.3));
+    // a diamond: an octahedron drawn out along y, flattened in z
+    const s = MeshBuilder.CreatePolyhedron("monarchDemonShard", { type: 1, size: TW * 0.12 }, scene);
+    s.scaling.set(1, C.shard / 0.24, 0.3); s.parent = body.torso; s.material = aura; out.push(s);
+    s.position.set(Math.sin(a) * TW * C.orbit, y, Math.cos(a) * TW * C.orbit);
+    s.rotation.set(0, a, 0.9 * (i % 2 ? 1 : -1));
+  }
+  return out;
+}

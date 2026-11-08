@@ -706,6 +706,14 @@ export class RuntimeUnit {
 
   /** Held on his slot in a shield wall this step (see SimulationSystem._holdShieldFrames): crowd pressure does not topple a braced man, a blast still does. */
   wallBraced = false;
+  /** [S] 502 the Void Monarch's demon form floats over the press: no shove or blow pitches him over (set by standFirm). */
+  steadfast = false;
+  /** Steadfast from now on, and a topple under way ends here: he rights himself into the hover. */
+  standFirm(): void {
+    this.steadfast = true;
+    this._toppledUntil = 0; this._downedUntil = 0; this._recoveringUntil = 0;
+    this._balancePressure = 0; this._toppleDirectionTag = "none"; this._toppleForwardness = 0;
+  }
 
   get isMoving(): boolean {
     return this._isMoving;
@@ -1739,7 +1747,7 @@ export class RuntimeUnit {
     }
 
     // A man held in his shield wall is braced by it: the shove moves the wall, it does not fold him
-    if (this.wallBraced) return;
+    if (this.wallBraced || this.steadfast) return;
     if (this._balancePressure >= this._crowdPhysicsProfile.launchThreshold) {
       this._enterTopple(now, Math.max(appliedPressure, this._balancePressure), this._balanceDirection, true);
       return;
@@ -1765,7 +1773,7 @@ export class RuntimeUnit {
 
   private _enterTopple(now: number, pressure: number, direction: Vector3, launched: boolean): void {
     // A vehicle has no balance to lose: a blow shoves it, it never pitches over onto its nose.
-    if (isVehicleUnit(this.definition.id)) return;
+    if (isVehicleUnit(this.definition.id) || this.steadfast) return;
     const toppleDirection = direction.lengthSquared() > 0.0001
       ? direction
       : this._getFacingVector();
