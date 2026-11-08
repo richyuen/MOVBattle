@@ -990,6 +990,64 @@ export function mechanicOveralls(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 497 the Mad Mechanic's Mechanic Tank (card: "a round, cauldronlike fuel source that floats behind a unit. Spikes protrude its surface, while
+ * three trails of soul smoke ooze out its mouth"; evil.mad_mechanic.png: a dark spiked ball as wide as his trunk hanging behind his hip and shoulder,
+ * glowing pale-cyan smoke curling up and out of it; audit 489 a.5).
+ * Spec in trunk-box widths W, heights H, depths D (torso joint frame, +z his front, +x his weapon side):
+ *   - a near-black faceted ball .ball W across, its centre .out W to the weapon side of the middle, .up H up the trunk, .back W behind the back;
+ *   - .spikes 4-sided dark spikes .spike W long standing out of it all round (golden-angle spread, none pointing into his back);
+ *   - a dark mouth ring .mouth W across on its top-outer face, and from it three soul-smoke tubes, unlit pale cyan out of nothing but their emissive,
+ *     each .smoke W long, curling up and out with a twist, tapering to a point.
+ */
+const MECHANIC_TANK = {
+  dark: new Color3(0.07, 0.06, 0.06), smokeC: new Color3(0.75, 1.05, 1.15),
+  ball: 1.05, out: 0.55, up: 0.42, back: 0.62, spikes: 14, spike: 0.28, mouth: 0.42, smoke: 1.5, tube: 0.1,
+};
+export function mechanicTank(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = MECHANIC_TANK, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
+  const smoke = mf.get("unlit", C.smokeC, { emissive: C.smokeC });
+  const { lo, hi } = trunkBox(body);
+  const W = hi.x - lo.x, H = hi.y - lo.y, cx = (lo.x + hi.x) / 2;
+  const R = (W * C.ball) / 2, c = new Vector3(cx + W * C.out, lo.y + H * C.up, lo.z - W * C.back + R * 0.4);
+  const out: Mesh[] = [];
+  const add = (m: Mesh, material: Material): Mesh => { m.parent = body.torso; m.material = material; out.push(m); return m; };
+  const ball = add(MeshBuilder.CreateIcoSphere("mechanicTank", { radius: R, subdivisions: 1 }, scene), dark);
+  ball.position.copyFrom(c);
+  const ga = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < C.spikes; i++) {
+    const y = 1 - (2 * (i + 0.5)) / C.spikes, r = Math.sqrt(1 - y * y), a = i * ga;
+    const dir = new Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+    if (dir.z > 0.55) continue; // not into his back
+    const len = W * C.spike;
+    const s = add(MeshBuilder.CreateCylinder("mechanicTankSpike", { height: len, diameterTop: 0, diameterBottom: W * 0.11, tessellation: 4 }, scene), dark);
+    s.position.copyFrom(c.add(dir.scale(R + len * 0.38)));
+    s.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
+  }
+  // the mouth on the top, tipped out to the weapon side and back
+  const mDir = new Vector3(0.45, 0.85, -0.3).normalize();
+  const mouth = add(MeshBuilder.CreateTorus("mechanicTankMouth", { diameter: W * C.mouth, thickness: W * 0.09, tessellation: 10 }, scene), dark);
+  mouth.position.copyFrom(c.add(mDir.scale(R * 0.92)));
+  mouth.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), mDir, new Quaternion());
+  const L = W * C.smoke;
+  for (let k = 0; k < 3; k++) {
+    const turn = (k / 3) * Math.PI * 2 + 0.4, path: Vector3[] = [];
+    const start = c.add(mDir.scale(R * 0.9));
+    for (let j = 0; j <= 10; j++) {
+      const t = j / 10, sw = turn + t * 2.6;
+      path.push(start.add(new Vector3(
+        mDir.x * L * t * 0.8 + Math.cos(sw) * W * 0.32 * Math.sin(t * Math.PI * 0.9),
+        L * t * 0.85,
+        mDir.z * L * t * 0.8 + Math.sin(sw) * W * 0.32 * Math.sin(t * Math.PI * 0.9))));
+    }
+    const tube = add(MeshBuilder.CreateTube("mechanicTankSmoke", { path, radius: W * C.tube, tessellation: 6, cap: Mesh.CAP_START, radiusFunction: (i: number) => W * C.tube * (1 - (i / 10) * 0.92) }, scene), smoke);
+    tube.isPickable = false;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); if (m.material === dark) glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 496 the Void Monarch's bone harness (evil.void_monarch.blue.png; audit 489 a.3: "a single grey antler branch behind one shoulder - TABS: a bone
  * V harness whose spiked wing-arms reach out over both shoulders"). It replaces the evil preset's bone pauldrons (custom.void_monarch keeps them).
  * Spec in trunk-box widths W, heights H, depths D (torso joint frame; read off the render: a 200 px chest, the V's foot on the belt, its arms
