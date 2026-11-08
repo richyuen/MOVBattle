@@ -4037,7 +4037,8 @@ function buildBeardedAxe(scene: Scene, s: number, steelColor: Color3 = BEARDED_A
  * bearded cut at .scale of the weapon size with a .haft share of its haft, in grey steel, a blood-red smear (.blood, unlit) over the lower half of each
  * blade face. One per fist, seated as a hand weapon (default grip), the root "sentinelAxe" switched off until RuntimeUnit turns it on.
  */
-const SENTINEL_AXE = { scale: 0.7, haft: 0.75, steel: new Color3(0.5, 0.5, 0.54), blood: new Color3(0.75, 0.02, 0.02) };
+// 493b: at .7 the heads read as slivers at the hafts' tips in the release shot; .95 with a .6 haft keeps the axe hand-to-shoulder long
+const SENTINEL_AXE = { scale: 0.95, haft: 0.6,steel: new Color3(0.5, 0.5, 0.54), blood: new Color3(0.75, 0.02, 0.02) };
 function buildSentinelAxe(scene: Scene, scale: number, hand: TransformNode): Mesh[] {
   const A = SENTINEL_AXE, s = scale * 1.25 * A.scale;
   const axe = buildBeardedAxe(scene, s, A.steel, A.haft);
