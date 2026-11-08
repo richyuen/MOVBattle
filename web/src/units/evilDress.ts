@@ -805,7 +805,8 @@ export function walkerVest(scene: Scene, body: ArticulatedBody): Mesh[] {
     for (const v of m.getBoundingInfo().boundingBox.vectorsWorld) { const p = Vector3.TransformCoordinates(v, inv); lo.minimizeInPlace(p); hi.maximizeInPlace(p); }
   }
   const W = hi.x - lo.x, H = hi.y - lo.y, D = hi.z - lo.z, cx = (lo.x + hi.x) / 2, cz = (lo.z + hi.z) / 2;
-  for (const m of [body.torsoMesh, yoke, body.leftUpperArm, body.rightUpperArm]) if (m) m.material = body.skinMaterial;
+  // out of the glow: the self-lit skin's halo washed over the near-black vest (look 496, LESSONS 495)
+  for (const m of [body.torsoMesh, yoke, body.leftUpperArm, body.rightUpperArm]) if (m) { m.material = body.skinMaterial; glow?.addExcludedMesh(m); }
   if (pelvis) pelvis.material = body.leftUpperLeg.material;
   const out: Mesh[] = [];
   const add = (m: Mesh): Mesh => { m.parent = body.torso; m.material = dark; out.push(m); return m; };
