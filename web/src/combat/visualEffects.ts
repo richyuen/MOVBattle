@@ -641,7 +641,8 @@ export class VisualEffects {
    * inside the radius, .bolts in all; the cloud stays .life s, opaque throughout (no see-through fade), then goes.
    */
   spawnStormCloud(center: Vector3, radius: number): void {
-    const S = { high: 5.5, puffs: 11, puff: 1.5, squash: 0.55, spread: 1.15, every: 0.3, bolts: 5, life: 1.7 };
+    // 491b: high 5.5 put the cloud out of the struck shot; 3.2 m sits it just over the struck man's head in frame
+    const S = { high: 3.2, puffs: 11, puff: 1.3, squash: 0.55, spread: 1.15, every: 0.3, bolts: 5, life: 1.7 };
     const root = new TransformNode("stormCloud", this._scene);
     root.position.set(center.x, center.y + S.high, center.z);
     const slate = new Color3(0.16, 0.17, 0.22), dark = new Color3(0.09, 0.09, 0.12);
