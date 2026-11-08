@@ -460,3 +460,42 @@ export function lichTunic(scene: Scene, body: ArticulatedBody, team: Color3): Me
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 494 the Tempest Lich's staff head (evil.tempest_lich.red.png; card "a staff with a crude design on the top"; audit 489 b.1: "a white orb - TABS:
+ * a crude, jagged, team-coloured blade-crystal head"). The orb is hidden, not removed: a "staff" with an "orb" child is still a planted rod (LESSONS 20).
+ * Spec in staff lengths L (the staff mesh's own height, its +y up the shaft): a jagged crystal blade .long L long rising from the shaft's top, built of
+ * .shards 4-sided double points (two pyramids base to base) stacked end to end, each .wide L across (the lowest widest, tapering by .taper per shard),
+ * flattened to .flat in depth, each kinked .kink L to alternate sides and turned .twist rad, the last ending in a point; a collar .collar L across
+ * where it meets the shaft. Lit team cloth, a little self-lit, out of the glow.
+ */
+const LICH_CRYSTAL = { long: 0.3, shards: 4, wide: 0.075, taper: 0.16, flat: 0.45, kink: 0.018, twist: 0.35, collar: 0.05 };
+export function lichStaffCrystal(scene: Scene, staff: Mesh, team: Color3): Mesh[] {
+  const C = LICH_CRYSTAL, bb = staff.getBoundingInfo().boundingBox, L = bb.maximum.y - bb.minimum.y;
+  const orb = staff.getChildMeshes(true).find((m) => m.name === "orb");
+  if (orb) orb.isVisible = false;
+  const mf = getMaterialFactory();
+  const crystal = mf.get("cloth", team, { emissive: team.scale(0.3) });
+  const darkC = new Color3(0.08, 0.06, 0.08), dark = mf.get("cloth", darkC, { emissive: darkC.scale(0.4) });
+  const out: Mesh[] = [];
+  const top = bb.maximum.y - L * 0.02;
+  const collar = MeshBuilder.CreateCylinder("lichStaffCollar", { height: L * 0.03, diameter: L * C.collar, tessellation: 6 }, scene);
+  collar.parent = staff; collar.position.y = top; collar.material = dark; out.push(collar);
+  const seg = (L * C.long) / C.shards;
+  let y = top;
+  for (let i = 0; i < C.shards; i++) {
+    const w = L * C.wide * (1 - C.taper * i), x = (i % 2 ? 1 : -1) * L * C.kink, last = i === C.shards - 1;
+    for (const up of [1, -1]) {
+      const h = up > 0 ? seg * (last ? 0.85 : 0.55) : seg * 0.45;
+      const p = MeshBuilder.CreateCylinder("lichCrystal", { height: h, diameterBottom: w, diameterTop: 0, tessellation: 4 }, scene);
+      p.parent = staff; p.material = crystal;
+      p.rotation.set(up > 0 ? 0 : Math.PI, C.twist * i, (i % 2 ? -1 : 1) * 0.08);
+      p.scaling.z = C.flat;
+      p.position.set(x, y + seg * 0.45 + up * h * 0.5, 0);
+      out.push(p);
+    }
+    y += seg;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
