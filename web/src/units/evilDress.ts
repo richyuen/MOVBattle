@@ -115,6 +115,36 @@ export function walkerHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 497 the Shadow Walker's hair (evil.shadow_walker.red.png: long dark hair hangs from under the helm down both sides of the neck to the
+ * shoulders; audit 489 a.6).
+ * Spec in head widths W, heights H, depths D (the head box, its centre c): from under the helm's rim (.root H under the centre) a near-black
+ * curtain: per side a flat slab .sideW W wide and .sideD D deep, .out W out from the middle, a little behind the centre, hanging .long H; at the
+ * back a slab .backW W across behind the head; and .strands 4-sided strands .strandW W thick tapering to points, spread round the sides and back,
+ * hanging .strandL H below the slabs, so the ends are ragged. Lit near-black cloth (LESSONS 494), out of the glow next to the team skin.
+ */
+const WALKER_HAIR = { root: 0.42, long: 0.62, sideW: 0.16, sideD: 0.7, out: 0.56, backW: 1.06, strands: 9, strandW: 0.13, strandL: 0.34 };
+export function walkerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = WALKER_HAIR, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const hairC = new Color3(0.08, 0.06, 0.07), hair = getMaterialFactory().get("cloth", hairC, { emissive: hairC.scale(0.4), roughness: 1 });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, y: number, z: number): Mesh => { m.parent = head; m.position.set(c.x + x, c.y + y, c.z + z); m.material = hair; out.push(m); return m; };
+  const top = -H * C.root, mid = top - (H * C.long) / 2;
+  for (const s of [-1, 1]) put(MeshBuilder.CreateBox("walkerHair", { width: W * C.sideW, height: H * C.long, depth: D * C.sideD }, scene), s * W * C.out, mid, -D * 0.12);
+  put(MeshBuilder.CreateBox("walkerHair", { width: W * C.backW, height: H * C.long, depth: D * 0.16 }, scene), 0, mid, -D * 0.56);
+  const bottom = top - H * C.long;
+  for (let i = 0; i < C.strands; i++) {
+    // round the sides and back, from one cheek (a = -1.9) to the other (1.9), a = 0 straight back
+    const a = -1.9 + (3.8 * i) / (C.strands - 1), len = H * C.strandL * (0.75 + 0.5 * (((i * 7) % 5) / 4));
+    const x = Math.sin(a) * W * C.out, z = -Math.cos(a) * D * 0.56 - D * 0.04;
+    const s = put(MeshBuilder.CreateCylinder("walkerHairStrand", { height: len, diameterTop: W * C.strandW, diameterBottom: 0, tessellation: 4 }, scene), x, bottom - len / 2 + H * 0.02, z);
+    s.rotation.y = a;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 492 the Exiled Sentinel's shoulder spikes (evil.exiled_sentinel.red.png; audit 489 a.5: "rounded pauldrons - TABS: a row of tall black
  * spikes standing up over both shoulders, behind the shields").
  * Spec in torso widths W and heights TH (the torso box, torso frame): per shoulder a row of .count near-black 4-sided spikes along the shoulder
