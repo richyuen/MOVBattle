@@ -122,6 +122,13 @@ const BLUNDERBUSS_BLAST = { units: new Set(["pirate.blunderbuss"]), fling: 6, li
 // for .after s more. Each bomb bursts .splash m wide for .damage of a blow. Logged "bombspin" at the drop.
 const BOMB_SPIN = { units: new Set(["pirate.pirate_queen"]), within: 3, crowd: 3, cooldown: 8, rate: 16, drop: 0.3, after: 0.7, count: 7, out: 2.6, flight: 0.55, splash: 3.5, damage: 0.67, rise: 9 };
 const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
+/*
+ * [S] 493 the Mad Mechanic's claw fire (audit 489 c.1: "a lobbed black bomb that explodes in a white blast - TABS: a light-blue flame jet sprayed from
+ * the claws at short range (4.5)"; card Weapons "Mad Mechanic Fire": range 4.5, explosion radius 1.25; Characteristics "two claws that spews out
+ * light-blue fire"): in place of the bomb, a flame jet (visualEffects spawnFlameJet) from the weapon claw .ahead m in front of the fist to the man's
+ * chest (.chest m up) for .seconds, a pale-cyan core in a light-blue rim, .near m round at the claw swelling to .far; the blow lands with the jet.
+ */
+const MECHANIC_FIRE = { seconds: 0.8, ahead: 0.25, chest: 0.9, near: 0.14, far: 0.55, white: new Color3(0.8, 1, 1), yellow: new Color3(0.25, 0.7, 1.15) };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
  * [S] planted full-draw loose (354; medieval.archer.jpg: feet set, bow arm out, string at the cheek as the arrow leaves; card shoot delay 1.2 s). A bowman here
@@ -3248,6 +3255,21 @@ export class SimulationSystem {
             if (along.lengthSquared() > 1e-6) target.applyBlastLaunch(along.normalize(), fling.speed, fling.lift);
           }
           if (GUN_TOSS.units.has(attacker.definition.id)) this._tossGuns(attacker, now);
+        } else if (attacker.definition.id === "evil.mad_mechanic" && this.visualEffects) {
+          // [S] 493 light-blue fire sprayed from the claw onto the man (MECHANIC_FIRE), not a lobbed bomb
+          const hand = attacker.body.rightHand;
+          const claw = (): Vector3 | null => {
+            if (attacker.isDead) return null;
+            const chain: TransformNode[] = [];
+            for (let n: Node | null = hand; n; n = n.parent) if (n instanceof TransformNode) chain.unshift(n);
+            for (const n of chain) n.computeWorldMatrix(true);
+            const fwd = target.position.subtract(attacker.position); fwd.y = 0;
+            if (fwd.lengthSquared() > 1e-6) fwd.normalize();
+            return hand.getAbsolutePosition().add(fwd.scale(MECHANIC_FIRE.ahead));
+          };
+          const man = (): Vector3 | null => (target.isDead ? null : target.position.add(new Vector3(0, MECHANIC_FIRE.chest, 0)));
+          this.visualEffects.spawnFlameJet(claw, man, MECHANIC_FIRE.seconds, MECHANIC_FIRE);
+          this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, knockback);
         } else if (THROWS_HELD_PROP.has(attacker.definition.weaponHint ?? "") && attacker.animator.throwReleasesIn() > 0) {
           // The windup has only started: what he holds leaves his hand at the let-go
           this._pendingThrows.push({
