@@ -493,6 +493,9 @@ async function main() {
           if (id === "evil.exiled_sentinel") for (const dz of [-1.5, 1.5]) game.spawnUnit("medieval.archer", 0, { x: -d - 1, z: dz });
           // [evidence 498] the Death Bringer dodges projectiles (card Characteristics, Quick Dodge): as the sentinel, an archer and two beside it, 8 m off
           if (id === "evil.death_bringer") for (const dz of [-1.5, 1.5]) game.spawnUnit("medieval.archer", 0, { x: -d - 1, z: dz });
+          // [evidence 499] ...his charge (499) cuts down those three before they loose (capture 499: no dodge in 9 s): two more archers 9 m behind them
+          // loose at him while he fights the first line
+          if (id === "evil.death_bringer") for (const dz of [-2, 2]) game.spawnUnit("medieval.archer", 0, { x: -d - 9, z: dz });
           // [evidence 498] the Void Monarch transforms after dealing 800 damage (card Abilities, Demon Transformation): his knight and four mates
           // packed inside his sword's 2 m splash, so his blows count several men each
           if (id === "evil.void_monarch") for (const dz of [-1.5, -0.8, 0.8, 1.5]) game.spawnUnit("medieval.knight", 0, { x: -d - 0.6, z: dz });
@@ -673,7 +676,7 @@ async function main() {
         const d = id === "good.sacred_elephant" || id === "evil.exiled_sentinel" || id === "evil.death_bringer" ? 8 : id === "legacy.dark_peasant" ? 2 : def.archetype === "artillery" ? 9 : charger ? 8 : abilities.has("lunge") ? 5.5 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
         // Detection steps 6 ticks (one render) at a time; a logged event's frame comes from its world-time stamp, exact to the tick. Only the
         // projectile-count fallback (a missile with no fire log) is 6 ticks coarse.
-        const det = await page.evaluate(({ id, d, support, want }) => {
+        const det = await page.evaluate(({ id, d, support, want, second }) => {
           if (!window.__unitStart(id, d, support)) return { error: "spawn failed", events: [], rig: 1.8 };
           const rig = window.__rig(window.__ua);
           const game = window.game;
@@ -705,12 +708,15 @@ async function main() {
             before = now;
             // Done once a plain attack, its impact and a special mechanic are all seen, or 3 s after the first event
             if (want && !seen.has(want)) continue;
+            // [evidence 499] a second ability (SECOND_ABILITY) is waited for too: the monarch's first dodge comes after his transformation (probe 499:
+            // the knights' charge has him down when the first arrow lands)
+            if (second && !seen.has(second)) continue;
             if (events.some((e) => plain(e.kind)) && events.some((e) => special(e.kind)) && seen.has("impact")) break;
             if (events.length && tick >= Math.min(...events.map((e) => e.tick)) + 180) break;
           }
           events.sort((a, b) => a.tick - b.tick);
           return { events, rig };
-        }, { id, d, support, want: ABILITY_PREF[id] ?? null });
+        }, { id, d, support, want: ABILITY_PREF[id] ?? null, second: SECOND_ABILITY[id] ?? null });
         // A thrower or caster logs "fire" at the decision and "throw"/"cast" at the let-go: the let-go is the release
         const release = det.events.find((e) => /^(throw|cast)/.test(e.kind)) ?? det.events.find((e) => PLAIN.test(e.kind)) ?? det.events[0] ?? null;
         const ability = (id === "legacy.dark_peasant" ? det.events.find(e => e.kind === "dark_grab") : null) ?? det.events.find((e) => e.kind === ABILITY_PREF[id] && (e !== release || id === "legacy.super_peasant")) ?? det.events.find((e) => !PLAIN.test(e.kind) && e.kind !== "impact" && e !== release) ?? null;
