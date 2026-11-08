@@ -258,6 +258,8 @@ const BARREL_ROLL = { arc: 0.02, ridden: true };
 const MOUTH_LAUNCH = { mouthAhead: 1.1, mouthDrop: 0.3 };
 // [S] 502 the Shouter's shockwave (spec at _tryShout)
 const SHOUT = { reach: 9, half: 0.55, speed: 10, lift: 4.5, large: 0.6, giant: 0.3 };
+// [S] 503 the Fan Bearer's gust (spec at _tryFanBlow)
+const FAN_BLOW = { reach: 10, half: 0.32, push: 10 };
 
 /** Where a HAND_LAUNCH shooter's missile leaves: his bow fist or his mouth, in world space; null when he has neither. */
 function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
@@ -1394,6 +1396,41 @@ export class SimulationSystem {
     const head = target.body.headTop.getAbsolutePosition();
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
     this._logAbility(attacker, "shout", now, target.position);
+    return true;
+  }
+
+  /**
+   * [S] 503 the Fan Bearer's Fan Blow (card Main Hand "Ancient Fan": Polearm - Ranged, projectile Fan Blow, range 10, damage .25, force 40;
+   * Characteristics: "uses their long handheld fan in an attempt to blow away approaching enemies ... The wind they create can cause extremely
+   * light damage ... The wind blows every unit in its area"; secret.fan_bearer.jpg; audit 500 c.1: "no wind leaves the fan"). His attack is the
+   * gust: every living enemy within FAN_BLOW.reach m of him and inside FAN_BLOW.half rad of the line to his target takes the blow's damage and a
+   * shove of .push down that line (applyDamage's living knockback: a stagger and a slide, not a launch); a cone of white wind streaks leaves the
+   * fan leaf down the line (visualEffects spawnFanGust). A plain hit on his target at the same tick (LESSONS: the _release shot's event).
+   */
+  private _tryFanBlow(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, now: number): boolean {
+    const F = FAN_BLOW;
+    if (attacker.definition.id !== "secret.fan_bearer" || attacker.isDead || target.isDead) return false;
+    const line = target.position.subtract(attacker.position);
+    line.y = 0;
+    if (line.lengthSquared() < 1e-6) return false;
+    line.normalize();
+    const cosHalf = Math.cos(F.half);
+    for (const u of this._units) {
+      if (u.isDead || u.team === attacker.team || u.linkedParent) continue;
+      const to = u.position.subtract(attacker.position);
+      to.y = 0;
+      const d = to.length();
+      if (d > F.reach || (d > 0.3 && Vector3.Dot(to.scale(1 / d), line) < cosHalf)) continue;
+      u.applyDamage(damage, line.scale(F.push));
+    }
+    const leaf = attacker.body.root.getDescendants(false, (n) => n.name === "fanLeaf")[0] as TransformNode | undefined;
+    const from = leaf ?? attacker.body.headMesh;
+    worldMatrixChain(from);
+    this.visualEffects?.spawnFanGust(from.getAbsolutePosition().clone(), line, F.reach);
+    const neck = this._neckOf(target);
+    worldMatrixChain(target.body.headTop);
+    const head = target.body.headTop.getAbsolutePosition();
+    this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
     return true;
   }
 
@@ -2991,6 +3028,8 @@ export class SimulationSystem {
     if (this._tryLasso(attacker, target, damage, attackProfile.cooldown * cooldownMultiplier, now)) return;
     // [S] 502 the Shouter does not strike from range: he shouts a harmless shockwave down the line (SHOUT)
     if (this._tryShout(attacker, target, now)) return;
+    // [S] 503 the Fan Bearer blows a gust of wind down the line, not a strike (FAN_BLOW)
+    if (this._tryFanBlow(attacker, target, damage, now)) return;
 
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
     if (abilities.has("push_force")) {

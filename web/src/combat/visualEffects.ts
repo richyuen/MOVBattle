@@ -34,6 +34,8 @@ const CACTUS_NEEDLES = { count: 26, long: 0.42, thick: 0.05, speed: 8, life: 0.5
 // Paint flung off the painter's brush (see spawnPaintSplotches): blobs, size (m), speed along the swing, spread across it and up (m/s), seconds
 // [S] 502 the Shouter's shockwave (spawnShoutWave)
 const SHOUT_WAVE = { rings: 4, stagger: 0.09, life: 0.6, from: 0.5, to: 3.4, streaks: 10, streak: 0.7 };
+// [S] 503 the Fan Bearer's Fan Blow (spawnFanGust)
+const FAN_GUST = { streaks: 16, waves: 3, stagger: 0.12, life: 0.85, from: 0.5, to: 2.8, long: [0.7, 1.2], thick: 0.035, curl: 0.35, swirls: 2 };
 const PAINT_SPLOTCH = { count: 5, size: 0.09, speed: 3.4, spread: 1.6, up: 2.2, last: 1.0 };
 const GEAR_TOSS_MIN = 0.6;
 const GEAR_TOSS_MAX = 1.1;
@@ -979,6 +981,57 @@ export class VisualEffects {
         const go = 1 - (1 - u) * (1 - u), z = 0.3 + reach * go, wide = S.from + (S.to - S.from) * go;
         if (p.kind === "ring") { p.m.position.set(0, 0, z); p.m.scaling.x = wide; p.m.scaling.z = wide; }
         else p.m.position.set(p.x * wide * 0.5, p.y * wide * 0.5, z);
+      }
+      const fade = t / span < 0.66 ? 1 : 1 - (t / span - 0.66) / 0.34;
+      if (fade < 1) { mat.alpha = Math.max(0, fade); mat.transparencyMode = 2; }
+    };
+    pose(0);
+    this._effects.push({
+      root,
+      remaining: span,
+      update: (_dt, remaining) => pose(span - remaining),
+      dispose: () => { for (const p of parts) glow?.removeExcludedMesh(p.m); mat.dispose(); },
+    });
+  }
+
+  /**
+   * [S] 503 the Fan Bearer's Fan Blow (secret.fan_bearer.jpg: a cone of white wind streaks blowing out of the fan leaf; card projectile Fan Blow,
+   * range 10). FAN_GUST: .waves waves .stagger s apart, each .streaks/.waves white unlit slivers .long m long and .thick across, carried `reach` m
+   * along `dir` from the leaf over .life s, the cone widening from .from to .to m across, each sliver weaving .curl m sideways as it goes (the
+   * wind's wobble); .swirls open white arcs (half hoops) tumbling along the middle. Out of the glow, faded over the last third.
+   */
+  spawnFanGust(from: Vector3, dir: Vector3, reach: number): void {
+    const S = FAN_GUST, glow = this._scene.getGlowLayerByName("glow");
+    const d = dir.clone(); d.y = 0; if (d.lengthSquared() < 1e-6) d.set(0, 0, 1); d.normalize();
+    const root = new TransformNode("fanGust", this._scene);
+    root.position.copyFrom(from);
+    root.rotation.y = Math.atan2(d.x, d.z);
+    const mat = getMaterialFactory().createUnique("cloth", new Color3(0.97, 0.99, 1));
+    mat.emissiveColor = new Color3(1, 1, 1); mat.disableLighting = true;
+    const parts: { m: Mesh; born: number; x: number; y: number; ph: number; spin: number }[] = [];
+    for (let i = 0; i < S.streaks; i++) {
+      const a = i * 2.39996, r = 0.25 + 0.75 * ((i * 7) % 5) / 4, len = S.long[0] + (S.long[1] - S.long[0]) * (((i * 3) % 4) / 3);
+      const s = MeshBuilder.CreateBox("fanGustStreak", { width: S.thick, height: S.thick, depth: len }, this._scene);
+      s.parent = root; s.material = mat; glow?.addExcludedMesh(s);
+      parts.push({ m: s, born: (i % S.waves) * S.stagger, x: Math.cos(a) * r, y: Math.sin(a) * r * 0.55, ph: i * 1.3, spin: 0 });
+    }
+    for (let i = 0; i < S.swirls; i++) {
+      const arc = MeshBuilder.CreateTorus("fanGustSwirl", { diameter: 0.7, thickness: 0.04, tessellation: 16 }, this._scene);
+      // an open half hoop: drop the lower half's faces by squashing it into the upper (a C-curl seen from the side)
+      arc.scaling.set(1, 1, 0.5); arc.rotation.z = Math.PI / 2;
+      arc.parent = root; arc.material = mat; glow?.addExcludedMesh(arc);
+      parts.push({ m: arc, born: S.stagger * (i + 0.5), x: (i ? 0.3 : -0.3), y: 0.1, ph: i * 2, spin: 6 });
+    }
+    const span = S.life + S.stagger * (S.waves - 1);
+    const pose = (t: number): void => {
+      for (const p of parts) {
+        const u = Math.max(0, Math.min(1, (t - p.born) / S.life));
+        p.m.setEnabled(t >= p.born && u < 1);
+        const go = 1 - (1 - u) * (1 - u), z = 0.4 + reach * go, wide = S.from + (S.to - S.from) * go;
+        const weave = S.curl * Math.sin(p.ph + u * 7);
+        p.m.position.set(p.x * wide * 0.5 + weave, p.y * wide * 0.5, z);
+        p.m.rotation.y = weave * 0.6;
+        if (p.spin) p.m.rotation.x = p.spin * u;
       }
       const fade = t / span < 0.66 ? 1 : 1 - (t / span - 0.66) / 0.34;
       if (fade < 1) { mat.alpha = Math.max(0, fade); mat.transparencyMode = 2; }
