@@ -171,6 +171,51 @@ export function cultistHalo(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 493 the Void Cultist's beard (evil.void_cultist.blue.png, .red.png; card "beard"; audit 489 a.2: "a small grey mask over the chin - TABS: a big
+ * dark-grey pointed beard and drooping moustache from the nose to mid-chest"). It replaces the 6-sided chin wedge and its five thin strands.
+ * Spec in head widths W, heights H, depths D (the head box, its centre c):
+ *   - the beard: a 6-sided cone turned point-down, .wide W across at its top, which sits .top H under the head's centre (below the bead eyes), and
+ *     .long H long down to a blunt point on the chest; flattened to .flat of its width in depth, its back .back D in front of the centre so it
+ *     hangs over the chin and the chest, tipped .tip rad forward at the point;
+ *   - sideburns: per side a slab .sideW W wide and .sideH H tall from the temple down into the beard, .side W out, at the cheek;
+ *   - the moustache: per side a 4-sided horn .mLong H long and .mW W thick at the root under the nose (.mY H under the centre, .mX W out), drooping
+ *     down and out .mDroop rad, in a lighter grey; two lighter streaks .streak H long down the beard's front.
+ * Flat unlit dark grey (.dark) and light grey (.light), out of the glow.
+ */
+const CULTIST_BEARD = {
+  wide: 1.12, top: 0.08, long: 1.55, flat: 0.42, back: -0.2, tip: 0.2, sideW: 0.14, sideH: 0.55, side: 0.5,
+  mLong: 0.5, mW: 0.13, mY: 0.1, mX: 0.07, mDroop: 0.5, streak: 0.8,
+  dark: new Color3(0.17, 0.15, 0.14), light: new Color3(0.42, 0.39, 0.35),
+};
+export function cultistBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CULTIST_BEARD, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const mf = getMaterialFactory();
+  const dark = mf.get("unlit", C.dark, { emissive: C.dark }), light = mf.get("unlit", C.light, { emissive: C.light });
+  const out: Mesh[] = [];
+  const front = c.z + D * 0.5;
+  const root = new TransformNode("cultistBeard", scene);
+  root.parent = head; root.position.set(c.x, c.y - H * C.top, front - D * C.back); root.rotation.x = -C.tip; // -x turns the hanging point forward
+  const long = H * C.long;
+  const beard = MeshBuilder.CreateCylinder("cultistBeardMass", { height: long, diameterTop: W * C.wide, diameterBottom: W * 0.12, tessellation: 6 }, scene);
+  beard.parent = root; beard.position.set(0, -long / 2, W * C.wide * C.flat * 0.5); beard.scaling.z = C.flat; beard.rotation.y = Math.PI / 6; beard.material = dark; out.push(beard);
+  for (const x of [-0.16, 0.16]) {
+    const s = MeshBuilder.CreateBox("cultistBeardStreak", { width: W * 0.07, height: H * C.streak, depth: W * 0.05 }, scene);
+    s.parent = root; s.position.set(x * W, -H * (0.15 + C.streak / 2), W * C.wide * C.flat + W * 0.01); s.rotation.z = x * 0.6; s.material = light; out.push(s);
+  }
+  for (const side of [-1, 1]) {
+    const burn = MeshBuilder.CreateBox("cultistSideburn", { width: W * C.sideW, height: H * C.sideH, depth: D * 0.5 }, scene);
+    burn.parent = head; burn.position.set(c.x + side * W * C.side, c.y - H * 0.12, c.z + D * 0.12); burn.material = dark; out.push(burn);
+    const m = MeshBuilder.CreateCylinder("cultistMoustache", { height: H * C.mLong, diameterTop: W * C.mW, diameterBottom: 0, tessellation: 4 }, scene);
+    m.parent = head; m.rotation.z = side * C.mDroop;
+    m.position.set(c.x + side * (W * C.mX + Math.sin(C.mDroop) * H * C.mLong * 0.5), c.y - H * C.mY - Math.cos(C.mDroop) * H * C.mLong * 0.5, front + D * 0.06);
+    m.material = light; out.push(m);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 491 the Void Cultist's buckler (evil.void_cultist.jpg, .red.png; audit 489 b.2: "a small brown disc - TABS: a large dark round buckler,
  * shoulder-wide, with a raised rim ring and spikes around the rim and face"). It replaces the 1.5-chest disc that was cut in the hand's own
  * (shrunken) frame and read head-sized.

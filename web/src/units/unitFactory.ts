@@ -25,7 +25,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBuckler, cultistHalo, sentinelConeHat, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
+import { cultistBeard, cultistBuckler, cultistHalo, sentinelConeHat, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -2594,20 +2594,8 @@ function dressVoidCultist(scene: Scene, body: ArticulatedBody, teamColor: Color3
     cuff.position.y = headSize * 0.1;
     keep(cuff, hand, band);
   }
-  // The beard: a broad wedge under the face and strands hanging from it onto the chest
-  const hair = mf.get("cloth", VOID_BEARD_COLOR, { emissiveIntensity: VOID_GLOW });
-  const beard = MeshBuilder.CreateCylinder("voidBeard", { height: headSize * VOID_BEARD * 0.5, diameterTop: headSize * 0.85, diameterBottom: headSize * 0.5, tessellation: 6 }, scene);
-  beard.scaling.z = 0.55;
-  beard.position.set(0, -headSize * 0.42, headSize * 0.3);
-  keep(beard, body.headMesh, hair);
-  for (let i = 0; i < VOID_STRANDS; i++) {
-    const t = i / (VOID_STRANDS - 1) - 0.5;
-    const len = headSize * VOID_BEARD * (0.75 + 0.25 * (1 - Math.abs(t) * 2));
-    const strand = MeshBuilder.CreateCylinder("voidBeardStrand", { height: len, diameterTop: headSize * 0.13, diameterBottom: headSize * 0.03, tessellation: 4 }, scene);
-    strand.position.set(t * headSize * 0.6, -headSize * 0.55 - len * 0.5, headSize * (0.36 + 0.04 * Math.cos(t * 3)));
-    strand.rotation.set(-0.18, 0, t * 0.5);
-    keep(strand, body.headMesh, hair);
-  }
+  // [S] 493 (a.2) the beard is evilDress cultistBeard (CULTIST_BEARD): a big dark pointed beard to mid-chest with a drooping moustache
+  added.push(...cultistBeard(scene, body));
   // [S] 492 (a.1) the spoked wheel is evilDress cultistHalo (CULTIST_HALO): a dark ring with inward black spikes
   added.push(...cultistHalo(scene, body));
   // [S] 491 (b.2) the off-hand shield is evilDress cultistBuckler (CULTIST_BUCKLER), sized in the world, not the hand's frame
