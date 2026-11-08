@@ -368,17 +368,17 @@ export function sentinelLeggings(scene: Scene, body: ArticulatedBody, team: Colo
 /**
  * [S] 494 the Void Cultist's dark priest robe (evil.void_cultist.red.png, .blue.png; card "dark priest clothing"; audit 489 a.3: "a grey-lilac robe
  * - TABS: a near-black priest robe with a team-coloured stripe down the front"). The lit maroon robe read grey-lilac under the evil_void cloth.
- * Spec: every mesh in the body's own cloth or in the robe cloth (trunk, yoke, sleeves, legs, the hip skirt) goes flat unlit near-black .dark, out of
- * the glow (LESSONS 8); one team stripe .stripe torso widths wide runs down the front, .off torso widths to his right of the middle: on the trunk
+ * Spec: every mesh in the body's own cloth or in the robe cloth (trunk, yoke, sleeves, legs, the hip skirt) goes near-black cloth .dark, self-lit .4
+ * like the halo (an unlit near-black read plum in the haze, look 494), out of the glow; one team stripe .stripe torso widths wide runs down the front, .off torso widths to his right of the middle: on the trunk
  * from the neck to the waist, standing .proud torso widths off the front of whichever is further out, the torso or the yoke; on the skirt from its
- * waist to its hem along its front face (tilted with the flare), in unlit team cloth.
+ * waist to its hem along its front face (tilted with the flare), in lit team cloth self-lit .18 (the sentinel's spikes).
  */
 // waist: hangSkirt SKIRT_WAIST over VOID_HEM (1.15 / 1.6), the skirt's waist radius over its hem radius
-const CULTIST_ROBE = { dark: new Color3(0.05, 0.035, 0.04), stripe: 0.13, off: -0.14, proud: 0.03, thick: 0.03, waist: 1.15 / 1.6 };
+const CULTIST_ROBE = { dark: new Color3(0.08, 0.06, 0.07), stripe: 0.13, off: -0.14, proud: 0.03, thick: 0.03, waist: 1.15 / 1.6 };
 export function cultistDarkRobe(scene: Scene, body: ArticulatedBody, team: Color3, robeCloth: unknown, skirt: Mesh | null): Mesh[] {
   const C = CULTIST_ROBE, mf = getMaterialFactory();
-  const dark = mf.get("unlit", C.dark, { emissive: C.dark });
-  const teamM = mf.get("unlit", team, { emissive: team.scale(0.85) });
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4) });
+  const teamM = mf.get("cloth", team, { emissive: team.scale(0.18) });
   const glow = scene.getGlowLayerByName("glow");
   for (const m of body.allMeshes) if (m.material === body.bodyMaterial || m.material === robeCloth) { m.material = dark; glow?.addExcludedMesh(m); }
   if (skirt) { skirt.material = dark; glow?.addExcludedMesh(skirt); }
