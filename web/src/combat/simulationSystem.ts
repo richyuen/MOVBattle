@@ -135,6 +135,12 @@ const MECHANIC_FIRE = { seconds: 0.8, ahead: 0.25, chest: 0.9, near: 0.08, far: 
  * chest (.chest m up), tipped .tilt rad, alternate blows tipped the other way, fading over .seconds.
  */
 const DEATH_SLASH = { white: new Color3(1.2, 0.25, 0.7), radius: 1.0, band: 0.2, tilt: 1.25, seconds: 0.45, chest: 1.0 };
+/*
+ * [S] 493 the Void Monarch's sword burst (audit 489 c.1: "he summons two Shadow Walkers - TABS: a two-sword melee strike with a radius-2 burst"; card
+ * Weapons "Void Monarch Sword ... explosion radius 2"; evil.void_monarch.jpg: pink-magenta void light): the Reaper's shockwave (visualEffects
+ * spawnReaperBurst) in a hot-pink ring over a dark magenta dome .dome m across, run out to .radius m at the man.
+ */
+const MONARCH_BURST = { radius: 2, dome: 4, ring: new Color3(1.15, 0.2, 0.8), dark: new Color3(0.32, 0.03, 0.22) };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
  * [S] planted full-draw loose (354; medieval.archer.jpg: feet set, bow arm out, string at the cheek as the arrow leaves; card shoot delay 1.2 s). A bowman here
@@ -3706,6 +3712,10 @@ export class SimulationSystem {
     // [S] 364 the mammoth's stomp lands as a trample: a dust ring runs out over the ground and earth is thrown up (visualEffects TRAMPLE_RING)
     if (this.visualEffects && attacker.definition.id === "tribal.mammoth") {
       this.visualEffects.spawnTrampleRing(new Vector3(target.position.x, attacker.position.y, target.position.z), Math.max(2, splashRadius));
+    }
+    // [S] 493 every Void Monarch sword blow bursts in pink where it lands, out to its splash (MONARCH_BURST)
+    if (this.visualEffects && attacker.definition.id === "evil.void_monarch") {
+      this.visualEffects.spawnReaperBurst(new Vector3(target.position.x, target.position.y, target.position.z), MONARCH_BURST.radius, MONARCH_BURST);
     }
     // [S] 493 each warglaive cut leaves a pink trail across the man (DEATH_SLASH), turned over on alternate blows as the other blade cuts
     if (this.visualEffects && attacker.definition.id === "evil.death_bringer") {

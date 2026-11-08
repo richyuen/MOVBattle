@@ -1822,8 +1822,9 @@ export class VisualEffects {
    * flung up and out of it. REAPER_BURST: the ring from .ring0 m across out to the splash reach (radius), the dome from .dome0 to .dome m across, .shards shards .shard m
    * long thrown out .out m/s and up .up, all over .life s, faded over its last .fade.
    */
-  spawnReaperBurst(position: Vector3, reach = 4): void {
-    const B = REAPER_BURST;
+  spawnReaperBurst(position: Vector3, reach = 4, look?: { ring: Color3; dark: Color3; dome: number }): void {
+    // [S] 493 `look` recolours and resizes it (the Void Monarch's pink sword burst, simulationSystem MONARCH_BURST)
+    const B = look ? { ...REAPER_BURST, ...look } : REAPER_BURST;
     const root = new TransformNode("reaperBurst", this._scene);
     root.position = position.clone();
     const factory = getMaterialFactory();
