@@ -377,7 +377,8 @@ export function sentinelLeggings(scene: Scene, body: ArticulatedBody, team: Colo
 const CULTIST_ROBE = { dark: new Color3(0.08, 0.06, 0.07), stripe: 0.13, off: -0.14, proud: 0.03, thick: 0.03, waist: 1.15 / 1.6 };
 export function cultistDarkRobe(scene: Scene, body: ArticulatedBody, team: Color3, robeCloth: unknown, skirt: Mesh | null): Mesh[] {
   const C = CULTIST_ROBE, mf = getMaterialFactory();
-  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4) });
+  // fully rough: a smoother near-black cloth picked up the sky as a plum sheen across the robe (probe 494)
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
   const teamM = mf.get("cloth", team, { emissive: team.scale(0.18) });
   const glow = scene.getGlowLayerByName("glow");
   for (const m of body.allMeshes) if (m.material === body.bodyMaterial || m.material === robeCloth) { m.material = dark; glow?.addExcludedMesh(m); }
