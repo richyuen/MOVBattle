@@ -358,7 +358,9 @@ const evil = makeFaction(FactionId.Evil, "evil", [
   ["shadow_walker", "Shadow Walker", 200, "light_melee", { abilities: ["teleport"], weaponHint: "dagger", healthMultiplier: 0.27, damageMultiplier: 0.17, cooldownMultiplier: 1.5 }],
   ["exiled_sentinel", "Exiled Sentinel", 300, "shield_melee", { shieldHint: "tower", weaponHint: "sword", healthMultiplier: 1.27, damageMultiplier: 0.26, cooldownMultiplier: 0.77 }],
   ["mad_mechanic", "Mad Mechanic", 500, "thrower", { weaponHint: "hammer", projectileHint: "bomb", healthMultiplier: 0.7, damageMultiplier: 0.01, cooldownMultiplier: 0.45 }],
-  ["void_cultist", "Void Cultist", 800, "special_magic", { abilities: ["summon"], weaponHint: "staff", summonUnitIds: ["evil.exiled_sentinel"], summonCount: 1, damageMultiplier: 0.53, cooldownMultiplier: 0.56 }],
+  // [S] 493 (c.1, card Weapons "Void Cultist Mace": Bludgeon - Melee, range 2, cooldown 2 s): he walks in and clubs with the spiked mace
+  // (heavy_melee, mace), not a caster firing spears from 7.8 m; the summon (c.2) stays for now
+  ["void_cultist", "Void Cultist", 800, "heavy_melee", { abilities: ["summon"], weaponHint: "mace", summonUnitIds: ["evil.exiled_sentinel"], summonCount: 1, damageMultiplier: 0.53, cooldownMultiplier: 0.56 }],
   ["tempest_lich", "Tempest Lich", 1000, "special_magic", { abilities: ["lightning_strike", "push_force"], weaponHint: "staff", healthMultiplier: 0.08, damageMultiplier: 2.72, cooldownMultiplier: 3.33 }],
   ["death_bringer", "Death Bringer", 2000, "boss_melee", { weaponHint: "greatsword", abilities: ["fear"], healthMultiplier: 0.39, damageMultiplier: 0.37, cooldownMultiplier: 0.22 }],
   // [S] 492 (c.1, card Weapons "Void Monarch Sword": Sword - Melee, range 2.5, explosion radius 2): a melee swordsman whose blows burst in a radius-2
