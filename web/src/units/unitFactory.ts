@@ -273,7 +273,10 @@ type HornedEvilStyle = {
 };
 const HORNED_EVIL: Record<string, HornedEvilStyle> = {
   "evil.shadow_walker": {
-    horn: [[0.42, 0.3, 0], [0.95, 0.38, 0], [1.42, 0.5, 0], [1.62, 0.95, 0], [1.6, 1.55, 0.05], [1.5, 2.0, 0.1]],
+    // [S] 491 (a.1, evil.shadow_walker.red.png): the horns run out near level from the helmet's upper sides to ~2 heads off the
+    // middle (span ~4.4 heads across, render: 480 px of horn over an 85 px head), bend up only in the last .4 heads and rise ~1.25 heads
+    // from there; the 489 path rose from 1.4 heads out to 2 heads up, which read as a tall U over the cap.
+    horn: [[0.42, 0.24, 0], [1.05, 0.27, 0], [1.65, 0.31, 0], [2.0, 0.4, 0], [2.14, 0.68, 0], [2.2, 1.08, 0.02], [2.2, 1.5, 0.04]],
     hornColor: new Color3(0.9, 0.8, 0.55), cloth: new Color3(0.1, 0.11, 0.24), legs: new Color3(0.26, 0.17, 0.12),
     helm: new Color3(0.24, 0.16, 0.13), teeth: 5, skull: false, spikes: true, wraps: false, skirt: 0, thick: 1,
   },
