@@ -4,6 +4,14 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+490 | c223381e | good.divine_arbiter.a | approved ([R] blockers 1-3; struck 1, 2; CONFIRM early, not applied)
+490 | 4f41d5e6 | good.chronomancer.a | approved (blocker 1; a PASS; CONFIRM D)
+490 | 38f71664 | good.sacred_elephant.a | approved (blocker 6)
+490 | 52fdcb61 | good.sacred_elephant.a | approved (blocker 3)
+490 | df94c995 | evil.shadow_walker.b | approved (no strike)
+490 | cc597223 | evil.exiled_sentinel.b | approved (blocker 1; b PASS)
+490 | a9a68a3e | evil.void_cultist.b | approved (blocker 1)
+
 489 | 5df4161c | good.celestial_aegis.a | approved ([R] blocker 1; a PASS; CONFIRM D)
 489 | f0e9a4e5 | good.chronomancer.a | approved (blocker 6; CONFIRM failed a)
 489 | 504716a7,b6f1d5ba | good.sacred_elephant.a | approved (blocker 2)
@@ -42,15 +50,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 486 | 2176add5 | good.celestial_aegis.a | approved (blocker 4)
 486 | c2caca9d | good.sacred_elephant.a | approved (blocker 4)
 
-485 | cf4041df | good.devout_gauntlet.a | approved (blocker 1)
-485 | 11dabf78 | good.devout_gauntlet.a | approved (blockers 2-3; a PASS)
-485 | 594e02aa | good.radiant_glaive.c | approved (blocker 1; c PASS)
-485 | 4da0b53d,d1c4d6d0 | good.righteous_paladin.c | approved (blocker 1; c PASS)
-485 | 784a2fdd | good.radiant_glaive.a | approved (blocker 2)
-485 | c9266f24 | good.sacred_elephant.c | approved (blocker 1; c PASS)
-485 | e9a4084a | good.chronomancer.c | approved (blocker 1)
-485 | 0412f565 | good.chronomancer.a | approved (blocker 1)
-485 | a18bb6c5 | good.sacred_elephant.a | approved (blocker 1)
 
 
 ## Spent (never retry as [P])
@@ -58,10 +57,13 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+goodDress:ELEPHANT_BLANKET | drape hull rx.85 ry.68 rz1.16 +.05,hang.42,z-1->.15,.035 thick;gold hem.1,teeth.2x.17 every.25,end bands.07;4 tassels.26 | 490 | approved | half-shell arc.5 patch (VB)
+VB:ELEPHANT_FOOT | hide frustum .6->.78 x.18 at -.35 knee,rim .8 x.04 hide*1.12 | 490 | approved | dark .08 sole disc
+PB:CULTIST_MACE | shaft.66H x.022H dark,grip.4,team wrap.16H+band,ball.12H ico+12 spikes.075H,butt.07H;staff+orb rod | 490 | approved | plain staff+orb
 UV:CHRONO build/stance | 1.3,.9bulk,.9W,legs1.4,.76/.7;upright hook on chronoCrownBand,lean.04 | 489 | approved | .96bulk;seeded crouch
 VB:ELEPHANT_EAR | jittered flap .74H x.6L x.1,out.68 z.1 flare.5 droop.12;fold roll on top tipped.6 | 489 | approved | 7-sided disc .95 flare.55
-PB:BONE_DAGGER | .42stand curved 5-seg blade,sweep.11,4 spine teeth,tan(.62,.55,.36) lit;offhand none | 489 | approved | dark shuriken pair
-PB:PAVISE | coffin .42H x.17W,dark team .42,bone rim,2 studded bands;torso mount -.36SW,top .92neck | 489 | approved | tower slab on hand
+PB:BONE_DAGGER | under boneDaggerHold rot.z PI (point-down);.42stand curved 5-seg,sweep.11,4 teeth .06;unlit tan(.95,.68,.3) | 490 | approved | lit tan(.62,.55,.36) point-up (489);dark shuriken pair
+PB:PAVISE | coffin .42H x.17W,dark team .42,bone rim,2 studded bands;torso mount -.36SW,top .92neck;mirrored paviseShieldRight +.36SW,sword isVisible false | 490 | approved | one board (489);tower slab on hand
 evilDress:SENTINEL_CONE | black 8-sided cone 1.06W->.2W,1.75H,brim.36H,lean.12;3 rows x6 team spikes | 489 | approved | great_helm
 evil stats cost/hm/dm/cm (7 units, 3666e25c) | d PASS 7/7 | 489 | stats | initial manifest
 UV:RADIANT build/stance | 1.24,.92bulk,.92W,legs1.38,.76/.7;upright | 487 | approved | 1.16bulk;seeded crouch
@@ -74,12 +76,12 @@ goodDress:CHRONO_ARMBANDS | upper bands1.4r .18-.3/.5-.62,fore1.35r .1-.22;white
 PA:PALADIN stance | square,PALADIN_SPLAY.15,sink 1-cos | 488 | approved | upright stride.14
 PA:ARBITER stance | upright hook on arbiterMitre,crouch0,lean.04 | 488 | approved | seeded crouch
 UV:AEGIS build/stance | 1.12,.88bulk,.9W,legs1.4,.76/.7;upright | 487 | approved | bulk1.2;seeded crouch
-goodDress:ARBITER_ROBE | team torso/yoke,sleeve1.75r,elbow puff to 5r,fore1.5r,glove cuff3.4->4.4r,unlit(1,.62,.12) | 487 | approved | dark vest
-goodDress:ARBITER_SKIRT | split panels back1.15->1.9P,front .12-.6->.35-1P,sides,gold.07,len to .85T;grey(.62,.64,.68) legs,skin feet | 487 | approved | dark skirt,trousers,boots
+goodDress:ARBITER_ROBE | team torso/yoke,upper balloon 5.2r x4.6r on upperArm.parent (not seen 490),fore1.7r,glove cuff3.4->4.4r | 490 | approved | sleeve1.75r+elbow puffs 5r (487)
+goodDress:ARBITER_SKIRT | hem knee joint+.25PD;back1.15->2.1P tilt.28,front .1-.55/.62-1.2P tilt-.24,sides lean.32,gold.07;grey legs,skin feet | 490 | approved | len .85T thigh mesh (mid-shin,487)
 goodDress:PALADIN_CUIRASS | grey slabs .58D,1.16W,.04D slot,brown straps,gold hex+chevrons;team sleeves .55 | 486 | approved | white body plate,shoulder pads
 goodDress:PALADIN_LEG_ARMOUR | shorts seat1.08->1.3P,bloused3.2/4.1/3r to .48T;thigh plate .5-.8T 1.7w;cop 6-sided1.8w .9d gold V;shin1.75w | 487 | approved | 2.15/2.2/2.25w,flat cops,limbShell puff (486)
 UV:PALADIN build/stance | 1.3,.92bulk,.92W,legs1.38,.76/.7;upright,no pads/belt | 486 | approved | 1.34,1.36bulk;seeded crouch
-goodDress:CHRONO_RING | ring2.5W,tube.07W,spikes.18W,top.55W,3/9 spikes+winglets | 486 | approved | small attack-only torso hoop
+goodDress:CHRONO_RING | ring3.2W,tube.17W,8 spikes.3W,top.85W,3/9 spikes.5W+winglets.6W | 490 | approved | 2.5W tube.07W spikes.18 (486);small attack-only torso hoop
 SS/goodMagic:CHRONO_TRANSFORM | settle.2,drop1.45H,tilt1.15,grow.25,spin1.6;10 cubes r1.4 orbit.9 | 486 | approved | none
 goodDress:RADIANT_VEST | team vest,white V .5W x .55H,gold trim+hem;sleeves 1.7/1.9,left .45 | 486 | approved | dark vest,pads
 goodDress:AEGIS_HOODIE | bare torso+yoke (arm skin) narrowed to .76SW x .8SD;unlit team*.4 shell from .1H,>=yoke W;lip1.05;hood.62W | 488 | approved | full-width bare trunk (487),skin box,lit cloth shell (486)
@@ -105,7 +107,7 @@ SS/PS:AEGIS_ORBS | 6 orbit lights,hand-origin team orb,range10,cooldown2,speed18
 goodDress:ARBITER_MITRE | half-ellipsoid dome1.12W x2H rim.36H,gold band1.16W .16H,gold point.6W .55H tilt.28,team diamond in gold frame | 488 | approved | team8-sided cylinder1.05H+shield panel (484);laurel/hair/halo
 SS/PS/FX:ARBITER_LIGHTS | 5 book-origin lights,.1delay,18speed,radius2 ray friendly fire | 484 | approved | instant lightning/dome
 goodDress:AEGIS_BUTTERFLY | white crown/temples/4-knot braid;four team lobes,upper1.32H/lower.4H | 483 | approved | steel cap
-goodDress:ARBITER_COLLAR | 10 closed rising gold petals,rim1.2-1.3W,opening.35W,unlit(.85,.55,.12) | 483 | approved | bare neck outline
+goodDress:ARBITER_COLLAR | one solid Medici shell:throat.45W,rim R .8+.8exp((|a|-95)/40)W,H ramp 30-95deg,.07W thick,unlit(.85,.55,.12) | 490 | approved | 10 rising petals 1.2-1.3W (483);bare neck
 PA:DEVOUT_PUNCH | alternating level jabs,charging lean .28;boxer overlay | 483 | approved | overhead duelist swing
 UV:DEVOUT build/stance | 1.08scale,.8bulk,.9torsoW,1.4legs,.88/.8;upright,no vest/pads | 483 | approved | 1.02,1.12,1.08arms;duelist
 goodDress:DEVOUT_TROUSERS | six-sided articulated flares1.08/1.55/2.2,beige unlit(.8,.72,.56),team hem5.5% | 483 | approved | dark tight legs,grey boots
