@@ -128,7 +128,7 @@ const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9
  * light-blue fire"): in place of the bomb, a flame jet (visualEffects spawnFlameJet) from the weapon claw .ahead m in front of the fist to the man's
  * chest (.chest m up) for .seconds, a pale-cyan core in a light-blue rim, .near m round at the claw swelling to .far; the blow lands with the jet.
  */
-const MECHANIC_FIRE = { seconds: 0.8, ahead: 0.25, chest: 0.9, near: 0.14, far: 0.55, white: new Color3(0.8, 1, 1), yellow: new Color3(0.25, 0.7, 1.15) };
+const MECHANIC_FIRE = { seconds: 0.8, ahead: 0.25, chest: 0.9, near: 0.08, far: 0.3, farPer: 0.1,white: new Color3(0.8, 1, 1), yellow: new Color3(0.25, 0.7, 1.15) };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
  * [S] planted full-draw loose (354; medieval.archer.jpg: feet set, bow arm out, string at the cheek as the arrow leaves; card shoot delay 1.2 s). A bowman here

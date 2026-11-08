@@ -418,7 +418,7 @@ export class VisualEffects {
 
   /** The Dragon's flame jet (FLAME_JET) from `from()` (the mouth) to `to()` (the man), both read every frame, for `seconds`; `look` swaps its
    * core and rim colours and its near/far radii (the Mad Mechanic's light-blue claw fire, MECHANIC_FIRE). */
-  spawnFlameJet(from: () => Vector3 | null, to: () => Vector3 | null, seconds: number, look?: { white: Color3; yellow: Color3; near: number; far: number }): void {
+  spawnFlameJet(from: () => Vector3 | null, to: () => Vector3 | null, seconds: number, look?: { white: Color3; yellow: Color3; near: number; far: number; farPer: number }): void {
     const F = look ? { ...FLAME_JET, ...look } : FLAME_JET;
     const root = new TransformNode("flameJet", this._scene);
     // the root's +y runs from the mouth (y -len/2) to the man (y +len/2)
