@@ -748,11 +748,21 @@ export function elephantRiderDress(scene: Scene, rider: ArticulatedBody, team: C
   const tm = rider.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
   const TW = tb.extendSize.x * 2 * s.x, TH = tb.extendSize.y * 2 * s.y, TD = tb.extendSize.z * 2 * s.z;
   const cy = tm.position.y + tb.center.y * s.y, cz = tm.position.z + tb.center.z * s.z;
+  // [S] 492 (good.sacred_elephant.red.png, .blue.png): the white top is crossed by two broad team bands, each lined above and below with a thin
+  // gold line, between the gold top and hem bands. The white torso and yoke leave the glow layer so the top stays cloth, not a bloom blob.
+  // Spec (torso heights TH): team bands .13TH centred at .17 and -.17 TH, gold lines .035TH at each band edge, all 1.07 TW proud.
   tm.material = white;
-  for (const m of rider.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = white;
-  for (const y of [0.42, -0.45]) {
-    const band = MeshBuilder.CreateBox("elephantRiderTopBand", { width: TW * 1.06, height: TH * 0.08, depth: TD * 1.08 }, scene);
-    band.parent = rider.torso; band.position.set(0, cy + y * TH, cz); band.material = gold; out.push(band);
+  const glow = scene.getGlowLayerByName("glow");
+  glow?.addExcludedMesh(tm as Mesh);
+  for (const m of rider.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) { m.material = white; glow?.addExcludedMesh(m as Mesh); }
+  const band = (name: string, y: number, tall: number, proud: number, mat: Material): void => {
+    const b = MeshBuilder.CreateBox(name, { width: TW * proud, height: TH * tall, depth: TD * (proud + 0.02) }, scene);
+    b.parent = rider.torso; b.position.set(0, cy + y * TH, cz); b.material = mat; out.push(b);
+  };
+  for (const y of [0.42, -0.45]) band("elephantRiderTopBand", y, 0.08, 1.06, gold);
+  for (const y of [0.17, -0.17]) {
+    band("elephantRiderTopStripe", y, 0.13, 1.07, cloth);
+    for (const e of [-1, 1]) band("elephantRiderTopLine", y + e * 0.08, 0.035, 1.08, gold);
   }
   const pelvis = rider.hip.getChildMeshes(true).find(m => m.name.endsWith("_pelvis"));
   if (pelvis) pelvis.material = white;
