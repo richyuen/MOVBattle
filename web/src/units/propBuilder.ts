@@ -4186,7 +4186,7 @@ const WARGLAIVE = { chord: 0.33, sweep: 0.95, wide: 0.05, tipW: 0.18, thick: 0.0
 function buildWarglaive(scene: Scene, fit: BladeFit): Mesh {
   const G = WARGLAIVE, H = fit.stand, Rc = (G.chord * H) / 2 / Math.sin(G.sweep);
   const root = new Mesh("warglaive", scene);
-  const gold = mat(scene, new Color3(0.95, 0.62, 0.2), 0.18, "cloth");
+  const gold = mat(scene, new Color3(0.95, 0.62, 0.2), 0.4, "cloth");
   const hotC = new Color3(1.6, 0.22, 0.32), hot = getMaterialFactory().get("unlit", hotC, { emissive: hotC });
   const at = (a: number) => new Vector3(Rc * Math.sin(a) - G.offset * G.chord * H, Rc * (1 - Math.cos(a)), 0);
   for (let k = 0; k < G.segs; k++) {
@@ -4196,7 +4196,7 @@ function buildWarglaive(scene: Scene, fit: BladeFit): Mesh {
     // each facet a box laid along the arc; its "down" is the arc's outward normal (away from the circle's centre above)
     const normal = new Vector3(Math.sin(m), -Math.cos(m), 0);
     const w = G.wide * H * taper;
-    for (const [name, material, tall, off] of [["warglaiveBlade", gold, w, 0], ["warglaiveEdge", hot, G.edge * H * Math.max(0.4, taper), w / 2 + G.edge * H * 0.4]] as const) {
+    for (const [name, material, tall, off] of [["warglaiveFacet", gold, w, 0], ["warglaiveEdge", hot, G.edge * H * Math.max(0.4, taper), w / 2 + G.edge * H * 0.4]] as const) {
       const facet = MeshBuilder.CreateBox(name, { width: len, height: tall, depth: G.thick * H * (name === "warglaiveEdge" ? 0.7 : 1) }, scene);
       facet.parent = root; facet.material = material;
       facet.position.copyFrom(mid.add(normal.scale(off))); facet.rotation.z = m;
