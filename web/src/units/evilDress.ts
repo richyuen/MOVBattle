@@ -79,6 +79,41 @@ export function sentinelMane(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 492 the Shadow Walker's helm (evil.shadow_walker.blue.png, .red.png; audit 489 a.2: "a flat dark box cap with a brim sitting on top of the
+ * head - TABS: a dark rounded helmet that encloses the head, with four tan vertical teeth-bars over the face"). It replaces the box cap, its dome
+ * and the five hanging teeth; the horns (HORNED_EVIL) still leave its upper sides.
+ * Spec in head widths W, heights H, depths D (the head box, its centre c): an 8-sided dark shell .wide W across and .deep D deep, from .low H under
+ * the centre up to .crown H over it, its top a rounded 8-sided dome .dome H tall; the bead eyes hidden (the face is closed); on its front four tan
+ * bars .barW W wide and .barH H tall, .gap W apart, centred .barY H off the centre, standing a little proud of the shell.
+ */
+const WALKER_HELM = { wide: 1.24, deep: 1.26, low: 0.56, crown: 0.36, dome: 0.3, barW: 0.13, barH: 0.52, gap: 0.24, barY: -0.06 };
+export function walkerHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = WALKER_HELM, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const mf = getMaterialFactory();
+  const darkC = new Color3(0.14, 0.09, 0.11), dark = mf.get("cloth", darkC, { emissive: darkC.scale(0.35) });
+  const tanC = new Color3(0.6, 0.42, 0.18), tan = mf.get("cloth", tanC, { emissive: tanC.scale(0.3) });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, y: number, z: number, material: typeof dark): Mesh => {
+    m.parent = head; m.position.set(c.x + x, c.y + y, c.z + z); m.material = material; out.push(m); return m;
+  };
+  const tall = H * (C.low + C.crown), squash = (D * C.deep) / (W * C.wide);
+  const shell = put(MeshBuilder.CreateCylinder("walkerHelm", { height: tall, diameter: W * C.wide, tessellation: 8 }, scene), 0, H * (C.crown - C.low) / 2, 0, dark);
+  shell.scaling.z = squash; shell.rotation.y = Math.PI / 8;
+  const dome = put(MeshBuilder.CreateSphere("walkerHelmDome", { diameterX: W * C.wide, diameterY: H * C.dome * 2, diameterZ: W * C.wide, segments: 4, slice: 0.5 }, scene), 0, H * C.crown, 0, dark);
+  dome.scaling.z = squash;
+  const front = (D * C.deep) / 2 * Math.cos(Math.PI / 8);
+  for (let k = 0; k < 4; k++) {
+    const x = (k - 1.5) * W * C.gap;
+    put(MeshBuilder.CreateBox("walkerHelmBar", { width: W * C.barW, height: H * C.barH, depth: D * 0.06 }, scene), x, H * C.barY, front + D * 0.02, tan);
+  }
+  body.leftEye?.setEnabled(false);
+  body.rightEye?.setEnabled(false);
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 492 the Exiled Sentinel's shoulder spikes (evil.exiled_sentinel.red.png; audit 489 a.5: "rounded pauldrons - TABS: a row of tall black
  * spikes standing up over both shoulders, behind the shields").
  * Spec in torso widths W and heights TH (the torso box, torso frame): per shoulder a row of .count near-black 4-sided spikes along the shoulder

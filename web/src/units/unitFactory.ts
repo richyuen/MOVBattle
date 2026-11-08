@@ -25,7 +25,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBuckler, cultistHalo, sentinelConeHat, sentinelMane, sentinelShoulderSpikes } from "./evilDress";
+import { cultistBuckler, cultistHalo, sentinelConeHat, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -278,7 +278,8 @@ const HORNED_EVIL: Record<string, HornedEvilStyle> = {
     // from there; the 489 path rose from 1.4 heads out to 2 heads up, which read as a tall U over the cap.
     horn: [[0.42, 0.24, 0], [1.05, 0.27, 0], [1.65, 0.31, 0], [2.0, 0.4, 0], [2.14, 0.68, 0], [2.2, 1.08, 0.02], [2.2, 1.5, 0.04]],
     hornColor: new Color3(0.9, 0.8, 0.55), cloth: new Color3(0.1, 0.11, 0.24), legs: new Color3(0.26, 0.17, 0.12),
-    helm: new Color3(0.24, 0.16, 0.13), teeth: 5, skull: false, spikes: true, wraps: false, skirt: 0, thick: 1,
+    // [S] 492 (a.2): no box cap or hanging teeth; the enclosing helm with four tan face bars is evilDress walkerHelm (WALKER_HELM)
+    helm: null, teeth: 0, skull: false, spikes: true, wraps: false, skirt: 0, thick: 1,
   },
   "evil.death_bringer": {
     horn: [[0.24, 0.42, -0.05], [0.4, 0.95, -0.18], [0.46, 1.45, -0.5], [0.36, 1.85, -1.0], [0.24, 2.05, -1.45]],
@@ -1031,6 +1032,7 @@ export class UnitFactory {
     }
     if (HORNED_EVIL[definition.id] && !shouldUseVehicleBody) {
       propMeshes.push(...dressHornedEvil(this._scene, body, HORNED_EVIL[definition.id]));
+      if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerHelm(this._scene, body));
     }
     if (definition.id === "legacy.super_peasant" && !shouldUseVehicleBody) {
       propMeshes.push(...dressSuperPeasant(this._scene, body));
