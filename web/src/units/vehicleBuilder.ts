@@ -4181,7 +4181,10 @@ const ELEPHANT_GOLD = new Color3(0.95, 0.66, 0.16);
 const ELEPHANT_GEM = new Color3(0.16, 0.26, 0.85);
 const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "maneLock", "browPaint", "facePaint", "trunkDot", "paintDaub", "hump", "ankleStripe", "ankleDot"]);
 const ELEPHANT_HIDE_PIECES = new Set(["backRidge", "furHem", "ear", "legCuff", "trunk", "trunkTip"]);
-const TUSK_RING_PIECE = 4;
+const ELEPHANT_TUSK = {
+  path: [[0.34, -0.2, 0.56], [0.41, -0.33, 0.68], [0.46, -0.41, 0.8], [0.48, -0.4, 0.91], [0.47, -0.3, 0.99], [0.45, -0.15, 1.02]],
+  radius: [0.16, 0.155, 0.14, 0.115, 0.075, 0.008], ring: [1, 2], ringTall: 0.1, ringWide: 0.37, color: new Color3(0.72, 0.69, 0.63),
+};
 const ELEPHANT_TRUNK = { root: [0, -0.12, 0.76], pitch: [0.55, 0.35, 0.2, 0.1, 0.05, 0.05, 0.15, 0.35], piece: 0.17, rootR: 0.27, tipR: 0.12, flare: 0.15 };
 const THRONE_SEAT = new Vector3(0, 0.9, 0.12);
 const THRONE_BACK_TALL = 0.62;
@@ -4237,15 +4240,24 @@ function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
   const last = path.length - 1;
   add(MeshBuilder.CreateTube("trunk", { path, radiusFunction: (i) => (i >= last ? T.flare : T.rootR + (T.tipR - T.rootR) * (i / (last - 1))), tessellation: 8, cap: Mesh.CAP_ALL }, scene), body.neck, hide);
 
-  // Tusks: ivory to the tip, a broad gold ring round each a third of the way out
-  const tusks = body.allMeshes.filter((mesh) => mesh.name === "tusk");
-  const perSide = tusks.length / 2;
-  for (const [i, tusk] of tusks.entries()) {
-    if (i % perSide === perSide - 1 || i % perSide === perSide - 2) tusk.material = tusks[0].material;
-    if (i % perSide !== TUSK_RING_PIECE) continue;
-    const ring = add(MeshBuilder.CreateCylinder("tuskRing", { height: 0.13, diameter: 0.33, tessellation: 8 }, scene), body.neck, gold);
-    ring.position.copyFrom(tusk.position);
-    ring.rotation.copyFrom(tusk.rotation);
+  // [S] 492 ELEPHANT_TUSK (good.sacred_elephant.jpg, .red.png): not the mammoth's long sweep. Each tusk is a short thick cone out of the
+  // cheek beside the trunk root: it leaves the face (neck frame) a little below and inside the eye, dips forward and down, then curls up
+  // to a point about level with the cheek (a little under the eye), its forward reach under half the head. Root radius .rootR tapering
+  // along .path to a point; grey-ivory, self-lit a little; one broad gold ring round the thick part (between path points .ring).
+  const ET = ELEPHANT_TUSK;
+  body.allMeshes = body.allMeshes.filter((mesh) => {
+    if (mesh.name !== "tusk") return true;
+    mesh.dispose(); return false;
+  });
+  const ivory = getMaterialFactory().get("cloth", ET.color, { emissive: ET.color.scale(0.2) });
+  for (const side of [-1, 1]) {
+    const path = ET.path.map(([x, y, z]) => new Vector3(side * x, y, z));
+    const last = path.length - 1;
+    add(MeshBuilder.CreateTube("elephantTusk", { path, radiusFunction: (i) => ET.radius[Math.min(i, last)], tessellation: 9, cap: Mesh.CAP_START }, scene), body.neck, ivory);
+    const a = path[ET.ring[0]], b = path[ET.ring[1]];
+    const ring = add(MeshBuilder.CreateCylinder("tuskRing", { height: ET.ringTall, diameter: ET.ringWide, tessellation: 9 }, scene), body.neck, gold);
+    ring.position = Vector3.Center(a, b);
+    ring.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), b.subtract(a).normalize(), new Quaternion());
   }
 
   // Headplate: a pointed gold shield on the brow, point down between the eyes, three blue gems, and a strap back over the crown
