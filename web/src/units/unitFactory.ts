@@ -25,7 +25,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBuckler, cultistHalo, sentinelConeHat, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
+import { cultistBeard, cultistBuckler, cultistHalo, mechanicGoggles, sentinelConeHat, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -292,7 +292,8 @@ const HORNED_EVIL: Record<string, HornedEvilStyle> = {
   },
   "evil.mad_mechanic": {
     horn: [], hornColor: new Color3(0.3, 0.2, 0.13), cloth: new Color3(0.24, 0.15, 0.1), legs: new Color3(0.16, 0.11, 0.09),
-    helm: new Color3(0.32, 0.2, 0.12), teeth: 0, skull: false, spikes: false, wraps: false, skirt: 0.95, thick: 1, goggles: true,
+    // [S] 494 (a.1): no cap and no goggles over the eyes; the goggles pushed up on the brow and the top bun are evilDress mechanicGoggles
+    helm: null, teeth: 0, skull: false, spikes: false, wraps: false, skirt: 0.95, thick: 1,
   },
   "evil.void_monarch": {
     horn: [], hornColor: new Color3(0.6, 0.6, 0.46), cloth: new Color3(0.08, 0.09, 0.2), legs: new Color3(0.07, 0.07, 0.11),
@@ -1033,6 +1034,7 @@ export class UnitFactory {
     if (HORNED_EVIL[definition.id] && !shouldUseVehicleBody) {
       propMeshes.push(...dressHornedEvil(this._scene, body, HORNED_EVIL[definition.id]));
       if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerHelm(this._scene, body));
+      if (definition.id === "evil.mad_mechanic") propMeshes.push(...mechanicGoggles(this._scene, body));
     }
     if (definition.id === "legacy.super_peasant" && !shouldUseVehicleBody) {
       propMeshes.push(...dressSuperPeasant(this._scene, body));

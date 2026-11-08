@@ -1,4 +1,4 @@
-import { Color3, Mesh, MeshBuilder, Scene, TransformNode } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Scene, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -260,6 +260,59 @@ export function cultistBuckler(scene: Scene, body: ArticulatedBody): Mesh[] {
     spike("cultistBucklerFaceSpike", W * C.faceSpike, Math.sin(a) * r, Math.cos(a) * r, W * (C.thick * 0.5 + C.faceSpike * 0.45), Math.PI / 2, 0);
   }
   spike("cultistBucklerBoss", W * C.boss, 0, 0, W * (C.thick * 0.5 + C.boss * 0.45), Math.PI / 2, 0);
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
+ * [S] 494 the Mad Mechanic's goggles and bun (evil.mad_mechanic.red.png; card "goggles with 3 eye holes"; audit 489 a.1: "a brown flat cap with
+ * glowing round goggles over the eyes - TABS: dark goggles pushed up on the forehead over a top bun, the bead eyes uncovered"). It replaces the cap
+ * and the pale-blue lenses over the eyes (HORNED_EVIL mad_mechanic: no helm, no goggles).
+ * Spec in head widths W, heights H, depths D (the head box, its centre c; the bead eyes' top read into the head frame, LESSONS 46):
+ *   - a dark leather strap .strapH H tall round the head, its lower edge .above H over the eyes' top, .wrap of the head box across;
+ *   - on its front, three dark goggle cups (two .cup W across .apart W either side of the middle, a smaller .mid one between and a little higher),
+ *     each a 8-sided cup .deep D long with a dark red lens on its end, tipped .tilt rad up so the lenses look at the sky (pushed up, not worn);
+ *   - a ginger-blond bun, a faceted ball .bun W across on the crown, .bunBack D behind the centre, a small knot .knot W on its top.
+ */
+const MECHANIC_GOGGLES = { strapH: 0.13, above: 0.05, wrap: 1.07, cup: 0.3, mid: 0.2, apart: 0.24, deep: 0.2, tilt: 1.05, bun: 0.46, bunBack: 0.12, knot: 0.22 };
+export function mechanicGoggles(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = MECHANIC_GOGGLES, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  // the bead eyes hang off the neck joint: read their top into the head's frame
+  let eyeTop = c.y + H * 0.12;
+  const eye = body.leftEye;
+  if (eye) {
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = eye; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    head.computeWorldMatrix(true);
+    const inv = head.getWorldMatrix().clone().invert();
+    eyeTop = Vector3.TransformCoordinates(eye.getBoundingInfo().boundingBox.maximumWorld, inv).y;
+  }
+  const mf = getMaterialFactory();
+  const leatherC = new Color3(0.07, 0.05, 0.05), leather = mf.get("cloth", leatherC, { emissive: leatherC.scale(0.3) });
+  const lensC = new Color3(0.3, 0.03, 0.03), lens = mf.get("cloth", lensC, { emissive: lensC.scale(0.4) });
+  const hairC = new Color3(0.95, 0.5, 0.15), hair = mf.get("cloth", hairC, { emissive: hairC.scale(0.12) });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, x: number, y: number, z: number, material: typeof leather): Mesh => {
+    m.parent = head; m.position.set(x, y, z); m.material = material; out.push(m); return m;
+  };
+  const strapY = eyeTop + H * (C.above + C.strapH / 2);
+  put(MeshBuilder.CreateBox("mechanicStrap", { width: W * C.wrap, height: H * C.strapH, depth: D * C.wrap }, scene), c.x, strapY, c.z, leather);
+  const front = c.z + (D * C.wrap) / 2;
+  for (const [x, across, lift] of [[-C.apart, C.cup, 0], [C.apart, C.cup, 0], [0, C.mid, 0.06]] as const) {
+    const len = D * C.deep, y = strapY + H * (C.strapH * 0.5 + lift);
+    // a cup's +y pitched forward by (PI/2 - tilt): it stands out of the brow and looks up
+    const pitch = Math.PI / 2 - C.tilt;
+    const cup = put(MeshBuilder.CreateCylinder("mechanicGoggle", { height: len, diameterBottom: W * across * 0.85, diameterTop: W * across, tessellation: 8 }, scene),
+      c.x + W * x, y + Math.cos(pitch) * len * 0.5, front + Math.sin(pitch) * len * 0.5 - D * 0.04, leather);
+    cup.rotation.x = pitch;
+    const glass = put(MeshBuilder.CreateCylinder("mechanicLens", { height: len * 0.12, diameter: W * across * 0.7, tessellation: 8 }, scene),
+      c.x + W * x, y + Math.cos(pitch) * len * 1.02, front + Math.sin(pitch) * len * 1.02 - D * 0.04, lens);
+    glass.rotation.x = pitch;
+  }
+  put(MeshBuilder.CreateIcoSphere("mechanicBun", { radius: (W * C.bun) / 2, subdivisions: 1 }, scene), c.x, c.y + H * 0.5 + W * C.bun * 0.3, c.z - D * C.bunBack, hair);
+  put(MeshBuilder.CreateIcoSphere("mechanicBunKnot", { radius: (W * C.knot) / 2, subdivisions: 1 }, scene), c.x, c.y + H * 0.5 + W * (C.bun * 0.75 + C.knot * 0.2), c.z - D * C.bunBack, hair);
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
