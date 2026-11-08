@@ -319,6 +319,8 @@ const LANCE_AIM = { hold: 0.6, rate: 4 };
  * marks is held in both hands in every living state but limpness: the weapon arm poses as before and the off hand is solved (as the club's, _offArmTo) onto
  * the shaft where it passes nearest the off shoulder, kept within the span [from, to] of the shaft's length out along it from the weapon fist (_twoHandPole).
  */
+/** [S] 502 the Ball 'n' Chain's hug (_hugStone): fists on the stone's flanks, in its radii out, ahead and down from its centre. */
+const STONE_HUG = { side: 0.8, front: -0.1, drop: 0.3 };
 const POLE_GRIP = {
   hpoint: [0.15, 0.45], // the halberd (and every glaive built on it)
   musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
@@ -2438,6 +2440,7 @@ export class ProceduralAnimator {
     this._aimPick();
     this._twoHandPole();
     this._holdArbiterBook();
+    this._hugStone();
     this._levelPike();
     this._holdBlowgun();
     this._boxerJab();
@@ -4235,6 +4238,31 @@ export class ProceduralAnimator {
     const along = Vector3.Dot(this._body.leftShoulder.getAbsolutePosition().subtract(origin), axis);
     const at = Math.max(fistAt + span[0] * length, Math.min(fistAt + span[1] * length, along));
     this._offArmTo(origin.add(axis.scale(at)), w, 2);
+  }
+
+  /**
+   * [S] 502 the Ball 'n' Chain hugs his stone (secret.ball_n_chain.red.png: both forearms wrapped round the sides of the huge stone ball at his
+   * chest; audit 500 b.1, 501: "the arms do not hug it"). With the torso-hung "ballStone" (secretDress ballStone), in every living state each fist
+   * is solved (_armTo) onto the ball's side: STONE_HUG.side of its radius out from its centre toward that hand's side, .front of it ahead and .drop
+   * of it below, so the forearms wrap its flanks; eased off as he goes limp.
+   */
+  private _stone: Mesh | null | undefined = undefined;
+  private _hugStone(): void {
+    if (this._stone === undefined) this._stone = this._body.torso.getChildMeshes(true).find((m): m is Mesh => m instanceof Mesh && m.name === "ballStone") ?? null;
+    const st = this._stone;
+    if (!st || this.walkStyle === "quadruped") return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const b = this._body, H = STONE_HUG;
+    for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.rightShoulder]) n.computeWorldMatrix(true);
+    st.computeWorldMatrix(true);
+    const c = st.getBoundingInfo().boundingSphere.centerWorld, R = st.getBoundingInfo().boundingSphere.radiusWorld * 0.82;
+    const { fwd, right } = this._heading();
+    for (const side of [1, -1]) {
+      const grip = c.add(right.scale(side * R * H.side)).addInPlace(fwd.scale(R * H.front)).addInPlace(new Vector3(0, -R * H.drop, 0));
+      if (side > 0) this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, grip, w, 2);
+      else this._offArmTo(grip, w, 2);
+    }
   }
 
   /** His heading in the world, level: forward off the root's +z, his right from his left shoulder to his right one (world matrices already computed). */
