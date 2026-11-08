@@ -1823,14 +1823,16 @@ export class SimulationSystem {
     }
 
     if (hasAbility(unit, "teleport") && distance > engageDistance && distance < engageDistance * 3 && unit.canAttack(now)) {
-      if (this.visualEffects) this.visualEffects.spawnSmokePuff(unit.position);
+      // [S] 495 the Shadow Walker's Assassin Poof: a dark violet cloud where he vanishes and where he lands (visualEffects spawnShadowPoof)
+      const poof = unit.definition.id === "evil.shadow_walker";
+      if (this.visualEffects) { if (poof) this.visualEffects.spawnShadowPoof(unit.position); else this.visualEffects.spawnSmokePuff(unit.position); }
       const dir = enemy.position.subtract(unit.position).normalize();
       const teleportDist = Math.min(distance - engageDistance * 0.65, 8);
       const newPos = unit.position.add(dir.scale(teleportDist));
       newPos.y = 0;
       unit.teleportTo(newPos);
       this._clearPathState(unit);
-      if (this.visualEffects) this.visualEffects.spawnSmokePuff(newPos);
+      if (this.visualEffects) { if (poof) this.visualEffects.spawnShadowPoof(newPos); else this.visualEffects.spawnSmokePuff(newPos); }
       unit.setAttackCooldown(now, attackProfile.cooldown * 0.5);
       this._logAbility(unit, "teleport", now);
       return;

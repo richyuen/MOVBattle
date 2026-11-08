@@ -100,6 +100,8 @@ const BODY_FLAMES = {
 };
 /** [S] 419 the hwacha's launch smoke (spawnLaunchSmoke). */
 const LAUNCH_SMOKE = { puffs: 14, wide: 1.2, tall: 0.6, from: 0.15, to: 0.6, drift: 0.9, rise: 0.4, stagger: 0.45, seconds: 1.6, fade: 0.4, alpha: 0.9, glow: 0.35, white: new Color3(0.93, 0.93, 0.9) };
+/** [S] 495 the Shadow Walker's Assassin Poof (spawnShadowPoof): a dark violet cloud a man high, held long enough for the after-shot. */
+const SHADOW_POOF = { puffs: 12, wide: 1.1, tall: 1.7, from: 0.2, to: 0.75, grow: 0.25, rise: 0.5, stagger: 0.2, seconds: 1.4, fade: 0.45, alpha: 0.88, glow: 0.6, ring: 1.6, dark: new Color3(0.16, 0.05, 0.22) };
 /** [S] 418 the Firework Arrow's burst (spawnFireworkBurst): spark ball .radius m (half the card's 2.5 m blast each way), .lift up off the ground. */
 const FIREWORK_BURST = {
   sparks: 26, radius: 1.25, long: 0.34, thick: 0.05, grow: 0.45, fall: 0.35, lift: 0.9, coreSize: 0.45, seconds: 0.65,
@@ -290,6 +292,51 @@ export class VisualEffects {
           p.m.scaling.setAll(Math.max(0.001, k > 0 ? S.from + (S.to - S.from) * grow : 0.001));
           p.m.position.copyFrom(p.base.add(p.out.scale(grow)));
         }
+        matl.alpha = t < 1 - S.fade ? S.alpha : S.alpha * Math.max(0, (1 - t) / S.fade);
+      },
+      dispose: () => matl.dispose(),
+    });
+  }
+
+  /**
+   * [S] 495 the Shadow Walker's Assassin Poof (card: the poof vanishes him and puts him by the enemy; audit 489 c.1: "no smoke or shadow puff at
+   * departure or arrival"). The 20-particle grey puff (spawnSmokePuff) stopped emitting after .15 s and never showed in a capture shot.
+   * SHADOW_POOF: a man-high column of .puffs flat-shaded near-black violet balls round `at`, .wide m across and .tall m up, each swelling from .from
+   * to .to m across (staggered over .stagger s) while rising .rise m, the cloud held .seconds and faded over its last .fade; a dark violet ring on the
+   * ground .ring m across under it. Self-lit (.glow) so it reads dark on the field, not black.
+   */
+  spawnShadowPoof(at: Vector3): void {
+    const S = SHADOW_POOF;
+    const root = new TransformNode("shadowPoof", this._scene);
+    root.position.set(at.x, 0, at.z);
+    const matl = new StandardMaterial("shadowPoofMat", this._scene);
+    matl.diffuseColor = S.dark;
+    matl.emissiveColor = S.dark.scale(S.glow);
+    matl.specularColor = new Color3(0, 0, 0);
+    const puffs: { m: Mesh; base: Vector3; delay: number }[] = [];
+    for (let i = 0; i < S.puffs; i++) {
+      const a = i * 2.39996, r = S.wide * 0.5 * (0.35 + 0.65 * ((i * 0.618034) % 1)), y = S.tall * (((i * 0.381966) % 1) * 0.85 + 0.1);
+      const m = MeshBuilder.CreateIcoSphere("shadowPoofPuff", { radius: 0.5, subdivisions: 1 }, this._scene);
+      m.convertToFlatShadedMesh();
+      m.parent = root; m.material = matl; m.isPickable = false;
+      const base = new Vector3(Math.sin(a) * r, y, Math.cos(a) * r);
+      m.position.copyFrom(base); m.scaling.setAll(0.001);
+      puffs.push({ m, base, delay: (i / S.puffs) * S.stagger });
+    }
+    const ring = MeshBuilder.CreateTorus("shadowPoofRing", { diameter: S.ring, thickness: 0.12, tessellation: 16 }, this._scene);
+    ring.parent = root; ring.position.y = 0.05; ring.material = matl; ring.isPickable = false;
+    this._effects.push({
+      root,
+      remaining: S.seconds,
+      update: (_dt, remaining) => {
+        const t = 1 - Math.max(0, Math.min(1, remaining / S.seconds)), el = t * S.seconds;
+        for (const p of puffs) {
+          const k = Math.max(0, Math.min(1, (el - p.delay) / S.grow));
+          const swell = 1 - (1 - k) * (1 - k);
+          p.m.scaling.setAll(k > 0 ? S.from + (S.to - S.from) * swell : 0.001);
+          p.m.position.set(p.base.x, p.base.y + S.rise * t, p.base.z);
+        }
+        ring.scaling.setAll(0.6 + 0.5 * t);
         matl.alpha = t < 1 - S.fade ? S.alpha : S.alpha * Math.max(0, (1 - t) / S.fade);
       },
       dispose: () => matl.dispose(),
