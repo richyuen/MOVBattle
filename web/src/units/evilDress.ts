@@ -1153,6 +1153,56 @@ export function mechanicSleeves(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 498 the Mad Mechanic's torn trousers (evil.mad_mechanic.red.png: near-black trousers torn open in ragged holes that show the team skin on the
+ * lower thigh, the knee and the shins, a bone-white ring of tools clipped round one knee; audit 489 a.6: "plain dark trousers").
+ * Spec in each leg mesh's own box (r its radius, h its length, +y up the bone, +z its front): thighs and shins go near-black lit cloth (LESSONS 494);
+ * on them .holes ragged 5-sided team-skin patches [mesh, height share from the foot, angle off the front (+ to the leg's outer side), size r,
+ * tallness], each a thin slab standing .proud r off the surface (turned by its index so no two match); round the left knee a bone ring .ring r out,
+ * .tube r thick, at .ringAt h under the shin's top, with .tools bone tool bars hanging .tool r off its front.
+ */
+const MECHANIC_TROUSERS = {
+  dark: new Color3(0.08, 0.06, 0.07), bone: new Color3(0.85, 0.82, 0.72), proud: 0.06, ring: 1.35, tube: 0.22, ringAt: 0.12, tools: 3, tool: 1.1,
+  holes: [["shin", 0.72, 0.5, 1.35, 1.5], ["shin", 0.3, -0.3, 1.1, 1.3], ["thigh", 0.2, 0.6, 1.2, 1.4]] as [string, number, number, number, number][],
+};
+export function mechanicTrousers(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = MECHANIC_TROUSERS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
+  const bone = mf.get("unlit", C.bone, { emissive: C.bone });
+  const out: Mesh[] = [];
+  const legs = [[body.leftUpperLeg, body.leftLowerLeg, -1], [body.rightUpperLeg, body.rightLowerLeg, 1]] as const;
+  legs.forEach(([thigh, shin, side], li) => {
+    for (const m of [thigh, shin]) { m.material = dark; glow?.addExcludedMesh(m); }
+    C.holes.forEach(([which, at, ang, size, tall], k) => {
+      const leg = which === "shin" ? shin : thigh;
+      const bb = leg.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z);
+      // + angle is the leg's outer side: the left leg's outside is -x
+      const a = ang * -side + (li ? 0.15 : -0.1);
+      const patch = MeshBuilder.CreateCylinder("mechanicTear", { height: r * 0.08, diameter: r * size, tessellation: 5 }, scene);
+      patch.parent = leg; patch.material = body.skinMaterial;
+      patch.rotation.set(Math.PI / 2, a, (k + li) * 0.7);
+      patch.scaling.z = tall;
+      const rad = r * (1 + C.proud);
+      patch.position.set(cc.x + Math.sin(a) * rad, cc.y - e.y + e.y * 2 * at, cc.z + Math.cos(a) * rad);
+      out.push(patch);
+    });
+  });
+  // the tool ring round his left knee
+  const shin = body.leftLowerLeg, bb = shin.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z);
+  const y = cc.y + e.y - e.y * 2 * C.ringAt;
+  const ring = MeshBuilder.CreateTorus("mechanicToolRing", { diameter: r * 2 * C.ring, thickness: r * C.tube, tessellation: 10 }, scene);
+  ring.parent = shin; ring.position.set(cc.x, y, cc.z); ring.rotation.x = 0.15; ring.material = bone; out.push(ring);
+  for (let k = 0; k < C.tools; k++) {
+    const a = (k - 1) * 0.6;
+    const bar = MeshBuilder.CreateBox("mechanicTool", { width: r * 0.22, height: r * C.tool, depth: r * 0.12 }, scene);
+    bar.parent = shin; bar.material = bone; bar.rotation.set(0, a, (k - 1) * 0.25);
+    bar.position.set(cc.x + Math.sin(a) * r * C.ring, y - r * C.tool * 0.5, cc.z + Math.cos(a) * r * C.ring);
+    out.push(bar);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 497 the Mad Mechanic's Mechanic Tank (card: "a round, cauldronlike fuel source that floats behind a unit. Spikes protrude its surface, while
  * three trails of soul smoke ooze out its mouth"; evil.mad_mechanic.png: a dark spiked ball as wide as his trunk hanging behind his hip and shoulder,
  * glowing pale-cyan smoke curling up and out of it; audit 489 a.5).
