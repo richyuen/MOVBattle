@@ -431,7 +431,8 @@ export function mechanicGoggles(scene: Scene, body: ArticulatedBody): Mesh[] {
  * .backW*1.15, .backT D thick, from the strap down to .low, .rear D behind the centre; the ends cut into .tips points per side. Ginger-brown cloth
  * .hair self-lit .12 (palette: orange x.7 reads ginger-brown; the bun at (.95,.5,.15) read pale tan, look 494).
  */
-export const MECHANIC_HAIR = { hair: new Color3(0.7, 0.3, 0.07), top: 0.3, low: 0.62, sideD: 0.72, sideW: 0.24, out: 0.6, back: 0.1, flare: 0.12, backW: 1.08, backT: 0.2, rear: 0.5, tips: 3 };
+// 499: blond-brown (palette gold x.7 cloth), was ginger orange x.7 (0.7, 0.3, 0.07) (CONFIRM 498 a.9)
+export const MECHANIC_HAIR = { hair: new Color3(0.7, 0.49, 0.13), top: 0.3, low: 0.62, sideD: 0.72, sideW: 0.24, out: 0.6, back: 0.1, flare: 0.12, backW: 1.08, backT: 0.2, rear: 0.5, tips: 3 };
 export function mechanicHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = MECHANIC_HAIR, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
   const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
@@ -467,6 +468,68 @@ export function mechanicHair(scene: Scene, body: ArticulatedBody): Mesh[] {
     out.push(tip);
   }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
+ * [S] 499 the Mad Mechanic's long hair past the shoulders (evil.mad_mechanic.red.png: blond-brown hair falls from under the goggles beside the face
+ * and on over the shoulders onto the shirt's front and down the back; CONFIRM 498 a.9: "short panels at the sides of the head that stop at the jaw").
+ * A head-hung piece cannot run on down the torso (LESSONS 401): the falls are torso-parented, in the trunk box (trunkBox: W across, H high, front zf,
+ * back zb, top yt; the head's centre read into the torso frame). Per side .locks tapered 4-sided strands, each from inside the head-side panel
+ * (.root x head widths out, at the jaw) over the shoulder top (.over W out, .lift H above yt, .rest D in front of the centre) and down the shirt front
+ * (.proud D off zf) to .drop H under yt (each a little longer than the last, so the ends are ragged), .thick head widths across at the root; at the
+ * back a mantle .backW W across from behind the head (.backTop head heights over its centre) to .backDrop H under yt, .backT thick, ending in .backTips
+ * points. MECHANIC_HAIR's blond-brown cloth, out of the glow.
+ */
+const MECHANIC_HAIR_FALL = { locks: 3, root: 0.42, over: 0.4, lift: 0.04, rest: 0.55, proud: 0.16, drop: [0.28, 0.36, 0.32], spread: 0.11, thick: 0.32, backW: 0.82, backTop: 0.1, backDrop: 0.45, backT: 0.05, backTips: 5 };
+export function mechanicHairFall(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = MECHANIC_HAIR_FALL, glow = scene.getGlowLayerByName("glow");
+  const hair = getMaterialFactory().get("cloth", MECHANIC_HAIR.hair, { emissive: MECHANIC_HAIR.hair.scale(0.12) });
+  const { lo, hi } = trunkBox(body);
+  const W = hi.x - lo.x, H = hi.y - lo.y, D = hi.z - lo.z, cx = (lo.x + hi.x) / 2, cz = (lo.z + hi.z) / 2, yt = hi.y, zf = hi.z, zb = lo.z;
+  // the head's box read into the torso frame (rest pose at build)
+  const head = body.headMesh, chain: TransformNode[] = [];
+  for (let n: TransformNode | null = head; n; n = n.parent as TransformNode | null) chain.unshift(n);
+  for (const n of chain) n.computeWorldMatrix(true);
+  const inv = body.torso.getWorldMatrix().clone().invert();
+  const hlo = new Vector3(Infinity, Infinity, Infinity), hhi = new Vector3(-Infinity, -Infinity, -Infinity);
+  for (const v of head.getBoundingInfo().boundingBox.vectorsWorld) { const q = Vector3.TransformCoordinates(v, inv); hlo.minimizeInPlace(q); hhi.maximizeInPlace(q); }
+  const hW = hhi.x - hlo.x, hH = hhi.y - hlo.y, hc = hlo.add(hhi).scale(0.5);
+  const out: Mesh[] = [];
+  const strand = (pts: Vector3[], thick: number): void => {
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1], dir = b.subtract(a), len = dir.length();
+      const top = thick * (1 - i / (pts.length - 1)), foot = thick * (1 - (i + 1) / (pts.length - 1)) + thick * 0.08;
+      const seg = MeshBuilder.CreateCylinder("mechanicHairFall", { height: len * 1.06, diameterBottom: top, diameterTop: foot, tessellation: 4 }, scene);
+      seg.position.copyFrom(a.add(b).scale(0.5));
+      seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir.normalize(), new Quaternion());
+      seg.parent = body.torso; seg.material = hair; out.push(seg);
+    }
+  };
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < C.locks; k++) {
+      const dz = (k - (C.locks - 1) / 2) * C.spread * D;
+      const x0 = cx + side * hW * C.root, x1 = cx + side * W * (C.over + 0.03 * k);
+      strand([
+        new Vector3(x0, hc.y - hH * 0.3, hc.z + dz * 0.6),
+        new Vector3(x1, yt + H * C.lift, cz + D * C.rest + dz * 0.4),
+        new Vector3(x1 + side * W * 0.02, yt - H * C.drop[k % C.drop.length], zf + D * C.proud),
+      ], hW * C.thick);
+    }
+  }
+  // the back mantle: a tapering slab behind the head and down between the shoulder blades, ragged points at its foot
+  const top = hc.y + hH * C.backTop, foot = yt - H * C.backDrop, tall = top - foot;
+  const mantle = MeshBuilder.CreateCylinder("mechanicHairMantle", { height: tall, diameterTop: hW * 1.05 * Math.SQRT2, diameterBottom: W * C.backW * Math.SQRT2, tessellation: 4 }, scene);
+  mantle.rotation.set(0, Math.PI / 4, 0); mantle.bakeCurrentTransformIntoVertices(); mantle.rotation.set(0, 0, 0);
+  mantle.parent = body.torso; mantle.material = hair; mantle.scaling.z = (H * C.backT) / (W * C.backW);
+  mantle.position.set(cx, foot + tall / 2, Math.min(zb, hlo.z) - H * C.backT * 0.6); out.push(mantle);
+  for (let k = 0; k < C.backTips; k++) {
+    const tip = MeshBuilder.CreateCylinder("mechanicHairTip", { height: H * (0.1 + 0.05 * (k % 2)), diameterTop: W * C.backW / C.backTips * 1.3, diameterBottom: 0, tessellation: 4 }, scene);
+    tip.parent = body.torso; tip.material = hair; tip.scaling.z = 0.4;
+    tip.position.set(cx + W * C.backW * ((k + 0.5) / C.backTips - 0.5), foot - H * (0.05 + 0.025 * (k % 2)), mantle.position.z);
+    out.push(tip);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
 
