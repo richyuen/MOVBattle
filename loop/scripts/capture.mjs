@@ -716,6 +716,9 @@ async function main() {
           const ok = await page.evaluate(({ id, d, support, ticks, on, s, hold, clean }) => {
             const from = hold ?? ticks;
             const r = from === null ? window.__unitPlace(id, d, support) : window.__unitAt(id, d, support, from);
+            // [evidence 494] the Mad Mechanic's claw still swings across his face ~100 ms after spawn (critic 492): his idle is taken once it has
+            // settled at his side (300 ms, the probe's settle), so his cap, goggles and hair can be judged
+            if (r && from === null && id === "evil.mad_mechanic") window.advanceTime(250);
             if (r) window.__unitFrame(on, s);
             if (r && hold !== null && ticks > hold) window.advanceTime((ticks - hold) * 1000 / 60);
             if (r && clean) {
