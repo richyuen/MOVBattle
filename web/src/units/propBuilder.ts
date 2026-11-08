@@ -4143,19 +4143,22 @@ function buildDevoutGauntlet(scene: Scene, fit: BladeFit): Mesh {
 /*
  * [S] 491 the Mad Mechanic's claw (evil.mad_mechanic.red.png, .blue.png; card Main/Off Hand "Mad Mechanic Fire", Appearance "two mechanical
  * claws"): on each hand a dark boxy gauntlet from the knuckles halfway up the forearm with three small cyan lights down its outer side, and a pair of
- * big bone-white pincer jaws standing past the fist, a little open. MECHANIC_CLAW in fists f (hand frame, +y past the knuckles, -y up the arm):
+ * big bone-white pincer jaws standing past the fist, a little open. MECHANIC_CLAW in fists f (claw frame, +y past the knuckles, -y up the arm):
  * cuff .cuff f long, .wide f across (6-sided), its top .top f under the fist's middle; a dark knuckle housing .house f cube over the fist; three
  * cyan lights .light f tall on the cuff's outer face; two jaws .jawL f long, .jawW f wide, .jawT f thick, opened .open rad apart from the
  * housing's front and back, each with a hooked tip block .tip f long turned in toward the other.
+ * [S] 492 (b.1, 491 DEFECTS): the hand frame's +y runs up the forearm (as time_gauntlet's cuff), so the claw frame is the hand frame turned half a
+ * turn about x: the cuff sheathes the forearm and the jaws stand out past the knuckles.
  */
 const MECHANIC_CLAW = { cuff: 3.4, wide: 2.5, top: 0.9, house: 2.3, light: 0.6, jawL: 2.9, jawW: 2.1, jawT: 0.95, open: 0.32, tip: 1.1 };
 function buildMechanicClaw(scene: Scene, fit: BladeFit): Mesh {
   const C = MECHANIC_CLAW, f = fit.fist;
   const root = new Mesh("mechanicClaw", scene);
+  const frame = new Mesh("clawFrame", scene); frame.parent = root; frame.rotation.x = Math.PI;
   const dark = mat(scene, new Color3(0.08, 0.075, 0.085), 0.05, "cloth");
   const bone = mat(scene, new Color3(0.86, 0.84, 0.78), 0.35, "cloth");
   const cyan = getMaterialFactory().get("unlit", new Color3(0.35, 0.95, 1.2), { emissive: new Color3(0.35, 0.95, 1.2) });
-  const put = (m: Mesh, material: PBRMetallicRoughnessMaterial): Mesh => { m.parent = root; m.material = material; m.convertToFlatShadedMesh(); return m; };
+  const put = (m: Mesh, material: PBRMetallicRoughnessMaterial): Mesh => { m.parent = frame; m.material = material; m.convertToFlatShadedMesh(); return m; };
   const cuff = put(MeshBuilder.CreateCylinder("clawCuff", { height: C.cuff * f, diameterTop: C.wide * f, diameterBottom: C.wide * f * 1.12, tessellation: 6 }, scene), dark);
   cuff.position.y = -C.top * f - C.cuff * f / 2; cuff.rotation.y = Math.PI / 6;
   put(MeshBuilder.CreateBox("clawHousing", { width: C.house * f, height: C.house * f * 0.9, depth: C.house * f }, scene), dark);
@@ -4165,7 +4168,7 @@ function buildMechanicClaw(scene: Scene, fit: BladeFit): Mesh {
   }
   for (const side of [-1, 1]) {
     // a jaw hinged at the housing's top edge, front (+z) and back (-z), opened apart; the hooked tip turns in
-    const hinge = new Mesh("clawHinge", scene); hinge.parent = root;
+    const hinge = new Mesh("clawHinge", scene); hinge.parent = frame;
     hinge.position.set(0, C.house * f * 0.4, side * C.house * f * 0.3); hinge.rotation.x = side * C.open;
     const jaw = put(MeshBuilder.CreateBox("clawJaw", { width: C.jawW * f, height: C.jawL * f, depth: C.jawT * f }, scene), bone);
     jaw.parent = hinge; jaw.position.y = C.jawL * f / 2;
