@@ -32,6 +32,8 @@ const PUMPKIN_BURST = { shards: 8, rind: 0.2, lanterns: 4, lantern: 0.32, out: 3
 // tan-brown spikes, self-lit .glow, flying straight out of the body in every direction, point first ([P] 446: (.95,.78,.42) at .6 read as pale glowing slivers, critic 445)
 const CACTUS_NEEDLES = { count: 26, long: 0.42, thick: 0.05, speed: 8, life: 0.55, rise: 0.45, color: new Color3(0.5, 0.33, 0.17), glow: 0.12 };
 // Paint flung off the painter's brush (see spawnPaintSplotches): blobs, size (m), speed along the swing, spread across it and up (m/s), seconds
+// [S] 502 the Shouter's shockwave (spawnShoutWave)
+const SHOUT_WAVE = { rings: 4, stagger: 0.09, life: 0.6, from: 0.5, to: 3.4, streaks: 10, streak: 0.7 };
 const PAINT_SPLOTCH = { count: 5, size: 0.09, speed: 3.4, spread: 1.6, up: 2.2, last: 1.0 };
 const GEAR_TOSS_MIN = 0.6;
 const GEAR_TOSS_MAX = 1.1;
@@ -943,6 +945,53 @@ export class VisualEffects {
    * opaque for most of its life and only faded over the last third, so it reads as one graphic shape and not a haze.
    * Outlives the bolt that made it.
    */
+  /**
+   * [S] 502 the Shouter's shockwave (secret.shouter.jpg: white rings and streaks blasting out of his mouth in one direction; card Shout).
+   * SHOUT_WAVE: .rings white unlit hoops square to `dir`, each born .stagger s after the last at the mouth and carried `reach` m along `dir`
+   * over .life s, widening from .from to .to m across; .streaks white slivers .streak m long inside the cone, flying the same way. Excluded from
+   * the glow (a flat graphic white), faded over the last third.
+   */
+  spawnShoutWave(mouth: Vector3, dir: Vector3, reach: number): void {
+    const S = SHOUT_WAVE, glow = this._scene.getGlowLayerByName("glow");
+    const d = dir.clone(); d.y = 0; if (d.lengthSquared() < 1e-6) d.set(0, 0, 1); d.normalize();
+    const root = new TransformNode("shoutWave", this._scene);
+    root.position.copyFrom(mouth);
+    root.rotation.y = Math.atan2(d.x, d.z); // its +z down the shout's line
+    const mat = getMaterialFactory().createUnique("cloth", new Color3(0.97, 0.99, 1));
+    mat.emissiveColor = new Color3(1, 1, 1); mat.disableLighting = true;
+    const parts: { m: Mesh; born: number; kind: "ring" | "streak"; x: number; y: number }[] = [];
+    for (let i = 0; i < S.rings; i++) {
+      const ring = MeshBuilder.CreateTorus("shoutRing", { diameter: 1, thickness: 0.09, tessellation: 20 }, this._scene);
+      ring.rotation.x = Math.PI / 2; ring.scaling.y = 0.4; ring.parent = root; ring.material = mat; glow?.addExcludedMesh(ring);
+      parts.push({ m: ring, born: i * S.stagger, kind: "ring", x: 0, y: 0 });
+    }
+    for (let i = 0; i < S.streaks; i++) {
+      const a = i * 2.39996, r = 0.35 + 0.65 * ((i * 7) % 5) / 4;
+      const s = MeshBuilder.CreateBox("shoutStreak", { width: 0.05, height: 0.05, depth: S.streak }, this._scene);
+      s.parent = root; s.material = mat; glow?.addExcludedMesh(s);
+      parts.push({ m: s, born: (i % 3) * S.stagger, kind: "streak", x: Math.cos(a) * r, y: Math.sin(a) * r * 0.6 });
+    }
+    const span = S.life + S.stagger * (S.rings - 1);
+    const pose = (t: number): void => {
+      for (const p of parts) {
+        const u = Math.max(0, Math.min(1, (t - p.born) / S.life));
+        p.m.setEnabled(t >= p.born && u < 1);
+        const go = 1 - (1 - u) * (1 - u), z = 0.3 + reach * go, wide = S.from + (S.to - S.from) * go;
+        if (p.kind === "ring") { p.m.position.set(0, 0, z); p.m.scaling.x = wide; p.m.scaling.z = wide; }
+        else p.m.position.set(p.x * wide * 0.5, p.y * wide * 0.5, z);
+      }
+      const fade = t / span < 0.66 ? 1 : 1 - (t / span - 0.66) / 0.34;
+      if (fade < 1) { mat.alpha = Math.max(0, fade); mat.transparencyMode = 2; }
+    };
+    pose(0);
+    this._effects.push({
+      root,
+      remaining: span,
+      update: (_dt, remaining) => pose(span - remaining),
+      dispose: () => { for (const p of parts) glow?.removeExcludedMesh(p.m); mat.dispose(); },
+    });
+  }
+
   private _spawnShockRing(at: Vector3): void {
     const root = new TransformNode("shockRing", this._scene);
     root.position.copyFrom(at);

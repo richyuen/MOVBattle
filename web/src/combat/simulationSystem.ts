@@ -256,6 +256,8 @@ const BARREL_ROLL = { arc: 0.02, ridden: true };
  * ground; a fresh barrel is under him again when his next blow is ready (_barrelOut, checked each decision).
  */
 const MOUTH_LAUNCH = { mouthAhead: 1.1, mouthDrop: 0.3 };
+// [S] 502 the Shouter's shockwave (spec at _tryShout)
+const SHOUT = { reach: 9, half: 0.55, speed: 10, lift: 4.5, large: 0.6, giant: 0.3 };
 
 /** Where a HAND_LAUNCH shooter's missile leaves: his bow fist or his mouth, in world space; null when he has neither. */
 function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
@@ -1355,6 +1357,43 @@ export class SimulationSystem {
     this._lassos.set(target, lasso);
     this._haulLasso(target, lasso, now);
     this._logAbility(attacker, "lasso", now, target.position);
+    return true;
+  }
+
+  /**
+   * [S] 502 the Shouter's Shout (card Abilities "Shout": "a giant shockwave in one direction, blasting units away"; Characteristics: harmless,
+   * the same push for every man in it, taller or heavier men resist more; secret.shouter.jpg; audit 500 c.1: "only a melee hit ... no shockwave
+   * from the head"). His attack is the shout: every living enemy within SHOUT.reach m of him and inside SHOUT.half rad of the line to his target
+   * is blasted off his feet along that line (applyBlastLaunch .speed, .lift; times .large for a large man, .giant for a giant or colossal one),
+   * no damage; a wave of white rings and streaks leaves his head down the line (visualEffects spawnShoutWave). Logged "shout", with a plain hit
+   * on his target at the same tick (LESSONS: the _release shot is the first plain event).
+   */
+  private _tryShout(attacker: RuntimeUnit, target: RuntimeUnit, now: number): boolean {
+    const S = SHOUT;
+    if (attacker.definition.id !== "secret.shouter" || attacker.isDead || target.isDead) return false;
+    const line = target.position.subtract(attacker.position);
+    line.y = 0;
+    if (line.lengthSquared() < 1e-6) return false;
+    line.normalize();
+    const cosHalf = Math.cos(S.half);
+    for (const u of this._units) {
+      if (u.isDead || u.team === attacker.team || u.linkedParent || isVehicleUnit(u.definition.id)) continue;
+      const to = u.position.subtract(attacker.position);
+      to.y = 0;
+      const d = to.length();
+      if (d > S.reach || (d > 0.3 && Vector3.Dot(to.scale(1 / d), line) < cosHalf)) continue;
+      const size = u.definition.size;
+      const resist = size === "giant" || size === "colossal" ? S.giant : size === "large" ? S.large : 1;
+      u.applyBlastLaunch(line.clone(), S.speed * resist, S.lift * resist);
+    }
+    worldMatrixChain(attacker.body.headMesh);
+    const mouth = attacker.body.headMesh.getAbsolutePosition().clone();
+    this.visualEffects?.spawnShoutWave(mouth, line, S.reach);
+    const neck = this._neckOf(target);
+    worldMatrixChain(target.body.headTop);
+    const head = target.body.headTop.getAbsolutePosition();
+    this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
+    this._logAbility(attacker, "shout", now, target.position);
     return true;
   }
 
@@ -2950,6 +2989,8 @@ export class SimulationSystem {
     if (this._tryLatch(attacker, target, damage, attackProfile.cooldown * cooldownMultiplier, now)) return;
     // [S] 445 the Lasso does not jab: he ropes the man and hauls him under the horse (LASSO_DRAG)
     if (this._tryLasso(attacker, target, damage, attackProfile.cooldown * cooldownMultiplier, now)) return;
+    // [S] 502 the Shouter does not strike from range: he shouts a harmless shockwave down the line (SHOUT)
+    if (this._tryShout(attacker, target, now)) return;
 
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
     if (abilities.has("push_force")) {
