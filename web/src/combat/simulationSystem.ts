@@ -260,6 +260,8 @@ const MOUTH_LAUNCH = { mouthAhead: 1.1, mouthDrop: 0.3 };
 const SHOUT = { reach: 9, half: 0.55, speed: 10, lift: 4.5, large: 0.6, giant: 0.3 };
 // [S] 503 the Fan Bearer's gust (spec at _tryFanBlow)
 const FAN_BLOW = { reach: 10, half: 0.32, push: 10 };
+// [S] 503 the Bomb on a Stick's blast on the blow (spec at _tryBombSmack): radius m, burst scale, push times the blow's, the ball within .near m of the man
+const BOMB_SMACK = { radius: 3.5, scale: 0.7, push: 1.6, near: 3 };
 
 /** Where a HAND_LAUNCH shooter's missile leaves: his bow fist or his mouth, in world space; null when he has neither. */
 function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
@@ -1431,6 +1433,29 @@ export class SimulationSystem {
     worldMatrixChain(target.body.headTop);
     const head = target.body.headTop.getAbsolutePosition();
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
+    return true;
+  }
+
+  /**
+   * [S] 503 the Bomb on a Stick's smack (card Main Hand "Bomb on a Stick": Bludgeon - Melee, range 3, explosion radius 3.5; Characteristics: "they
+   * will charge the enemy and smack them with the bomb, creating a big blast"; audit 500 c.1: "throws the bomb as a projectile from 6 m"). He walks
+   * in to his pole's reach (manifest engageRangeOverride) and his blow lands the bomb on the man: a blast (spawnExplosionBurst at BOMB_SMACK.scale)
+   * where the bomb's ball is at the blow, the man's harm and a push out to .radius m round him. No bomb leaves his hands. Logged "blast" at the
+   * blow, with the plain hit (LESSONS: the _release shot's event).
+   */
+  private _tryBombSmack(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, now: number): boolean {
+    const B = BOMB_SMACK;
+    if (attacker.definition.id !== "secret.bomb_on_a_stick" || attacker.isDead || target.isDead) return false;
+    const ball = attacker.body.root.getDescendants(false, (n) => n.name === "bombStickBall")[0] as TransformNode | undefined;
+    let at = target.position.add(new Vector3(0, 1, 0));
+    if (ball) { worldMatrixChain(ball); const p = ball.getAbsolutePosition(); if (Vector3.Distance(p, target.position) < B.near) at = p.clone(); }
+    this.visualEffects?.spawnExplosionBurst(at, B.scale);
+    this._applyDirectOrSplash(target, damage, B.radius, attacker.team, knockback.scale(B.push), knockback.scale(B.push));
+    const neck = this._neckOf(target);
+    worldMatrixChain(target.body.headTop);
+    const head = target.body.headTop.getAbsolutePosition();
+    this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
+    this._logAbility(attacker, "blast", now, target.position);
     return true;
   }
 
@@ -3030,6 +3055,8 @@ export class SimulationSystem {
     if (this._tryShout(attacker, target, now)) return;
     // [S] 503 the Fan Bearer blows a gust of wind down the line, not a strike (FAN_BLOW)
     if (this._tryFanBlow(attacker, target, damage, now)) return;
+    // [S] 503 the Bomb on a Stick smacks the man with the bomb on its pole, which blows up there; it is never thrown (BOMB_SMACK)
+    if (this._tryBombSmack(attacker, target, damage, knockback, now)) return;
 
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
     if (abilities.has("push_force")) {

@@ -383,7 +383,8 @@ const custom = makeFaction(FactionId.Custom, "custom", [
 
 const secret = makeFaction(FactionId.Secret, "secret", [
   ["ballooner", "Ballooner", 120, "flying_melee", { abilities: ["flying_hover", "pull_hook"], specialHint: "balloon", visualPreset: "secret_ballooner", behaviorPreset: "secret_balloon_lift", controlStrength: 1.3, statusDurationSeconds: 2.2, damageMultiplier: 0.04, cooldownMultiplier: 0.56 }],
-  ["bomb_on_a_stick", "Bomb on a Stick", 150, "thrower", { weaponHint: "bomb", projectileHint: "bomb", visualPreset: "secret_bomb_on_a_stick", healthMultiplier: 1.22, damageMultiplier: 0.04, cooldownMultiplier: 0.23 }],
+  // [S] 503 (c.1) he walks in to his pole's reach (card range 3) and smacks with the bomb (simulationSystem BOMB_SMACK)
+  ["bomb_on_a_stick", "Bomb on a Stick", 150, "thrower", { engageRangeOverride: 2.6, weaponHint: "bomb", projectileHint: "bomb", visualPreset: "secret_bomb_on_a_stick", healthMultiplier: 1.22, damageMultiplier: 0.04, cooldownMultiplier: 0.23 }],
   ["fan_bearer", "Fan Bearer", 200, "special_magic", { abilities: ["push_force"], weaponHint: "staff", hatHint: "conical_hat", visualPreset: "secret_fan_bearer", behaviorPreset: "secret_push_fan", controlStrength: 1.5, healthMultiplier: 0.19, damageMultiplier: 0.00064, cooldownMultiplier: 0.11 }],
   ["raptor", "Raptor", 200, "charge_melee", { abilities: ["charge_impact"], size: "large", visualPreset: "secret_raptor", behaviorPreset: "secret_charge_beast", controlStrength: 1.15, healthMultiplier: 0.45 }],
   ["the_teacher", "The Teacher", 200, "heavy_melee", { abilities: ["parry"], weaponHint: "katana", visualPreset: "secret_teacher", behaviorPreset: "secret_duelist", cooldownMultiplier: 0.82, healthMultiplier: 0.44, damageMultiplier: 0.8 }],
