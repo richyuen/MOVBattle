@@ -102,7 +102,8 @@ const BODY_FLAMES = {
 const LAUNCH_SMOKE = { puffs: 14, wide: 1.2, tall: 0.6, from: 0.15, to: 0.6, drift: 0.9, rise: 0.4, stagger: 0.45, seconds: 1.6, fade: 0.4, alpha: 0.9, glow: 0.35, white: new Color3(0.93, 0.93, 0.9) };
 /** [S] 495 the Shadow Walker's Assassin Poof (spawnShadowPoof): a dark violet cloud a man high, held for the after-shot (~.16 s), gone before the windup (~1.1 s). */
 /** [S] 497 the Shadow Walker's stacking hit marks (spawnWalkerMarks). */
-const WALKER_MARK = { orb: 0.13, sparks: 2, radius: 0.36, height: 0.5, speed: 2.4, seconds: 8, fade: 1.5, green: new Color3(0.35, 1.6, 0.3) };
+// capture 497: .13 m orbs in (.35,1.6,.3) read as one small yellow glint at the knight's hip: bigger, three sparks, a deeper green under the glow
+const WALKER_MARK = { orb: 0.2, sparks: 3, radius: 0.36, height: 0.5, speed: 2.4, seconds: 8, fade: 1.5, green: new Color3(0.08, 0.9, 0.12) };
 const SHADOW_POOF = { puffs: 12, wide: 1.1, tall: 1.7, from: 0.2, to: 0.75, grow: 0.25, rise: 0.5, stagger: 0.2, seconds: 0.8, fade: 0.4, alpha: 0.88, glow: 0.6, ring: 1.6, dark: new Color3(0.16, 0.05, 0.22) };
 /** [S] 418 the Firework Arrow's burst (spawnFireworkBurst): spark ball .radius m (half the card's 2.5 m blast each way), .lift up off the ground. */
 const FIREWORK_BURST = {
