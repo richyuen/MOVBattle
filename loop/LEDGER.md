@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+491 | 65568848 | good.divine_arbiter.a | approved (blocker 3; a PASS; CONFIRM D)
+491 | 67a1ba53 | evil.shadow_walker.a | approved (blocker 1)
+491 | d2525821 | evil.exiled_sentinel.a | approved (blocker 2)
+491 | a395751d,287847f9 | evil.mad_mechanic.b | approved (no strike; claw inside out)
+491 | 4dfe45ac | evil.void_cultist.b | approved (blocker 2; b PASS)
+491 | cdb92fd0,ddf16a33 | evil.death_bringer.b | approved (blockers 1, 2; b PASS)
+491 | 071b5f23 | evil.void_monarch.b | approved (blockers 1, 2; b PASS)
+491 | 6a770969,f86388a0 | evil.tempest_lich.c | approved (no strike; bolts unseen)
+491 | 20f7342f | good.sacred_elephant.a | approved ([P] blocker 5; CONFIRM failed a)
+
 490 | c223381e | good.divine_arbiter.a | approved ([R] blockers 1-3; struck 1, 2; CONFIRM early, not applied)
 490 | 4f41d5e6 | good.chronomancer.a | approved (blocker 1; a PASS; CONFIRM D)
 490 | 38f71664 | good.sacred_elephant.a | approved (blocker 6)
@@ -40,16 +50,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 487 | 353aa34c | good.divine_arbiter.a | approved (blocker 5; CONFIRM failed a)
 487 | 50a6fe6b | good.celestial_aegis.a | approved (blocker 1; CONFIRM failed a)
 
-486 | 2b940c2b | good.righteous_paladin.a | approved (blocker 1)
-486 | 86c5d31f | good.righteous_paladin.a | approved (blocker 3)
-486 | 3287a3d9,5af5b18b | good.righteous_paladin.a | approved (no strike; CONFIRM failed a)
-486 | 20a4e925 | good.chronomancer.a | approved (blocker 2)
-486 | 1813eeb8,ec63e03e | good.chronomancer.c | approved (blocker 2; c PASS)
-486 | c2ee629c,39b3ed63 | good.radiant_glaive.a | approved (blocker 3)
-486 | b0e178f4 | good.celestial_aegis.a | approved (blockers 5-6 lineup)
-486 | 2176add5 | good.celestial_aegis.a | approved (blocker 4)
-486 | c2caca9d | good.sacred_elephant.a | approved (blocker 4)
-
 
 
 ## Spent (never retry as [P])
@@ -57,6 +57,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+VB:ELEPHANT_GIANT | buildMammoth giant .84 (seat 3.4 m) | 491 | approved | 1 (seat 4.1 m)
+goodDress:ARBITER_PUFFS | torso-hung ellipsoid .9W x.9H x1.1D at +-.84W,+.2H | 491 | approved | arm-frame balloon (490)
+UV/unitFactory:WALKER_HORN | path out to 2.2 heads at .24-.4H, up to 1.5H | 491 | approved | out 1.6, up 2.0 (U)
+evilDress:SENTINEL_MANE | 11 ico lumps .36-.62W, lit cloth ginger(.85,.3,.06) self-lit .2 | 491 | approved | none
+PB:MECHANIC_CLAW | cuff3.4f x2.5f,housing2.3f,3 cyan lights,jaws2.9f open.32 (built backwards) | 491 | approved | hammer+bomb
+evilDress:CULTIST_BUCKLER | 1.3W world-sized board,rim+.62 ring,10 rim/5 face spikes,boss | 491 | approved | 1.5W hand-frame disc
+PB:WARGLAIVE | chord.33H sweep.95,wide.05H,hot edge unlit(1.6,.22,.32),gold self-lit.4 | 491 | approved | greatsword
+PB:MONARCH_SWORD | blade.5H wide.05H,ball.075H 10 spikes,unlit bone(.78,.7,.44) | 491 | approved | orb staff
+FX:STORM_CLOUD | high3.2,11 puffs1.3,bolts5 every.3,life1.7 | 491 | approved | horizontal staff bolt
 goodDress:ELEPHANT_BLANKET | drape hull rx.85 ry.68 rz1.16 +.05,hang.42,z-1->.15,.035 thick;gold hem.1,teeth.2x.17 every.25,end bands.07;4 tassels.26 | 490 | approved | half-shell arc.5 patch (VB)
 VB:ELEPHANT_FOOT | hide frustum .6->.78 x.18 at -.35 knee,rim .8 x.04 hide*1.12 | 490 | approved | dark .08 sole disc
 PB:CULTIST_MACE | shaft.66H x.022H dark,grip.4,team wrap.16H+band,ball.12H ico+12 spikes.075H,butt.07H;staff+orb rod | 490 | approved | plain staff+orb

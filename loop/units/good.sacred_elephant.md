@@ -1,24 +1,25 @@
 # good.sacred_elephant
-Status: open   Audited: 481 (AUDIT x2)   Done: -
+Status: open   Audited: 481 (AUDIT x2), 491 (CONFIRM: passed b, c, d; failed a)   Done: -
 ## Verdicts
-a FAIL (5 since 481)
- 5. scale in unit_good.sacred_elephant_idle and lineup_good_wide: an enormous beast whose mounted rider sits far above all humanoids — TABS: a smaller elephant whose seated rider is roughly two normal unit heights above the ground (ref: reference/factions/good.jpg, reference/units/good.sacred_elephant.blue.png).
-b PASS (482 gap review)
-c PASS (485 rider spear throws with pull)
-d PASS (490 stats)
+a FAIL (0 since 491)
+ 1. tusks in unit_good.sacred_elephant_idle — long, slim, cream mammoth tusks that sweep forward and up past the trunk tip to about half a body length in front of the head — TABS: short, thick, conical grey-ivory tusks that curl up close to the head and end about level with the cheeks, each with a gold ring (ref: reference/units/good.sacred_elephant.jpg, good.sacred_elephant.red.png; card Appearance "mixture of an African Elephant and an Asian Elephant").
+ 2. rider's tank-top in unit_good.sacred_elephant_idle — a plain white torso block washed into a white glow blob, with no bands — TABS: a white short top crossed by horizontal team-coloured bands with gold linings (ref: reference/units/good.sacred_elephant.red.png, .blue.png; card Appearance "white short tank-top, with gold linings").
+ 3. feet in unit_good.sacred_elephant_idle — each leg ends in a stepped, octagonal, flared grey collar like a column base — TABS: smooth tapering legs ending in plain rounded pads (ref: reference/units/good.sacred_elephant.jpg, good.sacred_elephant.blue.png).
+b PASS (482 gap review; CONFIRM 491)
+c PASS (485 rider spear throws with pull; CONFIRM 491)
+d PASS (491 stats)
 ## Ranked gaps
-1. [P] good.sacred_elephant.a scale — blocker 5: rig scale down until the rider sits about two unit heights high (fallout of 38f71664/52fdcb61); in lineup_good the rider's head comes into frame — ref: reference/factions/good.jpg — ours: lineup_good.png
-2. [S] good.sacred_elephant.a scale — blocker 5: shrink the body so the seated rider sits about two unit heights up — ref: reference/factions/good.jpg — ours: lineup_good_wide.png
+1. [S] good.sacred_elephant.a short curled tusks — blocker 1: thick conical tusks curling up beside the trunk root, ending by the cheeks, gold ring kept — ref: good.sacred_elephant.jpg — ours: unit_good.sacred_elephant_idle.png
+2. [S] good.sacred_elephant.a banded rider top — blocker 2: white top with team bands and gold linings, out of the glow — ref: good.sacred_elephant.red.png — ours: unit_good.sacred_elephant_idle.png
+3. [S] good.sacred_elephant.a rounded foot pads — blocker 3: replace the stepped flared rim with a plain rounded pad — ref: good.sacred_elephant.blue.png — ours: unit_good.sacred_elephant_idle.png
 ## Attempts (iter | gap | criterion | verdict)
-490 | draped flank blanket, goodDress elephantBlanket (38f71664) | a | approved (struck 6)
-490 | pale flared foot pads, ELEPHANT_FOOT (52fdcb61) | a | approved (struck 3)
+491 | [P] rig at .84 (ELEPHANT_GIANT), seat 4.1 -> 3.4 m (20f7342f) | a | approved (struck 5; CONFIRM failed a)
+490 | draped flank blanket (38f71664); pale flared foot pads (52fdcb61) | a | approved (struck 6, 3)
 489 | small folded hide ears (504716a7, b6f1d5ba) | a | approved (struck 2)
 486 | rider white dress (c2caca9d) | a | approved (struck 4)
 485 | rider spear throws (c9266f24) | c | approved (struck 1; c PASS)
-485 | continuous trunk (a18bb6c5) | a | approved (struck 1)
-482 | paired rider spears (f6e3fada) | b | approved (struck 1)
+482-485 | paired rider spears, continuous trunk | a,b | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Evidence 485: lineup_good_wide shows the rider whole (a.5 re-aimed there); rig 7.38 m; a scale change re-frames shots (LESSONS: RE-AUDIT risk).
-- 490 DEFECTS: blanket lacks the big gold chevrons on its face; foot pads flare like a pedestal ledge.
-- Ears are vehicleBuilder elephantEars (ELEPHANT_EAR); blanket goodDress elephantBlanket (torso frame, hull ellipsoid spec at its head).
+- Tusks are the mammoth's (vehicleBuilder buildMammoth MAMMOTH_TUSK); feet ELEPHANT_FOOT; rider ELEPHANT_RIDER_DRESS (goodDress).
+- Rig scale: buildMammoth giant = ELEPHANT_GIANT (vis scale does not reach it).

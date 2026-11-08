@@ -38,14 +38,14 @@ Read whole at step 1; one fact per line, merge near cap.
 - Retire superseded hip skirts/ropes (482). The `_yoke` hull spans the trunk, wider than a slim torso: re-skin it for a bare waist, size shells from it (487).
 - A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen). The `_yoke` hull spans the whole trunk, not a collar: never anchor a chest piece to its foot (444).
-- A one-sided disc flipped by its summed normal (faceFront) can face away (390 halfling): build small flat dress pieces as thin closed slabs.
+- Build small flat dress pieces as thin closed slabs: a one-sided disc can face away (390).
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
 - A foot mesh is a merged cuff + toe box ~half the shin tall: a tuft at its bbox middle is buried; the instep's top is lo.y + ~.42 (399). Shoes, anklets, socks go at that height or the boot eats the shin (433); the grass hides a foot box to ~.6, so a shoe must top that (434).
 - A hem or band cut at a share of limbBox(thigh) misses the knee: the thigh runs ~.08 past the joint; anchor to knee.position.y in the hip frame. Shin, foot, trunk and _yoke meshes in the dark body shade read as boots or a vest: recolour them to the dress cloth (433).
-- A pelvis (hip-joint) pitch carries the legs with it: +1.2 rad lays the body flat - head forward, face down, legs trailing - so a whole-body dive pose comes from the hip joint alone (400 headbutter).
-- A piece hung in the head's frame cannot run on down the torso: at the chest's z it sits inside the chest box - build the torso run as its own torso-parented piece (401 jarl).
+- A hip-joint pitch carries the legs: +1.2 rad lays the body flat, face down, so a whole-body dive comes from the hip alone (400).
+- A head-hung piece cannot run on down the torso (it sits inside the chest box): build the torso run torso-parented (401).
 - The bead eyes hang off the neck joint, not the head block: a head-hung cap or band must be seated off the eyes' world tops read into the head's frame, or it covers them (403 ice archer); shrinking headSize leaves the eyes where they were (403 headbutter band across the eyes). A peaked cap brim hides them too (429 cannon).
-- A beast hood's ellipsoid skull reads as a flat cap unless its features stand proud of the ellipsoid's own front at their height: sample the skull's front z at the eye's y, not one z for all (400 jarl).
+- A beast hood's features read only proud of the skull's own front at their height: sample its front z at each feature's y (400).
 - A leg-length change reads only if the dress over the leg scales with it: brawlerLegs' boots and cuffs kept the visible belt-to-sole at 41% while the probe hip rose to 52% (406 headbutter). Measure the shot, not the bone.
 - A closed trapezoid plate is a 4-tessellation frustum cylinder squashed in z (KABUTO plate): facet skirts, blades and crests come from it; arc cylinders are one-sided ribbons SSAO greys, their opening an angle to get wrong (421).
 - A faction tint plus the clothed recolour's warm hue shift turns red-team body cloth tan (449 wild_west): a garment the ref shows in team colour gets its own team cloth material, not body.bodyMaterial; check the red team on a --noglow swatch.
@@ -55,4 +55,6 @@ Read whole at step 1; one fact per line, merge near cap.
 - A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
 - A torso-rooted shield detaches in windup (483, 489 pavise).
 - Dispose sim meshes in endSimulation (485).
+- A head-hung unlit orange lump washed to a faint halo under the glow even when excluded; lit cloth, self-lit .2, reads solid (491).
+- vis `scale` does not reach a vehicle rig: the mammoth family scales by buildMammoth's `giant` (491 elephant).
 - A lethal duel freezes post-impact shots; a distant reserve fixes it (480).
