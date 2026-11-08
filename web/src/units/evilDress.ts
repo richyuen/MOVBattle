@@ -2,7 +2,7 @@ import { Color3, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Vector3, V
 import type { Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
-import { limbShell } from "./medievalDress";
+import { limbBox, limbShell } from "./medievalDress";
 
 /*
  * Evil faction cloth, hats and ornaments (loop: new per-unit dress goes here, not into unitFactory or propBuilder).
@@ -1083,8 +1083,13 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  * from its top to its foot, with .bands raised darker (.band grey) bands .bandOut proud, .bandH of the shin tall, each tipped .slant rad about x,
  * alternating, the wound read.
  */
+// [S] 501 (a.1, CONFIRM 500: "the pants block runs almost to the ankles over a short wrapped shin stub"): the thigh mesh runs .16 m past the knee
+// joint (probe 501: shorts to .39 m over a knee at ~.57 m), so the shorts are cut at the knee joint (LESSONS: anchor to knee.position.y) and not at the
+// thigh box's foot: .thigh a slim seat shell from the hip to .puffFrom of the way to the knee, then a baggy .puff barrel per thigh to .hemAt over the
+// knee, gathered in a narrow .cuff band; the wraps then show over the whole shin, knee to ankle, a third of his height
 const DEATH_LEGS = {
-  shade: 0.32, thigh: 1.55, puff: 1.85, puffFrom: 0.45, grey: new Color3(0.45, 0.44, 0.42), wrap: 1.3, bands: 5, bandOut: 1.45, bandH: 0.09,
+  hemAt: 0.04, cuff: 1.35, cuffH: 0.07,
+  shade: 0.32, thigh: 1.55, puff: 1.95, puffFrom: 0.3, grey: new Color3(0.45, 0.44, 0.42), wrap: 1.3, bands: 5, bandOut: 1.45, bandH: 0.09,
   band: new Color3(0.28, 0.28, 0.27), slant: 0.18,
 };
 export function deathBringerShinWraps(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
@@ -1095,9 +1100,14 @@ export function deathBringerShinWraps(scene: Scene, body: ArticulatedBody, team:
   const out: Mesh[] = [];
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) for (const m of shin.getChildMeshes(true)) if (m.name === "evilWrap") m.setEnabled(false);
   for (const m of body.allMeshes) if (m.name === "evilBreech") m.material = shorts;
-  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
-    out.push(limbShell(scene, "deathShorts", thigh, 0, 1, C.thigh, shorts));
-    out.push(limbShell(scene, "deathShortsPuff", thigh, C.puffFrom, 1, C.puff, shorts));
+  for (const [thigh, knee] of [[body.leftUpperLeg, body.leftKnee], [body.rightUpperLeg, body.rightKnee]] as const) {
+    // the share of the thigh box (0 its top, 1 its foot) at which the knee joint sits, the hem a little over it
+    const L = limbBox(thigh), H = L.half * 2;
+    const hem = Math.min(1, (L.mid + L.half - (knee.position.y + C.hemAt)) / H);
+    out.push(limbShell(scene, "deathShorts", thigh, 0, hem * C.puffFrom + 0.02, C.thigh, shorts));
+    const puff = limbShell(scene, "deathShortsPuff", thigh, hem * C.puffFrom, hem - C.cuffH, C.puff, shorts);
+    out.push(puff);
+    out.push(limbShell(scene, "deathShortsCuff", thigh, hem - C.cuffH, hem, C.cuff, shorts));
   }
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
     out.push(limbShell(scene, "deathShinWrap", shin, 0, 1, C.wrap, grey));
