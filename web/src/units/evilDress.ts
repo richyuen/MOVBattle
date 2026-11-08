@@ -878,15 +878,22 @@ export function lichTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
   body.rightEye?.setEnabled(false);
   for (const m of head.getChildMeshes(false)) if (/^(evilCap|evilCapDome|lichTine|lichTwig)/.test(m.name)) m.isVisible = false;
   const blackC = new Color3(0.08, 0.06, 0.07), black = getMaterialFactory().get("cloth", blackC, { emissive: blackC.scale(0.4), roughness: 1 });
-  const flatC = new Color3(0.02, 0.015, 0.02), flat = getMaterialFactory().get("unlit", flatC, { emissive: flatC });
+  // 500 look: the flat .02 black read plum-brown through the field's haze at the capture distance; its own material (not deathBringerHair's), fog off
+  const flatC = new Color3(0.018, 0.014, 0.02), flat = getMaterialFactory().get("unlit", flatC, { emissive: flatC });
+  flat.fogEnabled = false;
   // the neck stub under the socket read as a blue band (look 495): it goes the tendrils' black
   for (const m of body.allMeshes) if (/_neckM$/.test(m.name)) { m.material = black; scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   const out: Mesh[] = [];
   const foot = c.y - H * 0.5, top = foot + H * C.socket;
   const socket = MeshBuilder.CreateCylinder("lichSocket", { height: H * C.socket, diameterBottom: W * C.sockW * 0.9, diameterTop: W * C.sockW, tessellation: 8 }, scene);
   socket.parent = head; socket.position.set(c.x, (foot + top) / 2, c.z); socket.material = flat; out.push(socket);
-  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, hs = head.scaling;
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox;
   const TH = tb.extendSize.y * 2 * tm.scaling.y;
+  // 500 look: hung off the head, the idle head pitch tipped the 1 m tendrils forward (foreshortened, the tallest tip .3 m ahead of the face):
+  // they stand on the torso joint, rooted at the socket top read into its frame
+  for (let n: TransformNode | null = head; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+  const toTorso = head.getWorldMatrix().multiply(body.torso.getWorldMatrix().clone().invert());
+  const root0 = Vector3.TransformCoordinates(new Vector3(c.x, top - H * 0.05, c.z), toTorso);
   const up = new Vector3(0, 1, 0);
   const chain = (pts: Vector3[], root: number): void => {
     const n = pts.length - 1;
@@ -894,17 +901,17 @@ export function lichTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
       const a = pts[k], e = pts[k + 1], d = e.subtract(a), len = d.length();
       const r0 = root * (1 - k / n), r1 = k === n - 1 ? 0 : root * (1 - (k + 1) / n);
       const seg = MeshBuilder.CreateCylinder("lichTendril", { height: len * 1.06, diameterBottom: r0, diameterTop: r1, tessellation: 5 }, scene);
-      seg.parent = head; seg.material = flat;
+      seg.parent = body.torso; seg.material = flat;
       seg.position.copyFrom(a.add(e).scale(0.5));
       seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, d.normalize(), new Quaternion());
       out.push(seg);
     }
   };
-  const paths = LICH_TENDRILS.map((path) => path.map(([x, y, z]) => new Vector3(c.x + (x * TH) / hs.x, top + (y * TH) / hs.y - H * 0.05, c.z + (z * TH) / hs.z)));
-  for (const pts of paths) chain(pts, (TH * C.root) / hs.x);
+  const paths = LICH_TENDRILS.map((path) => path.map(([x, y, z]) => root0.add(new Vector3(x * TH, y * TH, z * TH))));
+  for (const pts of paths) chain(pts, TH * C.root);
   for (const [i, at, [x, y, z]] of LICH_SPURS) {
     const pts = paths[i], f = at * (pts.length - 1), k = Math.floor(f), from = Vector3.Lerp(pts[k], pts[k + 1], f - k);
-    chain([from, from.add(new Vector3((x * TH) / hs.x, (y * TH) / hs.y, (z * TH) / hs.z))], (TH * C.root * 0.5) / hs.x);
+    chain([from, from.add(new Vector3(x * TH, y * TH, z * TH))], TH * C.root * 0.5);
   }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
