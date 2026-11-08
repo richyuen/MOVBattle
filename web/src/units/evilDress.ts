@@ -1525,7 +1525,8 @@ export function monarchTunic(scene: Scene, body: ArticulatedBody, bone: Material
  * its foot .below h under the thigh's foot (over the knee), standing .fwd r forward of the axis; on its front .rows x .cols studs, 4-sided points
  * .stud r across and .spike r proud, and .side studs down each outer face.
  */
-const MONARCH_KNEES = { wide: 2.7, deep: 2.3, tall: 0.62, below: 0.14, fwd: 0.25, rows: 3, cols: 2, stud: 0.55, spike: 0.5, side: 2 };
+// 499 [P] (a.7): one plate per knee with a gap between, mid-thigh to under the knee (was wide 2.7, tall .62: a slab from the belt)
+const MONARCH_KNEES = { wide: 2.2, deep: 2.3, tall: 0.4, below: 0.14, fwd: 0.25, rows: 3, cols: 2, stud: 0.55, spike: 0.5, side: 2 };
 export function monarchKneePlates(scene: Scene, body: ArticulatedBody, bone: Material): Mesh[] {
   const C = MONARCH_KNEES, out: Mesh[] = [];
   for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
