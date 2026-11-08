@@ -54,7 +54,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A short effect child (cloud bolts) can die inside one capture advance: tie its life to its owner (492).
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
 - A ground-length skirt hides a hover lift: robe below the knee rides each shin (493, 499 lich).
-- A man flat in a shot whose probe_eval root.rotation is 0 and physicsState steady is tipped by a pose layer (502 monarch).
+- A probe replays a shot only seeded as capture (mulberry32 0x4d4f5642, _nextRuntimeId 100000) (503 monarch).
 - hpoint without "haxe" gives the shouldered carry: _twoHandPole's off fist lands over the crown (502 bomb stick).
 - In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).

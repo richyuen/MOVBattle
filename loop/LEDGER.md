@@ -4,6 +4,14 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+503 | 90f0707f,6ace58da | evil.death_bringer.a | approved [R] (blocker 2; 1's crown clause cleared; CONFIRM passed a, gap critic failed it)
+503 | 412d556a,1888c349 | evil.void_monarch.c | approved (blocker 1; c PASS; CONFIRM D)
+503 | c9a3b096,71cb0028 | secret.ballooner.b | approved (blocker 1; b PASS)
+503 | 59e6b1af | secret.fan_bearer.c | approved (blocker 1; c PASS)
+503 | bf9a5a70,cb05da8e | secret.bomb_on_a_stick.c | approved (blocker 1)
+503 | 1101ed14 | secret.jester.a | approved (blocker 1)
+503 | 945b798f | secret.chu_ko_nu.a | approved (blocker 1; 5 struck by lineup)
+
 502 | c1dc9a29 | evil.death_bringer.a | approved (blocker 3)
 502 | 1dde2456 | evil.death_bringer.a | approved (blocker 2; critic a PASS, CONFIRM failed a again: plateau)
 502 | bd0dacb6 | evil.void_monarch.a | approved (blocker 2; a PASS, CONFIRM passed a, b, c)
@@ -42,16 +50,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 499 | 66fc425a | evil.void_monarch.c | approved (blocker 2; c PASS)
 499 | 413f738e | evil.void_monarch.a | approved (blocker 6)
 
-498 | eb3df4ba,37602f6a | evil.shadow_walker.a | approved (blocker 4)
-498 | cb8a83fa | evil.shadow_walker.a | approved (blocker 5)
-498 | 1e5aa045 | evil.mad_mechanic.a | approved (blocker 6; critic a PASS, CONFIRM failed a)
-498 | 63006385 | evil.tempest_lich.b | approved (blocker 4)
-498 | 594b761d | evil.tempest_lich.b | approved (blocker 5; b PASS, CONFIRM passed b)
-498 | b08f6e09 | evil.tempest_lich.a | approved (blocker 4; CONFIRM failed a)
-498 | 647a7951 | evil.void_monarch.c | approved (Demon Transformation clause of 2)
-498 | b42cc679 | evil.death_bringer.c | approved (blocker 2)
-498 | 3ab07b72 | evil.void_monarch.a | approved (blocker 5; added 7)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
@@ -65,7 +63,9 @@ PA:STONE_HUG | side.8 front-.1 drop.3 of the stone's radius;_armTo both fists | 
 PB/SS:rcbMuzzle | slot on the stock nose, HAND_LAUNCH chu_ko_nu muzzle | 502 | approved | face-height origin
 SS/FX:SHOUT | reach9 half.55 speed10 lift4.5 large.6 giant.3, no damage;wave 4 rings .5-3.4 m,10 streaks,.6s | 502 | approved (no lean, thin ring) | melee hit from 7.8 m
 secretDress:TEACHER_HAIR | brown(.16,.085,.06);cap1.12W e+.06H to .6H;3 puffs/side .42W at .6W;3 back lumps | 502 | approved (cap reads boxy) | bald
-evilDress:DEATH_LEGS | [S] hem knee joint+.04;seat1.55 to .3,puff1.95,cuff1.35 .07;grey(.45) wrap1.3 whole shin,5 bands | 501 | approved | shorts to thigh box foot (.39 m);evilWrap rings
+evilDress:DEATH_LEGS | [R] 503 shin mesh itself unlit pale(.62,.58,.5),6 seams unlit(.4,.37,.32) 1.1 out .035 tall slant.22;thigh stub past knee wrapped 1.03;feet team skin;shorts hem/seat/puff/cuff kept | 503 | approved (shins struck) | 501 grey(.45) wrap1.3 whole shin,5 bands 1.45 (CONFIRM: greaves);shorts to thigh box foot (.39 m);evilWrap rings
+SS/RU:SECRET_503 | FAN_BLOW reach10 half.32 push10 + FX FAN_GUST 16 streaks 3 waves .85s,2 swirls;BOMB_SMACK radius3.5 scale.7 push1.6 chest1,engageRangeOverride2.6;RU steadfast blast slide .2 no lift;STEADFAST_UPRIGHT .3 | 503 | approved (fan streaks straight bars; monarch head leans 25 deg) | none (fan melee hit from 7.8 m; bomb thrown 6 m; monarch flung by blasts, swing rolled him flat)
+secretDress:SECRET_503 | BALLOONER_GLUE unlit(.66,.5,.3) mitt3.4HW lump1.9;JESTER_CAP hood1.14W points root.34 tip.14 bell.22,brown spike.62H;KONU_KNOT black(.05) cap.62H,band.16H team stripe,bun.42H | 503 | approved (glue near-white, hand only; jester points thin; hair maroon-brown) | shuriken; maroon disc cap; conical hat
 evilDress:DEATH_BELT | black belt.12H;3 tusks/side at.38/.5/.58W drop.32 hook.24 root.13W tan | 500 | approved | drop.14 hook.1 root.07 (look 500, hidden)
 evilDress:MONARCH_BONE | evil preset bone = MONARCH_CROWN.tan lit cloth .12 rough1,out of glow (custom grey) | 501 | approved | HORNED_EVIL bone(.6,.6,.46)
 secretDress:BALLOONER_PACK | satchel.62x.5TH x.42TD brown,flap,straps.09TW;5 unlit balloons.42TW cream/team on strings to 1.4TH | 501 | approved | pink sphere special
@@ -81,7 +81,7 @@ secret_1 stats cost/hm/dm/cm (10 units, b4d5ff95) | d PASS 10/10;fan dm .00064 |
 evilDress:MONARCH_TUNIC | trunk/yoke lit(.08,.06,.07);3 bone chevrons at.62/.45/.28H reach.46W dip.12H bar.085W proud.09W;belt.14H +.05W,7 studs.09W | 497 | approved | lilac team block
 evilDress:MONARCH_HARNESS | bone V straps .13W foot.06H to shoulders .44W;tube wings .16W via mid(.74,.22,-.05) tip(1.05,.38,-.12),4 spikes.17W;evil preset harness flag | 496 | approved | pauldrons (custom keeps)
 evilDress:DEATH_MASK | tan(.8,.6,.35) prism brow1.04W@.56H cheek1.18W chin.42W@-.62H deep1.12D;sockets.3x.11 droop.35;nose.14W;horns team x.5;skull/jaw boxes off | 496 | approved (mask reads square, pale) | cream skull+jaw boxes
-evilDress:DEATH_HAIR | cap1.3W,sides.66W lit(.025);cape off;skull+body out of glow;trunk,yoke,upper arms team skin;fall 11 strands .06-.12TW over .62TW 1.25TH,kink.035 at.55,2 shoulder/side,unlit(.016) fog off;[S] 502 4 crown locks/side .14-.2TW at .58W to .8TH,9 back strands from the crown .8TW to 1.0TH | 502 | approved (CONFIRM: head box reads a slab/hood) | 501 fall .95TH,5 back strands .8TH; 5 even wedges (bib read, 500); 7 front spread.66 over dark body cloth (495)
+evilDress:DEATH_HAIR | [R] 503 cap/crown/side boxes gone: scalp ellipsoid 1.06x1.0x1.04 under the head top;6 locks/side .045TW across x .08-.12 deep at .52W;back fall rooted inside .8 head W;was cap1.3W,sides.66W lit(.025);cape off;skull+body out of glow;trunk,yoke,upper arms team skin;fall 11 strands .06-.12TW over .62TW 1.25TH,kink.035 at.55,2 shoulder/side,unlit(.016) fog off;[S] 502 4 crown locks/side .14-.2TW at .58W to .8TH,9 back strands from the crown .8TW to 1.0TH | 503 | approved [R] (side locks merge into a flat plate; reads maroon-brown) | 502 CONFIRM: head box read a slab/hood; 501 fall .95TH,5 back strands .8TH; 5 even wedges (bib read, 500); 7 front spread.66 over dark body cloth (495)
 UV:DEATH build/stance | 1.26,.9bulk,.84W,arms1.2 .7/.68,legs1.12 .8/.76;duelist | 495 | rejected [P] default stand (65d585c3, reverted: ledger reversal, idle still side-on; wants an [S] idle pose) | 1.74,1.44bulk;giant pose
 manifest/UV:void_monarch size | no size class;vis 1.2,1.12bulk;hm.27 | 494 | approved | giant;2.08,1.46;hm.14
 SS/PS:SENTINEL_CATCH | warn.15,front cos.4,shafts lodged in the board met | 494 | approved | none
