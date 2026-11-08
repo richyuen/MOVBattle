@@ -4148,7 +4148,7 @@ function buildDevoutGauntlet(scene: Scene, fit: BladeFit): Mesh {
  * cyan lights .light f tall on the cuff's outer face; two jaws .jawL f long, .jawW f wide, .jawT f thick, opened .open rad apart from the
  * housing's front and back, each with a hooked tip block .tip f long turned in toward the other.
  */
-const MECHANIC_CLAW = { cuff: 5.2, wide: 3.3, top: 1.1, house: 3, light: 0.75, jawL: 3.6, jawW: 2.7, jawT: 1.15, open: 0.32, tip: 1.3 };
+const MECHANIC_CLAW = { cuff: 3.4, wide: 2.5, top: 0.9, house: 2.3, light: 0.6, jawL: 2.9, jawW: 2.1, jawT: 0.95, open: 0.32, tip: 1.1 };
 function buildMechanicClaw(scene: Scene, fit: BladeFit): Mesh {
   const C = MECHANIC_CLAW, f = fit.fist;
   const root = new Mesh("mechanicClaw", scene);
