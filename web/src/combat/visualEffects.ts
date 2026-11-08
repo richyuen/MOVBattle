@@ -100,8 +100,8 @@ const BODY_FLAMES = {
 };
 /** [S] 419 the hwacha's launch smoke (spawnLaunchSmoke). */
 const LAUNCH_SMOKE = { puffs: 14, wide: 1.2, tall: 0.6, from: 0.15, to: 0.6, drift: 0.9, rise: 0.4, stagger: 0.45, seconds: 1.6, fade: 0.4, alpha: 0.9, glow: 0.35, white: new Color3(0.93, 0.93, 0.9) };
-/** [S] 495 the Shadow Walker's Assassin Poof (spawnShadowPoof): a dark violet cloud a man high, held long enough for the after-shot. */
-const SHADOW_POOF = { puffs: 12, wide: 1.1, tall: 1.7, from: 0.2, to: 0.75, grow: 0.25, rise: 0.5, stagger: 0.2, seconds: 1.4, fade: 0.45, alpha: 0.88, glow: 0.6, ring: 1.6, dark: new Color3(0.16, 0.05, 0.22) };
+/** [S] 495 the Shadow Walker's Assassin Poof (spawnShadowPoof): a dark violet cloud a man high, held for the after-shot (~.16 s), gone before the windup (~1.1 s). */
+const SHADOW_POOF = { puffs: 12, wide: 1.1, tall: 1.7, from: 0.2, to: 0.75, grow: 0.25, rise: 0.5, stagger: 0.2, seconds: 0.8, fade: 0.4, alpha: 0.88, glow: 0.6, ring: 1.6, dark: new Color3(0.16, 0.05, 0.22) };
 /** [S] 418 the Firework Arrow's burst (spawnFireworkBurst): spark ball .radius m (half the card's 2.5 m blast each way), .lift up off the ground. */
 const FIREWORK_BURST = {
   sparks: 26, radius: 1.25, long: 0.34, thick: 0.05, grow: 0.45, fall: 0.35, lift: 0.9, coreSize: 0.45, seconds: 0.65,
