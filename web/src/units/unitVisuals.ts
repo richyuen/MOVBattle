@@ -178,7 +178,7 @@ export interface UnitVisualConfig {
 
 export type WeaponVariant =
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -1105,8 +1105,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "beast", materialPreset: "secret_beast",
       });
     case "secret_teacher":
-      return vis({ scale: 1.12, bulk: 0.95, armLength: 1.15 }, "katana", "none", "none", "monk_robe", "#3b3b3b", undefined, {
-        posePreset: "duelist", materialPreset: "secret_bandit",
+      // [S] 501 (b.1) a spadroon, a very long thin blade over a gold swept hilt, one-handed (propBuilder SPADROON on the rapier), not the katana
+      return vis({ scale: 1.12, bulk: 0.95, armLength: 1.15 }, "rapier", "none", "none", "monk_robe", "#3b3b3b", undefined, {
+        posePreset: "duelist", materialPreset: "secret_bandit", weaponVariant: "spadroon",
       });
     case "secret_jester":
       return vis({ scale: 1.0, bulk: 0.88, headSize: 1.08 }, "dagger", "jester_cap", "none", "none", "#d43d3d", "dagger", {

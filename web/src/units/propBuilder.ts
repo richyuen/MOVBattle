@@ -3448,6 +3448,47 @@ const LANCE_TAN = new Color3(0.9, 0.72, 0.4);
  */
 const RAPIER = { blade: 0.66, thick: 0.018, taper: 0.35, cup: 0.13, cupDeep: 0.055, cupTop: 0.3, rim: 0.014, quillon: 0.2, grip: 0.08, pommel: 0.035 };
 const RAPIER_STEEL = new Color3(0.56, 0.57, 0.6);
+/*
+ * [S] 501 the Teacher's sword (card Appearance "a sword similar to that of a Spadroon, a fancy one handed blade"; secret.the_teacher.red.png: a very
+ * long thin straight grey blade, about the man's height from hilt to point, over a gold swept hilt: a round gold shell over the fist, a gold knuckle
+ * bow sweeping from it down round the fist to the pommel, a second ring curling out under the shell, a short dark grip and a gold pommel; audit 500
+ * b.1: "a katana-like blade with a round black tsuba, upright in a two-handed grip").
+ * Spec in prop units s (+y up the blade from the fist, the fist on the grip): blade .blade s long, .wide s across at the root tapering .taper, flat
+ * .flat; the shell a flat 8-sided gold disc .shell s across tipped .shellTilt about x, at the blade's root; the knuckle bow a gold tube .bowT s thick
+ * through BOW_PATH [x, y in s] (out to the side, round and down under the fist to the pommel); a ring .ring s across under the shell on the
+ * other side; grip .grip s, dark leather; pommel .pommel s gold. Gold lit cloth (palette gold row), self-lit .14.
+ */
+const SPADROON = {
+  blade: 0.95, wide: 0.022, taper: 0.3, flat: 0.35, shell: 0.12, shellTilt: 0.35, bowT: 0.014, ring: 0.075, grip: 0.085, pommel: 0.038,
+  gold: new Color3(0.85, 0.6, 0.12), steel: new Color3(0.56, 0.57, 0.6), leather: new Color3(0.18, 0.1, 0.06),
+};
+const BOW_PATH: [number, number][] = [[0, 0], [0.05, -0.01], [0.075, -0.04], [0.07, -0.085], [0.04, -0.115], [0, -0.125]];
+function buildSpadroon(scene: Scene, s: number): Mesh {
+  const C = SPADROON, B = C.blade * s, gold = mat(scene, C.gold, 0.14, "cloth");
+  const blade = MeshBuilder.CreateCylinder("rapier", { height: B, diameterBottom: C.wide * s, diameterTop: C.wide * C.taper * s, tessellation: 4 }, scene);
+  blade.scaling.z = C.flat;
+  blade.material = mat(scene, C.steel, 0.12, "cloth");
+  blade.convertToFlatShadedMesh();
+  const base = -B / 2;
+  const part = (m: Mesh, material: ReturnType<typeof mat>, x: number, y: number): Mesh => { m.parent = blade; m.position.set(x, y, 0); m.material = material; m.convertToFlatShadedMesh(); return m; };
+  const shell = part(MeshBuilder.CreateCylinder("spadroonShell", { height: 0.012 * s, diameter: C.shell * s, tessellation: 8 }, scene), gold, 0, base);
+  shell.rotation.x = C.shellTilt; shell.scaling.z = 1 / C.flat;
+  part(MeshBuilder.CreateCylinder("rgrip", { height: C.grip * s, diameter: C.wide * 1.6 * s, tessellation: 6 }, scene), mat(scene, C.leather, 0.08, "cloth"), 0, base - C.grip * s * 0.5);
+  part(MeshBuilder.CreateIcoSphere("rpommel", { radius: C.pommel * s * 0.5, subdivisions: 1 }, scene), gold, 0, base - C.grip * s - C.pommel * s * 0.3);
+  // the knuckle bow, from the shell's edge out round the fist and back in to the pommel
+  const up = new Vector3(0, 1, 0);
+  for (let k = 0; k < BOW_PATH.length - 1; k++) {
+    const a = new Vector3(BOW_PATH[k][0] * s, base + BOW_PATH[k][1] * s, 0), e = new Vector3(BOW_PATH[k + 1][0] * s, base + BOW_PATH[k + 1][1] * s, 0), d = e.subtract(a);
+    const seg = MeshBuilder.CreateCylinder("spadroonBow", { height: d.length() * 1.1, diameter: C.bowT * s, tessellation: 5 }, scene);
+    seg.parent = blade; seg.material = gold; seg.position.copyFrom(a.add(e).scale(0.5));
+    seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, d.normalize(), new Quaternion());
+    seg.scaling.z = 1 / C.flat;
+  }
+  const ring = part(MeshBuilder.CreateTorus("spadroonRing", { diameter: C.ring * s, thickness: C.bowT * s, tessellation: 10 }, scene), gold, -C.ring * s * 0.45, base - 0.02 * s);
+  ring.rotation.z = Math.PI / 2; ring.scaling.z = 1 / C.flat;
+  blade.position.y = B / 2 + 0.02 * s;
+  return blade;
+}
 const RAPIER_HILT = new Color3(0.45, 0.46, 0.5);
 /*
  * A matchlock musket (328; renaissance.musketeer.red.png, card Appearance "a matchlock musket": longer than the man who carries it, a light-grey octagonal
@@ -4685,6 +4726,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return blade;
     }
     case "rapier": {
+      if (variant === "spadroon") return buildSpadroon(scene, s); // [S] 501 (SPADROON)
       // The Spanish cup-hilt rapier, built to the spec at RAPIER: a long thin matte-grey blade up +y from the guard, a deep octagonal grey cup over the
       // fist with its mouth toward the hand and a team rim round the mouth, a cross quillon bar through it, a dark grip and a round pommel under it
       const B = RAPIER.blade * s;
