@@ -8,18 +8,17 @@ a FAIL (0 since 489)
  4. arms in unit_evil.mad_mechanic_idle: bare team arms — TABS: grey sleeves rolled to the forearm (ref: evil.mad_mechanic.red.png)
  5. back in unit_evil.mad_mechanic_idle: nothing behind him — TABS: a dark spiked round fuel tank with soul-smoke tentacles floating behind the shoulder (ref: evil.mad_mechanic.png; card Mechanic Tank)
  6. legs in unit_evil.mad_mechanic_idle are plain dark trousers — TABS: dark trousers with torn patches showing team skin and a tool ring at the knee (ref: evil.mad_mechanic.red.png)
-b FAIL (1 since 489)
- 1. main hand in unit_evil.mad_mechanic_windup: a sledgehammer — TABS: a big mechanical claw gauntlet with a dark cuff and bone-white pincer jaws (ref: evil.mad_mechanic.red.png)
- 2. off hand in unit_evil.mad_mechanic_windup: a black round bomb — TABS: a second matching claw gauntlet (ref: evil.mad_mechanic.blue.png)
+b PASS (492 claws turned: cuff up the forearm, jaws past the fist)
 c FAIL (0 since 489)
  1. attack in unit_evil.mad_mechanic_flight/_struck: a lobbed black bomb that explodes in a white blast — TABS: a light-blue flame jet sprayed from the claws at short range (4.5) (ref: evil.mad_mechanic.png; card)
 d PASS (491 stats)
 ## Ranked gaps
-1. [S] evil.mad_mechanic.b claw mounted inside out — blocker 1: mirror buildMechanicClaw so the cuff sheathes the forearm (+y in the hand frame) and the jaws stand past the fist (-y) — ref: evil.mad_mechanic.red.png — ours: unit_evil.mad_mechanic_windup.png
-2. [S] evil.mad_mechanic.c flame jet — blocker 1: short-range (4.5) light-blue flame cone from the claw replacing the bomb lob — ref: evil.mad_mechanic.png — ours: unit_evil.mad_mechanic_flight.png
+1. [S] evil.mad_mechanic.c flame jet — blocker 1: short-range (4.5) light-blue flame cone from the claw replacing the bomb lob — ref: evil.mad_mechanic.png — ours: unit_evil.mad_mechanic_flight.png
+2. [S] evil.mad_mechanic.a cap and goggles — blocker 1: dark goggles pushed up on the forehead over a top bun, the eyes uncovered — ref: evil.mad_mechanic.red.png — ours: unit_evil.mad_mechanic_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+492 | claw frame turned half a turn about x (42fd82fe) | b | approved (struck 1, 2; b PASS)
 491 | claw gauntlets both hands, propBuilder MECHANIC_CLAW (a395751d, 287847f9) | b | approved (no strike)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 491 DEFECTS: claw built backwards: the hand frame's +y runs toward the elbow, not past the knuckles (cuff juts past the fist, jaws lie along the forearm).
+- 492 DEFECTS: jaws slimmer than TABS's blocky pincers; the raised claw covers the head in _idle (pose).
 - The weapon is now "boxing_glove" both hands (variant mechanic_claw); the bomb is still the thrown projectile.

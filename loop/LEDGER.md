@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+492 | 694be5ff | good.sacred_elephant.a | approved (blocker 1)
+492 | 5f638756 | good.sacred_elephant.a | approved (blocker 2)
+492 | 509c48a0 | good.sacred_elephant.a | approved (blocker 3; a PASS; CONFIRM D)
+492 | 9a91a5a5 | evil.exiled_sentinel.a | approved (blocker 5)
+492 | 42fd82fe | evil.mad_mechanic.b | approved (blockers 1, 2; b PASS)
+492 | 68d128e0 | evil.void_cultist.a | approved (blockers 1, 4)
+492 | 3d7a1e02 | evil.shadow_walker.a | approved (blocker 2)
+492 | a91f8594 | evil.tempest_lich.c | approved (blocker 1)
+492 | 2117c98a,421014cc | evil.void_monarch.c | approved (dart clause of blocker 1)
+
 491 | 65568848 | good.divine_arbiter.a | approved (blocker 3; a PASS; CONFIRM D)
 491 | 67a1ba53 | evil.shadow_walker.a | approved (blocker 1)
 491 | d2525821 | evil.exiled_sentinel.a | approved (blocker 2)
@@ -40,34 +50,27 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 488 | aa380788 | good.chronomancer.a | approved (blocker 4)
 488 | b6a91fc9 | good.chronomancer.a | approved (blocker 5)
 
-487 | 215e62cb,d89418f7 | good.celestial_aegis.a | approved (blocker 3)
-487 | 2b127af7 | good.righteous_paladin.a | approved (no strike)
-487 | 6c3892a7 | good.righteous_paladin.a | approved (no strike)
-487 | 7436497a | good.radiant_glaive.a | approved (blocker 1)
-487 | 13702a7e,8cb2ef91 | good.radiant_glaive.a | approved (blocker 5)
-487 | 5cc46687,02948277 | good.radiant_glaive.a | approved (blocker 4; a PASS; CONFIRM D)
-487 | 5822e7c7 | good.divine_arbiter.a | approved (blocker 4)
-487 | 353aa34c | good.divine_arbiter.a | approved (blocker 5; CONFIRM failed a)
-487 | 50a6fe6b | good.celestial_aegis.a | approved (blocker 1; CONFIRM failed a)
-
-
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+evilDress:SENTINEL_SPIKES | 4/side black 4-sided,.26-.56W out,.12D back,.62TH tall (ends .72),.12W,splay.22 | 492 | approved | pauldrons only
+evilDress:CULTIST_HALO | dark 12-sided ring 2.1H tube.11H,10 inward triangles len.5R base.38H thin.06H | 492 | approved | wooden wheel 2.1H,10 spokes,hub
+evilDress:WALKER_HELM | 8-sided shell 1.24W x1.26D,-.56H..+.36H,dome.3H,4 tan(.6,.42,.18) bars.13W x.52H gap.24W;eyes off | 492 | approved | box cap+dome,5 teeth
+manifest:void_monarch archetype | boss_melee (boss.legendary splash 2),weaponHint sword;hm.14 dm.25 cm.43 | 492 | approved | special_magic staff;hm.23 dm.53 cm.56
 VB:ELEPHANT_GIANT | buildMammoth giant .84 (seat 3.4 m) | 491 | approved | 1 (seat 4.1 m)
 goodDress:ARBITER_PUFFS | torso-hung ellipsoid .9W x.9H x1.1D at +-.84W,+.2H | 491 | approved | arm-frame balloon (490)
 UV/unitFactory:WALKER_HORN | path out to 2.2 heads at .24-.4H, up to 1.5H | 491 | approved | out 1.6, up 2.0 (U)
 evilDress:SENTINEL_MANE | 11 ico lumps .36-.62W, lit cloth ginger(.85,.3,.06) self-lit .2 | 491 | approved | none
-PB:MECHANIC_CLAW | cuff3.4f x2.5f,housing2.3f,3 cyan lights,jaws2.9f open.32 (built backwards) | 491 | approved | hammer+bomb
+PB:MECHANIC_CLAW | cuff3.4f x2.5f,housing2.3f,3 cyan lights,jaws2.9f open.32;clawFrame rot.x PI | 492 | approved | built backwards (491);hammer+bomb
 evilDress:CULTIST_BUCKLER | 1.3W world-sized board,rim+.62 ring,10 rim/5 face spikes,boss | 491 | approved | 1.5W hand-frame disc
 PB:WARGLAIVE | chord.33H sweep.95,wide.05H,hot edge unlit(1.6,.22,.32),gold self-lit.4 | 491 | approved | greatsword
 PB:MONARCH_SWORD | blade.5H wide.05H,ball.075H 10 spikes,unlit bone(.78,.7,.44) | 491 | approved | orb staff
-FX:STORM_CLOUD | high3.2,11 puffs1.3,bolts5 every.3,life1.7 | 491 | approved | horizontal staff bolt
+FX:STORM_CLOUD | high3.2,11 puffs1.3,bolts5 every.3,life1.7;bolts held to cloud end (zeus hold) | 492 | approved | .3 s bolts (491);horizontal staff bolt
 goodDress:ELEPHANT_BLANKET | drape hull rx.85 ry.68 rz1.16 +.05,hang.42,z-1->.15,.035 thick;gold hem.1,teeth.2x.17 every.25,end bands.07;4 tassels.26 | 490 | approved | half-shell arc.5 patch (VB)
-VB:ELEPHANT_FOOT | hide frustum .6->.78 x.18 at -.35 knee,rim .8 x.04 hide*1.12 | 490 | approved | dark .08 sole disc
+VB:ELEPHANT_SHIN | one 12-sided hide lathe r .29/.28/.27/.29/.3/.27/.2 at y .05..-.44 (shin+pad) | 492 | approved | hide frustum .6->.78+rim .8 (490);dark .08 sole disc
+VB:ELEPHANT_TUSK | tube 6 pts root(.34,-.2,.56)->tip(.45,-.15,1.02),r.16->.008,grey-ivory(.72,.69,.63) self-lit.2;gold ring .37x.1 pts1-2 | 492 | approved | mammoth 12-piece sweep,ring piece 4
 PB:CULTIST_MACE | shaft.66H x.022H dark,grip.4,team wrap.16H+band,ball.12H ico+12 spikes.075H,butt.07H;staff+orb rod | 490 | approved | plain staff+orb
 UV:CHRONO build/stance | 1.3,.9bulk,.9W,legs1.4,.76/.7;upright hook on chronoCrownBand,lean.04 | 489 | approved | .96bulk;seeded crouch
 VB:ELEPHANT_EAR | jittered flap .74H x.6L x.1,out.68 z.1 flare.5 droop.12;fold roll on top tipped.6 | 489 | approved | 7-sided disc .95 flare.55
@@ -95,7 +98,7 @@ SS/goodMagic:CHRONO_TRANSFORM | settle.2,drop1.45H,tilt1.15,grow.25,spin1.6;10 c
 goodDress:RADIANT_VEST | team vest,white V .5W x .55H,gold trim+hem;sleeves 1.7/1.9,left .45 | 486 | approved | dark vest,pads
 goodDress:AEGIS_HOODIE | bare torso+yoke (arm skin) narrowed to .76SW x .8SD;unlit team*.4 shell from .1H,>=yoke W;lip1.05;hood.62W | 488 | approved | full-width bare trunk (487),skin box,lit cloth shell (486)
 goodDress:AEGIS_SKIRT | 8-sided1.1P->1.85P,.62T,black waist,gold hem,trapezoid.5->.26P | 486 | approved | trousers,grey boots
-goodDress:ELEPHANT_RIDER_DRESS | white hair,team cap,gold crystal,white top gold bands,shorts1.6 | 486 | approved | bald team soldier
+goodDress:ELEPHANT_RIDER_DRESS | white hair,team cap,gold crystal,white top gold bands+2 team stripes .13TH at +-.17 gold-lined .035,torso/yoke out of glow,shorts1.6 | 492 | approved | glowing plain top (486); bald team soldier
 UV:ARBITER scale/build | 1.12,bulk.92,torso.92,legs1.42,.78/.72 | 488 | approved | bulk.96 legs1 (486);1.86,1.22
 goodDress:DEVOUT_ARM_WRAPS | upper .45-1 x1.45,fore 0-.94 x1.7,3 ridges,unlit(.62,.64,.68) | 485 | approved | bare forearms
 goodDress:DEVOUT_WAIST_COLLAR | front W points .48 torsoH,V to band,sides/back;pelvis out of glow;band 1.04W | 485 | approved | two 4-sided fold cones

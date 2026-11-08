@@ -53,8 +53,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A prop not in _carryProp's node regex rides the fist, so _aimBlow's raised fist points it back at the hit: lay it on _aimTip before _twoHandPole (451 miner).
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
 - A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
-- A torso-rooted shield detaches in windup (483, 489 pavise).
-- Dispose sim meshes in endSimulation (485).
-- A head-hung unlit orange lump washed to a faint halo under the glow even when excluded; lit cloth, self-lit .2, reads solid (491).
-- vis `scale` does not reach a vehicle rig: the mammoth family scales by buildMammoth's `giant` (491 elephant).
+- A torso-rooted shield detaches in windup (483, 489 pavise); dispose sim meshes in endSimulation (485).
 - A lethal duel freezes post-impact shots; a distant reserve fixes it (480).
+- An effect child of a longer one (a cloud's .3 s bolts) can die inside one capture advance before _struck: tie its life to its owner (492 lich).
+- In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
