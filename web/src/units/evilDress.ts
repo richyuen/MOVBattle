@@ -833,6 +833,79 @@ export function walkerVest(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/** The trunk's box in the torso joint frame: the union of the torso box and the yoke hull (LESSONS 487), read in the world and brought back */
+function trunkBox(body: ArticulatedBody): { lo: Vector3; hi: Vector3 } {
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  const chain: TransformNode[] = [];
+  for (let n: TransformNode | null = body.torsoMesh; n; n = n.parent as TransformNode | null) chain.unshift(n);
+  for (const n of chain) n.computeWorldMatrix(true);
+  yoke?.computeWorldMatrix(true);
+  const inv = body.torso.getWorldMatrix().clone().invert();
+  const lo = new Vector3(Infinity, Infinity, Infinity), hi = new Vector3(-Infinity, -Infinity, -Infinity);
+  for (const m of [body.torsoMesh, yoke]) {
+    if (!m) continue;
+    for (const v of m.getBoundingInfo().boundingBox.vectorsWorld) { const p = Vector3.TransformCoordinates(v, inv); lo.minimizeInPlace(p); hi.maximizeInPlace(p); }
+  }
+  return { lo, hi };
+}
+
+/**
+ * [S] 496 the Mad Mechanic's shirt and overalls (evil.mad_mechanic.red.png; audit 489 a.3: "a black vest block - TABS: a grey collared shirt under
+ * dark overalls, with a bone-white tool emblem on the bib").
+ * Spec in the trunk box (trunkBox: W across, H high, D deep, front zf): the trunk and yoke go grey shirt cloth .shirt; a grey shirt collar, an 8-sided
+ * ring .collar W across at the trunk's top with two flat points .flap W long folded down over the front; a near-black bib .bibW W wide from .bibTop
+ * H down to the trunk's bottom, standing .proud W off the front; two near-black straps .strap W wide from the bib's top corners up and over each
+ * shoulder to the back; on the bib a bone-white emblem in flat unlit pieces (out of the glow): a wrench (a bar with an open ring at one end) crossed
+ * over a hammer (a handle with a block head), .emblem W across, at .emblemAt H up the trunk.
+ */
+const MECHANIC_OVERALLS = {
+  shirt: new Color3(0.2, 0.2, 0.21), dark: new Color3(0.06, 0.05, 0.05), bone: new Color3(0.85, 0.82, 0.72),
+  collar: 0.62, flap: 0.2, bibW: 0.66, bibTop: 0.74, proud: 0.03, strap: 0.13, emblem: 0.42, emblemAt: 0.5,
+};
+export function mechanicOveralls(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = MECHANIC_OVERALLS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const shirt = mf.get("cloth", C.shirt, { emissive: C.shirt.scale(0.3), roughness: 1 });
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
+  const bone = mf.get("unlit", C.bone, { emissive: C.bone });
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  for (const m of [body.torsoMesh, yoke]) if (m) { m.material = shirt; glow?.addExcludedMesh(m); }
+  const { lo, hi } = trunkBox(body);
+  const W = hi.x - lo.x, H = hi.y - lo.y, D = hi.z - lo.z, cx = (lo.x + hi.x) / 2, cz = (lo.z + hi.z) / 2, zf = hi.z;
+  const out: Mesh[] = [];
+  const add = (m: Mesh, material: typeof shirt): Mesh => { m.parent = body.torso; m.material = material; out.push(m); return m; };
+  const collar = add(MeshBuilder.CreateCylinder("mechanicCollar", { height: H * 0.08, diameterBottom: W * C.collar, diameterTop: W * C.collar * 0.86, tessellation: 8 }, scene), shirt);
+  collar.scaling.z = Math.min(1.3, (D * 1.05) / (W * C.collar)); collar.position.set(cx, hi.y + H * 0.02, cz);
+  for (const side of [-1, 1]) {
+    const flap = add(MeshBuilder.CreateCylinder("mechanicCollarFlap", { height: W * C.flap, diameterBottom: W * 0.14, diameterTop: 0, tessellation: 3 }, scene), shirt);
+    flap.scaling.z = 0.3; flap.rotation.set(Math.PI, 0, side * 0.5);
+    flap.position.set(cx + side * W * 0.1, hi.y - W * C.flap * 0.35, zf + W * C.proud * 0.6);
+  }
+  const bibH = H * C.bibTop, bibY = lo.y + bibH / 2;
+  const bib = add(MeshBuilder.CreateBox("mechanicBib", { width: W * C.bibW, height: bibH, depth: W * 0.04 }, scene), dark);
+  bib.position.set(cx, bibY, zf + W * C.proud);
+  for (const side of [-1, 1]) {
+    const x = cx + side * W * (C.bibW / 2 - C.strap / 2), up = hi.y - (lo.y + bibH);
+    const front = add(MeshBuilder.CreateBox("mechanicStrap", { width: W * C.strap, height: up + H * 0.04, depth: W * 0.04 }, scene), dark);
+    front.position.set(x, lo.y + bibH + up / 2, zf + W * C.proud);
+    const over = add(MeshBuilder.CreateBox("mechanicStrap", { width: W * C.strap, height: W * 0.04, depth: D + W * C.proud * 2 + W * 0.04 }, scene), dark);
+    over.position.set(x, hi.y + H * 0.02, cz + W * C.proud / 2);
+    const back = add(MeshBuilder.CreateBox("mechanicStrap", { width: W * C.strap, height: H * 0.5, depth: W * 0.04 }, scene), dark);
+    back.position.set(x, hi.y - H * 0.25, lo.z - W * 0.02);
+  }
+  // the emblem: a wrench and a hammer crossed in an X on the bib's face
+  const E = W * C.emblem, ez = zf + W * C.proud + W * 0.03, ey = lo.y + H * C.emblemAt;
+  const wrench = add(MeshBuilder.CreateBox("mechanicEmblemWrench", { width: E * 0.13, height: E, depth: W * 0.02 }, scene), bone);
+  wrench.position.set(cx, ey, ez); wrench.rotation.z = -0.75;
+  const ring = add(MeshBuilder.CreateTorus("mechanicEmblemRing", { diameter: E * 0.3, thickness: E * 0.1, tessellation: 8 }, scene), bone);
+  ring.rotation.x = Math.PI / 2; ring.position.set(cx - Math.sin(0.75) * E * 0.55, ey + Math.cos(0.75) * E * 0.55, ez);
+  const handle = add(MeshBuilder.CreateBox("mechanicEmblemHammer", { width: E * 0.11, height: E, depth: W * 0.02 }, scene), bone);
+  handle.position.set(cx, ey, ez + W * 0.005); handle.rotation.z = 0.75;
+  const head = add(MeshBuilder.CreateBox("mechanicEmblemHead", { width: E * 0.42, height: E * 0.18, depth: W * 0.025 }, scene), bone);
+  head.position.set(cx + Math.sin(0.75) * E * 0.5, ey + Math.cos(0.75) * E * 0.5, ez + W * 0.005); head.rotation.z = 0.75;
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 /**
  * [S] 496 the Void Monarch's bone harness (evil.void_monarch.blue.png; audit 489 a.3: "a single grey antler branch behind one shoulder - TABS: a bone
  * V harness whose spiked wing-arms reach out over both shoulders"). It replaces the evil preset's bone pauldrons (custom.void_monarch keeps them).

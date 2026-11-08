@@ -29,7 +29,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, lichStaffCrystal, lichTunic, mechanicGoggles, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm, walkerVest } from "./evilDress";
+import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, lichStaffCrystal, lichTunic, mechanicGoggles, mechanicOveralls, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm, walkerVest } from "./evilDress";
 import { sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
@@ -1047,6 +1047,8 @@ export class UnitFactory {
       if (definition.id === "evil.death_bringer") propMeshes.push(...deathBringerHair(this._scene, body));
 
       if (definition.id === "evil.mad_mechanic") propMeshes.push(...mechanicGoggles(this._scene, body), ...mechanicHair(this._scene, body));
+      // [S] 496 (a.3): a grey collared shirt under a dark bib with a bone-white tool emblem (evilDress mechanicOveralls)
+      if (definition.id === "evil.mad_mechanic") propMeshes.push(...mechanicOveralls(this._scene, body));
       if (definition.id === "evil.tempest_lich") propMeshes.push(...lichTunic(this._scene, body, teamColor));
       // [S] 495 (a.2): headless; black tendrils rise from the neck (evilDress lichTendrils hides the head, cap and tines)
       if (definition.id === "evil.tempest_lich") propMeshes.push(...lichTendrils(this._scene, body));
