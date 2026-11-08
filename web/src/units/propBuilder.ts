@@ -3522,6 +3522,43 @@ const BRUSH_WOOD = new Color3(0.6, 0.3, 0.2);
  */
 const PRIEST_STAFF = { long: 1.2, thick: 0.02, grip: 0.45, sleeve: 0.17, cap: 0.05, orb: 0.11, band: 0.012, finial: 0.06 };
 const PRIEST_GOLD = new Color3(0.95, 0.6, 0.2);
+/*
+ * [S] 490 the Void Cultist's mace (evil.void_cultist.red.png; card Main Hand "Void Cultist Mace", "a simple spiked Morning Star"): a thin dark shaft
+ * about two thirds of his height, stood upright in the fist; a team wrap over the grip and a narrow team band under the head; a big spiked iron ball
+ * on top, a short spike out of the butt. CULTIST_MACE in his standing height H: shaft .long H, .thick H across, the fist .grip of the way up from
+ * the butt; wrap .wrap H long centred on the fist, band .band H under the ball; ball .ball H across with 12 spikes .spike H long at its icosahedron
+ * corners; butt spike .butt H. Named "staff" with an "orb" child (the ball) so it is held as a planted rod, not slanted.
+ */
+const CULTIST_MACE = { long: 0.66, thick: 0.022, grip: 0.4, wrap: 0.16, band: 0.03, ball: 0.12, spike: 0.075, butt: 0.07 };
+function buildCultistMace(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const C = CULTIST_MACE, H = fit.stand, L = C.long * H, r = C.thick * H;
+  const dark = mat(scene, new Color3(0.08, 0.06, 0.09), 0.04, "cloth");
+  const cloth = mat(scene, team, 0.12, "cloth");
+  const shaft = MeshBuilder.CreateCylinder("staff", { height: L, diameter: r, tessellation: 6 }, scene);
+  shaft.id = "cultistMace"; shaft.material = dark; shaft.convertToFlatShadedMesh();
+  const part = (m: Mesh, y: number, material: PBRMetallicRoughnessMaterial): Mesh => { m.position.y = y; m.parent = shaft; m.material = material; m.convertToFlatShadedMesh(); return m; };
+  const gripY = -L / 2 + C.grip * L;
+  part(MeshBuilder.CreateCylinder("maceWrap", { height: C.wrap * H, diameter: r * 1.7, tessellation: 6 }, scene), gripY, cloth);
+  part(MeshBuilder.CreateCylinder("maceBand", { height: C.band * H, diameter: r * 1.8, tessellation: 6 }, scene), L / 2 - C.band * H * 1.2, cloth);
+  part(MeshBuilder.CreateCylinder("maceButt", { height: C.butt * H, diameterTop: r * 1.4, diameterBottom: 0, tessellation: 4 }, scene), -L / 2 - C.butt * H / 2, dark);
+  const R = C.ball * H / 2, cy = L / 2 + R * 0.85;
+  const ball = MeshBuilder.CreateIcoSphere("orb", { radius: R, subdivisions: 1 }, scene);
+  ball.position.y = cy; ball.parent = shaft; ball.material = dark; ball.convertToFlatShadedMesh();
+  const t = (1 + Math.sqrt(5)) / 2;
+  const corners = [[-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0], [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t], [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]];
+  for (const c of corners) {
+    const dir = new Vector3(c[0], c[1], c[2]).normalize();
+    const spike = MeshBuilder.CreateCylinder("maceSpike", { height: C.spike * H, diameterBottom: R * 0.45, diameterTop: 0, tessellation: 4 }, scene);
+    spike.parent = ball; spike.position.copyFrom(dir.scale(R * 0.9 + C.spike * H / 2)); spike.material = dark;
+    const axis = Vector3.Cross(Vector3.Up(), dir), angle = Math.acos(Math.max(-1, Math.min(1, Vector3.Dot(Vector3.Up(), dir))));
+    spike.rotationQuaternion = axis.lengthSquared() < 1e-6 ? (dir.y < 0 ? Quaternion.RotationAxis(Vector3.Right(), Math.PI) : Quaternion.Identity()) : Quaternion.RotationAxis(axis.normalize(), angle);
+    spike.convertToFlatShadedMesh();
+  }
+  // The fist on the wrap: the shaft's middle stands above it
+  shaft.position.y = (0.5 - C.grip) * L;
+  return shaft;
+}
+
 function buildPriestStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const P = PRIEST_STAFF, H = fit.stand, L = P.long * H, r = P.thick * H;
   const gold = mat(scene, PRIEST_GOLD, 0.12, "metal");
@@ -4966,6 +5003,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "staff":
     case "bo_staff": {
       if (type === "staff" && variant === "priest_staff") return buildPriestStaff(scene, fit, teamColor ?? accent);
+      if (type === "staff" && variant === "cultist_mace") return buildCultistMace(scene, fit, teamColor ?? accent); // [S] 490 (CULTIST_MACE)
       if (type === "staff" && variant === "charge_flag") return buildChargeFlag(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "stay_banner") return buildStayBanner(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "pharaoh_crook") return buildPharaohCrook(scene, fit, teamColor ?? accent); // [S] 469 (PHARAOH_CROOK)
