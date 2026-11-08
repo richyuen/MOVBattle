@@ -920,7 +920,16 @@ export function lichHover(scene: Scene, body: ArticulatedBody): void {
  * pointing up and out .barbOut rad; a dark collar .collar L across where it meets the shaft. Lit team cloth self-lit .3, out of the glow.
  * (look 494: four double points touching tip to tip read as loose beads above the staff, not one blade)
  */
-const LICH_CRYSTAL = { long: 0.3, shards: 4, wide: 0.1, flat: 0.45, kink: 0.012, barb: 0.07, barbOut: 0.75, collar: 0.06 };
+/*
+ * [S] 498 the long crude blade (re-audit 498 b.5: "a short pale four-point crystal cluster ... about a tenth of the man's height - TABS: a long, crude
+ * team-coloured blade head about a third of the man's height"; evil.tempest_lich.red.png: a narrow red blade as long as the man's trunk and legs above
+ * his collar, a knuckle at its root, a bulge a quarter up, then a long straight run to a chisel point). The four stacked shards gave way to .profile:
+ * [share up the blade, width L] joints, each segment a flattened 4-sided frustum, alternate segments set .kink L aside so the edges step crudely.
+ */
+const LICH_CRYSTAL = {
+  long: 0.8, flat: 0.45, kink: 0.008, collar: 0.06,
+  profile: [[0, 0.045], [0.1, 0.07], [0.24, 0.085], [0.36, 0.055], [0.62, 0.06], [0.86, 0.045], [1, 0]] as [number, number][],
+};
 export function lichStaffCrystal(scene: Scene, staff: Mesh, team: Color3): Mesh[] {
   const C = LICH_CRYSTAL, bb = staff.getBoundingInfo().boundingBox, L = bb.maximum.y - bb.minimum.y;
   const orb = staff.getChildMeshes(true).find((m) => m.name === "orb");
@@ -932,21 +941,14 @@ export function lichStaffCrystal(scene: Scene, staff: Mesh, team: Color3): Mesh[
   const top = bb.maximum.y - L * 0.02;
   const collar = MeshBuilder.CreateCylinder("lichStaffCollar", { height: L * 0.03, diameter: L * C.collar, tessellation: 6 }, scene);
   collar.parent = staff; collar.position.y = top; collar.material = dark; out.push(collar);
-  const seg = (L * C.long) / C.shards;
-  // widths at each joint: the root .wide, then down to nothing at the tip (the last shard a point)
-  const width = (k: number): number => L * C.wide * (1 - k / C.shards) * (k === 0 ? 1 : 1.12);
-  for (let i = 0; i < C.shards; i++) {
+  const long = L * C.long;
+  for (let i = 0; i < C.profile.length - 1; i++) {
+    const [a, w0] = C.profile[i], [b, w1] = C.profile[i + 1], seg = (b - a) * long;
     const x = (i % 2 ? 1 : -1) * L * C.kink;
-    const p = MeshBuilder.CreateCylinder("lichCrystal", { height: seg * 1.04, diameterBottom: width(i), diameterTop: i === C.shards - 1 ? 0 : width(i + 1), tessellation: 4 }, scene);
+    const p = MeshBuilder.CreateCylinder("lichCrystal", { height: seg * 1.03, diameterBottom: L * w0, diameterTop: L * w1, tessellation: 4 }, scene);
     p.parent = staff; p.material = crystal; p.scaling.z = C.flat; p.rotation.y = Math.PI / 4;
-    p.position.set(x, top + seg * (i + 0.5), 0);
+    p.position.set(x, top + a * long + seg / 2, 0);
     out.push(p);
-    if (i === 1) for (const side of [-1, 1]) {
-      const barb = MeshBuilder.CreateCylinder("lichCrystalBarb", { height: L * C.barb, diameterBottom: width(2) * 0.6, diameterTop: 0, tessellation: 4 }, scene);
-      barb.parent = staff; barb.material = crystal; barb.scaling.z = C.flat; barb.rotation.z = -side * C.barbOut;
-      barb.position.set(x + side * (width(1) * 0.4 + Math.sin(C.barbOut) * L * C.barb * 0.5), top + seg * 1.3 + Math.cos(C.barbOut) * L * C.barb * 0.5, 0);
-      out.push(barb);
-    }
   }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
