@@ -565,6 +565,14 @@ const DORY_THRUST = { ahead: 0.35, out: 0.6, up: -0.05, tilt: -0.06, reach: 0.75
  */
 const BEARER_HOLD = { ahead: 0.42, out: 0.22, high: 0.72, low: 0.3 };
 const BOXER_JAB = { guardAhead: 0.45, guardUp: 0.12, guardIn: 0.2, reach: 0.95, jabUp: -0.05, cock: 0.15, cockAt: 0.12, drivenAt: 0.3, heldTo: 0.78, lean: 0.12 };
+/*
+ * [S] 493 the Shadow Walker's knife stab (audit 489 c.2: "an overhead chop with the star - TABS: a one-handed knife stab or backstab"; card Main Hand
+ * "Shadow Walker Dagger: Knife - Melee", range 2): the point-down bone dagger (propBuilder "boneDagger") is driven in one-handed, not swung over the
+ * head. In shoulder heights u over the hip and arm lengths: the fist cocked .cockAhead u in front of the shoulder and .cockUp u over it, then
+ * punched down and forward to .reach of the arm ahead and .landDown u under the shoulder, so the hanging blade leads into the man's chest; the
+ * timing is the boxer's jab (.cockAt, .drivenAt, held to .heldTo), the trunk pitched .lean into it; the empty off fist stays at the chest (.offAhead).
+ */
+const DAGGER_STAB = { cockAhead: 0.3, cockUp: 0.32, cockIn: 0.1, reach: 0.95, landDown: 0.45, cockAt: 0.14, drivenAt: 0.32, heldTo: 0.8, lean: 0.22, offAhead: 0.35 };
 const BLOWGUN_HOLD = { mouthAhead: 1.05, mouthDrop: 0.3, side: 0.18, tilt: 0.1, near: 0.07, far: 0.42 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
 const BULL_FISTS = { carryAhead: 0.5, carryOut: 1.1, carryUp: 0.3, lift: -0.4, out: 0.3, fold: -1.35, reach: -1.35, grab: 0.35, cock: -0.35, cockFold: -1.9, punch: 0.62, twist: 0.35, lean: 0.2 };
@@ -2417,6 +2425,7 @@ export class ProceduralAnimator {
     this._levelPike();
     this._holdBlowgun();
     this._boxerJab();
+    this._daggerStab();
     this._holdBearerPole();
     this._carryDory();
     this._applyBullFists();
@@ -4310,6 +4319,32 @@ export class ProceduralAnimator {
       const fist = side === this._jabSide ? Vector3.Lerp(guard, jab, ext) : guard;
       this._armTo(shoulderJ, elbowJ, handJ, fist, w, 2);
     }
+  }
+
+  /** [S] 493 the Shadow Walker's one-handed reverse-grip stab (spec at DAGGER_STAB). */
+  private _stabsDagger: boolean | undefined = undefined;
+  private _daggerStab(): void {
+    if (this._state !== AnimState.Attacking || this.walkStyle === "quadruped") return;
+    this._stabsDagger ??= this._body.rightHand.getChildren().some((n) => n.name === "boneDagger");
+    if (!this._stabsDagger) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const J = DAGGER_STAB, b = this._body;
+    const p = Math.min(this._attackTimer / Math.max(this._attackDuration, 0.001), 1);
+    const ease = (x: number) => x * x * (3 - 2 * x);
+    const ext = p < J.cockAt ? 0 : p < J.drivenAt ? ease((p - J.cockAt) / (J.drivenAt - J.cockAt)) : p < J.heldTo ? 1 : 1 - ease((p - J.heldTo) / (1 - J.heldTo));
+    b.torso.rotation.x += J.lean * ext * w;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
+    const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - b.hip.getAbsolutePosition().y);
+    const { fwd, right } = this._heading();
+    const up = new Vector3(0, 1, 0);
+    const at = b.rightShoulder.getAbsolutePosition();
+    const arm = (b.rightElbow.position.length() + b.rightHand.position.length()) * b.rightShoulder.absoluteScaling.y;
+    const cock = at.add(fwd.scale(J.cockAhead * u)).add(up.scale(J.cockUp * u)).add(right.scale(-J.cockIn * u));
+    const land = at.add(fwd.scale(J.reach * arm)).add(up.scale(-J.landDown * u));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, Vector3.Lerp(cock, land, ext), w, 2);
+    const off = b.leftShoulder.getAbsolutePosition();
+    this._armTo(b.leftShoulder, b.leftElbow, b.leftHand, off.add(fwd.scale(J.offAhead * u)).add(up.scale(-0.25 * u)).add(right.scale(0.15 * u)), w, 2);
   }
 
   private _bearerPole: { pole: Mesh; grip: Vector3; held: boolean } | null | undefined = undefined;
