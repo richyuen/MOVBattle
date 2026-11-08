@@ -44,3 +44,36 @@ export function sentinelConeHat(scene: Scene, body: ArticulatedBody, team: Color
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 491 the Exiled Sentinel's ginger mane (evil.exiled_sentinel.blue.png; card "ginger hair"; audit 489 a.2: "hair: none - TABS: a bushy ginger
+ * mane framing the face under the cone").
+ * Spec in head widths W, heights H, depths D (the head box, its centre c): a bushy mass of low-poly lumps (1-subdivision icospheres, flat-shaded,
+ * each turned its own way so the facets break up) from just under the cone's brim to below the jaw, round both sides and the back, the face open:
+ *   - per side three stacked side lumps .5W-.6W across, centred .55W out from the middle, at +.22H, -.08H and -.36H, .05D behind the centre;
+ *   - per side a cheek tuft .36W across at .5W out, -.12H, .12D forward (its inner edge stays outside the bead eyes);
+ *   - three back lumps .62W across, .5D behind the centre, at +.15H (middle) and -.2H (.3W either side);
+ * the whole mane ~1.7W across, as in the render (the hair stands about a third of a head out past each cheek). Lit ginger cloth (.85,.3,.06),
+ * self-lit .2, out of the glow layer (an unlit orange washed out to a faint halo under the glow, probe 491).
+ */
+const SENTINEL_MANE: [number, number, number, number][] = [
+  // [x W (per side), y H, z D, across W]
+  [0.55, 0.22, -0.05, 0.56], [0.58, -0.08, -0.05, 0.6], [0.5, -0.36, -0.05, 0.5], [0.5, -0.12, 0.12, 0.36],
+];
+const SENTINEL_MANE_BACK: [number, number, number, number][] = [[0, 0.15, -0.5, 0.62], [-0.3, -0.2, -0.5, 0.62], [0.3, -0.2, -0.5, 0.62]];
+export function sentinelMane(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const gingerC = new Color3(0.85, 0.3, 0.06), ginger = getMaterialFactory().get("cloth", gingerC, { emissive: gingerC.scale(0.2) });
+  const out: Mesh[] = [];
+  const lump = (x: number, y: number, z: number, across: number, i: number): void => {
+    const m = MeshBuilder.CreateIcoSphere("sentinelMane", { radius: (W * across) / 2, subdivisions: 1 }, scene);
+    m.parent = head; m.position.set(c.x + W * x, c.y + H * y, c.z + D * z);
+    m.rotation.set(i * 0.7, i * 1.3, i * 0.4); m.scaling.y = 1.1; m.material = ginger; out.push(m);
+  };
+  let i = 0;
+  for (const side of [-1, 1]) for (const [x, y, z, a] of SENTINEL_MANE) lump(side * x, y, z, a, i++);
+  for (const [x, y, z, a] of SENTINEL_MANE_BACK) lump(x, y, z, a, i++);
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
