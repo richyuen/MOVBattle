@@ -25,7 +25,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBuckler, sentinelConeHat, sentinelMane, sentinelShoulderSpikes } from "./evilDress";
+import { cultistBuckler, cultistHalo, sentinelConeHat, sentinelMane, sentinelShoulderSpikes } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -2604,24 +2604,8 @@ function dressVoidCultist(scene: Scene, body: ArticulatedBody, teamColor: Color3
     strand.rotation.set(-0.18, 0, t * 0.5);
     keep(strand, body.headMesh, hair);
   }
-  // The sun wheel: an upright wooden ring behind the head, spokes to a hub
-  const wheelD = headSize * VOID_WHEEL;
-  const wheel = new TransformNode("voidWheel", scene);
-  wheel.parent = body.headMesh;
-  wheel.position.set(0, headSize * 0.05, -headSize * 0.62);
-  const rim = MeshBuilder.CreateTorus("voidWheelRim", { diameter: wheelD, thickness: headSize * 0.13, tessellation: 16 }, scene);
-  rim.rotation.x = Math.PI / 2;
-  keep(rim, wheel, wood);
-  const hub = MeshBuilder.CreateCylinder("voidWheelHub", { height: headSize * 0.1, diameter: headSize * 0.42, tessellation: 8 }, scene);
-  hub.rotation.x = Math.PI / 2;
-  keep(hub, wheel, wood);
-  for (let i = 0; i < VOID_SPOKES; i++) {
-    const a = (i / VOID_SPOKES) * Math.PI * 2;
-    const spoke = MeshBuilder.CreateBox("voidWheelSpoke", { width: headSize * 0.07, height: wheelD * 0.5, depth: headSize * 0.05 }, scene);
-    spoke.rotation.z = a;
-    spoke.position.set(-Math.sin(a) * wheelD * 0.25, Math.cos(a) * wheelD * 0.25, 0);
-    keep(spoke, wheel, wood);
-  }
+  // [S] 492 (a.1) the spoked wheel is evilDress cultistHalo (CULTIST_HALO): a dark ring with inward black spikes
+  added.push(...cultistHalo(scene, body));
   // [S] 491 (b.2) the off-hand shield is evilDress cultistBuckler (CULTIST_BUCKLER), sized in the world, not the hand's frame
   added.push(...cultistBuckler(scene, body));
   // The staff's glowing orb gives way to a spiked iron ball

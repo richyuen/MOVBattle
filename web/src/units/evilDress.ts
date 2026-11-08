@@ -107,6 +107,35 @@ export function sentinelShoulderSpikes(scene: Scene, body: ArticulatedBody): Mes
 }
 
 /**
+ * [S] 492 the Void Cultist's spiked halo (evil.void_cultist.red.png; card "spiked halo"; audit 489 a.1: "a brown spoked wagon wheel behind the head -
+ * TABS: a dark ring with black triangular spikes pointing inward toward the head"). It replaces the wooden wheel, hub and spokes.
+ * Spec in head heights H (the head box, head frame): an upright near-black 12-sided ring .across H across, its tube .tube H thick, centred .up H
+ * over the head's centre and .back H behind it; .count flat black triangles round its inside, each rooted on the ring and pointing in at the
+ * centre, .len of the radius long and .base H wide at the root, .thin H thick; the middle left open (the head shows through it).
+ */
+const CULTIST_HALO = { across: 2.1, tube: 0.11, up: 0.15, back: 0.62, count: 10, len: 0.5, base: 0.38, thin: 0.06 };
+export function cultistHalo(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CULTIST_HALO, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center, H = b.extendSize.y * 2;
+  const darkC = new Color3(0.08, 0.06, 0.08), dark = getMaterialFactory().get("cloth", darkC, { emissive: darkC.scale(0.4) });
+  const root = new TransformNode("cultistHalo", scene);
+  root.parent = head; root.position.set(c.x, c.y + H * C.up, c.z - H * C.back);
+  const R = (H * C.across) / 2, out: Mesh[] = [];
+  const ring = MeshBuilder.CreateTorus("cultistHaloRing", { diameter: R * 2, thickness: H * C.tube, tessellation: 12 }, scene);
+  ring.rotation.x = Math.PI / 2; ring.parent = root; ring.material = dark; out.push(ring);
+  for (let i = 0; i < C.count; i++) {
+    const a = (i / C.count) * Math.PI * 2, len = R * C.len;
+    // a 4-sided cone flattened in z is a flat triangle; its +y turned by a about z points at angle a, so a + PI points it at the centre
+    const t = MeshBuilder.CreateCylinder("cultistHaloSpike", { height: len, diameterBottom: H * C.base, diameterTop: 0, tessellation: 4 }, scene);
+    t.scaling.z = C.thin / C.base; t.parent = root; t.material = dark;
+    const r = R - len * 0.5;
+    t.position.set(-Math.sin(a) * r, Math.cos(a) * r, 0); t.rotation.z = a + Math.PI;
+    out.push(t);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 491 the Void Cultist's buckler (evil.void_cultist.jpg, .red.png; audit 489 b.2: "a small brown disc - TABS: a large dark round buckler,
  * shoulder-wide, with a raised rim ring and spikes around the rim and face"). It replaces the 1.5-chest disc that was cut in the hand's own
  * (shrunken) frame and read head-sized.
