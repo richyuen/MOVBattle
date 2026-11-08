@@ -398,7 +398,9 @@ const PALETTE_HOLD = { raise: -1.0, out: -0.55, elbow: -1.2, sway: 0.05 };
  */
 const PALETTE_OUT = { side: 0.24, fwd: 0.1, drop: 0.07, tip: 0.35 };
 /** [S] 496 where the Void Cultist's buckler is seated on his front, in trunk-box widths and heights (_seatBuckler) */
-const CULTIST_SEAT = { side: 0.1, drop: 0.12, ahead: 0.3 };
+// [S] 497 (b.2) its face turned .turn rad across his body toward his weapon side and tipped .tilt rad up (probe 497: square ahead and .16 rad
+// face-down, it read edge-on from the three-quarter idle); the brace pose's own yaw, twist and tilt jitter is not applied to it
+const CULTIST_SEAT = { side: 0.1, drop: 0.12, ahead: 0.3, turn: 0.4, tilt: -0.14 };
 // The rider's heater (see _holdHeater): where the off fist is held off the off shoulder (shares of his height: forward, out, down) and how far the board's
 // face is turned from his off side toward his front (rad)
 const HEATER_HOLD = { fwd: 0.2, side: 0.08, drop: 0.2, turn: 0.35 };
@@ -2902,7 +2904,10 @@ export class ProceduralAnimator {
     // Square to the wall's heading, give or take the man's own turn, tilt and twist of it in his grip
     const br = (this._bracePose ??= this._buildBracePose());
     // ...and of the shoulders behind it: it turns with the lead shoulder and leans with the trunk
-    const held = Quaternion.RotationYawPitchRoll(this._body.root.rotation.y + br.boardYaw + br.lead * br.twist * 0.7, br.boardTilt + br.pitch * 0.5, br.boardRoll);
+    const cultist = shield.name === "cultistBuckler";
+    const held = cultist
+      ? Quaternion.RotationYawPitchRoll(this._body.root.rotation.y + CULTIST_SEAT.turn, CULTIST_SEAT.tilt, 0)
+      : Quaternion.RotationYawPitchRoll(this._body.root.rotation.y + br.boardYaw + br.lead * br.twist * 0.7, br.boardTilt + br.pitch * 0.5, br.boardRoll);
     let world = held;
     if (lap > 0.01) world = Quaternion.Slerp(held, this._lapBoard(shield, hand, rest, br.boardRoll, lap), lap);
     else shield.position.copyFrom(rest);
