@@ -29,7 +29,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, lichStaffCrystal, lichTunic, mechanicGoggles, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
+import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, lichStaffCrystal, lichTunic, mechanicGoggles, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
 import { sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
@@ -275,6 +275,7 @@ const VOID_STUDS = 8;
 type HornedEvilStyle = {
   horn: [number, number, number][]; hornColor: Color3; cloth: Color3; legs: Color3; helm: Color3 | null; teeth: number; skull: boolean;
   spikes: boolean; wraps: boolean; skirt: number; thick: number; tines?: number; goggles?: boolean; rags?: number; boneCrown?: boolean; bone?: Color3;
+  harness?: boolean;
 };
 const HORNED_EVIL: Record<string, HornedEvilStyle> = {
   "evil.shadow_walker": {
@@ -303,7 +304,7 @@ const HORNED_EVIL: Record<string, HornedEvilStyle> = {
   },
   "evil.void_monarch": {
     horn: [], hornColor: new Color3(0.6, 0.6, 0.46), cloth: new Color3(0.08, 0.09, 0.2), legs: new Color3(0.07, 0.07, 0.11),
-    helm: null, teeth: 0, skull: false, spikes: true, wraps: false, skirt: 0, thick: 1, boneCrown: true, bone: new Color3(0.6, 0.6, 0.46),
+    helm: null, teeth: 0, skull: false, spikes: true, wraps: false, skirt: 0, thick: 1, boneCrown: true, bone: new Color3(0.6, 0.6, 0.46), harness: true,
   },
   // Custom faction copy of evil.void_monarch (not loop-owned)
   "custom.void_monarch": {
@@ -2810,7 +2811,9 @@ function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilS
     const ext = chest.getBoundingInfo().boundingBox.extendSize;
     const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
     const top = chest.position.y + H * 0.5;
-    for (const side of [-1, 1]) {
+    // [S] 496 (a.3) the evil preset wears a bone V harness with spiked wing-arms in place of the pauldrons (evilDress monarchHarness); custom keeps them
+    if (style.harness) added.push(...monarchHarness(scene, body, bone));
+    else for (const side of [-1, 1]) {
       const cap = MeshBuilder.CreateSphere("monarchShoulder", { diameter: W * 0.46, segments: 4, slice: 0.5 }, scene);
       cap.position.set(side * W * 0.46, top - H * 0.04, 0);
       keep(cap, body.torso, bone);

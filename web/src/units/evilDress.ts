@@ -1,4 +1,5 @@
 import { Color3, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Vector3 } from "@babylonjs/core";
+import type { Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -773,6 +774,54 @@ export function lichStaffCrystal(scene: Scene, staff: Mesh, team: Color3): Mesh[
       barb.parent = staff; barb.material = crystal; barb.scaling.z = C.flat; barb.rotation.z = -side * C.barbOut;
       barb.position.set(x + side * (width(1) * 0.4 + Math.sin(C.barbOut) * L * C.barb * 0.5), top + seg * 1.3 + Math.cos(C.barbOut) * L * C.barb * 0.5, 0);
       out.push(barb);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
+ * [S] 496 the Void Monarch's bone harness (evil.void_monarch.blue.png; audit 489 a.3: "a single grey antler branch behind one shoulder - TABS: a bone
+ * V harness whose spiked wing-arms reach out over both shoulders"). It replaces the evil preset's bone pauldrons (custom.void_monarch keeps them).
+ * Spec in trunk-box widths W, heights H, depths D (torso joint frame; read off the render: a 200 px chest, the V's foot on the belt, its arms
+ * meeting the shoulder tops 100 px out, the wings running on up and out to 200 px at mouth height):
+ *   - the V: two flat bone straps .strap W wide and .strapT W thick from one foot .foot H over the trunk's bottom, standing .proud W off the front,
+ *     up to each shoulder top .shoulder W out and .over H above the trunk's top;
+ *   - a wing-arm off each shoulder: a 6-sided bone tube .wing W thick tapering to a point, from the strap's top up and out through .mid to the tip
+ *     at .tip (x W out, y H over the top, z D back), with .spikes 4-sided bone spikes .spike W long standing up and out along its top.
+ */
+const MONARCH_HARNESS = {
+  strap: 0.13, strapT: 0.05, foot: 0.06, proud: 0.05, shoulder: 0.44, over: 0.04, wing: 0.16,
+  mid: [0.74, 0.22, -0.05], tip: [1.05, 0.38, -0.12], spikes: 4, spike: 0.17,
+};
+export function monarchHarness(scene: Scene, body: ArticulatedBody, bone: Material): Mesh[] {
+  const C = MONARCH_HARNESS, tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const W = tb.extendSize.x * 2 * s.x, H = tb.extendSize.y * 2 * s.y, D = tb.extendSize.z * 2 * s.z;
+  const cy = tm.position.y + tb.center.y * s.y, top = cy + H / 2, bottom = cy - H / 2;
+  const front = tm.position.z + (tb.center.z + tb.extendSize.z) * s.z;
+  const out: Mesh[] = [];
+  const add = (m: Mesh): Mesh => { m.parent = body.torso; m.material = bone; out.push(m); return m; };
+  const foot = new Vector3(0, bottom + H * C.foot, front + W * C.proud);
+  for (const side of [-1, 1]) {
+    const sh = new Vector3(side * W * C.shoulder, top + H * C.over, front * 0.55 + W * C.proud);
+    const run = sh.subtract(foot);
+    const strap = add(MeshBuilder.CreateBox("monarchHarnessStrap", { width: W * C.strap, height: run.length() + W * C.strap * 0.5, depth: W * C.strapT }, scene));
+    strap.position.copyFrom(foot.add(sh).scale(0.5));
+    strap.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), run.normalize(), new Quaternion());
+    const mid = new Vector3(side * W * C.mid[0], top + H * C.mid[1], D * C.mid[2]);
+    const tip = new Vector3(side * W * C.tip[0], top + H * C.tip[1], D * C.tip[2]);
+    add(MeshBuilder.CreateTube("monarchHarnessWing", {
+      path: [sh, mid, tip], tessellation: 6, cap: Mesh.CAP_ALL,
+      radiusFunction: (i: number) => (W * C.wing / 2) * (i === 0 ? 1 : i === 1 ? 0.75 : 0.08),
+    }, scene));
+    for (let k = 0; k < C.spikes; k++) {
+      const t = (k + 0.5) / C.spikes, a = t < 0.5 ? Vector3.Lerp(sh, mid, t * 2) : Vector3.Lerp(mid, tip, t * 2 - 1);
+      const r = (W * C.wing / 2) * (1 - t * 0.85);
+      const dir = new Vector3(side * 0.35, 1, 0).normalize();
+      const len = W * C.spike * (1 - t * 0.35);
+      const sp = add(MeshBuilder.CreateCylinder("monarchHarnessSpike", { height: len, diameterTop: 0, diameterBottom: len * 0.42, tessellation: 4 }, scene));
+      sp.position.copyFrom(a.add(dir.scale(r + len * 0.4)));
+      sp.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
     }
   }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
