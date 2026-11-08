@@ -1,22 +1,25 @@
 # evil.mad_mechanic
-Status: open   Audited: 489 (AUDIT x2)   Done: -
+Status: open   Audited: 489 (AUDIT x2), 498 (CONFIRM: passed b, c, d; failed a)   Done: -
 ## Verdicts
-a FAIL (5 since 489, 5 struck)
- 6. legs in unit_evil.mad_mechanic_idle are plain dark trousers — TABS: dark trousers with torn patches showing team skin and a tool ring at the knee (ref: evil.mad_mechanic.red.png)
-b PASS (492 claws turned: cuff up the forearm, jaws past the fist)
-c PASS (493 light-blue claw flame jet at 4.5 m)
-d PASS (497 stats)
+a FAIL (0 since 498)
+ 7. Build in lineup_evil (3rd from left): slab torso with blocky shoulder and upper-arm masses, clearly wider than the cultist and spiked-shield neighbours. TABS shows a slim, ordinary-proportioned mechanic, no broader than his neighbours (ref: reference/factions/evil.jpg, 3rd figure; evil.mad_mechanic.red.png)
+ 8. Shirt in unit_evil.mad_mechanic_idle: the sleeves and shoulders are the same dark purple-grey as the apron. TABS shows a light-grey long-sleeved shirt, rolled at the forearm, contrasting with the black apron bib (ref: evil.mad_mechanic.red.png; card Appearance "tattered clothing")
+ 9. Hair in unit_evil.mad_mechanic_idle: short orange-brown panels at the sides of the head that stop at the jaw. TABS shows long blond-brown hair falling past the shoulders from under the goggles (ref: evil.mad_mechanic.red.png; evil.mad_mechanic.png)
+b PASS (492 claws turned; CONFIRM 498)
+c PASS (493 light-blue claw flame jet; CONFIRM 498)
+d PASS (498 stats; CONFIRM 498)
 ## Ranked gaps
-1. [S] evil.mad_mechanic.a torn trousers — blocker 6: team-skin torn patches on the dark trousers and a bone tool ring at one knee (evilDress mechanicTrousers) — ref: evil.mad_mechanic.red.png — ours: unit_evil.mad_mechanic_idle.png
+1. [S] evil.mad_mechanic.a slim build — blocker 7: narrower trunk and upper arms (UV build / overalls shell), no wider than the cultist in lineup_evil — ref: reference/factions/evil.jpg — ours: lineup_evil.png
+2. [S] evil.mad_mechanic.a light shirt — blocker 8: shirt sleeves and shoulders a light grey that stands off the black bib (read palette.png; --noglow swatch) — ref: evil.mad_mechanic.red.png — ours: unit_evil.mad_mechanic_idle.png
+3. [S] evil.mad_mechanic.a long hair — blocker 9: blond-brown hair hanging past the shoulders from under the goggles (MECHANIC_HAIR) — ref: evil.mad_mechanic.red.png — ours: unit_evil.mad_mechanic_idle.png
 ## Attempts (iter | gap | criterion | verdict)
-497 | Mechanic Tank: dark spiked ball behind the weapon shoulder, three pale-cyan soul-smoke tubes, evilDress mechanicTank (34f6e472) | a | approved (struck 5)
-497 | grey shirt sleeves on the upper arms, rolled cuff at the elbow, evilDress mechanicSleeves (75a3b139) | a | approved (struck 4)
-496 | grey collared shirt under a dark bib with a bone tool emblem, straps, evilDress mechanicOveralls (e89b1570) | a | approved (struck 3)
-495 | long ginger-brown hair to the shoulders, bun recoloured, evilDress mechanicHair (7d131c39) | a | approved (struck 2)
-494 | goggles pushed up on the brow over a top bun, eyes uncovered, evilDress mechanicGoggles (6b26e43f) | a | approved (struck 1)
-493 | light-blue flame jet from the claw, simulationSystem MECHANIC_FIRE + spawnFlameJet look (99b7a8fc, eee93888) | c | approved (struck 1; c PASS)
-491-492 | claw gauntlets both hands, then turned half a turn (a395751d, 287847f9, 42fd82fe) | b | approved (b PASS)
+498 | near-black trousers torn open on team skin, bone tool ring at the left knee, evilDress mechanicTrousers (1e5aa045) | a | approved (struck 6; critic a PASS, CONFIRM failed a)
+497 | Mechanic Tank, evilDress mechanicTank (34f6e472) | a | approved (struck 5)
+497 | grey shirt sleeves rolled at the elbow, evilDress mechanicSleeves (75a3b139) | a | approved (struck 4)
+496 | grey shirt under a dark bib with a tool emblem, evilDress mechanicOveralls (e89b1570) | a | approved (struck 3)
+494-495 | goggles on the brow, top bun (a); ginger-brown hair to the shoulders (a) | a | approved
+491-493 | claw gauntlets (b PASS); light-blue flame jet (c PASS) | b, c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 497 DEFECTS: sleeve grey a shade darker than TABS's mid-grey. 496: collar does not read turned-down; team-skin glow washes the neck. Rig reads 2.15 m with the smoke tubes (497).
-- Look is unitFactory HORNED_EVIL "evil.mad_mechanic" (apron, no helm) + evilDress mechanicGoggles, mechanicHair, mechanicOveralls, mechanicTank, mechanicSleeves. Forearms SKIN.
+- 498 DEFECTS: some tear patches read edge-on as slivers ([P] MECHANIC_TROUSERS.proud .06 to .02 eligible). CONFIRM 498 contradicts 495/497 approvals on hair and sleeves: the earlier pieces do not read in the shots.
+- Look is unitFactory HORNED_EVIL "evil.mad_mechanic" (apron) + evilDress mechanicGoggles, mechanicHair, mechanicOveralls, mechanicTank, mechanicSleeves, mechanicTrousers.

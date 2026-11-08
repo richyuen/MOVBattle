@@ -24,7 +24,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change). A faceless unit at .6 rad reads as a back: .25 (497).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - Capture frames by mesh top when a prop exceeds the head by .3 of UNIT height: taller props re-frame all shots, requiring RE-AUDIT (420, 447).
-- `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches (render them after).
+- `capture.mjs --units` takes a comma list, no spaces, and re-shoots lineup_<f> (498); an iter-N capture clears probe swatches (render after).
 - A dress change aimed at the idle must clear the rest pose: probe what covers that band first (442 queen). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Two gaps in one file: commit apart (stage a hunk subset with git apply --cached) so each reverts alone (406).
 - Logged at the swing start / let-go, not the landing: a preset's instant "slam" (use the pending blow, 426); a special logged as a missile leaves owns that missile (427 queen). A status logged at the cast (fire_dot) makes _struck precede the missile: an on-landing mechanic needs ABILITY_PREF (435 candlehead).
@@ -52,7 +52,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - An effect child of a longer one (a cloud's .3 s bolts) can die inside one capture advance before _struck: tie its life to its owner (492 lich).
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
 - A ground-length skirt hides a hover lift: shorten the dress first (493 lich).
-- A missile catch needs arrows before contact: spar against archers (494 sentinel).
+- A missile catch or dodge needs archers 8 m off (494, 498).
 - In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake before parenting (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
