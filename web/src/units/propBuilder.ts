@@ -2271,6 +2271,15 @@ export function attachProps(
       shield.parent = body.torso;
       shield.position.set(-body.metrics.shoulderWidth * 0.36, body.neck.position.y * 0.92 - tall / 2, body.torsoMesh.getBoundingInfo().boundingBox.maximum.z + scale * 0.16);
       shield.rotation.y = -0.12;
+      // [S] 490 (b.1, evil.exiled_sentinel.red.png; card Main Hand "Sentinel Right Shield Axe"): the main hand carries the matching pavise, the
+      // mirror of the off one, so two coffin boards stand side by side before him; his sword stays in the fist unseen (the blow and a later
+      // shield-to-axe swap keep a hand weapon to work with). The node "paviseShieldRight" names it.
+      const right = buildPavise(scene, body.metrics.overallHeight, teamColor ?? accent);
+      right.name = "paviseShieldRight"; right.parent = body.torso;
+      right.position.set(-shield.position.x, shield.position.y, shield.position.z);
+      right.rotation.y = 0.12;
+      props.push(right);
+      if (weapon) for (const m of [weapon, ...weapon.getChildMeshes(false)]) m.isVisible = false;
     } else if (config.shield === "aspis") {
       // strapped to the trunk, upright and face-forward whatever the arm does (ASPIS)
       shield.parent = body.torso;
