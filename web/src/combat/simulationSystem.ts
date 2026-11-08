@@ -492,6 +492,14 @@ const JOUSTER_CHARGE = { from: 1.5, reach: 16, speed: 1.5, seconds: 3.5, overrun
  */
 const MINOTAUR_CHARGE = { from: 1.5, reach: 14, speed: 2.3, seconds: 2.2, overrun: 1, contact: 0.4, damage: 30, fling: 7, lift: 5, cooldown: 6, through: false, log: true };
 /*
+ * [S] 499 the Death Bringer's charge (card Characteristics: "brings death to all by charging at enemy units and cutting through all of them with their
+ * two red hot tonfa blades in a swift fashion"; audit 489 c.3: "no dash through the enemy line"). A man .from to .reach m past his reach sets him running
+ * at him at .speed times his pace (he is 1.75x already) for up to .seconds s, and through: on .overrun m past where the man stood. Every enemy his body
+ * meets on the way (.contact m of slack) is cut once in passing: a warglaive swing (.swing s), .damage (the low end of the blade's 95-190), a short
+ * shove aside (.fling, .lift), the pink DEATH_SLASH trail across him, and the cut is logged as a blow (hit log) and "charge_cut". .cooldown s between runs.
+ */
+const DEATH_CHARGE = { from: 1.5, reach: 14, speed: 2.4, seconds: 1.6, overrun: 3, contact: 0.7, damage: 95, fling: 3.5, lift: 2, cooldown: 5, through: true, log: true, swing: 0.3 };
+/*
  * [S] 387 Big Headbutt (card Weapons "Big Headbutt: Ability - Melee; damage 30; cooldown 5 s; ... force 32500; explosion radius 4.5", Characteristics "a
  * headbutt ability like the Headbutter"; critic 378: missing). With a man within .within m past his reach and the butt ready (.cooldown s apart), he stops,
  * drops his head (the BULL_CHARGE pose) and drives it down over .windup s; at the blow the ground .ahead m before him bursts: every enemy within .radius m
@@ -1998,7 +2006,7 @@ export class SimulationSystem {
     // Mammoth Charge: start a run at a man far enough off, and while running, drive on through him (MAMMOTH_CHARGE); the wheelbarrow's ram (WHEELBARROW_RAM)
     const chargeSpec = preset === "iconic_mammoth" ? MAMMOTH_CHARGE : unit.definition.id === "farmer.wheelbarrow" ? WHEELBARROW_RAM
       : unit.definition.id === "medieval.knight" ? KNIGHT_CHARGE : unit.definition.id === "renaissance.jouster" ? JOUSTER_CHARGE
-      : unit.definition.id === "ancient.minotaur" ? MINOTAUR_CHARGE : null;
+      : unit.definition.id === "ancient.minotaur" ? MINOTAUR_CHARGE : unit.definition.id === "evil.death_bringer" ? DEATH_CHARGE : null;
     if (chargeSpec && canMove) {
       const run = this._charges.get(unit);
       if (run && (!unit.isCharging || (run.target.isDead && !run.end))) {
@@ -2316,6 +2324,27 @@ export class SimulationSystem {
     this._logAbility(supporter, "heal", now, ally.position);
   }
 
+  /** [S] 499 a running Death Bringer cuts a man he passes (DEATH_CHARGE): a swing, the blade's damage, a shove aside, his pink trail, logged as a blow. */
+  private _chargeCut(unit: RuntimeUnit, man: RuntimeUnit, dir: Vector3, now: number): void {
+    const C = DEATH_CHARGE;
+    const off = man.position.subtract(unit.position); off.y = 0;
+    const across = new Vector3(dir.z, 0, -dir.x);
+    const side = Vector3.Dot(off, across) >= 0 ? 1 : -1;
+    const aside = across.scale(side).add(dir.scale(0.4)).normalize();
+    unit.triggerAttackVisual(C.swing);
+    man.applyDamage(C.damage, aside.scale(C.fling));
+    man.applyBlastLaunch(aside, C.fling, C.lift);
+    if (this.visualEffects) {
+      const n = (this._deathSlashes.get(unit) ?? 0) + 1; this._deathSlashes.set(unit, n);
+      this.visualEffects.spawnSlashArc(man.position.add(new Vector3(0, DEATH_SLASH.chest, 0)), dir, { ...DEATH_SLASH, tilt: (n % 2 ? 1 : -1) * DEATH_SLASH.tilt });
+    }
+    if (this.hitLog.length >= 200) this.hitLog.shift();
+    worldMatrixChain(man.body.headTop);
+    const head = man.body.headTop.getAbsolutePosition();
+    this.hitLog.push({ t: now, attackerUnit: unit.definition.id, targetUnit: man.definition.id, x: man.position.x, y: man.position.y + DEATH_SLASH.chest, z: man.position.z, head: { x: head.x, y: head.y, z: head.z } });
+    this._logAbility(unit, "charge_cut", now, man.position);
+  }
+
   /** Every charging mammoth tramples the enemies its body meets ahead of its middle (MAMMOTH_CHARGE), each once per run; its own target ends the run. */
   private _trampleCharges(now: number): void {
     for (const [unit, run] of this._charges) {
@@ -2350,6 +2379,7 @@ export class SimulationSystem {
         if (off.length() > unit.collisionBodyRadius + other.collisionBodyRadius + C.contact) continue;
         if (Vector3.Dot(off, run.dir) < 0) continue;
         run.trampled.add(other);
+        if (C === DEATH_CHARGE) { this._chargeCut(unit, other, run.dir, now); continue; }
         // The jouster's lance goes into the man he rides at as the horse reaches him (JOUSTER_CHARGE)
         if (C === JOUSTER_CHARGE && other === run.target && unit.canAttack(now)) this._tryAttack(unit, other, getAttackProfile(unit.definition.attackProfileId), now);
         // Aside off the charge's line, to whichever side of it he stood, and on ahead of it
