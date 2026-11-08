@@ -1549,3 +1549,35 @@ export function monarchKneePlates(scene: Scene, body: ArticulatedBody, bone: Mat
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 499 the Void Monarch's elbow balls (evil.void_monarch.blue.png: at each elbow a round bone ball about a head across bristling with short bone
+ * spikes, standing off the outside of the arm; audit 489 a.6: "arms bare"). Evil preset only (HORNED_EVIL harness flag).
+ * Spec in each upper arm mesh's own box (r its radius, h its length, +y up the bone, the elbow at its foot): a faceted bone ball .ball r across, its
+ * centre at the elbow (.at h over the foot) set .out r to the arm's outer side; .spikes 4-sided bone spikes .spike r long, .spikeW r across at the
+ * root, spread over the ball by the golden angle, none pointing into the arm.
+ */
+const MONARCH_ELBOWS = { ball: 2.3, at: 0.05, out: 0.55, spikes: 14, spike: 1.0, spikeW: 0.45 };
+export function monarchElbowBalls(scene: Scene, body: ArticulatedBody, bone: Material): Mesh[] {
+  const C = MONARCH_ELBOWS, out: Mesh[] = [];
+  for (const [arm, side] of [[body.leftUpperArm, -1], [body.rightUpperArm, 1]] as const) {
+    const bb = arm.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z), h = e.y * 2;
+    const centre = new Vector3(cc.x + side * r * C.out, cc.y - e.y + h * C.at, cc.z);
+    const ball = MeshBuilder.CreateIcoSphere("monarchElbow", { radius: (r * C.ball) / 2, subdivisions: 1 }, scene);
+    ball.parent = arm; ball.position.copyFrom(centre); ball.material = bone; out.push(ball);
+    const R = (r * C.ball) / 2;
+    for (let k = 0; k < C.spikes; k++) {
+      // golden-angle points over the ball; skip the ones pointing back into the arm (toward -side)
+      const yy = 1 - (2 * (k + 0.5)) / C.spikes, rr = Math.sqrt(1 - yy * yy), a = k * 2.39996;
+      const dir = new Vector3(Math.cos(a) * rr, yy, Math.sin(a) * rr);
+      if (dir.x * side < -0.35) continue;
+      const sp = MeshBuilder.CreateCylinder("monarchElbowSpike", { height: r * C.spike, diameterBottom: r * C.spikeW, diameterTop: 0, tessellation: 4 }, scene);
+      sp.parent = arm; sp.material = bone;
+      sp.position.copyFrom(centre.add(dir.scale(R * 0.85 + (r * C.spike) / 2)));
+      sp.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
+      out.push(sp);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
