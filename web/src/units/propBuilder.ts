@@ -4290,6 +4290,10 @@ function buildRepeatingCrossbow(scene: Scene, s: number): Mesh {
     str.parent = root; str.material = mat(scene, new Color3(0.8, 0.75, 0.65)); str.position.copyFrom(tip.add(to).scale(0.5));
     str.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, dd.normalize(), new Quaternion());
   }
+  // [S] 502 (c.1: "the bolt appears in front of the face at head height ... TABS's bolts leave the crossbow's track"): the bolt slot at the
+  // magazine's foot on the stock's nose, named "rcbMuzzle", where simulationSystem HAND_LAUNCH "muzzle" launches each bolt of the burst
+  const slot = new TransformNode("rcbMuzzle", scene);
+  slot.parent = root; slot.position.set(0, (C.stockH * s) / 2 + 0.02 * s, zNose - 0.02 * s);
   return root;
 }
 function buildJarlAxe(scene: Scene, fit: BladeFit, A = JARL_AXE, crescent = JARL_CRESCENT): Mesh {
