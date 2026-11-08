@@ -877,7 +877,10 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "evil.mad_mechanic": vis(
     // [S] 491 (b.1, b.2; evil.mad_mechanic.red.png): a mechanical claw gauntlet on each hand (propBuilder MECHANIC_CLAW), no hammer or held bomb
-    { scale: 1.18, bulk: 1.16, headSize: 1.04 }, "boxing_glove", "none", "none", "none", "#8E5A3A", "boxing_glove", {
+    // [S] 499 (a.7; card Size 1.10x, reference/factions/evil.jpg 3rd figure, evil.mad_mechanic.red.png): a slim, ordinary man no broader than the
+    // cultist beside him, not a slab-chested bruiser: his height to the card's 1.10x (scale 1.18 -> 1.1, the head kept its size), a narrow trunk
+    // (bulk 1.16 -> .94, torso .84 wide) and thin arms (upper .78, fore .82) so the shirt shoulders and sleeves stop reading as blocks
+    { scale: 1.1, bulk: 0.94, headSize: 1.12, torsoWidth: 0.84, upperArmWidth: 0.78, lowerArmWidth: 0.82 }, "boxing_glove", "none", "none", "none", "#8E5A3A", "boxing_glove", {
       weaponVariant: "mechanic_claw", offhandVariant: "mechanic_claw",
       posePreset: "support",
       materialPreset: "secret_bandit",
