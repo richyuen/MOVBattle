@@ -1,23 +1,23 @@
 # evil.tempest_lich
-Status: open   Audited: 489 (AUDIT x2), 498 (RE-AUDIT a, b x2), 498 (CONFIRM: passed b, c, d; failed a)   Done: -
+Status: open   Audited: 489 (AUDIT x2), 498 (RE-AUDIT a, b x2), 498 (CONFIRM: passed b, c, d; failed a), 499 (CONFIRM: passed b, c, d; failed a)   Done: -
 ## Verdicts
-a FAIL (0 since 498)
- 5. Robe in lineup_evil (5th figure, pink, with the tall staff): the tunic ends at the hip and both dark trouser legs show in full. TABS shows a ragged robe hanging to the shins, with tattered strips trailing toward the ankles (ref: evil.tempest_lich.red.png; evil.tempest_lich.blue.png; reference/factions/evil.jpg, 5th figure)
+a FAIL (0 since 499) plateau (CONFIRM failed a twice: 498 robe length, 499 tendril height)
+ 1. headless tendril crown in unit_evil.tempest_lich_idle — short spiky tuft about half the torso's height. TABS: tall black tendrils rising from the collar, the longest one taller than the whole torso, making a tall dark antler-like silhouette (ref: reference/units/evil.tempest_lich.red.png, reference/factions/evil.jpg fifth figure)
 b PASS (498 two-handed grip, long blade head; CONFIRM 498)
 c PASS (495 hover, legs hanging; CONFIRM 498)
-d PASS (498 stats; CONFIRM 498)
+d PASS (499 stats; CONFIRM 498)
 ## Ranked gaps
-1. [S] evil.tempest_lich.a robe to the shins — blocker 5: LICH_TUNIC skirt long to mid-shin with ragged strips toward the ankles, while the hover still opens a gap under the feet (LESSONS: a ground-length skirt hides the hover) — ref: evil.tempest_lich.red.png — ours: lineup_evil.png
+1. [R] evil.tempest_lich.a tendril crown — blocker 1: rebuild LICH_SOCKET/lichTendrils from a spec read off evil.tempest_lich.blue.png: tendrils from the collar to ~1.9x the collar-to-hem torso, the tallest central, black, antler-like; keep the robe to the shins (499) and the hover gap — ref: evil.tempest_lich.blue.png — ours: unit_evil.tempest_lich_idle.png, lineup_evil.png
 ## Attempts (iter | gap | criterion | verdict)
-498 | off fist on the shaft above the weapon fist, POLE_GRIP lichGrip marker (63006385) | b | approved (struck 4)
-498 | long crude team blade head, LICH_CRYSTAL profile (594b761d) | b | approved (struck 5; b PASS)
-498 | team coat over trunk and sleeves, flared cuffs, dark seam, evilDress lichCoat (b08f6e09) | a | approved (struck 4; critic a PASS, CONFIRM failed a)
+499 | robe past the knee, torn hem, a robe round each shin, strips to the ankles, evilDress lichTunic (bb1030f6) | a | approved (struck 5; critic a PASS, CONFIRM failed a: tendril height)
+498 | off fist on the shaft (63006385); long crude team blade head (594b761d) | b | approved (struck 4, 5; b PASS)
+498 | team coat over trunk and sleeves, evilDress lichCoat (b08f6e09) | a | approved (struck 4; CONFIRM failed a: robe length)
 497 | thin banded pole (64959020); team bolt at the staff foot (4757c1df) | b | approved (struck 3, 2)
-496 | ochre collar (f724af18); [P] scale 1.05 (8e41dfe9) | a | approved (a PASS)
+496 | ochre collar (f724af18); [P] scale 1.05 (8e41dfe9) | a | approved
 495 | headless tendrils (f6c8fb65, c08bc4d0); hover .22 (4f458ebd) | a, c | approved (c PASS)
 491-494 | storm cloud (c); team tunic (a); crystal (b) | a, b, c | approved
 ## Rejected (last 4)
 493 | hover | c | attempts 1 | hover invisible: the skirt runs to the ground, a 15% lift opens no gap
 ## Notes (max 3 lines)
 - 498 DEFECTS: windup holds the pole well out in front; blade lacks the root knuckle; blue-team coat reads the pale skin tint. Blade raised the rig to 2.69 m (capture frames by its top).
-- Look is HORNED_EVIL "evil.tempest_lich" + evilDress lichTunic, lichTendrils, lichCollar, lichCoat, lichHover, lichStaffCrystal, lichStaffPole (lichGrip marker), lichStaffFoot.
+- Look is HORNED_EVIL "evil.tempest_lich" + evilDress lichTunic, lichTendrils (LICH_SOCKET: 7 tendrils to 2.45H), lichCollar, lichCoat, lichHover, lichStaffCrystal, lichStaffPole (lichGrip), lichStaffFoot.

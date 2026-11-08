@@ -3,7 +3,7 @@
 Read whole at step 1; one fact per line, merge near cap.
 
 ## Rendering (swiftshader + PBR + SSAO + ACES + glow)
-- PBR colours are linear: an sRGB target c needs about c^2.2 as the code (wood (.62,.3,.2) displayed taupe). Pick values off `output/loop/palette.png` (rewritten every capture; `capture.mjs --palette` alone).
+- PBR colours are linear: an sRGB target c needs ~c^2.2 as the code. Pick values off `output/loop/palette.png` (rewritten every capture; `capture.mjs --palette` alone).
 - SSAO (main.ts, radius 1.5) reads a DOUBLESIDE ribbon's inward faces as occlusion and greys the cloth: build dress shells one-sided facing out (check flipFaces), never double-sided at the same depth.
 - Flat colour that survives ACES: an "unlit" material's colour comes from its EMISSIVE only (baseColor alone renders black), excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
 - ACES lifts a mid code value toward pale, so an unlit plate keeps a deep value (zeus's gold emblem is (0.62,0.26,0.03), 400); the same for timber: an IBL-lit mid albedo reads beige, so a brown hull wants (.2,.11,.055) with a small self-light (400).
@@ -23,7 +23,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - Babylon fresnel t=|n.v|^power is 1 face-on: opacity fresnel ADDS left*(1-t)+right*t, so a thin rim wants power<1 (.25; 3 washed a field amber, 489). Cull back faces; give a 6 m field a pulled-back shot. Probing in-page: swap in a new material (prop edits do not recompile).
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change). A faceless unit at .6 rad reads as a back: .25 (497).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
-- Capture frames by mesh top when a prop exceeds the head by .3 of UNIT height: taller props re-frame all shots, requiring RE-AUDIT (420, 447).
+- Capture frames by mesh top once a prop tops the head by .3 unit height: re-frames all shots, RE-AUDIT (420, 447).
 - `capture.mjs --units` takes a comma list, no spaces, and re-shoots lineup_<f> (498); an iter-N capture clears probe swatches (render after).
 - A dress change aimed at the idle must clear the rest pose: probe what covers that band first (442 queen). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Two gaps in one file: commit apart (stage a hunk subset with git apply --cached) so each reverts alone (406).
@@ -49,10 +49,10 @@ Read whole at step 1; one fact per line, merge near cap.
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
 - A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
 - A torso-rooted shield detaches in windup (483, 489 pavise); dispose sim meshes in endSimulation (485).
-- An effect child of a longer one (a cloud's .3 s bolts) can die inside one capture advance before _struck: tie its life to its owner (492 lich).
+- A short effect child (cloud bolts) can die inside one capture advance: tie its life to its owner (492).
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
-- A ground-length skirt hides a hover lift: shorten the dress first (493 lich).
-- A missile catch or dodge needs archers 8 m off (494, 498).
+- A ground-length skirt hides a hover lift: robe below the knee rides each shin (493, 499 lich).
+- A missile catch or dodge needs archers 8 m off (494, 498); a charger kills them first: add a rank 9 m on. 2nd ability pair: capture SECOND_ABILITY (499).
 - In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake before parenting (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).

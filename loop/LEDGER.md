@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+499 | f7cd5edc | evil.shadow_walker.a | approved (blocker 7; a PASS; CONFIRM D)
+499 | bb037ff9 | evil.mad_mechanic.a | approved (blocker 7)
+499 | d837f5e3,54be779a | evil.mad_mechanic.a | approved (blocker 8)
+499 | 1d2a9dc9 | evil.mad_mechanic.a | approved (blocker 9; a PASS; CONFIRM D)
+499 | bb1030f6 | evil.tempest_lich.a | approved (blocker 5; CONFIRM failed a again: plateau)
+499 | 3a3576d4 | evil.death_bringer.a | approved (blocker 4; 2 struck by lineup)
+499 | fe3430c4 | evil.death_bringer.c | approved (blocker 3; c PASS)
+499 | 66fc425a | evil.void_monarch.c | approved (blocker 2; c PASS)
+499 | 413f738e | evil.void_monarch.a | approved (blocker 6)
+
 498 | eb3df4ba,37602f6a | evil.shadow_walker.a | approved (blocker 4)
 498 | cb8a83fa | evil.shadow_walker.a | approved (blocker 5)
 498 | 1e5aa045 | evil.mad_mechanic.a | approved (blocker 6; critic a PASS, CONFIRM failed a)
@@ -43,15 +53,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 495 | 3218b350 | evil.death_bringer.a | approved (blocker 3)
 495 | 9ebc78bd | evil.void_cultist.b | approved (blocker 1)
 
-494 | 6b26e43f | evil.mad_mechanic.a | approved (blocker 1)
-494 | 1c20c66c | evil.exiled_sentinel.a | approved (blocker 4)
-494 | 2f7c8529,5c8089a5,85c56b08 | evil.void_cultist.a | approved (blocker 3; critic a PASS, CONFIRM failed a, b)
-494 | 8b9c277c | evil.tempest_lich.a | approved (blocker 4)
-494 | fbae7a4d,03307096 | evil.tempest_lich.b | approved (blocker 1)
-494 | 416104b2 | evil.death_bringer.a | approved (blocker 1)
-494 | cdc2f6f8,e2469b0d | evil.void_monarch.a | approved (blocker 1)
-494 | 146499df | evil.void_cultist.c | approved (blocker 2; c PASS)
-494 | fb3bd010 | evil.exiled_sentinel.c | approved (blocker 2; c PASS)
 
 ## Spent (never retry as [P])
 
@@ -59,7 +60,7 @@ Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuil
 
 ## Rows
 evilDress:MECHANIC_TANK | dark(.07,.06,.06) ico ball1.05W at out.55W up.42H back.62W;14 spikes.28W;mouth.42W;3 unlit smoke tubes(.75,1.05,1.15) 1.5W r.1W | 497 | approved | none
-evilDress:MECHANIC_SLEEVE | upper arms shirt grey(.2,.2,.21);cuff fold(.14,.14,.15) 1.55r .24h at -.42h | 497 | approved (grey a shade dark) | team skin arms
+evilDress:MECHANIC_SLEEVE | shirt unlit(.36,.36,.37) upper+fore arms,trunk,yoke;cuff fold(.22,.22,.23) 1.5r .26h on forearm .3h under elbow | 499 | approved | lit (.2,.2,.21) upper arms,cuff 1.55r at elbow (497); look 499 (.5) near-white
 evilDress:LICH_POLE | rod hidden;6-sided pole .022L (.05,.04,.05);bands .034L at .38/.55/.9 | 497 | approved | thick grey rod
 evilDress:LICH_BOLT | team zig-zag (0,0)(.035,-.07)(-.03,-.1)(.025,-.19)L,strip.03L flat.45 | 497 | approved | round rod end
 evilDress:WALKER_HAIR | lit(.08,.06,.07);root-.42H long.8H;sides.22W x.8D at.68W;back1.3W;9 strands.16W .38H | 497 | approved | none (look 497: .56W out .62H hid)
@@ -73,17 +74,19 @@ evilDress:LICH_COLLAR | ochre(.45,.31,.08) band.16H .98W at socket foot;8 down .
 UV:tempest_lich scale | 1.05 | 496 | approved [P] | 1.42
 evilDress:DEATH_MASK | tan(.8,.6,.35) prism brow1.04W@.56H cheek1.18W chin.42W@-.62H deep1.12D;sockets.3x.11 droop.35;nose.14W;horns team x.5;skull/jaw boxes off | 496 | approved (mask reads square, pale) | cream skull+jaw boxes
 evilDress:SENTINEL_UNIFORM | trunk,yoke,pelvis,neck,arms lit(.08,.06,.07) self-lit.4 rough1;bracer cuff1.3r x.55 forearm,5 team spikes.45;collar.62W | 495 | approved | team plate body,team arms
-evilDress:MECHANIC_HAIR | ginger-brown cloth(.7,.3,.07) .12;sides +.3H..-.62H,.72D,.24W at .6W;back 1.08W .2D at .5D;3+4 tips | 495 | approved | none
+evilDress:MECHANIC_HAIR | blond-brown cloth(.7,.49,.13) .12;sides +.3H..-.62H,.72D,.24W at .6W;back 1.08W .2D at .5D;3+4 tips | 499 | approved | ginger (.7,.3,.07)
+evilDress:MECHANIC_HAIR_FALL | torso-hung 3 locks/side thick.32hW root.42hW over.4W lift.04H rest.55D proud.16D drop.28-.36H;mantle.82W to .45H under top,5 tips | 499 | approved | none
+UV:mad_mechanic build | scale1.1 bulk.94 head1.12 torso.84 upperArm.78 foreArm.82 | 499 | approved [S] | scale1.18 bulk1.16 head1.04
 evilDress:CULTIST_SLEEVE | arms robe-dark;forearm bell .top2.3r->3.1r,.6r past wrist,team band.22 | 495 | approved | bare team arms
 FX/SS:SHADOW_POOF | 12 puffs 1.1x1.7m .2->.75,rise.5,.8s fade.4,ring1.6,(.16,.05,.22) glow.6;walker teleport only | 495 | approved | 1.4s (look 495);grey 20-particle puff
 evilDress:LICH_TENDRILS | head,eyes,cap,tines hidden;socket.42H x.78W;7 tendrils to 2.45H,root.2H;neck black | 495 | approved | brown tines on a blue head
 evilDress/PA:LICH_HOVER | reaperHover mark y.22 = own lift share | 495 | approved | REAPER .15 (493 rejected)
-evilDress:DEATH_HAIR | cap1.3W,sides.66W lit(.025);7 front strands.2TW spread.66 1.0TH unlit(.02);5 back.8TH;cape off;skull+body out of glow | 495 | approved | none
+evilDress:DEATH_HAIR | cap1.3W,sides.66W lit(.025);5 front strands.2TW spread.3 1.0TH unlit(.02);5 back.8TH;cape off;skull+body out of glow;trunk,yoke,upper arms team skin (deathBringerBareTorso) | 499 | approved | 7 front spread.66 over dark body cloth (495)
 PA:_shieldBoard cultistBuckler | buckler is a board (low guard hold),squared face-out always | 495 | approved | staff stand free arm raised
 evilDress:MECHANIC_GOGGLES | strap.13H .05H over eye top,3 cups .3/.3/.2W tilt1.05,dark red lens;bun.46W in MECHANIC_HAIR (495; was (.95,.5,.15)),knot.22W | 494 | approved | brown cap+pale-blue lenses over the eyes
 evilDress:SENTINEL_LEGGINGS | black legs,shin4/thigh2 rows x4 team diamonds over +-1.75 rad,long.95r wide.6r proud.42r | 494 | approved | smooth team legs
 evilDress:CULTIST_ROBE | lit cloth (.08,.06,.07) self-lit.4 rough1;team stripe.13W off-.14W,trunk+skirt front | 494 | approved | unlit (.05,.035,.04) (plum);lit maroon VOID_ROBE
-evilDress:LICH_TUNIC | team 8-sided 1.12P->1.42P,.78K;7 black strips 1.05K +-2.2 rad back;black legs;UV legs .68/.6 | 494 | approved | bell skirt 1.9+9 rags
+evilDress:LICH_TUNIC | team 8-sided 1.12P->1.5P,1.02K;10 hem teeth.26K;shin robe 8-sided 1.55r .5h,5 teeth.2h;7 black strips.92K;black legs | 499 | approved (CONFIRM: tendrils short) | .78K hip tunic,1.42P,strips1.05K (494)
 evilDress:LICH_CRYSTAL | blade .8L,profile widths .045/.07/.085/.055/.06/.045/0 L,kink.008L,flat.45;orb hidden | 498 | approved [S] | 4 frustums .3L,.1L root,barbs (494, read a tenth of the man);white orb
 UV:DEATH build/stance | 1.26,.9bulk,.84W,arms1.2 .7/.68,legs1.12 .8/.76;duelist | 495 | rejected [P] default stand (65d585c3, reverted: ledger reversal, idle still side-on; wants an [S] idle pose) | 1.74,1.44bulk;giant pose
 manifest/UV:void_monarch size | no size class;vis 1.2,1.12bulk;hm.27 | 494 | approved | giant;2.08,1.46;hm.14
@@ -100,7 +103,10 @@ evilDress:WALKER_KNEES | ico pad1.65r deep.62 at shin top fwd.55r;tan spike1.1r 
 evilDress:MECHANIC_TROUSERS | legs dark(.08,.06,.07);3 skin tears/leg proud.06r;bone ring1.35r tube.22r,3 tools | 498 | approved (edge-on slivers) | brown legs
 evilDress:LICH_COAT | trunk,yoke,arms team cloth.18;cuffs.35L 1.5->2.3w;seam.06W | 498 | approved | lavender body cloth
 PA:POLE_GRIP lichGrip | [.12,.3] (evilDress marker on the staff) | 498 | approved | off arm raised
-evilDress:MONARCH_KNEES | box2.7r x2.3r x.62h foot.14h under thigh,fwd.25r;3x2 face+2 side studs.55r | 498 | approved (added a.7: too tall, one slab) | none
+evilDress:MONARCH_KNEES | box2.2r x2.3r x.4h foot.14h under thigh,fwd.25r;3x2 face+2 side studs.55r | 499 | approved [P] | wide2.7 tall.62 (498, one slab)
+evilDress:MONARCH_ELBOWS | ico ball2.3r at elbow+.05h out.55r;14 golden-angle spikes1r x.45r,none inward | 499 | approved (half a head, TABS a head) | none
+SS:DEATH_CHARGE | from1.5 reach14 speed2.4 secs1.6 overrun3 contact.7;cut 95 fling3.5 lift2 swing.3,DEATH_SLASH,hitLog+charge_cut;cd5 | 499 | approved | none
+SS:MONARCH_DODGE | warn.3 blink2.2 m off line,shadow poof both ends,cd1.2,either form;evil.void_monarch only | 499 | approved | none
 SS:MECHANIC_FIRE | jet .8s,ahead.25,chest.9,near.08 far.3 farPer.1,core(.8,1,1) rim(.25,.7,1.15);engage 4.5 | 493 | approved | near.14 far.55 (look);bomb lob 6 m
 SS:MONARCH_BURST | reaper burst radius2 dome4,ring(1.15,.2,.8) dark(.32,.03,.22) | 493 | approved | none
 SS:DEATH_SLASH | slash arc pink(1.2,.25,.7) r1 band.2 tilt+-1.25 .45s chest1 | 493 | approved | none
@@ -111,7 +117,7 @@ evilDress:SENTINEL_SPIKES | 4/side black 4-sided,.26-.56W out,.12D back,.62TH ta
 evilDress:CULTIST_HALO | dark 12-sided ring 2.1H tube.11H,10 inward triangles len.5R base.38H thin.06H | 492 | approved | wooden wheel 2.1H,10 spokes,hub
 evilDress:WALKER_HELM | 8-sided shell 1.24W x1.26D,-.56H..+.36H,dome.3H,4 tan(.6,.42,.18) bars.13W x.52H gap.24W;eyes off | 492 | approved | box cap+dome,5 teeth
 manifest:void_monarch archetype | boss_melee (boss.legendary splash 2),weaponHint sword;hm.14 dm.25 cm.43 | 492 | approved | special_magic staff;hm.23 dm.53 cm.56
-UV/unitFactory:WALKER_HORN | path out to 2.2 heads at .24-.4H, up to 1.5H | 491 | approved | out 1.6, up 2.0 (U)
+evilDress:WALKER_HORN | horns re-materialled helm-bar tan(.6,.42,.18) self-lit.3, out of glow; path out to 2.2 heads at .24-.4H, up to 1.5H | 499 | approved | pale cream (.9,.8,.55) in glow;path out 1.6, up 2.0 (U)
 evilDress:SENTINEL_MANE | 11 ico lumps .36-.62W, lit cloth ginger(.85,.3,.06) self-lit .2 | 491 | approved | none
 PB:MECHANIC_CLAW | cuff3.4f x2.5f,housing2.3f,3 cyan lights,jaws2.9f open.32;clawFrame rot.x PI | 492 | approved | built backwards (491);hammer+bomb
 evilDress/PA:CULTIST_BUCKLER | 2.6W world-sized board,rim+.62 ring,10 rim/5 face spikes,boss;PA _seatBuckler CULTIST_SEAT side.1W drop.12H ahead.3W turn.4 tilt-.14 (497) | 498 | approved [P] (b PASS, D) | 1.85W (496-497, trunk-wide);squared brace yaw (496);1.3W hand-seated (491)
