@@ -36,6 +36,7 @@ import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHe
 import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnakeArcher, dressZeus, dressZeusToga, heldSnake, sarissaKit, snakeArcherKit, zeusLegs } from "./ancientDress";
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
+import { lichHover } from "./evilDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1043,6 +1044,10 @@ export class UnitFactory {
       if (definition.id === "evil.tempest_lich") propMeshes.push(...lichTunic(this._scene, body, teamColor));
       // [S] 495 (a.2): headless; black tendrils rise from the neck (evilDress lichTendrils hides the head, cap and tines)
       if (definition.id === "evil.tempest_lich") propMeshes.push(...lichTendrils(this._scene, body));
+
+
+      // [S] 495 (c.2, card Abilities "Hover"): he floats off the ground, legs hanging (evilDress lichHover, proceduralAnimation REAPER_HOVER)
+      if (definition.id === "evil.tempest_lich") lichHover(this._scene, body);
       // [S] 494 (b.1): the staff's orb gives way to a jagged team crystal blade (evilDress lichStaffCrystal)
       const lichStaff = definition.id === "evil.tempest_lich" ? propMeshes.find((m) => m.name === "staff") : undefined;
       if (lichStaff) propMeshes.push(...lichStaffCrystal(this._scene, lichStaff, teamColor));

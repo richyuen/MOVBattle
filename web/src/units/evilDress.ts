@@ -627,6 +627,18 @@ export function lichTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 495 the Tempest Lich's Hover (card Abilities "Hover"; ref evil.tempest_lich.jpg: he floats a shin's height over the ground, legs hanging; audit
+ * 489 c.2: "he strides on the ground"). The 493 try (the Reaper's mark at its .15 lift) was hidden by the ground-length skirt; the tunic (494) now
+ * leaves the legs open. A "reaperHover" node under the hip marks him for the animator's hover (proceduralAnimation REAPER_HOVER: legs hang, no
+ * stride); its position.y carries his own lift, LICH_HOVER.lift of his height, so the gap under his feet clears the field's grass (~.6 of a foot box).
+ */
+const LICH_HOVER = { lift: 0.22 };
+export function lichHover(scene: Scene, body: ArticulatedBody): void {
+  const mark = new TransformNode("reaperHover", scene);
+  mark.parent = body.hip; mark.position.y = LICH_HOVER.lift;
+}
+
+/**
  * [S] 494 the Tempest Lich's staff head (evil.tempest_lich.red.png; card "a staff with a crude design on the top"; audit 489 b.1: "a white orb - TABS:
  * a crude, jagged, team-coloured blade-crystal head"). The orb is hidden, not removed: a "staff" with an "orb" child is still a planted rod (LESSONS 20).
  * Spec in staff lengths L (the staff mesh's own height, its +y up the shaft): one jagged crystal blade .long L long rising from the shaft's top: .shards

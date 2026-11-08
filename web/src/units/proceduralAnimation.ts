@@ -3622,17 +3622,23 @@ export class ProceduralAnimator {
   // The Reaper's hover (REAPER_HOVER): whether this body is marked for it (read once), and the bob's clock
   private _reaperHoverOn: boolean | undefined;
   private _reaperHoverT = 0;
+  private _reaperLift = REAPER_HOVER.lift;
   /** The Reaper held off the ground with his legs hanging loose (spec at REAPER_HOVER). */
   private _reaperHover(dt: number): void {
     const b = this._body;
-    this._reaperHoverOn ??= b.hip.getChildren().some((n) => n.name === "reaperHover");
+    if (this._reaperHoverOn === undefined) {
+      const mark = b.hip.getChildren().find((n) => n.name === "reaperHover") as TransformNode | undefined;
+      this._reaperHoverOn = !!mark;
+      // [S] 495 a mark set above the hip carries its own lift (share of height): the Tempest Lich floats higher than the Reaper (evilDress LICH_HOVER)
+      this._reaperLift = mark && mark.position.y > 0 ? mark.position.y : REAPER_HOVER.lift;
+    }
     if (!this._reaperHoverOn || this._state === AnimState.Dead || this.walkStyle === "quadruped") return;
     const R = REAPER_HOVER;
     this._reaperHoverT += dt * R.rate;
     const t = this._reaperHoverT;
     this._hipRest ??= b.hip.position.y;
     // the hip is set from its rest every frame (update), so the lift is laid on afresh each frame, as the scarecrow's
-    b.hip.position.y += b.metrics.overallHeight * (R.lift + R.bob * Math.sin(t));
+    b.hip.position.y += b.metrics.overallHeight * (this._reaperLift + R.bob * Math.sin(t));
     for (const [hip, knee, phase] of [[b.leftHip, b.leftKnee, 0], [b.rightHip, b.rightKnee, Math.PI * 0.7]] as const) {
       hip.rotation.x += (R.sway * Math.sin(t + phase) - hip.rotation.x) * R.hang;
       hip.rotation.z *= 1 - R.hang;
