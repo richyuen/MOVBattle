@@ -707,6 +707,33 @@ export function lichTunic(scene: Scene, body: ArticulatedBody, team: Color3): Me
 }
 
 /**
+ * [S] 498 the Tempest Lich's team coat (evil.tempest_lich.red.png: the trunk and both sleeves are the tunic's team cloth, one robe from the collar to
+ * the hem, wide sleeves ending in a flared cuff over the team hands; re-audit 498 a: "a plain lavender block that stays lavender on the red team").
+ * Spec: the trunk, yoke and upper and lower arms go the tunic's team cloth (LICH_TUNIC: team, self-lit .18), out of the glow; at each wrist a flared
+ * 8-sided team cuff .cuffL of the forearm long, .cuffTop to .cuffFoot forearm widths across; down the coat's front a near-black closing seam
+ * .seam trunk widths wide from the collar to the waist, standing .proud off the front.
+ */
+const LICH_COAT = { cuffL: 0.35, cuffTop: 1.5, cuffFoot: 2.3, seam: 0.06, proud: 0.02 };
+export function lichCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = LICH_COAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.18) });
+  const blackC = new Color3(0.05, 0.035, 0.05), black = mf.get("unlit", blackC, { emissive: blackC });
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  for (const m of [body.torsoMesh, yoke, body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) if (m) { m.material = cloth; glow?.addExcludedMesh(m); }
+  const out: Mesh[] = [];
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    const bb = arm.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z), len = e.y * 2 * C.cuffL;
+    const cuff = MeshBuilder.CreateCylinder("lichCoatCuff", { height: len, diameterTop: r * 2 * C.cuffTop, diameterBottom: r * 2 * C.cuffFoot, tessellation: 8 }, scene);
+    cuff.parent = arm; cuff.position.set(cc.x, cc.y - e.y + len / 2, cc.z); cuff.material = cloth; out.push(cuff);
+  }
+  const { lo, hi } = trunkBox(body), W = hi.x - lo.x;
+  const seam = MeshBuilder.CreateBox("lichCoatSeam", { width: W * C.seam, height: (hi.y - lo.y) * 0.92, depth: W * 0.03 }, scene);
+  seam.parent = body.torso; seam.position.set((lo.x + hi.x) / 2, (lo.y + hi.y) / 2 - (hi.y - lo.y) * 0.04, hi.z + W * C.proud); seam.material = black; out.push(seam);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 495 the Tempest Lich's tendrils (evil.tempest_lich.red.png; audit 489 a.2: "a blue head with bead eyes under a dark box crown sprouting brown
  * twigs - TABS: headless; tall black tendrils rise from the neck in place of a head"). The block head, its bead eyes, the box cap and dome and the
  * brown tines (HORNED_EVIL tempest_lich) are hidden; the head mesh stays as the anchor.
