@@ -1041,15 +1041,14 @@ export function deathBringerBareTorso(scene: Scene, body: ArticulatedBody): void
  * [S] 495 the Death Bringer's long black hair (evil.death_bringer.red.png; audit 489 a.3: "hair: none - TABS: long black hair falling over the chest to
  * the waist"). Built in two parts (LESSONS: a head-hung piece cannot run on down the torso): the crown head-hung, the fall over the chest and back
  * torso-parented.
- * Spec. Head part, in head widths W, heights H, depths D (the head box, its centre c; the skull mask is 1.15 W across): a near-black cap .capW W
- * across over the crown and the back of the head, from .capTop H over the centre down to the head's foot, .rear D behind the centre; per side a
- * strand slab .sideT W thick, .sideD D deep, just outside the mask (.side W out) from the cap down to the head's foot. Torso part, in torso widths TW
+ * Spec. Head part, in head widths W, heights H, depths D (the head box, its centre c; the skull mask is 1.15 W across): a near-black scalp
+ * hugging the head box (the [R] 503 spec at the code below; the 495-502 cap and side boxes read as a slab). Torso part, in torso widths TW
  * and heights TH (the torso box, torso frame): .front strands down the chest from the collar, spread over .spread TW across, each .strandW TW wide,
  * .strandT TW thick, .long TH long (varied by .vary) to a point at the waist, standing .proud TW off the chest's front, tipped .lean rad out at the
  * foot; .back strands the same down the back, .backLong TH long. Lit near-black cloth self-lit .4, roughness 1, out of the glow.
  */
 const DEATH_HAIR = {
-  capW: 1.3, capTop: 0.62, rear: 0.58, sideT: 0.18, sideD: 0.85, side: 0.66,
+  scalpW: 1.06, scalpH: 1.0, scalpD: 1.04, scalpBack: 0.06, scalpDrop: 0.02,
   // 499: the front fall narrowed to the chest's middle (7 strands over .66 TW covered the whole chest and read as a cuirass, audit 489 a.4)
   front: 5, spread: 0.3, strandW: 0.2, strandT: 0.07, long: 1.0, vary: 0.18, proud: 0.05, lean: 0.06, back: 5, backLong: 0.8,
   // [S] 501 (a.4, CONFIRM 500: "a maroon tabard bib with strips down the front of the torso"): five even wedges side by side read as one cloth
@@ -1072,13 +1071,15 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
   const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
   const put = (m: Mesh, parent: TransformNode, x: number, y: number, z: number): Mesh => { m.parent = parent; m.position.set(x, y, z); m.material = black; out.push(m); return m; };
-  const capH = H * (C.capTop + 0.5);
-  put(MeshBuilder.CreateBox("deathHairCap", { width: W * C.capW, height: capH, depth: D * 0.5 }, scene), head, c.x, c.y + H * C.capTop - capH / 2, c.z - D * C.rear);
-  put(MeshBuilder.CreateBox("deathHairCrown", { width: W * C.capW, height: H * 0.16, depth: D * 0.9 }, scene), head, c.x, c.y + H * (C.capTop - 0.08), c.z - D * 0.2);
-  for (const side of [-1, 1]) {
-    const s = put(MeshBuilder.CreateBox("deathHairSide", { width: W * C.sideT, height: capH, depth: D * C.sideD }, scene), head, c.x + side * W * C.side, c.y + H * C.capTop - capH / 2, c.z - D * 0.12);
-    s.rotation.z = side * 0.05;
-  }
+  // [R] 503 (a.1, CONFIRM 500 and 502: "a solid black rectangular slab that frames the mask and rises above the crown to the horn roots ... a tall
+  // arched dark hood"). The cap, crown and side boxes (W 1.3 across, to .62 H over the centre) are gone. Spec read off evil.death_bringer.red.png
+  // and .blue.png: the head silhouette stays the skull's own size between the two horns, nothing above it but the horns; thin black strands
+  // hang from the crown either side of the mask and behind it, falling past the shoulders over the chest and back to the belt. So the head
+  // part is only a scalp hugging the head box, never over its top or wider than the skull mask (1.15 W): an ellipsoid .scalpW W x .scalpH H
+  // x .scalpD D, its centre .scalpBack D behind the head's centre and .scalpDrop H under it, so its top stays at the head's own top; the hair
+  // mass is all the thin torso-parented strands below (crown locks, back fall, chest fall).
+  const scalp = put(MeshBuilder.CreateSphere("deathHairScalp", { diameter: 1, segments: 5 }, scene), head, c.x, c.y - H * C.scalpDrop, c.z - D * C.scalpBack);
+  scalp.scaling.set(W * C.scalpW, H * C.scalpH, D * C.scalpD);
   // the "cape" prop hung over his chest read as a brown cuirass and hid the fall (probe 495): TABS has none
   for (const m of body.torso.getChildMeshes(true)) if (m.name === "cape") m.setEnabled(false);
   // the self-lit skull mask's glow halo washed the black fall leather-brown (probe 495: black with --noglow): keep the mask out of the glow
@@ -1146,17 +1147,25 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
 // joint (probe 501: shorts to .39 m over a knee at ~.57 m), so the shorts are cut at the knee joint (LESSONS: anchor to knee.position.y) and not at the
 // thigh box's foot: .thigh a slim seat shell from the hip to .puffFrom of the way to the knee, then a baggy .puff barrel per thigh to .hemAt over the
 // knee, gathered in a narrow .cuff band; the wraps then show over the whole shin, knee to ankle, a third of his height
+// [R] 503 (a.2, CONFIRM 500 and 502: "chunky grey segmented plates, wider than the thigh, that read as heavy armoured greaves"). Spec read off
+// evil.death_bringer.blue.png and .red.png: under the baggy knee pants each shin is thin, narrower than the pants above it, wound tight in pale
+// off-white bandage from the cuff to the ankle, the winding shown by fine slanted seams, not raised rings; small team feet below. So: the wrap
+// a shell .wrap of the shin's own half-girth (tight, no wider than the shin), pale off-white flat unlit .pale (LESSONS 442: lit cream greys in
+// the shade; code value off palette.png, between the unlit white x.7 and tan x.7 swatches) out of the glow; .bands thin seams .bandOut over the
+// wrap (a hair proud), .bandH of the shin tall, a little darker .seam, alternately slanted .slant about x; the foot meshes under them take the
+// team skin (the dark shoe read as a boot under a greave).
 const DEATH_LEGS = {
   hemAt: 0.04, cuff: 1.35, cuffH: 0.07,
-  shade: 0.32, thigh: 1.55, puff: 1.95, puffFrom: 0.3, grey: new Color3(0.45, 0.44, 0.42), wrap: 1.3, bands: 5, bandOut: 1.45, bandH: 0.09,
-  band: new Color3(0.28, 0.28, 0.27), slant: 0.18,
+  shade: 0.32, thigh: 1.55, puff: 1.95, puffFrom: 0.3, pale: new Color3(0.62, 0.58, 0.5), wrap: 1.02, bands: 6, bandOut: 1.07, bandH: 0.035,
+  seam: new Color3(0.4, 0.37, 0.32), slant: 0.22,
 };
 export function deathBringerShinWraps(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const C = DEATH_LEGS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const shortC = team.scale(C.shade), shorts = mf.get("cloth", shortC, { emissive: shortC.scale(0.12), roughness: 1 });
-  const grey = mf.get("cloth", C.grey, { emissive: C.grey.scale(0.12), roughness: 1 });
-  const band = mf.get("cloth", C.band, { emissive: C.band.scale(0.12), roughness: 1 });
+  const grey = mf.get("unlit", C.pale, { emissive: C.pale });
+  const band = mf.get("unlit", C.seam, { emissive: C.seam });
   const out: Mesh[] = [];
+  for (const m of body.allMeshes) if (/_[lr]FootM$/.test(m.name)) m.material = body.skinMaterial;
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) for (const m of shin.getChildMeshes(true)) if (m.name === "evilWrap") m.setEnabled(false);
   for (const m of body.allMeshes) if (m.name === "evilBreech") m.material = shorts;
   for (const [thigh, knee] of [[body.leftUpperLeg, body.leftKnee], [body.rightUpperLeg, body.rightKnee]] as const) {
