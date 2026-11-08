@@ -748,7 +748,19 @@ export function cultistSleeves(scene: Scene, body: ArticulatedBody, team: Color3
  * the hem tapering to a point .stripLong K below it (lengths varied by .vary), hanging a little out (.flare rad); the thighs, shins and feet go
  * near-black cloth (the thin legs are UV lowerLegWidth/upperLegWidth).
  */
-const LICH_TUNIC = { waist: 1.12, hem: 1.42, long: 0.78, strips: 7, arc: 2.2, stripW: 0.26, stripLong: 1.05, vary: 0.3, flare: 0.12 };
+/*
+ * [S] 499 the robe hangs to the shins (evil.tempest_lich.red.png, .blue.png, reference/factions/evil.jpg 5th figure: the team robe runs past the knee,
+ * its hem torn into points over the shins, the black strips trailing on toward the ankles; CONFIRM 498 a.5: "the tunic ends at the hip and both dark
+ * trouser legs show in full"). A rigid ground-length bell hid the hover (LESSONS 493): the robe below the knee follows each leg instead.
+ * The hip skirt runs to .long K (just past the knee) and its hem is torn: .teeth team points round it, .tooth K long (varied by .vary);
+ * on each shin (its own box: r its radius, h its length, +y up toward the knee) a team robe sleeve, an 8-sided tube .sleeveR r out, from the knee
+ * end .sleeve h down, its foot torn into .sleeveTeeth points .sleeveTooth h long; the black strips reach .stripLong K under the hem, the ankles.
+ * The hover lift (LICH_HOVER) still shows the feet and the air under them below the strips' points.
+ */
+const LICH_TUNIC = {
+  waist: 1.12, hem: 1.5, long: 1.02, strips: 7, arc: 2.2, stripW: 0.26, stripLong: 0.92, vary: 0.25, flare: 0.12,
+  teeth: 10, tooth: 0.26, sleeveR: 1.55, sleeve: 0.5, sleeveTeeth: 5, sleeveTooth: 0.2,
+};
 export function lichTunic(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const C = LICH_TUNIC, mf = getMaterialFactory();
   const pelvis = body.allMeshes.find((m) => /_pelvis$/.test(m.name));
@@ -774,6 +786,27 @@ export function lichTunic(scene: Scene, body: ArticulatedBody, team: Color3): Me
     s.rotation.set(-C.flare, a, 0);
     s.position.set(Math.sin(a) * hemR * 0.92, -drop - long / 2 + K * 0.08, Math.cos(a) * hemR * 0.92);
     out.push(s);
+  }
+  // the skirt's hem torn into team points
+  for (let i = 0; i < C.teeth; i++) {
+    const a = ((i + 0.5) / C.teeth) * Math.PI * 2, long = K * C.tooth * (1 - C.vary * (((i * 7) % 3) / 2));
+    const t = MeshBuilder.CreateCylinder("lichTunicTooth", { height: long, diameterTop: (Math.PI * P * C.hem) / C.teeth * 1.1, diameterBottom: 0, tessellation: 3 }, scene);
+    t.parent = root; t.material = cloth; t.scaling.z = 0.3; t.rotation.set(-C.flare * 0.5, a, 0);
+    t.position.set(Math.sin(a) * hemR * 0.94, -drop - long / 2 + K * 0.02, Math.cos(a) * hemR * 0.94);
+    out.push(t);
+  }
+  // a robe sleeve round each shin's upper half, its foot torn into points
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const bb = shin.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z), h = e.y * 2;
+    const tube = MeshBuilder.CreateCylinder("lichShinRobe", { height: h * C.sleeve, diameterTop: r * 2 * C.sleeveR * 0.92, diameterBottom: r * 2 * C.sleeveR, tessellation: 8 }, scene);
+    tube.parent = shin; tube.material = cloth; tube.position.set(cc.x, cc.y + e.y - (h * C.sleeve) / 2, cc.z); out.push(tube);
+    for (let k = 0; k < C.sleeveTeeth; k++) {
+      const a = ((k + 0.5) / C.sleeveTeeth) * Math.PI * 2, long = h * C.sleeveTooth * (1 - C.vary * ((k * 2) % 3) / 2);
+      const t = MeshBuilder.CreateCylinder("lichShinTooth", { height: long, diameterTop: (Math.PI * r * 2 * C.sleeveR) / C.sleeveTeeth * 1.1, diameterBottom: 0, tessellation: 3 }, scene);
+      t.parent = shin; t.material = cloth; t.scaling.z = 0.3; t.rotation.y = a;
+      t.position.set(cc.x + Math.sin(a) * r * C.sleeveR * 0.95, cc.y + e.y - h * C.sleeve - long / 2 + h * 0.02, cc.z + Math.cos(a) * r * C.sleeveR * 0.95);
+      out.push(t);
+    }
   }
   for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = legs;
   for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(false)) if (/_[lr]FootM$/.test(m.name)) m.material = legs;
