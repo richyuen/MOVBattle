@@ -2,6 +2,7 @@ import { Color3, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Vector3, V
 import type { Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
+import { limbShell } from "./medievalDress";
 
 /*
  * Evil faction cloth, hats and ornaments (loop: new per-unit dress goes here, not into unitFactory or propBuilder).
@@ -1062,6 +1063,45 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   strands(C.front, cz + TD / 2 + TW * C.proud, C.long, 1);
   strands(C.back, cz - TD / 2 - TW * C.proud, C.backLong, -1);
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
+ * [S] 500 the Death Bringer's shorts and shin wraps (evil.death_bringer.red.png; audit 489 a.5: "shins: white plate greaves - TABS: grey cloth wraps
+ * below dark puffed shorts"). The render: dark team-coloured shorts puffed out round the thigh from the hip to the knee, then each shin wound tight
+ * in light grey cloth from the knee to the ankle in slanted overlapping bands, the team feet below. HORNED_EVIL's pale bandage rings (evilWrap,
+ * five fat rings that read as white plate) are hidden.
+ * Spec in each limb's box (limbShell: out is of the limb's half-girth): the shorts a team-dark (team x .shade) shell .thigh over the whole thigh and
+ * a puff .puff over its lower .puffFrom of it, the old evilBreech skirt taking the same cloth; the wrap a grey (.grey) shell .wrap over the shin
+ * from its top to its foot, with .bands raised darker (.band grey) bands .bandOut proud, .bandH of the shin tall, each tipped .slant rad about x,
+ * alternating, the wound read.
+ */
+const DEATH_LEGS = {
+  shade: 0.32, thigh: 1.55, puff: 1.85, puffFrom: 0.45, grey: new Color3(0.45, 0.44, 0.42), wrap: 1.3, bands: 5, bandOut: 1.45, bandH: 0.09,
+  band: new Color3(0.28, 0.28, 0.27), slant: 0.18,
+};
+export function deathBringerShinWraps(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = DEATH_LEGS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const shortC = team.scale(C.shade), shorts = mf.get("cloth", shortC, { emissive: shortC.scale(0.12), roughness: 1 });
+  const grey = mf.get("cloth", C.grey, { emissive: C.grey.scale(0.12), roughness: 1 });
+  const band = mf.get("cloth", C.band, { emissive: C.band.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) for (const m of shin.getChildMeshes(true)) if (m.name === "evilWrap") m.setEnabled(false);
+  for (const m of body.allMeshes) if (m.name === "evilBreech") m.material = shorts;
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    out.push(limbShell(scene, "deathShorts", thigh, 0, 1, C.thigh, shorts));
+    out.push(limbShell(scene, "deathShortsPuff", thigh, C.puffFrom, 1, C.puff, shorts));
+  }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    out.push(limbShell(scene, "deathShinWrap", shin, 0, 1, C.wrap, grey));
+    for (let i = 0; i < C.bands; i++) {
+      const at = (i + 0.5) / C.bands;
+      const b = limbShell(scene, "deathShinBand", shin, at - C.bandH / 2, at + C.bandH / 2, C.bandOut, band);
+      b.rotation.x = (i % 2 ? 1 : -1) * C.slant;
+      out.push(b);
+    }
+  }
+  for (const m of out) glow?.addExcludedMesh(m);
   return out;
 }
 
