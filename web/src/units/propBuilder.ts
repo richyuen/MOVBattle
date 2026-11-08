@@ -2136,7 +2136,7 @@ export function attachProps(
     if (config.weapon === "bomb") seatInFist(weapon, body, scale);
     if (config.weapon === "potion") seatNeckInFist(weapon, body.rightHand);
     if (config.weapon && SEATED_POLES.has(config.weapon)) seatPoleInFist(weapon, body, lift);
-    if (config.attachmentPreset === "fan_bearer") {
+    if (config.attachmentPreset === "fan_bearer" && config.weaponVariant !== "giant_fan") {
       tagVisualState(weapon, "fan_closed");
     }
     props.push(weapon);
@@ -4098,6 +4098,50 @@ const EXECUTIONER_AXE = {
   wood: new Color3(0.5, 0.22, 0.1), steel: new Color3(0.52, 0.52, 0.55), bronze: new Color3(0.36, 0.36, 0.38),
 };
 const EXECUTIONER_CRESCENT = { ...JARL_CRESCENT, hornUp: 0.12, beardDown: 0.17, bulge: 0.18, steel: new Color3(0.3, 0.3, 0.33) };
+/*
+ * [S] 500 the Fan Bearer's Ancient Fan (audit 500 b.1: "a small grey folding hand fan on a short stick - TABS, two-handed, a wooden pole longer than
+ * the man ending in a wide flat team-coloured half-oval fan with a crescent wooden mount"; secret.fan_bearer.red.png: a tan pole about the man's
+ * height, at its head a flat tan half-disc mount with two horns curling up off its ends, and against the mount's flat edge a huge flat team half
+ * oval, about 1.4 men across and .8 of one deep).
+ * Spec in haft lengths L (L = .long of the stand; +y up the haft from the fist, the fist .grip of L up from the butt): the haft .thick L across;
+ * the mount a flat tan half disc .mount L across (flat edge out, round edge to the haft), .plate L thick, its horns .horn L long off each end;
+ * the fan a flat team half oval .fanW L across and .fanD L deep off the mount's flat edge, .plate L thick, 12 steps round its arc. Plates in the
+ * haft's plane turned a quarter about it (as the halberd's axe). The haft top carries the hpoint off-fist mark.
+ */
+const GIANT_FAN = {
+  long: 1.0, thick: 0.03, grip: 0.3, mount: 0.32, horn: 0.1, fanW: 1.4, fanD: 0.8, plate: 0.02,
+  wood: new Color3(0.55, 0.33, 0.15),
+};
+function buildGiantFan(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const F = GIANT_FAN, L = fit.stand * F.long;
+  const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: F.thick * L, tessellation: 7 }, scene);
+  shaft.material = mat(scene, F.wood, 0.1, "cloth");
+  shaft.convertToFlatShadedMesh();
+  shaft.position.y = (0.5 - F.grip) * L;
+  const top = L * 0.5;
+  const plate = (name: string, outline: number[][], material: ReturnType<typeof mat>, y: number): Mesh => {
+    const m = flatPlate(scene, name, outline, F.plate * L);
+    m.position.y = y; m.rotation.y = Math.PI / 2; m.material = material; m.parent = shaft;
+    return m;
+  };
+  const wood = mat(scene, F.wood, 0.1, "cloth");
+  // the mount: a half disc, round edge down toward the haft, flat edge at the top
+  const r = (F.mount * L) / 2, mount: number[][] = [];
+  for (let k = 0; k <= 8; k++) { const a = Math.PI + (k / 8) * Math.PI; mount.push([Math.cos(a) * r, Math.sin(a) * r * 0.55]); }
+  plate("fanMount", mount, wood, top);
+  for (const side of [-1, 1]) {
+    plate("fanMountHorn", [[side * r * 0.82, 0], [side * r * 1.02, 0], [side * r * 0.9, F.horn * L], [side * r * 0.75, F.horn * L * 0.85]], wood, top);
+  }
+  // the fan: a half oval off the mount's flat edge
+  const a2 = (F.fanW * L) / 2, b2 = F.fanD * L, fan: number[][] = [];
+  for (let k = 0; k <= 12; k++) { const a = (k / 12) * Math.PI; fan.push([Math.cos(a) * a2, Math.sin(a) * b2]); }
+  plate("fanLeaf", fan, mat(scene, team, 0.12, "cloth"), top + F.plate * L);
+  const knob = MeshBuilder.CreateCylinder("hpoint", { height: F.thick * L * 2, diameter: F.thick * L * 1.4, tessellation: 6 }, scene);
+  knob.position.y = top - F.thick * L * 2;
+  knob.material = wood;
+  knob.parent = shaft;
+  return shaft;
+}
 function buildJarlAxe(scene: Scene, fit: BladeFit, A = JARL_AXE, crescent = JARL_CRESCENT): Mesh {
   const L = fit.stand * A.long;
   const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: A.thick * L, tessellation: 7 }, scene);
@@ -5033,6 +5077,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "halberd": {
       if (variant === "jarl_axe") return buildJarlAxe(scene, fit);
       if (variant === "executioner_axe") return buildJarlAxe(scene, fit, EXECUTIONER_AXE, EXECUTIONER_CRESCENT);
+      if (variant === "giant_fan") return buildGiantFan(scene, fit, teamColor ?? accent);
       // The halberd, built to the spec at HALBERD: +y up the shaft from the fist at the origin, HALBERD.grip of it below the fist
       const L = fit.stand * HALBERD.long;
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: HALBERD.thick * L, tessellation: 7 }, scene);

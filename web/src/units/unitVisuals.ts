@@ -178,7 +178,7 @@ export interface UnitVisualConfig {
 
 export type WeaponVariant =
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -1092,9 +1092,11 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["lit_fuse"], "ability-active": ["lit_fuse"] },
       });
     case "secret_fan_bearer":
-      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.15 }, "fan", "conical_hat", "none", "none", "#ead8a6", undefined, {
-        posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "fan_bearer", fxPreset: "wind",
-        stateVariants: { idle: ["fan_closed"], moving: ["fan_closed"], attacking: ["fan_open"], "ability-active": ["fan_open", "gust_ring"] },
+      // [S] 500 (b.1) a pole longer than him with a huge flat team half-oval fan on a crescent mount, two-handed (propBuilder GIANT_FAN on the
+      // halberd's grip); the hand fan's closed/open swap is off, the gust ring stays
+      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.15 }, "halberd", "conical_hat", "none", "none", "#ead8a6", undefined, {
+        posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "fan_bearer", fxPreset: "wind", weaponVariant: "giant_fan",
+        stateVariants: { "ability-active": ["gust_ring"] },
       });
     case "secret_raptor":
       return vis({ scale: 1.2, bulk: 0.95, headSize: 0.95, armLength: 0.7, legLength: 1.2 }, "none", "none", "none", "raptor_mount", "#7c8a4b", undefined, {
