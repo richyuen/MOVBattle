@@ -25,6 +25,8 @@ const SENTINEL_SWAP = { hold: 2.5 };
  * needs more arrows: each arrow's balloons add their share), to at most `top` m; then they pop and he falls.
  */
 const BALLOON_FLOAT = { seconds: 3, rise: 1.4, top: 3.2, per: 3, most: 9, size: 0.42, string: 0.55, swell: 0.12 };
+// [S] 503 the share of the torso's and neck's pitch and roll a steadfast (demon form) man keeps (see _holdSteadfastUpright)
+const STEADFAST_UPRIGHT = 0.3;
 /*
  * [S] drunk (342; farmer.potion_seller.jpg, card: "making them green and confused ... These tipsy units will fail to concentrate on attacking and wander about;
  * they may even struggle to stand and walk"). While drunk his skin is DRUNK.dye of the way to DRUNK.green and lit .glow of it (his clothes .6 of that), his
@@ -1895,6 +1897,22 @@ export class RuntimeUnit {
     this._applyFearSkull(now);
     this._applyKneelPose(now);
     this._applyFireworkSpin(now);
+    this._holdSteadfastUpright();
+  }
+
+  /**
+   * [S] 503 (void_monarch c.1: "the recorded demon_form ... shows only the unit tipping flat inside the melee pile") the demon form floats
+   * upright: his twin-sword swing rolled the torso ~.95 rad and pitched the head flat beside it (probe 503, capture seed: torso z .95, head up
+   * y ~0 at demon_form +6..12 ticks, root level). Once steadfast, after every pose layer, the torso's and neck's pitch and roll keep only
+   * STEADFAST_UPRIGHT of what the layers set (the twist about y stays, so the swing still reads).
+   */
+  private _holdSteadfastUpright(): void {
+    if (!this.steadfast || this._isDead) return;
+    const keep = STEADFAST_UPRIGHT;
+    for (const n of [this.body.torso, this.body.neck]) {
+      if (n.rotationQuaternion) continue;
+      n.rotation.x *= keep; n.rotation.z *= keep;
+    }
   }
 
   private _applyPoseOverlay(isAttacking: boolean): void {
