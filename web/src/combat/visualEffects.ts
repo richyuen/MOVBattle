@@ -101,6 +101,8 @@ const BODY_FLAMES = {
 /** [S] 419 the hwacha's launch smoke (spawnLaunchSmoke). */
 const LAUNCH_SMOKE = { puffs: 14, wide: 1.2, tall: 0.6, from: 0.15, to: 0.6, drift: 0.9, rise: 0.4, stagger: 0.45, seconds: 1.6, fade: 0.4, alpha: 0.9, glow: 0.35, white: new Color3(0.93, 0.93, 0.9) };
 /** [S] 495 the Shadow Walker's Assassin Poof (spawnShadowPoof): a dark violet cloud a man high, held for the after-shot (~.16 s), gone before the windup (~1.1 s). */
+/** [S] 497 the Shadow Walker's stacking hit marks (spawnWalkerMarks). */
+const WALKER_MARK = { orb: 0.13, sparks: 2, radius: 0.36, height: 0.5, speed: 2.4, seconds: 8, fade: 1.5, green: new Color3(0.35, 1.6, 0.3) };
 const SHADOW_POOF = { puffs: 12, wide: 1.1, tall: 1.7, from: 0.2, to: 0.75, grow: 0.25, rise: 0.5, stagger: 0.2, seconds: 0.8, fade: 0.4, alpha: 0.88, glow: 0.6, ring: 1.6, dark: new Color3(0.16, 0.05, 0.22) };
 /** [S] 418 the Firework Arrow's burst (spawnFireworkBurst): spark ball .radius m (half the card's 2.5 m blast each way), .lift up off the ground. */
 const FIREWORK_BURST = {
@@ -2261,7 +2263,54 @@ export class VisualEffects {
     });
   }
 
+  /**
+   * [S] 497 the Shadow Walker's hit marks (card: "Every time a unit is attacked by a Shadow Walker, they emit green particles, with one more for every
+   * attack"; audit 489 c.3: "no green particles on the struck knight"). WALKER_MARK: per stack one bright green orb .orb m across with .sparks smaller
+   * sparks trailing it, circling the struck man's chest (`at`, null once he is gone) .radius m out at its own height and speed, bobbing; the set lasts
+   * .seconds from the latest hit (a new hit replaces it with one stack more) and fades over its last .fade. Unlit green, in the glow.
+   */
+  private _walkerMarks = new Map<object, TimedEffect>();
+  spawnWalkerMarks(key: object, at: () => Vector3 | null, stacks: number): void {
+    const M = WALKER_MARK;
+    const old = this._walkerMarks.get(key);
+    if (old) old.remaining = 0;
+    const root = new TransformNode("walkerMarks", this._scene);
+    const p0 = at();
+    if (p0) root.position.copyFrom(p0);
+    const mat = this._fxMat(M.green, M.green, 1);
+    const motes: { m: Mesh; a: number; y: number; speed: number; lag: number }[] = [];
+    for (let s = 0; s < stacks; s++) {
+      const a = s * 2.39996, y = ((s * 0.618034) % 1) * M.height - M.height / 2, speed = M.speed * (s % 2 ? -1 : 1) * (0.8 + 0.4 * ((s * 0.381966) % 1));
+      for (let k = 0; k <= M.sparks; k++) {
+        const m = MeshBuilder.CreateIcoSphere("walkerMark", { radius: (k === 0 ? M.orb : M.orb * (0.55 - k * 0.15)) / 2, subdivisions: 1 }, this._scene);
+        m.parent = root; m.material = mat; m.isPickable = false;
+        motes.push({ m, a, y, speed, lag: k * 0.22 });
+      }
+    }
+    let t = 0;
+    const effect: TimedEffect = {
+      root,
+      remaining: M.seconds,
+      update: (dt, remaining) => {
+        t += dt;
+        const p = at();
+        if (!p) { effect.remaining = Math.min(effect.remaining, 0); return; }
+        root.position.copyFrom(p);
+        for (const o of motes) {
+          const ang = o.a + (t - o.lag) * o.speed;
+          o.m.position.set(Math.sin(ang) * M.radius, o.y + Math.sin(t * 3 + o.a) * 0.06, Math.cos(ang) * M.radius);
+        }
+        mat.alpha = remaining > M.fade ? 1 : Math.max(0, remaining / M.fade);
+      },
+      dispose: () => { mat.dispose(); if (this._walkerMarks.get(key) === effect) this._walkerMarks.delete(key); },
+    };
+    effect.update?.(0, M.seconds);
+    this._effects.push(effect);
+    this._walkerMarks.set(key, effect);
+  }
+
   dispose(): void {
+    this._walkerMarks.clear();
     for (const e of this._effects) {
       if (e.particles) for (const ps of e.particles) { ps.stop(); ps.dispose(false); }
       e.root.dispose();

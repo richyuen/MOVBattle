@@ -694,6 +694,8 @@ export class SimulationSystem {
   // so for that long he crumples under the club head where it struck instead of being a body-length off in the air on the next frame. See _landMeleeBlow
   // and _fireDwelledLaunches. A blow that kills him outright throws the corpse at once.
   private _pendingLaunches: Array<{ target: RuntimeUnit; from: Vector3; knockback: number; at: number }> = [];
+  /** [S] 497 Shadow Walker marks stacked on each man (WALKER_MARK); a WeakMap, so a battle's dead men drop out with it */
+  private _walkerMarks = new WeakMap<RuntimeUnit, number>();
   // A presser's distance to his foe at his last decision: while it is still closing he holds his heavy swing until he is at the man's shoulder.
   private _closingFrom = new Map<RuntimeUnit, number>();
   // one-blow-per-man: when a striker who closed on his man may first bring his weapon down (see STRIKE_LAG)
@@ -3770,6 +3772,13 @@ export class SimulationSystem {
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z, head: { x: head.x, y: head.y, z: head.z } });
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
+    // [S] 497 every Shadow Walker blow leaves one more green mark circling the struck man's chest (card; visualEffects WALKER_MARK)
+    if (this.visualEffects && attacker.definition.id === "evil.shadow_walker" && !target.isDead) {
+      const stacks = (this._walkerMarks.get(target) ?? 0) + 1;
+      this._walkerMarks.set(target, stacks);
+      const chest = target.body.torso;
+      this.visualEffects.spawnWalkerMarks(target, () => (target.isDead ? null : chest.getAbsolutePosition().clone()), stacks);
+    }
     // [S] 364 the mammoth's stomp lands as a trample: a dust ring runs out over the ground and earth is thrown up (visualEffects TRAMPLE_RING)
     if (this.visualEffects && attacker.definition.id === "tribal.mammoth") {
       this.visualEffects.spawnTrampleRing(new Vector3(target.position.x, attacker.position.y, target.position.z), Math.max(2, splashRadius));
