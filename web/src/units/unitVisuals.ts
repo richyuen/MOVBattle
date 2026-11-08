@@ -911,7 +911,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     // a narrow chest and thin long arms and legs; he stands upright with his arms out (duelist), not the giant's forward hunch
     { scale: 1.26, bulk: 0.9, headSize: 1.1, armLength: 1.2, legLength: 1.12, torsoWidth: 0.84, upperArmWidth: 0.7, lowerArmWidth: 0.68, upperLegWidth: 0.8, lowerLegWidth: 0.76 }, "greatsword", "none", "none", "cape", "#7D2E2E", "greatsword", {
       weaponVariant: "warglaive", offhandVariant: "warglaive",
-      posePreset: "duelist",
+      // [P] 495 (494 DEFECTS: the duelist stance showed him side-on in the idle; TABS square to the front, arms out low): the default stand
+      posePreset: "default",
       materialPreset: "secret_demon",
       attachmentPreset: "reaper_aura",
       fxPreset: "ember",
