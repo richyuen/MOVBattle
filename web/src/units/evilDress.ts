@@ -1127,12 +1127,13 @@ function trunkBox(body: ArticulatedBody): { lo: Vector3; hi: Vector3 } {
  * over a hammer (a handle with a block head), .emblem W across, at .emblemAt H up the trunk.
  */
 const MECHANIC_OVERALLS = {
-  shirt: new Color3(0.2, 0.2, 0.21), dark: new Color3(0.06, 0.05, 0.05), bone: new Color3(0.85, 0.82, 0.72),
+  // 499: the shirt is MECHANIC_SLEEVE's unlit light grey (CONFIRM 498 a.8), was lit (.2,.2,.21)
+  dark: new Color3(0.06, 0.05, 0.05), bone: new Color3(0.85, 0.82, 0.72),
   collar: 0.62, flap: 0.2, bibW: 0.66, bibTop: 0.74, proud: 0.03, strap: 0.13, emblem: 0.42, emblemAt: 0.5,
 };
 export function mechanicOveralls(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = MECHANIC_OVERALLS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
-  const shirt = mf.get("cloth", C.shirt, { emissive: C.shirt.scale(0.3), roughness: 1 });
+  const shirt = mf.get("unlit", MECHANIC_SLEEVE.shirt, { emissive: MECHANIC_SLEEVE.shirt });
   const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
   const bone = mf.get("unlit", C.bone, { emissive: C.bone });
   const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
@@ -1180,17 +1181,26 @@ export function mechanicOveralls(scene: Scene, body: ArticulatedBody): Mesh[] {
  * Spec in each upper arm's own box (r its radius, h its length, +y up the bone): the upper arm goes the shirt's grey cloth; a rolled cuff, a
  * 7-sided ring .roll r thick out to .cuffR r, .cuffH h tall, at its foot (.at h under the centre), a shade darker so the fold reads.
  */
-const MECHANIC_SLEEVE = { shirt: new Color3(0.2, 0.2, 0.21), fold: new Color3(0.14, 0.14, 0.15), cuffR: 1.55, cuffH: 0.24, at: 0.42 };
+/*
+ * [S] 499 the shirt is LIGHT grey and LONG-sleeved (evil.mad_mechanic.red.png: a pale grey shirt whose sleeves run past the elbow and are rolled in
+ * a thick cuff on the forearm, standing off the black bib; CONFIRM 498 a.8: "the sleeves and shoulders are the same dark purple-grey as the apron").
+ * The lit (.2,.2,.21) cloth read purple-grey in shade (LESSONS: lit cloth in shade reads grey-lavender): the shirt is unlit flat grey .shirt (palette
+ * right wall, white x.45-.7 reads a neutral mid-light grey), out of the glow. Spec in each arm mesh's own box (r its radius, h its length, +y up the
+ * bone toward the shoulder): upper arm and forearm both go shirt; the rolled cuff, a 7-sided ring .cuffR r out and .cuffH h tall, sits on the
+ * FOREARM .at h under its top (the elbow), a darker grey .fold so the roll reads; the claw gauntlet covers the wrist below it.
+ */
+export const MECHANIC_SLEEVE = { shirt: new Color3(0.5, 0.5, 0.51), fold: new Color3(0.32, 0.32, 0.33), cuffR: 1.5, cuffH: 0.26, at: 0.3 };
 export function mechanicSleeves(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = MECHANIC_SLEEVE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
-  const shirt = mf.get("cloth", C.shirt, { emissive: C.shirt.scale(0.3), roughness: 1 });
-  const fold = mf.get("cloth", C.fold, { emissive: C.fold.scale(0.3), roughness: 1 });
+  const shirt = mf.get("unlit", C.shirt, { emissive: C.shirt });
+  const fold = mf.get("unlit", C.fold, { emissive: C.fold });
   const out: Mesh[] = [];
-  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) { arm.material = shirt; glow?.addExcludedMesh(arm); }
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
     arm.material = shirt; glow?.addExcludedMesh(arm);
     const bb = arm.getBoundingInfo().boundingBox, e = bb.extendSize, r = Math.max(e.x, e.z), h = e.y * 2;
-    const cuff = MeshBuilder.CreateCylinder("mechanicSleeveCuff", { height: h * C.cuffH, diameterTop: r * 2 * C.cuffR, diameterBottom: r * 2 * C.cuffR * 1.06, tessellation: 7 }, scene);
-    cuff.parent = arm; cuff.position.set(bb.center.x, bb.center.y - h * C.at, bb.center.z); cuff.material = fold;
+    const cuff = MeshBuilder.CreateCylinder("mechanicSleeveCuff", { height: h * C.cuffH, diameterTop: r * 2 * C.cuffR * 1.06, diameterBottom: r * 2 * C.cuffR, tessellation: 7 }, scene);
+    cuff.parent = arm; cuff.position.set(bb.center.x, bb.center.y + e.y - h * C.at, bb.center.z); cuff.material = fold;
     cuff.convertToFlatShadedMesh(); glow?.addExcludedMesh(cuff); out.push(cuff);
   }
   return out;
