@@ -845,48 +845,65 @@ export function lichCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mes
  * [S] 495 the Tempest Lich's tendrils (evil.tempest_lich.red.png; audit 489 a.2: "a blue head with bead eyes under a dark box crown sprouting brown
  * twigs - TABS: headless; tall black tendrils rise from the neck in place of a head"). The block head, its bead eyes, the box cap and dome and the
  * brown tines (HORNED_EVIL tempest_lich) are hidden; the head mesh stays as the anchor.
- * Spec in head widths W and heights H (the head box, its centre c): a near-black 8-sided socket from the head's foot up .socket H, .sockW W across;
- * out of its top .count black tendrils, each a chain of 5-sided tapered segments through LICH_TENDRILS points [x W, y H over the socket top, z D],
- * rooted .root H thick and tapering to a point; the middle one tallest (about 2.4 H, the old tines' height, so the capture's framing holds), two
- * flanking ones near 2 H leaning out, the rest shorter and curling outward. Lit near-black cloth self-lit .4, roughness 1 (LESSONS near-black).
+ * [R] 500 rebuild of the crown (plateau: CONFIRM failed a in 498 and 499; 499 "a short spiky tuft about half the torso's height - TABS: tall black
+ * tendrils rising from the collar, the longest taller than the whole torso, a tall dark antler-like silhouette"). The 495 spec was in head heights
+ * over a hidden head box, so the tallest stood ~.8 m, about half the torso, and the lit .08 black read plum-brown in the field.
+ * Spec, read off evil.tempest_lich.blue.png (collar at 600 px, hip at 780 px: torso 180 px; tallest tip 225 px; next 350 px; left pair 440/470 px):
+ * lengths in torso heights TH (the torso mesh box, as deathBringerHair), turned into the head's local frame (divided by its scaling):
+ *   - the socket as before (.socket H tall, .sockW W across, out of the hidden head's foot);
+ *   - 7 tendrils out of the socket top, roots .root TH across tapering to a point, each a chain of 5-sided segments through LICH_TENDRILS
+ *     [x, y over the socket top, z] in TH: the middle one tallest, 1.9 TH, near straight with a slight S; one beside it 1.4 TH bowing out at
+ *     the tip; two on the far side .95 and .8 TH, wavy and leaning out; three short ones .4-.6 TH curling out round the back (the antler fan);
+ *   - one side tine (a spur) off each of the two tallest, half way up, .3 TH, angled out and up: the antler read.
+ * Flat unlit black (deathBringerHair's fall recipe, which reads black in this field; the lit .08 cloth read plum), out of the glow.
  */
-const LICH_SOCKET = { socket: 0.42, sockW: 0.78, root: 0.2 };
+const LICH_SOCKET = { socket: 0.42, sockW: 0.78, root: 0.13 };
 const LICH_TENDRILS: [number, number, number][][] = [
-  [[0, 0, 0], [0.05, 0.7, 0.02], [-0.06, 1.4, 0], [0.04, 2.0, -0.04], [0.02, 2.45, -0.02]],
-  [[-0.18, 0, 0.05], [-0.3, 0.6, 0.06], [-0.32, 1.2, 0.04], [-0.45, 1.75, 0], [-0.5, 2.0, -0.02]],
-  [[0.18, 0, 0.05], [0.28, 0.65, 0.06], [0.36, 1.25, 0], [0.42, 1.7, -0.04], [0.55, 1.95, -0.04]],
-  [[-0.25, 0, -0.15], [-0.42, 0.45, -0.2], [-0.5, 0.9, -0.24], [-0.68, 1.15, -0.26]],
-  [[0.25, 0, -0.15], [0.44, 0.5, -0.2], [0.52, 0.95, -0.22], [0.72, 1.2, -0.25]],
-  [[-0.1, 0, 0.22], [-0.16, 0.4, 0.34], [-0.28, 0.8, 0.42], [-0.36, 0.95, 0.5]],
-  [[0.1, 0, -0.25], [0.14, 0.55, -0.4], [0.08, 1.05, -0.52], [0.15, 1.35, -0.6]],
+  [[0, 0, 0], [0.04, 0.5, 0.02], [-0.05, 1.0, 0], [0.03, 1.5, -0.03], [0.01, 1.9, -0.02]],
+  [[0.1, 0, 0.03], [0.17, 0.45, 0.04], [0.2, 0.9, 0.02], [0.27, 1.2, -0.02], [0.4, 1.4, -0.04]],
+  [[-0.1, 0, 0.03], [-0.18, 0.35, 0.04], [-0.2, 0.65, 0.02], [-0.3, 0.95, 0]],
+  [[-0.13, 0, -0.06], [-0.26, 0.3, -0.08], [-0.33, 0.6, -0.1], [-0.46, 0.8, -0.12]],
+  [[0.13, 0, -0.07], [0.26, 0.25, -0.1], [0.32, 0.45, -0.12], [0.44, 0.6, -0.14]],
+  [[-0.05, 0, -0.12], [-0.08, 0.25, -0.2], [-0.16, 0.45, -0.26], [-0.22, 0.55, -0.3]],
+  [[0.05, 0, 0.1], [0.08, 0.2, 0.17], [0.15, 0.35, 0.22], [0.22, 0.4, 0.25]],
 ];
+// spurs: [tendril index, share of its path where it leaves, its tip offset from there in TH]
+const LICH_SPURS: [number, number, [number, number, number]][] = [[0, 0.45, [-0.2, 0.3, 0]], [1, 0.5, [0.2, 0.2, 0.02]]];
 export function lichTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = LICH_SOCKET, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
-  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2;
   head.isVisible = false;
   body.leftEye?.setEnabled(false);
   body.rightEye?.setEnabled(false);
   for (const m of head.getChildMeshes(false)) if (/^(evilCap|evilCapDome|lichTine|lichTwig)/.test(m.name)) m.isVisible = false;
   const blackC = new Color3(0.08, 0.06, 0.07), black = getMaterialFactory().get("cloth", blackC, { emissive: blackC.scale(0.4), roughness: 1 });
+  const flatC = new Color3(0.02, 0.015, 0.02), flat = getMaterialFactory().get("unlit", flatC, { emissive: flatC });
   // the neck stub under the socket read as a blue band (look 495): it goes the tendrils' black
   for (const m of body.allMeshes) if (/_neckM$/.test(m.name)) { m.material = black; scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   const out: Mesh[] = [];
   const foot = c.y - H * 0.5, top = foot + H * C.socket;
   const socket = MeshBuilder.CreateCylinder("lichSocket", { height: H * C.socket, diameterBottom: W * C.sockW * 0.9, diameterTop: W * C.sockW, tessellation: 8 }, scene);
-  socket.parent = head; socket.position.set(c.x, (foot + top) / 2, c.z); socket.material = black; out.push(socket);
+  socket.parent = head; socket.position.set(c.x, (foot + top) / 2, c.z); socket.material = flat; out.push(socket);
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, hs = head.scaling;
+  const TH = tb.extendSize.y * 2 * tm.scaling.y;
   const up = new Vector3(0, 1, 0);
-  for (const path of LICH_TENDRILS) {
-    const pts = path.map(([x, y, z]) => new Vector3(c.x + x * W, top + y * H - H * 0.05, c.z + z * D));
+  const chain = (pts: Vector3[], root: number): void => {
     const n = pts.length - 1;
     for (let k = 0; k < n; k++) {
       const a = pts[k], e = pts[k + 1], d = e.subtract(a), len = d.length();
-      const r0 = H * C.root * (1 - k / n), r1 = k === n - 1 ? 0 : H * C.root * (1 - (k + 1) / n);
+      const r0 = root * (1 - k / n), r1 = k === n - 1 ? 0 : root * (1 - (k + 1) / n);
       const seg = MeshBuilder.CreateCylinder("lichTendril", { height: len * 1.06, diameterBottom: r0, diameterTop: r1, tessellation: 5 }, scene);
-      seg.parent = head; seg.material = black;
+      seg.parent = head; seg.material = flat;
       seg.position.copyFrom(a.add(e).scale(0.5));
       seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, d.normalize(), new Quaternion());
       out.push(seg);
     }
+  };
+  const paths = LICH_TENDRILS.map((path) => path.map(([x, y, z]) => new Vector3(c.x + (x * TH) / hs.x, top + (y * TH) / hs.y - H * 0.05, c.z + (z * TH) / hs.z)));
+  for (const pts of paths) chain(pts, (TH * C.root) / hs.x);
+  for (const [i, at, [x, y, z]] of LICH_SPURS) {
+    const pts = paths[i], f = at * (pts.length - 1), k = Math.floor(f), from = Vector3.Lerp(pts[k], pts[k + 1], f - k);
+    chain([from, from.add(new Vector3((x * TH) / hs.x, (y * TH) / hs.y, (z * TH) / hs.z))], (TH * C.root * 0.5) / hs.x);
   }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
