@@ -4078,14 +4078,18 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
      * standing off its back (spine) edge, a dark wrapped grip in the fist. BONE_DAGGER in fit.stand: .long blade, .wide at its root, .curve
      * forward sweep at the tip, .teeth spine teeth .tooth long; grip .grip fists. Built down -y from the fist (a reverse grip).
      */
-    const D = { long: 0.42, wide: 0.075, thick: 0.022, curve: 0.11, segs: 5, teeth: 4, tooth: 0.05, grip: 2.4 };
+    const D = { long: 0.42, wide: 0.075, thick: 0.022, curve: 0.11, segs: 5, teeth: 4, tooth: 0.06, grip: 2.4 };
     const L = fit.stand * D.long, f = fit.fist, root = new Mesh("boneDagger", scene);
-    const bone = mat(scene, new Color3(0.62, 0.55, 0.36), 0.18, "cloth");
+    // [S] 490 (b.1): the fist's -y reads as up in the duelist hold (489 probe: blade rose .5 over the hand), so the whole knife hangs under a
+    // "boneDaggerHold" turned half round z: the blade now leaves the little-finger side and runs point-down, its forward sweep kept (+z).
+    // Bone in a flat self-lit tan (lit tan rendered pale grey, 489), out of the glow.
+    const hold = new Mesh("boneDaggerHold", scene); hold.parent = root; hold.rotation.z = Math.PI;
+    const boneC = new Color3(0.95, 0.68, 0.3), bone = getMaterialFactory().get("unlit", boneC, { emissive: boneC });
     const wrap = mat(scene, new Color3(0.12, 0.08, 0.08), 0.05, "cloth");
     const grip = MeshBuilder.CreateCylinder("boneDaggerGrip", { height: f * D.grip, diameter: f * 0.9, tessellation: 6 }, scene);
-    grip.parent = root; grip.material = wrap;
+    grip.parent = hold; grip.material = wrap;
     const pommel = MeshBuilder.CreateCylinder("boneDaggerPommel", { height: f * 0.7, diameterBottom: f * 1.4, diameterTop: 0, tessellation: 4 }, scene);
-    pommel.parent = root; pommel.position.y = f * D.grip * 0.5 + f * 0.35; pommel.material = bone;
+    pommel.parent = hold; pommel.position.y = f * D.grip * 0.5 + f * 0.35; pommel.material = bone;
     // the blade: segments bending forward (+z) as they run down, each narrower, the last a point
     let y = -f * D.grip * 0.5, z = 0;
     for (let k = 0; k < D.segs; k++) {
@@ -4094,7 +4098,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const dz = L * D.curve * (t1 * t1 - t0 * t0);
       const seg = MeshBuilder.CreateCylinder("boneDaggerBlade", { height: h * 1.04, diameterTop: w0, diameterBottom: w1, tessellation: 4 }, scene);
       seg.scaling.x = D.thick / D.wide; seg.rotation.y = Math.PI / 4;
-      const tilt = new Mesh("boneDaggerBend", scene); tilt.parent = root; tilt.position.set(0, y - h / 2, z + dz / 2); tilt.rotation.x = -Math.atan2(dz, h);
+      const tilt = new Mesh("boneDaggerBend", scene); tilt.parent = hold; tilt.position.set(0, y - h / 2, z + dz / 2); tilt.rotation.x = -Math.atan2(dz, h);
       seg.parent = tilt; seg.material = bone; seg.convertToFlatShadedMesh();
       // a jagged tooth off the spine (-z), raked back up toward the grip
       if (k < D.teeth) {
@@ -4103,6 +4107,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       }
       y -= h; z += dz;
     }
+    for (const m of hold.getChildMeshes(false)) if (m.material === bone) scene.getGlowLayerByName("glow")?.addExcludedMesh(m as Mesh);
     return root;
   }
   if (variant === "radiant_glaive") {
