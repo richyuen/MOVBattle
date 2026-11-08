@@ -2132,7 +2132,7 @@ export function attachProps(
     applyPresentationOffsets(weapon, config.weaponPositionOffset, config.weaponRotationOffset, scale);
     if (config.weaponVariant === "glow_glove") seatGlowGlove(weapon, body.rightHand);
     if (config.weaponVariant === "devout_gauntlet" || config.weaponVariant === "mechanic_claw") seatDevoutGauntlet(weapon, body.rightHand);
-    if (config.weaponVariant === "time_gauntlet") { weapon.position.setAll(0); weapon.rotation.setAll(0); }
+    if (config.weaponVariant === "time_gauntlet" || config.weaponVariant === "warglaive") { weapon.position.setAll(0); weapon.rotation.setAll(0); }
     if (config.weapon === "bomb") seatInFist(weapon, body, scale);
     if (config.weapon === "potion") seatNeckInFist(weapon, body.rightHand);
     if (config.weapon && SEATED_POLES.has(config.weapon)) seatPoleInFist(weapon, body, lift);
@@ -2150,7 +2150,7 @@ export function attachProps(
       applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
       if (config.offhandVariant === "glow_glove") seatGlowGlove(offhand, body.leftHand);
       if (config.offhandVariant === "devout_gauntlet" || config.offhandVariant === "mechanic_claw") seatDevoutGauntlet(offhand, body.leftHand);
-      if (config.offhandVariant === "time_gauntlet") { offhand.position.setAll(0); offhand.rotation.setAll(0); }
+      if (config.offhandVariant === "time_gauntlet" || config.offhandVariant === "warglaive") { offhand.position.setAll(0); offhand.rotation.setAll(0); }
       if (config.offhandWeapon === "bomb") seatInFist(offhand, body, scale);
       if (config.offhandWeapon === "potion") seatNeckInFist(offhand, body.leftHand);
       props.push(offhand);
@@ -4128,6 +4128,46 @@ function buildMechanicClaw(scene: Scene, fit: BladeFit): Mesh {
   return root;
 }
 
+/*
+ * [S] 491 the Death Bringer's warglaive (evil.death_bringer.red.png; card Main/Off Hand "Death Bringer Warglaive", "two red hot tonfa blades"): in each
+ * fist a curved gold crescent blade held across the hand like a tonfa, its middle in the fist, the tips curling up; a glowing red-hot edge along
+ * the convex (lower) side; three small gold teeth on the inner edge by the grip. WARGLAIVE in his standing height H (hand frame, the blade along x):
+ * chord .chord H across, an arc of a circle swept .sweep rad either side of the fist; blade .wide H tall at the middle tapering to .tipW of that
+ * at the tips, .thick H thick, in .segs flat-shaded facets; the hot edge .edge H tall under it; the fist .offset of the chord off the middle.
+ */
+const WARGLAIVE = { chord: 0.33, sweep: 0.95, wide: 0.05, tipW: 0.18, thick: 0.011, segs: 10, edge: 0.016, offset: 0.08 };
+function buildWarglaive(scene: Scene, fit: BladeFit): Mesh {
+  const G = WARGLAIVE, H = fit.stand, Rc = (G.chord * H) / 2 / Math.sin(G.sweep);
+  const root = new Mesh("warglaive", scene);
+  const gold = mat(scene, new Color3(0.95, 0.62, 0.2), 0.18, "cloth");
+  const hotC = new Color3(1.6, 0.22, 0.32), hot = getMaterialFactory().get("unlit", hotC, { emissive: hotC });
+  const at = (a: number) => new Vector3(Rc * Math.sin(a) - G.offset * G.chord * H, Rc * (1 - Math.cos(a)), 0);
+  for (let k = 0; k < G.segs; k++) {
+    const a = -G.sweep + (2 * G.sweep * k) / G.segs, b = a + (2 * G.sweep) / G.segs, m = (a + b) / 2;
+    const taper = G.tipW + (1 - G.tipW) * Math.cos((m / G.sweep) * Math.PI / 2);
+    const p = at(a), q = at(b), mid = Vector3.Center(p, q), len = Vector3.Distance(p, q) * 1.04;
+    // each facet a box laid along the arc; its "down" is the arc's outward normal (away from the circle's centre above)
+    const normal = new Vector3(Math.sin(m), -Math.cos(m), 0);
+    const w = G.wide * H * taper;
+    for (const [name, material, tall, off] of [["warglaiveBlade", gold, w, 0], ["warglaiveEdge", hot, G.edge * H * Math.max(0.4, taper), w / 2 + G.edge * H * 0.4]] as const) {
+      const facet = MeshBuilder.CreateBox(name, { width: len, height: tall, depth: G.thick * H * (name === "warglaiveEdge" ? 0.7 : 1) }, scene);
+      facet.parent = root; facet.material = material;
+      facet.position.copyFrom(mid.add(normal.scale(off))); facet.rotation.z = m;
+      facet.convertToFlatShadedMesh();
+    }
+  }
+  for (const a of [-0.18, 0.12, 0.42]) {
+    // small teeth on the inner (upper) edge beside the fist
+    const tooth = MeshBuilder.CreateCylinder("warglaiveTooth", { height: G.wide * H * 0.7, diameterTop: 0, diameterBottom: G.wide * H * 0.55, tessellation: 3 }, scene);
+    tooth.parent = root; tooth.material = gold; tooth.scaling.z = 0.3;
+    tooth.position.copyFrom(at(a).add(new Vector3(-Math.sin(a), Math.cos(a), 0).scale(G.wide * H * 0.55))); tooth.rotation.z = a;
+    tooth.convertToFlatShadedMesh();
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const m of root.getChildMeshes(true)) if (!/Edge/.test(m.name)) glow?.addExcludedMesh(m as Mesh);
+  return root;
+}
+
 function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
   hand.computeWorldMatrix(true);
   const fist = hand.getChildMeshes(true).find(m => /HandM$/.test(m.name));
@@ -4152,6 +4192,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     ridge.parent = root; ridge.position.set(0, f * 2.2, f * 1.25); ridge.material = light;
     return root;
   }
+  if (variant === "warglaive") return buildWarglaive(scene, fit); // [S] 491 (WARGLAIVE)
   if (variant === "bone_dagger") {
     /*
      * [S] 489 the Shadow Walker's dagger (evil.shadow_walker.red.png, .png; card Main Hand "Shadow Walker Dagger"): a long curved bone-tan blade

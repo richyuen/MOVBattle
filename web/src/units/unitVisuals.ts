@@ -178,7 +178,7 @@ export interface UnitVisualConfig {
 
 export type WeaponVariant =
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -903,7 +903,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.death_bringer": vis(
-    { scale: 1.74, bulk: 1.44, headSize: 1.1, armLength: 1.16 }, "greatsword", "none", "none", "cape", "#7D2E2E", undefined, {
+    // [S] 491 (b.1, b.2; evil.death_bringer.red.png): a gold warglaive in each fist (propBuilder WARGLAIVE), no greatsword
+    { scale: 1.74, bulk: 1.44, headSize: 1.1, armLength: 1.16 }, "greatsword", "none", "none", "cape", "#7D2E2E", "greatsword", {
+      weaponVariant: "warglaive", offhandVariant: "warglaive",
       posePreset: "giant",
       materialPreset: "secret_demon",
       attachmentPreset: "reaper_aura",
