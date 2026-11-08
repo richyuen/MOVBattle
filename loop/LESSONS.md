@@ -20,7 +20,6 @@ Read whole at step 1; one fact per line, merge near cap.
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
-- A flat plate on a dress ribbon needs 7+ cm of stand-off (398 zeus).
 - Babylon fresnel t=|n.v|^power is 1 face-on: opacity fresnel ADDS left*(1-t)+right*t, so a thin rim wants power<1 (.25; 3 washed a field amber, 489). Cull back faces; give a 6 m field a pulled-back shot. Probing in-page: swap in a new material (prop edits do not recompile).
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
@@ -36,15 +35,14 @@ Read whole at step 1; one fact per line, merge near cap.
 ## Rig and dress
 - Retire superseded hip skirts/ropes (482). The `_yoke` hull spans the trunk, wider than a slim torso: re-skin it for a bare waist, size shells from it (487).
 - A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
-- aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen). The `_yoke` hull spans the whole trunk, not a collar: never anchor a chest piece to its foot (444).
-- Build small flat dress pieces as closed slabs: a one-sided disc can face away (390).
+- aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
 - A foot mesh is a merged cuff + toe box ~half the shin tall: a tuft at its bbox middle is buried; the instep's top is lo.y + ~.42 (399). Shoes, anklets, socks go at that height or the boot eats the shin (433); the grass hides a foot box to ~.6, so a shoe must top that (434).
 - A hem or band cut at a share of limbBox(thigh) misses the knee: the thigh runs ~.08 past the joint; anchor to knee.position.y in the hip frame. Shin, foot, trunk and _yoke meshes in the dark body shade read as boots or a vest: recolour them to the dress cloth (433).
 - A head-hung piece cannot run on down the torso (it sits inside the chest box): build the torso run torso-parented (401).
 - The bead eyes hang off the neck joint, not the head block: a head-hung cap or band must be seated off the eyes' world tops read into the head's frame, or it covers them (403 ice archer); shrinking headSize leaves the eyes where they were (403 headbutter band across the eyes). A peaked cap brim hides them too (429 cannon).
 - A leg-length change reads only if the dress over the leg scales with it: brawlerLegs' boots and cuffs kept the visible belt-to-sole at 41% while the probe hip rose to 52% (406 headbutter). Measure the shot, not the bone.
-- A closed trapezoid plate is a 4-tessellation frustum squashed in z (KABUTO plate); arc cylinders are one-sided ribbons SSAO greys (421).
+- Flat dress pieces are closed slabs (a one-sided disc can face away, 390; a plate on a ribbon needs 7+ cm stand-off, 398); a trapezoid plate is a 4-tessellation frustum squashed in z (KABUTO); arc cylinders are one-sided ribbons SSAO greys (421).
 - A faction tint plus the clothed recolour's warm hue shift turns red-team body cloth tan (449 wild_west): a garment the ref shows in team colour gets its own team cloth material, not body.bodyMaterial; check the red team on a --noglow swatch.
 
 - A prop not in _carryProp's node regex rides the fist, so _aimBlow's raised fist points it back at the hit: lay it on _aimTip before _twoHandPole (451 miner).
@@ -55,5 +53,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
 - A ground-length skirt hides a hover lift: shorten the dress first (493 lich).
 - Near-black cloth: "unlit" near-black and smooth lit near-black both read plum in the field haze (494 cultist robe); use lit cloth (.08,.06,.07), self-lit .4, roughness 1.
-- A missile-catch/dodge needs arrows before contact: archers behind a squire loosed at 2.7 s, after the melee swap (494 sentinel); spar against archers (painter pattern).
+- A missile catch needs arrows before contact: spar against archers (494 sentinel).
 - In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
+- bakeCurrentTransformIntoVertices bakes the world matrix: bake before parenting (495).
+- Black in front of self-lit cloth or bone reads brown: the glow halo (black with --noglow); exclude the neighbours from the glow (495).

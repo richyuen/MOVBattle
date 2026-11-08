@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 494   Batch: evil   Consecutive empty: 0   Done: 93/139   Parked: 0
+Iteration: 495   Batch: evil   Consecutive empty: 0   Done: 93/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -16,40 +16,42 @@ wild_west: dynamite_thrower ++++ D | miner ++++ D | cactus ++++ D | gunslinger +
 legacy_1: peasant ++++ D | banner_bearer ++++ D | poacher ++++ D | blowdarter ++++ D | pike ++++ D | barrel_roller ++++ D | boxer ++++ D | flag_bearer ++++ D
 legacy_2: pharaoh ++++ D | wizard ++++ D | chariot ++++ D | thor ++++ D | tank ++++ D | super_boxer ++++ D | dark_peasant ++++ D | super_peasant ++++ D
 good: devout_gauntlet ++++ D | celestial_aegis ++++ D | radiant_glaive ++++ D | righteous_paladin ++++ D | divine_arbiter ++++ D | sacred_elephant ++++ D | chronomancer ++++ D
-evil: shadow_walker ---+ o | exiled_sentinel -+++ o | mad_mechanic -+++ o | void_cultist --++ o | tempest_lich ---+ o | death_bringer -+-+ o | void_monarch -+-+ o
+evil: shadow_walker -+-+ o | exiled_sentinel +-++ o | mad_mechanic -+++ o | void_cultist --++ o | tempest_lich --++ o | death_bringer -+-+ o | void_monarch -+-+ o
 secret_1: ballooner ???? q | bomb_on_a_stick ???? q | fan_bearer ???? q | raptor ???? q | the_teacher ???? q | jester ???? q | ball_n_chain ???? q | chu_ko_nu ???? q | executioner ???? q | shouter ???? q
 secret_2: taekwondo ???? q | raptor_rider ???? q | cheerleader ???? q | cupid ???? q | mace_spinner ???? q | clams ???? q | present_elf ???? q | ice_mage ???? q | infernal_whip ???? q | bank_robbers ???? q
 secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ???? q | wheelbarrow_dragon ???? q | skeleton_giant ???? q | bomb_cannon ???? q | cavalry ???? q | vlad ???? q | gatling_gun ???? q
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
-## Focus (iteration 494; BASE 7b0ae2f6; evidence 427bcf57, 4f267007, 24b2e01b, d12876fc)
-1. [S] evil.mad_mechanic.a blocker 1 (6b26e43f) APPROVE, struck 1.
-2. [S] evil.exiled_sentinel.a blocker 4 (1c20c66c) APPROVE, struck 4.
-3. [S] evil.void_cultist.a blocker 3 (2f7c8529, 5c8089a5, 85c56b08) APPROVE, struck 3; a PASS, but CONFIRM failed a, b (new lists).
-4. [S] evil.tempest_lich.a blocker 4 (8b9c277c) APPROVE, struck 4.
-5. [S] evil.tempest_lich.b blocker 1 (fbae7a4d, 03307096) APPROVE, struck 1.
-6. [S] evil.death_bringer.a blocker 1 (416104b2) APPROVE, struck 1.
-7. [S] evil.void_monarch.a blocker 1 (cdc2f6f8; stats e2469b0d) APPROVE, struck 1.
-8. [S] evil.void_cultist.c blocker 2 (146499df) APPROVE, struck 2; c PASS (CONFIRM passed c, d).
-9. [S] evil.exiled_sentinel.c blocker 2 (fb3bd010) APPROVE, struck 2; c PASS.
-- 9/9, 9 struck
+## Focus (iteration 495; BASE 3068672d)
+1. [S] evil.exiled_sentinel.a blocker 3 (5d269f55) APPROVE, struck 3; a PASS, but CONFIRM failed b (new list).
+2. [S] evil.mad_mechanic.a blocker 2 (7d131c39) APPROVE, struck 2.
+3. [S] evil.void_cultist.a blocker 1 (978009c4) APPROVE, struck 1.
+4. [S] evil.shadow_walker.b blocker 1 (a808e403) APPROVE, struck 1; b PASS.
+5. [S] evil.shadow_walker.c blocker 1 (97ea0360, 36f79506) APPROVE, struck 1.
+6. [S] evil.tempest_lich.a blocker 2 (f6c8fb65, c08bc4d0) APPROVE, struck 2.
+7. [S] evil.tempest_lich.c blocker 2 (4f458ebd) APPROVE, struck 2; c PASS.
+8. [S] evil.death_bringer.a blocker 3 (3218b350) APPROVE, struck 3.
+9. [S] evil.void_cultist.b blocker 1 (9ebc78bd) APPROVE, struck 1.
+10. [P] evil.death_bringer.a stance (65d585c3) REJECT, reverted ec4ffea2 (ledger reversal).
+- 9/10, 9 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] evil.mad_mechanic (6b26e43f) | VERDICT: APPROVE | CRITERION: evil.mad_mechanic.a FAIL   (previous: FAIL)
-- GAP: [S] evil.exiled_sentinel (1c20c66c) | VERDICT: APPROVE | CRITERION: evil.exiled_sentinel.a FAIL   (previous: FAIL)
-- GAP: [S] evil.void_cultist (2f7c8529, 5c8089a5, 85c56b08) | VERDICT: APPROVE | CRITERION: evil.void_cultist.a PASS   (previous: FAIL)
-- GAP: [S] evil.tempest_lich (8b9c277c) | VERDICT: APPROVE | CRITERION: evil.tempest_lich.a FAIL   (previous: FAIL)
-- GAP: [S] evil.tempest_lich (fbae7a4d, 03307096) | VERDICT: APPROVE | CRITERION: evil.tempest_lich.b FAIL   (previous: FAIL)
-- GAP: [S] evil.death_bringer (416104b2) | VERDICT: APPROVE | CRITERION: evil.death_bringer.a FAIL   (previous: FAIL)
-- GAP: [S] evil.void_monarch (cdc2f6f8) | VERDICT: APPROVE | CRITERION: evil.void_monarch.a FAIL   (previous: FAIL)
-- GAP: [S] evil.void_cultist (146499df) | VERDICT: APPROVE | CRITERION: evil.void_cultist.c PASS   (previous: FAIL)
-- GAP: [S] evil.exiled_sentinel (fb3bd010) | VERDICT: APPROVE | CRITERION: evil.exiled_sentinel.c PASS   (previous: FAIL)
+- GAP: [S] evil.exiled_sentinel (5d269f55) | VERDICT: APPROVE | CRITERION: evil.exiled_sentinel.a PASS   (previous: FAIL)
+- GAP: [S] evil.mad_mechanic (7d131c39) | VERDICT: APPROVE | CRITERION: evil.mad_mechanic.a FAIL   (previous: FAIL)
+- GAP: [S] evil.void_cultist (978009c4) | VERDICT: APPROVE | CRITERION: evil.void_cultist.a FAIL   (previous: FAIL)
+- GAP: [S] evil.shadow_walker (a808e403) | VERDICT: APPROVE | CRITERION: evil.shadow_walker.b PASS   (previous: FAIL)
+- GAP: [S] evil.shadow_walker (97ea0360, 36f79506) | VERDICT: APPROVE | CRITERION: evil.shadow_walker.c FAIL   (previous: FAIL)
+- GAP: [S] evil.tempest_lich (f6c8fb65, c08bc4d0) | VERDICT: APPROVE | CRITERION: evil.tempest_lich.a FAIL   (previous: FAIL)
+- GAP: [S] evil.tempest_lich (4f458ebd) | VERDICT: APPROVE | CRITERION: evil.tempest_lich.c PASS   (previous: FAIL)
+- GAP: [S] evil.death_bringer (3218b350) | VERDICT: APPROVE | CRITERION: evil.death_bringer.a FAIL   (previous: FAIL)
+- GAP: [S] evil.void_cultist (9ebc78bd) | VERDICT: APPROVE | CRITERION: evil.void_cultist.b FAIL   (previous: FAIL)
+- GAP: [P] evil.death_bringer (65d585c3) | VERDICT: REJECT | CRITERION: evil.death_bringer.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM: UNIT evil.void_cultist: a FAIL b FAIL c PASS d PASS (2/4)
+- CONFIRM: UNIT evil.exiled_sentinel: a PASS b FAIL c PASS d PASS (3/4)
 
 ## Notes for next iteration (max 5 lines)
-- 9/9 approved, 16 blockers struck; Done 93/139. Sentinel and cultist c PASS; cultist reopened on a (sleeves, knee coat) and b (shield hold, size) by CONFIRM.
-- Shadow Walker had no pick in 494 (a 492, b 490, c 493): b starves at 496; take its c poof or b blade early.
-- Lich: tunic in, so the hover retry (REAPER_HOVER on the hip) is ready (c.2); tendrils next on a.
-- Capture evidence 494: mechanic idle +250 ms; sentinel spars with three archers 8 m off (ability pavise_block framed as idle); cultist has two extra squires.
-- Stats 7/7 d PASS (monarch hm .27 after dropping giant). LESSONS near cap (~10.0 KB): compact before adding.
+- 9/10 approved, 9 blockers struck; Done 93/139. Walker b, lich c, sentinel a now PASS; CONFIRM reopened sentinel b (pavise length, carry height).
+- Evidence commit first: cultist b.2's named shot (windup) shows his back; re-aim it to the idle before its buckler-size pick.
+- Void Monarch had no pick in 495 (a 494, c 493): give it its harness (a.3) or Demon Transformation (c.2) early.
+- Lich scale [P] (UV s 1.44 toward 1.0) is ranked as blocker 1's root; death bringer stance wants an [S] idle pose, not the posePreset knob.
+- Stats 7/7 d PASS (495). LESSONS at ~9.99 KB: compact before adding.
