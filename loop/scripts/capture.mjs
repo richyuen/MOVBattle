@@ -482,6 +482,8 @@ async function main() {
           if (id === "pirate.pirate_queen") for (const dz of [-1.8, -0.9, 0.9, 1.8]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.3, z: dz });
           // the quick draw shoots one archer dead in .4 s, before its first arrow (look 445): four more archers in a file behind, so arrows fly at him
           if (id === "wild_west.quick_draw") for (const dz of [-1.8, -0.9, 0.9, 1.8]) game.spawnUnit("medieval.archer", 0, { x: -d - 1.5, z: dz });
+          // [evidence 494] the Void Cultist's Sword Implosion sucks the enemies round him into one point (card Characteristics): two mates beside his squire
+          if (id === "evil.void_cultist") for (const dz of [-2, 2]) game.spawnUnit("medieval.squire", 0, { x: -d - 0.8, z: dz });
           // [evidence 494] two archers behind the Exiled Sentinel's squire: their arrows (not his own missiles) are what his pavises catch
           if (id === "evil.exiled_sentinel") for (const dz of [-1.5, 1.5]) game.spawnUnit("medieval.archer", 0, { x: -d - 4, z: dz });
           let ally = null;
