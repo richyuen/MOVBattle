@@ -4282,7 +4282,12 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
      * standing off its back (spine) edge, a dark wrapped grip in the fist. BONE_DAGGER in fit.stand: .long blade, .wide at its root, .curve
      * forward sweep at the tip, .teeth spine teeth .tooth long; grip .grip fists. Built down -y from the fist (a reverse grip).
      */
-    const D = { long: 0.42, wide: 0.075, thick: 0.022, curve: 0.11, segs: 5, teeth: 4, tooth: 0.06, grip: 2.4 };
+    // [S] 495 (b.1, audit 489: "a dark four-point star on a short stick - TABS: a long, curved bone-tan dagger with a spiky back edge"): a broad
+    // crescent, not a needle. Each segment's eighth-turn is baked before it is flattened, so its section is a flat blade .wide L across in the
+    // curve's plane (z, the edge forward, the spine back) and .thick L thin across (x); the 489 build flattened it after the turn, which skewed
+    // every segment into a thin rhombus that read as a star end-on. .wide is about a wrist at the root (render: the blade as wide as the forearm),
+    // .curve the crescent's forward sweep, .teeth jagged spine teeth .tooth L long standing back off the root half.
+    const D = { long: 0.46, wide: 0.17, thick: 0.035, curve: 0.24, segs: 6, teeth: 4, tooth: 0.11, grip: 2.4 };
     const L = fit.stand * D.long, f = fit.fist, root = new Mesh("boneDagger", scene);
     // [S] 490 (b.1): the fist's -y reads as up in the duelist hold (489 probe: blade rose .5 over the hand), so the whole knife hangs under a
     // "boneDaggerHold" turned half round z: the blade now leaves the little-finger side and runs point-down, its forward sweep kept (+z).
@@ -4298,16 +4303,20 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     let y = -f * D.grip * 0.5, z = 0;
     for (let k = 0; k < D.segs; k++) {
       const t0 = k / D.segs, t1 = (k + 1) / D.segs, h = L / D.segs;
-      const w0 = L * D.wide * (1 - t0 * 0.55), w1 = k === D.segs - 1 ? 0 : L * D.wide * (1 - t1 * 0.55);
+      // the width swells a little past the root, then narrows to the point (a crescent's belly)
+      const width = (t: number): number => L * D.wide * (t < 0.3 ? 0.85 + t * 0.5 : 1 - (t - 0.3) * 1.2);
+      const w0 = width(t0), w1 = k === D.segs - 1 ? 0 : Math.max(L * 0.02, width(t1));
       const dz = L * D.curve * (t1 * t1 - t0 * t0);
-      const seg = MeshBuilder.CreateCylinder("boneDaggerBlade", { height: h * 1.04, diameterTop: w0, diameterBottom: w1, tessellation: 4 }, scene);
-      seg.scaling.x = D.thick / D.wide; seg.rotation.y = Math.PI / 4;
+      // a square frustum turned an eighth (baked: its faces square to x and z, its diagonal no longer on z), then flattened in x
+      const seg = MeshBuilder.CreateCylinder("boneDaggerBlade", { height: h * 1.04, diameterTop: w0 * Math.SQRT2, diameterBottom: w1 * Math.SQRT2, tessellation: 4 }, scene);
+      seg.rotation.y = Math.PI / 4; seg.bakeCurrentTransformIntoVertices(); seg.rotation.y = 0;
+      seg.scaling.x = D.thick / D.wide;
       const tilt = new Mesh("boneDaggerBend", scene); tilt.parent = hold; tilt.position.set(0, y - h / 2, z + dz / 2); tilt.rotation.x = -Math.atan2(dz, h);
       seg.parent = tilt; seg.material = bone; seg.convertToFlatShadedMesh();
       // a jagged tooth off the spine (-z), raked back up toward the grip
       if (k < D.teeth) {
-        const tooth = MeshBuilder.CreateCylinder("boneDaggerTooth", { height: L * D.tooth, diameterBottom: L * 0.035, diameterTop: 0, tessellation: 4 }, scene);
-        tooth.parent = tilt; tooth.position.set(0, h * 0.1, -w0 * 0.42 - L * D.tooth * 0.3); tooth.rotation.x = -2.2; tooth.scaling.x = 0.4; tooth.material = bone;
+        const tooth = MeshBuilder.CreateCylinder("boneDaggerTooth", { height: L * D.tooth, diameterBottom: L * 0.06, diameterTop: 0, tessellation: 4 }, scene);
+        tooth.parent = tilt; tooth.position.set(0, h * 0.1, -w0 * 0.5 - L * D.tooth * 0.3); tooth.rotation.x = -2.2; tooth.scaling.x = 0.5; tooth.material = bone;
       }
       y -= h; z += dz;
     }
