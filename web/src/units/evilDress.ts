@@ -115,6 +115,18 @@ export function walkerHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 499 the Shadow Walker's horns in bone tan (evil.shadow_walker.red.png: the two long horns are the same khaki-tan bone as the helm's face
+ * bars; audit 498 a.7: "pale grey-white"). The horns dressHornedEvil laid (meshes "evilHorn", lit pale cream self-lit .3 inside the glow, which
+ * washed them white) take the helm bars' tan cloth (WALKER_HELM tan, self-lit .3) and leave the glow layer, so they read as one bone with the bars.
+ */
+export const WALKER_HORN = { tan: new Color3(0.6, 0.42, 0.18), self: 0.3 };
+export function walkerHornBone(scene: Scene, worn: Mesh[]): void {
+  const C = WALKER_HORN, glow = scene.getGlowLayerByName("glow");
+  const tan = getMaterialFactory().get("cloth", C.tan, { emissive: C.tan.scale(C.self) });
+  for (const m of worn) if (m.name === "evilHorn") { m.material = tan; glow?.addExcludedMesh(m); }
+}
+
+/**
  * [S] 497 the Shadow Walker's hair (evil.shadow_walker.red.png: long dark hair hangs from under the helm down both sides of the neck to the
  * shoulders; audit 489 a.6).
  * Spec in head widths W, heights H, depths D (the head box, its centre c): from under the helm's rim (.root H under the centre) a near-black

@@ -29,7 +29,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerKneePads, walkerVest } from "./evilDress";
+import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
@@ -1041,6 +1041,8 @@ export class UnitFactory {
     if (HORNED_EVIL[definition.id] && !shouldUseVehicleBody) {
       propMeshes.push(...dressHornedEvil(this._scene, body, HORNED_EVIL[definition.id]));
       if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerHelm(this._scene, body));
+      // [S] 499 (a.7): the horns in the helm bars' tan bone, out of the glow (evilDress walkerHornBone)
+      if (definition.id === "evil.shadow_walker") walkerHornBone(this._scene, propMeshes);
       // [S] 496 (a.3): a near-black sleeveless vest with a jagged hem over team skin (evilDress walkerVest)
       if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerVest(this._scene, body));
       // [S] 497 (a.6): long near-black hair from under the helm to the shoulders (evilDress walkerHair)
