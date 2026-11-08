@@ -2592,9 +2592,8 @@ export class ProceduralAnimator {
       return v - Math.floor(v);
     };
     // A caster's rod: a staff with an orb on it (a plain staff is a striking weapon) or a bolt.
-    // [S] 493 the Void Cultist's mace (id cultistMace) is a striking weapon now he fights in melee (card "Bludgeon - Melee"), not a planted rod
     const rod = this.locomotionBias === "aimed" ? undefined
-      : this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bolt" || (n.name === "staff" && n.id !== "cultistMace" && n.getChildren().some((c) => c.name === "orb" || c.name === "uprightPole")));
+      : this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bolt" || (n.name === "staff" && n.getChildren().some((c) => c.name === "orb" || c.name === "uprightPole")));
     const held = this.locomotionBias !== "aimed" && !rod && !this._spearShaft() && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     // A club, a sword or a hafted head turns in the fist to the attitude; anything else only rides the arm.
     const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry|scytheCarry|paladinHammer)$/.test(n.name));
