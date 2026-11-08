@@ -4186,8 +4186,10 @@ const ELEPHANT_TRUNK = { root: [0, -0.12, 0.76], pitch: [0.55, 0.35, 0.2, 0.1, 0
 const THRONE_SEAT = new Vector3(0, 0.9, 0.12);
 const THRONE_BACK_TALL = 0.62;
 const RIDER_SCALE = 2.4;
+const ELEPHANT_GIANT = 0.84;
 function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
-  const body = buildMammoth(scene, color, ELEPHANT_HIDE, 0);
+  // [P] 491 (a.5, reference/factions/good.jpg: the seated rider about two unit heights up): the whole rig at ELEPHANT_GIANT of the mammoth's, seat 4.1 m -> ~3.45 m
+  const body = buildMammoth(scene, color, ELEPHANT_HIDE, 0, ELEPHANT_GIANT);
   const hide = body.torsoMesh.material;
   const gold = getMaterialFactory().get("cloth", ELEPHANT_GOLD, { emissive: ELEPHANT_GOLD.scale(0.22) });
   const gem = getMaterialFactory().get("cloth", ELEPHANT_GEM, { emissive: ELEPHANT_GEM.scale(0.3) });
