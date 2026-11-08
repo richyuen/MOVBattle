@@ -23,7 +23,7 @@ import path from "node:path";
 import { spawn, execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
-import { loadRoster, batchByName } from "./lib/roster.mjs";
+import { loadRoster, batchByName, batches } from "./lib/roster.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..", "..");
@@ -852,6 +852,33 @@ async function main() {
               window.game.frameCamera({ ...cam.target, z: (lo + hi) / 2, y: cam.target.y + 0.5 }, cam.radius * 1.35, -0.25, Math.PI / 2.25);
             } else window.game.frameCamera(cam.target, cam.radius, -0.25, Math.PI / 2.25);
           }, `gallery_faction_${faction}`);
+          // [evidence 501] a sliced faction (secret: 39 men) lines up as a dense crowd where the critic could not place the batch's men
+          // (critic 500). The batch slice the first unit belongs to stands alone in two staggered ranks of five, 3 m apart, everyone else
+          // is sent 400 m off, and the camera frames the slice the same way (front three-quarter, a little above eye level)
+          const slice = batches(loadRoster()).find((b) => b.faction === faction && b.units.includes(id));
+          if (slice && slice.name !== faction) {
+            await page.evaluate((ids) => {
+              const live = window.game.listLiveUnits().filter((u) => !u.linkedParent);
+              const mine = ids.map((uid) => live.find((u) => u.definition.id === uid)).filter(Boolean);
+              if (!mine.length) return;
+              const x0 = mine.reduce((s, u) => s + u.body.root.position.x, 0) / mine.length;
+              const z0 = mine.reduce((s, u) => s + u.body.root.position.z, 0) / mine.length;
+              for (const u of live) if (!mine.includes(u)) { const p = u.body.root.position.clone(); p.x += 400; u.teleportTo(p); }
+              const per = Math.ceil(mine.length / 2);
+              mine.forEach((u, i) => {
+                const row = i < per ? 0 : 1, k = i < per ? i : i - per;
+                const p = u.body.root.position.clone();
+                p.x = x0 - row * 3.2; p.z = z0 + (k - (per - 1) / 2) * 3.2 + row * 1.6; u.teleportTo(p);
+              });
+              const cam = window.game.getGalleryCamera(`gallery_faction_${mine[0].definition.id.split(".")[0]}`);
+              const t = { x: x0 - 1.6, y: cam.target.y + 1.1, z: z0 + 0.8 }, r = 12, al = -0.25, be = Math.PI / 2.25;
+              const cx = t.x + r * Math.cos(al) * Math.sin(be), cz = t.z + r * Math.sin(al) * Math.sin(be);
+              // each man turns .6 rad off his own line to the camera (the perspective of a close rank turned the edge men side-on)
+              for (const u of mine) u.holdHeading(Math.atan2(cx - u.body.root.position.x, cz - u.body.root.position.z) - 0.6);
+              window.advanceTime(50);
+              window.game.frameCamera(t, r, al, be);
+            }, slice.units);
+          }
           await shot(page, `lineup_${faction}`);
           // [evidence 485] lineup_good crops the Chronomancer and the elephant's rider at its right edge: a supplementary wide shot of the same
           // rank, aimed at the rank's middle and pulled back so every man is whole (lineup_good itself is unchanged)
