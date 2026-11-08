@@ -367,7 +367,8 @@ const evil = makeFaction(FactionId.Evil, "evil", [
   // [S] 492 (c.1, card Weapons "Void Monarch Sword": Sword - Melee, range 2.5, explosion radius 2): a melee swordsman whose blows burst in a radius-2
   // splash (boss.legendary), not a caster firing darts
   // [S] 493 (c.1): no summon (the card has none; custom.void_monarch keeps his); each blow bursts pink (simulationSystem MONARCH_BURST)
-  ["void_monarch", "Void Monarch", 3000, "boss_melee", { abilities: ["fear"], weaponHint: "sword", size: "giant",healthMultiplier: 0.14, damageMultiplier: 0.25, cooldownMultiplier: 0.43 }],
+  // [S] 494 (a.1, card Size 1.10x): no giant size class; he stands a little over a man (custom.void_monarch keeps his)
+  ["void_monarch", "Void Monarch", 3000, "boss_melee", { abilities: ["fear"], weaponHint: "sword", healthMultiplier: 0.14, damageMultiplier: 0.25, cooldownMultiplier: 0.43 }],
 ]);
 
 // Our own versions of units, kept as they were before the TABS-fidelity loop reworked the originals. The loop never audits this faction

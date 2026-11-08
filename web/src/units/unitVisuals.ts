@@ -920,7 +920,8 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "evil.void_monarch": vis(
     // [S] 491 (b.1, b.2; evil.void_monarch.red.png): a long bone sword with a spiked hilt ball in each fist (propBuilder MONARCH_SWORD), no staff
-    { scale: 2.08, bulk: 1.46, headSize: 1.14, armLength: 1.16 }, "staff", "none", "none", "cape", "#5A4A8E", "staff", {
+    // [S] 494 (a.1, card Size 1.10x; reference/factions/evil.jpg): a man's height, not a giant (rig 2.79 -> ~1.9 m)
+    { scale: 1.2, bulk: 1.12, headSize: 1.14, armLength: 1.16 }, "staff", "none", "none", "cape", "#5A4A8E", "staff", {
       weaponVariant: "monarch_sword", offhandVariant: "monarch_sword",
       posePreset: "monarch",
       materialPreset: "evil_void",
