@@ -178,7 +178,7 @@ export interface UnitVisualConfig {
 
 export type WeaponVariant =
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -1118,8 +1118,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["crossbow_bolt"] },
       });
     case "secret_executioner":
-      return vis({ scale: 1.42, bulk: 1.4, headSize: 1.05 }, "axe", "hood", "none", "cape", "#4a1f1f", undefined, {
-        posePreset: "duelist", materialPreset: "secret_demon",
+      // [S] 500 (b.1) a two-handed pole axe taller than him, a grey bearded crescent at the top (propBuilder EXECUTIONER_AXE on the halberd's chop)
+      return vis({ scale: 1.42, bulk: 1.4, headSize: 1.05 }, "halberd", "hood", "none", "cape", "#4a1f1f", undefined, {
+        posePreset: "duelist", materialPreset: "secret_demon", weaponVariant: "executioner_axe",
       });
     case "secret_shouter":
       return vis({ scale: 1.35, bulk: 1.25, headSize: 1.18 }, "none", "none", "none", "cape", "#92d7ff", undefined, {

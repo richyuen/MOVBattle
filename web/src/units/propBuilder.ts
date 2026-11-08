@@ -4086,8 +4086,19 @@ const JARL_CRESCENT = {
   neck: 0.07, hornUp: 0.15, beardDown: 0.2, hornX: 0.98, beardX: 0.82, bulge: 0.12, arcSteps: 6, edge: 0.13,
   steel: new Color3(0.16, 0.165, 0.19), glow: 0.08,
 };
-function buildJarlAxe(scene: Scene, fit: BladeFit): Mesh {
-  const A = JARL_AXE;
+/*
+ * [S] 500 the Executioner's axe (audit 500 b.1: "a short dark stick with no head - TABS a two-handed pole taller than himself with a big grey
+ * bearded axe head"; secret.executioner.jpg, .red.png: an orange-brown haft 1.3x the man's height, a grey ferrule at its butt, a wide grey
+ * bearded crescent at the top and a short grey spike over it). The Jarl's crescent machinery (buildJarlAxe, the halberd's chop and hpoint
+ * off-fist mark) with its own spec: haft .long of the stand, the fist .grip up from the butt, the blade .wide of the haft out, grey steel
+ * (EXECUTIONER_CRESCENT, the dark jarl steel lightened), the collar and knob grey.
+ */
+const EXECUTIONER_AXE = {
+  ...JARL_AXE, long: 1.3, thick: 0.024, grip: 0.12, wide: 0.22, knob: 0.08,
+  wood: new Color3(0.5, 0.22, 0.1), steel: new Color3(0.52, 0.52, 0.55), bronze: new Color3(0.36, 0.36, 0.38),
+};
+const EXECUTIONER_CRESCENT = { ...JARL_CRESCENT, hornUp: 0.12, beardDown: 0.17, bulge: 0.18, steel: new Color3(0.3, 0.3, 0.33) };
+function buildJarlAxe(scene: Scene, fit: BladeFit, A = JARL_AXE, crescent = JARL_CRESCENT): Mesh {
   const L = fit.stand * A.long;
   const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: A.thick * L, tessellation: 7 }, scene);
   shaft.material = mat(scene, A.wood, 0.1, "cloth");
@@ -4107,7 +4118,7 @@ function buildJarlAxe(scene: Scene, fit: BladeFit): Mesh {
   // eye, the cutting edge a long arc bulging .bulge past the blade's width down to the beard's horn .beardDown below it, the beard's back edge curving
   // concave back to the neck, so the plate reads as two hooked horns either side of a hollow back, not a paddle. Dark steel, with a lighter honed band
   // .edge of the width inside the cutting arc so the crescent's line reads at lineup distance.
-  const C = JARL_CRESCENT;
+  const C = crescent;
   const w = A.wide * L, neck = C.neck * L, hornUp = C.hornUp * L, beardDown = -C.beardDown * L;
   const arc: number[][] = [];
   for (let k = 0; k <= C.arcSteps; k++) {
@@ -5021,6 +5032,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "halberd": {
       if (variant === "jarl_axe") return buildJarlAxe(scene, fit);
+      if (variant === "executioner_axe") return buildJarlAxe(scene, fit, EXECUTIONER_AXE, EXECUTIONER_CRESCENT);
       // The halberd, built to the spec at HALBERD: +y up the shaft from the fist at the origin, HALBERD.grip of it below the fist
       const L = fit.stand * HALBERD.long;
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: HALBERD.thick * L, tessellation: 7 }, scene);
