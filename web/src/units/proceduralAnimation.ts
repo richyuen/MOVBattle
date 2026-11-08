@@ -2866,7 +2866,9 @@ export class ProceduralAnimator {
   private _shield: TransformNode | null | undefined = undefined;
   private _shieldBoard(): TransformNode | null {
     if (this._shield === undefined) {
-      this._shield = this._body.leftHand.getChildren().find((n): n is TransformNode => /shield$/.test(n.name)) ?? null;
+      // [S] 495 the Void Cultist's buckler (evilDress CULTIST_BUCKLER, 1.3 chests across) is a board too: held low in front, face out, chest to hip (CONFIRM
+      // 494 b.1: "carried high and edge-on beside the head with the empty fist raised above it" by the staff stand's free arm)
+      this._shield = this._body.leftHand.getChildren().find((n): n is TransformNode => /shield$/.test(n.name) || n.name === "cultistBuckler") ?? null;
     }
     return this._shield;
   }
@@ -2883,7 +2885,8 @@ export class ProceduralAnimator {
     const up = this._state === AnimState.Dead ? 0 : (1 - Math.min(1, this._limp)) * (1 - this._boardOffWeight());
     // A front-rank man in a wall holds his board on the wall's plane from the moment he is slotted, closing or in contact, not only while he shoves
     const lap = this._boardLap * up;
-    const k = Math.max(this._shove * up, lap);
+    // [S] 495 the cultist's buckler is held square, face out, at all times (it hung flat off the low fist, look 495), not only in a shove
+    const k = Math.max(this._shove * up, lap, shield.name === "cultistBuckler" ? up : 0);
     const rest = (this._boardRest ??= shield.position.clone());
     if (k <= 0.01) {
       if (shield.rotationQuaternion) {
