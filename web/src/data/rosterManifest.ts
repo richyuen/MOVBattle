@@ -363,7 +363,7 @@ const evil = makeFaction(FactionId.Evil, "evil", [
   ["death_bringer", "Death Bringer", 2000, "boss_melee", { weaponHint: "greatsword", abilities: ["fear"], healthMultiplier: 0.39, damageMultiplier: 0.37, cooldownMultiplier: 0.22 }],
   // [S] 492 (c.1, card Weapons "Void Monarch Sword": Sword - Melee, range 2.5, explosion radius 2): a melee swordsman whose blows burst in a radius-2
   // splash (boss.legendary), not a caster firing darts; the summon (c.2) stays for now
-  ["void_monarch", "Void Monarch", 3000, "boss_melee", { abilities: ["summon", "fear"], weaponHint: "sword", size: "giant", summonUnitIds: ["evil.shadow_walker"], summonCount: 2, healthMultiplier: 0.23, damageMultiplier: 0.53, cooldownMultiplier: 0.56 }],
+  ["void_monarch", "Void Monarch", 3000, "boss_melee", { abilities: ["summon", "fear"], weaponHint: "sword", size: "giant", summonUnitIds: ["evil.shadow_walker"], summonCount: 2, healthMultiplier: 0.14, damageMultiplier: 0.25, cooldownMultiplier: 0.43 }],
 ]);
 
 // Our own versions of units, kept as they were before the TABS-fidelity loop reworked the originals. The loop never audits this faction
