@@ -178,7 +178,7 @@ export interface UnitVisualConfig {
 
 export type WeaponVariant =
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -1118,8 +1118,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "spinner", materialPreset: "secret_bandit",
       });
     case "secret_chu_ko_nu":
+      // [S] 501 (b.1) a boxy repeating crossbow: square stock, box magazine on top with a lever, a wide swept bow arm (propBuilder REPEATING_CROSSBOW)
       return vis({ scale: 1.0, bulk: 0.95, armLength: 1.05 }, "crossbow", "conical_hat", "none", "quiver_back", "#7e4b2d", undefined, {
-        posePreset: "archer", materialPreset: "secret_bandit", attachmentPreset: "crossbow_ready",
+        posePreset: "archer", materialPreset: "secret_bandit", attachmentPreset: "crossbow_ready", weaponVariant: "repeating_crossbow",
         stateVariants: { attacking: ["crossbow_bolt"] },
       });
     case "secret_executioner":

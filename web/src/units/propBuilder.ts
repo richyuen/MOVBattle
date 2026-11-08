@@ -4239,6 +4239,56 @@ function buildBombStick(scene: Scene, fit: BladeFit): Mesh {
   add(MeshBuilder.CreateIcoSphere("bombStickFlameBulb", { radius: R * 0.26, subdivisions: 1 }, scene), flameMat, flame.position.y - (B.flame * L) * 0.35).position.x = flame.position.x;
   return shaft;
 }
+/*
+ * [S] 501 the Chu Ko Nu's repeating crossbow (card: Two-handed "Chu Ko Nu"; secret.chu_ko_nu.red.png: a boxy brown wooden crossbow held across the
+ * chest, a long square stock, on its front half a tall box magazine with a rounded top and brass studs, a lever arm from the magazine's back down to
+ * the stock's butt, and at the stock's nose a wide flat bow arm curving back to its tips, wider than his shoulders, the string back to the magazine;
+ * audit 500 b.1: "a curved dark bow piece at the hip").
+ * Spec in prop units s, in the plain crossbow's frame (x across, y up, -z the shooting line; the root .1 s up as the plain one): the stock a box
+ * .stockW x .stockH x .stock long, its nose .nose s ahead of the fist; the magazine a box .magW x .mag tall x .magL long on the stock's front half,
+ * darker wood, a rounded cap (a half cylinder) and .studs brass studs a side; the lever a bar .leverT thick from the magazine's top back down to the
+ * butt; the bow arm a flat tube .span s across through 9 points bowed .sweep s back at its tips, .armT s thick; the string from its tips to the
+ * magazine's back. Brown wood lit cloth.
+ */
+const REPEATING_CROSSBOW = {
+  stock: 0.56, stockW: 0.06, stockH: 0.075, nose: 0.3, mag: 0.17, magW: 0.07, magL: 0.24, studs: 2, leverT: 0.025, span: 0.66, sweep: 0.1, armT: 0.03,
+  wood: new Color3(0.5, 0.27, 0.12), dark: new Color3(0.32, 0.17, 0.08), brass: new Color3(0.7, 0.62, 0.45),
+};
+function buildRepeatingCrossbow(scene: Scene, s: number): Mesh {
+  const C = REPEATING_CROSSBOW, wood = mat(scene, C.wood, 0.12, "cloth"), dark = mat(scene, C.dark, 0.12, "cloth"), brass = mat(scene, C.brass, 0.14, "cloth");
+  const back = C.stock - C.nose; // the butt behind the fist
+  const root = MeshBuilder.CreateBox("bow", { width: C.stockW * s, height: C.stockH * s, depth: C.stock * s }, scene);
+  root.material = wood; root.convertToFlatShadedMesh();
+  root.position.y = 0.1 * s;
+  const part = (m: Mesh, material: ReturnType<typeof mat>, x: number, y: number, z: number): Mesh => { m.parent = root; m.position.set(x, y, z); m.material = material; m.convertToFlatShadedMesh(); return m; };
+  // the stock's middle sits between nose (-z) and butt (+z): shift so the fist (origin) is .nose behind the nose
+  const zMid = ((back - C.nose) / 2) * s;
+  root.position.z = zMid;
+  const zNose = -C.stock * s / 2, magZ = zNose + (C.magL * s) / 2 + 0.02 * s, magY = C.stockH * s / 2 + (C.mag * s) / 2;
+  part(MeshBuilder.CreateBox("rcbMagazine", { width: C.magW * s, height: C.mag * s, depth: C.magL * s }, scene), dark, 0, magY, magZ);
+  const cap = part(MeshBuilder.CreateCylinder("rcbCap", { height: C.magL * s, diameter: C.magW * s, tessellation: 6, arc: 0.5 }, scene), dark, 0, magY + (C.mag * s) / 2, magZ);
+  cap.rotation.set(Math.PI / 2, 0, Math.PI / 2);
+  for (const side of [-1, 1]) for (let i = 0; i < C.studs; i++) {
+    part(MeshBuilder.CreateIcoSphere("rcbStud", { radius: 0.013 * s, subdivisions: 1 }, scene), brass, side * (C.magW * s) / 2, magY + (i - 0.5) * C.mag * s * 0.45, magZ);
+  }
+  // the lever: from the magazine's top back down to the butt
+  const up = new Vector3(0, 1, 0);
+  const a = new Vector3(0, magY + (C.mag * s) / 2, magZ + (C.magL * s) / 2), e = new Vector3(0, C.stockH * s / 2, C.stock * s / 2), d = e.subtract(a);
+  const lever = part(MeshBuilder.CreateBox("rcbLever", { width: C.leverT * s, height: d.length(), depth: C.leverT * s }, scene), wood, 0, 0, 0);
+  lever.position.copyFrom(a.add(e).scale(0.5)); lever.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, d.normalize(), new Quaternion());
+  // the bow arm across the nose, tips swept back
+  const path: Vector3[] = [];
+  for (let i = 0; i <= 8; i++) { const t = i / 4 - 1; path.push(new Vector3(t * C.span * s * 0.5, 0, zNose + 0.02 * s + C.sweep * s * t * t)); }
+  const arm = MeshBuilder.CreateTube("rcbArm", { path, radius: C.armT * s * 0.5, tessellation: 4, cap: Mesh.CAP_ALL }, scene);
+  arm.parent = root; arm.material = wood; arm.scaling.y = 0.6; arm.convertToFlatShadedMesh();
+  for (const side of [-1, 1]) {
+    const tip = new Vector3(side * C.span * s * 0.5, 0, zNose + 0.02 * s + C.sweep * s), to = new Vector3(0, 0, magZ + (C.magL * s) / 2), dd = to.subtract(tip);
+    const str = MeshBuilder.CreateCylinder("string", { height: dd.length(), diameter: 0.008 * s, tessellation: 3 }, scene);
+    str.parent = root; str.material = mat(scene, new Color3(0.8, 0.75, 0.65)); str.position.copyFrom(tip.add(to).scale(0.5));
+    str.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, dd.normalize(), new Quaternion());
+  }
+  return root;
+}
 function buildJarlAxe(scene: Scene, fit: BladeFit, A = JARL_AXE, crescent = JARL_CRESCENT): Mesh {
   const L = fit.stand * A.long;
   const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: A.thick * L, tessellation: 7 }, scene);
@@ -5450,6 +5500,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         stave.position.y = 0.1 * s;
         return stave;
       }
+      if (type === "crossbow" && variant === "repeating_crossbow") return buildRepeatingCrossbow(scene, s); // [S] 501 (REPEATING_CROSSBOW)
       // The stave is an arc: its tips meet the string and its belly bows a third of its length away from it
       const bowHeight = type === "crossbow" ? 0.25 : 0.4;
       const stavePath: Vector3[] = [];
