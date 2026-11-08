@@ -364,3 +364,56 @@ export function sentinelLeggings(scene: Scene, body: ArticulatedBody, team: Colo
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 494 the Void Cultist's dark priest robe (evil.void_cultist.red.png, .blue.png; card "dark priest clothing"; audit 489 a.3: "a grey-lilac robe
+ * - TABS: a near-black priest robe with a team-coloured stripe down the front"). The lit maroon robe read grey-lilac under the evil_void cloth.
+ * Spec: every mesh in the body's own cloth or in the robe cloth (trunk, yoke, sleeves, legs, the hip skirt) goes flat unlit near-black .dark, out of
+ * the glow (LESSONS 8); one team stripe .stripe torso widths wide runs down the front, .off torso widths to his right of the middle: on the trunk
+ * from the neck to the waist, standing .proud torso widths off the front of whichever is further out, the torso or the yoke; on the skirt from its
+ * waist to its hem along its front face (tilted with the flare), in unlit team cloth.
+ */
+// waist: hangSkirt SKIRT_WAIST over VOID_HEM (1.15 / 1.6), the skirt's waist radius over its hem radius
+const CULTIST_ROBE = { dark: new Color3(0.05, 0.035, 0.04), stripe: 0.13, off: -0.14, proud: 0.03, thick: 0.03, waist: 1.15 / 1.6 };
+export function cultistDarkRobe(scene: Scene, body: ArticulatedBody, team: Color3, robeCloth: unknown, skirt: Mesh | null): Mesh[] {
+  const C = CULTIST_ROBE, mf = getMaterialFactory();
+  const dark = mf.get("unlit", C.dark, { emissive: C.dark });
+  const teamM = mf.get("unlit", team, { emissive: team.scale(0.85) });
+  const glow = scene.getGlowLayerByName("glow");
+  for (const m of body.allMeshes) if (m.material === body.bodyMaterial || m.material === robeCloth) { m.material = dark; glow?.addExcludedMesh(m); }
+  if (skirt) { skirt.material = dark; glow?.addExcludedMesh(skirt); }
+  const out: Mesh[] = [];
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const W = tb.extendSize.x * 2 * s.x, TH = tb.extendSize.y * 2 * s.y;
+  // the trunk's front in the torso joint's frame: the further of the torso box and the yoke hull (read in the world, then back)
+  const chain: TransformNode[] = [];
+  for (let n: TransformNode | null = tm; n; n = n.parent as TransformNode | null) chain.unshift(n);
+  for (const n of chain) n.computeWorldMatrix(true);
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  yoke?.computeWorldMatrix(true);
+  const inv = body.torso.getWorldMatrix().clone().invert();
+  let front = -Infinity;
+  for (const m of [tm, yoke]) {
+    if (!m) continue;
+    const bw = m.getBoundingInfo().boundingBox;
+    for (const v of bw.vectorsWorld) front = Math.max(front, Vector3.TransformCoordinates(v, inv).z);
+  }
+  const midY = tm.position.y + tb.center.y * s.y;
+  const trunk = MeshBuilder.CreateBox("cultistStripe", { width: W * C.stripe, height: TH * 1.02, depth: W * C.thick }, scene);
+  trunk.parent = body.torso; trunk.position.set(W * C.off, midY, front + W * C.proud); trunk.material = teamM; out.push(trunk);
+  if (skirt) {
+    const sb = skirt.getBoundingInfo().boundingBox;
+    // the 6-sided skirt (hangSkirt): its local x half-extent is the hem radius (a corner on x), its waist .waist of that; a flat face fronts +z at
+    // cos 30 deg of the radius
+    const hemR = sb.extendSize.x, topR = hemR * C.waist, face = Math.cos(Math.PI / 6);
+    const top = new Vector3(W * C.off / Math.max(1e-3, skirt.absoluteScaling.x / body.torso.absoluteScaling.x), sb.maximum.y, topR * face);
+    const hem = new Vector3(top.x, sb.minimum.y, hemR * face);
+    const run = hem.subtract(top);
+    const strip = MeshBuilder.CreateBox("cultistSkirtStripe", { width: W * C.stripe, height: run.length(), depth: W * C.thick }, scene);
+    strip.parent = skirt; strip.position.copyFrom(top.add(hem).scale(0.5)); strip.position.z += W * C.proud;
+    strip.rotation.x = -Math.atan2(run.z, -run.y);
+    strip.material = teamM; out.push(strip);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}

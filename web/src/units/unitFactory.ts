@@ -25,7 +25,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBuckler, cultistHalo, mechanicGoggles, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
+import { cultistBeard, cultistBuckler, cultistDarkRobe, cultistHalo, mechanicGoggles, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -2594,6 +2594,8 @@ function dressVoidCultist(scene: Scene, body: ArticulatedBody, teamColor: Color3
     cuff.position.y = headSize * 0.1;
     keep(cuff, hand, band);
   }
+  // [S] 494 (a.3) the robe goes unlit near-black with a team stripe down the front (evilDress cultistDarkRobe, CULTIST_ROBE)
+  added.push(...cultistDarkRobe(scene, body, teamColor, robe, skirt));
   // [S] 493 (a.2) the beard is evilDress cultistBeard (CULTIST_BEARD): a big dark pointed beard to mid-chest with a drooping moustache
   added.push(...cultistBeard(scene, body));
   // [S] 492 (a.1) the spoked wheel is evilDress cultistHalo (CULTIST_HALO): a dark ring with inward black spikes
