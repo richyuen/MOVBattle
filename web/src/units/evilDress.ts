@@ -604,6 +604,8 @@ export function lichTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
   body.rightEye?.setEnabled(false);
   for (const m of head.getChildMeshes(false)) if (/^(evilCap|evilCapDome|lichTine|lichTwig)/.test(m.name)) m.isVisible = false;
   const blackC = new Color3(0.08, 0.06, 0.07), black = getMaterialFactory().get("cloth", blackC, { emissive: blackC.scale(0.4), roughness: 1 });
+  // the neck stub under the socket read as a blue band (look 495): it goes the tendrils' black
+  for (const m of body.allMeshes) if (/_neckM$/.test(m.name)) { m.material = black; scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   const out: Mesh[] = [];
   const foot = c.y - H * 0.5, top = foot + H * C.socket;
   const socket = MeshBuilder.CreateCylinder("lichSocket", { height: H * C.socket, diameterBottom: W * C.sockW * 0.9, diameterTop: W * C.sockW, tessellation: 8 }, scene);
