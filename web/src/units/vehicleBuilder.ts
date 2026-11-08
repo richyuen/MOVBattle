@@ -4181,6 +4181,7 @@ const ELEPHANT_GOLD = new Color3(0.95, 0.66, 0.16);
 const ELEPHANT_GEM = new Color3(0.16, 0.26, 0.85);
 const ELEPHANT_SHAVED = new Set(["dome", "crest", "topknot", "maneLock", "browPaint", "facePaint", "trunkDot", "paintDaub", "hump", "ankleStripe", "ankleDot"]);
 const ELEPHANT_HIDE_PIECES = new Set(["backRidge", "furHem", "ear", "legCuff", "trunk", "trunkTip"]);
+const ELEPHANT_SHIN: [number, number][] = [[0.29, 0.05], [0.28, -0.12], [0.27, -0.26], [0.29, -0.36], [0.3, -0.4], [0.27, -0.43], [0.2, -0.44]];
 const ELEPHANT_TUSK = {
   path: [[0.34, -0.2, 0.56], [0.41, -0.33, 0.68], [0.46, -0.41, 0.8], [0.48, -0.4, 0.91], [0.47, -0.3, 0.99], [0.45, -0.15, 1.02]],
   radius: [0.16, 0.155, 0.14, 0.115, 0.075, 0.008], ring: [1, 2], ringTall: 0.1, ringWide: 0.37, color: new Color3(0.72, 0.69, 0.63),
@@ -4212,20 +4213,18 @@ function buildSacredElephant(scene: Scene, color: Color3): ArticulatedBody {
     return mesh;
   };
 
-  // [S] 490 ELEPHANT_FOOT (good.sacred_elephant.blue.png): no dark sole band; each pillar ends in a pale foot pad in the hide, continuous with the
-  // leg and flaring out at the ground. Per leg (knee frame): a 10-sided frustum from .6 across at the pillar's foot (y -.26) to .78 at the ground
-  // (y -.44), and a slightly paler flat rim .8 across, .04 tall, at its base so the pad reads as a foot and not a straight column.
-  const padRim = getMaterialFactory().get("cloth", ELEPHANT_HIDE.scale(1.12), { emissive: ELEPHANT_HIDE.scale(0.18) });
-  const oldFeet = body.allMeshes.filter((mesh) => mesh.name === "foot");
-  body.allMeshes = body.allMeshes.filter((mesh) => mesh.name !== "foot");
-  for (const mesh of oldFeet) {
+  // [S] 492 ELEPHANT_SHIN (good.sacred_elephant.jpg, .blue.png): smooth tapering legs that end in plain rounded pads, no stepped collar. The
+  // six-sided shin, the dark sole and the old pad and rim are one smooth 12-sided lathe per leg (knee frame, radius by height): from the knee it
+  // narrows a little to the ankle, swells only slightly into the pad, and rounds under to a flat sole on the ground (y -.44).
+  for (const mesh of body.allMeshes.filter((m) => m.name === "foot" || m.name === "lleg")) {
     const knee = mesh.parent as TransformNode;
-    const pad = add(MeshBuilder.CreateCylinder("elephantFootPad", { height: 0.18, diameterTop: 0.6, diameterBottom: 0.78, tessellation: 10 }, scene), knee, hide);
-    pad.position.set(0, -0.35, 0);
-    const rim = add(MeshBuilder.CreateCylinder("elephantFootRim", { height: 0.04, diameter: 0.8, tessellation: 10 }, scene), knee, padRim);
-    rim.position.set(0, -0.42, 0);
+    const shape = ELEPHANT_SHIN.map(([r, y]) => new Vector3(r, y, 0));
+    shape.unshift(new Vector3(0, ELEPHANT_SHIN[0][1], 0));
+    shape.push(new Vector3(0, ELEPHANT_SHIN[ELEPHANT_SHIN.length - 1][1], 0));
+    if (mesh.name === "lleg") add(MeshBuilder.CreateLathe("lleg", { shape: shape.reverse(), tessellation: 12 }, scene), knee, hide);
     mesh.dispose();
   }
+  body.allMeshes = body.allMeshes.filter((mesh) => !mesh.isDisposed());
 
   // [S] 485 ELEPHANT_TRUNK (good.sacred_elephant.red.png): one continuous faceted tube in the hide replaces the eight separate pieces and
   // their hooked tip. It leaves the face as wide as the gap between the eyes, hangs almost straight to just over the ground and turns only a
