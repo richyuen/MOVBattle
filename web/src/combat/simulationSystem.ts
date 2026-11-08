@@ -648,6 +648,14 @@ const QUICK_DODGE = { warn: 0.3, dist: 1.4, seconds: 0.12, back: 0.06, cooldown:
 // [S] 498 the Void Monarch's Demon Transformation (spec at _countDemonDamage): 800 / 97.5 of his own blows, a 3.5 m burst, floating .3 of his height
 const DEMON_FORM = { blows: 800 / 97.5, burst: 3.5, lift: 0.3, kind: "demon_form" };
 /*
+ * [S] 499 the Void Monarch Dodge (card Abilities: "used by the Void Monarch in both forms"; audit 489 c.2). Not the Painter's slide: a missile that
+ * will reach him within .warn s makes him vanish in a dark violet poof and stand .dist m off its line in the same instant (alternate sides), a second
+ * poof where he lands, still facing the man he fights; the shaft comes down on air. On foot or floating in his Demon form alike (the lift is his
+ * animator's, the blink only moves him across the ground). .cooldown s between dodges. Only evil.void_monarch (custom.void_monarch keeps none).
+ * Logged as .kind.
+ */
+const MONARCH_DODGE = { warn: 0.3, dist: 2.2, cooldown: 1.2, kind: "monarch_dodge" };
+/*
  * [S] Banjo Walk (353; card Characteristics "lures enemy units to them, by closing in the enemy to get their attention and then begin retreating while running
  * in circles"; Appearance "It doesn't attack unless ... a unit gets particularly close"). The bard walks at his man until he is .lure m past his reach, then
  * turns and runs, playing: each step heads .turn rad off straight away from the man, so he circles round him and out, alternate bards circling opposite
@@ -1041,6 +1049,7 @@ export class SimulationSystem {
     this._assignShieldSlots();
     this._resolveLivingCollisions();
     this._painterDodges(now);
+    this._monarchDodges(now);
     this._samuraiBlocks(now);
     this._cultistImplosions(now);
     this._sentinelCatches(now);
@@ -3730,6 +3739,39 @@ export class SimulationSystem {
       if (quick) this._dodgeBack.set(unit, { at: now + D.seconds + QUICK_DODGE.back, dir: dir.scale(-1), foe });
       missiles.loseTarget(unit);
       this._logAbility(unit, D.kind, now, unit.position);
+    }
+  }
+
+  /** [S] 499 the Void Monarch Dodge (spec at MONARCH_DODGE): a violet blink off an incoming missile's line. */
+  private _monarchDodges(now: number): void {
+    const D = MONARCH_DODGE, missiles = this.projectileSystem;
+    if (!missiles) return;
+    for (const unit of this._units) {
+      if (unit.definition.id !== "evil.void_monarch" || unit.isDead || unit.isToppled || unit.isDowned) continue;
+      if (now < (this._dodgeReadyAt.get(unit) ?? 0)) continue;
+      const incoming = missiles.incomingAt(unit, D.warn);
+      if (!incoming) continue;
+      let foe: RuntimeUnit | null = null, best = Infinity;
+      for (const u of this._units) {
+        if (u.isDead || u.team === unit.team) continue;
+        const d = Vector3.DistanceSquared(u.position, unit.position);
+        if (d < best) { best = d; foe = u; }
+      }
+      const side = this._dodgeSide.get(unit) ?? 1;
+      this._dodgeSide.set(unit, -side);
+      const across = new Vector3(-incoming.dir.z * side, 0, incoming.dir.x * side);
+      if (across.lengthSquared() < 1e-6) continue;
+      const from = unit.position.clone(), to = from.add(across.normalize().scale(D.dist));
+      to.y = from.y;
+      if (this.visualEffects) this.visualEffects.spawnShadowPoof(from);
+      unit.stopMoving();
+      this._clearPathState(unit);
+      unit.teleportTo(to);
+      if (foe) unit.faceTarget(foe.position);
+      if (this.visualEffects) this.visualEffects.spawnShadowPoof(to);
+      this._dodgeReadyAt.set(unit, now + D.cooldown);
+      missiles.loseTarget(unit);
+      this._logAbility(unit, D.kind, now, to);
     }
   }
 
