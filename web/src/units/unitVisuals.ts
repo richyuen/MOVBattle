@@ -907,9 +907,11 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
   ),
   "evil.death_bringer": vis(
     // [S] 491 (b.1, b.2; evil.death_bringer.red.png): a gold warglaive in each fist (propBuilder WARGLAIVE), no greatsword
-    { scale: 1.74, bulk: 1.44, headSize: 1.1, armLength: 1.16 }, "greatsword", "none", "none", "cape", "#7D2E2E", "greatsword", {
+    // [S] 494 (a.1; card Size 1.20x, evil.death_bringer.red.png): a lanky man, not a bulky giant: a little over a man's height (rig ~2.3 -> ~1.75 m),
+    // a narrow chest and thin long arms and legs; he stands upright with his arms out (duelist), not the giant's forward hunch
+    { scale: 1.26, bulk: 0.9, headSize: 1.1, armLength: 1.2, legLength: 1.12, torsoWidth: 0.84, upperArmWidth: 0.7, lowerArmWidth: 0.68, upperLegWidth: 0.8, lowerLegWidth: 0.76 }, "greatsword", "none", "none", "cape", "#7D2E2E", "greatsword", {
       weaponVariant: "warglaive", offhandVariant: "warglaive",
-      posePreset: "giant",
+      posePreset: "duelist",
       materialPreset: "secret_demon",
       attachmentPreset: "reaper_aura",
       fxPreset: "ember",
