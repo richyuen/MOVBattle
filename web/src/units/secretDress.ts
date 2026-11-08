@@ -171,6 +171,52 @@ export function balloonerGlueMitts(scene: Scene, body: ArticulatedBody): Mesh[] 
 }
 
 /**
+ * [S] 503 the Jester's hood and three-pointed cap (secret.jester.red.png; card Appearance "a team-colored jester outfit and hat"; audit 500 a.1:
+ * "a flat maroon disc with two short yellow-tipped stubs"). The render: a team hood close round the whole head and under the chin, only the face
+ * open; out of its crown two thick team points arc up and out past the shoulders and droop at the ends, each ending in a round bell ball; between
+ * them a brown spike stands straight up about half a head, a knob on its tip. The old jester_cap (propBuilder) is hidden.
+ * Spec in head widths W, heights H, depths D (the head box, its centre c; e the eyes' top in the head frame): the hood an ellipsoid .hoodW W x
+ * .hoodH H x .hoodD D set .hoodBack D back (its front stays behind the face, so the face shows), a chin band .chin H under the head's foot; per
+ * side a point tapering .root W to .tip W along JESTER_POINT [x W out, y H over e]; a bell ball .bell W across at its end; the spike .spike H tall
+ * from .spikeRoot W at the crown to a point, a knob .knob W across on it. Team cloth (team x .shade, self-lit .12), brown .brown, out of the glow.
+ */
+const JESTER_CAP = { hoodW: 1.14, hoodH: 1.1, hoodD: 1.12, hoodBack: 0.1, chin: 0.12, root: 0.34, tip: 0.14, bell: 0.22, spike: 0.62, spikeRoot: 0.26, knob: 0.16, shade: 0.85, brown: new Color3(0.38, 0.2, 0.09) };
+const JESTER_POINT: [number, number][] = [[0.2, 0.42], [0.5, 0.72], [0.85, 0.86], [1.15, 0.78], [1.32, 0.56], [1.36, 0.36]];
+export function jesterCap(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = JESTER_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  for (const m of body.root.getChildMeshes(false)) if (/^jester(Cap|Horn|Bell)$/.test(m.name)) m.setEnabled(false);
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const clothC = team.scale(C.shade), cloth = mf.get("cloth", clothC, { emissive: clothC.scale(0.12), roughness: 1 });
+  const brown = mf.get("cloth", C.brown, { emissive: C.brown.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const hood = MeshBuilder.CreateSphere("jesterHood", { diameter: 1, segments: 5 }, scene);
+  hood.parent = head; hood.material = cloth; hood.scaling.set(W * C.hoodW, H * C.hoodH, D * C.hoodD); hood.position.set(c.x, c.y, c.z - D * C.hoodBack);
+  out.push(hood);
+  const chin = MeshBuilder.CreateBox("jesterHoodChin", { width: W * C.hoodW * 0.85, height: H * C.chin, depth: D * C.hoodD * 0.8 }, scene);
+  chin.parent = head; chin.material = cloth; chin.position.set(c.x, c.y - H * 0.5, c.z - D * C.hoodBack);
+  out.push(chin);
+  for (const side of [-1, 1]) {
+    const pts = JESTER_POINT.map(([x, y]) => new Vector3(c.x + side * x * W, e + y * H, c.z - D * 0.05));
+    taper(scene, "jesterPoint", pts, W * C.root, W * C.tip, head, cloth, out);
+    const end = pts[pts.length - 1];
+    const bell = MeshBuilder.CreateIcoSphere("jesterBellBall", { radius: (W * C.bell) / 2, subdivisions: 1 }, scene);
+    bell.parent = head; bell.material = brown; bell.position.set(end.x, end.y - W * C.bell * 0.4, end.z);
+    out.push(bell);
+  }
+  const crown = c.y + H * C.hoodH * 0.45;
+  const spike = MeshBuilder.CreateCylinder("jesterSpike", { height: H * C.spike, diameterBottom: W * C.spikeRoot, diameterTop: W * 0.05, tessellation: 6 }, scene);
+  spike.parent = head; spike.material = brown; spike.position.set(c.x, crown + (H * C.spike) / 2, c.z - D * 0.05);
+  out.push(spike);
+  const knob = MeshBuilder.CreateIcoSphere("jesterSpikeKnob", { radius: (W * C.knob) / 2, subdivisions: 1 }, scene);
+  knob.parent = head; knob.material = brown; knob.position.set(c.x, crown + H * C.spike, c.z - D * 0.05);
+  out.push(knob);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 501 the Ball 'n' Chain's stone ball (secret.ball_n_chain.red.png: he hugs a huge faceted grey stone ball, wider than his chest, at chest
  * height in both arms, a thick grey chain of open links hanging from its foot to his knees; audit 500 b.1: "a small dark ball on a stick, held
  * one-handed like a mace"). The flail (handle, chain, ball) in his fist is hidden; the stone rides the torso so it stays at his chest through the
