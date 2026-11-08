@@ -2578,7 +2578,7 @@ export class ProceduralAnimator {
       : this._body.rightHand.getChildren().find((n): n is TransformNode => n.name === "bolt" || (n.name === "staff" && n.getChildren().some((c) => c.name === "orb" || c.name === "uprightPole")));
     const held = this.locomotionBias !== "aimed" && !rod && !this._spearShaft() && this._body.rightHand.getChildren().some((n) => !/HandM$/.test(n.name));
     // A club, a sword or a hafted head turns in the fist to the attitude; anything else only rides the arm.
-    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry|scytheCarry)$/.test(n.name));
+    const node = this._body.rightHand.getChildren().find((n): n is TransformNode => /^(club|blade|gsblade|katana|handle|pickaxeHandle|treeClubCarry|scytheCarry|paladinHammer)$/.test(n.name));
     const side = Math.sign(this._body.rightShoulder.position.x) || 1;
     // A scythe is carried one way, high, and like the tree he stands in it from the first frame, whatever phase the arm is in
     const scythe = node?.name === "scytheCarry";
@@ -2620,7 +2620,8 @@ export class ProceduralAnimator {
     // and he stands in it from the first frame: a whole tree does not ease round out of the fist's strapped angle
     if (tree) this._carryTurn = 1;
     const armingOut = !!node?.getChildren().some((c) => c.name === "armingOut");
-    const sideAxe = !!node?.getChildren().some((c) => c.name === "beardedAxeCarry");
+    // [S] 493 the Paladin's hammer (marked `uprightHammerCarry`) takes the same head-up carry beside the shield (good.righteous_paladin.red.png)
+    const sideAxe = !!node?.getChildren().some((c) => c.name === "beardedAxeCarry" || c.name === "uprightHammerCarry");
     const attitude = potion
       ? { raise: POTION_HANG.raise, out: POTION_HANG.out, elbow: POTION_HANG.elbow, tip: POTION_HANG.tip.clone() }
       : armingOut

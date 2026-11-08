@@ -4834,6 +4834,9 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
           put(MeshBuilder.CreateBox("paladinHammerCheek", { width: L * 0.18, height: L * 0.4, depth: L * 0.21 }, scene), side * L * 0.15, L * 0.43, pale);
           put(MeshBuilder.CreateBox("paladinHammerFace", { width: L * 0.025, height: L * 0.35, depth: L * 0.2 }, scene), side * L * 0.245, L * 0.43, light);
         }
+        // [S] 493 (CONFIRM 486 a.1): marked for the upright carry (proceduralAnimation BEARDED_AXE_CARRY): the head stood up at helm height beside
+        // the shield as in the render, not hung at the hip where it covered the puffed team shorts in the idle and the lineup
+        new TransformNode("uprightHammerCarry", scene).parent = haft;
         return haft;
       }
       if (type === "hammer" && variant === "mjolnir") {
