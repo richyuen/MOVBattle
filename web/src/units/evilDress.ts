@@ -1681,3 +1681,65 @@ export function monarchElbowBalls(scene: Scene, body: ArticulatedBody, bone: Mat
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 500 the Void Monarch's crown (evil.void_monarch.red.png, .blue.png; audit 489 a.2: "a pale grey crown of spikes - TABS: a bone-tan crown of
+ * flared rays with a tall black-wrapped central spike ringed in pink"). Evil preset only (HORNED_EVIL harness flag): the boneCrown band and its
+ * MONARCH_SPIKES (unitFactory) are hidden here, custom.void_monarch keeps them.
+ * Spec in head widths W, heights H, depths D (the head box, its centre c), read off the blue render (a 90 px head; band over the eyes at 290 px; pole
+ * tip at 70 px): a bone-tan 8-sided band from .bandLo to .bandHi H over the centre, .band W across, just over the bead eyes; out of its back half
+ * .rays flat blunt slats fanned in the face's plane at RAY_ANGLES (rad off upright), each .rayW W wide, .rayT D thick, .ray H long, set .rayBack D
+ * behind the centre; on its front arc .spikes thin 4-sided spikes .spikeW W across at FRONT_SPIKES [angle round the band, H tall]; from the crown's
+ * middle a near-black pole .pole H tall, .poleW W across, wound with .wraps bone-tan bands tipped .wrapTilt rad (the wrapped read), a bone knob
+ * .knob W under a bone point .tip H; round the pole at .ringAt of its height a flat pink ring .ring W across, .ringT W thick, tilted .ringTilt rad,
+ * flat unlit pink (DEATH_SLASH's hue). Bone-tan lit cloth .tan self-lit .12 (the shared bone (.6,.6,.46) read pale grey); all out of the glow.
+ */
+const MONARCH_CROWN = {
+  tan: new Color3(0.72, 0.56, 0.3), band: 1.22, bandLo: 0.28, bandHi: 0.56, rays: 6, rayW: 0.24, rayT: 0.1, ray: 0.95, rayBack: 0.2,
+  spikeW: 0.13, pole: 2.0, poleW: 0.16, wraps: 5, wrapTilt: 0.5, knob: 0.24, tip: 0.38, ring: 1.35, ringT: 0.05, ringAt: 0.68, ringTilt: 0.32,
+};
+const RAY_ANGLES = [-1.3, -0.9, -0.5, 0.5, 0.9, 1.3];
+const FRONT_SPIKES: [number, number][] = [[0, 0.95], [-0.45, 0.75], [0.45, 0.75], [-0.9, 0.5], [0.9, 0.5]];
+export function monarchCrown(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = MONARCH_CROWN, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  for (const m of head.getChildMeshes(true)) if (/^monarch(Band|Spike)$/.test(m.name)) m.setEnabled(false);
+  const tan = mf.get("cloth", C.tan, { emissive: C.tan.scale(0.12), roughness: 1 });
+  const blackC = new Color3(0.03, 0.025, 0.03), black = mf.get("cloth", blackC, { emissive: blackC.scale(0.4), roughness: 1 });
+  const pinkC = new Color3(1.1, 0.2, 0.55), pink = mf.get("unlit", pinkC, { emissive: pinkC });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, material: Material): Mesh => { m.parent = head; m.material = material; out.push(m); return m; };
+  const bandH = H * (C.bandHi - C.bandLo), bandY = c.y + H * (C.bandLo + C.bandHi) / 2, top = c.y + H * C.bandHi;
+  const band = put(MeshBuilder.CreateCylinder("monarchCrownBand", { height: bandH, diameterTop: W * C.band * 1.06, diameterBottom: W * C.band, tessellation: 8 }, scene), tan);
+  band.rotation.y = Math.PI / 8; band.scaling.z = (D * 1.1) / (W * C.band); band.position.set(c.x, bandY, c.z);
+  for (const a of RAY_ANGLES) {
+    // a flat slat rooted on the band's rim, fanned out from upright by a
+    const rootX = Math.sin(a) * W * C.band * 0.42, rootY = top - bandH * 0.4;
+    const ray = put(MeshBuilder.CreateBox("monarchCrownRay", { width: W * C.rayW, height: H * C.ray, depth: D * C.rayT }, scene), tan);
+    ray.rotation.z = -a;
+    ray.position.set(c.x + rootX + Math.sin(a) * H * C.ray * 0.5, rootY + Math.cos(a) * H * C.ray * 0.5, c.z - D * C.rayBack);
+  }
+  for (const [a, tall] of FRONT_SPIKES) {
+    const s = put(MeshBuilder.CreateCylinder("monarchCrownSpike", { height: H * tall, diameterBottom: W * C.spikeW, diameterTop: 0, tessellation: 4 }, scene), tan);
+    s.position.set(c.x + Math.sin(a) * W * C.band * 0.45, top + (H * tall) / 2 - bandH * 0.1, c.z + Math.cos(a) * D * 0.5);
+    s.rotation.z = -a * 0.35;
+  }
+  const poleZ = c.z - D * 0.05, poleFoot = top - bandH * 0.5, poleH = H * C.pole;
+  const pole = put(MeshBuilder.CreateCylinder("monarchCrownPole", { height: poleH, diameter: W * C.poleW, tessellation: 6 }, scene), black);
+  pole.position.set(c.x, poleFoot + poleH / 2, poleZ);
+  for (let i = 0; i < C.wraps; i++) {
+    const wrap = put(MeshBuilder.CreateCylinder("monarchCrownWrap", { height: W * C.poleW * 0.35, diameter: W * C.poleW * 1.3, tessellation: 6 }, scene), tan);
+    wrap.position.set(c.x, poleFoot + bandH * 0.6 + (poleH - bandH * 0.6) * ((i + 0.5) / C.wraps) * 0.92, poleZ);
+    wrap.rotation.set(C.wrapTilt * 0.3, 0, (i % 2 ? 1 : -1) * C.wrapTilt);
+  }
+  const knob = put(MeshBuilder.CreateIcoSphere("monarchCrownKnob", { radius: (W * C.knob) / 2, subdivisions: 1 }, scene), tan);
+  knob.position.set(c.x, poleFoot + poleH, poleZ);
+  const tip = put(MeshBuilder.CreateCylinder("monarchCrownTip", { height: H * C.tip, diameterBottom: W * C.knob * 0.8, diameterTop: 0, tessellation: 6 }, scene), tan);
+  tip.position.set(c.x, poleFoot + poleH + (H * C.tip) / 2 + W * C.knob * 0.3, poleZ);
+  const ring = put(MeshBuilder.CreateTorus("monarchCrownRing", { diameter: W * C.ring, thickness: W * C.ringT, tessellation: 16 }, scene), pink);
+  ring.position.set(c.x, poleFoot + poleH * C.ringAt, poleZ);
+  ring.rotation.set(C.ringTilt, 0, C.ringTilt * 0.6);
+  for (const m of out) { if (m !== ring) m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
