@@ -1120,7 +1120,8 @@ export function deathBringerShinWraps(scene: Scene, body: ArticulatedBody, team:
  * per side .tusks tusks at .at W out from the middle (front and side of the hip), each a tapered 4-segment curve rooted on the belt's front face,
  * running .drop W down then .hook W out and up to a point, .long W in all, .root W thick at the belt. Tan bone (DEATH_MASK.tan), out of the glow.
  */
-const DEATH_BELT = { beltH: 0.12, out: 0.05, tusks: 3, at: [0.3, 0.42, 0.5], fwd: [1, 0.75, 0.35], drop: 0.14, hook: 0.1, root: 0.07, lift: 0.04 };
+// 500 look: drop .14 hook .1 root .07 at .3-.5 W made 8 cm tusks, half behind the hair fall: bigger and out at the hip sides
+const DEATH_BELT = { beltH: 0.12, out: 0.05, tusks: 3, at: [0.38, 0.5, 0.58], fwd: [1, 0.7, 0.3], drop: 0.32, hook: 0.24, root: 0.13, lift: 0.08 };
 export function deathBringerBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = DEATH_BELT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const { lo, hi } = trunkBox(body), W = hi.x - lo.x, H = hi.y - lo.y, D = hi.z - lo.z, cx = (lo.x + hi.x) / 2, cz = (lo.z + hi.z) / 2;
