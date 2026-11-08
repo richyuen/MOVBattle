@@ -178,7 +178,7 @@ export interface UnitVisualConfig {
 
 export type WeaponVariant =
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -1087,8 +1087,10 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { moving: ["ghost_stream"], "ability-active": ["ghost_stream"] },
       });
     case "secret_bomb_on_a_stick":
-      return vis({ scale: 1.0, bulk: 1.0, armLength: 1.1 }, "bomb", "none", "none", "none", "#3a3a3a", undefined, {
-        materialPreset: "secret_bandit", attachmentPreset: "bomb_lit",
+      // [S] 501 (b.1) a pole longer than him in both hands topped by a big black bomb in orange rope bands with a lit fuse (propBuilder BOMB_STICK on
+      // the halberd's two-handed grip, as the fan bearer's GIANT_FAN), not a fist bomb
+      return vis({ scale: 1.0, bulk: 1.0, armLength: 1.1 }, "halberd", "none", "none", "none", "#3a3a3a", undefined, {
+        materialPreset: "secret_bandit", weaponVariant: "bomb_stick",
         stateVariants: { attacking: ["lit_fuse"], "ability-active": ["lit_fuse"] },
       });
     case "secret_fan_bearer":

@@ -4160,6 +4160,44 @@ function buildGiantFan(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   knob.parent = shaft;
   return shaft;
 }
+/*
+ * [S] 501 the Bomb on a Stick's weapon (card: Two-handed, "an always lit bomb strapped to a long stick"; secret.bomb_on_a_stick.red.png: a thin dark
+ * pole held upright in both hands at the waist, its top over the head, carrying a big black bomb, about a head and a half across, bound by two
+ * orange rope bands, a short neck and a lit fuse burning yellow-white on top; audit 500 b.1: "a fist-sized bomb on a short handle held one-handed").
+ * Spec in haft lengths L (+y up the haft from the fist, the fist .grip of L up from the butt, the fan bearer's two-handed halberd grip): the
+ * haft .thick L across, dark wood; the bomb a flat-shaded ico ball .bomb L across sitting on the haft's top, near-black iron; two orange rope
+ * bands .band L thick round it at .bandAt of its radius under and over its middle; an iron neck .neck L tall, a fuse .fuse L long tipped .fuseTilt,
+ * and a flame: an unlit yellow-white teardrop .flame L tall over the fuse's end, out of the glow's reach (LESSONS 442: unlit keeps its hue).
+ */
+const BOMB_STICK = {
+  long: 1.05, thick: 0.026, grip: 0.32, bomb: 0.26, band: 0.026, bandAt: [-0.22, 0.12], neck: 0.05, fuse: 0.07, fuseTilt: 0.3, flame: 0.1,
+  wood: new Color3(0.2, 0.13, 0.08), iron: new Color3(0.07, 0.07, 0.08), rope: new Color3(0.85, 0.4, 0.1), fire: new Color3(1.4, 0.95, 0.45),
+};
+function buildBombStick(scene: Scene, fit: BladeFit): Mesh {
+  const B = BOMB_STICK, L = fit.stand * B.long;
+  const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: B.thick * L, tessellation: 7 }, scene);
+  shaft.material = mat(scene, B.wood, 0.1, "cloth");
+  shaft.convertToFlatShadedMesh();
+  shaft.position.y = (0.5 - B.grip) * L;
+  const top = L * 0.5, R = (B.bomb * L) / 2, cy = top + R * 0.85;
+  const iron = mat(scene, B.iron, 0.06, "cloth");
+  const add = (m: Mesh, material: Mesh["material"], y: number): Mesh => { m.parent = shaft; m.position.y = y; m.material = material; m.convertToFlatShadedMesh(); return m; };
+  add(MeshBuilder.CreateIcoSphere("bombStickBall", { radius: R, subdivisions: 1 }, scene), iron, cy);
+  const rope = mat(scene, B.rope, 0.14, "cloth");
+  for (const at of B.bandAt) {
+    const rr = Math.sqrt(Math.max(0, 1 - at * at)) * R;
+    add(MeshBuilder.CreateTorus("bombStickBand", { diameter: rr * 2.04, thickness: B.band * L, tessellation: 10 }, scene), rope, cy + at * R);
+  }
+  add(MeshBuilder.CreateCylinder("bombStickNeck", { height: B.neck * L, diameterTop: R * 0.4, diameterBottom: R * 0.55, tessellation: 6 }, scene), iron, cy + R * 0.95 + (B.neck * L) / 2);
+  const fy = cy + R * 0.95 + B.neck * L;
+  const fuse = add(MeshBuilder.CreateCylinder("bombStickFuse", { height: B.fuse * L, diameter: R * 0.1, tessellation: 5 }, scene), mat(scene, new Color3(0.55, 0.42, 0.25), 0.1, "cloth"), fy + (B.fuse * L) / 2);
+  fuse.rotation.z = B.fuseTilt;
+  const flameMat = getMaterialFactory().get("unlit", B.fire, { emissive: B.fire });
+  const flame = add(MeshBuilder.CreateCylinder("bombStickFlame", { height: B.flame * L, diameterTop: 0, diameterBottom: R * 0.45, tessellation: 6 }, scene), flameMat, fy + B.fuse * L * Math.cos(B.fuseTilt) + (B.flame * L) / 2);
+  flame.position.x = -Math.sin(B.fuseTilt) * B.fuse * L;
+  add(MeshBuilder.CreateIcoSphere("bombStickFlameBulb", { radius: R * 0.26, subdivisions: 1 }, scene), flameMat, flame.position.y - (B.flame * L) * 0.35).position.x = flame.position.x;
+  return shaft;
+}
 function buildJarlAxe(scene: Scene, fit: BladeFit, A = JARL_AXE, crescent = JARL_CRESCENT): Mesh {
   const L = fit.stand * A.long;
   const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: A.thick * L, tessellation: 7 }, scene);
@@ -5096,6 +5134,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (variant === "jarl_axe") return buildJarlAxe(scene, fit);
       if (variant === "executioner_axe") return buildJarlAxe(scene, fit, EXECUTIONER_AXE, EXECUTIONER_CRESCENT);
       if (variant === "giant_fan") return buildGiantFan(scene, fit, teamColor ?? accent);
+      if (variant === "bomb_stick") return buildBombStick(scene, fit); // [S] 501 (BOMB_STICK)
       // The halberd, built to the spec at HALBERD: +y up the shaft from the fist at the origin, HALBERD.grip of it below the fist
       const L = fit.stand * HALBERD.long;
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: HALBERD.thick * L, tessellation: 7 }, scene);
