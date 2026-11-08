@@ -1027,13 +1027,20 @@ const DEATH_HAIR = {
   capW: 1.3, capTop: 0.62, rear: 0.58, sideT: 0.18, sideD: 0.85, side: 0.66,
   // 499: the front fall narrowed to the chest's middle (7 strands over .66 TW covered the whole chest and read as a cuirass, audit 489 a.4)
   front: 5, spread: 0.3, strandW: 0.2, strandT: 0.07, long: 1.0, vary: 0.18, proud: 0.05, lean: 0.06, back: 5, backLong: 0.8,
+  // [S] 501 (a.4, CONFIRM 500: "a maroon tabard bib with strips down the front of the torso"): five even wedges side by side read as one cloth
+  // bib, and the flat .02 black read maroon through the field's haze (the lich's tendrils, 500). The fall is straggly: .fall strands of mixed
+  // widths .fallW (TW) with gaps, over .fallSpread TW, lengths .fallLong TH varied .fallVary and kinked .kink TW at .kinkAt of the way down, so the
+  // ends hang ragged at different heights; .shoulder strands per side fall over the collarbone at .shoulderX TW; fog off.
+  fall: 11, fallSpread: 0.62, fallW: [0.07, 0.11, 0.06, 0.09, 0.12, 0.07, 0.1, 0.06, 0.11, 0.08, 0.07], fallLong: 0.95, fallVary: 0.38,
+  kink: 0.035, kinkAt: 0.55, shoulder: 2, shoulderX: 0.4, shoulderLong: 0.42,
 };
 export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = DEATH_HAIR, mf = getMaterialFactory();
   // darker than the robe recipe: the chest strands face the lit field and the .08 cloth read brown (probe 495)
   const blackC = new Color3(0.025, 0.02, 0.025), black = mf.get("cloth", blackC, { emissive: blackC.scale(0.5), roughness: 1 });
   // the fall over the chest sits in the fxPreset ember light, which turned lit black cloth leather-brown (probe 495): flat unlit black
-  const fallC = new Color3(0.02, 0.015, 0.02), fall = mf.get("unlit", fallC, { emissive: fallC });
+  const fallC = new Color3(0.016, 0.012, 0.016), fall = mf.get("unlit", fallC, { emissive: fallC });
+  fall.fogEnabled = false;
   const out: Mesh[] = [];
   const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
   const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
@@ -1067,7 +1074,26 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
       m.rotation.set(dir * 0.04, 0, -t * C.lean * 4);
     }
   };
-  strands(C.front, cz + TD / 2 + TW * C.proud, C.long, 1);
+  // the straggly front fall: each strand two tapered pieces, the lower one kinked aside, ends ragged at mixed heights
+  const zf = cz + TD / 2 + TW * C.proud;
+  const strand = (x: number, w: number, len: number, kink: number, z: number): void => {
+    const upper = len * C.kinkAt, lower = len - upper;
+    const a = MeshBuilder.CreateCylinder("deathHairStrand", { height: upper, diameterTop: TW * w * Math.SQRT2, diameterBottom: TW * w * 0.85 * Math.SQRT2, tessellation: 4 }, scene);
+    a.rotation.y = Math.PI / 4; a.bakeCurrentTransformIntoVertices(); a.rotation.y = 0; a.scaling.z = C.strandT / w;
+    put(a, body.torso, x, top + TW * 0.04 - upper / 2, z).material = fall;
+    const b = MeshBuilder.CreateCylinder("deathHairStrand", { height: lower, diameterTop: TW * w * 0.85 * Math.SQRT2, diameterBottom: TW * w * 0.15, tessellation: 4 }, scene);
+    b.rotation.y = Math.PI / 4; b.bakeCurrentTransformIntoVertices(); b.rotation.y = 0; b.scaling.z = C.strandT / w;
+    put(b, body.torso, x + kink * TW * 0.5, top + TW * 0.04 - upper - lower / 2, z).material = fall;
+    b.rotation.z = -Math.atan2(kink * TW, lower);
+  };
+  for (let i = 0; i < C.fall; i++) {
+    const t = i / (C.fall - 1) - 0.5, w = C.fallW[i % C.fallW.length];
+    const len = TH * C.fallLong * (1 - C.fallVary * (((i * 7) % 5) / 4)) * (1 - Math.abs(t) * 0.35);
+    strand(t * TW * C.fallSpread, w, len, C.kink * (i % 2 ? 1 : -1) * (1 + (i % 3)), zf + (i % 2) * TW * 0.02);
+  }
+  for (const side of [-1, 1]) for (let k = 0; k < C.shoulder; k++) {
+    strand(side * TW * (C.shoulderX + k * 0.07), 0.08, TH * C.shoulderLong * (1 - k * 0.25), side * C.kink, cz + (TD / 2 + TW * C.proud) * (k ? -1 : 1));
+  }
   strands(C.back, cz - TD / 2 - TW * C.proud, C.backLong, -1);
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
