@@ -1056,8 +1056,10 @@ const DEATH_HAIR = {
   // bib, and the flat .02 black read maroon through the field's haze (the lich's tendrils, 500). The fall is straggly: .fall strands of mixed
   // widths .fallW (TW) with gaps, over .fallSpread TW, lengths .fallLong TH varied .fallVary and kinked .kink TW at .kinkAt of the way down, so the
   // ends hang ragged at different heights; .shoulder strands per side fall over the collarbone at .shoulderX TW; fog off.
-  fall: 11, fallSpread: 0.62, fallW: [0.07, 0.11, 0.06, 0.09, 0.12, 0.07, 0.1, 0.06, 0.11, 0.08, 0.07], fallLong: 0.95, fallVary: 0.38,
+  fall: 11, fallSpread: 0.62, fallW: [0.07, 0.11, 0.06, 0.09, 0.12, 0.07, 0.1, 0.06, 0.11, 0.08, 0.07], fallLong: 1.25, fallVary: 0.38,
   kink: 0.035, kinkAt: 0.55, shoulder: 2, shoulderX: 0.4, shoulderLong: 0.42,
+  // [S] 502 crown-rooted side locks and back fall (a.2)
+  locks: 4, lockX: 0.58, lockY: 0.45, lockLong: 0.8, lockW: [0.16, 0.2, 0.14, 0.18], backFall: 9, backSpread: 0.8, backFallLong: 1.0,
 };
 export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = DEATH_HAIR, mf = getMaterialFactory();
@@ -1087,30 +1089,37 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, sc = tm.scaling;
   const TW = tb.extendSize.x * 2 * sc.x, TH = tb.extendSize.y * 2 * sc.y, TD = tb.extendSize.z * 2 * sc.z;
   const top = tm.position.y + (tb.center.y + tb.extendSize.y) * sc.y, cz = tm.position.z + tb.center.z * sc.z;
-  const strands = (n: number, z: number, long: number, dir: number): void => {
-    for (let i = 0; i < n; i++) {
-      const t = n === 1 ? 0 : i / (n - 1) - 0.5, len = TH * long * (1 - C.vary * ((i * 5) % 3) / 2);
-      // a 4-sided frustum turned an eighth (baked) so its faces are square, flattened in z: a flat strand, wide at the collar, a point at its foot
-      const m = MeshBuilder.CreateCylinder("deathHairStrand", { height: len, diameterTop: TW * C.strandW * Math.SQRT2, diameterBottom: TW * C.strandW * 0.25, tessellation: 4 }, scene);
-      m.rotation.y = Math.PI / 4; m.bakeCurrentTransformIntoVertices(); m.rotation.y = 0;
-      m.scaling.z = C.strandT / C.strandW;
-      put(m, body.torso, t * TW * C.spread + Math.sin(t * C.lean * 4) * len * 0.5, top + TW * 0.04 - len / 2, z);
-      m.material = fall;
-      m.rotation.set(dir * 0.04, 0, -t * C.lean * 4);
-    }
-  };
   // the straggly front fall: each strand two tapered pieces, the lower one kinked aside, ends ragged at mixed heights
   const zf = cz + TD / 2 + TW * C.proud;
-  const strand = (x: number, w: number, len: number, kink: number, z: number): void => {
+  const strand = (x: number, w: number, len: number, kink: number, z: number, y0 = top + TW * 0.04, thick = C.strandT): void => {
     const upper = len * C.kinkAt, lower = len - upper;
     const a = MeshBuilder.CreateCylinder("deathHairStrand", { height: upper, diameterTop: TW * w * Math.SQRT2, diameterBottom: TW * w * 0.85 * Math.SQRT2, tessellation: 4 }, scene);
-    a.rotation.y = Math.PI / 4; a.bakeCurrentTransformIntoVertices(); a.rotation.y = 0; a.scaling.z = C.strandT / w;
-    put(a, body.torso, x, top + TW * 0.04 - upper / 2, z).material = fall;
+    a.rotation.y = Math.PI / 4; a.bakeCurrentTransformIntoVertices(); a.rotation.y = 0; a.scaling.z = thick / w;
+    put(a, body.torso, x, y0 - upper / 2, z).material = fall;
     const b = MeshBuilder.CreateCylinder("deathHairStrand", { height: lower, diameterTop: TW * w * 0.85 * Math.SQRT2, diameterBottom: TW * w * 0.15, tessellation: 4 }, scene);
-    b.rotation.y = Math.PI / 4; b.bakeCurrentTransformIntoVertices(); b.rotation.y = 0; b.scaling.z = C.strandT / w;
-    put(b, body.torso, x + kink * TW * 0.5, top + TW * 0.04 - upper - lower / 2, z).material = fall;
+    b.rotation.y = Math.PI / 4; b.bakeCurrentTransformIntoVertices(); b.rotation.y = 0; b.scaling.z = thick / w;
+    put(b, body.torso, x + kink * TW * 0.5, y0 - upper - lower / 2, z).material = fall;
     b.rotation.z = -Math.atan2(kink * TW, lower);
   };
+  // [S] 502 (a.2: "a short black bob framing the head ... - TABS: long straggly black hair hanging over the chest and back to the waist, the
+  // unit's dominant dark mass"): the head's cap and side slabs stop at the head's foot and read as a bob. Torso-parented locks now run on from
+  // the crown (LESSONS: a head-hung piece cannot run down the torso): per side .locks strands rooted .lockX head W out from the head's centre at
+  // .lockY H over it, front to back over the head's side, down past the shoulders to .lockLong TH under the torso top; the back fall starts at
+  // the crown too and hangs to the waist as .backFall ragged strands over .backSpread TW, .backFallLong TH under the torso top.
+  body.torso.computeWorldMatrix(true); head.computeWorldMatrix(true);
+  const toTorso = body.torso.getWorldMatrix().clone().invert();
+  const inTorso = (x: number, y: number, z: number): Vector3 => Vector3.TransformCoordinates(Vector3.TransformCoordinates(new Vector3(x, y, z), head.getWorldMatrix()), toTorso);
+  for (const side of [-1, 1]) for (let k = 0; k < C.locks; k++) {
+    const t = k / (C.locks - 1) - 0.5, p = inTorso(c.x + side * W * C.lockX, c.y + H * C.lockY, c.z + t * D * 0.8);
+    const foot = top - TH * C.lockLong * (1 - Math.abs(t) * 0.3), w = C.lockW[k % C.lockW.length];
+    strand(p.x, w, p.y - foot, side * C.kink * (1 + k), p.z, p.y, C.strandT * 1.4);
+  }
+  const crown = inTorso(c.x, c.y + H * C.lockY, c.z - D * 0.45);
+  for (let i = 0; i < C.backFall; i++) {
+    const t = i / (C.backFall - 1) - 0.5, w = C.fallW[(i + 3) % C.fallW.length];
+    const foot = top - TH * C.backFallLong * (1 - C.fallVary * 0.6 * (((i * 3) % 4) / 3));
+    strand(t * TW * C.backSpread, w * 1.2, crown.y - foot, C.kink * (i % 2 ? 1 : -1), Math.min(crown.z, cz - TD / 2 - TW * C.proud), crown.y);
+  }
   for (let i = 0; i < C.fall; i++) {
     const t = i / (C.fall - 1) - 0.5, w = C.fallW[i % C.fallW.length];
     const len = TH * C.fallLong * (1 - C.fallVary * (((i * 7) % 5) / 4)) * (1 - Math.abs(t) * 0.35);
@@ -1119,7 +1128,6 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const side of [-1, 1]) for (let k = 0; k < C.shoulder; k++) {
     strand(side * TW * (C.shoulderX + k * 0.07), 0.08, TH * C.shoulderLong * (1 - k * 0.25), side * C.kink, cz + (TD / 2 + TW * C.proud) * (k ? -1 : 1));
   }
-  strands(C.back, cz - TD / 2 - TW * C.proud, C.backLong, -1);
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
