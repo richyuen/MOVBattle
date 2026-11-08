@@ -29,7 +29,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBuckler, cultistDarkRobe, cultistHalo, lichStaffCrystal, lichTunic, mechanicGoggles, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
+import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, lichStaffCrystal, lichTunic, mechanicGoggles, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHelm } from "./evilDress";
 import { sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
@@ -235,7 +235,7 @@ const PALADIN_HELM_BAND = 0.16;
  * maroon-brown robe from the neck to the shins, banded in the team colour twice near its hem, at the neck and at the cuffs; bare team-skin head with a long
  * grey-tan beard hanging in strands to the chest; a wooden sun wheel (a ring ~2 heads across with ~10 spokes to a hub) standing upright behind the head;
  * a dark round wooden shield studded with spikes round its rim and one at the boss; a staff topped with a spiked iron ball.
- *   robe VOID_ROBE, self-lit VOID_GLOW; bands team, self-lit VOID_BAND_GLOW; skirt VOID_SKIRT thighs long, hem VOID_HEM pelvises wide;
+ *   robe VOID_ROBE, self-lit VOID_GLOW; bands team, self-lit VOID_BAND_GLOW; skirt to the knee (evilDress cultistCoatLength), hem VOID_HEM pelvises wide;
  *   wheel VOID_WHEEL heads across, VOID_SPOKES spokes; beard VOID_BEARD heads long in VOID_STRANDS strands; shield VOID_SHIELD chests across, VOID_STUDS rim spikes.
  */
 const VOID_ROBE = new Color3(0.3, 0.15, 0.12);
@@ -248,7 +248,6 @@ const VOID_BAND_GLOW = 0.3;
  * shirt runs on into a robe skirt hung from the hips (hangSkirt), HEALER_ROBE.long thighs long and .hem pelvises wide at the hem, in the team cloth.
  */
 const HEALER_ROBE = { long: 1.75, hem: 1.5 };
-const VOID_SKIRT = 1.75;
 const VOID_HEM = 1.6;
 const VOID_WHEEL = 2.1;
 const VOID_SPOKES = 10;
@@ -2592,7 +2591,9 @@ function dressVoidCultist(scene: Scene, body: ArticulatedBody, teamColor: Color3
   const W = ext.x * 2 * chest.scaling.x, H = ext.y * 2 * chest.scaling.y, D = ext.z * 2 * chest.scaling.z;
   const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
   // Long robe skirt to the shins, two team bands round it near the hem
-  const skirt = hangSkirt(scene, body, "voidRobe", VOID_SKIRT, VOID_HEM, robe);
+  // [S] 496 (a.2) the coat is cut at the knee, team-cuffed boots under the trousers (evilDress cultistCoatLength, cultistBoots, CULTIST_COAT)
+  const skirt = hangSkirt(scene, body, "voidRobe", cultistCoatLength(body), VOID_HEM, robe);
+  added.push(...cultistBoots(scene, body, teamColor));
   if (skirt) {
     added.push(skirt);
     const sb = skirt.getBoundingInfo().boundingBox;

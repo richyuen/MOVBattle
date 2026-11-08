@@ -506,6 +506,42 @@ export function cultistDarkRobe(scene: Scene, body: ArticulatedBody, team: Color
 }
 
 /**
+ * [S] 496 the Void Cultist's knee coat and boots (evil.void_cultist.blue.png, .red.png lower third; CONFIRM 494 a.2: "coat hem reaches the ground as a
+ * bell, hiding the legs - TABS: coat ends at the knee, with dark trousers and boots with team-coloured cuffs showing below").
+ * Spec: the robe skirt (hangSkirt, a share of the knee drop K) is cut from the pelvis top to .above K over the rest knee joint, both read in the hip
+ * frame, so the hem sits on the knee whatever the leg's build (the idle's bent hip lifts the knee ~.3 K; a share of the 1.75 K skirt reached the
+ * ankle); below it the near-black trouser legs show.
+ * On each shin (its mesh box, limb along y, r the larger of its x and z half-extents) a boot: an 8-sided shell in dark leather .boot from the foot
+ * up to .bootTop of the shin's length, .bootW r across, and a team cuff band .cuff of the shin long round its top, .cuffW r across, standing proud.
+ */
+const CULTIST_COAT = { above: 0.3, boot: new Color3(0.06, 0.045, 0.04), bootTop: 0.5, bootW: 2.25, cuff: 0.13, cuffW: 2.5 };
+export function cultistCoatLength(body: ArticulatedBody): number {
+  const pelvis = body.allMeshes.find((m) => /_pelvis$/.test(m.name));
+  const K = Math.abs(body.leftKnee.position.y);
+  if (!pelvis || K < 1e-4) return 1;
+  const top = pelvis.position.y + pelvis.getBoundingInfo().boundingBox.extendSize.y;
+  const hem = body.leftHip.position.y + body.leftKnee.position.y + K * CULTIST_COAT.above;
+  return Math.max(0.3, (top - hem) / K);
+}
+export function cultistBoots(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = CULTIST_COAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const boot = mf.get("cloth", C.boot, { emissive: C.boot.scale(0.4), roughness: 1 });
+  const teamM = mf.get("cloth", team, { emissive: team.scale(0.18) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const bb = shin.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z);
+    const y0 = cc.y - e.y, long = e.y * 2 * C.bootTop;
+    const shell = MeshBuilder.CreateCylinder("cultistBoot", { height: long, diameter: r * C.bootW, tessellation: 8 }, scene);
+    shell.parent = shin; shell.position.set(cc.x, y0 + long / 2, cc.z); shell.material = boot; out.push(shell);
+    const cuffL = e.y * 2 * C.cuff;
+    const cuff = MeshBuilder.CreateCylinder("cultistBootCuff", { height: cuffL, diameterTop: r * C.cuffW * 1.06, diameterBottom: r * C.cuffW, tessellation: 8 }, scene);
+    cuff.parent = shin; cuff.position.set(cc.x, y0 + long - cuffL / 2 + cuffL * 0.15, cc.z); cuff.material = teamM; out.push(cuff);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 495 the Void Cultist's coat sleeves (evil.void_cultist.red.png, both arms; CONFIRM 494 a.1: "bare team-coloured arms, no sleeve - TABS: dark
  * priest-coat sleeves to the wrist, team colour only on a cuff band and the mitt").
  * Spec in each arm mesh's own frame (its box half-extents e, r the larger of e.x, e.z; the limb runs along y): the upper and lower arm meshes and
