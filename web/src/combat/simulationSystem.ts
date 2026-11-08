@@ -129,6 +129,12 @@ const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9
  * chest (.chest m up) for .seconds, a pale-cyan core in a light-blue rim, .near m round at the claw swelling to .far; the blow lands with the jet.
  */
 const MECHANIC_FIRE = { seconds: 0.8, ahead: 0.25, chest: 0.9, near: 0.08, far: 0.3, farPer: 0.1,white: new Color3(0.8, 1, 1), yellow: new Color3(0.25, 0.7, 1.15) };
+/*
+ * [S] 493 the Death Bringer's warglaive trail (audit 489 c.1: "a slow overhead greatsword chop - TABS: swift twin-blade slashes leaving pink trails";
+ * evil.death_bringer.jpg): every blow leaves a hot-pink crescent (visualEffects spawnSlashArc) .radius m round and .band m wide across the man's
+ * chest (.chest m up), tipped .tilt rad, alternate blows tipped the other way, fading over .seconds.
+ */
+const DEATH_SLASH = { white: new Color3(1.2, 0.25, 0.7), radius: 1.0, band: 0.2, tilt: 1.25, seconds: 0.45, chest: 1.0 };
 const THROWS_HELD_PROP = new Set(["javelin", "bomb", "stone", "potion"]);
 /*
  * [S] planted full-draw loose (354; medieval.archer.jpg: feet set, bow arm out, string at the cheek as the arrow leaves; card shoot delay 1.2 s). A bowman here
@@ -3469,6 +3475,8 @@ export class SimulationSystem {
   /** [S] 485 when a Radiant Glaive's thrown glaive is back in his fist (world seconds). */
   private _glaiveBack = new WeakMap<RuntimeUnit, number>();
   private _hammerReady = new WeakMap<RuntimeUnit, number>();
+  /** [S] 493 how many warglaive cuts each Death Bringer has landed (DEATH_SLASH turns alternate trails over). */
+  private _deathSlashes = new WeakMap<RuntimeUnit, number>();
   private _spearReady = new WeakMap<RuntimeUnit, number>();
   private _spearBack = new WeakMap<object, number>();
   private _hammers: { unit: RuntimeUnit; hinge: TransformNode; at: Vector3; t0: number; damage: number; dir: Vector3; struck: boolean }[] = [];
@@ -3698,6 +3706,13 @@ export class SimulationSystem {
     // [S] 364 the mammoth's stomp lands as a trample: a dust ring runs out over the ground and earth is thrown up (visualEffects TRAMPLE_RING)
     if (this.visualEffects && attacker.definition.id === "tribal.mammoth") {
       this.visualEffects.spawnTrampleRing(new Vector3(target.position.x, attacker.position.y, target.position.z), Math.max(2, splashRadius));
+    }
+    // [S] 493 each warglaive cut leaves a pink trail across the man (DEATH_SLASH), turned over on alternate blows as the other blade cuts
+    if (this.visualEffects && attacker.definition.id === "evil.death_bringer") {
+      const across = target.position.subtract(attacker.position); across.y = 0;
+      const n = (this._deathSlashes.get(attacker) ?? 0) + 1; this._deathSlashes.set(attacker, n);
+      const look = { ...DEATH_SLASH, tilt: (n % 2 ? 1 : -1) * DEATH_SLASH.tilt };
+      this.visualEffects.spawnSlashArc(target.position.add(new Vector3(0, DEATH_SLASH.chest, 0)), across.lengthSquared() > 1e-6 ? across.normalize() : new Vector3(0, 0, 1), look);
     }
     // [S] 436 the Reaper's scythe bursts a dark magic shockwave where it lands (card Characteristics; visualEffects REAPER_BURST), out to its splash
     // [S] 444 (CONFIRM 443 c.1: "every scythe swing bursts a dark magic shockwave"): the impaling blow bursts too, the ring and dome at the ground

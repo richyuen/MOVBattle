@@ -380,8 +380,9 @@ export class VisualEffects {
    * [S] 417 the Samurai's block slash (SLASH_ARC): a bright white crescent .arc rad round, .radius across, .band wide, lying along the missile's line
    * at `at` (`dir`), unlit and out of the glow, swept a little and fading over its .seconds.
    */
-  spawnSlashArc(at: Vector3, dir: Vector3): void {
-    const S = SLASH_ARC;
+  spawnSlashArc(at: Vector3, dir: Vector3, look?: { white: Color3; radius: number; band: number; tilt: number; seconds: number }): void {
+    // [S] 493 `look` recolours and resizes it (the Death Bringer's pink warglaive trail, simulationSystem DEATH_SLASH)
+    const S = look ? { ...SLASH_ARC, ...look } : SLASH_ARC;
     const root = new TransformNode("slashArc", this._scene);
     root.position.copyFrom(at);
     root.rotation.y = Math.atan2(dir.x, dir.z) + Math.PI / 2; // the crescent lies along the line of flight, a cut across it seen broadside

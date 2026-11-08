@@ -572,6 +572,14 @@ const BOXER_JAB = { guardAhead: 0.45, guardUp: 0.12, guardIn: 0.2, reach: 0.95, 
  * punched down and forward to .reach of the arm ahead and .landDown u under the shoulder, so the hanging blade leads into the man's chest; the
  * timing is the boxer's jab (.cockAt, .drivenAt, held to .heldTo), the trunk pitched .lean into it; the empty off fist stays at the chest (.offAhead).
  */
+/*
+ * [S] 493 the Death Bringer's twin slashes (audit 489 c.1: "a slow overhead greatsword chop - TABS: swift twin-blade slashes"; card "cutting through
+ * all of them with their two red hot tonfa blades in a swift fashion"): with a warglaive (propBuilder "warglaive") in each fist, blows alternate fists
+ * and each is a flat cut, not a chop. In shoulder heights u: the cutting fist wound .windOut u out to its own side and .windBack u behind the
+ * shoulder, then swept level across the front to .reach of the arm ahead and .across u past the middle to the other side, .drop u under the
+ * shoulder; timing .cockAt / .drivenAt / .heldTo of the blow, the trunk turned .twist rad with the cut; the other fist held ahead at the guard.
+ */
+const TWIN_SLASH = { windOut: 0.75, windBack: 0.35, reach: 0.9, across: 0.45, drop: 0.2, cockAt: 0.18, drivenAt: 0.4, heldTo: 0.8, twist: 0.35, guardAhead: 0.5 };
 const DAGGER_STAB = { cockAhead: 0.3, cockUp: 0.32, cockIn: 0.1, reach: 0.95, landDown: 0.45, cockAt: 0.14, drivenAt: 0.32, heldTo: 0.8, lean: 0.22, offAhead: 0.35 };
 const BLOWGUN_HOLD = { mouthAhead: 1.05, mouthDrop: 0.3, side: 0.18, tilt: 0.1, near: 0.07, far: 0.42 };
 const PIKE_LEVEL = { ahead: 0.7, out: 0.35, up: 0.2, tilt: 0.05, fistAt: 0.3, offAhead: 0.6, draw: 0.3, stroke: 0.9 };
@@ -2426,6 +2434,7 @@ export class ProceduralAnimator {
     this._holdBlowgun();
     this._boxerJab();
     this._daggerStab();
+    this._twinSlash();
     this._holdBearerPole();
     this._carryDory();
     this._applyBullFists();
@@ -4345,6 +4354,42 @@ export class ProceduralAnimator {
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, Vector3.Lerp(cock, land, ext), w, 2);
     const off = b.leftShoulder.getAbsolutePosition();
     this._armTo(b.leftShoulder, b.leftElbow, b.leftHand, off.add(fwd.scale(J.offAhead * u)).add(up.scale(-0.25 * u)).add(right.scale(0.15 * u)), w, 2);
+  }
+
+  /** [S] 493 the Death Bringer's alternating flat warglaive cuts (spec at TWIN_SLASH). */
+  private _twinBlades: boolean | undefined = undefined;
+  private _slashSide = 1;
+  private _slashLastT = Infinity;
+  private _twinSlash(): void {
+    if (this._state !== AnimState.Attacking || this.walkStyle === "quadruped") return;
+    this._twinBlades ??= [this._body.rightHand, this._body.leftHand].every((h) => h.getChildren().some((n) => n.name === "warglaive"));
+    if (!this._twinBlades) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    if (this._attackTimer < this._slashLastT) this._slashSide = -this._slashSide;
+    this._slashLastT = this._attackTimer;
+    const J = TWIN_SLASH, b = this._body;
+    const p = Math.min(this._attackTimer / Math.max(this._attackDuration, 0.001), 1);
+    const ease = (x: number) => x * x * (3 - 2 * x);
+    const ext = p < J.cockAt ? 0 : p < J.drivenAt ? ease((p - J.cockAt) / (J.drivenAt - J.cockAt)) : p < J.heldTo ? 1 : 1 - ease((p - J.heldTo) / (1 - J.heldTo));
+    const wound = p < J.cockAt ? ease(p / J.cockAt) : 1;
+    // the trunk turns with the cut: wound toward the cutting side, then round past the middle
+    b.torso.rotation.y += this._slashSide * J.twist * (wound * (1 - ext) - ext) * w;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
+    const u = Math.max(0.05, b.rightShoulder.getAbsolutePosition().y - b.hip.getAbsolutePosition().y);
+    const { fwd, right } = this._heading();
+    const up = new Vector3(0, 1, 0);
+    for (const side of [1, -1]) {
+      const [shoulderJ, elbowJ, handJ] = side > 0 ? [b.rightShoulder, b.rightElbow, b.rightHand] : [b.leftShoulder, b.leftElbow, b.leftHand];
+      const at = shoulderJ.getAbsolutePosition();
+      const arm = (elbowJ.position.length() + handJ.position.length()) * shoulderJ.absoluteScaling.y;
+      const guard = at.add(fwd.scale(J.guardAhead * u)).add(up.scale(-0.3 * u)).add(right.scale(-side * 0.1 * u));
+      if (side !== this._slashSide) { this._armTo(shoulderJ, elbowJ, handJ, guard, w, 2); continue; }
+      const wind = at.add(right.scale(side * J.windOut * u)).add(fwd.scale(-J.windBack * u)).add(up.scale(-J.drop * u));
+      const cut = at.add(fwd.scale(J.reach * arm)).add(right.scale(-side * J.across * u)).add(up.scale(-J.drop * u));
+      const fist = ext > 0 ? Vector3.Lerp(wind, cut, ext) : Vector3.Lerp(guard, wind, wound);
+      this._armTo(shoulderJ, elbowJ, handJ, fist, w, 2);
+    }
   }
 
   private _bearerPole: { pole: Mesh; grip: Vector3; held: boolean } | null | undefined = undefined;
