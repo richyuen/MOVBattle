@@ -3066,7 +3066,10 @@ export class SimulationSystem {
 
     if (abilities.has("lightning_strike")) {
       this._logAbility(attacker, "lightning", now, target.position);
-      if (this.visualEffects) {
+      if (this.visualEffects && attacker.definition.id === "evil.tempest_lich") {
+        // [S] 491 (c.1, evil.tempest_lich.jpg): a storm cloud over the enemies drops its bolts straight down, no bolt from the staff
+        this.visualEffects.spawnStormCloud(target.position.clone(), splashRadius > 0 ? splashRadius : 2.2);
+      } else if (this.visualEffects) {
         this.visualEffects.spawnLightning(attackOrigin, target.position);
         // The strike's area as one solid shape over the men it hits
         this.visualEffects.spawnSpellDome(target.position, splashRadius > 0 ? splashRadius : 2.2);

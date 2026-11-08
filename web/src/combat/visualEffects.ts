@@ -632,6 +632,52 @@ export class VisualEffects {
     });
   }
 
+  /**
+   * [S] 491 the Tempest Lich's storm (evil.tempest_lich.jpg; card Characteristics: "a stave that will cast a storm on enemy units. The clouds strikes
+   * powerful lightning bolts upon anyone underneath the cloud"): a dark storm cloud gathers .high m over the struck spot and drops bolts straight
+   * down onto the ground under it. STORM_CLOUD: .puffs flat-shaded dark grey lumps (1-subdivision icospheres .puff m across, squashed to .squash
+   * of that tall) scattered over a disc .spread of the strike radius, lit by nothing (unlit, a deep slate, so it reads dark against the sky); a
+   * Zeus-style bolt (spawnZeusBolt) from the cloud's underside to the ground every .every s, the first on the target and the rest at random points
+   * inside the radius, .bolts in all; the cloud stays .life s, opaque throughout (no see-through fade), then goes.
+   */
+  spawnStormCloud(center: Vector3, radius: number): void {
+    const S = { high: 5.5, puffs: 11, puff: 1.5, squash: 0.55, spread: 1.15, every: 0.3, bolts: 5, life: 1.7 };
+    const root = new TransformNode("stormCloud", this._scene);
+    root.position.set(center.x, center.y + S.high, center.z);
+    const slate = new Color3(0.16, 0.17, 0.22), dark = new Color3(0.09, 0.09, 0.12);
+    const glow = this._scene.getGlowLayerByName("glow");
+    const mats = [slate, dark].map((c) => { const m = getMaterialFactory().createUnique("cloth", c); m.emissiveColor = c; m.disableLighting = true; return m; });
+    for (let i = 0; i < S.puffs; i++) {
+      const a = (i / S.puffs) * Math.PI * 2 * 1.618, r = i === 0 ? 0 : radius * S.spread * Math.sqrt(i / S.puffs);
+      const size = S.puff * (0.75 + Math.random() * 0.5) * (i === 0 ? 1.4 : 1);
+      const puff = MeshBuilder.CreateIcoSphere("stormCloudPuff", { radius: size / 2, subdivisions: 1 }, this._scene);
+      puff.parent = root; puff.position.set(Math.cos(a) * r, (Math.random() - 0.3) * 0.35, Math.sin(a) * r);
+      puff.scaling.y = S.squash; puff.rotation.y = i * 1.3;
+      puff.material = mats[i % 3 === 0 ? 1 : 0];
+      puff.convertToFlatShadedMesh();
+      glow?.addExcludedMesh(puff);
+    }
+    let elapsed = 0, fired = 0;
+    const strike = (): void => {
+      const spot = center.clone();
+      if (fired > 0) { const a = Math.random() * Math.PI * 2, r = radius * Math.sqrt(Math.random()); spot.x += Math.cos(a) * r; spot.z += Math.sin(a) * r; }
+      // straight down from the cloud's underside; spawnZeusBolt aims its end .9 m up (a chest), so the ground spot is passed .9 m low
+      const from = new Vector3(spot.x + (Math.random() - 0.5) * 0.4, center.y + S.high - S.puff * S.squash * 0.4, spot.z + (Math.random() - 0.5) * 0.4);
+      this.spawnZeusBolt(from, new Vector3(spot.x, center.y - 0.9, spot.z));
+      fired++;
+    };
+    strike();
+    this._effects.push({
+      root,
+      remaining: S.life,
+      update: (dt) => {
+        elapsed += dt;
+        while (fired < S.bolts && elapsed >= fired * S.every) strike();
+      },
+      dispose: () => { for (const m of mats) m.dispose(); },
+    });
+  }
+
   // ══════════════════ LIGHTNING ══════════════════
   /**
    * Spawn a jagged lightning bolt from origin to target: a chain of short thick shards that kink hard
