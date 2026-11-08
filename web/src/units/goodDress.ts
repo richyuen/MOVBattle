@@ -851,13 +851,21 @@ export function arbiterRobe(scene: Scene, body: ArticulatedBody, team: Color3): 
   body.torsoMesh.material = robe;
   for (const m of body.torso.getChildMeshes(true)) if (m.name.endsWith("_yoke")) m.material = robe;
   const out: Mesh[] = [];
+  // [S] 491 (a.3, good.divine_arbiter.blue.png "puffy sleeves"): the shoulder puffs hang off the torso, not the arm.
+  // Probe 491: the open book spans ~1.9 torso widths in front of the chest and hid the 490 arm-frame balloon
+  // whole (its bbox was the upper arm's own). Spec (torso widths W, heights H, depths D, torso frame): each
+  // puff a 4-segment faceted ellipsoid .9W across, .9H tall, 1.1D deep, centred .84W out from the
+  // middle and .2H over the torso's middle, so it stands ~.2W past the book's edge from the shoulder top
+  // down to the book's upper third, widening the shoulders past the torso as in the render.
+  const tm = body.torsoMesh, tbb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const TW = tbb.extendSize.x * 2 * ts.x, TH = tbb.extendSize.y * 2 * ts.y, TD = tbb.extendSize.z * 2 * ts.z;
+  const tcx = tm.position.x + tbb.center.x * ts.x, tcy = tm.position.y + tbb.center.y * ts.y, tcz = tm.position.z + tbb.center.z * ts.z;
+  for (const side of [-1, 1]) {
+    const puff = MeshBuilder.CreateSphere("arbiterSleeveBalloon", { diameterX: TW * 0.9, diameterY: TH * 0.9, diameterZ: TD * 1.1, segments: 4 }, scene);
+    puff.parent = body.torso; puff.position.set(tcx + side * TW * 0.84, tcy + TH * 0.2, tcz); puff.material = robe; out.push(puff);
+  }
   for (const [upperArm, lowerArm, hand] of [[body.leftUpperArm, body.leftLowerArm, body.leftHand], [body.rightUpperArm, body.rightLowerArm, body.rightHand]] as const) {
-    // [R] 490: the balloon puff sits on the upper arm (shoulder to just above the elbow), where the
-    // idle camera sees it past the book, instead of elbow puffs hidden behind the book.
     const U = limbBox(upperArm), L = limbBox(lowerArm), r = Math.max(U.wide, U.deep, L.wide, L.deep);
-    const uTop = U.mid + U.half + U.half * 2 * 0.08, uBot = U.mid + U.half - U.half * 2 * 0.88;
-    const balloon = MeshBuilder.CreateSphere("arbiterSleeveBalloon", { diameterX: r * 5.2, diameterZ: r * 4.6, diameterY: uTop - uBot, segments: 3 }, scene);
-    balloon.parent = upperArm.parent; balloon.position.y = (uTop + uBot) / 2; balloon.material = robe; out.push(balloon);
     const L0 = L.mid + L.half;
     out.push(limbShell(scene, "arbiterSleeveFore", lowerArm, 0, 0.45, 1.7, robe));
     const gTop = L0 - L.half * 2 * 0.45, gBot = L.mid - L.half;
