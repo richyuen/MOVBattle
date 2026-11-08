@@ -1703,8 +1703,9 @@ export function monarchElbowBalls(scene: Scene, body: ArticulatedBody, bone: Mat
  * flat unlit pink (DEATH_SLASH's hue). Bone-tan lit cloth .tan self-lit .12 (the shared bone (.6,.6,.46) read pale grey); all out of the glow.
  */
 const MONARCH_CROWN = {
-  tan: new Color3(0.72, 0.56, 0.3), band: 1.22, bandLo: 0.28, bandHi: 0.56, rays: 6, rayW: 0.24, rayT: 0.1, ray: 0.95, rayBack: 0.2,
-  spikeW: 0.13, pole: 2.0, poleW: 0.16, wraps: 5, wrapTilt: 0.5, knob: 0.24, tip: 0.38, ring: 1.35, ringT: 0.05, ringAt: 0.68, ringTilt: 0.32,
+  // 500 look: tan (.72,.56,.3) read pale grey on the rays, pole 2.0 H stood about one head over the band (render: ~2.4 H)
+  tan: new Color3(0.66, 0.5, 0.2), band: 1.22, bandLo: 0.28, bandHi: 0.56, rays: 6, rayW: 0.24, rayT: 0.1, ray: 0.95, rayBack: 0.2,
+  spikeW: 0.13, pole: 2.6, poleW: 0.16, wraps: 5, wrapTilt: 0.5, knob: 0.24, tip: 0.38, ring: 1.35, ringT: 0.05, ringAt: 0.68, ringTilt: 0.32,
 };
 const RAY_ANGLES = [-1.3, -0.9, -0.5, 0.5, 0.9, 1.3];
 const FRONT_SPIKES: [number, number][] = [[0, 0.95], [-0.45, 0.75], [0.45, 0.75], [-0.9, 0.5], [0.9, 0.5]];
