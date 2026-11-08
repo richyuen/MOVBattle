@@ -397,6 +397,8 @@ const PALETTE_HOLD = { raise: -1.0, out: -0.55, elbow: -1.2, sway: 0.05 };
  * below, in the body's frame (the swing's trunk twist does not bring it round in front), and the board stood in the world face-up, tipped .tip to his front.
  */
 const PALETTE_OUT = { side: 0.24, fwd: 0.1, drop: 0.07, tip: 0.35 };
+/** [S] 496 where the Void Cultist's buckler is seated on his front, in trunk-box widths and heights (_seatBuckler) */
+const CULTIST_SEAT = { side: 0.1, drop: 0.12, ahead: 0.3 };
 // The rider's heater (see _holdHeater): where the off fist is held off the off shoulder (shares of his height: forward, out, down) and how far the board's
 // face is turned from his off side toward his front (rad)
 const HEATER_HOLD = { fwd: 0.2, side: 0.08, drop: 0.2, turn: 0.35 };
@@ -2906,6 +2908,27 @@ export class ProceduralAnimator {
     else shield.position.copyFrom(rest);
     const square = Quaternion.Inverse(hand.absoluteRotationQuaternion).multiply(world);
     shield.rotationQuaternion = Quaternion.Slerp(Quaternion.Identity(), square, Math.min(1, k * 1.5));
+    if (shield.name === "cultistBuckler") this._seatBuckler(shield, hand, rest, k);
+  }
+
+  /**
+   * [S] 496 the Void Cultist's buckler is centred over his front (CONFIRM 494 b.2: "shield disc about torso-wide - TABS: oversized disc wider than the
+   * shoulders, chin to hip, hiding most of the torso"; 495 DEFECTS "the board sits off to his left side, not centred over the chest";
+   * evil.void_cultist.red.png). Each frame the board's centre is seated in the world on CULTIST_SEAT, read off the trunk box: .side of the chest's
+   * width to his off side of the middle, .drop of its height under its centre, .ahead of its width before its front along his heading; the fist
+   * stays where the arm put it and holds the board from behind. Blended in by the hold weight, so a limp or knocked-off board hangs from the hand.
+   */
+  private _seatBuckler(shield: TransformNode, hand: TransformNode, rest: Vector3, k: number): void {
+    const C = CULTIST_SEAT, tm = this._body.torsoMesh;
+    tm.computeWorldMatrix(true);
+    const bw = tm.getBoundingInfo().boundingBox, c = bw.centerWorld;
+    const S = tm.absoluteScaling, e = bw.extendSize, W = e.x * 2 * Math.abs(S.x), H = e.y * 2 * Math.abs(S.y), D = e.z * 2 * Math.abs(S.z);
+    const yaw = this._body.root.rotation.y;
+    const fwd = new Vector3(Math.sin(yaw), 0, Math.cos(yaw)), side = new Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    const at = c.add(side.scale(-W * C.side)).addInPlace(fwd.scale(D / 2 + W * C.ahead));
+    at.y -= H * C.drop;
+    const local = Vector3.TransformCoordinates(at, hand.getWorldMatrix().clone().invert());
+    shield.position.copyFrom(Vector3.Lerp(rest, local, Math.min(1, k)));
   }
 
   /**
