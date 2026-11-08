@@ -4,6 +4,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+497 | 88b2fcc7 | evil.void_cultist.b | approved (no strike; face-on, width short; CONFIRM passed all)
+497 | 34f6e472 | evil.mad_mechanic.a | approved (blocker 5)
+497 | 64959020 | evil.tempest_lich.b | approved (blocker 3)
+497 | 7c77bf2f,29acc06f | evil.shadow_walker.a | approved (blocker 6)
+497 | 67617691 | evil.void_monarch.a | approved (blocker 4)
+497 | 75a3b139 | evil.mad_mechanic.a | approved (blocker 4)
+497 | 4757c1df | evil.tempest_lich.b | approved (blocker 2)
+497 | 7de67bfc,d838dbbe | evil.shadow_walker.c | approved (blocker 3; c PASS)
+
 496 | cb86b6ef | evil.exiled_sentinel.b | approved (blocker 1)
 496 | 1a6a70d4 | evil.exiled_sentinel.b | approved (blocker 2; b PASS; CONFIRM D)
 496 | 94c8cd58 | evil.void_cultist.a | approved (blocker 2; a PASS; CONFIRM passed a, b)
@@ -43,21 +52,19 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 493 | 301f1fad | evil.tempest_lich.c | rejected (hover hidden by the skirt; reverted 06b4f975)
 493 | f22ca9e7 | evil.void_monarch.c | approved (blocker 1)
 493 | 6c991027 | evil.void_cultist.a | approved (blocker 2)
-492 | 694be5ff | good.sacred_elephant.a | approved (blocker 1)
-492 | 5f638756 | good.sacred_elephant.a | approved (blocker 2)
-492 | 509c48a0 | good.sacred_elephant.a | approved (blocker 3; a PASS; CONFIRM D)
-492 | 9a91a5a5 | evil.exiled_sentinel.a | approved (blocker 5)
-492 | 42fd82fe | evil.mad_mechanic.b | approved (blockers 1, 2; b PASS)
-492 | 68d128e0 | evil.void_cultist.a | approved (blockers 1, 4)
-492 | 3d7a1e02 | evil.shadow_walker.a | approved (blocker 2)
-492 | a91f8594 | evil.tempest_lich.c | approved (blocker 1)
-492 | 2117c98a,421014cc | evil.void_monarch.c | approved (dart clause of blocker 1)
 
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+evilDress:MECHANIC_TANK | dark(.07,.06,.06) ico ball1.05W at out.55W up.42H back.62W;14 spikes.28W;mouth.42W;3 unlit smoke tubes(.75,1.05,1.15) 1.5W r.1W | 497 | approved | none
+evilDress:MECHANIC_SLEEVE | upper arms shirt grey(.2,.2,.21);cuff fold(.14,.14,.15) 1.55r .24h at -.42h | 497 | approved (grey a shade dark) | team skin arms
+evilDress:LICH_POLE | rod hidden;6-sided pole .022L (.05,.04,.05);bands .034L at .38/.55/.9 | 497 | approved | thick grey rod
+evilDress:LICH_BOLT | team zig-zag (0,0)(.035,-.07)(-.03,-.1)(.025,-.19)L,strip.03L flat.45 | 497 | approved | round rod end
+evilDress:WALKER_HAIR | lit(.08,.06,.07);root-.42H long.8H;sides.22W x.8D at.68W;back1.3W;9 strands.16W .38H | 497 | approved | none (look 497: .56W out .62H hid)
+evilDress:MONARCH_TUNIC | trunk/yoke lit(.08,.06,.07);3 bone chevrons at.62/.45/.28H reach.46W dip.12H bar.085W proud.09W;belt.14H +.05W,7 studs.09W | 497 | approved | lilac team block
+FX/SS:WALKER_MARK | per stack orb.2 m+3 sparks,r.36 h.5 speed2.4,8 s fade1.5,unlit(.08,.9,.12);stacks per target WeakMap | 497 | approved | none (.13 m (.35,1.6,.3) read yellow, 497)
 evilDress:CULTIST_COAT | skirt to .3K over the rest knee (cultistCoatLength);boots .5 shin dark(.06,.045,.04) 2.25r,team cuff.13 2.5r | 496 | approved | VOID_SKIRT 1.75K (ankle bell)
 evilDress:MONARCH_HARNESS | bone V straps .13W foot.06H to shoulders .44W;tube wings .16W via mid(.74,.22,-.05) tip(1.05,.38,-.12),4 spikes.17W;evil preset harness flag | 496 | approved | pauldrons (custom keeps)
 evilDress:WALKER_VEST | trunk/yoke/upper arms team skin out of glow;near-black shell 1.1W x1.25D .62H..-.22H,12 hem teeth.2H,5 crown.16H,straps.22W at.3W | 496 | approved | navy body cloth jacket
@@ -98,7 +105,7 @@ manifest:void_monarch archetype | boss_melee (boss.legendary splash 2),weaponHin
 UV/unitFactory:WALKER_HORN | path out to 2.2 heads at .24-.4H, up to 1.5H | 491 | approved | out 1.6, up 2.0 (U)
 evilDress:SENTINEL_MANE | 11 ico lumps .36-.62W, lit cloth ginger(.85,.3,.06) self-lit .2 | 491 | approved | none
 PB:MECHANIC_CLAW | cuff3.4f x2.5f,housing2.3f,3 cyan lights,jaws2.9f open.32;clawFrame rot.x PI | 492 | approved | built backwards (491);hammer+bomb
-evilDress/PA:CULTIST_BUCKLER | 1.85W world-sized board,rim+.62 ring,10 rim/5 face spikes,boss;PA _seatBuckler CULTIST_SEAT side.1W drop.12H ahead.3W | 496 | approved (no strike, edge-on) | 1.3W hand-seated (491);1.5W hand-frame disc
+evilDress/PA:CULTIST_BUCKLER | 1.85W world-sized board,rim+.62 ring,10 rim/5 face spikes,boss;PA _seatBuckler CULTIST_SEAT side.1W drop.12H ahead.3W turn.4 tilt-.14 (497) | 497 | approved (no strike; face-on, trunk-wide) | squared brace yaw (496);1.3W hand-seated (491);1.5W hand-frame disc
 PB:WARGLAIVE | chord.33H sweep.95,wide.05H,hot edge unlit(1.6,.22,.32),gold self-lit.4 | 491 | approved | greatsword
 PB:MONARCH_SWORD | blade.5H wide.05H,ball.075H 10 spikes,unlit bone(.78,.7,.44) | 491 | approved | orb staff
 FX:STORM_CLOUD | high3.2,11 puffs1.3,bolts5 every.3,life1.7;bolts held to cloud end (zeus hold) | 492 | approved | .3 s bolts (491);horizontal staff bolt

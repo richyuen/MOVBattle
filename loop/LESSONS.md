@@ -9,7 +9,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - ACES lifts a mid code value toward pale, so an unlit plate keeps a deep value (zeus's gold emblem is (0.62,0.26,0.03), 400); the same for timber: an IBL-lit mid albedo reads beige, so a brown hull wants (.2,.11,.055) with a small self-light (400).
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey however white or warm: cream wants the flat unlit cut out of the glow (442).
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it (a vehicle's `bodyMaterial` IS the team colour: timber, iron, leather need their own; 392), and the head's as skin: a bone crewman needs a hidden anchor head (440 pumpkin operator).
-- vehicleBuilder makeMat is getWood and greys a mid colour (472 tank tan swatched sat .05): paint with a cloth lit() material, check a --noglow swatch.
+- vehicleBuilder makeMat (getWood) greys a mid colour (472): paint with cloth lit(), check a --noglow swatch.
 - A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
 
 ## Capture and probes
@@ -21,7 +21,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
 - Babylon fresnel t=|n.v|^power is 1 face-on: opacity fresnel ADDS left*(1-t)+right*t, so a thin rim wants power<1 (.25; 3 washed a field amber, 489). Cull back faces; give a 6 m field a pulled-back shot. Probing in-page: swap in a new material (prop edits do not recompile).
-- The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change).
+- The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change). A faceless unit at .6 rad reads as a back: .25 (497).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - Capture frames by mesh top when a prop exceeds the head by .3 of UNIT height: taller props re-frame all shots, requiring RE-AUDIT (420, 447).
 - `capture.mjs --units` takes a comma list, no spaces; an iter-N capture clears probe swatches (render them after).
