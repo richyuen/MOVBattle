@@ -1045,6 +1045,28 @@ export function mechanicOveralls(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 497 the Mad Mechanic's rolled shirt sleeves (evil.mad_mechanic.red.png: the grey shirt's sleeves run to just past the elbow, rolled up in a
+ * thick cuff, the team skin forearm below; audit 489 a.4: "bare team arms").
+ * Spec in each upper arm's own box (r its radius, h its length, +y up the bone): the upper arm goes the shirt's grey cloth; a rolled cuff, a
+ * 7-sided ring .roll r thick out to .cuffR r, .cuffH h tall, at its foot (.at h under the centre), a shade darker so the fold reads.
+ */
+const MECHANIC_SLEEVE = { shirt: new Color3(0.2, 0.2, 0.21), fold: new Color3(0.14, 0.14, 0.15), cuffR: 1.55, cuffH: 0.24, at: 0.42 };
+export function mechanicSleeves(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = MECHANIC_SLEEVE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const shirt = mf.get("cloth", C.shirt, { emissive: C.shirt.scale(0.3), roughness: 1 });
+  const fold = mf.get("cloth", C.fold, { emissive: C.fold.scale(0.3), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    arm.material = shirt; glow?.addExcludedMesh(arm);
+    const bb = arm.getBoundingInfo().boundingBox, e = bb.extendSize, r = Math.max(e.x, e.z), h = e.y * 2;
+    const cuff = MeshBuilder.CreateCylinder("mechanicSleeveCuff", { height: h * C.cuffH, diameterTop: r * 2 * C.cuffR, diameterBottom: r * 2 * C.cuffR * 1.06, tessellation: 7 }, scene);
+    cuff.parent = arm; cuff.position.set(bb.center.x, bb.center.y - h * C.at, bb.center.z); cuff.material = fold;
+    cuff.convertToFlatShadedMesh(); glow?.addExcludedMesh(cuff); out.push(cuff);
+  }
+  return out;
+}
+
+/**
  * [S] 497 the Mad Mechanic's Mechanic Tank (card: "a round, cauldronlike fuel source that floats behind a unit. Spikes protrude its surface, while
  * three trails of soul smoke ooze out its mouth"; evil.mad_mechanic.png: a dark spiked ball as wide as his trunk hanging behind his hip and shoulder,
  * glowing pale-cyan smoke curling up and out of it; audit 489 a.5).
