@@ -975,6 +975,19 @@ export function lichCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 499 the Death Bringer's bare team torso (evil.death_bringer.red.png: the chest, shoulders and arms are his team skin, the black hair falling
+ * down the middle of the chest; audit 489 a.4: "a brown leather cuirass - TABS: a team-skinned torso and arms behind the hair"). The dark body
+ * cloth (HORNED_EVIL death_bringer cloth) on the trunk, the yoke hull (LESSONS 487) and the upper arms, with the full-width front hair fall over it,
+ * read as a brown cuirass: those meshes and the forearm stubs take the team skin, out of the glow (the self-lit skin's halo browns the black hair,
+ * LESSONS 495); DEATH_HAIR's front fall narrows to the middle so the skin shows either side. The pelvis keeps the dark shorts cloth.
+ */
+export function deathBringerBareTorso(scene: Scene, body: ArticulatedBody): void {
+  const glow = scene.getGlowLayerByName("glow");
+  const bare = [body.torsoMesh, body.leftUpperArm, body.rightUpperArm, ...body.allMeshes.filter((m) => /_(yoke|[lr]LowerArm_stub)$/.test(m.name))];
+  for (const m of bare) { m.material = body.skinMaterial; glow?.addExcludedMesh(m); }
+}
+
+/**
  * [S] 495 the Death Bringer's long black hair (evil.death_bringer.red.png; audit 489 a.3: "hair: none - TABS: long black hair falling over the chest to
  * the waist"). Built in two parts (LESSONS: a head-hung piece cannot run on down the torso): the crown head-hung, the fall over the chest and back
  * torso-parented.
@@ -987,7 +1000,8 @@ export function lichCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const DEATH_HAIR = {
   capW: 1.3, capTop: 0.62, rear: 0.58, sideT: 0.18, sideD: 0.85, side: 0.66,
-  front: 7, spread: 0.66, strandW: 0.2, strandT: 0.07, long: 1.0, vary: 0.18, proud: 0.05, lean: 0.06, back: 5, backLong: 0.8,
+  // 499: the front fall narrowed to the chest's middle (7 strands over .66 TW covered the whole chest and read as a cuirass, audit 489 a.4)
+  front: 5, spread: 0.3, strandW: 0.2, strandT: 0.07, long: 1.0, vary: 0.18, proud: 0.05, lean: 0.06, back: 5, backLong: 0.8,
 };
 export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = DEATH_HAIR, mf = getMaterialFactory();

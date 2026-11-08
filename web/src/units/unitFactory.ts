@@ -30,7 +30,7 @@ import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
-import { sentinelUniform } from "./evilDress";
+import { deathBringerBareTorso, sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1055,6 +1055,8 @@ export class UnitFactory {
       if (definition.id === "evil.death_bringer") propMeshes.push(...deathBringerHair(this._scene, body));
       // [S] 496 (a.2): a bone-tan faceted skull mask with sad sockets, team-coloured horns (evilDress deathBringerMask)
       if (definition.id === "evil.death_bringer") propMeshes.push(...deathBringerMask(this._scene, body, teamColor));
+      // [S] 499 (a.4): no dark cuirass; the trunk and arms are bare team skin behind the hair (evilDress deathBringerBareTorso)
+      if (definition.id === "evil.death_bringer") deathBringerBareTorso(this._scene, body);
 
       if (definition.id === "evil.mad_mechanic") propMeshes.push(...mechanicGoggles(this._scene, body), ...mechanicHair(this._scene, body));
       // [S] 496 (a.3): a grey collared shirt under a dark bib with a bone-white tool emblem (evilDress mechanicOveralls)
