@@ -10,18 +10,18 @@ a FAIL (0 since 489)
  6. belt in unit_evil.death_bringer_idle: no bones — TABS: a dark belt hung with bone tusks (ref: evil.death_bringer.red.png)
  7. feathers in unit_evil.death_bringer_idle are missing — TABS: dark feathers on the head and shoulders (card Appearance)
 b PASS (491 twin gold warglaives)
-c FAIL (0 since 489)
- 1. blow in unit_evil.death_bringer_release/_flight: a slow overhead greatsword chop — TABS: swift twin-blade slashes leaving pink trails (ref: evil.death_bringer.jpg)
+c FAIL (1 since 489, 1 struck)
  2. ability in unit_evil.death_bringer_ability/_ability_after: a fear status is logged (not on the card) and no dodge is shown — TABS: Quick Dodge, a sidestep and back away from projectiles (card)
  3. missing: the charge — no dash through the enemy line in the pair (card Characteristics)
-d PASS (491 stats)
+d PASS (493 stats)
 ## Ranked gaps
-1. [S] evil.death_bringer.c twin slashes — blocker 1: swift alternating twin-warglaive slashes leaving pink trails — ref: evil.death_bringer.jpg — ours: unit_evil.death_bringer_release.png
-2. [S] evil.death_bringer.a lanky build — blocker 1: build/scale to 1.2x, thin arms, no slab torso — ref: evil.death_bringer.red.png — ours: lineup_evil.png
-3. [S] evil.death_bringer.a skull mask — blocker 2: bone-tan skull mask, sad sockets, team curved horns — ref: evil.death_bringer.blue.png — ours: unit_evil.death_bringer_idle.png
+1. [S] evil.death_bringer.a lanky build — blocker 1: build/scale to 1.2x, thin arms, no slab torso — ref: evil.death_bringer.red.png — ours: lineup_evil.png
+2. [S] evil.death_bringer.a skull mask — blocker 2: bone-tan skull mask, sad sockets, team curved horns — ref: evil.death_bringer.blue.png — ours: unit_evil.death_bringer_idle.png
+3. [S] evil.death_bringer.c no charge — blocker 3: a fast dash through the enemy line, cutting as he passes — ref: card Characteristics — ours: unit_evil.death_bringer_release.png
 ## Attempts (iter | gap | criterion | verdict)
+493 | alternating flat warglaive cuts, pink trails, proceduralAnimation TWIN_SLASH + simulationSystem DEATH_SLASH (87954be0) | c | approved (struck 1)
 491 | twin gold warglaives with red-hot edges, propBuilder WARGLAIVE (cdb92fd0, ddf16a33) | b | approved (struck 1, 2; b PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 491 DEFECTS: blades edge-on in the side-on windup read as thin lilac slivers (not a blocker).
-- Weapon type still "greatsword" both hands (variant warglaive, seated at the fist); the chop animation is the greatsword's.
+- 493 DEFECTS: the cut is stiff with a straight arm (TABS a wide sweeping arc), within tolerance.
+- Weapon type still "greatsword" both hands (variant warglaive); TWIN_SLASH drives the arms while attacking. Look is HORNED_EVIL "evil.death_bringer" (skull, horns, wraps).

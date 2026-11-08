@@ -4,6 +4,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+493 | 74215c7f | good.righteous_paladin.a | approved (blocker 1; a PASS; CONFIRM D)
+493 | a127c2f7,0a8a899c,ddbe3995 | evil.void_cultist.c | approved (blocker 1; 7dcdbf23 reverted)
+493 | 99b7a8fc,eee93888 | evil.mad_mechanic.c | approved (blocker 1; c PASS)
+493 | 7387478e,d837acc3 | evil.exiled_sentinel.c | approved (blocker 1)
+493 | 7b49861b | evil.shadow_walker.c | approved (blocker 2)
+493 | 87954be0 | evil.death_bringer.c | approved (blocker 1)
+493 | 301f1fad | evil.tempest_lich.c | rejected (hover hidden by the skirt; reverted 06b4f975)
+493 | f22ca9e7 | evil.void_monarch.c | approved (blocker 1)
+493 | 6c991027 | evil.void_cultist.a | approved (blocker 2)
 492 | 694be5ff | good.sacred_elephant.a | approved (blocker 1)
 492 | 5f638756 | good.sacred_elephant.a | approved (blocker 2)
 492 | 509c48a0 | good.sacred_elephant.a | approved (blocker 3; a PASS; CONFIRM D)
@@ -40,21 +49,22 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 489 | ab3c3690 | evil.exiled_sentinel.a | approved (blocker 1)
 489 | a755e889 | evil.exiled_sentinel.b | approved (blocker 2)
 
-488 | 3d214b80,90d5416e,f63699d0 | good.celestial_aegis.a | approved (blocker 1)
-488 | 51b500fc | good.celestial_aegis.a | approved (blocker 2; CONFIRM failed a: plateau)
-488 | db9eceee | good.divine_arbiter.a | approved (blocker 1)
-488 | 05f78f9f | good.divine_arbiter.a | approved (blocker 2; CONFIRM failed a: plateau)
-488 | dba0cb7a | good.righteous_paladin.a | dropped (shield not moved; reverted bf730ed5)
-488 | 57449aa1 | good.righteous_paladin.a | approved (blocker 2)
-488 | a58de409 | good.chronomancer.a | approved (blocker 3)
-488 | aa380788 | good.chronomancer.a | approved (blocker 4)
-488 | b6a91fc9 | good.chronomancer.a | approved (blocker 5)
 
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+evilDress:CULTIST_BEARD | 6-sided point-down cone 1.12W x1.55H,flat.42,root .08H under centre .2D proud,tip.2 fwd;sideburns.14W x.55H;moustache horns.5H droop.5 light(.42,.39,.35);dark(.17,.15,.14) unlit | 493 | approved | wedge+5 strands (unitFactory VOID_BEARD)
+manifest:void_cultist archetype | heavy_melee,weaponHint mace;hm.76 dm.43 cm.56;vis heavy_swing family,default grip | 493 | approved | special_magic staff;dm.53 cm.56
+manifest:void_monarch abilities | fear only (no summon) | 493 | approved | summon+fear,2 shadow walkers
+SS:MECHANIC_FIRE | jet .8s,ahead.25,chest.9,near.08 far.3 farPer.1,core(.8,1,1) rim(.25,.7,1.15);engage 4.5 | 493 | approved | near.14 far.55 (look);bomb lob 6 m
+SS:MONARCH_BURST | reaper burst radius2 dome4,ring(1.15,.2,.8) dark(.32,.03,.22) | 493 | approved | none
+SS:DEATH_SLASH | slash arc pink(1.2,.25,.7) r1 band.2 tilt+-1.25 .45s chest1 | 493 | approved | none
+PA:TWIN_SLASH | wind out.75 back.35,reach.9 across.45 drop.2,cock.18 driven.4 held.8,twist.35,guard.5 | 493 | approved | greatsword chop
+PA:DAGGER_STAB | cock ahead.3 up.32 in.1,reach.95 down.45,cock.14 driven.32 held.8,lean.22 | 493 | approved | duelist overhead chop
+PB:SENTINEL_AXE | bearded cut .95 x1.25 scale,haft.6,steel(.5,.5,.54),blood smear(.75,.02,.02);RU hold 2.5s | 493 | approved | .7 haft.75 (look);sword hidden
+PB/PA:PALADIN_HAMMER carry | uprightHammerCarry mark -> BEARDED_AXE_CARRY | 493 | approved | hashed carry (head at the hip)
 evilDress:SENTINEL_SPIKES | 4/side black 4-sided,.26-.56W out,.12D back,.62TH tall (ends .72),.12W,splay.22 | 492 | approved | pauldrons only
 evilDress:CULTIST_HALO | dark 12-sided ring 2.1H tube.11H,10 inward triangles len.5R base.38H thin.06H | 492 | approved | wooden wheel 2.1H,10 spokes,hub
 evilDress:WALKER_HELM | 8-sided shell 1.24W x1.26D,-.56H..+.36H,dome.3H,4 tan(.6,.42,.18) bars.13W x.52H gap.24W;eyes off | 492 | approved | box cap+dome,5 teeth

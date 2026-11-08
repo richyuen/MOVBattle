@@ -9,17 +9,17 @@ a FAIL (0 since 489)
  5. knees in unit_evil.void_monarch_idle: plain blue boots — TABS: big bone knee plates covered in spikes (ref: evil.void_monarch.red.png)
  6. arms in unit_evil.void_monarch_idle are bare — TABS: spiked bone balls at the elbows (ref: evil.void_monarch.blue.png)
 b PASS (491 twin bone swords)
-c FAIL (1 since 489, 1 struck)
- 1. attack in unit_evil.void_monarch_release/_flight: he summons two Shadow Walkers — TABS: a two-sword melee strike with a radius-2 burst (card Weapons)
+c FAIL (2 since 489, 2 struck)
  2. ability in unit_evil.void_monarch_ability_after: a summon plus a fear status are logged — TABS: Void Monarch Dodge and Demon Transformation (rising into the air after 800 damage), no summon (card Abilities; evil.void_monarch.jpg)
-d PASS (491 stats)
+d PASS (493 stats)
 ## Ranked gaps
-1. [S] evil.void_monarch.c summon gone, burst shown — blocker 1: drop summon and summonUnitIds from the evil entry (custom keeps them) and spawn a pink-magenta radius-2 shard burst at each sword hit — ref: card Weapons, evil.void_monarch.jpg — ours: unit_evil.void_monarch_flight.png
-2. [S] evil.void_monarch.a giant — blocker 1: drop the giant size class so he stands 1.1x a man — ref: card Infobox, reference/factions/evil.jpg — ours: lineup_evil.png
+1. [S] evil.void_monarch.a giant — blocker 1: drop the giant size class so he stands 1.1x a man (evil entry and its vis only) — ref: card Infobox, reference/factions/evil.jpg — ours: lineup_evil.png
+2. [S] evil.void_monarch.c fear ability — blocker 2: Demon Transformation, after 800 damage taken he rises into the air; no fear — ref: evil.void_monarch.jpg — ours: unit_evil.void_monarch_ability_after.png
 ## Attempts (iter | gap | criterion | verdict)
-492 | boss_melee archetype (boss.legendary splash 2), weaponHint sword; stats retuned (2117c98a, 421014cc) | c | approved (struck the "a dart flies off" clause of 1)
+493 | no summon; pink radius-2 burst at each blow, simulationSystem MONARCH_BURST (f22ca9e7) | c | approved (struck 1)
+492 | boss_melee archetype (boss.legendary splash 2), weaponHint sword; stats retuned (2117c98a, 421014cc) | c | approved (struck the dart clause of 1)
 491 | twin long bone swords with spiked hilt balls, propBuilder MONARCH_SWORD (071b5f23) | b | approved (struck 1, 2; b PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Its look and kit match custom.void_monarch: change the evil.* preset only; custom_* presets and custom.* ids stay untouched (custom keeps its staff).
-- 491 DEFECTS: blade narrower and paler cream than the render's olive-tan (not a blocker).
+- Its look and kit match custom.void_monarch: change the evil.* preset only; custom_* presets and custom.* ids stay untouched (custom keeps its staff and summon).
+- 493: the summon is gone; blocker 2 stands for the fear status. a had no attempt since 489: it starves at 494.
