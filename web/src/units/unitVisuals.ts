@@ -178,7 +178,7 @@ export interface UnitVisualConfig {
 
 export type WeaponVariant =
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -914,7 +914,9 @@ export const UNIT_VISUALS: Record<string, UnitVisualConfig> = {
     },
   ),
   "evil.void_monarch": vis(
-    { scale: 2.08, bulk: 1.46, headSize: 1.14, armLength: 1.16 }, "staff", "none", "none", "cape", "#5A4A8E", undefined, {
+    // [S] 491 (b.1, b.2; evil.void_monarch.red.png): a long bone sword with a spiked hilt ball in each fist (propBuilder MONARCH_SWORD), no staff
+    { scale: 2.08, bulk: 1.46, headSize: 1.14, armLength: 1.16 }, "staff", "none", "none", "cape", "#5A4A8E", "staff", {
+      weaponVariant: "monarch_sword", offhandVariant: "monarch_sword",
       posePreset: "monarch",
       materialPreset: "evil_void",
       attachmentPreset: "shadow_orbit",

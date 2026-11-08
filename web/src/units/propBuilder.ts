@@ -3559,6 +3559,53 @@ function buildCultistMace(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   return shaft;
 }
 
+/*
+ * [S] 491 the Void Monarch's sword (evil.void_monarch.red.png, .blue.png; card Main/Off Hand "Void Monarch Sword"): a long straight bone-tan blade
+ * stood upright in each fist, a spiked bone ball at the hilt just over the fist, a dark grip with a team band under it. MONARCH_SWORD in his
+ * standing height H: blade .blade H long, .wide H across at its root swelling to .belly of that a third of the way up, then tapering to a point,
+ * .thick H thick (a 4-sided lozenge section); the ball .ball H across with 10 spikes .spike H long; grip .grip H long, .gripW H across, a team
+ * band .band H tall at its foot; a short pommel spike .pommel H under it. Named "staff" with an "orb" child (the ball) so the hold keeps it
+ * upright as a planted rod; the fist sits on the grip's middle.
+ */
+const MONARCH_SWORD = { blade: 0.5, wide: 0.05, belly: 1.15, thick: 0.014, ball: 0.075, spike: 0.035, grip: 0.1, gripW: 0.024, band: 0.022, pommel: 0.04 };
+function buildMonarchSword(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const C = MONARCH_SWORD, H = fit.stand;
+  const boneC = new Color3(0.78, 0.7, 0.44), bone = getMaterialFactory().get("unlit", boneC, { emissive: boneC });
+  const dark = mat(scene, new Color3(0.08, 0.06, 0.09), 0.04, "cloth");
+  const band = mat(scene, team, 0.15, "cloth");
+  const glow = scene.getGlowLayerByName("glow");
+  // the grip is the root ("staff"), its middle at the fist
+  const grip = MeshBuilder.CreateCylinder("staff", { height: C.grip * H, diameter: C.gripW * H, tessellation: 6 }, scene);
+  grip.id = "monarchSword"; grip.material = dark; grip.convertToFlatShadedMesh();
+  const part = (m: Mesh, material: PBRMetallicRoughnessMaterial, y: number): Mesh => {
+    m.parent = grip; m.position.y = y; m.material = material; m.convertToFlatShadedMesh(); if (material === bone) glow?.addExcludedMesh(m); return m;
+  };
+  part(MeshBuilder.CreateCylinder("monarchSwordBand", { height: C.band * H, diameter: C.gripW * H * 1.35, tessellation: 6 }, scene), band, -C.grip * H / 2 + C.band * H / 2);
+  part(MeshBuilder.CreateCylinder("monarchSwordPommel", { height: C.pommel * H, diameterTop: C.gripW * H * 1.2, diameterBottom: 0, tessellation: 4 }, scene), bone, -C.grip * H / 2 - C.pommel * H / 2);
+  const R = C.ball * H / 2, by = C.grip * H / 2 + R * 0.8;
+  const ball = part(MeshBuilder.CreateIcoSphere("orb", { radius: R, subdivisions: 1 }, scene), bone, by);
+  for (let i = 0; i < 10; i++) {
+    // spikes round the ball: two rings of five, tipped up and down, half a step apart
+    const a = (i % 5) / 5 * Math.PI * 2 + (i >= 5 ? Math.PI / 5 : 0), tilt = i >= 5 ? -0.5 : 0.45;
+    const dir = new Vector3(Math.cos(a) * Math.cos(tilt), Math.sin(tilt), Math.sin(a) * Math.cos(tilt));
+    const spike = MeshBuilder.CreateCylinder("monarchSwordSpike", { height: C.spike * H, diameterBottom: R * 0.5, diameterTop: 0, tessellation: 4 }, scene);
+    spike.parent = ball; spike.position.copyFrom(dir.scale(R * 0.85 + C.spike * H / 2)); spike.material = bone;
+    spike.rotationQuaternion = Quaternion.Identity(); Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, spike.rotationQuaternion);
+    spike.convertToFlatShadedMesh(); glow?.addExcludedMesh(spike);
+  }
+  // the blade: root, belly and point as three stacked 4-sided frusta (a lozenge section, flat to the front)
+  const root0 = by + R * 0.7, L = C.blade * H, w0 = C.wide * H, w1 = w0 * C.belly;
+  for (const [name, y0, y1, d0, d1] of [
+    ["monarchSwordRoot", root0, root0 + L * 0.33, w0, w1],
+    ["monarchSwordBlade", root0 + L * 0.33, root0 + L * 0.86, w1, w0 * 0.6],
+    ["monarchSwordPoint", root0 + L * 0.86, root0 + L, w0 * 0.6, 0],
+  ] as const) {
+    const seg = part(MeshBuilder.CreateCylinder(name, { height: y1 - y0, diameterBottom: d0, diameterTop: d1, tessellation: 4 }, scene), bone, (y0 + y1) / 2);
+    seg.scaling.z = (C.thick / C.wide) * 1.4;
+  }
+  return grip;
+}
+
 function buildPriestStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const P = PRIEST_STAFF, H = fit.stand, L = P.long * H, r = P.thick * H;
   const gold = mat(scene, PRIEST_GOLD, 0.12, "metal");
@@ -5081,6 +5128,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     case "bo_staff": {
       if (type === "staff" && variant === "priest_staff") return buildPriestStaff(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "cultist_mace") return buildCultistMace(scene, fit, teamColor ?? accent); // [S] 490 (CULTIST_MACE)
+      if (type === "staff" && variant === "monarch_sword") return buildMonarchSword(scene, fit, teamColor ?? accent); // [S] 491 (MONARCH_SWORD)
       if (type === "staff" && variant === "charge_flag") return buildChargeFlag(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "stay_banner") return buildStayBanner(scene, fit, teamColor ?? accent);
       if (type === "staff" && variant === "pharaoh_crook") return buildPharaohCrook(scene, fit, teamColor ?? accent); // [S] 469 (PHARAOH_CROOK)
