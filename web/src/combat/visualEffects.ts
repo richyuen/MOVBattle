@@ -124,6 +124,8 @@ const DOME_LIFE = 1.4;
 const DOME_RISE = 0.15;
 const DOME_FADE = 0.35;
 const DOME_ALPHA = 0.5;
+// [S] 494 Sword Implosion (spawnImplosion): life (s), the shell's see-through alpha and colour, the dark core at the point (radius m when full, height m)
+const IMPLODE = { life: 0.9, alpha: 0.5, shell: new Color3(0.3, 0.06, 0.42), core: new Color3(0.1, 0.02, 0.16), coreR: 0.75, coreY: 0.9 };
 // The bone mage's spike row (see VisualEffects.spawnBoneSpikeRow): seconds between one spike and the next (the card's 0.025 s a bone), the pop-up and
 // the sink-back times, how long the row stands, the overshoot of the pop; metres from the caster's feet to the first spike, past the mark to the last,
 // between spikes and of sideways scatter; the nearest and farthest spikes' heights, the lean on toward the mark (rad) and the most spikes in a row.
@@ -1092,6 +1094,56 @@ export class VisualEffects {
       dispose: () => {
         this._scene.getGlowLayerByName("glow")?.removeExcludedMesh(dome);
         mat.dispose();
+      },
+    });
+  }
+
+  /**
+   * [S] 494 Sword Implosion (simulationSystem CULTIST_IMPLOSION; card evil.void_cultist "a spell that sucks any surrounding enemy into one area"): the
+   * spell drawn in on its point. A see-through dark violet hemisphere `radius` wide on the ground collapses to nothing over IMPLODE.life (fast at
+   * first, then slowing: 1 - u^0.6), while a near-black faceted core swells at the point to IMPLODE.coreR at chest height (IMPLODE.coreY) and goes as the
+   * shell closes; both unlit and out of the glow, so the sucking-in reads in one frame and the men inside show through.
+   */
+  spawnImplosion(position: Vector3, radius: number): void {
+    const I = IMPLODE;
+    const root = new TransformNode("implosion", this._scene);
+    root.position.set(position.x, 0, position.z);
+    const shellMat = getMaterialFactory().createUnique("cloth", I.shell);
+    shellMat.emissiveColor = I.shell;
+    shellMat.disableLighting = true;
+    shellMat.backFaceCulling = false;
+    shellMat.transparencyMode = 2;
+    shellMat.alpha = I.alpha;
+    const shell = MeshBuilder.CreateSphere("implosionShell", { diameter: 2, segments: 12, slice: 0.5 }, this._scene);
+    shell.material = shellMat;
+    shell.parent = root;
+    shell.isPickable = false;
+    const coreMat = getMaterialFactory().createUnique("cloth", I.core);
+    coreMat.emissiveColor = I.core;
+    coreMat.disableLighting = true;
+    const core = MeshBuilder.CreateIcoSphere("implosionCore", { radius: 1, subdivisions: 1 }, this._scene);
+    core.material = coreMat;
+    core.parent = root;
+    core.position.y = I.coreY;
+    core.isPickable = false;
+    const glow = this._scene.getGlowLayerByName("glow");
+    glow?.addExcludedMesh(shell);
+    glow?.addExcludedMesh(core);
+    const shape = (u: number): void => {
+      shell.scaling.setAll(Math.max(0.05, radius * (1 - Math.pow(u, 0.6))));
+      core.scaling.setAll(Math.max(0.02, I.coreR * Math.sin(Math.PI * Math.min(1, u * 1.1))));
+      core.rotation.y = u * 4;
+    };
+    shape(0);
+    this._effects.push({
+      root,
+      remaining: I.life,
+      update: (_dt, remaining) => shape(Math.min(1, 1 - remaining / I.life)),
+      dispose: () => {
+        glow?.removeExcludedMesh(shell);
+        glow?.removeExcludedMesh(core);
+        shellMat.dispose();
+        coreMat.dispose();
       },
     });
   }

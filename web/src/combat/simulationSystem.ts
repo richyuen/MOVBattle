@@ -614,6 +614,14 @@ const FIRST_LUNGE = { within: 3.2, closest: 1.2, dist: 2.4, stopShort: 0.8, seco
  * on it and swings (.flick s), and a white crescent slash (visualEffects SLASH_ARC) stands .ahead m before him at .chest m up; at most once every
  * .cooldown s; logged "block".
  */
+/**
+ * [S] 494 Sword Implosion (card evil.void_cultist Characteristics: "will occasionally cast a spell that sucks any surrounding enemy into one area, though
+ * causing minimal damage"; audit 489 c.2: "a blue knight is summoned beside him and no enemy is pulled in"). It replaces his summon. .first s into the
+ * fight and every .every s after, when an enemy stands within .reach m of him, the point is that nearest enemy: every enemy within .radius m of it is
+ * hauled toward it (an impulse .pull times its distance, so the far ones fly farther and they meet, plus .lift up) and takes .minor damage; a dark
+ * violet shell collapses on the point (visualEffects spawnImplosion). Logged as .kind.
+ */
+const CULTIST_IMPLOSION = { first: 1.2, every: 7, reach: 5, radius: 4.5, pull: 2.4, lift: 1.4, minor: 6, kind: "implosion" };
 const SAMURAI_BLOCK = { warn: 0.5, reach: 1.3, ahead: 0.6, chest: 1.0, flick: 0.3, cooldown: 0.5, kind: "block" };
 const PAINTER_DODGE = { warn: 0.3, dist: 1.6, seconds: 0.2, cooldown: 1.2, kind: "dodge" };
 /*
@@ -1008,6 +1016,7 @@ export class SimulationSystem {
     this._resolveLivingCollisions();
     this._painterDodges(now);
     this._samuraiBlocks(now);
+    this._cultistImplosions(now);
     this._aegisFields(now);
     if (this._hammers.length > 0) this._stepHammers(now);
     if (this._chrono.size > 0) this._stepChrono(now);
@@ -3588,6 +3597,34 @@ export class SimulationSystem {
     }
   }
   private _blockReadyAt = new Map<RuntimeUnit, number>();
+
+  private _cultistImplosions(now: number): void {
+    const C = CULTIST_IMPLOSION;
+    for (const unit of this._units) {
+      if (unit.definition.id !== "evil.void_cultist" || unit.isDead || unit.isToppled || unit.isDowned) continue;
+      const ready = this._implodeAt.get(unit);
+      if (ready === undefined) { this._implodeAt.set(unit, now + C.first); continue; }
+      if (now < ready) continue;
+      let point: RuntimeUnit | null = null, best = C.reach;
+      for (const u of this._units) {
+        if (u.isDead || u.team === unit.team) continue;
+        const d = Math.hypot(u.position.x - unit.position.x, u.position.z - unit.position.z);
+        if (d < best) { best = d; point = u; }
+      }
+      if (!point) continue;
+      this._implodeAt.set(unit, now + C.every);
+      const center = point.position.clone();
+      for (const u of this._units) {
+        if (u.isDead || u.team === unit.team) continue;
+        const to = center.subtract(u.position); to.y = 0;
+        if (to.length() > C.radius) continue;
+        u.applyDamage(C.minor, to.scale(C.pull).add(new Vector3(0, C.lift, 0)));
+      }
+      this.visualEffects?.spawnImplosion(center, C.radius);
+      this._logAbility(unit, C.kind, now, center);
+    }
+  }
+  private _implodeAt = new Map<RuntimeUnit, number>();
 
   /**
    * Painter Dodge (PAINTER_DODGE): each ready painter with a missile about to reach him sidesteps off its line, and it comes down on air.
