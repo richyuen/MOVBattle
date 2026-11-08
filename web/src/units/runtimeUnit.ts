@@ -15,6 +15,8 @@ const DRUM_SPIN = { rate: 3.5, spinUp: 12, spinDown: 1.5, linger: 1.0 };
  * hidden from the throw until the arm is back down.
  */
 const CATAPULT_THROW = { swing: 0.12, hold: 0.5, lower: 0.7 };
+/** [S] 493 the Exiled Sentinel keeps his axes out .hold s after his last blow (_tendSentinelAxes). */
+const SENTINEL_SWAP = { hold: 2.5 };
 /*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
  * upward. Heavier units may require more balloons to float"; Appearance: the arrow's ball "expand[s] into balloons"). A man a balloon arrow strikes
@@ -801,6 +803,31 @@ export class RuntimeUnit {
     }
   }
 
+  /*
+   * [S] 493 the Exiled Sentinel's shield-to-axe swap (card Characteristics: the shields "turn into deadly axes when within melee range"): while he
+   * fights (attacking, and for SENTINEL_SWAP.hold s after a blow) the two bloodied axes (propBuilder SENTINEL_AXE, "sentinelAxe") are on and the
+   * two pavises off; out of the fight the boards come back.
+   */
+  private _sentinelGear: { axes: TransformNode[]; boards: TransformNode[] } | null | undefined = undefined;
+  private _sentinelHold = 0;
+  private _sentinelOn = false;
+  private _tendSentinelAxes(dt: number): void {
+    if (this._sentinelGear === undefined) {
+      const axes = this.body.root.getDescendants(false, (n) => n.name === "sentinelAxe") as TransformNode[];
+      const boards = this.body.root.getDescendants(false, (n) => n.name === "paviseShield" || n.name === "paviseShieldRight") as TransformNode[];
+      this._sentinelGear = axes.length ? { axes, boards } : null;
+    }
+    const gear = this._sentinelGear;
+    if (!gear) return;
+    if (this.animator.state === AnimState.Attacking) this._sentinelHold = SENTINEL_SWAP.hold;
+    else this._sentinelHold -= dt;
+    const on = this._sentinelHold > 0 && !this._isDead;
+    if (on === this._sentinelOn) return;
+    this._sentinelOn = on;
+    for (const a of gear.axes) a.setEnabled(on);
+    for (const b of gear.boards) b.setEnabled(!on);
+  }
+
   faceTarget(target: Vector3): void {
     const dx = target.x - this.body.root.position.x;
     const dz = target.z - this.body.root.position.z;
@@ -1214,6 +1241,7 @@ export class RuntimeUnit {
     // the live-air shape is only for a jump-charge arc (the leap pose), not for a hop back or a blasted body (that one is limp and takes its own)
     this.animator.setLeapAir(this._leapAir && !this._grounded);
     this._tendBatForm(now);
+    this._tendSentinelAxes(dt);
     // A flung body is drawn over the blast it is thrown through (FLUNG_RENDER_GROUP: after the fire and smoke sprites, still depth-tested against the solid
     // scene), so it stays a dark, solid figure against the fireball and the smoke instead of being lit pale by the additive fire in front of it
     if (flung !== this._drawnFlung) {

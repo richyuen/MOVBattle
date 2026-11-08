@@ -2280,6 +2280,10 @@ export function attachProps(
       right.rotation.y = 0.12;
       props.push(right);
       if (weapon) for (const m of [weapon, ...weapon.getChildMeshes(false)]) m.isVisible = false;
+      // [S] 493 (c.1, card Characteristics "two protective shields ... which will turn into deadly axes when within melee range"; Appearance "two
+      // bloodied Horseman's Axes"): a bloodied hatchet in each fist (SENTINEL_AXE), named "sentinelAxe" and switched off; RuntimeUnit
+      // _tendSentinelAxes turns them on and the two pavises off while he fights
+      for (const hand of [body.rightHand, body.leftHand]) props.push(...buildSentinelAxe(scene, scale, hand));
     } else if (config.shield === "aspis") {
       // strapped to the trunk, upright and face-forward whatever the arm does (ASPIS)
       shield.parent = body.torso;
@@ -4027,6 +4031,33 @@ function buildBeardedAxe(scene: Scene, s: number, steelColor: Color3 = BEARDED_A
   carryMark.parent = handle;
   handle.position.y = (long * 0.5 - A.butt) * s;
   return handle;
+}
+/*
+ * [S] 493 the Exiled Sentinel's bloodied Horseman's axes (card Appearance "their shields will turn into two bloodied Horseman's Axes"): the Brawler's
+ * bearded cut at .scale of the weapon size with a .haft share of its haft, in grey steel, a blood-red smear (.blood, unlit) over the lower half of each
+ * blade face. One per fist, seated as a hand weapon (default grip), the root "sentinelAxe" switched off until RuntimeUnit turns it on.
+ */
+const SENTINEL_AXE = { scale: 0.7, haft: 0.75, steel: new Color3(0.5, 0.5, 0.54), blood: new Color3(0.75, 0.02, 0.02) };
+function buildSentinelAxe(scene: Scene, scale: number, hand: TransformNode): Mesh[] {
+  const A = SENTINEL_AXE, s = scale * 1.25 * A.scale;
+  const axe = buildBeardedAxe(scene, s, A.steel, A.haft);
+  axe.name = "sentinelAxe";
+  // the brawler's carry mark is not wanted (the hidden sword keeps the carry)
+  for (const c of axe.getChildren()) if (c.name === "beardedAxeCarry") c.dispose();
+  const blade = axe.getChildMeshes(true).find((m) => m.name === "axehead");
+  if (blade) {
+    const blood = getMaterialFactory().get("unlit", A.blood, { emissive: A.blood });
+    const w = BEARDED_AXE.wide * s;
+    for (const side of [-1, 1]) {
+      const smear = flatPlate(scene, "sentinelAxeBlood", [[w * 0.4, 0], [w * 0.95, -0.01 * s], [w * 0.8, -BEARDED_AXE.beard * s * 0.7], [w * 0.45, -BEARDED_AXE.beard * s * 0.5]], 0.004 * s);
+      smear.parent = blade; smear.position.z = side * BEARDED_AXE.plate * s * 0.55; smear.material = blood;
+    }
+  }
+  axe.parent = hand;
+  axe.scaling.scaleInPlace(PROP_OVERSIZE);
+  applyWeaponGripPreset(axe, "default", scale);
+  axe.setEnabled(false);
+  return [axe, ...axe.getChildMeshes(false).filter((m): m is Mesh => m instanceof Mesh)];
 }
 /*
  * [S] the Jarl's poleaxe (392; viking.jarl.red.png, card Main Hand Jarl Axe "Polearm"; critic 391: a long grey greatsword with a black crossguard). A
