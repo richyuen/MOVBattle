@@ -141,14 +141,16 @@ export function balloonerPack(scene: Scene, body: ArticulatedBody, team: Color3)
  * enemies"; secret.ballooner.red.png: both hands are big lumpy beige glue blobs, open and empty, the glue running up the wrist; audit 500 b.1: "a
  * dark ninja shuriken in the raised hand"). The visual entry carries no weapon now; each hand is cased in glue.
  * Spec in hand widths HW (the hand mesh's box, hand frame: +y up the forearm, -y past the knuckles): per hand a flat-shaded ico blob .mitt HW
- * across over the hand mesh, stretched .long in y, flattened .flat in z; .lumps smaller lumps .lump HW across round it on GLUE_LUMPS
- * [x, y, z in HW from the hand mesh's centre], the topmost over the wrist. Pale beige glue lit cloth .glue self-lit .3, out of the glow.
+ * across over the hand mesh, stretched .long in y, flattened .flat in z; smaller lumps .lump HW across round it on GLUE_LUMPS
+ * [x, y, z in HW from the hand mesh's centre], the topmost over the wrist. Flat unlit beige glue .glue, out of the glow.
  */
-const BALLOONER_GLUE = { mitt: 1.7, long: 1.35, flat: 0.8, lump: 0.95, glue: new Color3(0.95, 0.78, 0.52) };
-const GLUE_LUMPS: [number, number, number][] = [[0.45, 0.35, 0.2], [-0.4, -0.2, -0.15], [0.1, 0.85, 0], [-0.2, -0.75, 0.25]];
+// look 503: 1.7 HW with .95 lumps read as small pale knobs on the fists, and lit tan cloth read grey in the field: flat unlit beige (between
+// the palette's unlit tan x.7 and x1 swatches), bigger
+const BALLOONER_GLUE = { mitt: 3.4, long: 1.3, flat: 0.85, lump: 1.9, glue: new Color3(0.66, 0.5, 0.3) };
+const GLUE_LUMPS: [number, number, number][] = [[0.75, 0.4, 0.25], [-0.7, -0.25, -0.2], [0.15, 1.3, 0], [-0.3, -1.1, 0.35]];
 export function balloonerGlueMitts(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = BALLOONER_GLUE, glow = scene.getGlowLayerByName("glow");
-  const glue = getMaterialFactory().get("cloth", C.glue, { emissive: C.glue.scale(0.3), roughness: 1 });
+  const glue = getMaterialFactory().get("unlit", C.glue, { emissive: C.glue });
   const out: Mesh[] = [];
   for (const hand of [body.leftHand, body.rightHand]) {
     const hm = hand.getChildMeshes(true).find((m) => /_[lr]HandM$/.test(m.name)) as Mesh | undefined;
