@@ -668,6 +668,37 @@ export function lichTendrils(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 496 the Tempest Lich's collar (evil.tempest_lich.blue.png; audit 489 a.3: "collar: none - TABS: a jagged ochre-brown collar at the base of the
+ * tendrils").
+ * Spec in head widths W and heights H (the head box, its centre c; the socket LICH_SOCKET .sockW W across sits from the head's foot): an ochre 8-sided
+ * band .band H tall, .wide W across, round the socket's foot; .points flat 3-sided points round it, each .pointW W wide at the root: the front and
+ * sides hang .down H below the band, every other one shorter (.vary), and the same count stand .up H above it, turned half a step, so the ring
+ * reads jagged above and below. Lit ochre cloth (palette 496: gold x .45 displays the render's ochre-brown), self-lit .12, out of the glow.
+ */
+const LICH_COLLAR = { ochre: new Color3(0.45, 0.31, 0.08), band: 0.16, wide: 0.98, points: 8, pointW: 0.3, down: 0.3, up: 0.2, vary: 0.35 };
+export function lichCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = LICH_COLLAR, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const ochre = getMaterialFactory().get("cloth", C.ochre, { emissive: C.ochre.scale(0.12) });
+  const out: Mesh[] = [];
+  const foot = c.y - H * 0.5, r = (W * C.wide) / 2, rz = r * Math.max(0.8, D / W);
+  const band = MeshBuilder.CreateCylinder("lichCollar", { height: H * C.band, diameterBottom: r * 2 * 1.04, diameterTop: r * 2, tessellation: 8 }, scene);
+  band.parent = head; band.scaling.z = rz / r; band.position.set(c.x, foot + H * C.band / 2, c.z); band.material = ochre; out.push(band);
+  for (let i = 0; i < C.points * 2; i++) {
+    const down = i % 2 === 0, k = Math.floor(i / 2), a = ((k + (down ? 0 : 0.5)) / C.points) * Math.PI * 2;
+    const long = H * (down ? C.down : C.up) * (k % 2 ? 1 - C.vary : 1);
+    const p = MeshBuilder.CreateCylinder("lichCollarPoint", { height: long, diameterBottom: W * C.pointW, diameterTop: 0, tessellation: 3 }, scene);
+    p.parent = head; p.material = ochre; p.scaling.z = 0.3;
+    p.rotation.set(down ? Math.PI : 0, a, 0);
+    const y = down ? foot - long / 2 + H * 0.02 : foot + H * C.band + long / 2 - H * 0.02;
+    p.position.set(c.x + Math.sin(a) * r * 1.02, y, c.z + Math.cos(a) * rz * 1.02);
+    out.push(p);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 495 the Death Bringer's long black hair (evil.death_bringer.red.png; audit 489 a.3: "hair: none - TABS: long black hair falling over the chest to
  * the waist"). Built in two parts (LESSONS: a head-hung piece cannot run on down the torso): the crown head-hung, the fall over the chest and back
  * torso-parented.
