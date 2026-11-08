@@ -29,7 +29,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, lichStaffCrystal, lichStaffPole, lichTunic, mechanicGoggles, mechanicOveralls, mechanicTank, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHair, walkerHelm, walkerVest } from "./evilDress";
+import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, monarchTunic, lichStaffCrystal, lichStaffPole, lichTunic, mechanicGoggles, mechanicOveralls, mechanicTank, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHair, walkerHelm, walkerVest } from "./evilDress";
 import { sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
@@ -2827,6 +2827,8 @@ function dressHornedEvil(scene: Scene, body: ArticulatedBody, style: HornedEvilS
     const top = chest.position.y + H * 0.5;
     // [S] 496 (a.3) the evil preset wears a bone V harness with spiked wing-arms in place of the pauldrons (evilDress monarchHarness); custom keeps them
     if (style.harness) added.push(...monarchHarness(scene, body, bone));
+    // [S] 497 (a.4) ...over a dark tunic with three bone chevron ribs and a bone-studded belt (evilDress monarchTunic); evil preset only
+    if (style.harness) added.push(...monarchTunic(scene, body, bone));
     else for (const side of [-1, 1]) {
       const cap = MeshBuilder.CreateSphere("monarchShoulder", { diameter: W * 0.46, segments: 4, slice: 0.5 }, scene);
       cap.position.set(side * W * 0.46, top - H * 0.04, 0);

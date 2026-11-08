@@ -1149,3 +1149,48 @@ export function monarchHarness(scene: Scene, body: ArticulatedBody, bone: Materi
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 497 the Void Monarch's tunic, ribs and belt (evil.void_monarch.red.png: under the harness's V three bone chevrons dip across the dark chest,
+ * one under the other, over a dark belt studded with bone; audit 489 a.4: "a plain lilac block with a white fur collar"). Evil preset only.
+ * Spec in trunk-box widths W, heights H, depths D (torso joint frame, as the harness): the trunk and yoke go near-black lit cloth (LESSONS 494);
+ * .ribs bone chevrons, each two flat bars .barH W tall and .barT W thick from .reach W either side of the middle down to the centre, dipping .dip H,
+ * standing .proud W off the front (over the harness straps), their centres at .ribsAt H up the trunk; a dark belt .beltH H tall round the trunk's
+ * foot, .beltOut W proud all round, with .studs 5-sided bone studs .stud W across on its front.
+ */
+const MONARCH_TUNIC = {
+  dark: new Color3(0.08, 0.06, 0.07), ribs: 3, ribsAt: [0.62, 0.45, 0.28], reach: 0.46, dip: 0.12, barH: 0.085, barT: 0.05, proud: 0.09,
+  beltH: 0.14, beltOut: 0.05, studs: 7, stud: 0.09,
+};
+export function monarchTunic(scene: Scene, body: ArticulatedBody, bone: Material): Mesh[] {
+  const C = MONARCH_TUNIC, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, s = tm.scaling;
+  const W = tb.extendSize.x * 2 * s.x, H = tb.extendSize.y * 2 * s.y, D = tb.extendSize.z * 2 * s.z;
+  const cy = tm.position.y + tb.center.y * s.y, bottom = cy - H / 2;
+  const cz = tm.position.z + tb.center.z * s.z, front = cz + D / 2;
+  const yoke = body.allMeshes.find((m) => /_yoke$/.test(m.name));
+  for (const m of [tm, yoke]) if (m) { m.material = dark; glow?.addExcludedMesh(m); }
+  const out: Mesh[] = [];
+  const add = (m: Mesh, material: Material): Mesh => { m.parent = body.torso; m.material = material; out.push(m); return m; };
+  for (let r = 0; r < C.ribs; r++) {
+    const y = bottom + H * C.ribsAt[r], wide = W * C.reach * (1 - r * 0.1);
+    for (const side of [-1, 1]) {
+      const a = new Vector3(side * wide, y + (H * C.dip) / 2, front + W * C.proud), b = new Vector3(0, y - (H * C.dip) / 2, front + W * C.proud);
+      const run = b.subtract(a);
+      const bar = add(MeshBuilder.CreateBox("monarchRib", { width: run.length() + W * C.barH * 0.6, height: W * C.barH, depth: W * C.barT }, scene), bone);
+      bar.position.copyFrom(a.add(b).scale(0.5));
+      bar.rotation.z = Math.atan2(run.y, run.x);
+    }
+  }
+  const belt = add(MeshBuilder.CreateBox("monarchBelt", { width: W + W * C.beltOut * 2, height: H * C.beltH, depth: D + W * C.beltOut * 2 }, scene), dark);
+  belt.position.set(0, bottom + (H * C.beltH) / 2, cz);
+  for (let k = 0; k < C.studs; k++) {
+    const x = (k / (C.studs - 1) - 0.5) * W * 0.9;
+    const stud = add(MeshBuilder.CreateCylinder("monarchStud", { height: W * C.stud * 0.7, diameterBottom: W * C.stud, diameterTop: W * C.stud * 0.3, tessellation: 5 }, scene), bone);
+    stud.rotation.x = Math.PI / 2;
+    stud.position.set(x, bottom + (H * C.beltH) / 2, front + W * C.beltOut + W * C.stud * 0.3);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
