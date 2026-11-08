@@ -152,7 +152,8 @@ export function walkerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
  * (they read team-navy); the foot goes near-black; a near-black 8-sided shell .shellR r round from the shin's foot up .shell h; on its front .fins
  * tan 4-sided fins, flat side-to-side (.flat), .fin r long, rooted at .from to .to of h, each leaning .lean rad forward off upright.
  */
-const WALKER_BOOTS = { shellR: 1.35, shell: 0.8, fins: 3, fin: 1.5, from: 0.18, to: 0.68, lean: 0.75, flat: 0.35 };
+// look 498: fin 1.5 r read as small tan diamonds on a shell 1.35 r wide; longer, broader fins on a slimmer shell
+const WALKER_BOOTS = { shellR: 1.18, shell: 0.8, fins: 3, fin: 2.4, from: 0.15, to: 0.62, lean: 0.75, flat: 0.45 };
 export function walkerBoots(scene: Scene, body: ArticulatedBody, worn: Mesh[]): Mesh[] {
   const C = WALKER_BOOTS, mf = getMaterialFactory();
   const darkC = new Color3(0.08, 0.06, 0.07), dark = mf.get("cloth", darkC, { emissive: darkC.scale(0.4), roughness: 1 });
@@ -167,7 +168,7 @@ export function walkerBoots(scene: Scene, body: ArticulatedBody, worn: Mesh[]): 
     shell.parent = shin; shell.position.set(cc.x, foot + (h * C.shell) / 2, cc.z); shell.material = dark; out.push(shell);
     for (let k = 0; k < C.fins; k++) {
       const y = foot + h * (C.from + ((C.to - C.from) * k) / (C.fins - 1)), len = r * C.fin;
-      const fin = MeshBuilder.CreateCylinder("walkerBootFin", { height: len, diameterTop: 0, diameterBottom: r * 0.8, tessellation: 4 }, scene);
+      const fin = MeshBuilder.CreateCylinder("walkerBootFin", { height: len, diameterTop: 0, diameterBottom: r * 1.1, tessellation: 4 }, scene);
       fin.parent = shin; fin.material = tan; fin.scaling.x = C.flat;
       fin.rotation.x = C.lean;
       fin.position.set(cc.x, y + Math.cos(C.lean) * len * 0.45, cc.z + r * C.shellR * 0.9 + Math.sin(C.lean) * len * 0.45);
