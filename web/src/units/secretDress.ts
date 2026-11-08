@@ -137,6 +137,38 @@ export function balloonerPack(scene: Scene, body: ArticulatedBody, team: Color3)
 }
 
 /**
+ * [S] 503 the Ballooner's Ballooner Grab mitts (card Main Hand / Off Hand "Ballooner Grab", Unarmed; Appearance "arms covered with glue to catch
+ * enemies"; secret.ballooner.red.png: both hands are big lumpy beige glue blobs, open and empty, the glue running up the wrist; audit 500 b.1: "a
+ * dark ninja shuriken in the raised hand"). The visual entry carries no weapon now; each hand is cased in glue.
+ * Spec in hand widths HW (the hand mesh's box, hand frame: +y up the forearm, -y past the knuckles): per hand a flat-shaded ico blob .mitt HW
+ * across over the hand mesh, stretched .long in y, flattened .flat in z; .lumps smaller lumps .lump HW across round it on GLUE_LUMPS
+ * [x, y, z in HW from the hand mesh's centre], the topmost over the wrist. Pale beige glue lit cloth .glue self-lit .3, out of the glow.
+ */
+const BALLOONER_GLUE = { mitt: 1.7, long: 1.35, flat: 0.8, lump: 0.95, glue: new Color3(0.95, 0.78, 0.52) };
+const GLUE_LUMPS: [number, number, number][] = [[0.45, 0.35, 0.2], [-0.4, -0.2, -0.15], [0.1, 0.85, 0], [-0.2, -0.75, 0.25]];
+export function balloonerGlueMitts(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = BALLOONER_GLUE, glow = scene.getGlowLayerByName("glow");
+  const glue = getMaterialFactory().get("cloth", C.glue, { emissive: C.glue.scale(0.3), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const hand of [body.leftHand, body.rightHand]) {
+    const hm = hand.getChildMeshes(true).find((m) => /_[lr]HandM$/.test(m.name)) as Mesh | undefined;
+    if (!hm) continue;
+    const hb = hm.getBoundingInfo().boundingBox, HW = hb.extendSize.x * 2 * hm.scaling.x;
+    const at = hm.position.add(hb.center.multiply(hm.scaling));
+    const blob = MeshBuilder.CreateIcoSphere("balloonerGlue", { radius: (HW * C.mitt) / 2, subdivisions: 1 }, scene);
+    blob.parent = hand; blob.position.copyFrom(at); blob.scaling.set(1, C.long, C.flat); blob.rotation.y = 0.4; blob.material = glue;
+    out.push(blob);
+    GLUE_LUMPS.forEach(([x, y, z], k) => {
+      const l = MeshBuilder.CreateIcoSphere("balloonerGlue", { radius: (HW * C.lump) / 2, subdivisions: 1 }, scene);
+      l.parent = hand; l.position.set(at.x + x * HW, at.y + y * HW, at.z + z * HW); l.rotation.set(k * 0.9, k * 1.7, k * 0.5); l.material = glue;
+      out.push(l);
+    });
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 501 the Ball 'n' Chain's stone ball (secret.ball_n_chain.red.png: he hugs a huge faceted grey stone ball, wider than his chest, at chest
  * height in both arms, a thick grey chain of open links hanging from its foot to his knees; audit 500 b.1: "a small dark ball on a stick, held
  * one-handed like a mace"). The flail (handle, chain, ball) in his fist is hidden; the stone rides the torso so it stays at his chest through the

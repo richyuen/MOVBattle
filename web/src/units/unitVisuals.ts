@@ -1082,7 +1082,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["quickdraw_smoke"] },
       });
     case "secret_ballooner":
-      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.1 }, "dagger", "none", "none", "balloon", "#ff9db5", undefined, {
+      // [S] 503 (b.1) Ballooner Grab is unarmed (card Main Hand / Off Hand): no dagger (it drew as a shuriken), glue mitts (secretDress)
+      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.1 }, "none", "none", "none", "balloon", "#ff9db5", undefined, {
         posePreset: "support", materialPreset: "secret_festive", fxPreset: "wind", attachmentPreset: "ghost_trail",
         stateVariants: { moving: ["ghost_stream"], "ability-active": ["ghost_stream"] },
       });
