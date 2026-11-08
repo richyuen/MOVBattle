@@ -974,6 +974,8 @@ export function lichStaffPole(scene: Scene, staff: Mesh): Mesh[] {
     band.parent = staff; band.position.y = bb.minimum.y + L * at; band.material = iron; out.push(band);
   }
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  // [S] 498 (b.4) both fists on the shaft: the marker hands the off fist onto it (proceduralAnimation POLE_GRIP.lichGrip, _twoHandPole)
+  new TransformNode("lichGrip", scene).parent = staff;
   return out;
 }
 
