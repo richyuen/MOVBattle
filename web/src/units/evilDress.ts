@@ -1384,3 +1384,35 @@ export function monarchTunic(scene: Scene, body: ArticulatedBody, bone: Material
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 498 the Void Monarch's knee plates (evil.void_monarch.red.png: over each knee a big squared bone plate, wider than the leg, from mid-thigh to
+ * just under the knee, its face studded with short bone pyramids; audit 489 a.5: "plain blue boots"). Evil preset only (HORNED_EVIL harness flag).
+ * Spec in each thigh mesh's own box (r its radius, h its length, +y up the bone, +z its front): a bone box .wide r across, .deep r deep, .tall h tall,
+ * its foot .below h under the thigh's foot (over the knee), standing .fwd r forward of the axis; on its front .rows x .cols studs, 4-sided points
+ * .stud r across and .spike r proud, and .side studs down each outer face.
+ */
+const MONARCH_KNEES = { wide: 2.7, deep: 2.3, tall: 0.62, below: 0.14, fwd: 0.25, rows: 3, cols: 2, stud: 0.55, spike: 0.5, side: 2 };
+export function monarchKneePlates(scene: Scene, body: ArticulatedBody, bone: Material): Mesh[] {
+  const C = MONARCH_KNEES, out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    const bb = thigh.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z), h = e.y * 2;
+    const foot = cc.y - e.y - h * C.below, y = foot + (h * C.tall) / 2, z = cc.z + r * C.fwd;
+    const put = (m: Mesh): Mesh => { m.parent = thigh; m.material = bone; out.push(m); return m; };
+    put(MeshBuilder.CreateBox("monarchKnee", { width: r * C.wide, height: h * C.tall, depth: r * C.deep }, scene)).position.set(cc.x, y, z);
+    const face = z + (r * C.deep) / 2;
+    const stud = (x: number, sy: number, zz: number, rotY: number): void => {
+      const s = put(MeshBuilder.CreateCylinder("monarchKneeStud", { height: r * C.spike, diameterBottom: r * C.stud, diameterTop: 0, tessellation: 4 }, scene));
+      s.rotation.set(Math.PI / 2, rotY, 0);
+      s.position.set(x + Math.sin(rotY) * r * C.spike * 0.45, sy, zz + Math.cos(rotY) * r * C.spike * 0.45);
+    };
+    for (let i = 0; i < C.rows; i++) for (let j = 0; j < C.cols; j++) {
+      stud(cc.x + (j / (C.cols - 1) - 0.5) * r * C.wide * 0.55, foot + h * C.tall * ((i + 0.5) / C.rows), face, 0);
+    }
+    for (const s of [-1, 1]) for (let i = 0; i < C.side; i++) {
+      stud(cc.x + s * (r * C.wide) / 2, foot + h * C.tall * ((i + 0.6) / (C.side + 0.2)), z, (s * Math.PI) / 2);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
