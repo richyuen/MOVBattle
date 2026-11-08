@@ -1832,3 +1832,49 @@ export function monarchCrown(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { if (m !== ring) m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 502 the Void Monarch's bone beak mask (evil.void_monarch.blue.png; audit 489 a.2: "a bare blue face below the bead eyes - TABS: a tan bone
+ * jaw/beak mask covers the face below the eyes"). The render: under the round eyes the whole lower face is a bone-tan plate, as wide as the face at
+ * the eyes' foot and narrowing to a point at the chin, with a beak ridge standing out of its middle and pointing down and forward.
+ * Spec in head widths W, heights H, depths D (the head box, its centre c; e0 the bead eyes' foot read into the head frame, LESSONS 45): a prism
+ * plate .depth D deep, its face .proud D in front of the head's front, top edge .gap H under e0 and .topW W across, sides in to .jawW W across at
+ * .jawY H, a point at .chinY H; a 4-sided beak .beakW W across at its root (.beakY H under the plate's top), .beak H long, tipped .tilt rad
+ * forward of straight down; two dark nostril slits .nostril W either side of it. The monarch bone material (monarchBone), out of the glow.
+ */
+const MONARCH_BEAK = { proud: 0.06, depth: 0.22, gap: 0.03, topW: 1.1, jawW: 0.8, jawY: -0.3, chinY: -0.6, beakW: 0.3, beakY: 0.06, beak: 0.5, tilt: 0.75, nostril: 0.12 };
+export function monarchBeak(scene: Scene, body: ArticulatedBody, bone: Material): Mesh[] {
+  const C = MONARCH_BEAK, glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  let e0 = c.y - H * 0.02;
+  const eye = body.leftEye ?? body.rightEye;
+  if (eye) {
+    for (let n: TransformNode | null = eye; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+    for (let n: TransformNode | null = head; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+    eye.refreshBoundingInfo();
+    const inv = head.getWorldMatrix().clone().invert();
+    e0 = Infinity;
+    for (const v of eye.getBoundingInfo().boundingBox.vectorsWorld) e0 = Math.min(e0, Vector3.TransformCoordinates(v, inv).y);
+  }
+  const top = e0 - H * C.gap - c.y; // in H-units below, relative to the centre
+  const out: Mesh[] = [];
+  const outline = [[C.topW / 2 * W, top], [C.jawW / 2 * W, H * C.jawY], [0, H * C.chinY], [-C.jawW / 2 * W, H * C.jawY], [-C.topW / 2 * W, top]];
+  const front = c.z + D / 2 + D * C.proud;
+  const plate = prism(scene, "monarchBeakPlate", outline, D * C.depth);
+  plate.parent = head; plate.position.set(c.x, c.y, front - (D * C.depth) / 2); plate.material = bone; out.push(plate);
+  const beak = MeshBuilder.CreateCylinder("monarchBeak", { height: H * C.beak, diameterTop: W * C.beakW, diameterBottom: 0, tessellation: 4 }, scene);
+  beak.parent = head; beak.material = bone; beak.rotation.x = -C.tilt; out.push(beak);
+  // the root sits on the plate's face; the point hangs .beak H along the tipped axis, down and forward
+  const rootY = c.y + top - H * C.beakY;
+  beak.position.set(c.x, rootY - (H * C.beak / 2) * Math.cos(C.tilt), front + (H * C.beak / 2) * Math.sin(C.tilt));
+  beak.convertToFlatShadedMesh();
+  const darkC = new Color3(0.03, 0.02, 0.03), dark = getMaterialFactory().get("unlit", darkC, { emissive: darkC });
+  for (const side of [-1, 1]) {
+    const n = MeshBuilder.CreateBox("monarchBeakNostril", { width: W * C.nostril, height: H * 0.04, depth: D * 0.04 }, scene);
+    n.parent = head; n.material = dark; n.rotation.z = side * 0.4; out.push(n);
+    n.position.set(c.x + side * W * (C.beakW * 0.5 + 0.06), rootY - H * 0.1, front + D * 0.01);
+  }
+  for (const m of out) glow?.addExcludedMesh(m);
+  return out;
+}
