@@ -176,7 +176,11 @@ const wanted = only.length > 0 ? only : null;
 // Whether any of these shots is to be taken (every shot, in a full run)
 const wants = (...names) => wanted === null || names.some((n) => wanted.includes(n));
 // Loop v2: the shot set of one unit (the ability pair only when a second mechanic fires)
-const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ability", "ability_after", ...(RELOAD_SHOT[id] ? ["reload"] : [])].map((s) => `unit_${id}_${s}`);
+const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ability", "ability_after", ...(RELOAD_SHOT[id] ? ["reload"] : []), ...(SECOND_ABILITY[id] ? ["dodge", "dodge_after"] : [])].map((s) => `unit_${id}_${s}`);
+// [evidence 499] a unit with two abilities whose ability pair is the other one: its second ability (event kind) gets a pair of its own, `_dodge` and
+// `_dodge_after`, one camera held on him at the event tick for both (the Void Monarch's ability pair is his Demon Transformation; card Abilities
+// "Void Monarch Dodge" is a second, audit 489 c.2)
+const SECOND_ABILITY = { "evil.void_monarch": "monarch_dodge" };
 // A unit whose reload is a pose of its own (the scarecrow's A-pose after the volley): one more shot, on the unit alone, this many ticks past the release
 const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // A unit whose card ability comes after its first logged special (the minotaur's charge at 17 ms): detection runs on until this kind is seen
@@ -492,6 +496,8 @@ async function main() {
           // [evidence 498] the Void Monarch transforms after dealing 800 damage (card Abilities, Demon Transformation): his knight and four mates
           // packed inside his sword's 2 m splash, so his blows count several men each
           if (id === "evil.void_monarch") for (const dz of [-1.5, -0.8, 0.8, 1.5]) game.spawnUnit("medieval.knight", 0, { x: -d - 0.6, z: dz });
+          // [evidence 499] ...and he dodges in both forms (card Abilities, Void Monarch Dodge): three archers 8 m behind the knights loose at him over them
+          if (id === "evil.void_monarch") for (const dz of [-2.5, 0, 2.5]) game.spawnUnit("medieval.archer", 0, { x: -d - 8, z: dz });
           let ally = null;
           // [evidence 465] a bearer fights (polearm_melee, his pole's blow) and his ring's aura pulses beside it: he spars with his squire and has the
           // hurt ally beside him too, inside the ring, so the blow is the release and the aura the ability pair
@@ -808,6 +814,12 @@ async function main() {
           await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
           if (darkGrab) await take(`unit_${id}_grab_blast`, ability.tick + 36, 2, pair);
         }
+        const second = SECOND_ABILITY[id] ? det.events.find((e) => e.kind === SECOND_ABILITY[id]) : null;
+        if (second) {
+          summary.notes.push(`unit_${id}: second ability ${second.kind} at ${ms(second)} ms`);
+          await take(`unit_${id}_dodge`, second.tick, 5, { hold: second.tick });
+          await take(`unit_${id}_dodge_after`, second.tick + 9, 5, { hold: second.tick });
+        } else if (SECOND_ABILITY[id]) summary.notes.push(`unit_${id}: shot may miss: no ${SECOND_ABILITY[id]} within the window`);
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
           lineupsDone.add(faction);
