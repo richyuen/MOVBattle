@@ -217,6 +217,40 @@ export function jesterCap(scene: Scene, body: ArticulatedBody, team: Color3): Me
 }
 
 /**
+ * [S] 503 the Chu Ko Nu's topknot and headband (secret.chu_ko_nu.red.png; card Appearance "their hair in a bun like other Dynasty-themed units";
+ * audit 500 a.1: "a black conical straw hat - TABS a topknot bun with a black/team headband"). The render: black hair close over the crown, its
+ * front edge just over the bead eyes; round the head at the hair's foot a black band with a team stripe along its middle; on the crown a tall black
+ * bun, a little narrower at its top, ringed by a team band. The visual entry's conical hat is gone.
+ * Spec in head widths W, heights H, depths D (the head box, its centre c; e the eyes' top in the head frame): the hair a half ellipsoid .capW W x
+ * .capH H x .capD D on a base .capLo H over e; the band an 8-sided ring .bandW W across, .band H tall from .capLo H over e, the stripe .stripe of its
+ * height, .stripeOut proud; the bun a 6-sided cylinder .bunW W across (.bunTop of it at the top) .bun H tall on the crown, set .bunBack D back,
+ * its band .bunBand H tall at .bunBandAt of its height. Near-black hair (LESSONS: lit .08 cloth self-lit), team stripe; out of the glow.
+ */
+const KONU_KNOT = { capW: 1.1, capH: 0.62, capD: 1.1, capLo: 0.04, bandW: 1.14, band: 0.16, stripe: 0.4, stripeOut: 0.02, bunW: 0.36, bunTop: 0.8, bun: 0.42, bunBack: 0.12, bunBand: 0.08, bunBandAt: 0.35, black: new Color3(0.05, 0.04, 0.04) };
+export function chuKoNuTopknot(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = KONU_KNOT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const black = mf.get("cloth", C.black, { emissive: C.black.scale(0.4), roughness: 1 });
+  const stripe = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, material: Material, y: number, z = c.z): Mesh => { m.parent = head; m.material = material; m.position.set(c.x, y, z); out.push(m); return m; };
+  const base = e + H * C.capLo;
+  const cap = put(MeshBuilder.CreateSphere("konuHair", { diameter: 1, segments: 5, slice: 0.5 }, scene), black, base);
+  cap.scaling.set(W * C.capW, H * C.capH * 2, D * C.capD);
+  const band = put(MeshBuilder.CreateCylinder("konuBand", { height: H * C.band, diameter: W * C.bandW, tessellation: 8 }, scene), black, base + (H * C.band) / 2);
+  band.scaling.z = (D * C.bandW) / (W * C.bandW); band.rotation.y = Math.PI / 8;
+  const st = put(MeshBuilder.CreateCylinder("konuBandStripe", { height: H * C.band * C.stripe, diameter: W * (C.bandW + C.stripeOut * 2), tessellation: 8 }, scene), stripe, base + (H * C.band) / 2);
+  st.scaling.z = D / W; st.rotation.y = Math.PI / 8;
+  const top = base + H * C.capH * 0.92, bz = c.z - D * C.bunBack;
+  put(MeshBuilder.CreateCylinder("konuBun", { height: H * C.bun, diameterBottom: W * C.bunW, diameterTop: W * C.bunW * C.bunTop, tessellation: 6 }, scene), black, top + (H * C.bun) / 2, bz);
+  put(MeshBuilder.CreateCylinder("konuBunBand", { height: H * C.bunBand, diameter: W * C.bunW * 1.08, tessellation: 6 }, scene), stripe, top + H * C.bun * C.bunBandAt, bz);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 501 the Ball 'n' Chain's stone ball (secret.ball_n_chain.red.png: he hugs a huge faceted grey stone ball, wider than his chest, at chest
  * height in both arms, a thick grey chain of open links hanging from its foot to his knees; audit 500 b.1: "a small dark ball on a stick, held
  * one-handed like a mace"). The flail (handle, chain, ball) in his fist is hidden; the stone rides the torso so it stays at his chest through the

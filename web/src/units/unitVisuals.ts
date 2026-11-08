@@ -1120,7 +1120,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_chu_ko_nu":
       // [S] 501 (b.1) a boxy repeating crossbow: square stock, box magazine on top with a lever, a wide swept bow arm (propBuilder REPEATING_CROSSBOW)
-      return vis({ scale: 1.0, bulk: 0.95, armLength: 1.05 }, "crossbow", "conical_hat", "none", "quiver_back", "#7e4b2d", undefined, {
+      // [S] 503 (a.1) no hat: a topknot bun and headband (secretDress chuKoNuTopknot)
+      return vis({ scale: 1.0, bulk: 0.95, armLength: 1.05 }, "crossbow", "none", "none", "quiver_back", "#7e4b2d", undefined, {
         posePreset: "archer", materialPreset: "secret_bandit", attachmentPreset: "crossbow_ready", weaponVariant: "repeating_crossbow",
         stateVariants: { attacking: ["crossbow_bolt"] },
       });
