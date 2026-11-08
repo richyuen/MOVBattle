@@ -4211,7 +4211,7 @@ function buildGiantFan(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  * and a flame: an unlit yellow-white teardrop .flame L tall over the fuse's end, out of the glow's reach (LESSONS 442: unlit keeps its hue).
  */
 const BOMB_STICK = {
-  long: 1.05, thick: 0.026, grip: 0.32, bomb: 0.26, band: 0.026, bandAt: [-0.22, 0.12], neck: 0.05, fuse: 0.07, fuseTilt: 0.3, flame: 0.1,
+  long: 1.05, thick: 0.026, grip: 0.32, bomb: 0.26, band: 0.026, bandAt: [-0.22, 0.12], neck: 0.05, fuse: 0.07, fuseTilt: 0.3, flame: 0.1, wrap: 0.1, wrapAt: 0.28,
   wood: new Color3(0.2, 0.13, 0.08), iron: new Color3(0.07, 0.07, 0.08), rope: new Color3(0.85, 0.4, 0.1), fire: new Color3(1.4, 0.95, 0.45),
 };
 function buildBombStick(scene: Scene, fit: BladeFit): Mesh {
@@ -4237,6 +4237,9 @@ function buildBombStick(scene: Scene, fit: BladeFit): Mesh {
   const flame = add(MeshBuilder.CreateCylinder("bombStickFlame", { height: B.flame * L, diameterTop: 0, diameterBottom: R * 0.45, tessellation: 6 }, scene), flameMat, fy + B.fuse * L * Math.cos(B.fuseTilt) + (B.flame * L) / 2);
   flame.position.x = -Math.sin(B.fuseTilt) * B.fuse * L;
   add(MeshBuilder.CreateIcoSphere("bombStickFlameBulb", { radius: R * 0.26, subdivisions: 1 }, scene), flameMat, flame.position.y - (B.flame * L) * 0.35).position.x = flame.position.x;
+  // [S] 502 (b.1: "held one-handed at the hip - TABS ... in both hands"): a leather grip wrap .wrapAt of L over the fist named "hpoint", the
+  // POLE_GRIP mark that puts his off fist on the haft over the weapon fist (proceduralAnimation _twoHandPole), both hands on the stick
+  add(MeshBuilder.CreateCylinder("hpoint", { height: B.wrap * L, diameter: B.thick * L * 1.7, tessellation: 7 }, scene), mat(scene, new Color3(0.3, 0.17, 0.08), 0.1, "cloth"), (B.grip + B.wrapAt) * L - L / 2);
   return shaft;
 }
 /*
