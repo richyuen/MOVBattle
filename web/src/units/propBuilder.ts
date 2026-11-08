@@ -7255,7 +7255,13 @@ function buildRadiantShield(scene: Scene, stand: number, teamColor: Color3): Mes
  * across at its flat top and foot, .thick deep; a dark team face (.dark of the team colour) proud of a bone rim board .rim larger all round; two bone
  * cross-bands .band high at .bandsAt of the height with .studs dark pyramid studs each. Face +z, up +y. Stood upright ahead of his off side (attach).
  */
-const PAVISE = { tall: 0.42, wide: 0.17, shoulder: 0.82, top: 0.78, foot: 0.62, thick: 0.02, dark: 0.42, rim: 0.012, band: 0.022, bandsAt: [0.73, 0.22], studs: 3,
+/*
+ * [S] 496 (b.1, CONFIRM 495: "each shield runs only from the belly to the knee, about 3/8 of the unit's height - TABS: each Norman pavise is about
+ * half the unit's height and covers him from shoulder to mid-shin"; evil.exiled_sentinel.red.png): the board is cut long and slim, as the render
+ * reads it (board 470 px of a 730 px man, 145 px across): .58 of his standing height, .18 across, the coffin shoulder high at .86 with a long
+ * straight taper to a .74 foot, the bands moved out to the board's ends (.8 and .13).
+ */
+const PAVISE = { tall: 0.58, wide: 0.18, shoulder: 0.86, top: 0.8, foot: 0.74, thick: 0.02, dark: 0.42, rim: 0.012, band: 0.022, bandsAt: [0.8, 0.13], studs: 3,
   bone: new Color3(0.66, 0.62, 0.5), stud: new Color3(0.08, 0.06, 0.08) };
 function coffinPlate(scene: Scene, name: string, w: number, h: number, d: number): Mesh {
   const P = PAVISE, outline = [[-w * P.foot / 2, -h / 2], [w * P.foot / 2, -h / 2], [w / 2, h * (P.shoulder - 0.5)], [w * P.top / 2, h / 2], [-w * P.top / 2, h / 2], [-w / 2, h * (P.shoulder - 0.5)]];
