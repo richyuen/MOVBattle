@@ -1033,6 +1033,8 @@ export class UnitFactory {
     if (HORNED_EVIL[definition.id] && !shouldUseVehicleBody) {
       propMeshes.push(...dressHornedEvil(this._scene, body, HORNED_EVIL[definition.id]));
       if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerHelm(this._scene, body));
+      // [S] 493 (c.2, card Abilities "Hover"): the Lich floats off the ground with his legs hanging, the Reaper's hover (proceduralAnimation REAPER_HOVER)
+      if (definition.id === "evil.tempest_lich") new TransformNode("reaperHover", this._scene).parent = body.hip;
     }
     if (definition.id === "legacy.super_peasant" && !shouldUseVehicleBody) {
       propMeshes.push(...dressSuperPeasant(this._scene, body));
