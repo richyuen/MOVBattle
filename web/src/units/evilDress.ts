@@ -146,6 +146,39 @@ export function walkerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 498 the Shadow Walker's spiked boots (evil.shadow_walker.red.png: near-black boots from the foot to under the knee, three tan fins standing
+ * up and out of each shin's front, stacked; re-audit 498 a.4: "plain team-blue tall boots").
+ * Spec in each shin mesh's own box (r its radius, h its length, +y up the bone, +z its front): the HORNED_EVIL shin guards and their spikes go
+ * (they read team-navy); the foot goes near-black; a near-black 8-sided shell .shellR r round from the shin's foot up .shell h; on its front .fins
+ * tan 4-sided fins, flat side-to-side (.flat), .fin r long, rooted at .from to .to of h, each leaning .lean rad forward off upright.
+ */
+const WALKER_BOOTS = { shellR: 1.35, shell: 0.8, fins: 3, fin: 1.5, from: 0.18, to: 0.68, lean: 0.75, flat: 0.35 };
+export function walkerBoots(scene: Scene, body: ArticulatedBody, worn: Mesh[]): Mesh[] {
+  const C = WALKER_BOOTS, mf = getMaterialFactory();
+  const darkC = new Color3(0.08, 0.06, 0.07), dark = mf.get("cloth", darkC, { emissive: darkC.scale(0.4), roughness: 1 });
+  const tanC = new Color3(0.6, 0.42, 0.18), tan = mf.get("cloth", tanC, { emissive: tanC.scale(0.3) });
+  const shins = [body.leftLowerLeg, body.rightLowerLeg];
+  for (const m of worn) if (/^evil(Guard|Spike)$/.test(m.name) && shins.includes(m.parent as Mesh)) m.setEnabled(false);
+  for (const knee of [body.leftKnee, body.rightKnee]) for (const m of knee.getChildMeshes(false)) if (/_[lr]FootM$/.test(m.name)) m.material = dark;
+  const out: Mesh[] = [];
+  for (const shin of shins) {
+    const bb = shin.getBoundingInfo().boundingBox, e = bb.extendSize, cc = bb.center, r = Math.max(e.x, e.z), h = e.y * 2, foot = cc.y - e.y;
+    const shell = MeshBuilder.CreateCylinder("walkerBoot", { height: h * C.shell, diameterTop: r * 2 * C.shellR, diameterBottom: r * 2 * C.shellR * 1.08, tessellation: 8 }, scene);
+    shell.parent = shin; shell.position.set(cc.x, foot + (h * C.shell) / 2, cc.z); shell.material = dark; out.push(shell);
+    for (let k = 0; k < C.fins; k++) {
+      const y = foot + h * (C.from + ((C.to - C.from) * k) / (C.fins - 1)), len = r * C.fin;
+      const fin = MeshBuilder.CreateCylinder("walkerBootFin", { height: len, diameterTop: 0, diameterBottom: r * 0.8, tessellation: 4 }, scene);
+      fin.parent = shin; fin.material = tan; fin.scaling.x = C.flat;
+      fin.rotation.x = C.lean;
+      fin.position.set(cc.x, y + Math.cos(C.lean) * len * 0.45, cc.z + r * C.shellR * 0.9 + Math.sin(C.lean) * len * 0.45);
+      out.push(fin);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 492 the Exiled Sentinel's shoulder spikes (evil.exiled_sentinel.red.png; audit 489 a.5: "rounded pauldrons - TABS: a row of tall black
  * spikes standing up over both shoulders, behind the shields").
  * Spec in torso widths W and heights TH (the torso box, torso frame): per shoulder a row of .count near-black 4-sided spikes along the shoulder

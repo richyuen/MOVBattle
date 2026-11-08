@@ -29,7 +29,7 @@ import { reaperRobe } from "./spookyDress";
 import { vampireVest } from "./spookyDress";
 import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTribalHideDress, dressTribalLoincloth, dressTribalNecklace, dressTribalPauldrons, hasTribalNecklace, trunkBand, wearsHideDress } from "./tribalDress";
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
-import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, monarchTunic, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicOveralls, mechanicSleeves, mechanicTank, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerHair, walkerHelm, walkerVest } from "./evilDress";
+import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchHarness, monarchTunic, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicOveralls, mechanicSleeves, mechanicTank, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerVest } from "./evilDress";
 import { sentinelUniform } from "./evilDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
@@ -1045,6 +1045,8 @@ export class UnitFactory {
       if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerVest(this._scene, body));
       // [S] 497 (a.6): long near-black hair from under the helm to the shoulders (evilDress walkerHair)
       if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerHair(this._scene, body));
+      // [S] 498 (a.4): near-black boots with three tan fins up each shin, in place of the navy shin guards (evilDress walkerBoots)
+      if (definition.id === "evil.shadow_walker") propMeshes.push(...walkerBoots(this._scene, body, propMeshes));
       // [S] 495 (a.3): long black hair from the crown over the chest to the waist (evilDress deathBringerHair)
       if (definition.id === "evil.death_bringer") propMeshes.push(...deathBringerHair(this._scene, body));
       // [S] 496 (a.2): a bone-tan faceted skull mask with sad sockets, team-coloured horns (evilDress deathBringerMask)
