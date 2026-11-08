@@ -184,7 +184,7 @@ const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // the firework archer: her burn is logged as she shoots, so her rocket's burst where it lands is the ability shot (evidence 418)
 // [evidence 435] the candlehead's ability pair is the spirit fire's knock-up where it lands on the man (audit 434 c.2), not the burn logged as he casts
 // [evidence 426] the harpooner's ability pair is his Pirate Kick on the reeled man (audit 422 c.2), not the reel (struck at 425; its haul shows in _struck)
-const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst", "pirate.harpooner": "kick", "spooky.candlehead": "knockup", "spooky.reaper": "impale", "legacy.super_peasant": "flight", "evil.exiled_sentinel": "pavise_block" };
+const ABILITY_PREF = { "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst", "pirate.harpooner": "kick", "spooky.candlehead": "knockup", "spooky.reaper": "impale", "legacy.super_peasant": "flight", "evil.exiled_sentinel": "pavise_block", "evil.death_bringer": "quick_dodge", "evil.void_monarch": "demon_form" };
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
 // swatches between a squire of each team (the skin reference): the left wall "cloth" with emissive = colour x PALETTE_GLOW (the dress
@@ -464,7 +464,7 @@ async function main() {
           // the painter dodges missiles (Painter Dodge): he spars with an archer, whose arrows are what he sidesteps (evidence 373)
           // the samurai deflects missiles (Projectile Block): he spars with an archer too (evidence 417)
           // the quick draw sidesteps missiles (Quickdraw Projectile Dodge): an archer too (evidence 445)
-          const t = game.spawnUnit(id === "legacy.dark_peasant" ? "medieval.knight" : id === "renaissance.painter" || id === "dynasty.samurai" || id === "wild_west.quick_draw" || id === "evil.exiled_sentinel" ? "medieval.archer" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
+          const t = game.spawnUnit(id === "legacy.dark_peasant" ? "medieval.knight" : id === "renaissance.painter" || id === "dynasty.samurai" || id === "wild_west.quick_draw" || id === "evil.exiled_sentinel" || id === "evil.death_bringer" ? "medieval.archer" : id === "evil.void_monarch" ? "medieval.knight" : "medieval.squire", 0, { x: support ? -10 : -d, z: 0 });
           // [evidence 480] A lethal punch ended the duel at contact, freezing
           // its corpse before the post-impact pair. A distant reserve keeps
           // battle time advancing without entering the contact scene.
@@ -487,6 +487,11 @@ async function main() {
           // [evidence 494] the Exiled Sentinel spars with an archer, two more beside it: their arrows (not his own missiles) are what his pavises catch.
           // Behind a squire the first arrows came at 2.7 s, after contact had swapped his boards for axes (probe 494); from 16 m they meet him on the way in
           if (id === "evil.exiled_sentinel") for (const dz of [-1.5, 1.5]) game.spawnUnit("medieval.archer", 0, { x: -d - 1, z: dz });
+          // [evidence 498] the Death Bringer dodges projectiles (card Characteristics, Quick Dodge): as the sentinel, an archer and two beside it, 8 m off
+          if (id === "evil.death_bringer") for (const dz of [-1.5, 1.5]) game.spawnUnit("medieval.archer", 0, { x: -d - 1, z: dz });
+          // [evidence 498] the Void Monarch transforms after dealing 800 damage (card Abilities, Demon Transformation): his knight and four mates
+          // packed inside his sword's 2 m splash, so his blows count several men each
+          if (id === "evil.void_monarch") for (const dz of [-1.5, -0.8, 0.8, 1.5]) game.spawnUnit("medieval.knight", 0, { x: -d - 0.6, z: dz });
           let ally = null;
           // [evidence 465] a bearer fights (polearm_melee, his pole's blow) and his ring's aura pulses beside it: he spars with his squire and has the
           // hurt ally beside him too, inside the ring, so the blow is the release and the aura the ability pair
@@ -659,7 +664,7 @@ async function main() {
         // spear's flight was a few pixels; from 8 m it crosses the open ground (only the motion shots re-frame)
         // [evidence 494] the Exiled Sentinel catches arrows on his pavises while he closes (card Characteristics): he starts 8 m off so two archers
         // behind his squire loose at him on the way in, before his boards turn to axes at contact
-        const d = id === "good.sacred_elephant" || id === "evil.exiled_sentinel" ? 8 : id === "legacy.dark_peasant" ? 2 : def.archetype === "artillery" ? 9 : charger ? 8 : abilities.has("lunge") ? 5.5 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
+        const d = id === "good.sacred_elephant" || id === "evil.exiled_sentinel" || id === "evil.death_bringer" ? 8 : id === "legacy.dark_peasant" ? 2 : def.archetype === "artillery" ? 9 : charger ? 8 : abilities.has("lunge") ? 5.5 : Math.min(8, Math.max(2.5, def.engageRange * 0.6));
         // Detection steps 6 ticks (one render) at a time; a logged event's frame comes from its world-time stamp, exact to the tick. Only the
         // projectile-count fallback (a missile with no fire log) is 6 ticks coarse.
         const det = await page.evaluate(({ id, d, support, want }) => {
@@ -690,7 +695,7 @@ async function main() {
             const now = missiles();
             // [evidence 427] a missile that leaves with a special just logged is that mechanic's (the Pirate Queen's Bomb Spin bombs), not the unit's attack
             const withSpecial = events.some((e) => special(e.kind) && tick - e.tick <= 12);
-            if (now > before && !withSpecial && id !== "evil.exiled_sentinel" && !seen.has("missile") && !seen.has("fire") && !seen.has("throw") && !seen.has("cast")) { events.push({ kind: "missile", tick }); seen.add("missile"); }
+            if (now > before && !withSpecial && id !== "evil.exiled_sentinel" && id !== "evil.death_bringer" && !seen.has("missile") && !seen.has("fire") && !seen.has("throw") && !seen.has("cast")) { events.push({ kind: "missile", tick }); seen.add("missile"); }
             before = now;
             // Done once a plain attack, its impact and a special mechanic are all seen, or 3 s after the first event
             if (want && !seen.has(want)) continue;
@@ -745,7 +750,7 @@ async function main() {
         // [evidence 461] a bearer's aura lies on the ally inside his ring (BEARER_AURA: a ring at the ally's feet, haste or stay): his motion shots
         // frame that ally head to foot, the feet and aura ring in frame (critic 460 flag_bearer c.1, banner_bearer c.1: the ally's feet were cut off)
         const bearer = id === "legacy.flag_bearer" || id === "legacy.banner_bearer";
-        const far = support ? 1 : (d >= 6 && id !== "evil.exiled_sentinel") || id === "pirate.blunderbuss" ? 3 : 0;
+        const far = support ? 1 : (d >= 6 && id !== "evil.exiled_sentinel" && id !== "evil.death_bringer") || id === "pirate.blunderbuss" ? 3 : 0;
         await take(`unit_${id}_idle`, null, 1);
         if (id === "good.celestial_aegis") await take(`unit_${id}_field`, null, 10);
         if (release) {
