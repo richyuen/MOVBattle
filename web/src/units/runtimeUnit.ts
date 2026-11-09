@@ -1942,16 +1942,18 @@ export class RuntimeUnit {
   }
 
   private _teacherParryUntil = -Infinity;
+  private _teacherParryHand: Vector3 | null = null;
 
   tryTeacherParry(from: Vector3, now: number): Vector3 | null {
     if (this.definition.id !== "secret.the_teacher" || this.isDead || this.isToppled || this.isDowned ||
-      this.animator.state === AnimState.Attacking || now < this._teacherParryUntil + 0.55) return null;
+      now < this._teacherParryUntil + 0.55) return null;
     const toward = from.subtract(this.position);
     toward.y = 0;
     if (toward.lengthSquared() < 1e-6) return null;
     const yaw = this.body.root.rotation.y;
     if (Vector3.Dot(toward.normalize(), new Vector3(Math.sin(yaw), 0, Math.cos(yaw))) < 0.45) return null;
     this._teacherParryUntil = now + 0.24;
+    this._teacherParryHand = this.body.rightHand.rotation.clone();
     this._holdTeacherParry(now);
     const hand = this.body.rightHand;
     for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
@@ -1959,7 +1961,12 @@ export class RuntimeUnit {
   }
 
   private _holdTeacherParry(now: number): void {
-    if (now >= this._teacherParryUntil || this._isDead || this.isToppled || this.isDowned) return;
+    if (!this._teacherParryHand) return;
+    if (now >= this._teacherParryUntil || this._isDead || this.isToppled || this.isDowned) {
+      this.body.rightHand.rotation.copyFrom(this._teacherParryHand);
+      this._teacherParryHand = null;
+      return;
+    }
     this.body.rightShoulder.rotation.set(-0.9, -0.32, -0.23);
     this.body.rightElbow.rotation.x = -1.42;
     this.body.rightHand.rotation.set(0.3, 0.45, 0.55);
