@@ -34,6 +34,39 @@ function eyeTopInHead(body: ArticulatedBody): number | null {
   return top;
 }
 
+export function executionerVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const torso = body.torsoMesh;
+  const { center, extendSize } = torso.getBoundingInfo().boundingBox;
+  const mf = getMaterialFactory();
+  const iron = new Color3(0.45, 0.45, 0.45);
+  const buttonColor = iron.scale(0.4);
+  const buttons = mf.get("cloth", buttonColor, { emissive: buttonColor.scale(0.12) });
+  const sleeves = mf.get("cloth", team.scale(0.24));
+  body.leftUpperArm.material = sleeves;
+  body.rightUpperArm.material = sleeves;
+
+  const shell = MeshBuilder.CreateCylinder("executionerVest", {
+    height: extendSize.y * 1.92,
+    diameterTop: extendSize.x * 2.34,
+    diameterBottom: extendSize.x * 2.18,
+    tessellation: 8,
+  }, scene);
+  shell.parent = torso;
+  shell.position.copyFrom(center);
+  shell.rotation.y = Math.PI / 8;
+  shell.scaling.z = extendSize.z / extendSize.x * 1.12;
+  shell.material = mf.get("cloth", iron, { emissive: iron.scale(0.12) });
+  const out = [shell];
+  for (const height of [-0.63, -0.31, 0.01, 0.33, 0.65]) {
+    const button = MeshBuilder.CreatePolyhedron("executionerVestButton", { type: 1, size: extendSize.x * 0.08 }, scene);
+    button.parent = torso;
+    button.position.set(center.x, center.y + extendSize.y * height, center.z + extendSize.z * 1.21);
+    button.material = buttons;
+    out.push(button);
+  }
+  return out;
+}
+
 /**
  * [S] 500 the Shouter's Nordic helmet (secret.shouter.red.png; audit 500 a.1: "helmet: a bare team head - TABS a dark iron Nordic helmet with
  * curled brown horns and a nose guard"). The render: a dark grey faceted iron bowl over the crown and the sides of the head, its rim just over the
