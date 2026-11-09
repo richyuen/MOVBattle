@@ -54,3 +54,29 @@ export function dressRaptorBody(scene: Scene, body: ArticulatedBody, team: Color
   }
   return out;
 }
+
+export function dressRaptorTeeth(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const skull = body.hip.getChildTransformNodes(true).find(node => node.name === "raptorSkullPivot");
+  const jaw = skull?.getChildTransformNodes(true).find(node => node.name === "raptorJawPivot");
+  if (!skull || !jaw) return [];
+  const scale = body.metrics.overallHeight / 2;
+  const ivory = new Color3(0.95, 0.9, 0.75);
+  const enamel = getMaterialFactory().get("unlit", ivory, { emissive: ivory });
+  const teeth: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 4; i++) {
+      for (const upper of [true, false]) {
+        const tooth = MeshBuilder.CreateCylinder("raptorTooth", {
+          height: scale * (0.093 - 0.011 * i), diameterTop: 0, diameterBottom: scale * 0.06, tessellation: 3,
+        }, scene);
+        tooth.parent = upper ? skull : jaw;
+        tooth.position.set(side * scale * (0.115 + 0.014 * i), scale * (upper ? -0.103 : 0.029), scale * (0.385 - 0.061 * i));
+        tooth.rotation.x = upper ? Math.PI + 0.22 : 0.22;
+        tooth.material = enamel;
+        scene.getGlowLayerByName("glow")?.addExcludedMesh(tooth);
+        teeth.push(tooth);
+      }
+    }
+  }
+  return teeth;
+}
