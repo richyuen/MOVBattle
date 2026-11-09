@@ -3987,6 +3987,7 @@ export class SimulationSystem {
       this.visualEffects?.spawnHitSparks(parry, 1.6);
       return;
     }
+    if (attacker.startRaptorBite(now)) this._logAbility(attacker, "raptor_bite", now, target.position);
     if (HOP_BACK[attacker.definition.id]) this._landedAt.set(attacker, now);
     if (attacker.definition.id === "renaissance.fencer" && !attacker.isDead && !this._recovers.has(attacker)) this._startRecover(attacker, target, now);
     // [S] 442 a weak man is speared on a tendril and hung, not cut (REAPER_IMPALE)

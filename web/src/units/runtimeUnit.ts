@@ -1892,6 +1892,7 @@ export class RuntimeUnit {
 
     this._applyPoseOverlay(isAttacking);
     this._holdTeacherParry(now);
+    this._updateRaptorBite(now);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
     this._applyFrostCrust(now);
     this._applyBurnFlames(now);
@@ -1914,6 +1915,30 @@ export class RuntimeUnit {
       if (n.rotationQuaternion) continue;
       n.rotation.x *= keep; n.rotation.z *= keep;
     }
+  }
+
+  private _raptorBite: { jaw: TransformNode; skull: TransformNode; rest: Vector3; at: number } | null = null;
+
+  startRaptorBite(now: number): boolean {
+    if (this.definition.id !== "secret.raptor") return false;
+    const skull = this.body.hip.getChildTransformNodes(true).find(node => node.name === "raptorSkullPivot");
+    const jaw = skull?.getChildTransformNodes(true).find(node => node.name === "raptorJawPivot");
+    if (!skull || !jaw) return false;
+    this._raptorBite = { jaw, skull, rest: this._raptorBite?.rest ?? skull.position.clone(), at: now };
+    this._updateRaptorBite(now);
+    return true;
+  }
+
+  private _updateRaptorBite(now: number): void {
+    const bite = this._raptorBite;
+    if (!bite) return;
+    const elapsed = Math.max(0, now - bite.at);
+    const thrust = Math.max(0, 1 - elapsed / 0.3);
+    bite.skull.position.copyFrom(bite.rest);
+    bite.skull.position.z += this.body.metrics.overallHeight * 0.14 * thrust;
+    bite.skull.rotation.x = 0.28 * thrust;
+    bite.jaw.rotation.x = elapsed < 0.12 ? 0.76 - 0.72 * elapsed / 0.12 : 0.04 + 0.42 * (1 - thrust / 0.6);
+    if (elapsed >= 0.3) this._raptorBite = null;
   }
 
   private _teacherParryUntil = -Infinity;
