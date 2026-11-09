@@ -34,6 +34,34 @@ function eyeTopInHead(body: ArticulatedBody): number | null {
   return top;
 }
 
+export function prisonerCap(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const head = body.headMesh;
+  const { center, extendSize } = head.getBoundingInfo().boundingBox;
+  const width = extendSize.x * 2;
+  const height = extendSize.y * 2;
+  const hem = (eyeTopInHead(body) ?? center.y + height * 0.18) + height * 0.015;
+  const mf = getMaterialFactory();
+  const wool = team.scale(0.48);
+  const cream = new Color3(0.88, 0.82, 0.64);
+  const cap = MeshBuilder.CreateCylinder("prisonerCap", {
+    height: height * 0.29, diameterTop: width * 0.94, diameterBottom: width * 1.12, tessellation: 8,
+  }, scene);
+  const band = MeshBuilder.CreateCylinder("prisonerCapHem", {
+    height: height * 0.105, diameter: width * 1.14, tessellation: 8,
+  }, scene);
+  cap.material = mf.get("cloth", wool, { emissive: wool.scale(0.12) });
+  band.material = mf.get("cloth", cream, { emissive: cream.scale(0.12) });
+  cap.position.set(center.x, hem + height * 0.215, center.z);
+  band.position.set(center.x, hem + height * 0.0525, center.z);
+  for (const mesh of [cap, band]) {
+    mesh.parent = head;
+    mesh.rotation.y = Math.PI / 8;
+    mesh.scaling.z = extendSize.z / extendSize.x;
+    mesh.convertToFlatShadedMesh();
+  }
+  return [cap, band];
+}
+
 export function executionerVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
   const { center, extendSize } = torso.getBoundingInfo().boundingBox;

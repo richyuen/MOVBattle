@@ -31,7 +31,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, chuKoNuTopknot, executionerVest, jesterCap, shouterHelm, teacherHair } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, chuKoNuTopknot, executionerVest, jesterCap, prisonerCap, shouterHelm, teacherHair } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1063,6 +1063,7 @@ export class UnitFactory {
     if (definition.id === "secret.ball_n_chain" && !shouldUseVehicleBody) {
       // [S] 501 (b.1): a huge faceted grey stone ball hugged at the chest, a thick chain hanging from it, in place of the flail (secretDress ballStone)
       propMeshes.push(...ballStone(this._scene, body));
+      propMeshes.push(...prisonerCap(this._scene, body, teamColor));
     }
     if (definition.id === "secret.the_teacher" && !shouldUseVehicleBody) {
       // [S] 502 (a.1): long dark brown renaissance hair, a crown cap and bushy sides to the jaw, a back mass to the nape (secretDress teacherHair)

@@ -1115,7 +1115,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "duelist", materialPreset: "secret_festive",
       });
     case "secret_ball_n_chain":
-      return vis({ scale: 1.22, bulk: 1.25 }, "flail", "hood", "none", "none", "#5d5d5d", undefined, {
+      return vis({ scale: 1.22, bulk: 1.25 }, "flail", "none", "none", "none", "#5d5d5d", undefined, {
         posePreset: "spinner", materialPreset: "secret_bandit",
       });
     case "secret_chu_ko_nu":
