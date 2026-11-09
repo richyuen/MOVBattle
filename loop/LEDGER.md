@@ -4,6 +4,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+504 | 6a5b08c9 | secret.executioner.c | approved (struck 1, 2)
+504 | f91998de | secret.ball_n_chain.c | approved (struck 1)
+504 | e46ee0c3 | evil.death_bringer.a | approved (struck 1; CONFIRM failed a)
+504 | 7aac0f42 | secret.bomb_on_a_stick.c | approved (struck 2)
+504 | fa2c8ad9 | secret.fan_bearer.a | approved (struck 1)
+
 503 | 90f0707f,6ace58da | evil.death_bringer.a | approved [R] (blocker 2; 1's crown clause cleared; CONFIRM passed a, gap critic failed it)
 503 | 412d556a,1888c349 | evil.void_monarch.c | approved (blocker 1; c PASS; CONFIRM D)
 503 | c9a3b096,71cb0028 | secret.ballooner.b | approved (blocker 1; b PASS)
@@ -40,21 +46,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 500 | 62fb739c | secret.shouter.a | approved (blocker 1)
 500 | 69b5ae21 | secret.fan_bearer.b | approved (blocker 1)
 
-499 | f7cd5edc | evil.shadow_walker.a | approved (blocker 7; a PASS; CONFIRM D)
-499 | bb037ff9 | evil.mad_mechanic.a | approved (blocker 7)
-499 | d837f5e3,54be779a | evil.mad_mechanic.a | approved (blocker 8)
-499 | 1d2a9dc9 | evil.mad_mechanic.a | approved (blocker 9; a PASS; CONFIRM D)
-499 | bb1030f6 | evil.tempest_lich.a | approved (blocker 5; CONFIRM failed a again: plateau)
-499 | 3a3576d4 | evil.death_bringer.a | approved (blocker 4; 2 struck by lineup)
-499 | fe3430c4 | evil.death_bringer.c | approved (blocker 3; c PASS)
-499 | 66fc425a | evil.void_monarch.c | approved (blocker 2; c PASS)
-499 | 413f738e | evil.void_monarch.a | approved (blocker 6)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+SS:Executioner jump | range .65 engage to engage+1.5 m, aim .45 engage short; rise 5, axe visual .46 s, jump cooldown 2 s | 504 | approved | planted before chop
+SS:Foolish Jump | windup .24 s, backstep goal .5 m, approach band engage+3.4, rise 6.5, lands .4 engage short, cooldown 5 s | 504 | approved | spin_move
+evilDress:DEATH_HAIR crown/back | 4 locks per side .032-.046 TW in both axes, staggered behind mask; 6 narrow rear strands | 504 | approved | 503 flat side locks and 9 back strands
+SS:BOMB_SMACK self-destruct | bomb prop hidden after blast, lethal self-damage, horizontal impulse 6 and lift input 4 | 504 | approved | bomber survived
+manifest/UV:fan_bearer hat | none | 504 | approved | conical_hat
 evilDress:DEATH_SKULL | [S] cranium prism (crown .6H, cheek .6W) + jaw prism to .2W at -.66H fwd .04D;brow slabs .4W tip .25;sockets .3x.16 + drop .14;nose .16W;mouth .44W,5 teeth | 502 | approved (tooth row a defect) | one hexagon prism (DEATH_MASK outline)
 evilDress:MONARCH_BEAK | prism plate topW1.1 jawW.8 to chin -.6H,.06D proud,from eye foot;beak .3W x .5H tilt.75;nostrils | 502 | approved | bare face
 evilDress/RU/SS:MONARCH_DEMON | at demon_form standFirm (steadfast, topple cleared);void cloth (.05,.02,.06);pink eyes;2 rings TW3.2/3.8;7 shards orbit1.7TW | 502 | approved (tilt and lift stand) | lift only

@@ -24,11 +24,12 @@ Read whole at step 1; one fact per line, merge near cap.
 - Fresnel t=|n.v|^power is 1 face-on and ADDS left*(1-t)+right*t: a thin rim wants power<1 (.25, 489). Cull back faces; probing in-page, swap in a new material.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change). A faceless unit at .6 rad reads as a back: .25 (497).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
-- Capture frames by mesh top once a prop tops the head by .3 unit height: re-frames all shots, RE-AUDIT (420, 447).
-- `capture.mjs --units` takes a comma list, no spaces, and re-shoots lineup_<f> (498); an iter-N capture clears probe swatches (render after).
+- A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).
+- `--units` takes comma-separated IDs and re-shoots lineup_<f> (498); render swatches after capture.
+- A lethal blast can freeze a duel at contact. Use off-camera reserves on both teams for a self-destruct motion pair (504).
 - A dress change aimed at the idle must clear the rest pose: probe what covers that band first (442 queen). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Two gaps in one file: commit apart (stage a hunk subset with git apply --cached) so each reverts alone (406).
-- Logged at the swing start / let-go, not the landing: a preset's instant "slam" (use the pending blow, 426); a special logged as a missile leaves owns that missile (427 queen). A status logged at the cast (fire_dot) makes _struck precede the missile: an on-landing mechanic needs ABILITY_PREF (435 candlehead).
+- An instant slam logs at swing start: use the pending blow (426). A special logged at let-go owns its missile (427). A cast status can put _struck before impact: use ABILITY_PREF for on-landing effects (435).
 - The _ability/_release shots are the log tick itself, before RuntimeUnit.update: a swap or pose set at the log shows only after (437 bat). A latch reads in _release when it pins at the decision and its plain hits come from the draughts .3 s on (444 vampire).
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
