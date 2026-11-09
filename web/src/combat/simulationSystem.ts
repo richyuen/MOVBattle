@@ -1457,6 +1457,11 @@ export class SimulationSystem {
     const head = target.body.headTop.getAbsolutePosition();
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
     this._logAbility(attacker, "blast", now, target.position);
+    for (const mesh of attacker.body.rightHand.getChildMeshes(false, (mesh) => mesh.name.startsWith("bombStick"))) {
+      mesh.setEnabled(false);
+    }
+    const recoil = new Vector3(attacker.position.x - target.position.x, 0, attacker.position.z - target.position.z).normalize();
+    attacker.applyDamage(attacker.currentHealth, recoil.scale(6).add(new Vector3(0, 4, 0)));
     return true;
   }
 
