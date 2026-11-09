@@ -516,6 +516,12 @@ async function main() {
         };
         window.__unitStart = (id, d, support) => {
           if (!window.__unitPlace(id, d, support)) return false;
+          // A self-destruct ends a duel at the blast tick. Keep both teams
+          // alive off camera so the post-impact frames can show the recoil.
+          if (id === "secret.bomb_on_a_stick") {
+            window.game.spawnUnit("medieval.squire", 0, { x: -80, z: 50 });
+            window.game.spawnUnit("medieval.squire", 1, { x: 80, z: 50 });
+          }
           window.game.startBattleImmediate();
           window.game.clearHitLog();
           window.game.clearAbilityLog();
