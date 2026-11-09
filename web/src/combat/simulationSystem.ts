@@ -2158,6 +2158,23 @@ export class SimulationSystem {
       }
     }
 
+    // The Executioner raises his axe on a short hop and starts the chop on landing.
+    if (unit.definition.id === "secret.executioner") {
+      if (unit.isAirborne) return;
+      if (canMove && distance > engageDistance * 0.65 && distance < engageDistance + 1.5
+        && unit.canAttack(now) && now >= (this._jumpReadyAt.get(unit) ?? 0)) {
+        const dir = new Vector3(enemy.position.x - unit.position.x, 0, enemy.position.z - unit.position.z).normalize();
+        unit.faceTarget(enemy.position);
+        if (unit.leap(dir, distance - engageDistance * 0.45, 5)) {
+          unit.triggerAttackVisual(0.46);
+          this._jumpReadyAt.set(unit, now + 2);
+          this._clearPathState(unit);
+          this._logAbility(unit, "executioner_jump", now, enemy.position);
+          return;
+        }
+      }
+    }
+
     // Halfling Jump (HALFLING_JUMP): onto the man from up to 4 m off
     if (unit.definition.id === "farmer.halfling" && canMove && distance > engageDistance + HALFLING_JUMP.from && distance < engageDistance + HALFLING_JUMP.reach
       && now >= (this._jumpReadyAt.get(unit) ?? 0)) {
