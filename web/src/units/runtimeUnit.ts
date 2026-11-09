@@ -1917,14 +1917,15 @@ export class RuntimeUnit {
     }
   }
 
-  private _raptorBite: { jaw: TransformNode; skull: TransformNode; rest: Vector3; at: number } | null = null;
+  private _raptorBite: { jaw: TransformNode; skull: TransformNode; neck: Mesh; rest: Vector3; at: number } | null = null;
 
   startRaptorBite(now: number): boolean {
     if (this.definition.id !== "secret.raptor") return false;
     const skull = this.body.hip.getChildTransformNodes(true).find(node => node.name === "raptorSkullPivot");
     const jaw = skull?.getChildTransformNodes(true).find(node => node.name === "raptorJawPivot");
-    if (!skull || !jaw) return false;
-    this._raptorBite = { jaw, skull, rest: this._raptorBite?.rest ?? skull.position.clone(), at: now };
+    const neck = this.body.hip.getChildMeshes(true).find(mesh => mesh.name === "raptorNeck");
+    if (!skull || !jaw || !(neck instanceof Mesh)) return false;
+    this._raptorBite = { jaw, skull, neck, rest: this._raptorBite?.rest ?? skull.position.clone(), at: now };
     this._updateRaptorBite(now);
     return true;
   }
@@ -1934,10 +1935,11 @@ export class RuntimeUnit {
     if (!bite) return;
     const elapsed = Math.max(0, now - bite.at);
     const thrust = Math.max(0, 1 - elapsed / 0.3);
+    bite.neck.scaling.z = 0.26 + 0.24 * thrust;
     bite.skull.position.copyFrom(bite.rest);
     bite.skull.position.z += this.body.metrics.overallHeight * 0.14 * thrust;
     bite.skull.rotation.x = 0.28 * thrust;
-    bite.jaw.rotation.x = elapsed < 0.12 ? 0.76 - 0.72 * elapsed / 0.12 : 0.04 + 0.42 * (1 - thrust / 0.6);
+    bite.jaw.rotation.x = elapsed < 0.12 ? 0.76 - 0.72 * elapsed / 0.12 : 0.46 - 0.7 * thrust;
     if (elapsed >= 0.3) this._raptorBite = null;
   }
 

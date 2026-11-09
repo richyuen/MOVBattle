@@ -3987,12 +3987,16 @@ export class SimulationSystem {
       this.visualEffects?.spawnHitSparks(parry, 1.6);
       return;
     }
-    if (attacker.startRaptorBite(now)) this._logAbility(attacker, "raptor_bite", now, target.position);
+    const raptorBite = attacker.startRaptorBite(now);
+    if (raptorBite) {
+      knockback = knockback.scale(0.22);
+      this._logAbility(attacker, "raptor_bite", now, target.position);
+    }
     if (HOP_BACK[attacker.definition.id]) this._landedAt.set(attacker, now);
     if (attacker.definition.id === "renaissance.fencer" && !attacker.isDead && !this._recovers.has(attacker)) this._startRecover(attacker, target, now);
     // [S] 442 a weak man is speared on a tendril and hung, not cut (REAPER_IMPALE)
     const impaled = this._tryImpale(attacker, target, now);
-    const heavy = !impaled && attacker.animator.defaultAttackMotion === "heavy_swing";
+    const heavy = !impaled && !raptorBite && attacker.animator.defaultAttackMotion === "heavy_swing";
     // A heavy blow that leaves him standing dwells on him (BLOW_DWELL): the push is withheld from the damage step and fired with the throw; the crowd
     // around him still takes the blow's shock now
     const dwells = heavy && target.currentHealth > damage;
