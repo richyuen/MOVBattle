@@ -931,11 +931,13 @@ const DEATH_MASK = {
   sockW: 0.3, sockH: 0.11, sockX: 0.24, sockY: 0.06, droop: 0.35, nose: 0.14, noseY: -0.18, horn: 0.5,
 };
 const DEATH_SKULL = {
-  // right halves, top to bottom (head W, H about the head's centre), mirrored into convex outlines
-  cranium: [[0.3, 0.6], [0.52, 0.46], [0.6, 0.14], [0.57, -0.06], [0.4, -0.24]], jaw: [[0.36, -0.2], [0.3, -0.48], [0.2, -0.66]], jawFwd: 0.04,
-  browW: 0.4, browH: 0.09, browOut: 0.07, browX: 0.24, browY: 0.2, browTip: 0.25,
-  sockW: 0.3, sockH: 0.16, sockX: 0.24, sockY: 0.06, dropH: 0.14, dropX: 0.06,
-  noseW: 0.16, noseH: 0.14, noseY: -0.15, mouthW: 0.44, mouthH: 0.035, mouthY: -0.36, teeth: 5, toothH: 0.14,
+  // TABS red and blue renders: domed crown, flared cheekbones low on the face,
+  // a chin one third as wide as the cheeks, and a shallow rim swept back into the hair.
+  // The paired dark sockets sit low beneath the forehead, above a small nasal notch.
+  outline: [[0.13, 0.51], [0.25, 0.43], [0.34, 0.26], [0.36, 0.05], [0.47, -0.1],
+    [0.41, -0.29], [0.19, -0.38], [0.15, -0.52]],
+  sockW: 0.19, sockH: 0.10, sockX: 0.18, sockY: -0.07, dropH: 0.07, dropX: 0.02,
+  noseW: 0.09, noseH: 0.12, noseY: -0.23,
 };
 function prism(scene: Scene, name: string, outline: number[][], depth: number): Mesh {
   const pos: number[] = [], idx: number[] = [], n = outline.length;
@@ -947,34 +949,54 @@ function prism(scene: Scene, name: string, outline: number[][], depth: number): 
   const mesh = new Mesh(name, scene); data.applyToMesh(mesh); mesh.convertToFlatShadedMesh();
   return mesh;
 }
+
+function deathSkullShell(scene: Scene, width: number, height: number, depth: number): Mesh {
+  const half = DEATH_SKULL.outline;
+  const outline = [...half, ...half.slice().reverse().map(([x, y]) => [-x, y])];
+  const positions: number[] = [], indices: number[] = [], normals: number[] = [];
+  const count = outline.length;
+  for (const [scale, z] of [[0.77, 0.54], [1, 0.38], [0.76, 0.17]]) {
+    for (const [x, y] of outline) positions.push(x * width * scale, y * height * scale, depth * z);
+  }
+  const center = positions.length / 3;
+  positions.push(0, 0, depth * 0.56);
+  for (let i = 0; i < count; i++) indices.push(center, i, (i + 1) % count);
+  for (let ring = 0; ring < 2; ring++) {
+    for (let i = 0; i < count; i++) {
+      const a = ring * count + i;
+      const b = ring * count + (i + 1) % count;
+      indices.push(a, b + count, b, a, a + count, b + count);
+    }
+  }
+  VertexData.ComputeNormals(positions, indices, normals);
+  const data = new VertexData();
+  data.positions = positions; data.indices = indices; data.normals = normals;
+  const mesh = new Mesh("deathMask", scene);
+  data.applyToMesh(mesh);
+  return mesh.convertToFlatShadedMesh();
+}
+
 export function deathBringerMask(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const C = DEATH_MASK, head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center, mf = getMaterialFactory();
   const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2, glow = scene.getGlowLayerByName("glow");
   for (const m of head.getChildMeshes(true)) if (/^evil(Skull|Jaw|Socket|Nose)$/.test(m.name)) m.setEnabled(false);
+  head.isVisible = false;
+  body.leftEye?.setEnabled(false);
+  body.rightEye?.setEnabled(false);
   const hornC = team.scale(C.horn), horn = mf.get("cloth", hornC, { emissive: hornC.scale(0.18) });
   for (const m of head.getChildMeshes(true)) if (m.name === "evilHorn") (m as Mesh).material = horn;
   const tan = mf.get("cloth", C.tan, { emissive: C.tan.scale(0.12) });
   const dark = mf.get("unlit", new Color3(0.03, 0.02, 0.03), { emissive: new Color3(0.03, 0.02, 0.03) });
   const out: Mesh[] = [];
   const S = DEATH_SKULL;
-  const sym = (half: number[][]): number[][] => [...half, ...half.slice().reverse().map(([x, y]) => [-x, y])].map(([x, y]) => [x * W, y * H]);
-  // [S] 502 (a.3: "a flat square tan plate with two slit eyes on a cube head - TABS: a sculpted demon skull with a brow ridge, hollow drooping
-  // eye sockets, a nose hole and a narrowing jaw"). The one hexagon prism is cut into a skull: a cranium prism (rounded crown, widest at the
-  // cheekbones) and a narrower jaw prism under it set .jawFwd D forward; a brow ridge of two slabs proud of the face over the sockets, their outer
-  // ends tipped down; big dark teardrop sockets (a slab and a point under it) sunk under the ridge; a dark inverted-heart nose hole; a dark mouth
-  // slit across the jaw with tooth gaps down from it. Spec in head W, H, D (the head box, centre c), off the red render (mask ~1.2 W across).
-  const mask = prism(scene, "deathMask", sym(S.cranium), D * C.deep);
-  mask.parent = head; mask.position.set(c.x, c.y, c.z - D * C.back); mask.material = tan; out.push(mask);
-  const face = c.z - D * C.back + (D * C.deep) / 2;
-  const jaw = prism(scene, "deathMaskJaw", sym(S.jaw), D * C.deep * 0.9);
-  jaw.parent = head; jaw.position.set(c.x, c.y, c.z - D * C.back + D * S.jawFwd); jaw.material = tan; out.push(jaw);
-  const jawFace = face + D * S.jawFwd - D * C.deep * 0.05;
+  const mask = deathSkullShell(scene, W, H, D);
+  mask.parent = head; mask.position.copyFrom(c); mask.material = tan; out.push(mask);
+  const face = c.z + D * 0.54;
   const slab = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, rz: number, m: Material): Mesh => {
     const s = MeshBuilder.CreateBox(name, { width: W * w, height: H * h, depth: D * d }, scene);
     s.parent = head; s.position.set(c.x + W * x, c.y + H * y, z); s.rotation.z = rz; s.material = m; out.push(s); return s;
   };
   for (const side of [-1, 1]) {
-    slab("deathMaskBrow", S.browW, S.browH, S.browOut * 2, side * S.browX, S.browY, face, -side * S.browTip, tan);
     slab("deathMaskSocket", S.sockW, S.sockH, 0.06, side * S.sockX, S.sockY, face + D * 0.015, -side * C.droop, dark);
     const tip = MeshBuilder.CreateCylinder("deathMaskSocket", { height: H * S.dropH, diameterTop: W * S.sockW * 0.7, diameterBottom: 0, tessellation: 3 }, scene);
     tip.parent = head; tip.scaling.z = 0.25; tip.rotation.z = -side * C.droop * 0.6;
@@ -982,14 +1004,9 @@ export function deathBringerMask(scene: Scene, body: ArticulatedBody, team: Colo
   }
   const nose = MeshBuilder.CreateCylinder("deathMaskNose", { height: H * S.noseH, diameterBottom: W * S.noseW, diameterTop: 0, tessellation: 3 }, scene);
   nose.parent = head; nose.rotation.x = Math.PI; nose.scaling.z = 0.3; nose.position.set(c.x, c.y + H * S.noseY, face + D * 0.02); nose.material = dark; out.push(nose);
-  slab("deathMaskMouth", S.mouthW, S.mouthH, 0.05, 0, S.mouthY, jawFace + D * 0.015, 0, dark);
-  for (let i = 0; i < S.teeth; i++) {
-    const x = (i / (S.teeth - 1) - 0.5) * S.mouthW * 0.8;
-    slab("deathMaskTooth", 0.025, S.toothH, 0.05, x, S.mouthY - S.toothH / 2, jawFace + D * 0.015, 0, dark);
-  }
   // the team-skin neck under the chin glowed blue over the mask's foot (probe 496): out of the glow
   for (const m of body.allMeshes) if (/_neckM$/.test(m.name)) glow?.addExcludedMesh(m);
-  for (const m of out) { if (m !== mask && m !== jaw) m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  for (const m of out) { if (m !== mask) m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
 
