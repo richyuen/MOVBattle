@@ -15,6 +15,7 @@ import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody, crewProportions, type ArticulatedBody } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
 import { attachProps, buildPerchedCrow } from "./propBuilder";
+import { dressRaptorBody } from "./raptorBody";
 import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type WheelbarrowCrew } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
 import { getMaterialFactory } from "./materialFactory";
@@ -1038,6 +1039,9 @@ export class UnitFactory {
     }
     if (definition.id === "evil.void_cultist" && !shouldUseVehicleBody) {
       propMeshes.push(...dressVoidCultist(this._scene, body, teamColor, propMeshes));
+    }
+    if (definition.id === "secret.raptor" && !shouldUseVehicleBody) {
+      propMeshes.push(...dressRaptorBody(this._scene, body, teamColor));
     }
     if (definition.id === "secret.bomb_on_a_stick" && !shouldUseVehicleBody) {
       propMeshes.push(...bomberHair(this._scene, body));

@@ -1102,7 +1102,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { "ability-active": ["gust_ring"] },
       });
     case "secret_raptor":
-      return vis({ scale: 1.2, bulk: 0.95, headSize: 0.95, armLength: 0.7, legLength: 1.2 }, "none", "none", "none", "raptor_mount", "#7c8a4b", undefined, {
+      return vis({ scale: 1.2, bulk: 0.95, headSize: 0.95, armLength: 0.7, legLength: 1.2 }, "none", "none", "none", "none", "#7c8a4b", undefined, {
         posePreset: "beast", materialPreset: "secret_beast",
       });
     case "secret_teacher":
