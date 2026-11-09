@@ -1891,6 +1891,7 @@ export class RuntimeUnit {
     }
 
     this._applyPoseOverlay(isAttacking);
+    this._holdTeacherParry(now);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
     this._applyFrostCrust(now);
     this._applyBurnFlames(now);
@@ -1913,6 +1914,30 @@ export class RuntimeUnit {
       if (n.rotationQuaternion) continue;
       n.rotation.x *= keep; n.rotation.z *= keep;
     }
+  }
+
+  private _teacherParryUntil = -Infinity;
+
+  tryTeacherParry(from: Vector3, now: number): Vector3 | null {
+    if (this.definition.id !== "secret.the_teacher" || this.isDead || this.isToppled || this.isDowned ||
+      this.animator.state === AnimState.Attacking || now < this._teacherParryUntil + 0.55) return null;
+    const toward = from.subtract(this.position);
+    toward.y = 0;
+    if (toward.lengthSquared() < 1e-6) return null;
+    const yaw = this.body.root.rotation.y;
+    if (Vector3.Dot(toward.normalize(), new Vector3(Math.sin(yaw), 0, Math.cos(yaw))) < 0.45) return null;
+    this._teacherParryUntil = now + 0.24;
+    this._holdTeacherParry(now);
+    const hand = this.body.rightHand;
+    for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+    return hand.getAbsolutePosition().add(toward.scale(0.24)).add(new Vector3(0, 0.19, 0));
+  }
+
+  private _holdTeacherParry(now: number): void {
+    if (now >= this._teacherParryUntil || this._isDead || this.isToppled || this.isDowned) return;
+    this.body.rightShoulder.rotation.set(-0.9, -0.32, -0.23);
+    this.body.rightElbow.rotation.x = -1.42;
+    this.body.rightHand.rotation.set(0.3, 0.45, 0.55);
   }
 
   private _applyPoseOverlay(isAttacking: boolean): void {

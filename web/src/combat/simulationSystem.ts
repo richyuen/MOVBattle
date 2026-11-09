@@ -3981,6 +3981,12 @@ export class SimulationSystem {
   private _landMeleeBlow(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, splashRadius: number, knockback: Vector3, now: number, impactOrigin: Vector3): void {
     // The striker's aim is pinned where the blow lands before the man is thrown off that point
     attacker.animator.blowStruck();
+    const parry = target.tryTeacherParry(attacker.position, now);
+    if (parry) {
+      this._logAbility(target, "teacher_parry", now, parry);
+      this.visualEffects?.spawnHitSparks(parry, 1.6);
+      return;
+    }
     if (HOP_BACK[attacker.definition.id]) this._landedAt.set(attacker, now);
     if (attacker.definition.id === "renaissance.fencer" && !attacker.isDead && !this._recovers.has(attacker)) this._startRecover(attacker, target, now);
     // [S] 442 a weak man is speared on a tendril and hung, not cut (REAPER_IMPALE)
