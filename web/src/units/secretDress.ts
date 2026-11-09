@@ -142,6 +142,28 @@ export function shouterHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+export function shouterVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const torso = body.torsoMesh;
+  const { center, extendSize } = torso.getBoundingInfo().boundingBox;
+  const mf = getMaterialFactory();
+  const iron = SHOUTER_HELM.iron;
+  const material = mf.get("cloth", iron, { emissive: iron.scale(0.12) });
+  torso.material = mf.get("cloth", team.scale(0.52));
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    const panel = MeshBuilder.CreateBox("shouterVestPanel", {
+      width: extendSize.x * 0.93, height: extendSize.y * 1.78, depth: extendSize.z * 0.49,
+    }, scene);
+    panel.parent = torso;
+    panel.position.set(center.x + side * extendSize.x * 0.45, center.y + extendSize.y * 0.08, center.z + extendSize.z * 0.94);
+    panel.rotation.y = side * 0.19;
+    panel.rotation.z = side * 0.07;
+    panel.material = material;
+    out.push(panel);
+  }
+  return out;
+}
+
 /**
  * [S] 501 the Ballooner's Balloon Backpack (card Appearance "a backpack with a mini hot air balloon attached to it"; reference/units/secret.ballooner.png,
  * the icon: a satchel with a cluster of small balloons on strings over it; the red render shows its dark straps at the chest's sides; audit 500 a.1:

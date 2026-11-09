@@ -31,7 +31,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, chuKoNuTopknot, executionerVest, jesterCap, prisonerCap, shouterHelm, teacherHair } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, chuKoNuTopknot, executionerVest, jesterCap, prisonerCap, shouterHelm, shouterVest, teacherHair } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1045,6 +1045,7 @@ export class UnitFactory {
     if (definition.id === "secret.shouter" && !shouldUseVehicleBody) {
       // [S] 500 (a.1): a dark iron Nordic helmet, nose guard and cheek plates, curled brown horns (secretDress shouterHelm)
       propMeshes.push(...shouterHelm(this._scene, body));
+      propMeshes.push(...shouterVest(this._scene, body, teamColor));
     }
     if (definition.id === "secret.ballooner" && !shouldUseVehicleBody) {
       // [S] 501 (a.1): a leather satchel on the back with a cluster of small balloons on strings over it, in place of the pink sphere (secretDress balloonerPack)
