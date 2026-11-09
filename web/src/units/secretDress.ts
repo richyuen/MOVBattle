@@ -62,6 +62,37 @@ export function prisonerCap(scene: Scene, body: ArticulatedBody, team: Color3): 
   return [cap, band];
 }
 
+export function bomberHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const head = body.headMesh;
+  const { center, extendSize } = head.getBoundingInfo().boundingBox;
+  const w = extendSize.x, h = extendSize.y, d = extendSize.z;
+  const ginger = new Color3(0.7, 0.294, 0.07);
+  const hair = getMaterialFactory().get("cloth", ginger, { emissive: ginger.scale(0.12) });
+  const out: Mesh[] = [];
+  const lock = (name: string, x: number, y: number, z: number, sx: number, sy: number, sz: number, tilt: number) => {
+    const mesh = MeshBuilder.CreateIcoSphere(name, { radius: 1, subdivisions: 1, flat: true }, scene);
+    mesh.parent = head;
+    mesh.position.set(center.x + x * w, center.y + y * h, center.z + z * d);
+    mesh.scaling.set(sx * w, sy * h, sz * d);
+    mesh.rotation.z = tilt;
+    mesh.material = hair;
+    out.push(mesh);
+  };
+  lock("bomberHairCrown", 0, 0.68, -0.12, 1.16, 0.66, 1.15, -0.08);
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 3; i++) {
+      lock("bomberHairLock", side * (0.94 + i * 0.08), 0.52 - i * 0.41, 0.42 - i * 0.37,
+        0.26, 0.45, 0.30, side * (0.55 - i * 0.27));
+    }
+  }
+  for (let i = 0; i < 7; i++) {
+    const diameter = 0.39 - i * 0.033;
+    lock("bomberHairBraid", (i % 2 ? 0.13 : -0.13) + i * 0.07, 0.06 - i * 0.37, -1.03 - i * 0.065,
+      diameter, diameter * 1.22, diameter, i % 2 ? -0.43 : 0.43);
+  }
+  return out;
+}
+
 export function executionerVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
   const { center, extendSize } = torso.getBoundingInfo().boundingBox;
