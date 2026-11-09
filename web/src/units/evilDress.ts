@@ -1058,9 +1058,9 @@ const DEATH_HAIR = {
   fall: 11, fallSpread: 0.62, fallW: [0.07, 0.11, 0.06, 0.09, 0.12, 0.07, 0.1, 0.06, 0.11, 0.08, 0.07], fallLong: 1.25, fallVary: 0.38,
   kink: 0.035, kinkAt: 0.55, shoulder: 2, shoulderX: 0.4, shoulderLong: 0.42,
   // [S] 502 crown-rooted side locks and back fall (a.2)
-  // [R] 503: the locks were .14-.2 TW wide across x on the head's side, planks standing out sideways (the slab); now .lockT TW across x and
-  // .lockW TW deep, lying flat on the head's side, .locks of them per side from the scalp's edge
-  locks: 6, lockX: 0.52, lockY: 0.38, lockLong: 0.8, lockT: 0.045, lockW: [0.09, 0.12, 0.08, 0.11, 0.1, 0.12], backFall: 9, backSpread: 0.8, backFallLong: 1.0,
+  // Thin separated strands sit behind the mask and flare into different tips.
+  lockWidths: [0.032, 0.046, 0.035, 0.042], lockX: 0.49, lockY: 0.38, lockLong: 0.92,
+  backFall: 6, backSpread: 0.65, backFallLong: 1.0,
 };
 export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = DEATH_HAIR, mf = getMaterialFactory();
@@ -1112,10 +1112,10 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   body.torso.computeWorldMatrix(true); head.computeWorldMatrix(true);
   const toTorso = body.torso.getWorldMatrix().clone().invert();
   const inTorso = (x: number, y: number, z: number): Vector3 => Vector3.TransformCoordinates(Vector3.TransformCoordinates(new Vector3(x, y, z), head.getWorldMatrix()), toTorso);
-  for (const side of [-1, 1]) for (let k = 0; k < C.locks; k++) {
-    const t = k / (C.locks - 1) - 0.5, p = inTorso(c.x + side * W * C.lockX, c.y + H * C.lockY, c.z + t * D * 0.8);
-    const foot = top - TH * C.lockLong * (1 - Math.abs(t) * 0.3), w = C.lockW[k % C.lockW.length];
-    strand(p.x, C.lockT, p.y - foot, side * C.kink * (1 + k % 3), p.z, p.y, w);
+  for (const side of [-1, 1]) for (const [k, width] of C.lockWidths.entries()) {
+    const p = inTorso(c.x + side * W * (C.lockX + k * 0.025), c.y + H * (C.lockY - k * 0.035), c.z - D * (0.08 + k * 0.16));
+    const foot = top - TH * C.lockLong * (0.48 + k * 0.17);
+    strand(p.x, width, p.y - foot, side * C.kink * (4 - k), p.z, p.y, width);
   }
   const crown = inTorso(c.x, c.y + H * C.lockY, c.z - D * 0.45);
   const headW = Vector3.Distance(inTorso(c.x - W / 2, c.y, c.z), inTorso(c.x + W / 2, c.y, c.z));
@@ -1123,7 +1123,7 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
     const t = i / (C.backFall - 1) - 0.5, w = C.fallW[(i + 3) % C.fallW.length];
     const foot = top - TH * C.backFallLong * (1 - C.fallVary * 0.6 * (((i * 3) % 4) / 3));
     // [R] 503: rooted inside the head's width at the crown (.8 TW across stood out either side of the head as a block), fanning out below
-    strand(t * Math.min(TW * C.backSpread, headW * 0.8), w * 1.2, crown.y - foot, t * TW * 0.25 + C.kink * (i % 2 ? 1 : -1), Math.min(crown.z, cz - TD / 2 - TW * C.proud), crown.y);
+    strand(t * Math.min(TW * C.backSpread, headW * 0.8), w * 0.6, crown.y - foot, t * 0.25 + C.kink * (i % 2 ? 1 : -1), Math.min(crown.z, cz - TD / 2 - TW * C.proud), crown.y, 0.045);
   }
   for (let i = 0; i < C.fall; i++) {
     const t = i / (C.fall - 1) - 0.5, w = C.fallW[i % C.fallW.length];
