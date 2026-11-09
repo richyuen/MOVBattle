@@ -1097,7 +1097,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "secret_fan_bearer":
       // [S] 500 (b.1) a pole longer than him with a huge flat team half-oval fan on a crescent mount, two-handed (propBuilder GIANT_FAN on the
       // halberd's grip); the hand fan's closed/open swap is off, the gust ring stays
-      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.15 }, "halberd", "conical_hat", "none", "none", "#ead8a6", undefined, {
+      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.15 }, "halberd", "none", "none", "none", "#ead8a6", undefined, {
         posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "fan_bearer", fxPreset: "wind", weaponVariant: "giant_fan",
         stateVariants: { "ability-active": ["gust_ring"] },
       });
