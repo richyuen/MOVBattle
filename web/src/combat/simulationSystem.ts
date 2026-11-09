@@ -841,6 +841,7 @@ export class SimulationSystem {
   private _banjoNotes = new Map<RuntimeUnit, number>();
   private _banjoNoteCount = 0;
   private _jumpReadyAt = new Map<RuntimeUnit, number>();
+  private _foolishWindup = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
   private _battleStartedAt = 0;
@@ -947,6 +948,7 @@ export class SimulationSystem {
     this._banjoWalks.delete(unit);
     this._banjoNotes.delete(unit);
     this._jumpReadyAt.delete(unit);
+    this._foolishWindup.delete(unit);
   }
 
   beginSimulation(now: number): void {
@@ -998,6 +1000,7 @@ export class SimulationSystem {
     this._banjoNoteCount = 0;
     this._banjoTurns = 0;
     this._jumpReadyAt.clear();
+    this._foolishWindup.clear();
     this._isRunning = true;
     this._now = now;
     this._battleStartedAt = now;
@@ -2153,6 +2156,29 @@ export class SimulationSystem {
           unit.moveTo(charging.target.position.add(charging.dir.scale(chargeSpec.overrun)));
           this._clearPathState(unit);
           unit.faceTarget(charging.target.position);
+          return;
+        }
+      }
+    }
+
+    // Foolish Jump: pull back holding the stone, then fling forward into melee.
+    if (unit.definition.id === "secret.ball_n_chain") {
+      if (unit.isAirborne) return;
+      const windup = this._foolishWindup.get(unit);
+      if (!canMove || distance > engageDistance + 3.4) this._foolishWindup.delete(unit);
+      else if (windup !== undefined || (distance > engageDistance && now >= (this._jumpReadyAt.get(unit) ?? 0))) {
+        const dir = new Vector3(enemy.position.x - unit.position.x, 0, enemy.position.z - unit.position.z).normalize();
+        unit.faceTarget(enemy.position);
+        this._clearPathState(unit);
+        if (windup === undefined || now < windup) {
+          if (windup === undefined) this._foolishWindup.set(unit, now + 0.24);
+          unit.moveTo(unit.position.subtract(dir.scale(0.5)));
+          return;
+        }
+        this._foolishWindup.delete(unit);
+        if (unit.leap(dir, Math.max(0.5, distance - engageDistance * 0.4), 6.5)) {
+          this._jumpReadyAt.set(unit, now + 5);
+          this._logAbility(unit, "foolish_jump", now, enemy.position);
           return;
         }
       }
