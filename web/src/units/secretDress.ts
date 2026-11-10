@@ -570,3 +570,28 @@ export function chuKoNuHarness(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+export function teacherJabot(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const torso = body.torsoMesh;
+  const { center, extendSize: size } = torso.getBoundingInfo().boundingBox;
+  const cream = new Color3(0.80, 0.60, 0.35);
+  const material = getMaterialFactory().get("unlit", cream, { emissive: cream });
+  const out: Mesh[] = [];
+  for (const [index, [y, width, z]] of [[1.19, 0.48, 1.24], [0.92, 0.59, 1.35], [0.65, 0.65, 1.46]].entries()) {
+    const fold = MeshBuilder.CreateCylinder("teacherJabotFold", {
+      height: size.y * 0.38,
+      diameterTop: size.x * width * 1.6,
+      diameterBottom: size.x * width * 2.25,
+      tessellation: 6,
+    }, scene);
+    fold.parent = torso;
+    fold.position.set(center.x, center.y + size.y * y, center.z + size.z * z);
+    fold.scaling.z = size.z / size.x * 0.42;
+    fold.rotation.x = 0.16 - index * 0.08;
+    fold.rotation.y = Math.PI / 6;
+    fold.material = material;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(fold);
+    out.push(fold);
+  }
+  return out;
+}
