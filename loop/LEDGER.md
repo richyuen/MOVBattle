@@ -4,6 +4,9 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+507 | b3f04314,473257ab | evil.death_bringer.a | rejected [R] (reverted; skin channels)
+507 | 3fd52380 | secret.bomb_on_a_stick.b | approved [S] (struck 2; b PASS)
+
 506 | 729b5eaf,42f202ed | evil.death_bringer.a | approved [R] (struck 1, 2)
 506 | 03717227 | secret.ballooner.a | approved [S] (struck 2, 7)
 506 | 55f5caee,607a9757 | secret.jester.b | approved [S] (struck 1)
@@ -38,15 +41,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 503 | 1101ed14 | secret.jester.a | approved (blocker 1)
 503 | 945b798f | secret.chu_ko_nu.a | approved (blocker 1; 5 struck by lineup)
 
-502 | c1dc9a29 | evil.death_bringer.a | approved (blocker 3)
-502 | 1dde2456 | evil.death_bringer.a | approved (blocker 2; critic a PASS, CONFIRM failed a again: plateau)
-502 | bd0dacb6 | evil.void_monarch.a | approved (blocker 2; a PASS, CONFIRM passed a, b, c)
-502 | 495878c2 | evil.void_monarch.c | approved (no strike; form-change clause cleared)
-502 | 28cf5772 | secret.bomb_on_a_stick.b | approved (blocker 1; added 2)
-502 | 804fac9d | secret.ball_n_chain.b | approved (blocker 1; b PASS)
-502 | b1963ee9 | secret.chu_ko_nu.c | approved (blocker 1; c PASS)
-502 | 37541423 | secret.shouter.c | approved (blocker 1; c PASS)
-502 | 60b441dd | secret.the_teacher.a | approved (blocker 1)
 
 
 ## Spent (never retry as [P])
@@ -69,7 +63,7 @@ SS:BOMB_SMACK self-destruct | bomb prop hidden after blast, lethal self-damage, 
 manifest/UV:fan_bearer hat | none | 504 | approved | conical_hat
 evilDress:MONARCH_BEAK | prism plate topW1.1 jawW.8 to chin -.6H,.06D proud,from eye foot;beak .3W x .5H tilt.75;nostrils | 502 | approved | bare face
 evilDress/RU/SS:MONARCH_DEMON | at demon_form standFirm (steadfast, topple cleared);void cloth (.05,.02,.06);pink eyes;2 rings TW3.2/3.8;7 shards orbit1.7TW | 502 | approved (tilt and lift stand) | lift only
-PB:BOMB_STICK hpoint | grip wrap .1L at grip+.28L named hpoint (POLE_GRIP.hpoint [.15,.45]) | 502 | approved (off arm over the crown, b.2) | one-handed
+PA/PB:bombStickGrip | upright waist carry with forward pitch .12 rad; off-hand span .10-.14 shaft lengths | 507 | approved | hpoint at .28 L (off arm over crown)
 PA:STONE_HUG | side.8 front-.1 drop.3 of the stone's radius;_armTo both fists | 502 | approved | none (front .35 out of reach)
 PB/SS:rcbMuzzle | slot on the stock nose, HAND_LAUNCH chu_ko_nu muzzle | 502 | approved | face-height origin
 SS/FX:SHOUT | reach9 half.55 speed10 lift4.5 large.6 giant.3, no damage;wave 4 rings .5-3.4 m,10 streaks,.6s | 502 | approved (no lean, thin ring) | melee hit from 7.8 m
