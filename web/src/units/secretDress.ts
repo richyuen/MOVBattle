@@ -524,3 +524,49 @@ export function teacherHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+export function chuKoNuHarness(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const torso = body.torsoMesh;
+  const { center, extendSize: size } = torso.getBoundingInfo().boundingBox;
+  const mf = getMaterialFactory();
+  const brown = new Color3(0.62, 0.30, 0.20);
+  const leather = mf.get("cloth", brown, { emissive: brown.scale(0.12) });
+  const pouch = mf.get("cloth", brown.scale(0.45));
+  const out: Mesh[] = [];
+  const point = (x: number, y: number, z: number) =>
+    center.add(new Vector3(x * size.x, y * size.y, z * size.z));
+  const strap = (a: Vector3, b: Vector3) => {
+    const run = b.subtract(a);
+    const segment = MeshBuilder.CreateBox("chuKoNuLeatherStrap", {
+      width: size.x * 0.21, height: run.length() + size.x * 0.07, depth: size.z * 0.15,
+    }, scene);
+    segment.parent = torso;
+    segment.position.copyFrom(a.add(b).scale(0.5));
+    segment.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), run.normalize(), new Quaternion());
+    segment.material = leather;
+    out.push(segment);
+  };
+  for (const side of [-1, 1]) {
+    const front = point(side * 0.80, 1.04, 1.19);
+    const shoulder = point(side * 0.82, 1.18, 0.10);
+    const back = point(side * 0.80, 1.01, -1.18);
+    strap(point(side * 0.48, -0.75, 1.20), front);
+    strap(front, shoulder);
+    strap(shoulder, back);
+    strap(back, point(side * 0.25, -0.67, -1.45));
+  }
+  for (const [name, y, height, radius, material] of [
+    ["chuKoNuQuiver", 0.04, 1.73, 0.50, pouch],
+    ["chuKoNuQuiverRim", 0.85, 0.19, 0.58, leather],
+  ] as const) {
+    const mesh = MeshBuilder.CreateCylinder(name, {
+      height: height * size.y, diameterTop: radius * size.x, diameterBottom: radius * size.x * 0.9, tessellation: 6,
+    }, scene);
+    mesh.parent = torso;
+    mesh.position.copyFrom(point(0.22 + y * 0.18, y, -1.59));
+    mesh.rotation.z = -0.18;
+    mesh.material = material;
+    out.push(mesh);
+  }
+  return out;
+}
