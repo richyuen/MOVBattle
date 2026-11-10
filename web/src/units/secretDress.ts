@@ -372,6 +372,30 @@ export function jesterCap(scene: Scene, body: ArticulatedBody, team: Color3): Me
   const knob = MeshBuilder.CreateIcoSphere("jesterSpikeKnob", { radius: (W * C.knob) / 2, subdivisions: 1 }, scene);
   knob.parent = head; knob.material = brown; knob.position.set(c.x, crown + H * C.spike, c.z - D * 0.05);
   out.push(knob);
+  const torso = body.torsoMesh;
+  const bounds = torso.getBoundingInfo().boundingBox;
+  const width = bounds.extendSize.x * 2 * torso.scaling.x;
+  const depth = bounds.extendSize.z * 2 * torso.scaling.z;
+  const collarY = torso.position.y + bounds.maximum.y * torso.scaling.y - width * 0.17;
+  const gold = new Color3(1, 0.7, 0.18);
+  const edging = getMaterialFactory().get("cloth", gold, { emissive: gold.scale(0.12) });
+  for (const side of [-1, 1]) {
+    for (const [x, drop, z, angle] of [[0.13, 0.13, 0.6, 0.5], [0.36, 0.02, 0.47, 0.9], [0.46, -0.1, 0.06, 1.25]]) {
+      const lobe = MeshBuilder.CreateIcoSphere("jesterCollarEdging", { radius: 0.5, subdivisions: 1 }, scene);
+      lobe.parent = body.torso;
+      lobe.position.set(side * width * x, collarY - width * drop, torso.position.z + depth * z);
+      lobe.scaling.set(width * 0.32, width * 0.38, width * 0.16);
+      lobe.rotation.z = -side * angle;
+      lobe.material = edging;
+      out.push(lobe);
+      const inset = lobe.clone("jesterCollarCloth");
+      inset.scaling.scaleInPlace(0.84);
+      inset.position.y += width * 0.025;
+      inset.position.z += width * 0.029;
+      inset.material = cloth;
+      out.push(inset);
+    }
+  }
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
