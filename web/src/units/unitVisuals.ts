@@ -177,6 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
+  | "jester_dagger"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
   | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
 
@@ -1112,7 +1113,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_jester":
       return vis({ scale: 1.0, bulk: 0.88, headSize: 1.08 }, "dagger", "jester_cap", "none", "none", "#d43d3d", "dagger", {
-        posePreset: "duelist", materialPreset: "secret_festive",
+        posePreset: "duelist", materialPreset: "secret_festive", weaponVariant: "jester_dagger", offhandVariant: "jester_dagger",
       });
     case "secret_ball_n_chain":
       return vis({ scale: 1.22, bulk: 1.25 }, "flail", "none", "none", "none", "#5d5d5d", undefined, {

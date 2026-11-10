@@ -2123,6 +2123,12 @@ export function attachProps(
     glove.rotation.set(0, 0, 0);
     glove.scaling.setAll(diameter / (gb.extendSize.x * 2));
   };
+  const seatJesterDagger = (dagger: Mesh, hand: TransformNode, arm: Mesh, side: number): void => {
+    const radius = arm.getBoundingInfo().boundingBox.extendSize.x * arm.scaling.x;
+    dagger.parent = hand.parent;
+    dagger.position.set(side * radius * 1.05, hand.position.y * 0.82, 0);
+    dagger.rotation.set(0, side * Math.PI / 2, 0);
+  };
   const weapon = buildWeapon(scene, config.weapon, scale, accent, bladeFit, teamColor, config.weaponVariant);
   if (weapon) {
     const lift = weapon.position.y;
@@ -2139,6 +2145,7 @@ export function attachProps(
     if (config.attachmentPreset === "fan_bearer" && config.weaponVariant !== "giant_fan") {
       tagVisualState(weapon, "fan_closed");
     }
+    if (config.weaponVariant === "jester_dagger") seatJesterDagger(weapon, body.rightHand, body.rightLowerArm, 1);
     props.push(weapon);
   }
 
@@ -2153,6 +2160,7 @@ export function attachProps(
       if (config.offhandVariant === "time_gauntlet" || config.offhandVariant === "warglaive") { offhand.position.setAll(0); offhand.rotation.setAll(0); }
       if (config.offhandWeapon === "bomb") seatInFist(offhand, body, scale);
       if (config.offhandWeapon === "potion") seatNeckInFist(offhand, body.leftHand);
+      if (config.offhandVariant === "jester_dagger") seatJesterDagger(offhand, body.leftHand, body.leftLowerArm, -1);
       props.push(offhand);
     }
   }
@@ -5849,6 +5857,25 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return handle;
     }
     case "dagger":
+      if (variant === "jester_dagger") {
+        const dagger = new Mesh("jesterDagger", scene);
+        const blade = MeshBuilder.CreateCylinder("jesterDaggerBlade", {
+          height: 0.48 * s, diameterTop: 0.066 * s, diameterBottom: 0.001 * s, tessellation: 4,
+        }, scene);
+        blade.parent = dagger;
+        blade.position.y = -0.25 * s;
+        blade.scaling.z = 0.25;
+        blade.material = mat(scene, new Color3(0.47, 0.49, 0.53), 0.11);
+        blade.convertToFlatShadedMesh();
+        const strap = MeshBuilder.CreateCylinder("jesterDaggerStrap", {
+          height: 0.055 * s, diameter: 0.19 * s, tessellation: 8,
+        }, scene);
+        strap.parent = dagger;
+        strap.position.set(0, 0.024 * s, -0.05 * s);
+        strap.material = mat(scene, new Color3(0.17, 0.075, 0.045));
+        return dagger;
+      }
+      // The other dagger callers share the legacy shuriken geometry.
     case "shuriken_hand": {
       // [S] 411 a dark steel four-point shuriken (audit 411 b.1: "a thin grey blade - TABS: a dark steel four-point shuriken"; dynasty.ninja.red.png: a
       // flat dark star about a hand and a half across in each fist, one point down past the fingers): two flat rhombi SHURIKEN.span of the hand scale
