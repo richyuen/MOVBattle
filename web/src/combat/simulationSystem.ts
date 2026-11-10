@@ -4195,8 +4195,7 @@ export class SimulationSystem {
       const toward = target.position.subtract(unit.position); toward.y = 0; toward.normalize();
       const stone = unit.body.torso.getChildMeshes(true).find(m => m.name === "ballStone");
       const radius = stone?.getBoundingInfo().boundingSphere.radiusWorld ?? 0.3;
-      worldMatrixChain(target.body.torsoMesh);
-      unit.animator.stoneContact = target.body.torsoMesh.getBoundingInfo().boundingBox.centerWorld.clone()
+      unit.animator.stoneContact = target.position.add(new Vector3(0, target.body.metrics.overallHeight * 0.48, 0))
         .subtract(toward.scale(radius * 0.65));
       // Recoil .18 s after each contact, then drive forward for the next.
       unit.animator.stoneDrive = Math.max(0, Math.min(1, 1 - (pound.next - now) / 0.22));
