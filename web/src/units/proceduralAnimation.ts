@@ -4202,12 +4202,14 @@ export class ProceduralAnimator {
     const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
     const height = b.metrics.overallHeight * b.root.scaling.y;
     const jarl = this._jarlPelted();
-    const R = fan ? { ahead: 0.17, inward: 0.06, drop: 0.34 } : jarl ? JARL_REST : HALBERD_REST;
+    const R = fan ? { ahead: 0.17, inward: 0.14, drop: 0.34 } : jarl ? JARL_REST : HALBERD_REST;
     const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(R.ahead * height))
       .addInPlace(outward.scale(-R.inward * height)).addInPlace(new Vector3(0, -R.drop * height, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
     if (fan) {
-      this._poseHalberd(2.04, w, undefined, fan);
+      const pitch = 1.9;
+      const axis = Vector3.Up().scale(Math.cos(pitch)).addInPlace(fwd.scale(Math.sin(pitch)));
+      this._poseHalberd(0, w, axis, fan);
     } else if (jarl) {
       // the shaft across him: up, leant toward the off side (-outward) and a little forward (JARL_REST)
       const J = JARL_REST;
