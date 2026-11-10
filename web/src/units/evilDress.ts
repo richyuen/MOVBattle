@@ -984,10 +984,30 @@ export function deathBringerMask(scene: Scene, body: ArticulatedBody, team: Colo
   body.leftEye?.setEnabled(false);
   body.rightEye?.setEnabled(false);
   const hornC = team.scale(C.horn), horn = mf.get("cloth", hornC, { emissive: hornC.scale(0.18) });
-  for (const m of head.getChildMeshes(true)) if (m.name === "evilHorn") (m as Mesh).material = horn;
+  for (const m of head.getChildMeshes(true)) if (m.name === "evilHorn") m.setEnabled(false);
   const tan = mf.get("cloth", C.tan, { emissive: C.tan.scale(0.12) });
   const dark = mf.get("unlit", new Color3(0.03, 0.02, 0.03), { emissive: new Color3(0.03, 0.02, 0.03) });
   const out: Mesh[] = [];
+  // The studio horns start behind the temples, bow out, then hook inward.
+  // Their tips reach roughly one skull height above its crown.
+  const profile = [
+    [0.32, 0.30, -0.07, 0.17],
+    [0.47, 0.55, -0.10, 0.16],
+    [0.64, 0.82, -0.14, 0.13],
+    [0.74, 1.07, -0.19, 0.08],
+    [0.70, 1.31, -0.23, 0.037],
+    [0.66, 1.48, -0.27, 0.003],
+  ];
+  for (const side of [-1, 1]) {
+    const path = profile.map(([x, y, z]) => new Vector3(c.x + side * W * x, c.y + H * y, c.z + D * z));
+    const mesh = MeshBuilder.CreateTube("deathSweptHorn", {
+      path, tessellation: 6, cap: Mesh.CAP_START,
+      radiusFunction: (index) => W * profile[index][3],
+    }, scene);
+    mesh.parent = head;
+    mesh.material = horn;
+    out.push(mesh);
+  }
   const S = DEATH_SKULL;
   const mask = deathSkullShell(scene, W, H, D);
   mask.parent = head; mask.position.copyFrom(c); mask.material = tan; out.push(mask);
@@ -1072,8 +1092,8 @@ const DEATH_HAIR = {
   // bib, and the flat .02 black read maroon through the field's haze (the lich's tendrils, 500). The fall is straggly: .fall strands of mixed
   // widths .fallW (TW) with gaps, over .fallSpread TW, lengths .fallLong TH varied .fallVary and kinked .kink TW at .kinkAt of the way down, so the
   // ends hang ragged at different heights; .shoulder strands per side fall over the collarbone at .shoulderX TW; fog off.
-  fall: 11, fallSpread: 0.62, fallW: [0.07, 0.11, 0.06, 0.09, 0.12, 0.07, 0.1, 0.06, 0.11, 0.08, 0.07], fallLong: 1.25, fallVary: 0.38,
-  kink: 0.035, kinkAt: 0.55, shoulder: 2, shoulderX: 0.4, shoulderLong: 0.42,
+  fallW: [0.07, 0.11, 0.06, 0.09, 0.12, 0.07, 0.1, 0.06, 0.11, 0.08, 0.07], fallVary: 0.38,
+  kink: 0.035, kinkAt: 0.55,
   // [S] 502 crown-rooted side locks and back fall (a.2)
   // Thin separated strands sit behind the mask and flare into different tips.
   lockWidths: [0.032, 0.046, 0.035, 0.042], lockX: 0.49, lockY: 0.38, lockLong: 0.92,
@@ -1142,13 +1162,28 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
     // [R] 503: rooted inside the head's width at the crown (.8 TW across stood out either side of the head as a block), fanning out below
     strand(t * Math.min(TW * C.backSpread, headW * 0.8), w * 0.6, crown.y - foot, t * 0.25 + C.kink * (i % 2 ? 1 : -1), Math.min(crown.z, cz - TD / 2 - TW * C.proud), crown.y, 0.045);
   }
-  for (let i = 0; i < C.fall; i++) {
-    const t = i / (C.fall - 1) - 0.5, w = C.fallW[i % C.fallW.length];
-    const len = TH * C.fallLong * (1 - C.fallVary * (((i * 7) % 5) / 4)) * (1 - Math.abs(t) * 0.35);
-    strand(t * TW * C.fallSpread, w, len, C.kink * (i % 2 ? 1 : -1) * (1 + (i % 3)), zf + (i % 2) * TW * 0.02);
-  }
-  for (const side of [-1, 1]) for (let k = 0; k < C.shoulder; k++) {
-    strand(side * TW * (C.shoulderX + k * 0.07), 0.08, TH * C.shoulderLong * (1 - k * 0.25), side * C.kink, cz + (TD / 2 + TW * C.proud) * (k ? -1 : 1));
+  // Overlapping feathers flare from staggered neck roots. The raised spines
+  // follow the chest and the irregular tips range from the ribs to the belt.
+  const neck = inTorso(c.x, c.y - H * 0.55, c.z + D * 0.12);
+  for (const side of [-1, 1]) {
+    for (const [index, reach] of [0.09, 0.19, 0.28, 0.37, 0.47, 0.55].entries()) {
+      const root = new Vector3(neck.x + side * TW * (0.035 + index * 0.034), neck.y - TH * index * 0.052, neck.z + TD * index * 0.024);
+      const bend = new Vector3(side * TW * reach * 0.76, top - TH * (0.24 - index * 0.026), zf + TD * (0.12 - index * 0.017));
+      const tip = new Vector3(side * TW * reach, top - TH * [1.22, 1.1, 1.18, 0.96, 0.85, 0.61][index], zf + TD * (index % 2 ? 0.02 : 0.1));
+      const width = TW * (0.088 - index * 0.005);
+      const left = bend.add(new Vector3(-width, 0, 0));
+      const right = bend.add(new Vector3(width, 0, 0));
+      const spine = bend.add(new Vector3(0, 0, width * 0.48));
+      const positions = [root, left, spine, right, tip].flatMap((point) => point.asArray());
+      const indices = [0, 2, 1, 0, 3, 2, 1, 2, 4, 2, 3, 4, 0, 1, 4, 0, 4, 3];
+      const normals: number[] = [];
+      VertexData.ComputeNormals(positions, indices, normals);
+      const data = new VertexData();
+      data.positions = positions; data.indices = indices; data.normals = normals;
+      const feather = new Mesh("deathChestFeather", scene);
+      data.applyToMesh(feather);
+      put(feather, body.torso, 0, 0, 0).material = fall;
+    }
   }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
   return out;
