@@ -280,6 +280,22 @@ export function balloonerGlueMitts(scene: Scene, body: ArticulatedBody): Mesh[] 
       out.push(l);
     });
   }
+  for (const [arm, wrist, side] of [
+    [body.leftLowerArm, body.leftHand, -1], [body.rightLowerArm, body.rightHand, 1],
+  ] as const) {
+    const bounds = arm.getBoundingInfo().boundingBox;
+    const length = -wrist.position.y;
+    const width = bounds.extendSize.x * 2 * arm.scaling.x;
+    for (const [reach, girth, offset] of [[0.41, 1.85, 0.18], [0.66, 2.18, -0.1], [0.84, 2.35, 0.12]]) {
+      const lobe = MeshBuilder.CreateIcoSphere("balloonerForearmGlue", { radius: 0.5, subdivisions: 1 }, scene);
+      lobe.parent = wrist.parent;
+      lobe.position.set(width * offset * side, -length * reach, width * offset);
+      lobe.scaling.set(width * girth, length * 0.49, width * girth * 0.9);
+      lobe.rotation.z = side * offset;
+      lobe.material = glue;
+      out.push(lobe);
+    }
+  }
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
