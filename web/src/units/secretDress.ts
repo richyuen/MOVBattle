@@ -629,3 +629,50 @@ export function shouterFurTrim(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+export function bomberShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const cream = new Color3(0.80, 0.60, 0.35);
+  const mf = getMaterialFactory();
+  const cloth = mf.get("unlit", cream, { emissive: cream });
+  const foldColor = new Color3(0.91, 0.76, 0.52);
+  const foldedCloth = mf.get("unlit", foldColor, { emissive: foldColor });
+  const thread = mf.get("cloth", new Color3(0.31, 0.13, 0.075));
+  const glow = scene.getGlowLayerByName("glow");
+  const torso = body.torsoMesh;
+  const out: Mesh[] = [];
+  for (const mesh of [torso, ...body.allMeshes.filter((mesh) => mesh.name.endsWith("_yoke"))]) {
+    mesh.material = cloth;
+    glow?.addExcludedMesh(mesh);
+  }
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const { center, extendSize: size } = arm.getBoundingInfo().boundingBox;
+    arm.material = cloth;
+    glow?.addExcludedMesh(arm);
+    arm.scaling.x *= 1.22;
+    arm.scaling.z *= 1.19;
+    for (const [index, offset] of [0.06, 0.23].entries()) {
+      const cuff = MeshBuilder.CreateCylinder("bomberRolledSleeve", {
+        height: size.y * 0.20, diameterTop: size.x * (index === 0 ? 1.70 : 1.77),
+        diameterBottom: size.x * 1.67, tessellation: 8,
+      }, scene);
+      cuff.parent = arm;
+      cuff.position.set(center.x, center.y - size.y * (1 - offset), center.z);
+      cuff.scaling.z = size.z / size.x;
+      cuff.material = index === 0 ? foldedCloth : cloth;
+      glow?.addExcludedMesh(cuff);
+      out.push(cuff);
+    }
+  }
+  const { center, extendSize: size } = torso.getBoundingInfo().boundingBox;
+  for (const [index, angle] of [-0.72, 0.72, Math.PI / 2].entries()) {
+    const lace = MeshBuilder.CreateBox("bomberShirtLace", {
+      width: size.x * 0.065, height: size.y * (index === 2 ? 0.22 : 0.29), depth: size.z * 0.06,
+    }, scene);
+    lace.parent = torso;
+    lace.position.set(center.x, center.y + size.y * (index === 2 ? 0.64 : 0.86), center.z + size.z * 1.05);
+    lace.rotation.z = angle;
+    lace.material = thread;
+    out.push(lace);
+  }
+  return out;
+}
