@@ -32,7 +32,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerVest, jesterCap, prisonerCap, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, teacherJabot, shouterFurTrim, bomberShirt } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerVest, jesterCap, prisonerCap, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, teacherJabot, shouterFurTrim, bomberShirt, fanBearerSash } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1039,6 +1039,9 @@ export class UnitFactory {
     }
     if (definition.id === "evil.void_cultist" && !shouldUseVehicleBody) {
       propMeshes.push(...dressVoidCultist(this._scene, body, teamColor, propMeshes));
+    }
+    if (definition.id === "secret.fan_bearer" && !shouldUseVehicleBody) {
+      propMeshes.push(...fanBearerSash(this._scene, body, teamColor));
     }
     if (definition.id === "secret.raptor" && !shouldUseVehicleBody) {
       propMeshes.push(...dressRaptorBody(this._scene, body, teamColor));

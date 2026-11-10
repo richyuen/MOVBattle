@@ -7,6 +7,37 @@ import { getMaterialFactory } from "./materialFactory";
  * Secret faction cloth, hats and ornaments (loop: new per-unit dress goes here, not into unitFactory or propBuilder).
  */
 
+/** Bare team chest under a narrow dark sash over the right shoulder. */
+export function fanBearerSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const torso = body.torsoMesh;
+  const { center: c, extendSize: s } = torso.getBoundingInfo().boundingBox;
+  for (const mesh of [torso, ...body.allMeshes.filter(m => /_yoke$|_[lr]Pad$/.test(m.name))]) {
+    mesh.material = body.skinMaterial;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+  }
+  const dark = team.scale(0.25);
+  const cloth = getMaterialFactory().get("cloth", dark, { emissive: dark.scale(0.12) });
+  const out: Mesh[] = [];
+  // Front and back diagonal runs meet over the right shoulder and left waist.
+  for (const front of [-1, 1]) {
+    const a = new Vector3(c.x - s.x * 0.82, c.y + s.y * 1.08, c.z + front * s.z * 1.10);
+    const b = new Vector3(c.x + s.x * 0.78, c.y - s.y * 0.82, c.z + front * s.z * 1.14);
+    const run = b.subtract(a);
+    const sash = MeshBuilder.CreateBox("fanBearerSash", {
+      width: s.x * 0.31, height: run.length(), depth: s.z * 0.15,
+    }, scene);
+    sash.parent = torso; sash.position.copyFrom(a.add(b).scale(0.5));
+    sash.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), run.normalize(), new Quaternion());
+    sash.material = cloth; out.push(sash);
+  }
+  const bridge = MeshBuilder.CreateBox("fanBearerSashShoulder", {
+    width: s.x * 0.34, height: s.y * 0.16, depth: s.z * 2.32,
+  }, scene);
+  bridge.parent = torso; bridge.position.set(c.x - s.x * 0.82, c.y + s.y * 1.10, c.z);
+  bridge.material = cloth; out.push(bridge);
+  return out;
+}
+
 /** A chain of 6-sided tapered segments through `pts` (in `parent`'s frame), `root` across at the first point to a point at the last. */
 function taper(scene: Scene, name: string, pts: Vector3[], root: number, tip: number, parent: TransformNode, material: Material, out: Mesh[]): void {
   const n = pts.length - 1, up = new Vector3(0, 1, 0);
