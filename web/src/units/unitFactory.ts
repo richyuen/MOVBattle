@@ -32,7 +32,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuTopknot, executionerVest, jesterCap, prisonerCap, shouterHelm, shouterVest, teacherHair } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerVest, jesterCap, prisonerCap, shouterHelm, shouterVest, teacherHair } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1064,6 +1064,7 @@ export class UnitFactory {
     if (definition.id === "secret.chu_ko_nu" && !shouldUseVehicleBody) {
       // [S] 503 (a.1): black hair with a tall bun on the crown and a black headband with a team stripe, no hat (secretDress chuKoNuTopknot)
       propMeshes.push(...chuKoNuTopknot(this._scene, body, teamColor));
+      propMeshes.push(...chuKoNuRobe(this._scene, body, teamColor));
     }
     if (definition.id === "secret.jester" && !shouldUseVehicleBody) {
       // [S] 503 (a.1): a team hood round the head, two drooping team points with bell balls and a brown centre spike (secretDress jesterCap)

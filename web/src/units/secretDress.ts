@@ -195,6 +195,36 @@ export function shouterVest(scene: Scene, body: ArticulatedBody, team: Color3): 
   return out;
 }
 
+export function chuKoNuRobe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const torso = body.torsoMesh;
+  const bounds = torso.getBoundingInfo().boundingBox;
+  const width = bounds.extendSize.x * 2 * torso.scaling.x;
+  const depth = bounds.extendSize.z * 2 * torso.scaling.z;
+  const length = Math.abs(body.leftKnee.position.y);
+  const factory = getMaterialFactory();
+  const cloth = factory.get("cloth", team, { emissive: team.scale(0.12) });
+  const orange = new Color3(0.7, 0.294, 0.07);
+  const trim = factory.get("cloth", orange, { emissive: orange.scale(0.12) });
+  const out: Mesh[] = [];
+  const tier = (name: string, from: number, to: number, top: number, foot: number, material: Material): void => {
+    const panel = MeshBuilder.CreateCylinder(name, {
+      height: (to - from) * length, diameterTop: top * width, diameterBottom: foot * width, tessellation: 8,
+    }, scene);
+    panel.parent = body.torso;
+    panel.scaling.z = depth / width * 1.16;
+    panel.position.y = length * (0.12 - (from + to) / 2);
+    panel.rotation.y = Math.PI / 8;
+    panel.material = material;
+    panel.convertToFlatShadedMesh();
+    out.push(panel);
+  };
+  tier("konuLowerRobe", 0.28, 1.05, 1.12, 1.52, cloth);
+  tier("konuUpperRobe", 0, 0.76, 1.08, 1.55, cloth);
+  tier("konuHem", 0.69, 0.77, 1.53, 1.57, trim);
+  tier("konuHem", 0.98, 1.06, 1.50, 1.54, trim);
+  return out;
+}
+
 /**
  * [S] 501 the Ballooner's Balloon Backpack (card Appearance "a backpack with a mini hot air balloon attached to it"; reference/units/secret.ballooner.png,
  * the icon: a satchel with a cluster of small balloons on strings over it; the red render shows its dark straps at the chest's sides; audit 500 a.1:
