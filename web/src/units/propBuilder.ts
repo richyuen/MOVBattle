@@ -5860,18 +5860,18 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (variant === "jester_dagger") {
         const dagger = new Mesh("jesterDagger", scene);
         const blade = MeshBuilder.CreateCylinder("jesterDaggerBlade", {
-          height: 0.48 * s, diameterTop: 0.066 * s, diameterBottom: 0.001 * s, tessellation: 4,
+          height: 0.28 * s, diameterTop: 0.043 * s, diameterBottom: 0.001 * s, tessellation: 4,
         }, scene);
         blade.parent = dagger;
-        blade.position.y = -0.25 * s;
+        blade.position.y = -0.145 * s;
         blade.scaling.z = 0.25;
         blade.material = mat(scene, new Color3(0.47, 0.49, 0.53), 0.11);
         blade.convertToFlatShadedMesh();
         const strap = MeshBuilder.CreateCylinder("jesterDaggerStrap", {
-          height: 0.055 * s, diameter: 0.19 * s, tessellation: 8,
+          height: 0.021 * s, diameter: 0.085 * s, tessellation: 8,
         }, scene);
         strap.parent = dagger;
-        strap.position.set(0, 0.024 * s, -0.05 * s);
+        strap.position.set(0, 0.016 * s, -0.033 * s);
         strap.material = mat(scene, new Color3(0.17, 0.075, 0.045));
         return dagger;
       }
