@@ -1164,13 +1164,13 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   // Overlapping feathers flare from staggered neck roots. The raised spines
   // follow the chest and the irregular tips range from the ribs to the belt.
-  const neck = inTorso(c.x, c.y - H * 0.55, c.z + D * 0.12);
+  const neck = inTorso(c.x, c.y - H * 0.44, c.z + D * 0.41);
   for (const side of [-1, 1]) {
     for (const [index, reach] of [0.09, 0.19, 0.28, 0.37, 0.47, 0.55].entries()) {
-      const root = new Vector3(neck.x + side * TW * (0.035 + index * 0.034), neck.y - TH * index * 0.052, neck.z + TD * index * 0.024);
-      const bend = new Vector3(side * TW * reach * 0.76, top - TH * (0.24 - index * 0.026), zf + TD * (0.12 - index * 0.017));
+      const root = new Vector3(neck.x + side * TW * (0.035 + index * 0.034), neck.y - TH * index * 0.057, Math.max(neck.z, zf - TD * (0.17 + index * 0.018)));
+      const bend = new Vector3(side * TW * reach * 0.76, top - TH * [0.04, 0.12, 0.09, 0.16, 0.11, 0.19][index], zf + TD * (0.2 - index * 0.017));
       const tip = new Vector3(side * TW * reach, top - TH * [1.22, 1.1, 1.18, 0.96, 0.85, 0.61][index], zf + TD * (index % 2 ? 0.02 : 0.1));
-      const width = TW * (0.088 - index * 0.005);
+      const width = TW * [0.065, 0.08, 0.061, 0.076, 0.053, 0.049][index];
       const left = bend.add(new Vector3(-width, 0, 0));
       const right = bend.add(new Vector3(width, 0, 0));
       const spine = bend.add(new Vector3(0, 0, width * 0.48));
