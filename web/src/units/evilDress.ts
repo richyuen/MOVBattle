@@ -1068,10 +1068,35 @@ export function lichCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
  * read as a brown cuirass: those meshes and the forearm stubs take the team skin, out of the glow (the self-lit skin's halo browns the black hair,
  * LESSONS 495); DEATH_HAIR's front fall narrows to the middle so the skin shows either side. The pelvis keeps the dark shorts cloth.
  */
-export function deathBringerBareTorso(scene: Scene, body: ArticulatedBody): void {
+export function deathBringerBareTorso(scene: Scene, body: ArticulatedBody): Mesh[] {
+  // Rebuild spec (reference evil.death_bringer.red.png and factions/evil.jpg):
+  // broad six-sided bare upper arms, a pronounced elbow and tapering forearms;
+  // upper arm spans .27 torso widths, elbow .23, wrist .14. Keep joint lengths
+  // and weapon anchors; the mantle overlaps the shoulder, never the whole arm.
   const glow = scene.getGlowLayerByName("glow");
-  const bare = [body.leftUpperArm, body.rightUpperArm, ...body.allMeshes.filter((m) => /_[lr]LowerArm_stub$/.test(m.name))];
-  for (const m of bare) { m.material = body.skinMaterial; glow?.addExcludedMesh(m); }
+  const out: Mesh[] = [];
+  const width = body.torsoMesh.getBoundingInfo().boundingBox.extendSize.x * 2 * body.torsoMesh.scaling.x;
+  for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+    const upper = arm === body.leftUpperArm || arm === body.rightUpperArm;
+    const { center, extendSize: size } = arm.getBoundingInfo().boundingBox;
+    arm.isVisible = false;
+    for (const child of arm.getChildMeshes(false)) if (child.name.endsWith("_stub")) child.isVisible = false;
+    const shell = MeshBuilder.CreateCylinder("deathBareArm", {
+      height: size.y * 2.04,
+      diameterTop: width * (upper ? 0.27 : 0.23) / arm.scaling.x,
+      diameterBottom: width * (upper ? 0.23 : 0.14) / arm.scaling.x,
+      tessellation: 6,
+    }, scene);
+    shell.parent = arm;
+    shell.position.copyFrom(center);
+    shell.scaling.z = arm.scaling.x / arm.scaling.z * 0.88;
+    shell.rotation.y = Math.PI / 6;
+    shell.material = body.skinMaterial;
+    shell.convertToFlatShadedMesh();
+    glow?.addExcludedMesh(shell);
+    out.push(shell);
+  }
+  return out;
 }
 
 /**
