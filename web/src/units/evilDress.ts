@@ -1070,7 +1070,7 @@ export function lichCollar(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 export function deathBringerBareTorso(scene: Scene, body: ArticulatedBody): void {
   const glow = scene.getGlowLayerByName("glow");
-  const bare = [body.torsoMesh, body.leftUpperArm, body.rightUpperArm, ...body.allMeshes.filter((m) => /_(yoke|[lr]LowerArm_stub)$/.test(m.name))];
+  const bare = [body.leftUpperArm, body.rightUpperArm, ...body.allMeshes.filter((m) => /_[lr]LowerArm_stub$/.test(m.name))];
   for (const m of bare) { m.material = body.skinMaterial; glow?.addExcludedMesh(m); }
 }
 

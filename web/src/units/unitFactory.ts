@@ -1098,7 +1098,7 @@ export class UnitFactory {
       if (definition.id === "evil.death_bringer") propMeshes.push(...deathBringerHair(this._scene, body));
       // [S] 496 (a.2): a bone-tan faceted skull mask with sad sockets, team-coloured horns (evilDress deathBringerMask)
       if (definition.id === "evil.death_bringer") propMeshes.push(...deathBringerMask(this._scene, body, teamColor));
-      // [S] 499 (a.4): no dark cuirass; the trunk and arms are bare team skin behind the hair (evilDress deathBringerBareTorso)
+      // [S] 499 (a.4): bare team skin on the arms below the feather mantle (evilDress deathBringerBareTorso)
       if (definition.id === "evil.death_bringer") deathBringerBareTorso(this._scene, body);
       // [S] 500 (a.5): dark team puffed shorts to the knee over grey banded shin wraps (evilDress deathBringerShinWraps)
       if (definition.id === "evil.death_bringer") propMeshes.push(...deathBringerShinWraps(this._scene, body, teamColor));
