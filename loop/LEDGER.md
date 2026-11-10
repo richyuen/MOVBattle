@@ -4,6 +4,13 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+509 | 8a76bf73 | evil.death_bringer.a | approved [R] (struck 1; CONFIRM passed a, done)
+509 | c3516851, b317dbe1 | secret.chu_ko_nu.a | dropped [S] (belt hidden in idle)
+509 | de9ad3b0 | secret.fan_bearer.a | approved [S] (no strike; sash direction remains)
+509 | 724ec250, 4eb56a9b, 13352468 | secret.ball_n_chain.c | dropped [S] (reverted: detached torso at contact)
+509 | ab9656cd | secret.shouter.a | approved [S] (struck old 4)
+509 | 2e71ef24 | secret.shouter.a | approved [S] (struck old 3; CONFIRM failed a)
+
 508 | 2352f922, 3b2ed98a, 764f88ec | evil.death_bringer.a | approved [R] (struck 1; CONFIRM failed a on arm build)
 508 | 9b629415 | secret.chu_ko_nu.a | approved [S] (struck 3)
 508 | 843b068d | secret.the_teacher.a | approved [S] (struck 3)
@@ -33,11 +40,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 505 | 53a75e63 | secret.raptor.b | approved (struck 1)
 505 | be96b2b5,d7165ae8 | secret.raptor.c | approved
 
-504 | 6a5b08c9 | secret.executioner.c | approved (struck 1, 2)
-504 | f91998de | secret.ball_n_chain.c | approved (struck 1)
-504 | e46ee0c3 | evil.death_bringer.a | approved (struck 1; CONFIRM failed a)
-504 | 7aac0f42 | secret.bomb_on_a_stick.c | approved (struck 2)
-504 | fa2c8ad9 | secret.fan_bearer.a | approved (struck 1)
 
 
 
@@ -47,6 +49,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+evilDress:deathBringerBareTorso | six-sided skin shells; upper .27-.23 TW, forearm .23-.14 TW, depth .88 | 509 | approved [R] | thin rig meshes
+secretDress:chuKoNuBelt | none (reverted: hidden by crossbow) | 509 | dropped [S] | dark strap, square buckle and loose end
+secretDress:fanBearerSash | team skin chest/yoke/pads under .155 TW dark diagonal sash; endpoints x -.82,+.78, bridge -.82 half-TW | 509 | approved [S] (root-blocker exception: mirror X once per critic 509) | grey chest
+SS/PA:STONE_POUND | overhead stick swing retained; trial reverted (contact detached torso) | 509 | dropped [S] | three contact-timed pounds
+secretDress:shouterKneeWraps | four overlapping seven-sided tan bands at each shin top | 509 | approved [S] | none
+secretDress:shouterBracers | six-sided tapered dark team guards and two edge bands | 509 | approved [S] | none
 evilDress:DEATH_SKULL | single beveled face .94W at cheeks, .3W chin, depth .39D; dark sockets and nasal notch, hidden head box | 505 | approved [R] | 502 deep cranium and jaw prisms with a flat tooth row
 secretDress:EXECUTIONER_VEST | eight-sided iron shell .96TH, 5 buttons, dark team sleeves | 505 | approved | plain team torso
 secretDress:PRISONER_CAP | 8-sided .29H team cap and .105H cream band above bead eyes | 505 | approved | spiked hood and collar

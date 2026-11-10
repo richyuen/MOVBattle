@@ -1,14 +1,14 @@
 # evil.death_bringer
-Status: open   Audited: 489 (AUDIT x2), 500 (CONFIRM: passed b, c, d; failed a), 502 (CONFIRM: copied b, c, d; failed a), 503 (CONFIRM: passed a; copied b, c, d), 504 (CONFIRM: copied b, c, d; failed a), 505 (CONFIRM: copied b, c, d; failed a), 506 (CONFIRM: copied b, c, d; failed a), 508 (CONFIRM: copied b, c, d; failed a)   Done: -
+Status: done   Audited: 489 (AUDIT x2), 500 (CONFIRM: passed b, c, d; failed a), 502 (CONFIRM: copied b, c, d; failed a), 503 (CONFIRM: passed a; copied b, c, d), 504-506,508 (CONFIRM: copied b, c, d; failed a), 509 (CONFIRM: passed a; copied b, c, d)   Done: 509
 ## Verdicts
-a FAIL (0 since 508 CONFIRM; plateau)
- 1. Bare arms read as thin angular rods in lineup_evil.png, on the second unit from the right — TABS: the exposed arms have broad, faceted upper arms and forearms (ref: reference/factions/evil.jpg)
+a PASS (509 faceted bare arms; CONFIRM 509)
 b PASS (491 twin gold warglaives; CONFIRM 500)
 c PASS (499 charge through the line, cutting each man passed; CONFIRM 500)
-d PASS (504 stats; CONFIRM 500)
+d PASS (509 stats; CONFIRM 509)
 ## Ranked gaps
-1. [R] evil.death_bringer.a faceted bare arms — blocker 1: rebuild the thin upper-arm and forearm silhouettes around the existing articulated rig — ref: reference/factions/evil.jpg and reference/units/evil.death_bringer.blue.png — ours: lineup_evil.png
+None.
 ## Attempts (iter | gap | criterion | verdict)
+509 | six-sided bare arm shells (8a76bf73) | a | approved [R] (struck 1; CONFIRM passed a)
 508 | [R] fitted backing and overlapping shoulder and flank feathers (2352f922, 3b2ed98a, 764f88ec) | a | approved (struck 1)
 507 | [R] shoulder-to-flank feather tiers (b3f04314, reverted 473257ab) | a | rejected
 506 | [R] outward-swept horns and neckline-rooted chest feathers (729b5eaf, 42f202ed) | a | approved (struck 1, 2)
@@ -22,6 +22,5 @@ d PASS (504 stats; CONFIRM 500)
 507 | [R] shoulder-to-flank feather tiers | a | attempts 1 | exposed team-color channels between feather tiers
 495 | [P] stance default | a | attempts 1 | ledger reversal of UV:DEATH (approved 494); wants an [S] idle pose of its own, square with arms out low
 ## Notes (max 3 lines)
-- 508: mantle passed gap review. CONFIRM found thin bare upper arms and forearms.
-- 507 DEFECTS: shoulder tips read, but gaps expose skin from collar to ribs. The critic asks for a fitted wrap beneath overlapping feathers.
-- 506 CONFIRM: the dark feather mantle still needs to fill the shoulders and flanks. Skull and swept horns read.
+- 509: both critics pass the faceted bare arms and complete the look criterion.
+- Evil batch complete; 509 checkpoint passed 12/12 with zero page errors.
