@@ -1,8 +1,7 @@
 # secret.bomb_on_a_stick
 Status: open   Audited: 500 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (0 since 500)
- 1. hair in unit_secret.bomb_on_a_stick_idle — a bald team head; TABS shaggy ginger hair with a long braid down the back (ref: secret.bomb_on_a_stick.red.png)
+a FAIL (1 since 500, 1 struck)
  2. headband in unit_secret.bomb_on_a_stick_idle — none; TABS a team headband round the top of the head (ref: secret.bomb_on_a_stick.red.png)
  3. shirt in unit_secret.bomb_on_a_stick_idle — a dark team torso; TABS a beige baggy shirt with elbow-length rolled sleeves (ref: secret.bomb_on_a_stick.red.png)
  4. vest in unit_secret.bomb_on_a_stick_idle — none; TABS an open team vest over the shirt (ref: secret.bomb_on_a_stick.red.png)
@@ -12,9 +11,10 @@ b FAIL (2 since 500, 1 struck)
 c PASS (504 blast consumes the bomb and kills the bomber)
 d PASS (504 stats)
 ## Ranked gaps
-1. [S] secret.bomb_on_a_stick.b waist grip — blocker 2: bring both grip anchors ahead of the torso at belt height and stand the pole upright — ref: secret.bomb_on_a_stick.red.png — ours: unit_secret.bomb_on_a_stick_idle.png
-2. [S] secret.bomb_on_a_stick.a hair — blocker 1: shaggy ginger hair with a long back braid — ref: secret.bomb_on_a_stick.red.png — ours: unit_secret.bomb_on_a_stick_idle.png
+1. [S] secret.bomb_on_a_stick.a headband — blocker 2: wrap a team band around the crown over the hair — ref: secret.bomb_on_a_stick.red.png — ours: unit_secret.bomb_on_a_stick_idle.png
+2. [S] secret.bomb_on_a_stick.b waist grip — blocker 2: bring both grip anchors ahead of the torso at belt height and stand the pole upright — ref: secret.bomb_on_a_stick.red.png — ours: unit_secret.bomb_on_a_stick_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+505 | shaggy ginger crown locks and tapered back braid (c4965761) | a | approved (struck 1)
 504 | blast consumes the bomb and launches the bomber (7aac0f42) | c | approved (struck 2)
 503 | walks in to the pole's reach (manifest engageRangeOverride 2.6), smack with a blast on the man's chest, no throw, SS _tryBombSmack BOMB_SMACK (bf9a5a70, cb05da8e) | c | approved (struck 1)
 502 | grip wrap named hpoint, off fist on the haft by _twoHandPole, propBuilder BOMB_STICK (28cf5772) | b | approved (struck 1; added 2: off arm over the crown)

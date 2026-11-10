@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+505 | 37724d45 | evil.death_bringer.a | approved [R] (struck 1)
+505 | 81a7d921 | secret.executioner.a | approved (struck 2)
+505 | f8f54345 | secret.ball_n_chain.a | approved (struck 1, 2, 5)
+505 | 1ff4ba0b | secret.shouter.a | approved (struck 5)
+505 | c4965761 | secret.bomb_on_a_stick.a | approved (struck 1)
+505 | 140582e4,67439484 | secret.the_teacher.c | approved (struck 1)
+505 | 18710e8b | secret.raptor.a | approved (struck 1, 2, 3)
+505 | 53a75e63 | secret.raptor.b | approved (struck 1)
+505 | be96b2b5,d7165ae8 | secret.raptor.c | approved
+
 504 | 6a5b08c9 | secret.executioner.c | approved (struck 1, 2)
 504 | f91998de | secret.ball_n_chain.c | approved (struck 1)
 504 | e46ee0c3 | evil.death_bringer.a | approved (struck 1; CONFIRM failed a)
@@ -38,25 +48,25 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 501 | 7d5f2bb5 | secret.the_teacher.b | approved (blocker 1; b PASS)
 501 | 87af4842 | secret.chu_ko_nu.b | approved (blocker 1; b PASS)
 
-500 | fd7a3c00,3b39c687 | evil.tempest_lich.a | approved [R] (blocker 1; a PASS; CONFIRM D)
-500 | 5483a3d7 | evil.death_bringer.a | approved (blocker 5)
-500 | 6e0424e3,8643adb8 | evil.death_bringer.a | approved (blocker 6; CONFIRM failed a)
-500 | ce31248d,2b00b363 | evil.void_monarch.a | approved (blocker 2; CONFIRM failed a, b, c)
-500 | e6fa1e1f | secret.executioner.b | approved (blocker 1; b PASS)
-500 | 62fb739c | secret.shouter.a | approved (blocker 1)
-500 | 69b5ae21 | secret.fan_bearer.b | approved (blocker 1)
 
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+evilDress:DEATH_SKULL | single beveled face .94W at cheeks, .3W chin, depth .39D; dark sockets and nasal notch, hidden head box | 505 | approved [R] | 502 deep cranium and jaw prisms with a flat tooth row
+secretDress:EXECUTIONER_VEST | eight-sided iron shell .96TH, 5 buttons, dark team sleeves | 505 | approved | plain team torso
+secretDress:PRISONER_CAP | 8-sided .29H team cap and .105H cream band above bead eyes | 505 | approved | spiked hood and collar
+secretDress:SHOUTER_VEST | two dark iron front panels, darkened team torso | 505 | approved | light-blue torso block
+secretDress:BOMBER_HAIR | ginger crown, three locks per side and seven tapered braid segments | 505 | approved | bald
+RU/SS:TEACHER_PARRY | frontal cone dot .45; hold .24 s, recover .55 s; intercept in melee contact, emit sparks | 505 | approved | no melee deflection
+raptorBody:RAPTOR | articulated biped, long trunk, hinged skull, raised taper tail and opposing triangular teeth | 505 | approved | green four-legged mount on humanoid
+RU/SS:RAPTOR_BITE | forward head and neck .3 s, closure .12 s, target impulse .22 of melee | 505 | approved (contact blocker stands) | generic unarmed hit
 SS:Executioner jump | range .65 engage to engage+1.5 m, aim .45 engage short; rise 5, axe visual .46 s, jump cooldown 2 s | 504 | approved | planted before chop
 SS:Foolish Jump | windup .24 s, backstep goal .5 m, approach band engage+3.4, rise 6.5, lands .4 engage short, cooldown 5 s | 504 | approved | spin_move
 evilDress:DEATH_HAIR crown/back | 4 locks per side .032-.046 TW in both axes, staggered behind mask; 6 narrow rear strands | 504 | approved | 503 flat side locks and 9 back strands
 SS:BOMB_SMACK self-destruct | bomb prop hidden after blast, lethal self-damage, horizontal impulse 6 and lift input 4 | 504 | approved | bomber survived
 manifest/UV:fan_bearer hat | none | 504 | approved | conical_hat
-evilDress:DEATH_SKULL | [S] cranium prism (crown .6H, cheek .6W) + jaw prism to .2W at -.66H fwd .04D;brow slabs .4W tip .25;sockets .3x.16 + drop .14;nose .16W;mouth .44W,5 teeth | 502 | approved (tooth row a defect) | one hexagon prism (DEATH_MASK outline)
 evilDress:MONARCH_BEAK | prism plate topW1.1 jawW.8 to chin -.6H,.06D proud,from eye foot;beak .3W x .5H tilt.75;nostrils | 502 | approved | bare face
 evilDress/RU/SS:MONARCH_DEMON | at demon_form standFirm (steadfast, topple cleared);void cloth (.05,.02,.06);pink eyes;2 rings TW3.2/3.8;7 shards orbit1.7TW | 502 | approved (tilt and lift stand) | lift only
 PB:BOMB_STICK hpoint | grip wrap .1L at grip+.28L named hpoint (POLE_GRIP.hpoint [.15,.45]) | 502 | approved (off arm over the crown, b.2) | one-handed
