@@ -1167,12 +1167,18 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   // feathers down the front and flanks. The arms stay bare below the caps.
   // Use the rig's fitted yoke as the underlayer so its corners cannot show
   // through gaps between the overlapping feathers.
+  const backingColor = fallC.scale(0.48);
+  const backing = mf.get("unlit", backingColor, { emissive: backingColor });
+  backing.fogEnabled = false;
+  const edgeColor = fallC.scale(0.72);
+  const edge = mf.get("unlit", edgeColor, { emissive: edgeColor });
+  edge.fogEnabled = false;
   const yoke = body.torso.getChildMeshes(true).find((mesh) => mesh.name.endsWith("_yoke"));
   if (yoke) {
-    yoke.material = fall;
+    yoke.material = backing;
     scene.getGlowLayerByName("glow")?.addExcludedMesh(yoke as Mesh);
   }
-  tm.material = fall;
+  tm.material = backing;
   const featherPoint = (angle: number, width: number, depth: number, height: number): Vector3 =>
     new Vector3(Math.sin(angle) * TW * width, top + TH * height, cz + Math.cos(angle) * depth);
   for (const tier of [0, 1]) {
@@ -1185,7 +1191,7 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
         tier === 0 ? -0.13 : 0.29);
       const bend = featherPoint(angle, tier === 0 ? 0.64 : 0.68, zf - cz + TD * (tier === 0 ? 0.13 : 0.07),
         tier === 0 ? -0.45 : 0.02 - stagger);
-      const tip = featherPoint(angle + (index % 2 ? 0.07 : -0.07), tier === 0 ? 0.65 : 0.79, zf - cz + TD * 0.08,
+      const tip = featherPoint(angle + (index % 2 ? 0.07 : -0.07), tier === 0 ? 0.65 : 0.80 + side * 0.13, zf - cz + TD * 0.08,
         tier === 0 ? -1.22 + stagger + side * 0.12 : -0.34 - stagger);
       const width = TW * (tier === 0 ? 0.15 : 0.13);
       const across = new Vector3(Math.cos(angle), 0, -Math.sin(angle)).scale(width);
@@ -1200,7 +1206,7 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
       data.positions = positions; data.indices = indices; data.normals = normals;
       const feather = new Mesh("deathMantleFeather", scene);
       data.applyToMesh(feather);
-      put(feather, body.torso, 0, 0, 0).material = fall;
+      put(feather, body.torso, 0, 0, 0).material = (index + tier) % 3 === 0 ? edge : fall;
     }
   }
   for (const m of out) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
