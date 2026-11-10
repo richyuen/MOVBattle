@@ -595,3 +595,37 @@ export function teacherJabot(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+export function shouterFurTrim(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const tan = new Color3(0.8, 0.60, 0.35);
+  const mf = getMaterialFactory();
+  const fur = mf.get("cloth", tan, { emissive: tan.scale(0.12) });
+  const root = mf.get("cloth", tan.scale(0.7), { emissive: tan.scale(0.08) });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+    const { center, extendSize: size } = arm.getBoundingInfo().boundingBox;
+    const shoulder = arm === body.leftUpperArm || arm === body.rightUpperArm;
+    const y = center.y + size.y * (shoulder ? 0.68 : 0.64);
+    const radius = size.x * (shoulder ? 1.33 : 1.30);
+    const cuff = MeshBuilder.CreateCylinder("shouterFurBacking", {
+      height: size.y * (shoulder ? 0.62 : 0.28), diameter: radius * 2, tessellation: 8,
+    }, scene);
+    cuff.parent = arm;
+    cuff.position.set(center.x, y, center.z);
+    cuff.scaling.z = size.z / size.x;
+    cuff.material = root;
+    out.push(cuff);
+    for (let index = 0; index < 7; index++) {
+      const angle = index * Math.PI * 2 / 7;
+      const tuft = MeshBuilder.CreateIcoSphere("shouterFurTuft", { radius: 1, subdivisions: 1, flat: true }, scene);
+      tuft.parent = arm;
+      tuft.position.set(center.x + Math.sin(angle) * radius, y + size.y * (index % 2 ? 0.03 : -0.11),
+        center.z + Math.cos(angle) * radius * size.z / size.x);
+      tuft.scaling.set(size.x * 0.57, size.y * (shoulder ? 0.48 : 0.27), size.z * 0.47);
+      tuft.rotation.set(Math.cos(angle) * 0.34, 0, -Math.sin(angle) * 0.34);
+      tuft.material = index % 3 === 0 ? root : fur;
+      out.push(tuft);
+    }
+  }
+  return out;
+}
