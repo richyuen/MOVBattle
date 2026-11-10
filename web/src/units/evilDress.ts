@@ -1162,25 +1162,43 @@ export function deathBringerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
     // [R] 503: rooted inside the head's width at the crown (.8 TW across stood out either side of the head as a block), fanning out below
     strand(t * Math.min(TW * C.backSpread, headW * 0.8), w * 0.6, crown.y - foot, t * 0.25 + C.kink * (i % 2 ? 1 : -1), Math.min(crown.z, cz - TD / 2 - TW * C.proud), crown.y, 0.045);
   }
-  // Overlapping feathers flare from staggered neck roots. The raised spines
-  // follow the chest and the irregular tips range from the ribs to the belt.
-  const neck = inTorso(c.x, c.y - H * 0.44, c.z + D * 0.41);
-  for (const side of [-1, 1]) {
-    for (const [index, reach] of [0.09, 0.19, 0.28, 0.37, 0.47, 0.55].entries()) {
-      const root = new Vector3(neck.x + side * TW * (0.035 + index * 0.034), neck.y - TH * index * 0.057, Math.max(neck.z, zf - TD * (0.17 + index * 0.018)));
-      const bend = new Vector3(side * TW * reach * 0.76, top - TH * [0.04, 0.12, 0.09, 0.16, 0.11, 0.19][index], zf + TD * (0.2 - index * 0.017));
-      const tip = new Vector3(side * TW * reach, top - TH * [1.22, 1.1, 1.18, 0.96, 0.85, 0.61][index], zf + TD * (index % 2 ? 0.02 : 0.1));
-      const width = TW * [0.065, 0.08, 0.061, 0.076, 0.053, 0.049][index];
-      const left = bend.add(new Vector3(-width, 0, 0));
-      const right = bend.add(new Vector3(width, 0, 0));
-      const spine = bend.add(new Vector3(0, 0, width * 0.48));
+  // Mantle spec (red and blue renders): a fitted dark wrap from collar to
+  // waist, topped by broad, short shoulder feathers and longer pointed
+  // feathers down the front and flanks. The arms stay bare below the caps.
+  // Use the rig's fitted yoke as the underlayer so its corners cannot show
+  // through gaps between the overlapping feathers.
+  const yoke = body.torso.getChildMeshes(true).find((mesh) => mesh.name.endsWith("_yoke"));
+  if (yoke) {
+    yoke.material = fall;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(yoke as Mesh);
+  }
+  tm.material = fall;
+  const featherPoint = (angle: number, width: number, depth: number, height: number): Vector3 =>
+    new Vector3(Math.sin(angle) * TW * width, top + TH * height, cz + Math.cos(angle) * depth);
+  for (const tier of [0, 1]) {
+    const count = tier === 0 ? 16 : 12;
+    for (let index = 0; index < count; index++) {
+      const angle = (index + tier * 0.5) * Math.PI * 2 / count;
+      const side = Math.abs(Math.sin(angle));
+      const stagger = [0, 0.10, 0.035, 0.14][index % 4];
+      const root = featherPoint(angle, tier === 0 ? 0.49 : 0.24, tier === 0 ? TD * 0.57 : TD * 0.38,
+        tier === 0 ? -0.13 : 0.29);
+      const bend = featherPoint(angle, tier === 0 ? 0.64 : 0.68, zf - cz + TD * (tier === 0 ? 0.13 : 0.07),
+        tier === 0 ? -0.45 : 0.02 - stagger);
+      const tip = featherPoint(angle + (index % 2 ? 0.07 : -0.07), tier === 0 ? 0.65 : 0.79, zf - cz + TD * 0.08,
+        tier === 0 ? -1.22 + stagger + side * 0.12 : -0.34 - stagger);
+      const width = TW * (tier === 0 ? 0.15 : 0.13);
+      const across = new Vector3(Math.cos(angle), 0, -Math.sin(angle)).scale(width);
+      const left = bend.subtract(across);
+      const right = bend.add(across);
+      const spine = bend.add(new Vector3(Math.sin(angle), 0, Math.cos(angle)).scale(width * 0.42));
       const positions = [root, left, spine, right, tip].flatMap((point) => point.asArray());
       const indices = [0, 2, 1, 0, 3, 2, 1, 2, 4, 2, 3, 4, 0, 1, 4, 0, 4, 3];
       const normals: number[] = [];
       VertexData.ComputeNormals(positions, indices, normals);
       const data = new VertexData();
       data.positions = positions; data.indices = indices; data.normals = normals;
-      const feather = new Mesh("deathChestFeather", scene);
+      const feather = new Mesh("deathMantleFeather", scene);
       data.applyToMesh(feather);
       put(feather, body.torso, 0, 0, 0).material = fall;
     }
