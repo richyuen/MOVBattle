@@ -735,6 +735,8 @@ export class SimulationSystem {
   private _strikeReadyAt = new Map<RuntimeUnit, number>();
   private _aimReadyAt = new Map<RuntimeUnit, number>();
   // Halflings holding on to their man (HALFLING_CLING): the man, the side he hangs on, when he lets go (set once the man is dead)
+  private _spentBalloonPacks = new Set<RuntimeUnit>();
+  private _balloonLifts = new Map<RuntimeUnit, { target: RuntimeUnit; start: number; base: number; offset: Vector3; logged: boolean }>();
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
   // Gunslingers' volleys into the sky and the bullets coming down (BULLET_RAIN): when the guns fire up, then each bullet's spot and landing time
   private _rains: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; splash: number; upAt: number; drops: { at: Vector3; lands: number; shown: boolean }[] }[] = [];
@@ -958,6 +960,8 @@ export class SimulationSystem {
     this._fearHits.clear();
     this._pendingBlows = [];
     this._clings.clear();
+    this._spentBalloonPacks.clear();
+    this._balloonLifts.clear();
     for (const v of this._latches.keys()) v.holdHeading(null);
     this._latches.clear();
     this._rains = [];
@@ -1071,6 +1075,7 @@ export class SimulationSystem {
     this._firstLunges(now);
     if (this._recovers.size > 0) this._slideRecovers(dt, now);
     if (this._clings.size > 0) this._holdClings(now);
+    if (this._balloonLifts.size > 0) this._stepBalloonLifts(now);
     if (this._latches.size > 0) this._holdLatches(now);
     if (this._rains.length > 0) this._stepRains(now);
     if (this._fans.length > 0) this._stepFans(now);
@@ -1101,7 +1106,8 @@ export class SimulationSystem {
     for (const unit of this._units) {
       if (unit.isDead || unit.isAnchoredActor) continue;
       // a fencer sliding back off his thrust is committed to it: no decision steers him until it ends
-      if (this._recovers.has(unit)) continue;
+      if (this._recovers.has(unit) || this._balloonLifts.has(unit) ||
+          Array.from(this._balloonLifts.values()).some((lift) => lift.target === unit)) continue;
 
       const nextDecision = this._nextDecisionAt.get(unit) ?? 0;
       if (now < nextDecision) continue;
@@ -1205,6 +1211,32 @@ export class SimulationSystem {
           man.animator.triggerFlinch();
           this._logAbility(unit, "stab", now, man.position);
         }
+      }
+    }
+  }
+
+  private _stepBalloonLifts(now: number): void {
+    for (const [unit, lift] of this._balloonLifts) {
+      const target = lift.target;
+      const age = now - lift.start;
+      if (unit.isDead || target.isDead || age >= 1.8) {
+        this._balloonLifts.delete(unit);
+        unit.dropFromHang();
+        target.dropFromHang();
+        continue;
+      }
+      const t = Math.min(1, age / 1.25);
+      const weight = Math.max(1, target.definition.mass);
+      const y = lift.base + (3.3 / Math.sqrt(weight)) * t * (2 - t);
+      unit.stopMoving();
+      const pos = unit.position.clone();
+      pos.y = y;
+      unit.teleportTo(pos);
+      target.hangAt(pos.add(lift.offset), now + 0.1);
+      unit.faceTarget(target.position);
+      if (!lift.logged && age >= 0.24) {
+        lift.logged = true;
+        this._logAbility(unit, "float_pack", now, target.position);
       }
     }
   }
@@ -4030,7 +4062,25 @@ export class SimulationSystem {
       this.visualEffects?.spawnExplosionBurst(new Vector3(target.position.x, Math.max(0, target.position.y), target.position.z), MINER_BLAST.scale);
       this._logAbility(attacker, "blast", now, target.position);
     }
+    const ballooner = attacker.definition.id === "secret.ballooner";
+    if (ballooner) { splashRadius = 0; knockback = Vector3.Zero(); }
     if (!impaled) this._applyDirectOrSplash(target, damage, splashRadius, attacker.team, dwells ? Vector3.Zero() : knockback, knockback);
+    if (ballooner && !attacker.isDead && !target.isDead && !target.isAnchoredActor &&
+        !target.isAirborne && !this._spentBalloonPacks.has(attacker)) {
+      const direction = target.position.subtract(attacker.position);
+      direction.y = 0;
+      if (direction.lengthSquared() > 1e-6) {
+        this._spentBalloonPacks.add(attacker);
+        const reach = attacker.collisionBodyRadius + target.collisionBodyRadius;
+        const offset = direction.normalize().scale(reach * 0.78);
+        const contact = target.position.subtract(offset);
+        attacker.stopMoving();
+        attacker.teleportTo(contact);
+        this._clearPathState(attacker);
+        target.hangAt(target.position, now + 0.1);
+        this._balloonLifts.set(attacker, { target, start: now, base: contact.y, offset, logged: false });
+      }
+    }
     // [S] 473 the Super Boxer's punch bursts in light where it lands (visualEffects PUNCH_BURST): at the man's chest
     if (attacker.definition.id === "legacy.super_boxer") this.visualEffects?.spawnPunchBurst(target.position.add(new Vector3(0, 1.1, 0)));
     // A halfling's first blow that lands takes hold of the man (HALFLING_CLING)
