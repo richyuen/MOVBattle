@@ -176,7 +176,7 @@ const wanted = only.length > 0 ? only : null;
 // Whether any of these shots is to be taken (every shot, in a full run)
 const wants = (...names) => wanted === null || names.some((n) => wanted.includes(n));
 // Loop v2: the shot set of one unit (the ability pair only when a second mechanic fires)
-const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ability", "ability_after", ...(RELOAD_SHOT[id] ? ["reload"] : []), ...(SECOND_ABILITY[id] ? id === "secret.ball_n_chain" ? ["pound", "pound_after"] : ["dodge", "dodge_after"] : [])].map((s) => `unit_${id}_${s}`);
+const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ability", "ability_after", ...(RELOAD_SHOT[id] ? ["reload"] : []), ...(SECOND_ABILITY[id] ? ["dodge", "dodge_after"] : [])].map((s) => `unit_${id}_${s}`);
 // [evidence 499] a unit with two abilities whose ability pair is the other one: its second ability (event kind) gets a pair of its own, `_dodge` and
 // `_dodge_after`, one camera held on him at the event tick for both (the Void Monarch's ability pair is his Demon Transformation; card Abilities
 // "Void Monarch Dodge" is a second, audit 489 c.2)
