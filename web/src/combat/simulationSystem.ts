@@ -845,7 +845,6 @@ export class SimulationSystem {
   private _banjoNoteCount = 0;
   private _jumpReadyAt = new Map<RuntimeUnit, number>();
   private _foolishWindup = new Map<RuntimeUnit, number>();
-  private _stonePounds = new Map<RuntimeUnit, { target: RuntimeUnit; next: number; remaining: number; damage: number; dive: boolean }>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
   private _battleStartedAt = 0;
@@ -953,7 +952,6 @@ export class SimulationSystem {
     this._banjoNotes.delete(unit);
     this._jumpReadyAt.delete(unit);
     this._foolishWindup.delete(unit);
-    this._stonePounds.delete(unit);
   }
 
   beginSimulation(now: number): void {
@@ -1008,7 +1006,6 @@ export class SimulationSystem {
     this._banjoTurns = 0;
     this._jumpReadyAt.clear();
     this._foolishWindup.clear();
-    this._stonePounds.clear();
     this._isRunning = true;
     this._now = now;
     this._battleStartedAt = now;
@@ -1048,7 +1045,6 @@ export class SimulationSystem {
     if (this._boxerDashes.size > 0) this._stepBoxerDashes(now);
     // After the animation step, so the frame a blow lands on is the frame its club is down on the man
     if (this._pendingBlows.length > 0) this._landPendingBlows(now);
-    this._stepStonePounds(now);
     if (this._pendingLaunches.length > 0) this._fireDwelledLaunches(now);
     if (this._pendingThrows.length > 0) this._launchPendingThrows(now);
     this._stepBurning(now);
@@ -2205,7 +2201,6 @@ export class SimulationSystem {
 
     // Foolish Jump: pull back holding the stone, then fling forward into melee.
     if (unit.definition.id === "secret.ball_n_chain") {
-      if (this._stonePounds.has(unit)) return;
       if (unit.isAirborne) return;
       const windup = this._foolishWindup.get(unit);
       if (!canMove || distance > engageDistance + 3.4) this._foolishWindup.delete(unit);
@@ -2220,11 +2215,6 @@ export class SimulationSystem {
         }
         this._foolishWindup.delete(unit);
         if (unit.leap(dir, Math.max(0.5, distance - engageDistance * 0.4), 6.5)) {
-          const profile = getAttackProfile(unit.definition.attackProfileId);
-          this._stonePounds.set(unit, { target: enemy, next: now + 0.42, remaining: 3,
-            damage: profile.damage * (unit.definition.damageMultiplier ?? 1), dive: true });
-          unit.animator.stoneContact = enemy.position.add(new Vector3(0, enemy.body.metrics.overallHeight * 0.48, 0));
-          unit.animator.stoneDrive = 0.65;
           this._jumpReadyAt.set(unit, now + 5);
           this._logAbility(unit, "foolish_jump", now, enemy.position);
           return;
@@ -3123,13 +3113,6 @@ export class SimulationSystem {
     let splashRadius = attackProfile.splashRadius;
     let knockback = impulseDir.scale(attackProfile.knockback);
     const controlStrength = attacker.definition.controlStrength ?? 1;
-
-    if (attacker.definition.id === "secret.ball_n_chain") {
-      if (!this._stonePounds.has(attacker)) this._stonePounds.set(attacker, {
-        target, next: now + 0.22, remaining: 3, damage, dive: false,
-      });
-      return;
-    }
 
     // Five homing book lights carry no contact damage; their arrivals call
     // down the damaging rays (Divine Arbiter Book, card Weapons).
@@ -4180,38 +4163,6 @@ export class SimulationSystem {
       this.visualEffects.spawnPaintSplotches(tuft.getAbsolutePosition(), target.position.subtract(attacker.position), tuft.material);
     }
     this._applyOnHitStatuses(attacker, target, now, impactOrigin);
-  }
-
-  /** The prisoner dives behind his stone, then recoils it for two short chest-level pounds. */
-  private _stepStonePounds(now: number): void {
-    for (const [unit, pound] of this._stonePounds) {
-      const target = pound.target;
-      const distance = Math.hypot(target.position.x - unit.position.x, target.position.z - unit.position.z);
-      if (unit.isDead || unit.isToppled || target.isDead || pound.remaining === 0 || distance > 4) {
-        unit.animator.stoneContact = null; unit.animator.stoneDrive = 0;
-        this._stonePounds.delete(unit); continue;
-      }
-      unit.stopMoving(); unit.faceTarget(target.position);
-      const toward = target.position.subtract(unit.position); toward.y = 0; toward.normalize();
-      const stone = unit.body.torso.getChildMeshes(true).find(m => m.name === "ballStone");
-      const radius = stone?.getBoundingInfo().boundingSphere.radiusWorld ?? 0.3;
-      unit.animator.stoneContact = target.position.add(new Vector3(0, target.body.metrics.overallHeight * 0.48, 0))
-        .subtract(toward.scale(radius * 0.65));
-      // Recoil .18 s after each contact, then drive forward for the next.
-      unit.animator.stoneDrive = Math.max(0, Math.min(1, 1 - (pound.next - now) / 0.22));
-      if (pound.dive && unit.isAirborne && unit.position.y > 0.30) unit.animator.stoneDrive = 0.85;
-      unit.reposeNow();
-      if (now < pound.next || (pound.dive && unit.isAirborne && unit.position.y > 0.30)) continue;
-      if (distance > unit.collisionBodyRadius + target.collisionBodyRadius + 1.0) {
-        unit.animator.stoneContact = null; unit.animator.stoneDrive = 0;
-        this._stonePounds.delete(unit); continue;
-      }
-      unit.animator.stoneDrive = 1; unit.reposeNow();
-      this._landMeleeBlow(unit, target, pound.damage / 3, 0, toward.scale(0.35), now,
-        unit.animator.stoneContact);
-      this._logAbility(unit, pound.dive ? "stone_dive" : "stone_pound", now, target.position);
-      pound.dive = false; pound.remaining--; pound.next = now + 0.40;
-    }
   }
 
   /** Lands the heavy blows whose clubs have come down. A striker who died, was knocked down or was knocked out of reach meanwhile, or whose man is already down, has swung at air. */
