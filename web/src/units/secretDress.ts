@@ -679,6 +679,30 @@ export function shouterKneeWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+export function shouterBracers(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const dark = team.scale(0.24);
+  const leather = getMaterialFactory().get("cloth", dark, { emissive: dark.scale(0.12) });
+  const edgeColor = team.scale(0.12);
+  const edge = getMaterialFactory().get("cloth", edgeColor);
+  const out: Mesh[] = [];
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    const { center: c, extendSize: s } = arm.getBoundingInfo().boundingBox;
+    for (const [name, y, height, diameter, material] of [
+      ["shouterBracer", -0.04, 1.28, 2.65, leather],
+      ["shouterBracerTop", 0.59, 0.10, 2.76, edge],
+      ["shouterBracerWrist", -0.67, 0.10, 2.22, edge],
+    ] as const) {
+      const guard = MeshBuilder.CreateCylinder(name, {
+        height: s.y * height, diameterTop: s.x * diameter, diameterBottom: s.x * diameter * 0.77, tessellation: 6,
+      }, scene);
+      guard.parent = arm; guard.position.set(c.x, c.y + s.y * y, c.z);
+      guard.scaling.z = s.z / s.x; guard.rotation.y = Math.PI / 6;
+      guard.material = material; guard.convertToFlatShadedMesh(); out.push(guard);
+    }
+  }
+  return out;
+}
+
 export function bomberShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const cream = new Color3(0.80, 0.60, 0.35);
   const mf = getMaterialFactory();
