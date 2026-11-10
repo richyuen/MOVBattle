@@ -661,6 +661,24 @@ export function shouterFurTrim(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+export function shouterKneeWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const tan = new Color3(0.8, 0.60, 0.35);
+  const cloth = getMaterialFactory().get("cloth", tan, { emissive: tan.scale(0.12) });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const { center: c, extendSize: s } = shin.getBoundingInfo().boundingBox;
+    for (let index = 0; index < 4; index++) {
+      const band = MeshBuilder.CreateCylinder("shouterKneeBand", {
+        height: s.y * 0.25, diameterTop: s.x * 2.6, diameterBottom: s.x * 2.45, tessellation: 7,
+      }, scene);
+      band.parent = shin; band.position.set(c.x, c.y + s.y * (0.94 - index * 0.19), c.z);
+      band.scaling.z = s.z / s.x * 0.95; band.rotation.z = index % 2 ? -0.10 : 0.10;
+      band.material = cloth; band.convertToFlatShadedMesh(); out.push(band);
+    }
+  }
+  return out;
+}
+
 export function bomberShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const cream = new Color3(0.80, 0.60, 0.35);
   const mf = getMaterialFactory();
