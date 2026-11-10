@@ -610,6 +610,7 @@ const FENCER_RECOVER = { dist: 1.8, seconds: 0.16, kind: "backstep" };
  * between them, turned back off the man by .back of the side step (1: half way between side and straight back), in .seconds s, fast at first and easing (the recover slide), facing the man throughout. His sides
  * alternate. .cooldown s between dodges. The blow he dodged was struck at where he stood: it comes down on air. Logged .kind.
  */
+const JESTER_DODGE = { dist: 1.9, back: -0.34, seconds: 0.54, cooldown: 2.5, kind: "jester_dodge" };
 const FENCER_DODGE = { dist: 2.2, back: 1.0, seconds: 0.22, cooldown: 2.5, kind: "dodge" };
 /*
  * [S] 373 Painter Dodge (card Abilities "makes units instinctively sidestep whenever a projectile comes into their way"; Characteristics "They can dodge
@@ -825,7 +826,7 @@ export class SimulationSystem {
   // [S] 403 each crashed longship and when its oarsmen landed (LONGSHIP_OARS)
   private _oarsmen = new Map<RuntimeUnit, number>();
   // Fencer recover (FENCER_RECOVER): each sliding man, his flat way back, when it started and the man he faces
-  private _recovers = new Map<RuntimeUnit, { dir: Vector3; from: number; foe: RuntimeUnit; dist: number; seconds: number }>();
+  private _recovers = new Map<RuntimeUnit, { dir: Vector3; from: number; foe: RuntimeUnit; dist: number; seconds: number; flip?: boolean }>();
   // Fencer Dodge (FENCER_DODGE): when each fencer may dodge again, and which side he goes next
   private _dodgeReadyAt = new Map<RuntimeUnit, number>();
   private _dodgeSide = new Map<RuntimeUnit, number>();
@@ -3641,6 +3642,7 @@ export class SimulationSystem {
       this._tryDodge(target, attacker, now);
       return;
     }
+    if (target.definition.id === "secret.jester" && this._tryDodge(target, attacker, now)) return;
     this._landMeleeBlow(attacker, target, damage, splashRadius, knockback, now, impactOrigin);
   }
 
@@ -3658,9 +3660,10 @@ export class SimulationSystem {
   }
 
   /** Fencer Dodge (FENCER_DODGE): a swing has gone up at this fencer; if ready, he sidesteps out of its arc on the recover slide. */
-  private _tryDodge(unit: RuntimeUnit, foe: RuntimeUnit, now: number): void {
-    const D = FENCER_DODGE;
-    if (unit.definition.id !== "renaissance.fencer" || unit.isDead || unit.isToppled || unit.isDowned || this._recovers.has(unit)) return;
+  private _tryDodge(unit: RuntimeUnit, foe: RuntimeUnit, now: number): true | undefined {
+    const flip = unit.definition.id === "secret.jester";
+    const D = flip ? JESTER_DODGE : FENCER_DODGE;
+    if ((!flip && unit.definition.id !== "renaissance.fencer") || (flip && unit.isAirborne) || unit.isDead || unit.isToppled || unit.isDowned || this._recovers.has(unit)) return;
     if (now < (this._dodgeReadyAt.get(unit) ?? 0) || this._pendingBlows.some((b) => b.attacker === unit)) return;
     const away = unit.position.subtract(foe.position);
     away.y = 0;
@@ -3672,11 +3675,12 @@ export class SimulationSystem {
     unit.stopMoving();
     this._clearPathState(unit);
     unit.holdHeading(Math.atan2(-away.x, -away.z));
-    this._recovers.set(unit, { dir, from: now, foe, dist: D.dist, seconds: D.seconds });
+    this._recovers.set(unit, { dir, from: now, foe, dist: D.dist, seconds: D.seconds, flip });
     this._dodgeReadyAt.set(unit, now + D.cooldown);
     // the blow was struck at where he stood: it comes down on air
     this._pendingBlows = this._pendingBlows.filter((b) => !(b.attacker === foe && b.target === unit));
     this._logAbility(unit, D.kind, now, foe.position);
+    return true;
   }
 
   /** First-contact lunge (FIRST_LUNGE): a lunging unit closing on his first foe springs the last metres in with his blow already swinging, once. */
@@ -3973,7 +3977,20 @@ export class SimulationSystem {
       const ease = (t: number) => 2 * t - t * t;
       const step = r.dist * (ease(t1) - ease(t0));
       unit.stopMoving();
-      unit.teleportTo(unit.position.add(r.dir.scale(step)));
+      const pos = unit.position.add(r.dir.scale(step));
+      if (r.flip) {
+        const arc = Math.sin(Math.PI * t1);
+        const pitch = 2 * Math.PI * t1;
+        const pivot = unit.body.metrics.overallHeight * 0.48;
+        pos.y = t1 >= 1 ? 0 : 0.72 * arc + pivot * (1 - Math.cos(pitch));
+        unit.body.root.rotation.x = t1 >= 1 ? 0 : pitch;
+        const tuck = arc * 0.95;
+        unit.body.leftHip.rotation.x -= tuck;
+        unit.body.rightHip.rotation.x -= tuck;
+        unit.body.leftKnee.rotation.x += tuck;
+        unit.body.rightKnee.rotation.x += tuck;
+      }
+      unit.teleportTo(pos);
       if (!r.foe.isDead) unit.holdHeading(Math.atan2(r.foe.position.x - unit.position.x, r.foe.position.z - unit.position.z));
     }
   }
