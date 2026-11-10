@@ -4257,6 +4257,10 @@ export class ProceduralAnimator {
    * of it below, so the forearms wrap its flanks; eased off as he goes limp.
    */
   private _stone: Mesh | null | undefined = undefined;
+  private _stoneRest: Vector3 | null = null;
+  /** World contact point and drive supplied by the stone attack, not a stick swing. */
+  stoneContact: Vector3 | null = null;
+  stoneDrive = 0;
   private _hugStone(): void {
     if (this._stone === undefined) this._stone = this._body.torso.getChildMeshes(true).find((m): m is Mesh => m instanceof Mesh && m.name === "ballStone") ?? null;
     const st = this._stone;
@@ -4264,6 +4268,14 @@ export class ProceduralAnimator {
     const w = 1 - Math.min(1, this._limp);
     if (w <= 0.01) return;
     const b = this._body, H = STONE_HUG;
+    this._stoneRest ??= st.position.clone();
+    st.position.copyFrom(this._stoneRest);
+    if (this.stoneContact && this.stoneDrive > 0) {
+      b.torso.rotation.x += this.stoneDrive * 0.48;
+      for (const n of [b.root, b.hip, b.torso]) n.computeWorldMatrix(true);
+      const local = Vector3.TransformCoordinates(this.stoneContact, Matrix.Invert(b.torso.getWorldMatrix()));
+      st.position.copyFrom(Vector3.Lerp(this._stoneRest, local, this.stoneDrive));
+    }
     for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.rightShoulder]) n.computeWorldMatrix(true);
     st.computeWorldMatrix(true);
     const c = st.getBoundingInfo().boundingSphere.centerWorld, R = st.getBoundingInfo().boundingSphere.radiusWorld * 0.82;
