@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 505   Batch: evil+secret_1   Consecutive empty: 0   Done: 99/139   Parked: 0
+Iteration: 506   Batch: evil+secret_1   Consecutive empty: 0   Done: 99/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -22,32 +22,33 @@ secret_2: taekwondo ???? q | raptor_rider ???? q | cheerleader ???? q | cupid ??
 secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ???? q | wheelbarrow_dragon ???? q | skeleton_giant ???? q | bomb_cannon ???? q | cavalry ???? q | vlad ???? q | gatling_gun ???? q
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
-## Focus (iteration 505; BASE 73b068c5)
-1. [R] evil.death_bringer.a blocker 1 (37724d45) APPROVE, struck 1; a PASS
-2. [S] secret.executioner.a blocker 2 (81a7d921) APPROVE, struck 2
-3. [S] secret.ball_n_chain.a blocker 1 (f8f54345) APPROVE, struck 1, 2, 5
-4. [S] secret.shouter.a blocker 5 (1ff4ba0b) APPROVE, struck 5
-5. [S] secret.bomb_on_a_stick.a blocker 1 (c4965761) APPROVE, struck 1
-6. [S] secret.the_teacher.c blocker 1 (140582e4, 67439484) APPROVE, struck 1; c PASS
-7. [S] secret.raptor.a blocker 1 (18710e8b) APPROVE, struck 1, 2, 3
-8. [S] secret.raptor.b blocker 1 (53a75e63) APPROVE, struck 1
-9. [S] secret.raptor.c blocker 1 (be96b2b5, d7165ae8) APPROVE
-- 9/9, 12 struck
+## Focus (iteration 506; BASE 070afbae)
+1. [R] evil.death_bringer.a blocker 1, 2 (729b5eaf, 42f202ed) APPROVE, struck 1, 2; a PASS
+2. [S] secret.ballooner.a blocker 2 (03717227) APPROVE, struck 2, 7
+3. [S] secret.jester.b blocker 1 (55f5caee, 607a9757) APPROVE, struck 1
+4. [S] secret.jester.c blocker 1 (beecdbea) APPROVE, struck 1
+5. [S] secret.ballooner.c blocker 1 (b89901f6) APPROVE, struck 1
+6. [S] secret.the_teacher.a blocker 2 (50013545) APPROVE, struck 2
+7. [S] secret.chu_ko_nu.a blocker 2 (3b148781) APPROVE, struck 2
+8. [S] secret.fan_bearer.b blocker 2 (83f17efd, c2e1505e) APPROVE
+9. [S] secret.jester.a blocker 2 (2f45b912) APPROVE, struck 2
+- 9/9, 10 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [R] evil.death_bringer (37724d45) | VERDICT: APPROVE | CRITERION: evil.death_bringer.a PASS   (previous: FAIL)
-- GAP: [S] secret.executioner (81a7d921) | VERDICT: APPROVE | CRITERION: secret.executioner.a FAIL   (previous: FAIL)
-- GAP: [S] secret.ball_n_chain (f8f54345) | VERDICT: APPROVE | CRITERION: secret.ball_n_chain.a FAIL   (previous: FAIL)
-- GAP: [S] secret.shouter (1ff4ba0b) | VERDICT: APPROVE | CRITERION: secret.shouter.a FAIL   (previous: FAIL)
-- GAP: [S] secret.bomb_on_a_stick (c4965761) | VERDICT: APPROVE | CRITERION: secret.bomb_on_a_stick.a FAIL   (previous: FAIL)
-- GAP: [S] secret.the_teacher (140582e4 + 67439484) | VERDICT: APPROVE | CRITERION: secret.the_teacher.c PASS   (previous: FAIL)
-- GAP: [S] secret.raptor (18710e8b) | VERDICT: APPROVE | CRITERION: secret.raptor.a FAIL   (previous: FAIL)
-- GAP: [S] secret.raptor (53a75e63) | VERDICT: APPROVE | CRITERION: secret.raptor.b FAIL   (previous: FAIL)
-- GAP: [S] secret.raptor (be96b2b5 + d7165ae8) | VERDICT: APPROVE | CRITERION: secret.raptor.c FAIL   (previous: FAIL)
+- GAP: [R] evil.death_bringer.a (729b5eaf + 42f202ed) | VERDICT: APPROVE | CRITERION: evil.death_bringer.a PASS (previous: FAIL)
+- GAP: [S] secret.ballooner.a (03717227) | VERDICT: APPROVE | CRITERION: secret.ballooner.a FAIL (previous: FAIL)
+- GAP: [S] secret.jester.b (55f5caee + 607a9757) | VERDICT: APPROVE | CRITERION: secret.jester.b FAIL (previous: FAIL)
+- GAP: [S] secret.jester.c (beecdbea) | VERDICT: APPROVE | CRITERION: secret.jester.c FAIL (previous: FAIL)
+- GAP: [S] secret.ballooner.c (b89901f6) | VERDICT: APPROVE | CRITERION: secret.ballooner.c FAIL (previous: FAIL)
+- GAP: [S] secret.the_teacher.a (50013545) | VERDICT: APPROVE | CRITERION: secret.the_teacher.a FAIL (previous: FAIL)
+- GAP: [S] secret.chu_ko_nu.a (3b148781) | VERDICT: APPROVE | CRITERION: secret.chu_ko_nu.a FAIL (previous: FAIL)
+- GAP: [S] secret.fan_bearer.b (83f17efd + c2e1505e) | VERDICT: APPROVE | CRITERION: secret.fan_bearer.b FAIL (previous: FAIL)
+- GAP: [S] secret.jester.a (2f45b912) | VERDICT: APPROVE | CRITERION: secret.jester.a FAIL (previous: FAIL)
 - UNIT evil.death_bringer: a FAIL b PASS c PASS d PASS (3/4) (CONFIRM)
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Death Bringer's compact skull passed gap review. CONFIRM leaves a open on the taller upright horns and rigid front feather fall. Rebuild those from the lineup and studio render; Evil checkpoint waits.
-- Raptor now has a standalone biped body and visible teeth. Its jaw snap is logged, but the squire remains outside the jaws in the contact frame.
-- Stats d PASS on all seven touched units. Final captures had no console or page errors.
+- Death Bringer passed the gap review for the swept horns and neckline, then CONFIRM failed a on shoulder and flank coverage. Build the mantle out around both shoulders. Evil checkpoint waits.
+- Ballooner lift and Jester front-flip are captured. The glued body grip and Jester toe blades and kick remain open.
+- Fan Bearer now carries the leaf low and forward. Its far fist still needs to seat on the shaft.
+- Stats d PASS on all six touched units. Final capture had no console or page errors.

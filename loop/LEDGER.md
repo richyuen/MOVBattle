@@ -4,6 +4,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+506 | 729b5eaf,42f202ed | evil.death_bringer.a | approved [R] (struck 1, 2)
+506 | 03717227 | secret.ballooner.a | approved [S] (struck 2, 7)
+506 | 55f5caee,607a9757 | secret.jester.b | approved [S] (struck 1)
+506 | beecdbea | secret.jester.c | approved [S] (struck 1)
+506 | b89901f6 | secret.ballooner.c | approved [S] (struck 1)
+506 | 50013545 | secret.the_teacher.a | approved [S] (struck 2)
+506 | 3b148781 | secret.chu_ko_nu.a | approved [S] (struck 2)
+506 | 83f17efd,c2e1505e | secret.fan_bearer.b | approved [S]
+506 | 2f45b912 | secret.jester.a | approved [S] (struck 2)
+
 505 | 37724d45 | evil.death_bringer.a | approved [R] (struck 1)
 505 | 81a7d921 | secret.executioner.a | approved (struck 2)
 505 | f8f54345 | secret.ball_n_chain.a | approved (struck 1, 2, 5)
@@ -37,16 +47,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 502 | b1963ee9 | secret.chu_ko_nu.c | approved (blocker 1; c PASS)
 502 | 37541423 | secret.shouter.c | approved (blocker 1; c PASS)
 502 | 60b441dd | secret.the_teacher.a | approved (blocker 1)
-
-501 | 28c99aa4 | evil.death_bringer.a | approved (blocker 1)
-501 | 12556880 | evil.death_bringer.a | approved (blocker 4)
-501 | baccf212 | evil.void_monarch.a | approved (blocker 3; 1 struck by lineup)
-501 | 82b8820a | evil.void_monarch.b | approved (blocker 1; b PASS)
-501 | 2c5f720b | secret.ballooner.a | approved (blocker 1)
-501 | 8b3c4a36 | secret.bomb_on_a_stick.b | approved (no strike; one-handed)
-501 | 561dcf46 | secret.ball_n_chain.b | approved (blocker 2)
-501 | 7d5f2bb5 | secret.the_teacher.b | approved (blocker 1; b PASS)
-501 | 87af4842 | secret.chu_ko_nu.b | approved (blocker 1; b PASS)
 
 
 ## Spent (never retry as [P])
@@ -114,3 +114,13 @@ PB:MONARCH_SWORD | blade.62H wide.085H,7 teeth/edge .032H rake.6,unlit khaki(.5,
 evil stats cost/hm/dm/cm (7 units, 3666e25c) | d PASS 7/7 | 489 | stats | initial manifest
 Completed evil units (walker, sentinel, cultist, mechanic, lich) rows | specs in owning code; ledger@87af4842 | 501 | archived values | unchanged
 Completed good, legacy_2 and earlier rows | specs in owning code; ledger@7b0ae2f6 (legacy_2@b9daeaea, legacy_1@7090fef5) | 494 | archived values | unchanged
+evilDress:deathBringerMask swept horn | 6 tapered sections from .32W out at temple to .74W out before .66W tip at 1.48H | 506 | approved [R] | reused evilHorn prongs
+evilDress:deathBringerHair chest feathers | 6 raised-spine feathers per side rooted at neckline, ragged tips from ribs to belt | 506 | approved [R] (CONFIRM: shoulders and flanks still bare) | 501 chest wedges, retained crown and back locks
+secretDress:balloonerGlueMitts forearm | three faceted lobes each, spanning .41-.84 of elbow-to-wrist and 1.85-2.35 lower-arm widths | 506 | approved | mitts and hand lumps only
+PB:jester_dagger | .28 hand-scale tapered blade with .085 strap, elbow-parented just above wrist | 506 | approved | shuriken mesh in each hand
+SS:JESTER_DODGE | .54 s melee sidestep with forward roll, 1.9 m, cooldown 2.5 s | 506 | approved | no melee dodge
+SS:Balloon Backpack | once per fight, up to 3.3 m mass-scaled paired rise, release after 1.8 s, log float_pack | 506 | approved | generic pull and knock-up
+secretDress:teacherHair beard | .5H faceted triangle, .69W top, paired moustache lobes | 506 | approved | bare chin
+secretDress:chuKoNuRobe | two faceted overlapping knee tiers with orange hem bands | 506 | approved | short tunic
+PA/PB:fanGrip | fist forward and in, leaf at 1.9 rad off vertical with face up, offhand span -.28 to -.15 | 506 | approved (far fist off shaft) | hpoint high carry
+secretDress:jesterCap collar | six layered team lobes, 0.84 inset over gold | 506 | approved | bare neckline

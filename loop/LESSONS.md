@@ -35,6 +35,7 @@ Read whole at step 1; one fact per line, merge near cap.
 
 - Gate an idle hold on the fire, not Attacking+throw (451). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 ## Rig and dress
+- Neck-rooted feathers can emerge halfway down the chest. Check the visible roots in the idle shot (506).
 - A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
 - Retire superseded hip skirts (482). The `_yoke` hull spans the trunk: re-skin it for a bare waist, size shells from it (487).
 - A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
