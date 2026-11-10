@@ -4203,8 +4203,8 @@ function buildGiantFan(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const a2 = (F.fanW * L) / 2, b2 = F.fanD * L, fan: number[][] = [];
   for (let k = 0; k <= 12; k++) { const a = (k / 12) * Math.PI; fan.push([Math.cos(a) * a2, Math.sin(a) * b2]); }
   plate("fanLeaf", fan, mat(scene, team, 0.12, "cloth"), top + F.plate * L);
-  const knob = MeshBuilder.CreateCylinder("hpoint", { height: F.thick * L * 2, diameter: F.thick * L * 1.4, tessellation: 6 }, scene);
-  knob.position.y = top - F.thick * L * 2;
+  const knob = MeshBuilder.CreateCylinder("fanGrip", { height: F.thick * L * 2, diameter: F.thick * L * 1.4, tessellation: 6 }, scene);
+  knob.position.y = -L * 0.28;
   knob.material = wood;
   knob.parent = shaft;
   return shaft;

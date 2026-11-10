@@ -322,6 +322,7 @@ const LANCE_AIM = { hold: 0.6, rate: 4 };
 /** [S] 502 the Ball 'n' Chain's hug (_hugStone): fists on the stone's flanks, in its radii out, ahead and down from its centre. */
 const STONE_HUG = { side: 0.8, front: -0.1, drop: 0.3 };
 const POLE_GRIP = {
+  fanGrip: [-0.28, -0.15],
   hpoint: [0.15, 0.45], // the halberd (and every glaive built on it)
   musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
   forkBar: [0.2, 0.5], // the pitchfork: the off hand up the shaft toward the head (farmer.farmer.red.png)
@@ -4184,9 +4185,13 @@ export class ProceduralAnimator {
    */
   private _restHalberd(): void {
     const h = this._halberd();
-    if (!h || this._chopDown || this.walkStyle === "quadruped") return;
+    const fan = this._fanCarry();
+    if ((!h && !fan) || this._chopDown || this.walkStyle === "quadruped") return;
     const s = this._state;
-    if (s !== AnimState.Idle && s !== AnimState.Walking) return;
+    if (s !== AnimState.Idle && s !== AnimState.Walking) {
+      if (fan) fan.node.rotationQuaternion = null;
+      return;
+    }
     const w = 1 - Math.min(1, this._limp);
     if (w <= 0.01) return;
     const b = this._body;
@@ -4197,11 +4202,13 @@ export class ProceduralAnimator {
     const outward = flat(Vector3.TransformNormal(new Vector3(Math.sign(b.rightShoulder.position.x) || 1, 0, 0), rootM));
     const height = b.metrics.overallHeight * b.root.scaling.y;
     const jarl = this._jarlPelted();
-    const R = jarl ? JARL_REST : HALBERD_REST;
+    const R = fan ? { ahead: 0.17, inward: 0.06, drop: 0.34 } : jarl ? JARL_REST : HALBERD_REST;
     const fist = b.rightShoulder.getAbsolutePosition().add(fwd.scale(R.ahead * height))
       .addInPlace(outward.scale(-R.inward * height)).addInPlace(new Vector3(0, -R.drop * height, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, fist, w, 2);
-    if (jarl) {
+    if (fan) {
+      this._poseHalberd(2.04, w, undefined, fan);
+    } else if (jarl) {
       // the shaft across him: up, leant toward the off side (-outward) and a little forward (JARL_REST)
       const J = JARL_REST;
       const axis = Vector3.Up().scale(Math.cos(J.across)).addInPlace(outward.scale(-Math.sin(J.across))).addInPlace(fwd.scale(Math.sin(J.forward))).normalize();
@@ -6223,6 +6230,15 @@ export class ProceduralAnimator {
     return this._halberdProp;
   }
 
+  private _fanProp: { node: Mesh; rest: Quaternion } | null | undefined;
+  private _fanCarry(): { node: Mesh; rest: Quaternion } | null {
+    if (this._fanProp === undefined) {
+      const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "fanLeaf"));
+      this._fanProp = node ? { node, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
+    }
+    return this._fanProp;
+  }
+
   /** The Jarl (CHOP_JARL), found by his bear pelt's skull; looked up once. */
   private _jarlFound: boolean | undefined = undefined;
   private _jarlPelted(): boolean {
@@ -6232,8 +6248,8 @@ export class ProceduralAnimator {
 
   // The halberd stood in the world at `theta` from straight up toward his front (in the plane through his front and up), the axe's edge leading the way it
   // swings, blended from its rest in the fist by w
-  private _poseHalberd(theta: number, w: number, along?: Vector3): void {
-    const h = this._halberd();
+  private _poseHalberd(theta: number, w: number, along?: Vector3, prop = this._halberd()): void {
+    const h = prop;
     if (!h) return;
     if (w <= 0.001) {
       h.node.rotationQuaternion = null;
