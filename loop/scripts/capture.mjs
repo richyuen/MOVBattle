@@ -180,7 +180,7 @@ const UNIT_SHOTS = (id) => ["idle", "windup", "release", "flight", "struck", "ab
 // [evidence 499] a unit with two abilities whose ability pair is the other one: its second ability (event kind) gets a pair of its own, `_dodge` and
 // `_dodge_after`, one camera held on him at the event tick for both (the Void Monarch's ability pair is his Demon Transformation; card Abilities
 // "Void Monarch Dodge" is a second, audit 489 c.2)
-const SECOND_ABILITY = { "evil.void_monarch": "monarch_dodge", "secret.ball_n_chain": "stone_pound" };
+const SECOND_ABILITY = { "evil.void_monarch": "monarch_dodge" };
 // A unit whose reload is a pose of its own (the scarecrow's A-pose after the volley): one more shot, on the unit alone, this many ticks past the release
 const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // A unit whose card ability comes after its first logged special (the minotaur's charge at 17 ms): detection runs on until this kind is seen
@@ -829,9 +829,8 @@ async function main() {
         const second = SECOND_ABILITY[id] ? det.events.find((e) => e.kind === SECOND_ABILITY[id]) : null;
         if (second) {
           summary.notes.push(`unit_${id}: second ability ${second.kind} at ${ms(second)} ms`);
-          const pound = second.kind === "stone_pound";
-          await take(`unit_${id}_${pound ? "pound" : "dodge"}`, second.tick, pound ? far : 5, { hold: second.tick });
-          await take(`unit_${id}_${pound ? "pound_after" : "dodge_after"}`, second.tick + 9, pound ? far : 5, { hold: second.tick });
+          await take(`unit_${id}_dodge`, second.tick, 5, { hold: second.tick });
+          await take(`unit_${id}_dodge_after`, second.tick + 9, 5, { hold: second.tick });
         } else if (SECOND_ABILITY[id]) summary.notes.push(`unit_${id}: shot may miss: no ${SECOND_ABILITY[id]} within the window`);
         const faction = id.split(".")[0];
         if (!lineupsDone.has(faction)) {
