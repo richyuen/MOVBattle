@@ -328,9 +328,9 @@ process.on("exit", killServer);
 
 async function startServer() {
   log(`starting vite preview on ${port}`);
-  server = spawn("npx", ["vite", "preview", "--host", "127.0.0.1", "--port", String(port), "--strictPort"], {
+  server = spawn(process.execPath, [path.join(webDir, "node_modules/vite/bin/vite.js"), "preview", "--host", "127.0.0.1", "--port", String(port), "--strictPort"], {
     cwd: webDir,
-    shell: true,
+    shell: false,
     stdio: ["ignore", "pipe", "pipe"],
   });
   server.stdout.on("data", () => {});
