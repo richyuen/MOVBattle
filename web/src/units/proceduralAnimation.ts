@@ -4258,6 +4258,7 @@ export class ProceduralAnimator {
    */
   private _stone: Mesh | null | undefined = undefined;
   private _stoneRest: Vector3 | null = null;
+  private _stoneTorsoZ: number | null = null;
   /** World contact point and drive supplied by the stone attack, not a stick swing. */
   stoneContact: Vector3 | null = null;
   stoneDrive = 0;
@@ -4269,8 +4270,11 @@ export class ProceduralAnimator {
     if (w <= 0.01) return;
     const b = this._body, H = STONE_HUG;
     this._stoneRest ??= st.position.clone();
+    this._stoneTorsoZ ??= b.torso.position.z;
+    b.torso.position.z = this._stoneTorsoZ;
     st.position.copyFrom(this._stoneRest);
     if (this.stoneContact && this.stoneDrive > 0) {
+      b.torso.position.z += b.metrics.overallHeight * 0.25 * this.stoneDrive;
       b.torso.rotation.x += this.stoneDrive * 0.48;
       for (const n of [b.root, b.hip, b.torso]) n.computeWorldMatrix(true);
       const local = Vector3.TransformCoordinates(this.stoneContact, Matrix.Invert(b.torso.getWorldMatrix()));
