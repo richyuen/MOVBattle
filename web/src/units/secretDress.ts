@@ -455,6 +455,18 @@ export function teacherHair(scene: Scene, body: ArticulatedBody): Mesh[] {
     const p = put(MeshBuilder.CreateIcoSphere("teacherHairBack", { radius: (W * C.backW) / 2, subdivisions: 1 }, scene), c.x + (k - 1) * W * 0.12, y, c.z - D * C.rear);
     p.scaling.set(1.5, 1, 0.8); p.rotation.y = k * 0.9;
   }
+  const beard = put(MeshBuilder.CreateCylinder("teacherBeard", {
+    height: H * 0.5, diameterTop: W * 0.69, diameterBottom: W * 0.035, tessellation: 5,
+  }, scene), c.x, c.y - H * 0.47, c.z + D * 0.48);
+  beard.scaling.z = 0.65;
+  beard.rotation.y = Math.PI / 5;
+  for (const side of [-1, 1]) {
+    const moustache = put(MeshBuilder.CreateIcoSphere("teacherMoustache", {
+      radius: W * 0.19, subdivisions: 1,
+    }, scene), c.x + side * W * 0.16, c.y - H * 0.23, c.z + D * 0.58);
+    moustache.scaling.set(1.12, 0.39, 0.52);
+    moustache.rotation.z = -side * 0.45;
+  }
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
