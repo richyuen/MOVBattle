@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 507   Batch: evil+secret_1   Consecutive empty: 0   Done: 99/139   Parked: 0
+Iteration: 508   Batch: evil+secret_1   Consecutive empty: 0   Done: 99/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -22,22 +22,35 @@ secret_2: taekwondo ???? q | raptor_rider ???? q | cheerleader ???? q | cupid ??
 secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ???? q | wheelbarrow_dragon ???? q | skeleton_giant ???? q | bomb_cannon ???? q | cavalry ???? q | vlad ???? q | gatling_gun ???? q
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
 
-## Focus (iteration 507; BASE 4c032c25)
-1. [R] evil.death_bringer.a blocker 1 (b3f04314, reverted 473257ab) REJECT
-2. [S] secret.bomb_on_a_stick.b blocker 2 (3fd52380) APPROVE, struck 2; b PASS
-- 1/2, 1 struck
+## Focus (iteration 508; BASE ca89c407)
+1. [R] evil.death_bringer.a blocker 1 (2352f922, 3b2ed98a, 764f88ec) APPROVE, struck 1; CONFIRM failed a on arm build
+2. [S] secret.chu_ko_nu.a blocker 3 (9b629415) APPROVE, struck 3
+3. [S] secret.the_teacher.a blocker 3 (843b068d) APPROVE, struck 3
+4. [S] secret.shouter.a blocker 2 (ca17f27b) APPROVE, struck 2
+5. [S] secret.bomb_on_a_stick.a blocker 3 (ca58ecb9) APPROVE, struck 3
+- 5/5, 5 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [R] evil.death_bringer.a (b3f04314)
-- VERDICT: REJECT
-- CRITERION: evil.death_bringer.a FAIL (previous: FAIL)
-- GAP: [S] secret.bomb_on_a_stick.b (3fd52380)
+- GAP: [R] evil.death_bringer (2352f922,3b2ed98a,764f88ec)
 - VERDICT: APPROVE
-- CRITERION: secret.bomb_on_a_stick.b PASS (previous: FAIL)
+- CRITERION: evil.death_bringer.a PASS (previous: FAIL)
+- GAP: [S] secret.chu_ko_nu (9b629415)
+- VERDICT: APPROVE
+- CRITERION: secret.chu_ko_nu.a FAIL (previous: FAIL)
+- GAP: [S] secret.the_teacher (843b068d)
+- VERDICT: APPROVE
+- CRITERION: secret.the_teacher.a FAIL (previous: FAIL)
+- GAP: [S] secret.shouter (ca17f27b)
+- VERDICT: APPROVE
+- CRITERION: secret.shouter.a FAIL (previous: FAIL)
+- GAP: [S] secret.bomb_on_a_stick (ca58ecb9)
+- VERDICT: APPROVE
+- CRITERION: secret.bomb_on_a_stick.a FAIL (previous: FAIL)
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Death Bringer stays on a plateau after the first rejected mantle rebuild. The critic asks for a fitted wrap beneath overlapping shoulder and flank feathers. Evil checkpoint waits.
-- Bomb on a Stick cleared b. The rolled-sleeve shirt, headband, open vest and breeches remain on a.
+- Death Bringer's mantle passed. CONFIRM found thin exposed arms, so a remains plateau and the Evil checkpoint waits.
+- Chu Ko Nu needs the waist belt. The Teacher needs the yellow waist slab removed and small black shoes.
+- Shouter needs bracers and knee wraps. Bomb on a Stick needs a headband, an open vest and breeches.
 - Ballooner still needs the glued body grip. Jester's toe blades and kick and Fan Bearer's far-fist grip remain open.
-- Both touched units passed stats. Capture completed with no console or page errors.
+- Build, capture and stats passed for the five touched units.

@@ -37,7 +37,7 @@ Read whole at step 1; one fact per line, merge near cap.
 ## Rig and dress
 - Neck-rooted feathers can emerge halfway down the chest. Check the visible roots in the idle shot (506).
 - A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
-- Retire superseded hip skirts (482). The `_yoke` hull spans the trunk: re-skin it for a bare waist, size shells from it (487).
+- Retire old hip skirts (482). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
 - A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).

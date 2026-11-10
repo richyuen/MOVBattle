@@ -4,6 +4,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (last 5 iterations)
 
+508 | 2352f922, 3b2ed98a, 764f88ec | evil.death_bringer.a | approved [R] (struck 1; CONFIRM failed a on arm build)
+508 | 9b629415 | secret.chu_ko_nu.a | approved [S] (struck 3)
+508 | 843b068d | secret.the_teacher.a | approved [S] (struck 3)
+508 | ca17f27b | secret.shouter.a | approved [S] (struck 2)
+508 | ca58ecb9 | secret.bomb_on_a_stick.a | approved [S] (struck 3)
+
 507 | b3f04314,473257ab | evil.death_bringer.a | rejected [R] (reverted; skin channels)
 507 | 3fd52380 | secret.bomb_on_a_stick.b | approved [S] (struck 2; b PASS)
 
@@ -33,13 +39,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 504 | 7aac0f42 | secret.bomb_on_a_stick.c | approved (struck 2)
 504 | fa2c8ad9 | secret.fan_bearer.a | approved (struck 1)
 
-503 | 90f0707f,6ace58da | evil.death_bringer.a | approved [R] (blocker 2; 1's crown clause cleared; CONFIRM passed a, gap critic failed it)
-503 | 412d556a,1888c349 | evil.void_monarch.c | approved (blocker 1; c PASS; CONFIRM D)
-503 | c9a3b096,71cb0028 | secret.ballooner.b | approved (blocker 1; b PASS)
-503 | 59e6b1af | secret.fan_bearer.c | approved (blocker 1; c PASS)
-503 | bf9a5a70,cb05da8e | secret.bomb_on_a_stick.c | approved (blocker 1)
-503 | 1101ed14 | secret.jester.a | approved (blocker 1)
-503 | 945b798f | secret.chu_ko_nu.a | approved (blocker 1; 5 struck by lineup)
 
 
 
@@ -118,3 +117,8 @@ secretDress:teacherHair beard | .5H faceted triangle, .69W top, paired moustache
 secretDress:chuKoNuRobe | two faceted overlapping knee tiers with orange hem bands | 506 | approved | short tunic
 PA/PB:fanGrip | fist forward and in, leaf at 1.9 rad off vertical with face up, offhand span -.28 to -.15 | 506 | approved (far fist off shaft) | hpoint high carry
 secretDress:jesterCap collar | six layered team lobes, 0.84 inset over gold | 506 | approved | bare neckline
+evilDress:deathBringerHair mantle | fitted yoke and chest backing under 16 lower and 12 shoulder feathers; backing .48 and accent .72 of fall colour | 508 | approved [R] | 507 uncovered channels between tiers
+secretDress:chuKoNuHarness | two leather runs over shoulders to a six-sided rear quiver | 508 | approved [S] | no harness
+secretDress:teacherJabot | three overlapping faceted cream folds beneath beard | 508 | approved [S] | no jabot
+secretDress:shouterFurTrim | seven faceted tufts on each shoulder and forearm opening | 508 | approved [S] | bare openings
+secretDress:bomberShirt | cream torso and widened upper sleeves; two folded cuffs per elbow and cross-lacing | 508 | approved [S] | dark team torso and sleeves
