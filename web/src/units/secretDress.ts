@@ -1386,6 +1386,57 @@ export function balloonerRuff(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/**
+ * [S] 514 the Ballooner's hair and goggles (secret.ballooner.red.png, .blue.png: brown hair from a cap over the crown falling straight to the
+ * shoulders down both sides and the back, the face open; thick round goggle rims ringing each eye; card Appearance "goggles"; audit a.5 "bare,
+ * no hair or goggles"). Spec in head widths W, heights H, depths D (head box, centre c, front +z; e the eyes' top): a cap .capW W across from
+ * .capLo H over e up to .capTop H over c, .capD D deep set .capBack D back; per side a fall .sideW W thick at .sideX W out, from .sideHi H over c down
+ * to .low H under c, .sideD D deep set .sideBack D back, splayed .splay rad at its foot; a back fall .backW W across, .backD D thick, .rear D behind c,
+ * from the crown down to .low. Per eye a goggle rim: a 10-sided torus round the eye's own centre (both read into the head frame, LESSONS 403), .rim
+ * of the eye's width across, its tube .tube of that, standing .proud of the eye's width before it. Brown lit hair self-lit .12; the rims dark leather.
+ * Flat-shaded, out of the glow.
+ */
+const BALLOONER_HEAD = {
+  brown: new Color3(0.2, 0.11, 0.06), rimC: new Color3(0.16, 0.12, 0.1), capW: 1.14, capLo: 0.05, capTop: 0.62, capD: 1.12, capBack: 0.06,
+  sideW: 0.2, sideX: 0.56, sideHi: 0.42, low: 0.78, sideD: 0.86, sideBack: 0.12, splay: 0.12, backW: 1.12, backD: 0.26, rear: 0.5,
+  rim: 1.32, tube: 0.24, proud: 0.12,
+};
+export function balloonerHead(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = BALLOONER_HEAD, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const hair = mf.get("cloth", C.brown, { emissive: C.brown.scale(0.12), roughness: 1 });
+  const rimMat = mf.get("cloth", C.rimC, { emissive: C.rimC.scale(0.15), roughness: 1 });
+  const out: Mesh[] = [];
+  const box = (name: string, w: number, lo: number, hi: number, d: number, x: number, z: number): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: hi - lo, depth: d }, scene);
+    m.parent = head; m.position.set(x, (lo + hi) / 2, z); m.material = hair; out.push(m); return m;
+  };
+  box("balloonerHairCap", W * C.capW, e + H * C.capLo, c.y + H * C.capTop, D * C.capD, c.x, c.z - D * C.capBack);
+  for (const side of [-1, 1]) {
+    const fall = box("balloonerHairSide", W * C.sideW, c.y - H * C.low, c.y + H * C.sideHi, D * C.sideD, c.x + side * W * C.sideX, c.z - D * C.sideBack);
+    fall.rotation.z = side * C.splay;
+  }
+  box("balloonerHairBack", W * C.backW, c.y - H * C.low, c.y + H * C.capTop * 0.9, D * C.backD, c.x, c.z - D * C.rear);
+  // goggle rims round each bead eye, the eye's centre read into the head's frame
+  for (let n: TransformNode | null = head; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+  const inv = Matrix.Invert(head.getWorldMatrix());
+  for (const eye of [body.leftEye, body.rightEye]) {
+    if (!eye) continue;
+    for (let n: TransformNode | null = eye; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+    eye.refreshBoundingInfo();
+    const eb = eye.getBoundingInfo().boundingBox;
+    const at = Vector3.TransformCoordinates(eb.centerWorld, inv);
+    const ew = eb.extendSizeWorld.x * 2 / head.absoluteScaling.x;
+    const rim = MeshBuilder.CreateTorus("balloonerGoggleRim", { diameter: ew * C.rim, thickness: ew * C.tube, tessellation: 10 }, scene);
+    rim.parent = head; rim.position.set(at.x, at.y, at.z + ew * C.proud); rim.rotation.x = Math.PI / 2;
+    rim.material = rimMat; out.push(rim);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 const BALLOONER_DOUBLET = {
   vW: 0.09, vTop: 0.2, vDeep: 0.62, vOut: 0.03, puff: 2.5, puffLong: 0.62, puffAt: 0.3, slashes: 3, beltH: 0.1, beltOut: 1.06, beltAt: 0.12,
   cream: new Color3(0.95, 0.88, 0.7), belt: new Color3(0.16, 0.08, 0.04), brass: new Color3(0.75, 0.55, 0.15),

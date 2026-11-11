@@ -32,7 +32,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerSash, jesterToeKnives, jesterShorts, jesterBelt, balloonerDoublet, teacherShoes, executionerBoots, bomberVest, jesterTunic, bomberHeadband, bomberBreeches, fanBearerSkirt, teacherTrousers, teacherSleeves, fanBearerWristGuards, balloonerRuff, chuKoNuSleeves, chuKoNuMitts } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerSash, jesterToeKnives, jesterShorts, jesterBelt, balloonerDoublet, teacherShoes, executionerBoots, bomberVest, jesterTunic, bomberHeadband, bomberBreeches, fanBearerSkirt, teacherTrousers, teacherSleeves, fanBearerWristGuards, balloonerRuff, chuKoNuSleeves, chuKoNuMitts, balloonerHead } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1083,6 +1083,8 @@ export class UnitFactory {
       propMeshes.push(...balloonerDoublet(this._scene, body, teamColor));
       // [S] 514 (a.4): a wide grey pleated ruff round the neck under the chin (secretDress balloonerRuff)
       propMeshes.push(...balloonerRuff(this._scene, body));
+      // [S] 514 (a.5): brown shoulder-length hair and round goggle rims round the eyes (secretDress balloonerHead)
+      propMeshes.push(...balloonerHead(this._scene, body));
     }
     if (definition.id === "secret.chu_ko_nu" && !shouldUseVehicleBody) {
       // [S] 503 (a.1): black hair with a tall bun on the crown and a black headband with a team stripe, no hat (secretDress chuKoNuTopknot)
