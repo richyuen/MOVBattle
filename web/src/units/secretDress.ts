@@ -1,4 +1,4 @@
-import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Vector3, VertexData } from "@babylonjs/core";
 import type { Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
@@ -787,6 +787,52 @@ export function ballStone(scene: Scene, body: ArticulatedBody): Mesh[] {
  * centre, from .puffHi H over the centre down to .puffLo H, stepping .stepZ D back as they go down; a back fall of .back lumps .backW W across
  * .rear D behind the centre from the crown to .backLo H. Brown lit cloth (palette brown x .25), self-lit .12, out of the glow.
  */
+/** A closed faceted solid from triangles, each wound so its face looks away from the solid's centroid. */
+function facetedSolid(scene: Scene, name: string, tris: Vector3[][]): Mesh {
+  const mid = Vector3.Zero();
+  for (const t of tris) for (const p of t) mid.addInPlace(p.scale(1 / (tris.length * 3)));
+  const positions: number[] = [], indices: number[] = [];
+  for (const [a, b, d] of tris) {
+    const n = Vector3.Cross(a.subtract(b), d.subtract(b));
+    const centre = a.add(b).add(d).scale(1 / 3);
+    const tri = Vector3.Dot(n, centre.subtract(mid)) > 0 ? [a, b, d] : [a, d, b];
+    for (const p of tri) { indices.push(positions.length / 3); positions.push(p.x, p.y, p.z); }
+  }
+  const vd = new VertexData();
+  vd.positions = positions; vd.indices = indices;
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  vd.normals = normals;
+  const mesh = new Mesh(name, scene);
+  vd.applyToMesh(mesh);
+  return mesh;
+}
+
+/**
+ * [S] 514 the Teacher's beard (secret.the_teacher.blue.png: a broad brown triangular beard filling the lower face from cheek to cheek just under
+ * the eyes, coming to a point in front of the jabot; CONFIRM 512 a.3 "a small dark tuft at the mouth"). Probe 514: the 506 cone hung half inside
+ * the head and the jabot's top fold stood 2-4 cm in front of it, so only its stub showed. Spec in head widths W, heights H, depths D (head box,
+ * centre c, front +z; e the eye box's bottom): a front outline from the cheeks (.top W half-wide, .gap H under e, .cheekZ D forward) to the jaw
+ * (.jaw W half-wide at .jawY H under c, .jawZ D forward) to a tip (.tipY H under c, .tipZ D forward, clear of the jabot), raised to a ridge at
+ * (.ridgeY H, .ridgeZ D); the back outline the same .thick D behind. Hair brown, flat-shaded; the moustache sits .stache D forward on it.
+ */
+const TEACHER_BEARD = { top: 0.56, gap: 0.03, cheekZ: 0.4, jaw: 0.5, jawY: 0.52, jawZ: 0.66, tipY: 1.12, tipZ: 1.08, ridgeY: 0.4, ridgeZ: 0.84, thick: 0.3, stache: 0.92 };
+function teacherBeardSlab(scene: Scene, body: ArticulatedBody, c: Vector3, W: number, H: number, D: number): Mesh {
+  const B = TEACHER_BEARD;
+  const e = eyeBoxInHead(body)?.lo.y ?? c.y - H * 0.1;
+  const at = (x: number, y: number, z: number) => new Vector3(c.x + x * W, y, c.z + z * D);
+  const top = e - H * B.gap, jaw = c.y - H * B.jawY, tip = c.y - H * B.tipY;
+  const front = [at(-B.top, top, B.cheekZ), at(B.top, top, B.cheekZ), at(B.jaw, jaw, B.jawZ), at(0, tip, B.tipZ), at(-B.jaw, jaw, B.jawZ)];
+  const back = front.map((p) => p.add(new Vector3(0, 0, -D * B.thick)));
+  const ridge = at(0, c.y - H * B.ridgeY, B.ridgeZ), rear = at(0, c.y - H * B.ridgeY, B.ridgeZ - B.thick * 1.6);
+  const tris: Vector3[][] = [];
+  for (let i = 0; i < 5; i++) {
+    const j = (i + 1) % 5;
+    tris.push([ridge, front[i], front[j]], [rear, back[j], back[i]], [front[i], back[i], back[j]], [front[i], back[j], front[j]]);
+  }
+  return facetedSolid(scene, "teacherBeard", tris);
+}
+
 const TEACHER_HAIR = {
   brown: new Color3(0.16, 0.085, 0.06), capW: 1.12, capLo: 0.06, capTop: 0.6, capD: 1.08, capBack: 0.06,
   puffs: 3, puff: 0.42, out: 0.6, puffHi: 0.3, puffLo: -0.42, stepZ: 0.1, back: 3, backW: 0.6, rear: 0.5, backLo: -0.5,
@@ -811,15 +857,11 @@ export function teacherHair(scene: Scene, body: ArticulatedBody): Mesh[] {
     const p = put(MeshBuilder.CreateIcoSphere("teacherHairBack", { radius: (W * C.backW) / 2, subdivisions: 1 }, scene), c.x + (k - 1) * W * 0.12, y, c.z - D * C.rear);
     p.scaling.set(1.5, 1, 0.8); p.rotation.y = k * 0.9;
   }
-  const beard = put(MeshBuilder.CreateCylinder("teacherBeard", {
-    height: H * 0.5, diameterTop: W * 0.69, diameterBottom: W * 0.035, tessellation: 5,
-  }, scene), c.x, c.y - H * 0.47, c.z + D * 0.48);
-  beard.scaling.z = 0.65;
-  beard.rotation.y = Math.PI / 5;
+  put(teacherBeardSlab(scene, body, c, W, H, D), 0, 0, 0);
   for (const side of [-1, 1]) {
     const moustache = put(MeshBuilder.CreateIcoSphere("teacherMoustache", {
       radius: W * 0.19, subdivisions: 1,
-    }, scene), c.x + side * W * 0.16, c.y - H * 0.23, c.z + D * 0.58);
+    }, scene), c.x + side * W * 0.16, c.y - H * 0.23, c.z + D * TEACHER_BEARD.stache);
     moustache.scaling.set(1.12, 0.39, 0.52);
     moustache.rotation.z = -side * 0.45;
   }
