@@ -52,6 +52,14 @@ export function dressRaptorBody(scene: Scene, body: ArticulatedBody, team: Color
     shape("raptorTail", torso, v(0, 0.12 + 0.019 * i * i, -0.49 - 0.19 * i),
       v(radius, radius, 0.19 - 0.009 * i), skin, 0.12 * i);
   }
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 3; i++) {
+      const feather = shape("raptorTailFeather", torso,
+        v(side * (0.075 - 0.013 * i), 0.36 + 0.062 * i, -1.14 - 0.1 * i),
+        v(0.039, 0.092 - 0.013 * i, 0.17 - 0.018 * i), dark, 0.6);
+      feather.rotation.y = side * 0.24;
+    }
+  }
   return out;
 }
 
