@@ -1182,7 +1182,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });
     case "secret_infernal_whip":
-      return vis({ scale: 1.12, bulk: 1.0, armLength: 1.15 }, "whip", "hood", "none", "none", "#ff7a2f", undefined, {
+      return vis({ scale: 1.12, bulk: 1.0, armLength: 1.15 }, "whip", "none", "none", "none", "#ff7a2f", undefined, {
         posePreset: "duelist", materialPreset: "secret_demon", attachmentPreset: "infernal_whip", fxPreset: "ember",
         stateVariants: { attacking: ["flame_lash"], "ability-active": ["flame_lash"] },
       });

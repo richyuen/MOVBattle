@@ -2146,3 +2146,44 @@ export function iceMageHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 517 the Infernal Whip's igneous-rock hair (secret.infernal_whip.red.png: near-black rock over the crown breaking up into tall jagged
+ * spikes, the face and its angry eyes bare under it; card Appearance "solid igneous rock on its head"; audit 515 a.1 "a brown ball covering the
+ * head over a tan brim"). Spec in head widths W, heights H, depths D (head box, centre c, front +z; e the eyes' top): a flat-faceted rock cap
+ * (ico) .capW W x .capH H x .capD D, its foot .capLo H over e, set .capBack D back; ROCK_SPIKES [x W, z D, height H, lean x, lean z] 5-sided
+ * cones .spike W across at the root from the cap's top. Near-black lit rock self-lit .4 (LESSONS 494), a few thin glowing magma cracks
+ * (unlit orange) on the cap front. Out of the glow. The generic hood off (unitVisuals hat none).
+ */
+const ROCK_HAIR = { capW: 1.18, capH: 0.5, capD: 1.16, capLo: 0.03, capBack: 0.05, spike: 0.3, rock: new Color3(0.07, 0.045, 0.04), magma: new Color3(1.4, 0.35, 0.02) };
+const ROCK_SPIKES: [number, number, number, number, number][] = [
+  [0, 0.05, 0.62, 0, -0.15], [-0.26, 0.12, 0.5, -0.35, 0.1], [0.26, 0.1, 0.52, 0.38, 0.05], [-0.14, -0.26, 0.48, -0.2, -0.45], [0.16, -0.24, 0.46, 0.25, -0.4],
+  [-0.42, -0.06, 0.34, -0.7, -0.1], [0.42, -0.08, 0.34, 0.7, -0.1],
+];
+export function infernalRockHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = ROCK_HAIR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const rock = mf.get("cloth", C.rock, { emissive: C.rock.scale(0.4), roughness: 1 });
+  const magma = mf.get("unlit", C.magma, { emissive: C.magma });
+  const out: Mesh[] = [];
+  const lo = e + H * C.capLo, z0 = c.z - D * C.capBack;
+  const cap = MeshBuilder.CreateIcoSphere("infernalRockCap", { radius: 0.5, subdivisions: 1, flat: true }, scene);
+  cap.parent = head; cap.scaling.set(W * C.capW, H * C.capH * 2, D * C.capD); cap.position.set(c.x, lo, z0); cap.material = rock; out.push(cap);
+  const top = lo + H * C.capH * 0.7;
+  for (const [x, z, h, lx, lz] of ROCK_SPIKES) {
+    const s = MeshBuilder.CreateCylinder("infernalRockSpike", { height: H * h, diameterTop: 0, diameterBottom: W * C.spike, tessellation: 5 }, scene);
+    const dir = new Vector3(Math.sin(lx), Math.cos(lx) * Math.cos(lz), Math.sin(lz)).normalize();
+    s.parent = head; s.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion()); s.material = rock;
+    const root = new Vector3(c.x + x * W, top - H * 0.08 - Math.abs(x) * H * 0.3, z0 + z * D);
+    s.position.copyFrom(root.add(dir.scale((H * h) / 2)));
+    out.push(s);
+  }
+  for (const [x, y, t] of [[-0.22, 0.16, 0.5], [0.18, 0.22, -0.6], [0.02, 0.32, 0.2]]) {
+    const crack = MeshBuilder.CreateBox("infernalRockCrack", { width: W * 0.2, height: H * 0.025, depth: D * 0.04 }, scene);
+    crack.parent = head; crack.position.set(c.x + x * W, lo + y * H, z0 + D * C.capD * 0.47); crack.rotation.z = t; crack.material = magma; out.push(crack);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
