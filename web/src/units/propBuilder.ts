@@ -4485,6 +4485,8 @@ function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
   glove.rotation.setAll(0);
 }
 
+/** [S] 515 the Cheerleader's pom-pom (spec at its builder case "pom_pom"), in unit-scale s. */
+const POM_POM = { y: 0.08, core: 0.17, spikes: 26, spike: 0.1, root: 0.15 };
 function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3, bladeFit?: BladeFit, teamColor?: Color3, variant?: UnitVisualConfig["weaponVariant"]): Mesh | null {
   const s = _s * 1.25; // TABS-style weapon exaggeration
   const fit = bladeFit ?? { fist: 0.058 * _s / PROP_OVERSIZE, stand: 1.5 * _s / PROP_OVERSIZE };
@@ -6406,13 +6408,23 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return box;
     }
     case "pom_pom": {
+      // [S] 515 (cheerleader b.1, secret.cheerleader.red.png: each pom-pom a spiky team-coloured ball wider than the torso, held in the fist):
+      // spec POM_POM — a flat-shaded ico core .core s across round the old puff ring's centre, .spikes faceted cones .spike s long off it on a
+      // golden-angle spiral, each .root s wide at the core; team colour self-lit .2 (accent when no team)
+      const P = POM_POM, col = (teamColor ?? accent).scale(0.8), pm = mat(scene, col, 0.12, "cloth");
       const root = new TransformNode("pompom", scene) as unknown as Mesh;
-      for (let i = 0; i < 6; i++) {
-        const puff = MeshBuilder.CreateSphere("puff", { diameter: 0.07 * s, segments: 4 }, scene);
-        const angle = (Math.PI * 2 * i) / 6;
-        puff.position.set(Math.cos(angle) * 0.04 * s, Math.sin(angle) * 0.04 * s + 0.08 * s, 0);
-        puff.parent = root;
-        puff.material = mat(scene, accent, 0.15);
+      const at = new Vector3(0, P.y * s, 0);
+      const core = MeshBuilder.CreateIcoSphere("puff", { radius: P.core * s, subdivisions: 1 }, scene);
+      core.parent = root; core.position.copyFrom(at); core.material = pm; core.convertToFlatShadedMesh();
+      for (let i = 0; i < P.spikes; i++) {
+        const yy = 1 - (2 * (i + 0.5)) / P.spikes, rr = Math.sqrt(1 - yy * yy), th = i * 2.39996;
+        const dir = new Vector3(Math.cos(th) * rr, yy, Math.sin(th) * rr);
+        const len = P.spike * s * (0.8 + 0.4 * ((i * 7) % 5) / 4);
+        const spike = MeshBuilder.CreateCylinder("puff", { height: len, diameterTop: 0, diameterBottom: P.root * s, tessellation: 4 }, scene);
+        spike.parent = root; spike.material = pm;
+        spike.position.copyFrom(at.add(dir.scale(P.core * s * 0.8 + len / 2)));
+        spike.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
+        spike.convertToFlatShadedMesh();
       }
       return root;
     }
