@@ -538,6 +538,15 @@ const MINOTAUR_CHARGE = { from: 1.5, reach: 14, speed: 2.3, seconds: 2.2, overru
  */
 const DEATH_CHARGE = { from: 1.5, reach: 14, speed: 2.4, seconds: 1.6, overrun: 3, contact: 0.7, damage: 95, fling: 3.5, lift: 2, cooldown: 5, through: true, log: true, swing: 0.3 };
 /*
+ * [S] 520 the Raptor Rider's hit-and-run (audit 515 c.2: "the raptor runs the rider into the target (hit-and-run); ours has the mount static while the
+ * rider thrusts from a standing pose"; card Characteristics "taking advantage of their steed's speed to conduct hit-and-run tactics ... They can still
+ * trample units"; secret.raptor_rider.jpg). The jouster's run on the raptor: a man RAPTOR_CHARGE.from to .reach m past his reach sets the raptor running
+ * at him at .speed times its pace (its legs striding, RuntimeUnit._tendRaptorGait) and on through him .overrun m; the man it meets takes the rider's
+ * spear (his plain attack, if ready), and every enemy within .contact m of its body ahead of its middle is trampled (.damage, flung .fling/.lift).
+ * Then it turns and comes again, .cooldown s between runs. Logged "charge" at the start and "trample" at each man.
+ */
+const RAPTOR_CHARGE = { from: 1.2, reach: 14, speed: 1.7, seconds: 3, overrun: 4, contact: 0.6, damage: 12, fling: 4, lift: 3, cooldown: 2.5, through: true, log: true };
+/*
  * [S] 387 Big Headbutt (card Weapons "Big Headbutt: Ability - Melee; damage 30; cooldown 5 s; ... force 32500; explosion radius 4.5", Characteristics "a
  * headbutt ability like the Headbutter"; critic 378: missing). With a man within .within m past his reach and the butt ready (.cooldown s apart), he stops,
  * drops his head (the BULL_CHARGE pose) and drives it down over .windup s; at the blow the ground .ahead m before him bursts: every enemy within .radius m
@@ -2234,7 +2243,8 @@ export class SimulationSystem {
     // Mammoth Charge: start a run at a man far enough off, and while running, drive on through him (MAMMOTH_CHARGE); the wheelbarrow's ram (WHEELBARROW_RAM)
     const chargeSpec = preset === "iconic_mammoth" ? MAMMOTH_CHARGE : unit.definition.id === "farmer.wheelbarrow" ? WHEELBARROW_RAM
       : unit.definition.id === "medieval.knight" ? KNIGHT_CHARGE : unit.definition.id === "renaissance.jouster" ? JOUSTER_CHARGE
-      : unit.definition.id === "ancient.minotaur" ? MINOTAUR_CHARGE : unit.definition.id === "evil.death_bringer" ? DEATH_CHARGE : null;
+      : unit.definition.id === "ancient.minotaur" ? MINOTAUR_CHARGE : unit.definition.id === "evil.death_bringer" ? DEATH_CHARGE
+      : unit.definition.id === "secret.raptor_rider" ? RAPTOR_CHARGE : null;
     if (chargeSpec && canMove) {
       const run = this._charges.get(unit);
       if (run && (!unit.isCharging || (run.target.isDead && !run.end))) {
@@ -2655,7 +2665,7 @@ export class SimulationSystem {
         run.trampled.add(other);
         if (C === DEATH_CHARGE) { this._chargeCut(unit, other, run.dir, now); continue; }
         // The jouster's lance goes into the man he rides at as the horse reaches him (JOUSTER_CHARGE)
-        if (C === JOUSTER_CHARGE && other === run.target && unit.canAttack(now)) this._tryAttack(unit, other, getAttackProfile(unit.definition.attackProfileId), now);
+        if ((C === JOUSTER_CHARGE || C === RAPTOR_CHARGE) && other === run.target && unit.canAttack(now)) this._tryAttack(unit, other, getAttackProfile(unit.definition.attackProfileId), now);
         // Aside off the charge's line, to whichever side of it he stood, and on ahead of it
         const across = new Vector3(run.dir.z, 0, -run.dir.x);
         const side = Vector3.Dot(off, across) >= 0 ? 1 : -1;

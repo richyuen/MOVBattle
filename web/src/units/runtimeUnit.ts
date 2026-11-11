@@ -19,6 +19,8 @@ const DRUM_SPIN = { rate: 3.5, spinUp: 12, spinDown: 1.5, linger: 1.0 };
 const CATAPULT_THROW = { swing: 0.12, hold: 0.5, lower: 0.7 };
 /** [S] 493 the Exiled Sentinel keeps his axes out .hold s after his last blow (_tendSentinelAxes). */
 const SENTINEL_SWAP = { hold: 2.5 };
+/** [S] 520 the raptor mount's run (spec at RuntimeUnit._tendRaptorGait). */
+const RAPTOR_GAIT = { amp: 0.75, rate: 2.6, full: 3, ease: 8, bob: 0.06 };
 /*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
  * upward. Heavier units may require more balloons to float"; Appearance: the arrow's ball "expand[s] into balloons"). A man a balloon arrow strikes
@@ -1291,6 +1293,7 @@ export class RuntimeUnit {
     }
     this._applyVisualPresentation(now);
     this._tendChainWhip(dt);
+    this._tendRaptorGait(dt);
     this._movementVelocity.setAll(0);
 
     if (this._linkedParent && this._isAnchoredActor) {
@@ -2663,6 +2666,31 @@ export class RuntimeUnit {
       return;
     }
     this._chainWhip.step(dt);
+  }
+
+  /**
+   * [S] 520 the Raptor Rider's raptor runs (audit 515 c.2 "the mount static while the rider thrusts from a standing pose"; secret.raptor_rider.jpg):
+   * its two legs (propBuilder buildRaptorMount "raptorMountLeg" pivots at the hip sockets) swing fore and aft in turn, .amp rad at a run, their
+   * stride rate .rate rad per metre covered, and the trunk bobs .bob of the hip height twice a stride; at rest they ease back to standing.
+   */
+  private _raptorGait: { legs: TransformNode[]; last: Vector3; phase: number; amp: number; rest: number } | null = null;
+  private _tendRaptorGait(dt: number): void {
+    if (this.visualConfig.special !== "raptor_mount" || dt <= 0) return;
+    const G = RAPTOR_GAIT;
+    if (!this._raptorGait) {
+      const legs = this.body.hip.getDescendants(false, (n) => n.name === "raptorMountLeg") as TransformNode[];
+      if (legs.length === 0) return;
+      this._raptorGait = { legs, last: this.position.clone(), phase: 0, amp: 0, rest: this.body.hip.position.y };
+      return;
+    }
+    const g = this._raptorGait;
+    const moved = Math.hypot(this.position.x - g.last.x, this.position.z - g.last.z);
+    g.last.copyFrom(this.position);
+    const speed = moved / dt;
+    g.phase += moved * G.rate;
+    g.amp += (Math.min(1, speed / G.full) * G.amp - g.amp) * Math.min(1, dt * G.ease);
+    g.legs.forEach((leg, i) => { leg.rotation.x = Math.sin(g.phase + i * Math.PI) * g.amp; });
+    this.body.hip.position.y = g.rest + Math.abs(Math.sin(g.phase)) * g.amp / G.amp * G.bob * g.rest;
   }
 
   dispose(): void {

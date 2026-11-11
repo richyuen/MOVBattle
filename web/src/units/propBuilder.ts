@@ -8606,16 +8606,21 @@ function buildRaptorMount(scene: Scene, body: ArticulatedBody): Mesh {
     spike.parent = frame; spike.material = hide; spike.position.copyFrom(at.add(v(0, R.spike * 0.4, 0))); spike.rotation.x = -0.45;
     parts.push(spike);
   }
-  // legs: thigh forward and down to the knee, shin back to the ankle, foot forward to the toe on the ground, three claws
+  // legs: thigh forward and down to the knee, shin back to the ankle, foot forward to the toe on the ground, three claws; each leg hangs off its
+  // own "raptorMountLeg" pivot at the hip socket, which RuntimeUnit._tendRaptorGait swings fore and aft while the raptor runs (520, RAPTOR_GAIT)
   const g = ground / H;
   for (const x of [-R.legX, R.legX]) {
     const hipJ = v(x, -0.3, -0.08), knee = v(x * 1.05, g * 0.48, 0.32), ankle = v(x, g * 0.9, -0.18), toe = v(x, g + 0.05, 0.16);
-    seg("raptorMountThigh", hipJ, knee, R.legW * 1.5, R.legW, hide);
-    seg("raptorMountShin", knee, ankle, R.legW * 0.85, R.legW * 0.6, hide);
-    seg("raptorMountFoot", ankle, toe, R.legW * 0.6, R.legW * 0.55, hide);
+    const pivot = new TransformNode("raptorMountLeg", scene);
+    pivot.parent = frame; pivot.position.copyFrom(hipJ);
+    for (const m of [
+      seg("raptorMountThigh", hipJ, knee, R.legW * 1.5, R.legW, hide),
+      seg("raptorMountShin", knee, ankle, R.legW * 0.85, R.legW * 0.6, hide),
+      seg("raptorMountFoot", ankle, toe, R.legW * 0.6, R.legW * 0.55, hide),
+    ]) { m.parent = pivot; m.position.subtractInPlace(hipJ); }
     for (const dx of [-0.07, 0, 0.07]) {
       const claw = MeshBuilder.CreateCylinder("raptorMountClaw", { height: H * 0.11, diameterBottom: H * 0.06, diameterTop: 0, tessellation: 4 }, scene);
-      claw.parent = frame; claw.material = ivory; claw.position.copyFrom(toe.add(v(dx, -0.03, 0.08))); claw.rotation.x = 1.3;
+      claw.parent = pivot; claw.material = ivory; claw.position.copyFrom(toe.add(v(dx, -0.03, 0.08)).subtract(hipJ)); claw.rotation.x = 1.3;
       parts.push(claw);
     }
   }
