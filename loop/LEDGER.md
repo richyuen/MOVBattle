@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+513 | ecb2f1d2 | secret.shouter.a | approved [R] (struck 1-4; CONFIRM passed, done)
+513 | 0e3163cb | secret.executioner.a | approved [S] (struck 1; CONFIRM passed, done)
+513 | bd5c8bce, 9e93b061 | secret.ball_n_chain.c | approved [S] (struck 2; CONFIRM passed, done)
+513 | aec49ae0 | secret.jester.a | approved [S] (struck 1; CONFIRM passed, done)
+513 | 1ed2fd7e | secret.bomb_on_a_stick.a | approved [S] (struck 2)
+513 | fdf374b2 | secret.bomb_on_a_stick.a | approved [S] (struck 5; CONFIRM passed, done)
+513 | 75907159 | secret.fan_bearer.a | approved [S] (struck 3)
+513 | b919c5d4 | secret.the_teacher.a | approved [S] (struck 1)
+513 | ce979dd8 | secret.the_teacher.a | approved [S] (struck 2)
+
 512 | 891ac028, 027436f7 | secret.jester.c | approved [S] (struck 3; c PASS)
 512 | 5ebe1d59 | secret.the_teacher.a | approved [S] (struck 4)
 512 | d5bc11bf | secret.raptor.a | approved [S] (struck 1)
@@ -39,17 +49,19 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 509 | ab9656cd | secret.shouter.a | approved [S] (struck old 4)
 509 | 2e71ef24 | secret.shouter.a | approved [S] (struck old 3; CONFIRM failed a)
 
-508 | 2352f922, 3b2ed98a, 764f88ec | evil.death_bringer.a | approved [R] (struck 1; CONFIRM failed a on arm build)
-508 | 9b629415 | secret.chu_ko_nu.a | approved [S] (struck 3)
-508 | 843b068d | secret.the_teacher.a | approved [S] (struck 3)
-508 | ca17f27b | secret.shouter.a | approved [S] (struck 2)
-508 | ca58ecb9 | secret.bomb_on_a_stick.a | approved [S] (struck 3)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+UV/PA:secret_shouter build | scale 1.1 bulk .88 torsoWidth .95 head 1.08 legLength 1.3 upperLeg .92 lowerLeg .82; upright stance by shouterHelmDome | 513 | approved | 1.35/1.25/1.18 squat, hashed crouch
+UV/PA:secret_executioner build | scale 1.22 bulk .9 torsoWidth .9 legLength 1.3 upperLeg .9 lowerLeg .82; upright by executionerHood | 513 | approved | 1.42/1.4 slab
+PA/RU:STONE_POUND | lift .55 back .45 slam 1.15 hold .14 neck .45 knee .35; DIVE at full weight in the Foolish Jump (RU _leapAir for ball_n_chain) | 513 | approved | generic mace swing, upright leap
+secretDress:SHOUTER_VEST | 10-sided yoke shell wide 2.3 hem .9 deep 2.5 top 1.04 low 1.3, front point .2; tunic team x.8 | 513 | approved | 505 two front panels
+secretDress:jesterTunic | body-cloth meshes + tunic skirt onto hood cloth (team x.85), run after the skirt | 513 | approved | body material (khaki)
+secretDress:BOMBER_BAND/BREECH | band .17H over .03H round 1.24W, knot, tails; breech lathe .96 to knee-.06 m, 1.18/1.42/1.22, cuff 2.6 shin, patch, skin shins | 513 | approved | none
+secretDress:FAN_SKIRT | under r1.18 flare1.3 long.62 team x.7, flaps 1.15 wide .96/.82 long slant .18, self-lit .4 | 513 | approved | generic tunic skirt
+secretDress:TEACHER_TROUSER/SLEEVE | jacket-material shells loose 1.16/1.18, shin flare 1.26, cuff 1.42 x.16 | 513 | approved | skin limbs
 Evil done units (death_bringer, void_monarch) rows | specs in owning code; ledger@8d2b01e3 | 511 | archived values | unchanged
 SS:KICK start gate | dodge flip drops a pending kick (ready again after the flip); no start while _recovers, toppled, downed or airborne | 512 | approved | start gated on _recovers only
 UV:secret_teacher special | none | 512 | approved | monk_robe (orange torso box and drape)
@@ -73,7 +85,6 @@ secretDress:shouterKneeWraps | seven-sided tan bands down the shin from the knee
 secretDress:shouterBracers | six-sided tapered dark team guards and two edge bands | 509 | approved [S] | none
 secretDress:EXECUTIONER_VEST | eight-sided iron shell .96TH, 5 buttons, dark team sleeves | 505 | approved | plain team torso
 secretDress:PRISONER_CAP | 8-sided .29H team cap and .105H cream band above bead eyes | 505 | approved | spiked hood and collar
-secretDress:SHOUTER_VEST | two dark iron front panels, darkened team torso | 505 | approved | light-blue torso block
 secretDress:BOMBER_HAIR | ginger crown, three locks per side and seven tapered braid segments | 505 | approved | bald
 RU/SS:TEACHER_PARRY | frontal cone dot .45; hold .24 s, recover .55 s; intercept in melee contact, emit sparks | 505 | approved | no melee deflection
 raptorBody:RAPTOR | articulated biped, long trunk, hinged skull, raised taper tail and opposing triangular teeth | 505 | approved | green four-legged mount on humanoid
@@ -95,7 +106,7 @@ secretDress:BALL_STONE | torso ico 1.3TW .5TH down .62TW ahead,grey(.42);6 links
 PB:SPADROON | rapier variant;blade.95s .022 flat.35;gold(.85,.6,.12) shell.12s,bow,ring.075s | 501 | approved | katana
 PB:REPEATING_CROSSBOW | crossbow variant;stock.56s,magazine.17x.24s,2 studs/side,lever,arm.66s sweep.1 | 501 | approved | small bow arc
 PB:EXECUTIONER_AXE | buildJarlAxe long1.3 grip.12 wide.22,steel(.52) crescent(.3) bulge.18 | 500 | approved | short axe stick
-secretDress:SHOUTER_HELM | iron bowl/nose/cheeks; lateral tan horns .39W root,1.22W span/side | 510 | approved | 500 upward .28W horns
+secretDress:SHOUTER_HELM | [R] 513 dome 1.24W to crown .64H, band, ear guards .5H, back plate, mask (brow V, cheeks, under-eye bars, nose .34H) off the eye box; horns .39W root 1.22W span | 513 | approved | 510 bowl cylinder + cheek blocks
 PB:GIANT_FAN | halberd variant;haft1.0 stand grip.3;mount.32L;team half-oval1.4L x.8L | 500 | approved | hand fan
 secret_1 stats cost/hm/dm/cm (10 units, b4d5ff95) | d PASS 10/10;fan dm .00064 | 500 | stats | initial manifest
 SS/PS:SENTINEL_CATCH | warn.15,front cos.4,shafts lodged in the board met | 494 | approved | none

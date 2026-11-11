@@ -10,7 +10,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey however white or warm: cream wants the flat unlit cut out of the glow (442).
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it (a vehicle's `bodyMaterial` IS the team colour: timber, iron, leather need their own; 392), and the head's as skin: a bone crewman needs a hidden anchor head (440 pumpkin operator).
 - vehicleBuilder makeMat (getWood) greys a mid colour (472): paint with cloth lit(), check a --noglow swatch.
-- A prop hung in a crewman's fist with holdInFist is aimed by the prop's local +Z: geometry built up +Y leaves the hand horizontal. Put the shape under a child rotated +PI/2 on x (longship oars, 395).
+- holdInFist aims a prop by its local +Z: build up +Y under a child rotated +PI/2 on x (395 oars).
 
 ## Capture and probes
 - stats.mjs rounds knobs to .01: under .005 prints 0 (NaN next run); set the exact ratio.
@@ -34,6 +34,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - Gate an idle hold on the fire, not Attacking+throw; props outside _carryProp's regex ride the fist (451). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 - _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
 - An ability started while toppled/airborne is wiped by its lander and burns the cooldown: gate starts on his feet (512 kick).
+- RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
 - A flat ico's faces sit ~20% inside its ellipsoid: seat surface dress by ray-cast onto the mesh (512 raptor).
 ## Rig and dress
 - A pole butt inside the hip box hides the off fist: carry it ahead of the hips (511). Translating torso to reach a target detaches it from the hips; move the whole body (509). A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
