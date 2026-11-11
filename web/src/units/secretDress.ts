@@ -1297,6 +1297,44 @@ export function jesterBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
  * belt a band .beltH TH tall .beltOut wider than the trunk at .beltAt TH over its foot, a brass buckle. Team cloth of its own (LESSONS 449), the
  * cream flat unlit (LESSONS 442), out of the glow.
  */
+/**
+ * [S] 514 the Ballooner's ruff (secret.ballooner.red.png, .blue.png: a wide grey pleated ruff standing round the neck under the chin, about 1.4
+ * head widths across, its rim a crown of rounded flutes, dark between them; audit a.4 "collar: none"). Spec in head widths W and heights H (the
+ * head box, read into the torso's frame with the neck joint): .flutes short 6-sided upright tubes, each .flute W across, their centres on a ring
+ * .ring W across round the neck, from the neck joint .below H under it up to .lap H over the head's foot (lapping the jaw), every other one
+ * .stagger H lower; inside them a darker 12-sided core .core of the ring across, as tall. Lit grey cloth, self-lit .15, flat-shaded, out of the glow.
+ */
+const BALLOONER_RUFF = { flutes: 16, flute: 0.22, ring: 1.34, below: 0.06, lap: 0.18, stagger: 0.05, core: 0.9, grey: new Color3(0.55, 0.55, 0.58), dark: new Color3(0.2, 0.2, 0.22) };
+export function balloonerRuff(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const R = BALLOONER_RUFF, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const torso = body.torsoMesh, head = body.headMesh;
+  const neck = originIn(body.neck, torso);
+  head.computeWorldMatrix(true); head.refreshBoundingInfo();
+  const inv = Matrix.Invert(torso.getWorldMatrix());
+  let lo = Infinity;
+  for (const v of head.getBoundingInfo().boundingBox.vectorsWorld) lo = Math.min(lo, Vector3.TransformCoordinates(v, inv).y);
+  const hb = head.getBoundingInfo().boundingBox, ts = torso.absoluteScaling, hs = head.absoluteScaling;
+  // head sizes in the torso's local units
+  const W = (hb.extendSize.x * 2 * hs.x) / ts.x, H = (hb.extendSize.y * 2 * hs.y) / ts.y;
+  const bottom = neck.y - H * R.below, topY = lo + H * R.lap, tall = topY - bottom;
+  const grey = mf.get("cloth", R.grey, { emissive: R.grey.scale(0.15), roughness: 1 });
+  const dark = mf.get("cloth", R.dark, { emissive: R.dark.scale(0.15), roughness: 1 });
+  const out: Mesh[] = [];
+  const core = MeshBuilder.CreateCylinder("balloonerRuffCore", { height: tall * 0.92, diameter: W * R.ring * R.core, tessellation: 12 }, scene);
+  core.parent = torso; core.position.set(neck.x, bottom + tall * 0.46, neck.z); core.material = dark; out.push(core);
+  for (let k = 0; k < R.flutes; k++) {
+    const a = (k / R.flutes) * Math.PI * 2, drop = (k % 2) * H * R.stagger;
+    const tube = MeshBuilder.CreateCylinder("balloonerRuffFlute", { height: tall - drop, diameter: W * R.flute, tessellation: 6 }, scene);
+    tube.parent = torso;
+    tube.position.set(neck.x + Math.sin(a) * W * R.ring * 0.5, bottom + (tall - drop) / 2, neck.z + Math.cos(a) * W * R.ring * 0.5);
+    tube.rotation.y = a;
+    tube.scaling.z = 0.7;
+    tube.material = grey; out.push(tube);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 const BALLOONER_DOUBLET = {
   vW: 0.09, vTop: 0.2, vDeep: 0.62, vOut: 0.03, puff: 2.5, puffLong: 0.62, puffAt: 0.3, slashes: 3, beltH: 0.1, beltOut: 1.06, beltAt: 0.12,
   cream: new Color3(0.95, 0.88, 0.7), belt: new Color3(0.16, 0.08, 0.04), brass: new Color3(0.75, 0.55, 0.15),
