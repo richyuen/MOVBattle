@@ -1083,3 +1083,36 @@ export function balloonerDoublet(scene: Scene, body: ArticulatedBody, team: Colo
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 512 the Teacher's little black shoes (card Appearance "dark pants with little black shoes"; secret.the_teacher.red.png: small near-black
+ * ankle shoes under the trouser legs, much slimmer than a boot; audit 500 a.5 "team boots"). The team boot (foot box: length L, width Wf, height
+ * Hf, toe +z) is hidden; in its place per foot a slim ankle quarter .ankleW Wf wide, .ankleH Hf tall over the rear .ankleL L (it tops the grass,
+ * which hides a foot box to ~.6, LESSONS 434), a low vamp .toeW Wf wide, .toeH Hf tall over the front .toeL L, its nose bevelled down, and a heel
+ * block. Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow.
+ */
+const TEACHER_SHOE = { ankleW: 0.8, ankleH: 0.92, ankleL: 0.48, toeW: 0.74, toeH: 0.42, toeL: 0.6, heelH: 0.14, black: new Color3(0.08, 0.06, 0.07) };
+export function teacherShoes(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = TEACHER_SHOE, glow = scene.getGlowLayerByName("glow");
+  const black = getMaterialFactory().get("cloth", T.black, { emissive: T.black.scale(0.4), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) {
+    const { minimum: lo, maximum: hi } = foot.getBoundingInfo().boundingBox;
+    const L = hi.z - lo.z, Wf = hi.x - lo.x, Hf = hi.y - lo.y, x = (lo.x + hi.x) / 2;
+    const part = (name: string, w: number, h: number, d: number, y: number, z: number) => {
+      const mesh = MeshBuilder.CreateBox(name, { width: Wf * w, height: Hf * h, depth: L * d }, scene);
+      mesh.parent = foot; mesh.material = black;
+      mesh.position.set(x, lo.y + Hf * y, lo.z + L * z);
+      out.push(mesh);
+      return mesh;
+    };
+    part("teacherShoeAnkle", T.ankleW, T.ankleH, T.ankleL, T.ankleH / 2, T.ankleL / 2);
+    part("teacherShoeVamp", T.toeW, T.toeH, T.toeL, T.toeH / 2, 1 - T.toeL / 2);
+    const nose = part("teacherShoeNose", T.toeW * 0.9, T.toeH * 0.7, 0.16, T.toeH * 0.42, 1 - 0.02);
+    nose.rotation.x = 0.5;
+    part("teacherShoeHeel", T.ankleW * 0.9, T.heelH, 0.22, T.heelH / 2 - 0.04, 0.12);
+    foot.isVisible = false;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
