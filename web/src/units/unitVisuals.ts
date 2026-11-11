@@ -1108,7 +1108,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_teacher":
       // [S] 501 (b.1) a spadroon, a very long thin blade over a gold swept hilt, one-handed (propBuilder SPADROON on the rapier), not the katana
-      return vis({ scale: 1.12, bulk: 0.95, armLength: 1.15 }, "rapier", "none", "none", "monk_robe", "#3b3b3b", undefined, {
+      // [S] 512 (a.4) no monk_robe special: its orange torso box and shoulder drape read as a yellow slab on a plain team jacket
+      return vis({ scale: 1.12, bulk: 0.95, armLength: 1.15 }, "rapier", "none", "none", "none", "#3b3b3b", undefined, {
         posePreset: "duelist", materialPreset: "secret_bandit", weaponVariant: "spadroon",
       });
     case "secret_jester":
