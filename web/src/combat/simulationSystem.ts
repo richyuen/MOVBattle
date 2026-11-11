@@ -4556,7 +4556,8 @@ export class SimulationSystem {
         this._units,
         spread,
         i * 0.05,
-        { originLift: originLiftForSource(attackOriginInfo.source) },
+        // [S] 519 Cupid's pair flies as love arrows too (HEART_ARROWS)
+        { originLift: originLiftForSource(attackOriginInfo.source), heartArrow: HEART_ARROWS.has(attacker.definition.id) },
       );
     }
   }
