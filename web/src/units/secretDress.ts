@@ -1528,7 +1528,7 @@ export function balloonerDoublet(scene: Scene, body: ArticulatedBody, team: Colo
  */
 const BALLOONER_LEG = {
   top: 0.98, hem: -0.07, waist: 1.2, bulge: 1.5, low: 1.36, cuffH: 0.06, cuff: 2.7, shoeW: 1.08, shoeH: 0.82, toeH: 0.5, tongueW: 0.42,
-  stocking: new Color3(0.6, 0.44, 0.22), shoe: new Color3(1, 0.42, 0.12),
+  stocking: new Color3(0.6, 0.44, 0.22), shoe: new Color3(1, 0.2, 0.05), // 515 swatch: (1,.42,.12) displayed tan in the grass
 };
 export function balloonerBreeches(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const B = BALLOONER_LEG, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
