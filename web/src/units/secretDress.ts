@@ -1337,6 +1337,34 @@ export function teacherTrousers(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 513 the Teacher's jacket sleeves (secret.the_teacher.red.png: the dark jacket's sleeves run from the shoulder to the wrist, a little loose,
+ * only the hands bare team skin; CONFIRM 512 a.2 "the arms are bright team skin from shoulder to hand"). Per upper and lower arm an 8-sided shell
+ * .loose of the limb box round over its length, the forearm's widening to a .cuff turned cuff band .cuffH of it long at the wrist end (the box's
+ * far end from the elbow); both arm meshes and the elbow stubs re-clothed in the jacket's material (body.torsoMesh). Hands untouched.
+ */
+const TEACHER_SLEEVE = { loose: 1.18, cuff: 1.42, cuffH: 0.16 };
+export function teacherSleeves(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = TEACHER_SLEEVE, jacket = body.torsoMesh.material;
+  if (!jacket) return [];
+  const out: Mesh[] = [];
+  for (const [arm, lower] of [[body.leftUpperArm, false], [body.rightUpperArm, false], [body.leftLowerArm, true], [body.rightLowerArm, true]] as const) {
+    const { center: c, extendSize: s } = arm.getBoundingInfo().boundingBox;
+    const shell = MeshBuilder.CreateCylinder(lower ? "teacherSleeveLower" : "teacherSleeveUpper", {
+      height: s.y * 2, diameter: s.x * 2 * T.loose, tessellation: 8,
+    }, scene);
+    shell.parent = arm; shell.position.copyFrom(c); shell.scaling.z = s.z / s.x; shell.rotation.y = Math.PI / 8;
+    shell.material = jacket; shell.convertToFlatShadedMesh(); out.push(shell);
+    if (lower) {
+      const cuff = MeshBuilder.CreateCylinder("teacherSleeveCuff", { height: s.y * 2 * T.cuffH, diameter: s.x * 2 * T.cuff, tessellation: 8 }, scene);
+      cuff.parent = arm; cuff.position.set(c.x, c.y - s.y * (1 - T.cuffH), c.z); cuff.scaling.z = s.z / s.x; cuff.rotation.y = Math.PI / 8;
+      cuff.material = jacket; cuff.convertToFlatShadedMesh(); out.push(cuff);
+    }
+    arm.material = jacket;
+  }
+  return out;
+}
+
+/**
  * [S] 512 the Executioner's trousers tucked into banded boots (secret.executioner.red.png: dark team trousers down the thigh into tall darker boots
  * that reach just under the knee, ridged by four raised bands and topped by a flared cuff; audit 500 a.4 "plain team legs"). Spec in the shin's box
  * (centre c, half size s) and the foot box: thighs and the upper shin in trouser cloth (team x .trouser); a boot shaft .shaft s.x round over the
