@@ -56,6 +56,8 @@ const GILD = { gold: new Color3(1, 0.78, 0.2), dye: 0.85, glow: 0.45, coat: new 
 const FROST = { shards: 4, wide: 0.42, color: new Color3(0.5, 0.82, 1.0), glow: 0.28 };
 // [S] 475 a man kneeling before the Pharaoh (spec at RuntimeUnit._kneelUntil)
 const KNEEL_POSE = { hip: 0.1, knee: 1.55, drop: 0.9, bow: 0.35, arms: 0.25 };
+/** [S] 519 the Cheerleader's cheer (spec at RuntimeUnit.startCheer): s held after a buff, raised-V arm angle, forward tip, pump drop, beats per s, elbow. */
+const CHEER = { hold: 1.4, up: 2.5, fore: 0.35, pump: 1.1, hz: 2.5, elbow: 0.15 };
 const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
 const BURN = { tongues: 6, long: 2.6, wide: 0.55, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), glow: 0.9 };
 /*
@@ -1903,6 +1905,7 @@ export class RuntimeUnit {
     }
 
     this._applyPoseOverlay(isAttacking);
+    this._applyCheer(now);
     this._holdTeacherParry(now);
     this._updateRaptorBite(now);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
@@ -2374,6 +2377,28 @@ export class RuntimeUnit {
     body.torso.rotation.x = K.bow;
     body.torso.rotation.z = 0;
     for (const sh of [body.leftShoulder, body.rightShoulder]) sh.rotation.x = -K.arms;
+  }
+  /*
+   * [S] 519 the Cheerleader's cheer (card Weapons: pom-poms shaken at the friend; secret.cheerleader.png: both poms thrown up over the head in a V and shaken):
+   * while `_cheerUntil` (refreshed by each buff, SimulationSystem._handleSupportAction) the arms are set outright, after the animator and the pose preset,
+   * to a raised V (CHEER.up rad out from the sides) tipped CHEER.fore rad toward the friend she faces, the two arms pumping in turn at CHEER.hz: one up at
+   * .up while the other drops by .pump, so any two frames differ. Full weight from the buff's own tick (the release shot is that tick, LESSONS 393, 437).
+   */
+  private _cheerUntil = 0;
+  startCheer(now: number): void {
+    if (this._isDead) return;
+    this._cheerUntil = now + CHEER.hold;
+    this._applyCheer(now);
+  }
+  private _applyCheer(now: number): void {
+    if (now >= this._cheerUntil || this._isDead || this.isToppled || this.isDowned) return;
+    const C = CHEER, b = this.body;
+    const s = Math.sin(now * C.hz * Math.PI * 2);
+    const lift = (k: number): number => C.up - C.pump * Math.max(0, k);
+    b.leftShoulder.rotation.set(-C.fore, 0, -lift(s));
+    b.rightShoulder.rotation.set(-C.fore, 0, lift(-s));
+    b.leftElbow.rotation.set(-C.elbow, 0, 0);
+    b.rightElbow.rotation.set(-C.elbow, 0, 0);
   }
   get fearFrom(): Vector3 { return this._fearFrom; }
   private _applyFearSkull(now: number): void {

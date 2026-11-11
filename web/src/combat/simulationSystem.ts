@@ -2542,6 +2542,8 @@ export class SimulationSystem {
       healAmount = Math.max(healAmount, 45);
       // [S] 518 (c.1) multi-coloured confetti round the buffed man (card Characteristics), not a smoke puff
       if (this.visualEffects) this.visualEffects.spawnConfetti(ally.position);
+      // [S] 519 (c.2) poms thrown up and shaken at the friend while she buffs (RuntimeUnit.startCheer)
+      supporter.startCheer(now);
     }
     ally.heal(healAmount);
     // The Healer's Priest Staff: a gold beam from the staff's orb to the man, who goes gold while it holds (HEAL_BEAM, GILD), until near the next heal
