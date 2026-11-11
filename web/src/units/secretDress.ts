@@ -737,6 +737,38 @@ export function shouterFurTrim(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+export function shouterBreeches(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const color = team.scale(0.62);
+  const cloth = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.15) });
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    const { center, extendSize: size } = thigh.getBoundingInfo().boundingBox;
+    const shape = [[0, -1.05], [1.04, -1.05], [1.48, -0.58], [1.42, 0.16], [1.14, 0.94], [0, 0.94]]
+      .map(([width, height]) => new Vector3(width * size.x, height * size.y, 0));
+    const breech = MeshBuilder.CreateLathe("shouterBreech", { shape, tessellation: 7 }, scene);
+    breech.parent = thigh;
+    breech.position.copyFrom(center);
+    breech.scaling.z = size.z / size.x;
+    breech.material = cloth;
+    breech.convertToFlatShadedMesh();
+    thigh.isVisible = false;
+    out.push(breech);
+  }
+  const pelvis = body.allMeshes.find(mesh => mesh.name.endsWith("_pelvis"));
+  if (pelvis) {
+    const { center, extendSize: size } = pelvis.getBoundingInfo().boundingBox;
+    for (const side of [-1, 1]) {
+      const flap = MeshBuilder.CreateBox("shouterSplitHem", { width: size.x * 0.99, height: size.y * 2.1, depth: size.z * 0.24 }, scene);
+      flap.parent = pelvis;
+      flap.position.set(center.x + side * size.x * 0.52, center.y - size.y * 0.48, center.z + size.z * 1.03);
+      flap.rotation.z = side * 0.18;
+      flap.material = cloth;
+      out.push(flap);
+    }
+  }
+  return out;
+}
+
 export function shouterKneeWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
   const tan = new Color3(0.8, 0.60, 0.35);
   const cloth = getMaterialFactory().get("cloth", tan, { emissive: tan.scale(0.12) });

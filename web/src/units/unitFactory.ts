@@ -32,7 +32,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBracers, bomberShirt, fanBearerSash } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerSash } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1061,6 +1061,7 @@ export class UnitFactory {
       propMeshes.push(...shouterVest(this._scene, body, teamColor));
       propMeshes.push(...shouterFurTrim(this._scene, body));
       propMeshes.push(...shouterKneeWraps(this._scene, body));
+      propMeshes.push(...shouterBreeches(this._scene, body, teamColor));
       propMeshes.push(...shouterBracers(this._scene, body, teamColor));
     }
     if (definition.id === "secret.ballooner" && !shouldUseVehicleBody) {
@@ -1260,7 +1261,7 @@ export class UnitFactory {
     // (nor the jarl: a bare chest down to his belt over straight trousers, 406 vikingDress JARL_BELT)
     // (nor the captain: his coat's own skirts hang open to the knee, 428 pirateDress CAPTAIN_COAT)
     // (nor the Pirate Queen: her own wrap skirt is cut short over pale thighs, and the tunic's dark band hung wider than it round her hips, [R] 450 pirateDress QUEEN_LEGLINE)
-    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king" && definition.id !== "ancient.minotaur" && definition.id !== "viking.jarl" && definition.id !== "pirate.captain" && definition.id !== "pirate.pirate_queen" && definition.id !== "legacy.super_peasant") {
+    if (!shouldUseVehicleBody && !shouldFavorTeamBodyColor(materialPreset) && !isZeus && visual.posePreset !== "crew" && definition.id !== "farmer.scarecrow" && definition.id !== "medieval.king" && definition.id !== "ancient.minotaur" && definition.id !== "viking.jarl" && definition.id !== "pirate.captain" && definition.id !== "pirate.pirate_queen" && definition.id !== "legacy.super_peasant" && definition.id !== "secret.shouter") {
       const tabard = propMeshes.find((mesh) => mesh.name === "tabard");
       const knight = definition.id === "medieval.knight";
       const skirt = knight
