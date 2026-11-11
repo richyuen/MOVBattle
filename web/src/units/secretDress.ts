@@ -92,10 +92,11 @@ export function prisonerTrousers(scene: Scene, body: ArticulatedBody, team: Colo
     const { center, extendSize: size } = leg.getBoundingInfo().boundingBox;
     const upper = leg === body.leftUpperLeg || leg === body.rightUpperLeg;
     const count = upper ? 3 : 5;
-    const edge = upper ? 1 : 0.86;
+    const edge = upper ? 1 : 0.96;
     const height = size.y * (1 + edge) / count;
+    const radius = (index: number) => size.x * (1.19 - index * (upper ? 0.19 : 0.29) / count);
+    leg.isVisible = false;
     for (let index = 0; index < count; index++) {
-      const radius = (index: number) => size.x * (1.25 - index * 0.19 / count);
       const band = MeshBuilder.CreateCylinder("prisonerTrouserStripe", {
         height: height * 1.005, diameterTop: radius(index) * 2, diameterBottom: radius(index + 1) * 2, tessellation: 8,
       }, scene);
