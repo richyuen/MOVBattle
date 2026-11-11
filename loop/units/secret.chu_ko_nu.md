@@ -24,5 +24,5 @@ d PASS (515 stats)
 515 | b.5 (19b0b661, 3948d262) | attempts 2 | still faces his retreat in the side shots; bow behind him; idle bow thrust to arm's length at head height
 514 | b.5 (09540a69) | attempts 1 | windup is a back-off without readyAim: bow trails
 ## Notes (max 3 lines)
-- 515 probe: with holdHeading the probe body faced the man (face 1) and the bow pointed at him (.6 m) while upright; the capture's side shots still show him facing his retreat. A knight at contact knocks him limp (limp 1) and the hold fades.
+- 515 probes never ran his AI back-off: the motion seen was a knight knocking him back limp (limp 0 to 1). The code moving him away is unfound (holdHeading grep: farmer, sarissa, fencer only). The [R] probes at 6.3 m, no contact; a 2nd rejected [R] parks b.
 - c starves at 516 (last attempt 511).

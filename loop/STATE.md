@@ -47,7 +47,7 @@ secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade
 - CONFIRM: ballooner -+++ (a: pantaloons too long) | fan_bearer -+++ (a: navy shins; second CONFIRM fail, plateau)
 
 ## Notes for next iteration (max 5 lines)
-- Evidence commit first: lineup_secret shows only the ten secret_1 units (critic 515); add the secret_2 units, and re-aim the idle of present_elf, ice_mage, infernal_whip to the front three-quarter (AUDIT 2: shot from behind).
+- lineup_secret frames only the batch slice of the capture's FIRST unit (capture.mjs slice block): the 515 step-5 capture led with chu_ko_nu, so secret_2 men were absent. Evidence commit first: one lineup per slice touched (or list a secret_2 unit first); re-aim the idle of present_elf, ice_mage, infernal_whip to the front three-quarter (AUDIT 2: from behind).
 - [R] slot: chu_ko_nu.b plateau (backpedal facing the man + across-chest hold, unit file) and fan_bearer.a plateau wait; the older one (chu_ko_nu) takes 516, fan_bearer 517.
 - chu_ko_nu.c starves at 516 (last attempt 511): bolts off the held rail.
 - Ballooner a: [P] BALLOONER_LEG.hem -0.07 -> +0.03 is eligible fallout of b8a58d45.
