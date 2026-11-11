@@ -777,13 +777,22 @@ export function shouterFurTrim(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 512 the Shouter's breeches end at the knee and the pale wraps take the shin below (secret.shouter.blue.png: baggy team breeches to the knee,
+ * then a bulky tan wrap from the knee to mid-shin over brown boots; audit a.3 "narrow angular slivers intersect the front faces of the knees").
+ * The thigh mesh runs ~.12 m past the knee joint, so a hem cut on the thigh box covered the wraps: the hem is anchored to the knee joint itself
+ * (SHOUTER_LEG.hem m above it, LESSONS 433), and the wrap's .bands bands run down the shin from .wrapTop m above the joint, .step m apart.
+ */
+const SHOUTER_LEG = { hem: 0.02, wrapTop: 0.08, bands: 5, step: 0.052, bandH: 0.07, wrapW: 2.7 };
 export function shouterBreeches(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const color = team.scale(0.62);
   const cloth = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.15) });
   const out: Mesh[] = [];
-  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+  for (const [thigh, knee] of [[body.leftUpperLeg, body.leftKnee], [body.rightUpperLeg, body.rightKnee]] as const) {
     const { center, extendSize: size } = thigh.getBoundingInfo().boundingBox;
-    const shape = [[0, -1.05], [1.04, -1.05], [1.48, -0.58], [1.42, 0.16], [1.14, 0.94], [0, 0.94]]
+    const top = 0.94, hem = (knee.position.y - thigh.position.y + SHOUTER_LEG.hem - center.y) / size.y;
+    const at = (f: number) => hem + (top - hem) * f;
+    const shape = [[0, hem], [1.1, hem], [1.46, at(0.3)], [1.42, at(0.62)], [1.14, top], [0, top]]
       .map(([width, height]) => new Vector3(width * size.x, height * size.y, 0));
     const breech = MeshBuilder.CreateLathe("shouterBreech", { shape, tessellation: 7 }, scene);
     breech.parent = thigh;
@@ -813,13 +822,15 @@ export function shouterKneeWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
   const tan = new Color3(0.8, 0.60, 0.35);
   const cloth = getMaterialFactory().get("cloth", tan, { emissive: tan.scale(0.12) });
   const out: Mesh[] = [];
+  const L = SHOUTER_LEG;
   for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
     const { center: c, extendSize: s } = shin.getBoundingInfo().boundingBox;
-    for (let index = 0; index < 4; index++) {
+    const kneeY = -shin.position.y;
+    for (let index = 0; index < L.bands; index++) {
       const band = MeshBuilder.CreateCylinder("shouterKneeBand", {
-        height: s.y * 0.25, diameterTop: s.x * 2.6, diameterBottom: s.x * 2.45, tessellation: 7,
+        height: L.bandH, diameterTop: s.x * L.wrapW, diameterBottom: s.x * (L.wrapW - 0.15), tessellation: 7,
       }, scene);
-      band.parent = shin; band.position.set(c.x, c.y + s.y * (0.94 - index * 0.19), c.z);
+      band.parent = shin; band.position.set(c.x, kneeY + L.wrapTop - L.bandH / 2 - index * L.step, c.z);
       band.scaling.z = s.z / s.x * 0.95; band.rotation.z = index % 2 ? -0.10 : 0.10;
       band.material = cloth; band.convertToFlatShadedMesh(); out.push(band);
     }
