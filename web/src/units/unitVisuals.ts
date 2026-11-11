@@ -1129,7 +1129,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_executioner":
       // [S] 500 (b.1) a two-handed pole axe taller than him, a grey bearded crescent at the top (propBuilder EXECUTIONER_AXE on the halberd's chop)
-      return vis({ scale: 1.42, bulk: 1.4, headSize: 1.05 }, "halberd", "none", "none", "cape", "#4a1f1f", undefined, {
+      // [S] 513 (a.1) a lanky Wobbler 1.2x his size (card Size 1.20x; secret.executioner.jpg: tall and thin, long straight legs, a narrow trunk), not
+      // the 1.42 squat slab: the slim long-legged cut (bulk .9, torsoWidth .9, legLength 1.3, thin thighs and shins), upright (PA _buildIdlePose)
+      return vis({ scale: 1.22, bulk: 0.9, torsoWidth: 0.9, headSize: 1.05, legLength: 1.3, upperLegWidth: 0.9, lowerLegWidth: 0.82 }, "halberd", "none", "none", "cape", "#4a1f1f", undefined, {
         posePreset: "duelist", materialPreset: "secret_demon", weaponVariant: "executioner_axe",
       });
     case "secret_shouter":
