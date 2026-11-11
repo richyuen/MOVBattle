@@ -509,6 +509,30 @@ export function shouterVest(scene: Scene, body: ArticulatedBody, team: Color3): 
   return out;
 }
 
+/**
+ * [S] 514 the Chu Ko Nu's shirt sleeves (secret.chu_ko_nu.blue.png: a loose team shirt sleeve from the shoulder down to the wrist on both arms,
+ * fuller than the arm, a little wider at the forearm; audit a.1 "exposed stick-thin upper arm"). Per upper and lower arm an 8-sided shell over the
+ * limb box's length, .upper / .lower of its half width round (the forearm's .flare wider at the wrist end), the upper one run .over of its length up
+ * into the shoulder; both arm meshes re-clothed in the shell's team cloth. Team cloth of its own (LESSONS 449), self-lit .12.
+ */
+const KONU_SLEEVE = { upper: 1.55, lower: 1.5, flare: 1.18, over: 0.12 };
+export function chuKoNuSleeves(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const S = KONU_SLEEVE;
+  const cloth = getMaterialFactory().get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const [arm, lower] of [[body.leftUpperArm, false], [body.rightUpperArm, false], [body.leftLowerArm, true], [body.rightLowerArm, true]] as const) {
+    const { center: c, extendSize: s } = arm.getBoundingInfo().boundingBox;
+    const r = s.x * 2 * (lower ? S.lower : S.upper), over = lower ? 0 : s.y * 2 * S.over;
+    const shell = MeshBuilder.CreateCylinder(lower ? "konuSleeveLower" : "konuSleeveUpper", {
+      height: s.y * 2 + over, diameterTop: r, diameterBottom: lower ? r * S.flare : r, tessellation: 8,
+    }, scene);
+    shell.parent = arm; shell.position.set(c.x, c.y + over / 2, c.z); shell.scaling.z = s.z / s.x; shell.rotation.y = Math.PI / 8;
+    shell.material = cloth; shell.convertToFlatShadedMesh(); out.push(shell);
+    arm.material = cloth;
+  }
+  return out;
+}
+
 export function chuKoNuRobe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
   const bounds = torso.getBoundingInfo().boundingBox;
