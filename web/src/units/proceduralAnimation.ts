@@ -321,6 +321,14 @@ const LANCE_AIM = { hold: 0.6, rate: 4 };
  */
 /** [S] 502 the Ball 'n' Chain's hug (_hugStone): fists on the stone's flanks, in its radii out, ahead and down from its centre. */
 const STONE_HUG = { side: 0.8, front: -0.1, drop: 0.3 };
+/**
+ * [S] 513 the Ball 'n' Chain dives with the stone and pounds (card Characteristics "using it to dive into their enemies and pound them repeatedly";
+ * audit c.2 "an overhead stick swing"). In the Foolish Jump's flight the head-first DIVE at full weight from the first air frame (no LEAP_AIR knees:
+ * the legs trail), so the hugged stone leads. Each blow is a pound: over the attack's first .lift share of the time to the blow the trunk heaves the
+ * stone up and back (.back rad), then slams forward over the hips to .slam rad at the blow, held through .hold of the attack after it, eased out by
+ * its end; the neck takes .neck of the pitch back so the face stays on the man; the knees give .knee rad at the slam.
+ */
+const STONE_POUND = { lift: 0.55, back: 0.45, slam: 1.15, hold: 0.14, neck: 0.45, knee: 0.35 };
 /** [S] 511 the Chu Ko Nu's level carry (_holdRepeatingCrossbow): the weapon fist ahead of the trunk, out to his side and down from the chest's middle (m); the off fist under the stock .under of the magazine's height below the stock. */
 const RCB_HOLD = { ahead: 0.16, across: 0.06, drop: 0.12, under: 0.45, lead: 0.1, lift: 0.04 };
 const POLE_GRIP = {
@@ -2125,6 +2133,7 @@ export class ProceduralAnimator {
         break;
     }
     this._applyChargePose(dt);
+    this._stoneDive();
     this._applyDive(dt);
     this._applyKick(dt);
     this._applyBombSpin(dt);
@@ -2376,7 +2385,7 @@ export class ProceduralAnimator {
         joint.rotation.z += (z - joint.rotation.z) * a;
       }
       this._flailInAir(a);
-    } else if (this._leapAirOn && this._air > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
+    } else if (this._leapAirOn && !this._stoneDiving && this._air > 0.01 && this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {
       // [S] a live man thrown by a jump-charge (392; viking.berserker.red.png: caught mid-leap, knees kicked up under him, an axe wide in each hand):
       // not the flung sprawl above (that one is for limp bodies) but his own air shape, both thighs drawn up, the knees folded and split, the arms
       // flung out from the sides and a little back, so the walk's pose does not glide through the arc. Only a jump-charge leap takes it (LEAP_AIR):
@@ -2445,6 +2454,7 @@ export class ProceduralAnimator {
     this._twoHandPole();
     this._holdRepeatingCrossbow();
     this._holdArbiterBook();
+    this._poundStone();
     this._hugStone();
     this._levelPike();
     this._holdBlowgun();
@@ -4260,9 +4270,41 @@ export class ProceduralAnimator {
    * of it below, so the forearms wrap its flanks; eased off as he goes limp.
    */
   private _stone: Mesh | null | undefined = undefined;
-  private _hugStone(): void {
+  private _findStone(): Mesh | null {
     if (this._stone === undefined) this._stone = this._body.torso.getChildMeshes(true).find((m): m is Mesh => m instanceof Mesh && m.name === "ballStone") ?? null;
-    const st = this._stone;
+    return this._stone;
+  }
+  /** [S] 513 the stone-first dive through the Foolish Jump's flight (STONE_POUND): the DIVE at full weight while the leap is in the air. */
+  private _stoneDiving = false;
+  private _stoneDive(): void {
+    if (!this._findStone() || this.walkStyle === "quadruped") return;
+    const diving = this._leapAirOn && this._state !== AnimState.Dead && this._limp < 0.5;
+    if (diving) { this._diveTarget = 1; this._dive = 1; }
+    else if (this._stoneDiving) this._diveTarget = 0;
+    this._stoneDiving = diving;
+  }
+  /** [S] 513 each blow a pound of the hugged stone (STONE_POUND): heave up and back, slam forward over the hips at the blow, then ease up. */
+  private _poundStone(): void {
+    if (this._state !== AnimState.Attacking || !this._findStone() || this.walkStyle === "quadruped") return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const P = STONE_POUND, b = this._body;
+    const p = Math.min(1, this._attackTimer / Math.max(0.001, this._attackDuration));
+    const land = Math.min(0.9, Math.max(0.2, this._blowLandFraction()));
+    const top = land * P.lift, held = Math.min(1, land + P.hold);
+    let pitch: number;
+    if (p < top) pitch = -P.back * Math.sin((p / top) * Math.PI / 2);
+    else if (p < land) { const k = (p - top) / (land - top); pitch = -P.back + (P.slam + P.back) * k * k; }
+    else if (p < held) pitch = P.slam;
+    else pitch = P.slam * (1 - (p - held) / Math.max(0.001, 1 - held));
+    const slam = Math.max(0, pitch) / P.slam;
+    b.torso.rotation.x += (pitch - b.torso.rotation.x) * w;
+    b.neck.rotation.x -= pitch * P.neck * w;
+    b.leftKnee.rotation.x += P.knee * slam * w;
+    b.rightKnee.rotation.x += P.knee * slam * w;
+  }
+  private _hugStone(): void {
+    const st = this._findStone();
     if (!st || this.walkStyle === "quadruped") return;
     const w = 1 - Math.min(1, this._limp);
     if (w <= 0.01) return;
