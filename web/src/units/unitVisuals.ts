@@ -28,7 +28,7 @@ export type HatType =
   | "pirate_hat" | "captain_hat"
   | "great_helm" | "crusader_helm" | "armet" | "hood_liripipe" | "jester_cap" | "bull_head" | "crested_helm" | "hoplite_helm" | "legion_helm" | "dragon_head" | "pointed_cowl" | "sun_hat" | "feather_hat" | "brim_hat" | "cavalier_hat" | "morion" | "sallet" | "sack_mask";
 
-export type ShieldType = "none" | "round" | "norse" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum" | "aspis" | "stiffy" | "pavise";
+export type ShieldType = "none" | "round" | "norse" | "kite" | "heater" | "tower" | "buckler" | "slab" | "palette" | "scutum" | "aspis" | "stiffy" | "pavise" | "plank";
 
 export type SpecialType =
   | "none" | "mount_mammoth" | "mount_horse" | "wings" | "cape"
@@ -1149,7 +1149,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "duelist", materialPreset: "secret_holy",
       });
     case "secret_raptor_rider":
-      return vis({ scale: 1.24, bulk: 1.1 }, "spear", "bone_mask", "none", "raptor_mount", "#8c6b45", undefined, {
+      // [S] 519 (b.2) the plank shield with lashed bones and a skull on the off arm (propBuilder PLANK_SHIELD)
+      return vis({ scale: 1.24, bulk: 1.1 }, "spear", "bone_mask", "plank", "raptor_mount", "#8c6b45", undefined, {
         posePreset: "mounted", materialPreset: "secret_beast",
       });
     case "secret_cheerleader":

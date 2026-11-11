@@ -981,7 +981,7 @@ function buildFittedHat(scene: Scene, type: HatType, head: { width: number; heig
       // [S] 423 the captain's white skull and crossbones (critic 422: the hat's front plain dark - the old skull ball sat inside the V of the two front
       // walls; pirate.captain.red.png: a white skull over two crossed bones painted on the hat's front face). Thin closed slabs on the front wall's
       // outer face (the wall between the 30 and 150 degree corners, its +z out), TRICORN_PLATE: the skull .skull wall-heights across, its jaw, two dark
-      // eye holes, and the bones .bone long crossed behind it; unlit white so it stays white in the felt's shade (out of the glow)
+      // eye holes, and the bones .boneLong long crossed behind it; unlit white so it stays white in the felt's shade (out of the glow)
       const P = TRICORN_PLATE;
       const front = walls[0];
       const glow = scene.getGlowLayerByName("glow");
@@ -7641,6 +7641,7 @@ function buildPaladinShield(scene: Scene, stand: number): Mesh {
   return rim;
 }
 
+const PLANK_SHIELD = { planks: 4, wide: 0.36, tall: 0.55, ragged: 0.07, thick: 0.035, boneLong: 0.3, crossY: 0.18, skull: 0.13, wood: new Color3(0.2, 0.11, 0.055), cord: new Color3(0.05, 0.12, 0.08), bone: new Color3(0.8, 0.74, 0.55) };
 function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, teamColor: Color3): Mesh | null {
   // A cool team colour is held as deep as the plate behind it and not washed with white: the sky-blue team colour paled is a slate board.
   const teamHsv = teamColor.toHSV();
@@ -7800,6 +7801,55 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         bar.position.set(0, y * s, 0.015 * s);
         bar.parent = shield;
         bar.material = cross;
+      }
+      return shield;
+    }
+    /*
+     * [S] 519 the Raptor Rider's plank shield (secret.raptor_rider.red.png: a tall board of four rough wooden planks, ragged at top and bottom, about as tall
+     * as his trunk, on the off arm; two crossed bones lashed over its upper face with dark cord and a bone-white skull hung beside the lashing). PLANK_SHIELD
+     * in s, face toward +Z: .planks planks .wide across in all, each .tall less up to .ragged, .thick deep, tilted a little apart; the bones .boneLong long,
+     * crossed at .crossY of the height; the skull a .skull ball with a jaw block, sockets and a cord knot. Wood dark brown, bone cream (unlit, LESSONS 442).
+     */
+    case "plank": {
+      const P = PLANK_SHIELD;
+      const shield = new Mesh("plankshield", scene);
+      const wood = mat(scene, P.wood, 0.12, "cloth");
+      const bone = getMaterialFactory().get("unlit", P.bone, { emissive: P.bone });
+      const cord = mat(scene, P.cord, 0.1, "cloth");
+      const dark = mat(scene, new Color3(0.06, 0.05, 0.04), 0.05, "cloth");
+      const strip = P.wide / P.planks;
+      for (let i = 0; i < P.planks; i++) {
+        const h = P.tall - P.ragged * ((i * 7) % 5) / 4;
+        const b = MeshBuilder.CreateBox("plankBoard", { width: strip * 0.94 * s, height: h * s, depth: P.thick * s }, scene);
+        b.position.set((-P.wide / 2 + strip * (i + 0.5)) * s, ((i % 2 ? 1 : -1) * P.ragged * 0.25) * s, 0);
+        b.rotation.z = (i - (P.planks - 1) / 2) * 0.03;
+        b.parent = shield; b.material = wood; b.convertToFlatShadedMesh();
+      }
+      for (const yy of [0.32, -0.3]) {
+        const batten = MeshBuilder.CreateBox("plankBatten", { width: P.wide * 1.02 * s, height: 0.035 * s, depth: P.thick * 0.6 * s }, scene);
+        batten.position.set(0, yy * P.tall * s, -P.thick * 0.7 * s); batten.parent = shield; batten.material = wood;
+      }
+      const cy = P.crossY * P.tall * s, front = (P.thick * 0.5 + 0.02) * s;
+      for (const side of [-1, 1]) {
+        const b = MeshBuilder.CreateCylinder("plankBone", { height: P.boneLong * s, diameter: 0.035 * s, tessellation: 6 }, scene);
+        b.position.set(0, cy, front); b.rotation.z = side * 0.8; b.parent = shield; b.material = bone;
+        for (const end of [-1, 1]) {
+          for (const k of [-1, 1]) {
+            const knob = MeshBuilder.CreateIcoSphere("plankBoneKnob", { radius: 0.03 * s, subdivisions: 1 }, scene);
+            knob.parent = b; knob.material = bone; knob.position.set(k * 0.02 * s, end * P.boneLong * 0.5 * s, 0);
+          }
+        }
+      }
+      const knot = MeshBuilder.CreateTorus("plankLash", { diameter: 0.07 * s, thickness: 0.018 * s, tessellation: 8 }, scene);
+      knot.position.set(0, cy, front + 0.01 * s); knot.rotation.x = Math.PI / 2; knot.parent = shield; knot.material = cord;
+      const skull = MeshBuilder.CreateIcoSphere("plankSkull", { radius: P.skull * 0.5 * s, subdivisions: 1 }, scene);
+      skull.position.set(P.wide * 0.28 * s, cy - P.skull * 0.35 * s, front + P.skull * 0.3 * s); skull.scaling.set(1, 0.95, 0.9);
+      skull.parent = shield; skull.material = bone; skull.convertToFlatShadedMesh();
+      const jaw = MeshBuilder.CreateBox("plankSkullJaw", { width: P.skull * 0.6 * s, height: P.skull * 0.3 * s, depth: P.skull * 0.5 * s }, scene);
+      jaw.parent = skull; jaw.material = bone; jaw.position.set(0, -P.skull * 0.45 * s, P.skull * 0.1 * s);
+      for (const side of [-1, 1]) {
+        const eye = MeshBuilder.CreateIcoSphere("plankSkullEye", { radius: P.skull * 0.13 * s, subdivisions: 1 }, scene);
+        eye.parent = skull; eye.material = dark; eye.position.set(side * P.skull * 0.2 * s, -P.skull * 0.02 * s, P.skull * 0.42 * s);
       }
       return shield;
     }
