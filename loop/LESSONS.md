@@ -25,16 +25,18 @@ Read whole at step 1; one fact per line, merge near cap.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change). A faceless unit at .6 rad reads as a back: .25 (497).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).
-- `--units` takes comma-separated IDs and re-shoots lineup_<f> (498); render swatches after capture.
-- A lethal blast can freeze a duel at contact. Use off-camera reserves on both teams for a self-destruct motion pair (504).
+- `--units` takes comma-separated IDs and re-shoots lineup_<f> (498); a lethal blast freezes a duel: off-camera reserves (504).
 - A dress change aimed at the idle must clear the rest pose: probe what covers that band first (442 queen). A giant's metrics.overallHeight is pre-hover: use headTop world y.
-- Commit gaps separately so each reverts alone (406). For a toppled target, aim at the current torso bounds, not standing height (509).
+- Commit gaps separately so each reverts alone (406). Aim at a toppled target's current torso bounds (509).
 - An instant slam logs at swing start: use the pending blow (426). A special logged at let-go owns its missile (427). A cast status can put _struck before impact: use ABILITY_PREF for on-landing effects (435).
 - _ability/_release are on the log tick, before RuntimeUnit.update: pose explicitly for contact, and use the next frame for motion (437 bat, 505 parry). A latch reads on the pin before its damage ticks (444 vampire).
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
-- Gate an idle hold on the fire, not Attacking+throw (451). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
+- Gate an idle hold on the fire, not Attacking+throw; props outside _carryProp's regex ride the fist (451). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
+- _heading() is the move heading (backing off, it points away): aim a held weapon at the target (511).
+- Re-laying a fist prop in world space: place it off the hand's world position, not its hand-frame offset (511).
 ## Rig and dress
+- A pole butt inside the hip box hides the off fist: carry it ahead of the hips (511).
 - Check feather roots in idle (506). Translating torso to reach a target detaches it from the hips; move the whole body (509).
 - A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
 - Retire old hip skirts (482). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
@@ -50,9 +52,8 @@ Read whole at step 1; one fact per line, merge near cap.
 - Flat dress pieces are closed slabs (a one-sided disc can face away, 390; a plate on a ribbon needs 7+ cm stand-off, 398); a trapezoid plate is a 4-tessellation frustum squashed in z (KABUTO); arc cylinders are one-sided ribbons SSAO greys (421).
 - A faction tint plus the clothed recolour's warm hue shift turns red-team body cloth tan (449 wild_west): a garment the ref shows in team colour gets its own team cloth material, not body.bodyMaterial; check the red team on a --noglow swatch.
 
-- Props outside _carryProp's regex ride the fist: lay them on _aimTip before _twoHandPole (451).
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
-- A glove's blow is blade_slash (inferWeaponPresentationFamily): gate a fist layer on Attacking, not _attackMotion "strike" (463).
+- A glove's blow is blade_slash: gate a fist layer on Attacking, not _attackMotion "strike" (463).
 - A torso-rooted shield detaches in windup (483, 489 pavise); dispose sim meshes in endSimulation (485).
 - A short effect child (cloud bolts) can die inside one capture advance: tie its life to its owner (492).
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
