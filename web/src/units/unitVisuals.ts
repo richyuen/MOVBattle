@@ -1177,7 +1177,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["present_spark"], "ability-active": ["present_spark"] },
       });
     case "secret_ice_mage":
-      return vis({ scale: 1.08, bulk: 0.95 }, "staff", "hood", "none", "none", "#87d8ff", undefined, {
+      return vis({ scale: 1.08, bulk: 0.95 }, "staff", "none", "none", "none", "#87d8ff", undefined, {
         posePreset: "caster", materialPreset: "secret_ice", attachmentPreset: "summoner", fxPreset: "frost",
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });

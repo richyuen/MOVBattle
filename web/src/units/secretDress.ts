@@ -2108,3 +2108,41 @@ export function elfCap(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 517 the Ice Mage's long white hair (secret.ice_mage.red.png: cream-white hair, a cap over the crown, parted at the middle and swept to one
+ * side over the brow above the eyes, long locks falling either side of the face to the jaw, a back mass to the nape; card Appearance "long, white
+ * hair"; audit 515 a.1 "a blue ball hood with a brim"). Spec in head widths W, heights H, depths D (head box, centre c, front +z; e the eyes'
+ * top): cap box .capW W x .capD D from .capLo H over e to .capTop H over c, set .capBack D back; a swept fringe slab .fringeW W wide over the
+ * brow, .fringeH H tall, tilted .fringeTilt; per side a front lock tapering from .lockRoot W at the cap's side to .lockTip W at .lockLo H under
+ * c, .lockX W out, .lockZ D forward (beside the face, outside the eyes); a back mass .backW W wide down to .backLo H under c. Unlit cream (fur
+ * cut, LESSONS 442), out of the glow. The generic hood off (unitVisuals hat none).
+ */
+const ICE_HAIR = {
+  capW: 1.14, capD: 1.1, capLo: 0.03, capTop: 0.62, capBack: 0.06, fringeW: 0.62, fringeH: 0.2, fringeTilt: 0.32,
+  lockRoot: 0.26, lockTip: 0.12, lockLo: -0.42, lockX: 0.5, lockZ: 0.22, backW: 1.0, backLo: -0.44, cream: new Color3(0.74, 0.68, 0.52),
+};
+export function iceMageHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = ICE_HAIR, glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const hair = getMaterialFactory().get("unlit", C.cream, { emissive: C.cream });
+  const out: Mesh[] = [];
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.parent = head; m.position.set(x, y, z); m.material = hair; out.push(m); return m;
+  };
+  const lo = e + H * C.capLo, hi = c.y + H * C.capTop;
+  box("iceMageHairCap", W * C.capW, hi - lo, D * C.capD, c.x, (lo + hi) / 2, c.z - D * C.capBack);
+  const fringe = box("iceMageHairFringe", W * C.fringeW, H * C.fringeH, D * 0.18, c.x + W * 0.14, lo + H * C.fringeH * 0.45, c.z + D * 0.52);
+  fringe.rotation.z = C.fringeTilt;
+  for (const side of [-1, 1]) {
+    const pts = [new Vector3(c.x + side * W * 0.5, lo + H * 0.06, c.z + D * C.lockZ), new Vector3(c.x + side * W * C.lockX * 1.04, c.y, c.z + D * C.lockZ * 1.1),
+      new Vector3(c.x + side * W * C.lockX * 0.94, c.y + H * C.lockLo, c.z + D * C.lockZ * 0.9)];
+    taper(scene, "iceMageHairLock", pts, W * C.lockRoot, W * C.lockTip, head, hair, out);
+  }
+  box("iceMageHairBack", W * C.backW, hi - (c.y + H * C.backLo), D * 0.3, c.x, (hi + c.y + H * C.backLo) / 2, c.z - D * 0.5);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
