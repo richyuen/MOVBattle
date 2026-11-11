@@ -32,7 +32,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - A neck-rooted piece must clear the head box: probe_bbox it (439). Before flipping a pose's sign, probe yaw and world pitch at the frame (439).
 - A mesh's world box refreshes only on render: computeWorldMatrix(true) it before reading centerWorld in a per-tick pose, else a replay grips where he stood at the last render (516).
 
-- Gate an idle hold on the fire, not Attacking+throw; props outside _carryProp's regex ride the fist (451). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
+- Gate an idle hold on the fire, not Attacking+throw; props outside _carryProp's regex ride the fist (451). Team garment shade: saturate (c^2), scale, self-lit .12; x k at self-lit .4 reads grey (517). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 - _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
 - An ability started while toppled/airborne is wiped by its lander and burns the cooldown: gate starts on his feet (512 kick).
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
@@ -40,10 +40,10 @@ Read whole at step 1; one fact per line, merge near cap.
 - Two men pinned together topple apart under their crowd push: RU.holdUpright each step (514).
 ## Rig and dress
 - A pole butt inside the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target, not the torso (509). A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
-- Retire old skirts (482). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
+- Retire old skirts (482); a belt hides in the tunicSkirt's flare: build it off its top ring after hangSkirt (517). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450 queen). metrics.overallHeight is pre-cut; shin limbShell 0 is the calf cap, ~.1 m above the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
-- unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
+- unitFactory overwrites mesh metadata: mark a prop for the animator with a named child node (427).
 - A foot mesh is a merged cuff + toe box ~half the shin tall: a tuft at its bbox middle is buried; the instep's top is lo.y + ~.42 (399). Shoes, anklets, socks go at that height or the boot eats the shin (433); the grass hides a foot box to ~.6, so a shoe must top that (434).
 - A hem or band cut at a share of limbBox(thigh) misses the knee: the thigh runs ~.08-.12 past the joint; anchor to knee.position.y - thigh.position.y (shin: -shin.position.y) (512 shouter). Shin, foot, trunk and _yoke meshes in the dark body shade read as boots or a vest: recolour them to the dress cloth (433).
 - A head-hung piece cannot run on down the torso (it sits inside the chest box): build the torso run torso-parented (401).
@@ -58,8 +58,8 @@ Read whole at step 1; one fact per line, merge near cap.
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
 - A ground-length skirt hides a hover lift: robe below the knee rides each shin (493, 499 lich).
 - Replay probes as capture: mulberry32 0x4d4f5642 reseeded before resetBattle, resetClock, _nextRuntimeId 100000 (503, 512).
-- hpoint without "haxe" gives the shouldered carry: _twoHandPole's off fist lands over the crown (502 bomb stick).
-- In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
+- hpoint without "haxe": shouldered carry, _twoHandPole's off fist over the crown (502).
+- Fist prop hand frame: +y up the forearm, knuckles -y (492).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
-- A torso-rooted board tips back with the idle lean: stand a wall board on body.root, top off the shoulder joint (496 pavise).
+- A torso-rooted board tips with the idle lean: stand it on body.root (496).

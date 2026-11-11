@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 516   Batch: secret_1+secret_2   Consecutive empty: 0   Done: 109/139   Parked: 0
+Iteration: 517   Batch: secret_2   Consecutive empty: 0   Done: 110/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -17,37 +17,33 @@ legacy_1: peasant ++++ D | banner_bearer ++++ D | poacher ++++ D | blowdarter ++
 legacy_2: pharaoh ++++ D | wizard ++++ D | chariot ++++ D | thor ++++ D | tank ++++ D | super_boxer ++++ D | dark_peasant ++++ D | super_peasant ++++ D
 good: devout_gauntlet ++++ D | celestial_aegis ++++ D | radiant_glaive ++++ D | righteous_paladin ++++ D | divine_arbiter ++++ D | sacred_elephant ++++ D | chronomancer ++++ D
 evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void_cultist ++++ D | tempest_lich ++++ D | death_bringer ++++ D | void_monarch ++++ D
-secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer -+++ o | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
+secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer ++++ D | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo -+-+ o | raptor_rider ---+ o | cheerleader -+-+ o | cupid ---+ o | mace_spinner ---+ o | clams -+-+ o | present_elf ---+ o | ice_mage ---+ o | infernal_whip ---+ o | bank_robbers ---+ o
 secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ???? q | wheelbarrow_dragon ???? q | skeleton_giant ???? q | bomb_cannon ???? q | cavalry ???? q | vlad ???? q | gatling_gun ???? q
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
-## Focus (iteration 516; BASE 0757f5e0; evidence 0757f5e0: one lineup per slice)
-1. [R] secret.chu_ko_nu.b blockers 2, 4, 5 (a4b70e94, 602fa00f) APPROVE, struck 2, 4, 5; b PASS
-2. [S] secret.chu_ko_nu.c blocker 1 (66e47ff2) APPROVE, struck 1; c PASS; CONFIRM passed, done
-3. [S] secret.ballooner.a blocker 1 (aac1740a) APPROVE, struck 1; a PASS; CONFIRM passed, done
-4. [S] secret.taekwondo.a blocker 1 (1955e016, f438c488) APPROVE, struck 1, 2
-5. [S] secret.taekwondo.c blocker 1 (23d145b2) APPROVE, struck 1
-6. [S] secret.cupid.a blocker 3 (463d1578) APPROVE, struck 3, 2 by lineup
-7. [S] secret.cupid.b blocker 1 (2cd491c9) APPROVE, struck 1
-8. [S] secret.cheerleader.a blocker 2 (848338c6) APPROVE, struck 2, 1 by lineup
-9. [S] secret.clams.a blocker 2 (deb199cb, 30b1375a) APPROVE, struck 2
-- 9/9, 14 struck
+## Focus (iteration 517; BASE c84951f9)
+1. [R] secret.fan_bearer.a blocker 1 + CONFIRM lists (798bbba5) APPROVE, struck 1; a PASS; CONFIRM passed, done
+2. [S] secret.present_elf.a blocker 1 (b34b4519, 8142c383) APPROVE, struck 1, 7, 6 by lineup
+3. [S] secret.ice_mage.a blocker 1 (c46885b9, b82fd72b) APPROVE, struck 1
+4. [S] secret.infernal_whip.a blocker 1 (78eabf45) APPROVE, struck 1, 5 and 6 by lineup
+5. [S] secret.taekwondo.a blocker 3 (6679b6c8) APPROVE, struck 3, 5 by lineup
+6. [S] secret.cupid.a blocker 4 (7159b2bf) APPROVE, struck 4
+7. [S] secret.cheerleader.a blocker 3 (9a0c8787) APPROVE, struck 3, 4 by lineup
+- 7/7, 13 struck (cupid.b.2 heart arrow picked then left unattempted: the nocked arrow is a glow orb, needs a real aimed mesh)
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [R] secret.chu_ko_nu (a4b70e94, 602fa00f) / VERDICT: APPROVE / CRITERION: secret.chu_ko_nu.b PASS   (previous: FAIL plateau)
-- GAP: [S] secret.chu_ko_nu (66e47ff2) / VERDICT: APPROVE / CRITERION: secret.chu_ko_nu.c PASS   (previous: FAIL)
-- GAP: [S] secret.ballooner (aac1740a) / VERDICT: APPROVE / CRITERION: secret.ballooner.a PASS   (previous: FAIL)
-- GAP: [S] secret.taekwondo (1955e016, f438c488) / VERDICT: APPROVE / CRITERION: secret.taekwondo.a FAIL   (previous: FAIL)
-- GAP: [S] secret.taekwondo (23d145b2) / VERDICT: APPROVE / CRITERION: secret.taekwondo.c FAIL   (previous: FAIL)
-- GAP: [S] secret.cupid (463d1578) / VERDICT: APPROVE / CRITERION: secret.cupid.a FAIL   (previous: FAIL)
-- GAP: [S] secret.cupid (2cd491c9) / VERDICT: APPROVE / CRITERION: secret.cupid.b FAIL   (previous: FAIL)
-- GAP: [S] secret.cheerleader (848338c6) / VERDICT: APPROVE / CRITERION: secret.cheerleader.a FAIL   (previous: FAIL)
-- GAP: [S] secret.clams (deb199cb, 30b1375a) / VERDICT: APPROVE / CRITERION: secret.clams.a FAIL   (previous: FAIL)
+- GAP: [R] secret.fan_bearer (798bbba5) / VERDICT: APPROVE / CRITERION: secret.fan_bearer.a PASS   (previous: FAIL)
+- GAP: [S] secret.present_elf (b34b4519, 8142c383) / VERDICT: APPROVE / CRITERION: secret.present_elf.a FAIL   (previous: FAIL)
+- GAP: [S] secret.ice_mage (c46885b9, b82fd72b) / VERDICT: APPROVE / CRITERION: secret.ice_mage.a FAIL   (previous: FAIL)
+- GAP: [S] secret.infernal_whip (78eabf45) / VERDICT: APPROVE / CRITERION: secret.infernal_whip.a FAIL   (previous: FAIL)
+- GAP: [S] secret.taekwondo (6679b6c8) / VERDICT: APPROVE / CRITERION: secret.taekwondo.a FAIL   (previous: FAIL)
+- GAP: [S] secret.cupid (7159b2bf) / VERDICT: APPROVE / CRITERION: secret.cupid.a FAIL   (previous: FAIL)
+- GAP: [S] secret.cheerleader (9a0c8787) / VERDICT: APPROVE / CRITERION: secret.cheerleader.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM: ballooner ++++ | chu_ko_nu ++++ (both done)
+- CONFIRM: fan_bearer ++++ (done). secret_1 checkpoint 12/12 GREEN (output/loop/iter-517/summary.checkpoint.json); secret_1 dropped from Batch.
 
 ## Notes for next iteration (max 5 lines)
-- [R] slot 517: fan_bearer.a plateau (one dress pass owning skirt, sash and legs; unit file). It is secret_1's last open unit: its checkpoint follows once it is D or p.
-- present_elf, ice_mage, infernal_whip: the idle is a front shot (probe 516); the ball hood (a.1) hides the face. Pick a.1 first, then RE-AUDIT a, b on the new idle.
-- Per-slice lineups now: lineup_secret_1, lineup_secret_2 (capture lineupKey). CRITIC's lineup_<f> means the unit's slice lineup.
+- 518 first: RE-AUDIT a and b of present_elf, ice_mage and infernal_whip on the new idle (hoods gone, faces show); give the critic their Verdicts blocks.
+- raptor_rider, mace_spinner, bank_robbers have had no attempt since their 515 audit: pick their ranked #1 (raptor mount is a linked actor with hideBaseBody, linkedActorPresets).
+- Per-slice lineups: lineup_secret_2 is the slice lineup for every open unit now.
 - cheerleader: the poms in front of her hips hide top and skirt in idle and lineup (TABS holds them out at the hip sides).

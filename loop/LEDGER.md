@@ -2,6 +2,14 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+517 | 798bbba5 | secret.fan_bearer.a | approved [R] (struck 1; a PASS; CONFIRM passed, done)
+517 | b34b4519, 8142c383 | secret.present_elf.a | approved [S] (struck 1, 7, 6 by lineup)
+517 | c46885b9, b82fd72b | secret.ice_mage.a | approved [S] (struck 1)
+517 | 78eabf45 | secret.infernal_whip.a | approved [S] (struck 1; 5, 6 by lineup)
+517 | 6679b6c8 | secret.taekwondo.a | approved [S] (struck 3, 5 by lineup)
+517 | 7159b2bf | secret.cupid.a | approved [S] (struck 4)
+517 | 9a0c8787 | secret.cheerleader.a | approved [S] (struck 3, 4 by lineup)
+
 516 | a4b70e94, 602fa00f | secret.chu_ko_nu.b | approved [R] (struck 2, 4, 5; b PASS; CONFIRM passed, done)
 516 | 66e47ff2 | secret.chu_ko_nu.c | approved [S] (struck 1; c PASS; CONFIRM passed, done)
 516 | aac1740a | secret.ballooner.a | approved [S] (struck 1; a PASS; CONFIRM passed, done)
@@ -42,28 +50,19 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 513 | b919c5d4 | secret.the_teacher.a | approved [S] (struck 1)
 513 | ce979dd8 | secret.the_teacher.a | approved [S] (struck 2)
 
-512 | 891ac028, 027436f7 | secret.jester.c | approved [S] (struck 3; c PASS)
-512 | 5ebe1d59 | secret.the_teacher.a | approved [S] (struck 4)
-512 | d5bc11bf | secret.raptor.a | approved [S] (struck 1)
-512 | b1030b43 | secret.jester.a | approved [S] (struck 3; CONFIRM failed a: red tunic olive)
-512 | f1761213 | secret.raptor.a | approved [S] (struck 2; CONFIRM passed, done)
-512 | 19916c69 | secret.shouter.a | approved [S] (struck 3; CONFIRM failed a twice -> plateau)
-512 | ee78ffbe | secret.the_teacher.a | approved [S] (struck 5; CONFIRM failed a)
-512 | cf9030d9 | secret.executioner.a | approved [S] (struck 4)
-512 | 3c31e1a0 | secret.bomb_on_a_stick.a | approved [S] (struck 4)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress:517 | ELF_CAP fur .2H at e+.02H W1.2, cone .42H 1.08->.52W, 5-pt tip, pom .22W, green (.04,.42,.17), fur unlit (.82,.76,.6), pom (.85,.28,.06); ICE_HAIR half-dome 1.16W to c+.6H, fringe .62W tilt .32, locks .34->.2W x.64 z.3 to c-.42H, unlit (.74,.68,.52); ROCK_HAIR ico 1.18W .5H, 7 spikes .3W to .62H, (.07,.045,.04) self-lit .4, 3 magma cracks; TKD_BELT off the tunic skirt: band .17h sink .04 out 1.1, knot, tails .62h splay .3; CUPID_DIAPER lathe waist 1.18 bulge 1.34 low .62 drop .9 unlit (.74,.64,.46), bare body; CHEER_SOCK shin .08-1 out 1.28, cuff, 8 stripes team x.85 | 517 | approved | none (hoods; belt inside the skirt; vest; plain legs)
 secretDress/PB/SS/UV:516 | BALLOONER_LEG hem +.03 m waist 1.08 bulge 1.22 low 1.1 cuff 2.3, UV legLength 1.2 upperLegWidth .9; TKD_GI lapels .17TW to .86TH, belt .1TH, sleeves 1.7/1.85 flare 1.3, body material; KICK_BY_UNIT taekwondo within .75 windup .22 cooldown 1.5 damage 3 fling 7 raise 2.05 plain; CUPID_HAIR 4 rings x9 curls .34W unlit gold (.7,.5,.15); HEART_BOW tall .62 belly .3 unlit orange (.8,.38,.1) hearts pink (.8,.12,.55); CHEER_SKIRT 14 pleats flare .38 hem .55 purple (.42,.14,.63); CLAM_HAT 9 ribs span 1.3 long 1.5 rim .8 | 516 | approved | 515 BALLOONER_LEG hem -.07 bulge 1.5 low 1.36
 UV/PA:secret_shouter build | scale 1.1 bulk .88 torsoWidth .95 head 1.08 legLength 1.3 upperLeg .92 lowerLeg .82; upright stance by shouterHelmDome | 513 | approved | 1.35/1.25/1.18 squat, hashed crouch
 UV/PA:secret_executioner build | scale 1.22 bulk .9 torsoWidth .9 legLength 1.3 upperLeg .9 lowerLeg .82; upright by executionerHood | 513 | approved | 1.42/1.4 slab
 PA/RU:STONE_POUND | lift .55 back .45 slam 1.15 hold .14 neck .45 knee .35; DIVE at full weight in the Foolish Jump (RU _leapAir for ball_n_chain) | 513 | approved | generic mace swing, upright leap
 secretDress:SHOUTER_VEST | 10-sided yoke shell wide 2.3 hem .9 deep 2.5 top 1.04 low 1.3, front point .2; tunic team x.8 | 513 | approved | 505 two front panels
 secretDress:BOMBER_BAND/BREECH | band .17H over .03H round 1.24W, knot, tails; breech lathe .96 to knee-.06 m, 1.18/1.42/1.22, cuff 2.6 shin, patch, skin shins | 513 | approved | none
-secretDress:FAN_SKIRT | under team x.36 (body), hem band .16 long x1.04 team x.8, flaps .42/.3, self-lit .4 | 515 | approved | 513 under x.7 flaps .42/.55
+secretDress:FAN_DRESS [R] 517 | team saturated ^2 (peak-renormalised), sash x.42 folds x.29, skirt x.5, flaps .38/.3, hem team x.95, all self-lit .12; FAN_SASH wide .66 thick .16; legs skin; FAN_SHOE ankle .7 Hf brown (.13,.07,.04) self-lit .4 | 517 | approved | 515 skirt team x.36 flaps .42/.3 hem x.8, sash x.45, all self-lit .4; navy shins, grey boot
 secretDress:TEACHER_TROUSER/SLEEVE | jacket-material shells loose 1.16/1.18, shin flare 1.26, cuff 1.42 x.16 | 513 | approved | skin limbs
 Done secret_1 raptor and jester rows (raptorBody, RAPTOR_BITE, JESTER_*, jester kick/dodge/dagger/cap) | specs in owning code; ledger@823dc1cf | 515 | archived values | unchanged
 Evil done units (death_bringer, void_monarch) rows | specs in owning code; ledger@8d2b01e3 | 511 | archived values | unchanged
@@ -77,7 +76,6 @@ secretDress:BALLOONER_DOUBLET | team trunk, cream V .09 TW to .62 TH, puffs 2.5 
 PA:RCB_HOLD | [R] 516 explicit-basis lay (+z opposite the line); carry: fist .12 ahead .1 across .08 under chest, line left .5 fwd .85 up .22; aim (readyAim): .2/.05/.02, line on the chest; grip off a fresh torsoMesh box; off fist .45 mag under | 516 | approved | 511 fist .16/.06/.12 laid along heading (nose pointed backwards)
 SS:RCB_VOLLEY | one bolt per .25 s off rcbMuzzle, no scatter, arc 0, targetLift = chest | 516 | approved | 511 default bolt arc .06
 secretDress:chuKoNuBelt | eight-sided dark strap, square buckle, loose end | 510 | approved | 509 hidden strap
-secretDress:fanBearerSash | FAN_SASH wide .66 thick .16 shoulder (.78,1.06) hip (-.8,-.86) out 1.1, drape .72x.22, fall .5x.62, 2 folds; team x.45 self-lit .4 | 515 | approved [S] | 511 .155 TW dark strap x +.82,-.78
 SS/PA:STONE_POUND | overhead stick swing retained; trial reverted (contact detached torso) | 509 | dropped [S] | three contact-timed pounds
 secretDress:shouterKneeWraps | seven-sided tan bands down the shin from the knee (spec SHOUTER_LEG) | 512 | approved | 509 four bands at the shin top
 secretDress:shouterBracers | six-sided tapered dark team guards and two edge bands | 509 | approved [S] | none
