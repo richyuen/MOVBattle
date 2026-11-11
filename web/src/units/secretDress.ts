@@ -211,7 +211,7 @@ export function executionerVest(scene: Scene, body: ArticulatedBody, team: Color
  * [S] 500 the Shouter's Nordic helmet (secret.shouter.red.png; audit 500 a.1: "helmet: a bare team head - TABS a dark iron Nordic helmet with
  * curled brown horns and a nose guard"). The render: a dark grey faceted iron bowl over the crown and the sides of the head, its rim just over the
  * bead eyes, a broad nose guard and two cheek plates hanging down the face either side of it to the mouth, the eyes looking out between them; out
- * of each side over the ears a brown ram's horn running out about half a head, curling up and back.
+ * of each side over the ears a thick tan horn extending sideways, with a short downturned tip.
  * Spec in head widths W, heights H, depths D (the head box, its centre c; e the eyes' top in the head frame): an 8-sided iron bowl .bowl W across
  * from .rim H over e up to .top H over the centre, domed over the top (a half sphere .dome H tall); a brow band .band H tall round its foot,
  * .bandOut proud; a nose guard .noseW W wide from the band down .nose H, standing .proud D in front of the face; cheek plates .cheekW W wide,
@@ -220,10 +220,10 @@ export function executionerVest(scene: Scene, body: ArticulatedBody, team: Color
  * horn brown .horn. All out of the glow.
  */
 const SHOUTER_HELM = {
-  iron: new Color3(0.2, 0.21, 0.23), horn: new Color3(0.42, 0.22, 0.09), bowl: 1.22, rim: 0.02, top: 0.66, dome: 0.32, band: 0.12, bandOut: 0.04,
-  noseW: 0.2, nose: 0.42, proud: 0.56, cheekW: 0.24, cheek: 0.36, cheekX: 0.46, cheekTilt: 0.12, hornY: 0.12, hornRoot: 0.28, hornTip: 0.06,
+  iron: new Color3(0.2, 0.21, 0.23), horn: new Color3(0.72, 0.44, 0.24), bowl: 1.22, rim: 0.02, top: 0.66, dome: 0.32, band: 0.12, bandOut: 0.04,
+  noseW: 0.2, nose: 0.42, proud: 0.56, cheekW: 0.24, cheek: 0.36, cheekX: 0.46, cheekTilt: 0.12, hornY: 0.12, hornRoot: 0.39, hornTip: 0.11,
 };
-const HORN_PATH: [number, number, number][] = [[0.52, 0, 0], [0.78, 0.04, 0.02], [0.98, 0.2, 0.08], [1.04, 0.42, 0.2], [0.94, 0.56, 0.32], [0.82, 0.5, 0.36]];
+const HORN_PATH: [number, number, number][] = [[0.52, 0, 0], [0.73, 0.035, 0.015], [0.94, 0.047, 0.04], [1.12, 0.015, 0.07], [1.20, -0.065, 0.08], [1.22, -0.14, 0.08]];
 export function shouterHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = SHOUTER_HELM, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
