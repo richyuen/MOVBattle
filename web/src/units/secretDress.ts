@@ -2328,3 +2328,34 @@ export function taekwondoTrousers(scene: Scene, body: ArticulatedBody, team: Col
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 518 the Taekwondo's hair (secret.taekwondo.red.png, .jpg: dark brown-black hair close over the crown, its front edge just over the bead eyes,
+ * gathered into a tall topknot bun on the crown tied by a team-colour hairband; card Appearance "a black belt and hairband in their hair"; audit
+ * 515 a.6 "pale grey cap with a tie"). Spec in head widths W, heights H, depths D (head box, centre c; e the eyes' top): the hair a half ellipsoid
+ * .capW W x .capH H x .capD D on a base .capLo H over e, set .capBack D back; the bun a 6-sided cylinder .bunW W across (.bunTop of it at its top)
+ * .bun H tall on the crown .bunBack D back, leaning .lean rad back, its hairband .band H tall .bandW of the bun round at .bandAt of its height.
+ * Near-black lit cloth self-lit .4 (LESSONS 494), team band; out of the glow. The bandana hat off (unitVisuals).
+ */
+const TKD_HAIR = { capW: 1.12, capH: 0.6, capD: 1.12, capLo: 0.03, capBack: 0.04, bunW: 0.34, bunTop: 0.85, bun: 0.4, bunBack: 0.1, lean: -0.25, band: 0.1, bandW: 1.14, bandAt: 0.3,
+  dark: new Color3(0.11, 0.08, 0.07) };
+export function taekwondoHair(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = TKD_HAIR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const hair = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
+  const band = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const base = e + H * C.capLo;
+  const cap = MeshBuilder.CreateSphere("tkdHair", { diameter: 1, segments: 5, slice: 0.5 }, scene);
+  cap.parent = head; cap.material = hair; cap.position.set(c.x, base, c.z - D * C.capBack); cap.scaling.set(W * C.capW, H * C.capH * 2, D * C.capD); out.push(cap);
+  const knot = new TransformNode("tkdBunRoot", scene);
+  knot.parent = head; knot.position.set(c.x, base + H * C.capH * 0.9, c.z - D * C.bunBack); knot.rotation.x = C.lean;
+  const bun = MeshBuilder.CreateCylinder("tkdBun", { height: H * C.bun, diameterBottom: W * C.bunW, diameterTop: W * C.bunW * C.bunTop, tessellation: 6 }, scene);
+  bun.parent = knot; bun.position.y = (H * C.bun) / 2; bun.material = hair; out.push(bun);
+  const tie = MeshBuilder.CreateCylinder("tkdHairband", { height: H * C.band, diameter: W * C.bunW * C.bandW, tessellation: 6 }, scene);
+  tie.parent = knot; tie.position.y = H * C.bun * C.bandAt; tie.material = band; out.push(tie);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}

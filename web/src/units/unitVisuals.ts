@@ -1144,7 +1144,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["shout_ring"], "ability-active": ["shout_ring"] },
       });
     case "secret_taekwondo":
-      return vis({ scale: 1.05, bulk: 0.9, legLength: 1.1 }, "none", "bandana", "none", "none", "#f6f6f6", undefined, {
+      // [S] 518 (a.6) no bandana: his own hair and topknot (secretDress taekwondoHair)
+      return vis({ scale: 1.05, bulk: 0.9, legLength: 1.1 }, "none", "none", "none", "none", "#f6f6f6", undefined, {
         posePreset: "duelist", materialPreset: "secret_holy",
       });
     case "secret_raptor_rider":
