@@ -323,8 +323,6 @@ const LANCE_AIM = { hold: 0.6, rate: 4 };
 const STONE_HUG = { side: 0.8, front: -0.1, drop: 0.3 };
 /** [S] 511 the Chu Ko Nu's level carry (_holdRepeatingCrossbow): the weapon fist ahead of the trunk, out to his side and down from the chest's middle (m); the off fist under the stock .under of the magazine's height below the stock. */
 const RCB_HOLD = { ahead: 0.16, across: 0.06, drop: 0.12, under: 0.45 };
-/** [S] 511 the off fist on a two-handed pole stays this share of the shaft's length in from either end (_twoHandPole). */
-const POLE_END_IN = 0.12;
 const POLE_GRIP = {
   fanGrip: [-0.28, -0.15],
   bombStickGrip: [0.10, 0.14],
@@ -4251,11 +4249,7 @@ export class ProceduralAnimator {
     const fistAt = Vector3.Dot(this._body.rightHand.getAbsolutePosition().subtract(origin), axis);
     this._body.leftShoulder.computeWorldMatrix(true);
     const along = Vector3.Dot(this._body.leftShoulder.getAbsolutePosition().subtract(origin), axis);
-    let at = Math.max(fistAt + span[0] * length, Math.min(fistAt + span[1] * length, along));
-    // [S] 511 (fan_bearer b.2): the off fist stays on the shaft, POLE_END_IN of its length in from either end, so the pole runs on through and
-    // past the fist and never ends in it (the fan's far fist sat on the butt's tip, hidden behind the hip, and read as floating off the shaft)
-    const half = length / 2 - POLE_END_IN * length;
-    at = Math.max(-half, Math.min(half, at));
+    const at = Math.max(fistAt + span[0] * length, Math.min(fistAt + span[1] * length, along));
     this._offArmTo(origin.add(axis.scale(at)), w, 2);
   }
 
