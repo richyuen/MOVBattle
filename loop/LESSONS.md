@@ -36,11 +36,11 @@ Read whole at step 1; one fact per line, merge near cap.
 - An ability started while toppled/airborne is wiped by its lander and burns the cooldown: gate starts on his feet (512 kick).
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
 - A flat ico's faces sit ~20% inside its ellipsoid: seat surface dress by ray-cast onto the mesh (512 raptor).
+- Two men pinned together topple apart under their crowd push: RU.holdUpright each step (514).
 ## Rig and dress
 - A pole butt inside the hip box hides the off fist: carry it ahead of the hips (511). Translating torso to reach a target detaches it from the hips; move the whole body (509). A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
 - Retire old hip skirts (482). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450 queen). metrics.overallHeight is pre-cut; shin limbShell 0 is the calf cap, ~.1 m above the knee.
-- A wider thigh shell can bury a shin wrap that extends above the knee joint (510).
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
 - A foot mesh is a merged cuff + toe box ~half the shin tall: a tuft at its bbox middle is buried; the instep's top is lo.y + ~.42 (399). Shoes, anklets, socks go at that height or the boot eats the shin (433); the grass hides a foot box to ~.6, so a shoe must top that (434).

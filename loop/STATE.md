@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 513   Batch: secret_1   Consecutive empty: 0   Done: 106/139   Parked: 0
+Iteration: 514   Batch: secret_1   Consecutive empty: 0   Done: 107/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -17,38 +17,37 @@ legacy_1: peasant ++++ D | banner_bearer ++++ D | poacher ++++ D | blowdarter ++
 legacy_2: pharaoh ++++ D | wizard ++++ D | chariot ++++ D | thor ++++ D | tank ++++ D | super_boxer ++++ D | dark_peasant ++++ D | super_peasant ++++ D
 good: devout_gauntlet ++++ D | celestial_aegis ++++ D | radiant_glaive ++++ D | righteous_paladin ++++ D | divine_arbiter ++++ D | sacred_elephant ++++ D | chronomancer ++++ D
 evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void_cultist ++++ D | tempest_lich ++++ D | death_bringer ++++ D | void_monarch ++++ D
-secret_1: ballooner -+-+ o | bomb_on_a_stick ++++ D | fan_bearer --++ o | raptor ++++ D | the_teacher -+++ o | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ---+ o | executioner ++++ D | shouter ++++ D
+secret_1: ballooner -+++ o | bomb_on_a_stick ++++ D | fan_bearer -+++ o | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ---+ o | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo ???? q | raptor_rider ???? q | cheerleader ???? q | cupid ???? q | mace_spinner ???? q | clams ???? q | present_elf ???? q | ice_mage ???? q | infernal_whip ???? q | bank_robbers ???? q
 secret_3: witch ???? q | banshee ???? q | necromancer ???? q | solar_architect ???? q | wheelbarrow_dragon ???? q | skeleton_giant ???? q | bomb_cannon ???? q | cavalry ???? q | vlad ???? q | gatling_gun ???? q
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
-## Focus (iteration 513; BASE eee3063b)
-1. [R] secret.shouter.a blockers 1-4 (ecb2f1d2) APPROVE, struck 1-4; a PASS, CONFIRM passed, shouter D
-2. [S] secret.executioner.a blocker 1 (0e3163cb) APPROVE, struck 1; CONFIRM passed, executioner D
-3. [S] secret.ball_n_chain.c blocker 2 (bd5c8bce, 9e93b061) APPROVE, struck 2; CONFIRM passed, ball_n_chain D
-4. [S] secret.jester.a blocker 1 (aec49ae0) APPROVE, struck 1; CONFIRM passed, jester D
-5. [S] secret.bomb_on_a_stick.a blocker 2 (1ed2fd7e) APPROVE, struck 2
-6. [S] secret.bomb_on_a_stick.a blocker 5 (fdf374b2) APPROVE, struck 5; CONFIRM passed, bomb_on_a_stick D
-7. [S] secret.fan_bearer.a blocker 3 (75907159) APPROVE, struck 3
-8. [S] secret.the_teacher.a blocker 1 (b919c5d4) APPROVE, struck 1
-9. [S] secret.the_teacher.a blocker 2 (ce979dd8) APPROVE, struck 2
-- 9/9, 12 struck
+## Focus (iteration 514; BASE 8a18dbec)
+1. [S] secret.the_teacher.a blocker 3 (76eb7ccd) APPROVE, struck 3; a PASS, CONFIRM passed, the_teacher D
+2. [S] secret.fan_bearer.b blocker 2 (6eb5edb1) APPROVE, struck 2; b PASS
+3. [S] secret.fan_bearer.a blocker 4 (77e689a3) APPROVE, struck 4; CONFIRM failed a (skirt shade, sash width)
+4. [S] secret.ballooner.c blocker 2 (99a107b4) APPROVE, struck 2; c PASS
+5. [S] secret.chu_ko_nu.b blocker 5 (09540a69) REJECT, reverted 4d6431b2
+6. [S] secret.ballooner.a blocker 4 (c478e0f8) APPROVE, struck 4 (and 3 by the lineup test)
+7. [S] secret.chu_ko_nu.a blocker 1 (01ec5768) APPROVE, struck 1
+8. [S] secret.chu_ko_nu.a blocker 2 (d85e50bc) APPROVE, struck 2
+9. [S] secret.ballooner.a blocker 5 (baed6b00) APPROVE, struck 5
+- 8/9, 9 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [R] secret.shouter (ecb2f1d2) / VERDICT: APPROVE / CRITERION: secret.shouter.a PASS   (previous: FAIL)
-- GAP: [S] secret.executioner (0e3163cb) / VERDICT: APPROVE / CRITERION: secret.executioner.a PASS   (previous: FAIL)
-- GAP: [S] secret.ball_n_chain (bd5c8bce, 9e93b061) / VERDICT: APPROVE / CRITERION: secret.ball_n_chain.c PASS   (previous: FAIL)
-- GAP: [S] secret.jester (aec49ae0) / VERDICT: APPROVE / CRITERION: secret.jester.a PASS   (previous: FAIL)
-- GAP: [S] secret.bomb_on_a_stick (1ed2fd7e) / VERDICT: APPROVE / CRITERION: secret.bomb_on_a_stick.a FAIL   (previous: FAIL)
-- GAP: [S] secret.bomb_on_a_stick (fdf374b2) / VERDICT: APPROVE / CRITERION: secret.bomb_on_a_stick.a PASS   (previous: FAIL)
-- GAP: [S] secret.fan_bearer (75907159) / VERDICT: APPROVE / CRITERION: secret.fan_bearer.a FAIL   (previous: FAIL)
-- GAP: [S] secret.the_teacher (b919c5d4) / VERDICT: APPROVE / CRITERION: secret.the_teacher.a FAIL   (previous: FAIL)
-- GAP: [S] secret.the_teacher (ce979dd8) / VERDICT: APPROVE / CRITERION: secret.the_teacher.a FAIL   (previous: FAIL)
+- GAP: [S] secret.the_teacher (76eb7ccd) / VERDICT: APPROVE / CRITERION: secret.the_teacher.a PASS   (previous: FAIL)
+- GAP: [S] secret.fan_bearer (6eb5edb1) / VERDICT: APPROVE / CRITERION: secret.fan_bearer.b PASS   (previous: FAIL)
+- GAP: [S] secret.fan_bearer (77e689a3) / VERDICT: APPROVE / CRITERION: secret.fan_bearer.a PASS   (previous: FAIL)
+- GAP: [S] secret.ballooner (99a107b4) / VERDICT: APPROVE / CRITERION: secret.ballooner.c PASS   (previous: FAIL)
+- GAP: [S] secret.chu_ko_nu (09540a69) / VERDICT: REJECT / CRITERION: secret.chu_ko_nu.b FAIL   (previous: FAIL)
+- GAP: [S] secret.ballooner (c478e0f8) / VERDICT: APPROVE / CRITERION: secret.ballooner.a FAIL   (previous: FAIL)
+- GAP: [S] secret.chu_ko_nu (01ec5768) / VERDICT: APPROVE / CRITERION: secret.chu_ko_nu.a FAIL   (previous: FAIL)
+- GAP: [S] secret.chu_ko_nu (d85e50bc) / VERDICT: APPROVE / CRITERION: secret.chu_ko_nu.a FAIL   (previous: FAIL)
+- GAP: [S] secret.ballooner (baed6b00) / VERDICT: APPROVE / CRITERION: secret.ballooner.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM: shouter ++++ | executioner ++++ | ball_n_chain ++++ | jester ++++ | bomb_on_a_stick ++++
+- CONFIRM: the_teacher ++++ | fan_bearer -+++ (a: skirt shade, sash width)
 
 ## Notes for next iteration (max 5 lines)
-- Four secret_1 units open (ballooner, fan_bearer, the_teacher, chu_ko_nu) with 9 ranked [S] between them; if fewer than 9 are pickable, tail-overlap secret_2 (audit it in step 2).
-- Chu Ko Nu: first pick b.5 (lay the bow toward the target, not _heading); then re-judge c.1. Critic 2 asks for a front three-quarter idle before a can PASS (evidence commit candidate).
-- Ballooner glue dive dropped in 511: probe the held man's position through the lift before the next try (ball_n_chain's 513 dive: set RU _leapAir and DIVE at full weight).
-- Fan Bearer b.2 needs the carry ahead of the hips (the shaft runs through the pelvis).
-- Teacher a.3: the beard must be big (cheek to cheek, down to the jabot), not a recolour.
+- Three secret_1 units open (ballooner, fan_bearer, chu_ko_nu) with 6 ranked [S] between them: tail-overlap secret_2 (audit it in step 2) and pick from both.
+- Chu Ko Nu b.5: put the SS readyAim call for RCB units right after _selectEnemyTarget (the windup is a back-off) AND keep the 514 flipped lay (FromLookDirectionLH(fwd)); probe muzzleAhead in a back-off.
+- Fan Bearer a.1 is colour: render a --noglow swatch of the skirt before choosing the shade (palette.png).
+- Ballooner a.6: pantaloons must replace the pale tunic hem block below the waist.

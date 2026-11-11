@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+514 | 76eb7ccd | secret.the_teacher.a | approved [S] (struck 3; CONFIRM passed, done)
+514 | 6eb5edb1 | secret.fan_bearer.b | approved [S] (struck 2; b PASS)
+514 | 77e689a3 | secret.fan_bearer.a | approved [S] (struck 4; CONFIRM failed a: skirt shade, sash width)
+514 | 99a107b4 | secret.ballooner.c | approved [S] (struck 2; c PASS)
+514 | 09540a69 | secret.chu_ko_nu.b | rejected [S] (reverted 4d6431b2: back-off windup has no readyAim)
+514 | c478e0f8 | secret.ballooner.a | approved [S] (struck 4, 3 by lineup)
+514 | 01ec5768 | secret.chu_ko_nu.a | approved [S] (struck 1)
+514 | d85e50bc | secret.chu_ko_nu.a | approved [S] (struck 2)
+514 | baed6b00 | secret.ballooner.a | approved [S] (struck 5)
+
 513 | ecb2f1d2 | secret.shouter.a | approved [R] (struck 1-4; CONFIRM passed, done)
 513 | 0e3163cb | secret.executioner.a | approved [S] (struck 1; CONFIRM passed, done)
 513 | bd5c8bce, 9e93b061 | secret.ball_n_chain.c | approved [S] (struck 2; CONFIRM passed, done)
@@ -41,13 +51,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 510 | 3b45f093 | secret.shouter.a | approved [S] (struck 1; added 3)
 510 | f008ee0e | secret.shouter.a | approved [S] (struck 2)
 510 | 07986a12, e9179b7c | secret.ball_n_chain.a | approved [S] (struck 4)
-
-509 | 8a76bf73 | evil.death_bringer.a | approved [R] (struck 1; CONFIRM passed a, done)
-509 | c3516851, b317dbe1 | secret.chu_ko_nu.a | dropped [S] (belt hidden in idle)
-509 | de9ad3b0 | secret.fan_bearer.a | approved [S] (no strike; sash direction remains)
-509 | 724ec250, 4eb56a9b, 13352468 | secret.ball_n_chain.c | dropped [S] (reverted: detached torso at contact)
-509 | ab9656cd | secret.shouter.a | approved [S] (struck old 4)
-509 | 2e71ef24 | secret.shouter.a | approved [S] (struck old 3; CONFIRM failed a)
 
 ## Spent (never retry as [P])
 
@@ -116,9 +119,9 @@ secretDress:balloonerGlueMitts forearm | three faceted lobes each, spanning .41-
 PB:jester_dagger | .28 hand-scale tapered blade with .085 strap, elbow-parented just above wrist | 506 | approved | shuriken mesh in each hand
 SS:JESTER_DODGE | .54 s melee sidestep with forward roll, 1.9 m, cooldown 2.5 s | 506 | approved | no melee dodge
 SS:Balloon Backpack | once per fight, up to 3.3 m mass-scaled paired rise, release after 1.8 s, log float_pack | 506 | approved | generic pull and knock-up
-secretDress:teacherHair beard | .5H faceted triangle, .69W top, paired moustache lobes | 506 | approved | bare chin
 secretDress:chuKoNuRobe | two faceted overlapping knee tiers with orange hem bands | 506 | approved | short tunic
-PA/PB:fanGrip | fist forward and in, leaf at 1.9 rad off vertical with face up, offhand span -.28 to -.15 | 506 | approved (far fist off shaft) | hpoint high carry
+PA/PB:fanGrip | fist ahead .23 in .12 drop .29 of height, pitch 1.95; GIANT_FAN.grip .1 (butt stub); offhand span +.13 to +.24 (ahead of the fist) | 514 | approved | 506 ahead .17 in .14 drop .34 pitch 1.9, grip .3, span -.28 to -.15
+secretDress/SS/RU:514 | FAN_GUARD from .36 to .97 out 1.7 taper .84; TEACHER_BEARD top .56 jaw .5 tipY 1.12 tipZ 1.08 thick .3 stache .92; BALLOONER_RUFF 16 flutes .22W ring 1.34W grey .55; BALLOONER_HEAD cap/side/back falls, rim 1.32 tube .24; GLUE_HOLD chest .5, GLUE_GRIP side .75 up .2 near .95; KONU_SLEEVE 1.55/1.5 flare 1.18; KONU_MITT 1.3 band 1.45 cream (.86,.78,.62) unlit | 514 | approved | none (506 teacher beard cone)
 secretDress:jesterCap collar | six layered team lobes, 0.84 inset over gold | 506 | approved | bare neckline
 secretDress:chuKoNuHarness | two leather runs over shoulders to a six-sided rear quiver | 508 | approved [S] | no harness
 secretDress:teacherJabot | three overlapping faceted cream folds beneath beard | 508 | approved [S] | no jabot

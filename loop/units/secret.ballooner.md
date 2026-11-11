@@ -1,28 +1,21 @@
 # secret.ballooner
 Status: open   Audited: 500 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (1 since 511 split, 4 struck)
- 3. doublet in unit_secret.ballooner_idle — TABS ... a belt (ref: secret.ballooner.red.png)
- 4. collar in unit_secret.ballooner_idle — none; TABS a wide grey ruff collar under the chin (ref: secret.ballooner.red.png)
- 5. head in unit_secret.ballooner_idle — bare, no hair or goggles; TABS brown shoulder-length hair and round goggle rims round the eyes (ref: secret.ballooner.red.png)
+a FAIL (2 since 511 split, 7 struck)
  6. legs in unit_secret.ballooner_idle — straight team legs in boots; TABS knee pantaloons over beige stockings, orange shoes (ref: secret.ballooner.blue.png)
 b PASS (503 empty beige glue mitts, no shuriken)
-c FAIL (1 since 500, 1 struck)
- 2. grab in unit_secret.ballooner_release — a shuriken poke from 1 m; TABS dives in and glues onto the target's body (ref: card Characteristics)
-d PASS (511 stats)
+c PASS (514 glued chest to chest at the grab, the pair lifted together)
+d PASS (514 stats)
 ## Ranked gaps
-1. [S] secret.ballooner.c glue grab — blocker 2: dive in and latch both mitts onto the man's body — ref: loop/cards/secret.ballooner.md — ours: unit_secret.ballooner_release.png
-2. [S] secret.ballooner.a ruff — blocker 4: wide faceted grey ruff ring under the chin — ref: reference/units/secret.ballooner.red.png — ours: unit_secret.ballooner_idle.png
-3. [S] secret.ballooner.a head — blocker 5: brown shoulder-length hair chunk and round goggle rims round the eyes — ref: reference/units/secret.ballooner.red.png — ours: unit_secret.ballooner_idle.png
+1. [S] secret.ballooner.a legs — blocker 6: team knee pantaloons replacing the tunic hem, beige stocking shins, orange shoes (secretDress balloonerBreeches) — ref: reference/units/secret.ballooner.blue.png — ours: unit_secret.ballooner_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+514 | grey ruff of 16 upright flutes round a dark core, secretDress balloonerRuff (c478e0f8) | a | approved (struck 4; 3 struck by lineup test)
+514 | brown hair cap, side and back falls to the shoulders, goggle torus rims, secretDress balloonerHead (baed6b00) | a | approved (struck 5)
+514 | in to .5 summed radii at the grab, both held upright (RU holdUpright) through the lift, glue grip on the trunk posed on the hit tick (99a107b4) | c | approved (struck 2; c PASS)
 511 | team doublet, cream V, slashed puffs, belt (f7143acb) | a | approved (struck 3's doublet/V clause)
-511 | glued dive and two-fist grip on the held man (026039a3, reverted e2a612c1) | c | dropped: no dive pose in _release; pair apart in _ability
-506 | one-use backpack lift with a held opponent (b89901f6) | c | approved (struck 1)
-506 | faceted glue lobes along both forearms (03717227) | a | approved (struck 2, 7)
-503 | empty glue mitts, no weapon (c9a3b096, 71cb0028) | b | approved (struck 1; b PASS)
-501 | leather satchel, straps, 5 balloons (2c5f720b) | a | approved (struck 1)
+511 | glued dive (026039a3, reverted e2a612c1) | c | dropped: pair apart in _ability
+501-506 | satchel and balloons; glue mitts and forearm lobes; one-use backpack lift | a, b, c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 511 DEFECTS: pale-blue tunic hem block still hangs below the waist; belt hidden behind the pack strap's lower bar; slash slats stand off the puff.
-- 511 dropped: dive lerp + setDive did not read on the hit tick, and in _ability the pair are ~1.5 m apart; probe where the held man actually is during the lift before the next try.
-- 506 DEFECTS: the pair float apart. Add a dive into a sustained two-arm grip.
+- 514 probe: the crowd push toppled both men apart through the lift (torsos 2.2 m off, roots .72); holdUpright each lift step keeps them .5 m apart.
+- 514 DEFECTS: ability shot shows the glued pair tipped near horizontal; ruff tight to the jaw; hair boxy.
