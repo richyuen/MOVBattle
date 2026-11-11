@@ -2153,7 +2153,8 @@ export class SimulationSystem {
       }
       const KK = kickOf(unit.definition.id);
       const reach = unit.collisionBodyRadius + enemy.collisionBodyRadius + KK.within;
-      if (distance <= reach && now >= (this._kickReadyAt.get(unit) ?? 0)) {
+      // a man mid-dodge (the Jester's flip) kicks only once back on his feet
+      if (distance <= reach && now >= (this._kickReadyAt.get(unit) ?? 0) && !this._recovers.has(unit)) {
         const damage = attackProfile.damage * (unit.definition.damageMultiplier ?? 1) * KK.damage;
         this._kicks.set(unit, { target: enemy, blowAt: now + KK.windup, endAt: now + KK.windup + KK.recover, done: false, damage });
         this._kickReadyAt.set(unit, now + KK.cooldown);
