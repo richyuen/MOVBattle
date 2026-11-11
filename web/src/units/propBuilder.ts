@@ -4176,7 +4176,7 @@ const EXECUTIONER_CRESCENT = { ...JARL_CRESCENT, hornUp: 0.12, beardDown: 0.17, 
  * haft's plane turned a quarter about it (as the halberd's axe). The haft top carries the hpoint off-fist mark.
  */
 const GIANT_FAN = {
-  long: 1.0, thick: 0.03, grip: 0.3, mount: 0.32, horn: 0.1, fanW: 1.4, fanD: 0.8, plate: 0.02,
+  long: 1.0, thick: 0.03, grip: 0.1, mount: 0.32, horn: 0.1, fanW: 1.4, fanD: 0.8, plate: 0.02, // 514 grip .3 -> .1: the butt a stub behind the fist
   wood: new Color3(0.55, 0.33, 0.15),
 };
 function buildGiantFan(scene: Scene, fit: BladeFit, team: Color3): Mesh {

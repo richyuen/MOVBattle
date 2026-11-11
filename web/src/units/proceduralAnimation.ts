@@ -332,7 +332,7 @@ const STONE_POUND = { lift: 0.55, back: 0.45, slam: 1.15, hold: 0.14, neck: 0.45
 /** [S] 511 the Chu Ko Nu's level carry (_holdRepeatingCrossbow): the weapon fist ahead of the trunk, out to his side and down from the chest's middle (m); the off fist under the stock .under of the magazine's height below the stock. */
 const RCB_HOLD = { ahead: 0.16, across: 0.06, drop: 0.12, under: 0.45, lead: 0.1, lift: 0.04 };
 const POLE_GRIP = {
-  fanGrip: [-0.28, -0.15],
+  fanGrip: [0.13, 0.24], // [S] 514 the off fist ahead of the weapon fist, down the shaft toward the fan (secret.fan_bearer.red.png)
   bombStickGrip: [0.10, 0.14],
   hpoint: [0.15, 0.45], // the halberd (and every glaive built on it)
   musketFore: [0.3, 0.7], // the matchlock: the off hand under the fore-stock (renaissance.musketeer.jpg)
@@ -6339,7 +6339,11 @@ export class ProceduralAnimator {
       const node = this._body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && n.getChildren().some((c) => c.name === "fanLeaf" || c.name === "bombStickGrip"));
       const fan = node?.getChildren().some((child) => child.name === "fanLeaf");
       // Bomb on a Stick plants the lower fist at the belt and leans the shaft slightly forward.
-      const pose = fan ? { ahead: 0.17, inward: 0.14, drop: 0.34, pitch: 1.9 } : { ahead: 0.13, inward: 0.12, drop: 0.30, pitch: 0.12 };
+      // [S] 514 the fan (secret.fan_bearer.red.png: the upper fist at the butt before his belly, the off fist further down the shaft ahead of it,
+      // the shaft running forward and down from in front of him to the fan on the ground; audit b.2 "the shaft runs through the pelvis"): the weapon
+      // fist .23 of his height ahead of the shoulder and .29 under it, the butt a short stub behind it (GIANT_FAN.grip), the off fist ahead on the
+      // shaft (POLE_GRIP.fanGrip), both clear in front of the hips.
+      const pose = fan ? { ahead: 0.23, inward: 0.12, drop: 0.29, pitch: 1.95 } : { ahead: 0.13, inward: 0.12, drop: 0.30, pitch: 0.12 };
       this._fanOrBombProp = node ? { node, pose, rest: Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z) } : null;
     }
     return this._fanOrBombProp;
