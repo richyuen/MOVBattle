@@ -1150,3 +1150,35 @@ export function executionerBoots(scene: Scene, body: ArticulatedBody, team: Colo
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 512 the Bomber's open team vest (secret.bomb_on_a_stick.blue.png: a dark team waistcoat open down the front over the cream shirt, its fronts
+ * from the shoulders to the belt either side of a wide cream gap, a lighter team edge down each opening, a team back; audit 500 a.4 "none"). Spec in
+ * the yoke mesh's box (centre c, half size h; front +z): per side a front panel .frontW h.x wide at .frontX h.x out, .tall h.y tall, .out h.z
+ * proud of the front, with an edge strip .edgeW h.x wide on its inner side; a side panel at .sideX h.x and a back panel, all .thick h.z thick. Own
+ * team cloth (LESSONS 449), out of the glow.
+ */
+const BOMBER_VEST = { frontW: 0.6, frontX: 0.68, tall: 1.86, low: -0.06, out: 1.04, thick: 0.2, edgeW: 0.09, sideX: 1.04, vest: 0.55, edge: 0.95 };
+export function bomberVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const V = BOMBER_VEST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const yoke = body.allMeshes.find((mesh) => mesh.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const { center: c, extendSize: h } = yoke.getBoundingInfo().boundingBox;
+  const vestColor = team.scale(V.vest), edgeColor = team.scale(V.edge);
+  const vest = mf.get("cloth", vestColor, { emissive: vestColor.scale(0.12), roughness: 1 });
+  const edge = mf.get("cloth", edgeColor, { emissive: edgeColor.scale(0.2), roughness: 1 });
+  const out: Mesh[] = [];
+  const y = c.y + h.y * V.low, tall = h.y * V.tall, thick = h.z * V.thick;
+  const panel = (name: string, w: number, d: number, x: number, z: number, material: Material) => {
+    const mesh = MeshBuilder.CreateBox(name, { width: w, height: tall, depth: d }, yoke.getScene());
+    mesh.parent = yoke; mesh.material = material; mesh.position.set(c.x + x, y, c.z + z);
+    out.push(mesh);
+  };
+  for (const side of [-1, 1]) {
+    panel("bomberVestFront", h.x * V.frontW, thick, side * h.x * V.frontX, h.z * V.out, vest);
+    panel("bomberVestEdge", h.x * V.edgeW, thick * 1.1, side * h.x * (V.frontX - V.frontW / 2 + V.edgeW / 2), h.z * V.out + thick * 0.15, edge);
+    panel("bomberVestSide", thick, h.z * 2 * V.out, side * h.x * V.sideX, 0, vest);
+  }
+  panel("bomberVestBack", h.x * 2 * V.sideX, thick, 0, -h.z * V.out, vest);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
