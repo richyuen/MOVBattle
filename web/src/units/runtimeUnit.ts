@@ -58,6 +58,8 @@ const FROST = { shards: 4, wide: 0.42, color: new Color3(0.5, 0.82, 1.0), glow: 
 const KNEEL_POSE = { hip: 0.1, knee: 1.55, drop: 0.9, bow: 0.35, arms: 0.25 };
 /** [S] 519 the Cheerleader's cheer (spec at RuntimeUnit.startCheer): s held after a buff, raised-V arm angle, forward tip, pump drop, beats per s, elbow. */
 const CHEER = { hold: 1.4, up: 2.5, fore: 0.35, pump: 1.1, hz: 2.5, elbow: 0.15 };
+/** [S] 519 Lovestruck hearts (spec at RuntimeUnit.applyLove), in head widths: big heart, small hearts and their size, height over the head, circle radius, orbit rad/s. */
+const LOVE_HEARTS = { big: 0.95, small: 2, smallSize: 0.45, over: 0.85, ring: 0.75, orbit: 2.4, pink: new Color3(1, 0.18, 0.6) };
 const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
 const BURN = { tongues: 6, long: 2.6, wide: 0.55, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), glow: 0.9 };
 /*
@@ -1912,6 +1914,7 @@ export class RuntimeUnit {
     this._applyFrostCrust(now);
     this._applyBurnFlames(now);
     this._applyFearSkull(now);
+    this._applyLoveHearts(now);
     this._applyKneelPose(now);
     this._applyFireworkSpin(now);
     this._holdSteadfastUpright();
@@ -2400,6 +2403,63 @@ export class RuntimeUnit {
     b.leftElbow.rotation.set(-C.elbow, 0, 0);
     b.rightElbow.rotation.set(-C.elbow, 0, 0);
   }
+  /*
+   * [S] 519 Lovestruck (card secret.cupid Characteristics: "units who are shot with this arrow will lose interest in attacking their enemies for 10 seconds
+   * and instead draw their attention toward their allies ... they will kiss them relentlessly, draining their hitpoints"). While `_loveUntil` a struck man
+   * wears LOVE_HEARTS over his head (a big unlit pink heart and two small ones circling it, bobbing); SimulationSystem._processUnitDecision walks him to his
+   * nearest friend and drains that friend while he is close.
+   */
+  private _loveUntil = 0;
+  private _loveHearts: TransformNode | null = null;
+  applyLove(seconds: number): void {
+    if (this._isDead || this._isAnchoredActor) return;
+    const now = RuntimeUnit.timeNowSeconds();
+    this._loveUntil = Math.max(this._loveUntil, now + Math.max(0.1, seconds));
+  }
+  isLovestruck(now: number): boolean { return !this._isDead && now < this._loveUntil; }
+  private _applyLoveHearts(now: number): void {
+    if (!this.isLovestruck(now)) {
+      if (this._loveHearts) { this._loveHearts.dispose(false, false); this._loveHearts = null; }
+      return;
+    }
+    const head = this.body.headMesh;
+    if (!head || head.isDisposed()) return;
+    const L = LOVE_HEARTS;
+    if (!this._loveHearts) {
+      const scene = head.getScene();
+      const e = head.getBoundingInfo().boundingBox.extendSize;
+      const w = Math.max(0.12, Math.max(e.x, e.z) * 2);
+      const pink = getMaterialFactory().get("unlit", L.pink, { emissive: L.pink });
+      const root = new TransformNode("loveHearts", scene);
+      const heart = (size: number, name: string): TransformNode => {
+        const node = new TransformNode(name, scene);
+        node.parent = root;
+        for (const side of [-1, 1]) {
+          const lobe = MeshBuilder.CreateIcoSphere("loveHeartLobe", { radius: size * 0.3, subdivisions: 1 }, scene);
+          lobe.parent = node; lobe.material = pink; lobe.isPickable = false; lobe.position.set(side * size * 0.22, size * 0.12, 0); lobe.scaling.z = 0.6;
+        }
+        const point = MeshBuilder.CreateBox("loveHeartPoint", { width: size * 0.5, height: size * 0.5, depth: size * 0.3 }, scene);
+        point.parent = node; point.material = pink; point.isPickable = false; point.position.set(0, -size * 0.1, 0); point.rotation.z = Math.PI / 4;
+        return node;
+      };
+      heart(w * L.big, "loveHeartBig");
+      for (let i = 0; i < L.small; i++) heart(w * L.smallSize, "loveHeartSmall");
+      root.metadata = { w, headTop: e.y };
+      this._loveHearts = root;
+    }
+    const w = this._loveHearts.metadata.w as number;
+    head.computeWorldMatrix(true);
+    const top = head.getAbsolutePosition();
+    this._loveHearts.position.set(top.x, top.y + (this._loveHearts.metadata.headTop as number) * head.absoluteScaling.y + w * L.over + Math.sin(now * 5) * w * 0.1, top.z);
+    const f = this._getFacingVector();
+    this._loveHearts.rotation.y = Math.atan2(f.x, f.z);
+    let i = 0;
+    for (const child of this._loveHearts.getChildren() as TransformNode[]) {
+      if (child.name !== "loveHeartSmall") continue;
+      const a = now * L.orbit + (i++ / L.small) * Math.PI * 2;
+      child.position.set(Math.cos(a) * w * L.ring, Math.sin(a * 1.7) * w * 0.15 - w * 0.1, Math.sin(a) * w * L.ring * 0.4);
+    }
+  }
   get fearFrom(): Vector3 { return this._fearFrom; }
   private _applyFearSkull(now: number): void {
     const on = this.isAfraid(now);
@@ -2486,6 +2546,7 @@ export class RuntimeUnit {
   resetToSpawn(): void {
     this._isDead = false;
     this._drunkUntil = 0;
+    this._loveUntil = 0;
     this._poisonUntil = 0;
     this._gildUntil = 0;
     this._auraUntil = 0;

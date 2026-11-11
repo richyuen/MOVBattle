@@ -192,6 +192,8 @@ const ICE_ARROWS = new Set(["viking.ice_archer"]);
 const FIRE_ARROWS = new Set(["spooky.skeleton_archer"]);
 // [S] 519 Cupid's love arrows (projectileSystem _dressHeartArrow)
 const HEART_ARROWS = new Set(["secret.cupid"]);
+/** [S] 519 a lovestruck man's kiss (card secret.cupid: "kiss them relentlessly, draining their hitpoints"): m to his friend, s between kisses, hp per s. */
+const LOVE_KISS = { reach: 0.9, every: 0.5, drain: 4 };
 const STIFFY_FEAR = { units: new Set(["spooky.skeleton_warrior"]), every: 2, seconds: 3.5, reach: 4 };
 // [S] 475 Pharaoh Kneel: the struck man and enemies within .radius (KNEEL_AURA's ring) kneel .seconds (RuntimeUnit.applyKneel)
 const PHARAOH_KNEEL = { radius: 2.4, seconds: 3 };
@@ -1913,6 +1915,26 @@ export class SimulationSystem {
       return;
     }
 
+    // [S] 519 Lovestruck (RuntimeUnit.applyLove, Cupid's arrow): he does not fight his enemies, he goes to his nearest friend and kisses him (LOVE_KISS)
+    if (unit.isLovestruck(now)) {
+      let friend: RuntimeUnit | null = null, best = Infinity;
+      for (const man of this._units) {
+        if (man === unit || man.isDead || man.team !== unit.team || man.isAnchoredActor) continue;
+        const d = Vector3.Distance(man.position, unit.position);
+        if (d < best) { best = d; friend = man; }
+      }
+      this._clearPathState(unit);
+      if (!friend) { unit.stopMoving(); return; }
+      if (best > LOVE_KISS.reach) { unit.moveTo(friend.position); return; }
+      unit.stopMoving();
+      unit.faceTarget(friend.position);
+      if (now >= (this._kissAt.get(unit) ?? 0)) {
+        this._kissAt.set(unit, now + LOVE_KISS.every);
+        friend.applyDamage(LOVE_KISS.drain * LOVE_KISS.every, Vector3.Zero());
+      }
+      return;
+    }
+
     // Frightened (RuntimeUnit.applyFear, Stiffy Fear): he does not fight, he runs straight away from the man who scared him
     if (unit.isAfraid(now)) {
       const away = unit.position.subtract(unit.fearFrom);
@@ -2506,6 +2528,7 @@ export class SimulationSystem {
   }
 
   private readonly _bearerAuraAt = new WeakMap<RuntimeUnit, number>();
+  private readonly _kissAt = new WeakMap<RuntimeUnit, number>();
 
   /** [S] 460/465 a bearer's ring (haste for the Flag Bearer, stay for the Banner Bearer) holds every ally inside it; it pulses on its own clock, beside his blows. */
   private _pulseBearerAura(bearer: RuntimeUnit, now: number): void {

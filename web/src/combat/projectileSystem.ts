@@ -64,7 +64,7 @@ const HWACHA_ROCKET = {
 };
 /** The Skeleton Archer's burning arrow head (_dressFireArrow): flame tongues, longest (m), across (m), splay off the shaft, colours, glow */
 /** [S] 519 Cupid's love arrow (spec at ProjectileSystem._dressHeartArrow), m. */
-const HEART_ARROW_FLY = { head: 0.2, trail: 4, trailSize: 0.16, shrink: 0.8, gap: 0.24, sway: 0.06, lift: 0.04, pink: new Color3(1, 0.22, 0.62), shaft: new Color3(0.9, 0.78, 0.62) };
+const HEART_ARROW_FLY = { love: 10, head: 0.2, trail: 4, trailSize: 0.16, shrink: 0.8, gap: 0.24, sway: 0.06, lift: 0.04, pink: new Color3(1, 0.22, 0.62), shaft: new Color3(0.9, 0.78, 0.62) };
 const FIRE_ARROW = { burn: 5, tongues: 4, long: 0.38, wide: 0.11, splay: 0.28, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), dark: new Color3(0.1, 0.08, 0.07), glow: 0.9 };
 /** The Pumpkin Catapult's jack-o'-lantern ("pumpkin" case): diameter (m), height of the width, ribbed lobes, skin, stem, carved-face glow */
 /**
@@ -93,6 +93,8 @@ interface ActiveProjectile {
   balloons?: string;
   /** A Fire Arrow: the man it strikes is set alight (RuntimeUnit.applyBurn). */
   fireArrow?: boolean;
+  /** [S] 519 A love arrow: the man it strikes goes lovestruck (RuntimeUnit.applyLove). */
+  heartArrow?: boolean;
   origin: Vector3;
   target: RuntimeUnit;
   targetPos: Vector3;       // snapshot in case target dies mid-flight
@@ -574,7 +576,7 @@ export class ProjectileSystem {
       speed, damage, knockback, splashRadius, attackerTeam,
       elapsed: -delay, flightTime, arcHeight, allUnits, shape,
       targetLift: options.targetLift ?? 0.5,
-      balloons: options.balloons, fireArrow: options.fireArrow && shape === "arrow", drunk: options.drunk, snake: options.snake && shape === "arrow" && !held,
+      balloons: options.balloons, fireArrow: options.fireArrow && shape === "arrow", heartArrow: options.heartArrow && shape === "arrow" && !held, drunk: options.drunk, snake: options.snake && shape === "arrow" && !held,
       trailSystem, trailStarted,
       half: held?.half, bounces: options.bounces, bounced: options.bounced, suck: options.suck,
       rope: options.tether ? this._buildRope() : undefined,
@@ -1135,6 +1137,11 @@ export class ProjectileSystem {
         if (p.fireArrow && !p.target.isDead) {
           p.target.applyBurn(FIRE_ARROW.burn);
           this.abilityHook?.("spooky.skeleton_archer", "status:fire", p.target.position); // the only Fire Arrow shooter (SimulationSystem FIRE_ARROWS)
+        }
+        // [S] 519 a love arrow leaves the man it strikes lovestruck (RuntimeUnit.applyLove; SimulationSystem walks him to his friends)
+        if (p.heartArrow && !p.target.isDead) {
+          p.target.applyLove(HEART_ARROW_FLY.love);
+          this.abilityHook?.("secret.cupid", "status:love", p.target.position); // the only love-arrow shooter (SimulationSystem HEART_ARROWS)
         }
         if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
         if (p.shape === "spirit_fire") this._knockUpFromSpiritFire(p, p.target);
