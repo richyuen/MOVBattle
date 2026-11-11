@@ -1153,7 +1153,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "mounted", materialPreset: "secret_beast",
       });
     case "secret_cheerleader":
-      return vis({ scale: 0.95, bulk: 0.88 }, "pom_pom", "bandana", "none", "none", "#f0d66a", "pom_pom", {
+      // [S] 518 (a.5) no bandana: her own short team hair (secretDress cheerleaderHair)
+      return vis({ scale: 0.95, bulk: 0.88 }, "pom_pom", "none", "none", "none", "#f0d66a", "pom_pom", {
         posePreset: "support", materialPreset: "secret_festive", attachmentPreset: "cheerleader",
         stateVariants: { moving: ["pom_streamers"], attacking: ["pom_streamers"], "ability-active": ["pom_streamers"] },
       });

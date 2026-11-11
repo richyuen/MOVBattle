@@ -2359,3 +2359,30 @@ export function taekwondoHair(scene: Scene, body: ArticulatedBody, team: Color3)
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 518 the Cheerleader's short hair (secret.cheerleader.blue.png: a short team-colour hair cap, a shade deeper than the skin, close over the crown
+ * and down to the ears and nape, its front edge a short fringe just over the bead eyes; audit 515 a.5 "a grey cap"). Spec in head widths W, heights
+ * H, depths D (head box, centre c; e the eyes' top): a half ellipsoid .capW W x .capH H x .capD D on a base .capLo H over e, set .capBack D back;
+ * a back fall box .backW W wide from the cap's foot down to .backLo H under e at the nape; a fringe slab .fringeW W wide .fringeH H tall across the
+ * forehead over the eyes, tilted .tilt rad out. Own team cloth x .shade self-lit .12 (LESSONS 449), out of the glow. The bandana off (unitVisuals).
+ */
+const CHEER_HAIR = { capW: 1.14, capH: 0.56, capD: 1.14, capLo: 0.02, capBack: 0.04, backW: 1.02, backLo: -0.36, fringeW: 0.9, fringeH: 0.16, tilt: 0.25, shade: 0.72 };
+export function cheerleaderHair(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = CHEER_HAIR, glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const tint = team.scale(C.shade), hair = getMaterialFactory().get("cloth", tint, { emissive: tint.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const base = e + H * C.capLo;
+  const cap = MeshBuilder.CreateSphere("cheerHair", { diameter: 1, segments: 5, slice: 0.5 }, scene);
+  cap.parent = head; cap.material = hair; cap.position.set(c.x, base, c.z - D * C.capBack); cap.scaling.set(W * C.capW, H * C.capH * 2, D * C.capD); out.push(cap);
+  const low = e + H * C.backLo;
+  const back = MeshBuilder.CreateBox("cheerHairBack", { width: W * C.backW, height: base - low + H * 0.05, depth: D * 0.4 }, scene);
+  back.parent = head; back.material = hair; back.position.set(c.x, (base + low) / 2, c.z - D * 0.36); out.push(back);
+  const fringe = MeshBuilder.CreateBox("cheerHairFringe", { width: W * C.fringeW, height: H * C.fringeH, depth: D * 0.12 }, scene);
+  fringe.parent = head; fringe.material = hair; fringe.position.set(c.x, base + H * C.fringeH * 0.4, c.z + D * 0.52); fringe.rotation.x = -C.tilt; out.push(fringe);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
