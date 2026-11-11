@@ -10,6 +10,8 @@ import { RAPTOR_MOUTH } from "./raptorBody";
  * spinUp and lost at spinDown per second, and keeps turning through the wait for the next volley and DRUM_SPIN.linger s past it.
  */
 const DRUM_SPIN = { rate: 3.5, spinUp: 12, spinDown: 1.5, linger: 1.0 };
+/** [S] 518 the Mace Spinner's whirl (_applyMaceWhirl): arms out .out rad, body turning .rate rad/s. */
+const MACE_WHIRL = { out: 1.45, rate: 12 };
 /*
  * [S] catapult throw (351; medieval.catapult.jpg). On a shot the arm (CATAPULT_ARM in vehicleBuilder) whips from cocked to upright in CATAPULT_THROW.swing s,
  * easing out, stands there .hold s, then is hauled back down to cocked over .lower of the time left before the next shot. The shot in the bucket is
@@ -1903,6 +1905,7 @@ export class RuntimeUnit {
     }
 
     this._applyPoseOverlay(isAttacking);
+    this._applyMaceWhirl(isAttacking, now);
     this._holdTeacherParry(now);
     this._updateRaptorBite(now);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
@@ -2000,6 +2003,30 @@ export class RuntimeUnit {
     this.body.rightShoulder.rotation.set(-0.9, -0.32, -0.23);
     this.body.rightElbow.rotation.x = -1.42;
     this.body.rightHand.rotation.set(0.3, 0.45, 0.55);
+  }
+
+  /**
+   * [S] 518 the Mace Spinner's whirl (card Characteristics: "instead of swinging the maces normally, they attack by spinning their whole body and
+   * extending their arms, turning themselves into a blender"; audit 515 c.1 "an overhead chop"). While he attacks or runs spinning (spin_move),
+   * both arms are held straight out level at his sides (MACE_WHIRL.out rad from the hang, elbows straight, no forward swing: the animator's chop
+   * is overwritten) and the whole body from the hip turns about the vertical at MACE_WHIRL.rate rad/s off the sim clock; when he stops, the hip
+   * comes back to his heading.
+   */
+  private _maceWhirling = false;
+  private _applyMaceWhirl(isAttacking: boolean, now: number): void {
+    if (this.visualConfig.posePreset !== "spinner") return;
+    const body = this.body;
+    const on = (isAttacking || this._spinning) && !this._isDead;
+    if (!on) {
+      if (this._maceWhirling) { body.hip.rotation.y = 0; this._maceWhirling = false; }
+      return;
+    }
+    this._maceWhirling = true;
+    body.leftShoulder.rotation.set(0, 0, -MACE_WHIRL.out);
+    body.rightShoulder.rotation.set(0, 0, MACE_WHIRL.out);
+    body.leftElbow.rotation.set(0, 0, 0);
+    body.rightElbow.rotation.set(0, 0, 0);
+    body.hip.rotation.y = (now * MACE_WHIRL.rate) % (Math.PI * 2);
   }
 
   private _applyPoseOverlay(isAttacking: boolean): void {
