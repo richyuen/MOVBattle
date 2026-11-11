@@ -10,6 +10,18 @@ export function dressRaptorBody(scene: Scene, body: ArticulatedBody, team: Color
   const dark = mf.get("cloth", skinColor.scale(0.55));
   const feathers = mf.get("cloth", team.scale(0.65));
   const eye = mf.get("unlit", new Color3(0.92, 0.86, 0.72), { emissive: new Color3(0.92, 0.86, 0.72) });
+  const claw = (parent: TransformNode, x: number, y: number, z: number, length: number, splay: number) => {
+    const mesh = MeshBuilder.CreateCylinder("raptorClaw", {
+      height: scale * length, diameterTop: 0, diameterBottom: scale * length * 0.67, tessellation: 3,
+    }, scene);
+    mesh.parent = parent;
+    mesh.position.set(x * scale, y * scale, z * scale);
+    mesh.rotation.x = Math.PI * 0.58;
+    mesh.rotation.y = splay;
+    mesh.material = eye;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+    out.push(mesh);
+  };
   const out: Mesh[] = [];
   const scale = body.metrics.overallHeight / 2;
   const shape = (name: string, parent: TransformNode, at: Vector3, size: Vector3, material = skin, pitch = 0) => {
@@ -40,12 +52,14 @@ export function dressRaptorBody(scene: Scene, body: ArticulatedBody, team: Color
     shape("raptorPupil", skull, v(side * 0.259, 0.09, 0.12), v(0.029, 0.05, 0.05), dark);
     shape("raptorCrest", skull, v(side * 0.14, 0.17, -0.11), v(0.075, 0.10, 0.22), feathers, -0.37);
     shape("raptorForeleg", torso, v(side * 0.18, 0.03, 0.47), v(0.065, 0.18, 0.07), dark, -0.48);
+    claw(torso, side * 0.18, -0.106, 0.585, 0.095, side * 0.18);
   }
   for (const [hip, knee] of [[body.leftHip, body.leftKnee], [body.rightHip, body.rightKnee]]) {
     const shin = body.leftLowerLeg.getBoundingInfo().boundingBox;
     shape("raptorThigh", hip, v(0, knee.position.y * 0.32 / scale, 0.04), v(0.16, 0.28, 0.19));
     shape("raptorShin", knee, shin.center.scale(1 / scale), v(0.09, shin.extendSize.y / scale, 0.10), dark);
     shape("raptorFoot", knee, v(0, shin.minimum.y / scale, 0.095), v(0.11, 0.068, 0.19), dark);
+    for (const toe of [-1, 1]) claw(knee, toe * 0.05, shin.minimum.y / scale - 0.01, 0.266, 0.123, toe * 0.19);
   }
   for (let i = 0; i < 5; i++) {
     const radius = 0.19 - i * 0.03;
