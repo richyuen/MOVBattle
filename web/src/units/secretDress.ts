@@ -38,6 +38,48 @@ export function fanBearerSash(scene: Scene, body: ArticulatedBody, team: Color3)
   return out;
 }
 
+/** A node's world origin read into `frame`'s local space. */
+function originIn(node: TransformNode, frame: TransformNode): Vector3 {
+  for (let n: TransformNode | null = node; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+  for (let n: TransformNode | null = frame; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+  return Vector3.TransformCoordinates(node.getAbsolutePosition(), Matrix.Invert(frame.getWorldMatrix()));
+}
+
+/**
+ * [S] 513 the Fan Bearer's layered skirt (secret.fan_bearer.red.png: a dark team wrap skirt from the waist to mid-thigh in three overlapping
+ * pieces of falling shade, a lighter under-layer showing below and between two darker front flaps cut on a slant, bare team-skin legs under it;
+ * audit 500 a.3 "dark-blue shorts"). Spec in the pelvis frame (its box centre c, half size h; front +z), thigh length read off the knee: an 8-sided
+ * under-skirt .r h.x round at the waist flaring .flare to its hem .long of the way from the pelvis top to the knee, .deep h.z/h.x deep; two front
+ * flaps .flapW h.x wide over it, .flapOut proud, the left reaching .left of the under-skirt's length and the right .right, each slanted .slant rad.
+ * Shades team x .under / .left / .right. The thighs in skin. Own team cloth (LESSONS 449), out of the glow. No generic tunic skirt (unitFactory).
+ */
+const FAN_SKIRT = { r: 1.18, flare: 1.3, long: 0.62, deep: 1.25, flapW: 1.15, flapOut: 0.06, left: 0.96, right: 0.82, slant: 0.18, under: 0.7, leftShade: 0.42, rightShade: 0.55 };
+export function fanBearerSkirt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const F = FAN_SKIRT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (!pelvis) return [];
+  const { center: c, extendSize: h, maximum: hi } = pelvis.getBoundingInfo().boundingBox;
+  const cloth = (k: number) => { const col = team.scale(k); return mf.get("cloth", col, { emissive: col.scale(0.4), roughness: 1 }); };
+  const kneeY = (originIn(body.leftKnee, pelvis).y + originIn(body.rightKnee, pelvis).y) / 2;
+  const top = hi.y, hem = top + (kneeY - top) * F.long, long = top - hem;
+  const out: Mesh[] = [];
+  const under = MeshBuilder.CreateCylinder("fanBearerSkirt", { height: long, diameterTop: h.x * 2 * F.r, diameterBottom: h.x * 2 * F.r * F.flare, tessellation: 8 }, scene);
+  under.parent = pelvis; under.position.set(c.x, top - long / 2, c.z); under.scaling.z = (h.z * F.deep) / (h.x * F.r); under.rotation.y = Math.PI / 8;
+  under.material = cloth(F.under); out.push(under);
+  // the flaps lean out with the under-skirt's flare, standing .flapOut off it
+  const zTop = h.z * F.deep, flareOut = zTop * (F.flare - 1), lean = Math.atan2(flareOut, long);
+  for (const [side, reach, shade] of [[1, F.left, F.leftShade], [-1, F.right, F.rightShade]] as const) {
+    const flapLong = long * reach, k = reach / 2;
+    const flap = MeshBuilder.CreateBox("fanBearerSkirtFlap", { width: h.x * F.flapW, height: flapLong, depth: h.z * 0.14 }, scene);
+    flap.parent = pelvis;
+    flap.position.set(c.x + side * h.x * 0.38, top - flapLong / 2, c.z + zTop + flareOut * k + h.z * F.flapOut + (side > 0 ? 0 : h.z * 0.1));
+    flap.rotation.set(-lean, 0, side * F.slant); flap.material = cloth(shade); out.push(flap); // hem out (+z)
+  }
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) thigh.material = body.skinMaterial;
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 /** A chain of 6-sided tapered segments through `pts` (in `parent`'s frame), `root` across at the first point to a point at the last. */
 function taper(scene: Scene, name: string, pts: Vector3[], root: number, tip: number, parent: TransformNode, material: Material, out: Mesh[]): void {
   const n = pts.length - 1, up = new Vector3(0, 1, 0);
