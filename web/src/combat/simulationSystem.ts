@@ -1301,7 +1301,10 @@ export class SimulationSystem {
       v.attacker.faceTarget(v.target.position);
       const rail = handLaunchPoint(v.attacker) ?? v.attacker.getAttackOrigin().position;
       const shape = resolveProjectileShape(v.attacker, getAttackProfile(v.attacker.definition.attackProfileId)) ?? "arrow";
-      this.projectileSystem?.spawnProjectile(shape, rail, v.target, v.damage, v.knockback, v.splash, v.attacker.team, this._units, undefined, 0, { originLift: 0 });
+      // [S] 516 (c.1 "bolt train crosses the air above the visible weapon"): each bolt runs flat off the rail (no arc) to the man's chest, the
+      // line the laid crossbow points along (card: projectile speed 30, a 20 m bow)
+      const chestLift = Math.max(0.3, this._chestOf(v.target).y - v.target.position.y);
+      this.projectileSystem?.spawnProjectile(shape, rail, v.target, v.damage, v.knockback, v.splash, v.attacker.team, this._units, undefined, 0, { originLift: 0, targetLift: chestLift, arc: 0 });
     }
   }
 
