@@ -2261,3 +2261,37 @@ export function cupidDiaper(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 517 the Cheerleader's striped knee socks (secret.cheerleader.red.png: cream socks from just under the knee down to the shoes, with narrow
+ * team-colour stripes running down them, about three showing on each side; audit 515 a.3 "plain legs"). Spec on each shin (limbBox: its length
+ * and half-width in the knee's frame, 0 the shin's top, 1 its foot): an 8-sided cream shell from .from to .to of the way down, .out of the
+ * half-width round (x deep/wide for depth), a turned-over cuff band .cuff of the length tall .cuffOut round at its top; .stripes vertical team
+ * stripes evenly round it, each .stripeW of the shell's radius wide and .stripeT thick, standing on the shell's surface. Cream unlit (LESSONS
+ * 442); stripes in their own team cloth x .shade self-lit .12 (LESSONS 449); out of the glow.
+ */
+const CHEER_SOCK = { from: 0.08, to: 1.0, out: 1.28, cuff: 0.1, cuffOut: 1.08, stripes: 8, stripeW: 0.34, stripeT: 0.1, shade: 0.85, cream: new Color3(0.82, 0.76, 0.64) };
+export function cheerleaderSocks(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = CHEER_SOCK, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cream = mf.get("unlit", C.cream, { emissive: C.cream });
+  const stripeC = team.scale(C.shade), stripe = mf.get("cloth", stripeC, { emissive: stripeC.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const L = limbBox(shin), top = L.mid + L.half, r = Math.max(L.wide, L.deep) * C.out, sz = L.deep / Math.max(L.wide, L.deep);
+    const yTop = top - C.from * L.half * 2, yBot = top - C.to * L.half * 2, h = yTop - yBot, yMid = (yTop + yBot) / 2;
+    const sock = MeshBuilder.CreateCylinder("cheerSock", { height: h, diameter: r * 2, tessellation: 8 }, scene);
+    sock.parent = shin.parent; sock.position.set(0, yMid, 0); sock.scaling.z = sz; sock.rotation.y = Math.PI / 8; sock.material = cream; out.push(sock);
+    const cuffH = L.half * 2 * C.cuff;
+    const cuff = MeshBuilder.CreateCylinder("cheerSockCuff", { height: cuffH, diameter: r * 2 * C.cuffOut, tessellation: 8 }, scene);
+    cuff.parent = shin.parent; cuff.position.set(0, yTop - cuffH / 2, 0); cuff.scaling.z = sz; cuff.rotation.y = Math.PI / 8; cuff.material = cream; out.push(cuff);
+    for (let k = 0; k < C.stripes; k++) {
+      const a = (k / C.stripes) * Math.PI * 2;
+      const bar = MeshBuilder.CreateBox("cheerSockStripe", { width: r * C.stripeW, height: h - cuffH, depth: r * C.stripeT }, scene);
+      bar.parent = shin.parent; bar.rotation.y = a;
+      bar.position.set(Math.sin(a) * r * 0.97, yBot + (h - cuffH) / 2, Math.cos(a) * r * 0.97 * sz);
+      bar.material = stripe; out.push(bar);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
