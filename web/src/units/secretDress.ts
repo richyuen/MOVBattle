@@ -652,6 +652,32 @@ export function chuKoNuHarness(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/** A dark waist strap with an open square buckle and a loose end across the robe. */
+export function chuKoNuBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const torso = body.torsoMesh;
+  const { center: c, extendSize: s } = torso.getBoundingInfo().boundingBox;
+  const mf = getMaterialFactory();
+  const leather = mf.get("cloth", new Color3(0.12, 0.065, 0.045));
+  const gold = mf.get("cloth", new Color3(0.7, 0.35, 0.09), { emissive: new Color3(0.084, 0.042, 0.011) });
+  const out: Mesh[] = [];
+  const box = (name: string, x: number, y: number, z: number, w: number, h: number, d: number, material: Material) => {
+    const mesh = MeshBuilder.CreateBox(name, { width: s.x * w, height: s.y * h, depth: s.z * d }, scene);
+    mesh.parent = torso; mesh.position.set(c.x + s.x * x, c.y + s.y * y, c.z + s.z * z);
+    mesh.material = material; out.push(mesh); return mesh;
+  };
+  box("chuKoNuBeltFront", 0, -0.93, 1.19, 2.15, 0.23, 0.19, leather);
+  box("chuKoNuBeltBack", 0, -0.93, -1.16, 2.15, 0.23, 0.16, leather);
+  for (const side of [-1, 1]) box("chuKoNuBeltSide", side * 1.04, -0.93, 0, 0.16, 0.23, 2.4, leather);
+  for (const side of [-1, 1]) {
+    box("chuKoNuBuckleSide", side * 0.20, -0.93, 1.36, 0.055, 0.30, 0.10, gold);
+    box("chuKoNuBuckleBar", 0, -0.93 + side * 0.145, 1.36, 0.43, 0.055, 0.10, gold);
+  }
+  box("chuKoNuBuckleTongue", 0, -0.93, 1.42, 0.29, 0.035, 0.06, gold);
+  const end = box("chuKoNuLooseBelt", 0.62, -1.39, 1.48, 0.24, 1.0, 0.13, leather);
+  end.rotation.z = 0.32;
+  return out;
+}
+
 export function teacherJabot(scene: Scene, body: ArticulatedBody): Mesh[] {
   const torso = body.torsoMesh;
   const { center, extendSize: size } = torso.getBoundingInfo().boundingBox;
