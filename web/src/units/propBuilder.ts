@@ -8554,6 +8554,45 @@ function buildRaptorMount(scene: Scene, body: ArticulatedBody): Mesh {
   for (const m of [trunk, ...parts]) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return trunk;
 }
+/**
+ * [S] 518 the Bank Robbers' safe, carried overhead (secret.bank_robbers.red.png, .png: a huge team-coloured vault box, wider than the two men side by
+ * side, held up over their hats; gold trim round the door's edge, a gold dial and handle on the door, two gold hinges down its side, a dark band at
+ * its foot and four little corner feet; card "a duo of outlaws carrying an enormous safe"; audit 515 a.1 "none"). Built on the hidden safe actor's
+ * hip (at the lead robber, the flank robber .pairX m to his side, linkedActorPresets): spec in Hh, the body's standing height (metrics.overallHeight,
+ * ground at -hip.y): a box .wide Hh x .tall Hh x .deep Hh centred .pairX/2 to the flank side, its foot .over Hh over the head top (the safe actor is built at .95 scale to the lead's 1.08: .14 of that clears his head); door trim
+ * .trim Hh wide on the front face's four edges; a dial .dial Hh across with a knob, a bar handle, two hinge blocks on the flank-side edge; a dark
+ * plinth band .plinth of the height at the foot, four corner feet. Team cloth self-lit .12 (LESSONS 449), gold lit cloth, out of the glow.
+ */
+const OVERHEAD_SAFE = { pairX: -0.46, wide: 0.6, tall: 0.42, deep: 0.38, over: 0.26, trim: 0.035, dial: 0.11, plinth: 0.1,
+  gold: new Color3(0.78, 0.55, 0.14), dark: new Color3(0.12, 0.1, 0.1) };
+function buildOverheadSafe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh {
+  const S = OVERHEAD_SAFE, Hh = body.metrics.overallHeight, hipY = body.hip.position.y;
+  const glow = scene.getGlowLayerByName("glow");
+  const steel = mat(scene, team, 0.12, "cloth"), gold = mat(scene, S.gold, 0.15, "cloth"), dark = mat(scene, S.dark, 0.3, "cloth");
+  const W = Hh * S.wide, T = Hh * S.tall, D = Hh * S.deep;
+  const safe = MeshBuilder.CreateBox("safe", { width: W, height: T, depth: D }, scene);
+  safe.parent = body.hip; safe.material = steel;
+  safe.position.set(S.pairX / 2, body.metrics.headTopY - hipY + Hh * S.over + T / 2, 0);
+  const parts: Mesh[] = [safe];
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, material: typeof steel): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.parent = safe; m.material = material; m.position.set(x, y, z); parts.push(m); return m;
+  };
+  const t = Hh * S.trim, fz = D / 2 + t * 0.3;
+  box("safeTrim", W, t, t, 0, T / 2 - t / 2, fz, gold);
+  box("safeTrim", W, t, t, 0, -T / 2 + t / 2 + T * S.plinth, fz, gold);
+  box("safeTrim", t, T * (1 - S.plinth), t, -W / 2 + t / 2, T * S.plinth / 2, fz, gold);
+  box("safeTrim", t, T * (1 - S.plinth), t, W / 2 - t / 2, T * S.plinth / 2, fz, gold);
+  box("safePlinth", W * 1.03, T * S.plinth, D * 1.03, 0, -T / 2 + (T * S.plinth) / 2, 0, dark);
+  const dial = MeshBuilder.CreateCylinder("safeDial", { height: t, diameter: Hh * S.dial, tessellation: 10 }, scene);
+  dial.parent = safe; dial.material = gold; dial.rotation.x = Math.PI / 2; dial.position.set(-W * 0.12, T * 0.08, fz + t * 0.3); parts.push(dial);
+  box("safeDialKnob", Hh * S.dial * 0.25, Hh * S.dial * 0.25, t * 1.6, -W * 0.12, T * 0.08, fz + t, dark);
+  box("safeHandle", W * 0.2, t * 0.9, t * 1.4, W * 0.2, T * 0.08, fz + t * 0.5, gold);
+  for (const y of [0.28, -0.12]) box("safeHinge", t * 1.6, T * 0.16, t * 1.6, -Math.sign(S.pairX) * (W / 2 + t * 0.2), T * y, D / 2 - t, gold);
+  for (const x of [-1, 1]) for (const z of [-1, 1]) box("safeFoot", W * 0.1, T * 0.08, D * 0.12, x * W * 0.42, -T / 2 - T * 0.04, z * D * 0.38, dark);
+  for (const m of parts) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return safe;
+}
 function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: HorseStyle = "barded", s = 1): Mesh {
   const pinto = style === "pinto";
   const H = body.hip.position.y;
@@ -9117,22 +9156,8 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       pearl.material = mat(scene, new Color3(0.95, 0.98, 1), 0.15);
       return shell;
     }
-    case "safe_bundle": {
-      const safe = MeshBuilder.CreateBox("safe", { width: 0.32 * s, height: 0.26 * s, depth: 0.22 * s }, scene);
-      safe.position.set(0, -0.1 * s, -0.15 * s);
-      safe.parent = body.hip;
-      safe.material = mat(scene, new Color3(0.3, 0.32, 0.35));
-      const dial = MeshBuilder.CreateCylinder("dial", { height: 0.03 * s, diameter: 0.08 * s, tessellation: 12 }, scene);
-      dial.position.set(0, 0, 0.12 * s);
-      dial.rotation.x = Math.PI / 2;
-      dial.parent = safe;
-      dial.material = mat(scene, new Color3(0.85, 0.75, 0.35));
-      const handle = MeshBuilder.CreateBox("safeHandle", { width: 0.08 * s, height: 0.02 * s, depth: 0.02 * s }, scene);
-      handle.position.set(0.08 * s, 0, 0.12 * s);
-      handle.parent = safe;
-      handle.material = mat(scene, new Color3(0.82, 0.72, 0.3));
-      return safe;
-    }
+    case "safe_bundle":
+      return buildOverheadSafe(scene, body, teamColor ?? accent);
     case "dragon_cart": {
       const cart = MeshBuilder.CreateBox("dragonCart", { width: 0.4 * s, height: 0.2 * s, depth: 0.55 * s }, scene);
       cart.position.set(0, -0.18 * s, -0.08 * s);
