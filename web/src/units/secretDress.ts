@@ -974,6 +974,45 @@ export function jesterShorts(scene: Scene, body: ArticulatedBody, team: Color3):
 }
 
 /**
+ * [S] 512 the Jester's belt (secret.jester.red.png: a dark brown leather belt round the tunic's waist, just over the skirt's flare, with a square
+ * dark buckle framed in a pale edge at the front; audit 500 a.3 "none"). Spec in the torso mesh's box (centre c, half size s; front +z): an
+ * eight-sided band .h s.y tall at .y s.y under c (the waist, above the tunic skirt's top), .out times the yoke's half width round and .deep of
+ * that front to back; at the front a buckle plate .bW s.x wide, .bH s.y tall, .bOut proud of the band, in pale steel with a dark centre bar
+ * (the TABS "E"). Lit leather of its own, the steel a little self-lit, out of the glow.
+ */
+const JESTER_BELT = {
+  y: -0.5, h: 0.22, out: 1.1, deep: 0.62, bW: 0.46, bH: 0.34, bOut: 0.05,
+  leather: new Color3(0.3, 0.2, 0.12), steel: new Color3(0.8, 0.78, 0.72), dark: new Color3(0.05, 0.05, 0.07),
+};
+export function jesterBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = JESTER_BELT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const torso = body.torsoMesh;
+  const { center: c, extendSize: s } = torso.getBoundingInfo().boundingBox;
+  const yoke = body.allMeshes.find(mesh => mesh.name.endsWith("_yoke"));
+  const half = Math.max(s.x, yoke ? yoke.getBoundingInfo().boundingBox.extendSize.x : 0) * B.out;
+  const leather = mf.get("cloth", B.leather, { emissive: B.leather.scale(0.12), roughness: 1 });
+  const steel = mf.get("cloth", B.steel, { emissive: B.steel.scale(0.25) });
+  const dark = mf.get("cloth", B.dark, { roughness: 1 });
+  const out: Mesh[] = [];
+  const y = c.y + s.y * B.y;
+  const band = MeshBuilder.CreateCylinder("jesterBelt", { height: s.y * B.h, diameter: half * 2, tessellation: 8 }, scene);
+  band.parent = torso; band.position.set(c.x, y, c.z);
+  band.rotation.y = Math.PI / 8; band.scaling.z = B.deep;
+  band.material = leather; out.push(band);
+  const front = c.z + half * B.deep * Math.cos(Math.PI / 8) + s.x * B.bOut;
+  const plate = (name: string, x: number, yy: number, w: number, h: number, material: Material, z: number) => {
+    const mesh = MeshBuilder.CreateBox(name, { width: s.x * w, height: s.y * h, depth: s.x * 0.06 }, scene);
+    mesh.parent = torso; mesh.position.set(c.x + s.x * x, y + s.y * yy, front + z);
+    mesh.material = material; out.push(mesh);
+  };
+  plate("jesterBuckle", 0, 0, B.bW, B.bH, steel, 0);
+  plate("jesterBuckleBar", 0.02, 0, B.bW * 0.6, B.bH * 0.22, dark, s.x * 0.035);
+  plate("jesterBuckleBar", -B.bW * 0.28, 0, B.bW * 0.16, B.bH * 0.7, dark, s.x * 0.035);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 511 the Ballooner's slashed doublet (secret.ballooner.red.png: a team doublet with a cream V insert from the collar's points to the belly,
  * big puffed team shoulders over the upper arms slashed with cream, and a dark belt with a buckle at the waist; audit 500 a.3 "a plain pale-blue
  * tunic block"). Spec in torso widths TW, heights TH, depths TD (the torso mesh's box, its top the collar): the trunk, yoke and pads in team cloth;

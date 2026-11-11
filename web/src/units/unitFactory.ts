@@ -32,7 +32,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerSash, jesterToeKnives, jesterShorts, balloonerDoublet } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerSash, jesterToeKnives, jesterShorts, jesterBelt, balloonerDoublet } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1084,6 +1084,7 @@ export class UnitFactory {
       propMeshes.push(...jesterCap(this._scene, body, teamColor));
       propMeshes.push(...jesterToeKnives(this._scene, body));
       propMeshes.push(...jesterShorts(this._scene, body, teamColor));
+      propMeshes.push(...jesterBelt(this._scene, body));
     }
     if (definition.id === "secret.ball_n_chain" && !shouldUseVehicleBody) {
       // [S] 501 (b.1): a huge faceted grey stone ball hugged at the chest, a thick chain hanging from it, in place of the flail (secretDress ballStone)
