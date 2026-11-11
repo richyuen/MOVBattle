@@ -2075,6 +2075,63 @@ const ELF_CAP = {
   // [S] 517b the green brighter (.02,.2,.08 read near-black in the look), the pompom a brighter orange-brown
   green: new Color3(0.04, 0.42, 0.17), fur: new Color3(0.82, 0.76, 0.6), pomC: new Color3(0.85, 0.28, 0.06),
 };
+/*
+ * [S] 519 the Present Elf's present (secret.present_elf.red.png, .blue.png: a team-coloured gift box as wide as one and a half trunks and as tall as the
+ * trunk and hips, held up before the chest so its lid sits under the chin; a deeper team ribbon band with a gold stripe down each edge runs over the
+ * front and across the lid both ways; on the lid a big ribbon bow, two loops flaring up and out, a knot, two long tails, and two gold bells at the knot).
+ * PRESENT, in torso-box units (W wide, H tall, D deep, read off the torso mesh): box .w x .h x .d, its top .top of the trunk's half above the trunk's
+ * middle, its back .gap in front of the chest; lid .lid proud, .lidH tall; band .band of W, stripes .stripe of W; loops .loop W long, raised .loopUp;
+ * tails .tail W; bells .bell W. Box team (saturated, self-lit .12, FAN_DRESS rule), band team x .band2, gold unlit, all out of the glow. Torso-rooted
+ * so it is held before the chest in every pose; the hand prop is off (unitVisuals weapon none).
+ */
+const PRESENT = { w: 1.55, h: 1.25, d: 1.5, top: 0.95, gap: 0.15, lid: 1.07, lidH: 0.14, band: 0.2, stripe: 0.04, band2: 0.55, loop: 0.38, loopUp: 0.6, tail: 0.55, bell: 0.13, gold: new Color3(0.62, 0.26, 0.03) };
+export function presentElfPresent(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const P = PRESENT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const T = limbBox(body.torsoMesh);
+  const W = T.wide * 2 * P.w, H = T.half * 2 * P.h, D = T.deep * 2 * P.d;
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const deep = sat.scale(peak / Math.max(sat.r, sat.g, sat.b, 1e-3));
+  const boxCol = deep.scale(0.85), bandCol = deep.scale(P.band2);
+  const boxMat = mf.get("cloth", boxCol, { emissive: boxCol.scale(0.12), roughness: 1 });
+  const bandMat = mf.get("cloth", bandCol, { emissive: bandCol.scale(0.12), roughness: 1 });
+  const gold = mf.get("unlit", P.gold, { emissive: P.gold });
+  const out: Mesh[] = [];
+  const root = new TransformNode("presentRoot", scene);
+  root.parent = body.torso;
+  const top = T.mid + T.half * P.top, cy = top - H / 2, cz = T.deep + P.gap * T.deep + D / 2;
+  root.position.set(0, cy, cz);
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, m: Material, parent: TransformNode = root): Mesh => {
+    const b = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    b.parent = parent; b.position.set(x, y, z); b.material = m; out.push(b); glow?.addExcludedMesh(b);
+    return b;
+  };
+  box("presentBox", W, H, D, 0, 0, 0, boxMat);
+  const lidY = H / 2 - H * P.lidH / 2;
+  box("presentLid", W * P.lid, H * P.lidH, D * P.lid, 0, lidY, 0, boxMat);
+  const bw = W * P.band, sw = W * P.stripe, eps = 0.006;
+  // the band down the front and over the lid both ways, gold stripes at its edges
+  box("presentBand", bw, H * 1.01, D * P.lid + eps * 2, 0, 0, 0, bandMat);
+  box("presentBandX", W * P.lid + eps * 2, H * P.lidH + eps, bw, 0, lidY, 0, bandMat);
+  for (const side of [-1, 1]) {
+    box("presentStripe", sw, H * 1.02, D * P.lid + eps * 4, side * (bw / 2 - sw / 2), 0, 0, gold);
+    box("presentStripeX", W * P.lid + eps * 4, H * P.lidH + eps * 2, sw, 0, lidY, side * (bw / 2 - sw / 2), gold);
+  }
+  // the bow on the lid: a knot, two loops flaring up and out, two long tails fanned back, two gold bells at the knot's front
+  const bow = new TransformNode("presentBow", scene);
+  bow.parent = root; bow.position.set(0, H / 2 + W * 0.06, 0);
+  box("presentKnot", W * 0.16, W * 0.13, W * 0.16, 0, 0, 0, bandMat, bow);
+  for (const side of [-1, 1]) {
+    const loop = box("presentLoop", W * P.loop, W * 0.16, W * 0.12, side * W * P.loop * 0.45, W * 0.06, 0, bandMat, bow);
+    loop.rotation.z = side * P.loopUp;
+    box("presentLoopStripe", W * P.loop * 0.98, W * 0.03, W * 0.125, 0, 0, 0, gold, loop);
+    const tail = box("presentTail", W * 0.08, W * 0.012, W * P.tail, side * W * 0.12, -W * 0.03, -W * P.tail * 0.45, bandMat, bow);
+    tail.rotation.y = side * 0.35; tail.rotation.x = -0.25;
+    const bell = MeshBuilder.CreateCylinder("presentBell", { height: W * P.bell, diameterTop: W * P.bell * 0.45, diameterBottom: W * P.bell * 1.1, tessellation: 7 }, scene);
+    bell.parent = bow; bell.material = gold; bell.position.set(side * W * 0.07, -W * 0.01, W * 0.11); bell.rotation.x = 0.5; bell.convertToFlatShadedMesh();
+    out.push(bell); glow?.addExcludedMesh(bell);
+  }
+  return out;
+}
 const ELF_TIP: [number, number, number][] = [[0, 0, 0], [0.06, 0.2, -0.05], [0.24, 0.3, 0.05], [0.42, 0.22, 0.2], [0.52, 0.04, 0.32]];
 export function elfCap(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = ELF_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
