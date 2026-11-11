@@ -1084,7 +1084,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_ballooner":
       // [S] 503 (b.1) Ballooner Grab is unarmed (card Main Hand / Off Hand): no dagger (it drew as a shuriken), glue mitts (secretDress)
-      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.1 }, "none", "none", "none", "balloon", "#ff9db5", undefined, {
+      // [S] 516 (a.1) longer legs (legLength 1.2, slimmer thighs): the knee rides higher, so the knee pantaloons end there and the tan stockings
+      // run the lower fifth of him (secret.ballooner.blue.png)
+      return vis({ scale: 1.0, bulk: 0.9, armLength: 1.1, legLength: 1.2, upperLegWidth: 0.9 }, "none", "none", "none", "balloon", "#ff9db5", undefined, {
         posePreset: "support", materialPreset: "secret_festive", fxPreset: "wind", attachmentPreset: "ghost_trail",
         stateVariants: { moving: ["ghost_stream"], "ability-active": ["ghost_stream"] },
       });

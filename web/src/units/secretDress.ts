@@ -1613,8 +1613,10 @@ export function balloonerDoublet(scene: Scene, body: ArticulatedBody, team: Colo
  * an orange shoe .shoeH Hf tall over its whole length (tops the grass, LESSONS 434), a low toe, and a team tongue on the instep; the team foot hidden.
  * Stocking and shoe flat unlit (LESSONS 442: lit cream/tan reads grey in shade), picked off palette.png. No generic tunic skirt (unitFactory).
  */
+// [S] 516 (CONFIRM 515 a.1 "pantaloons nearly to the shoes"; DEFECTS "the two legs read as one wide block"): hem .03 m over the knee joint, each
+// leg slimmer (bulge 1.5 -> 1.22, low 1.36 -> 1.1) so a gap shows between them; the legs are longer (unitVisuals legLength 1.2)
 const BALLOONER_LEG = {
-  top: 0.98, hem: -0.07, waist: 1.2, bulge: 1.5, low: 1.36, cuffH: 0.06, cuff: 2.7, shoeW: 1.08, shoeH: 0.82, toeH: 0.5, tongueW: 0.42,
+  top: 0.98, hem: 0.03, waist: 1.08, bulge: 1.22, low: 1.1, cuffH: 0.06, cuff: 2.3, shoeW: 1.08, shoeH: 0.82, toeH: 0.5, tongueW: 0.42,
   stocking: new Color3(0.6, 0.44, 0.22), shoe: new Color3(1, 0.2, 0.05), // 515 swatch: (1,.42,.12) displayed tan in the grass
 };
 export function balloonerBreeches(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
@@ -1816,3 +1818,4 @@ export function bomberVest(scene: Scene, body: ArticulatedBody, team: Color3): M
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
