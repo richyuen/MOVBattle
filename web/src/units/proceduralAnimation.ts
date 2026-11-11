@@ -4749,10 +4749,13 @@ export class ProceduralAnimator {
     if (w <= 0.01) return;
     const b = this._body, H = RCB_HOLD;
     for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.rightShoulder]) n.computeWorldMatrix(true);
+    // [R] 516 the torso mesh's world box is refreshed only by a render: read stale, the grip trailed him by every metre walked since (probe 516:
+    // the fist .07 m further behind him each tick of a multi-tick replay, .4 m at the windup)
+    b.torsoMesh.computeWorldMatrix(true);
     const tb = b.torsoMesh.getBoundingInfo().boundingBox;
     const { fwd, right } = this._heading();
     const depth = tb.extendSize.z * Math.abs(b.torsoMesh.absoluteScaling.z);
-    const chest = tb.centerWorld;
+    const chest = tb.centerWorld.clone();
     // in range of his man: level at the chest, the line on the man; else carried across the chest, the line up to his left
     const aiming = this._aimReadyTimer > 0 && this._aimAt !== null;
     let line: Vector3;
