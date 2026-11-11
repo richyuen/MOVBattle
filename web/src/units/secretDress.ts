@@ -2120,9 +2120,10 @@ export function elfCap(scene: Scene, body: ArticulatedBody): Mesh[] {
  * cut, LESSONS 442), out of the glow. The generic hood off (unitVisuals hat none).
  */
 const ICE_HAIR = {
-  capW: 1.14, capD: 1.1, capLo: 0.03, capTop: 0.62, capBack: 0.06, fringeW: 0.62, fringeH: 0.2, fringeTilt: 0.32,
-  lockRoot: 0.26, lockTip: 0.12, lockLo: -0.42, lockX: 0.5, lockZ: 0.22, backW: 1.0, backLo: -0.44, cream: new Color3(0.74, 0.68, 0.52),
+  capW: 1.16, capD: 1.12, capLo: 0.03, capTop: 0.6, capBack: 0.06, fringeW: 0.62, fringeH: 0.2, fringeTilt: 0.32,
+  lockRoot: 0.34, lockTip: 0.2, lockLo: -0.42, lockX: 0.64, lockZ: 0.3, backW: 1.0, backLo: -0.44, cream: new Color3(0.74, 0.68, 0.52),
 };
+// [S] 517b the cap a faceted half dome (the box read as a flat-topped hat), the side locks further out and thicker (they sat inside the head)
 export function iceMageHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = ICE_HAIR, glow = scene.getGlowLayerByName("glow");
   const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
@@ -2135,11 +2136,12 @@ export function iceMageHair(scene: Scene, body: ArticulatedBody): Mesh[] {
     m.parent = head; m.position.set(x, y, z); m.material = hair; out.push(m); return m;
   };
   const lo = e + H * C.capLo, hi = c.y + H * C.capTop;
-  box("iceMageHairCap", W * C.capW, hi - lo, D * C.capD, c.x, (lo + hi) / 2, c.z - D * C.capBack);
+  const cap = MeshBuilder.CreateSphere("iceMageHairCap", { diameter: 1, segments: 4, slice: 0.5 }, scene);
+  cap.parent = head; cap.scaling.set(W * C.capW, (hi - lo) * 2, D * C.capD); cap.position.set(c.x, lo, c.z - D * C.capBack); cap.material = hair; out.push(cap);
   const fringe = box("iceMageHairFringe", W * C.fringeW, H * C.fringeH, D * 0.18, c.x + W * 0.14, lo + H * C.fringeH * 0.45, c.z + D * 0.52);
   fringe.rotation.z = C.fringeTilt;
   for (const side of [-1, 1]) {
-    const pts = [new Vector3(c.x + side * W * 0.5, lo + H * 0.06, c.z + D * C.lockZ), new Vector3(c.x + side * W * C.lockX * 1.04, c.y, c.z + D * C.lockZ * 1.1),
+    const pts = [new Vector3(c.x + side * W * 0.56, lo + H * 0.06, c.z + D * C.lockZ), new Vector3(c.x + side * W * C.lockX * 1.04, c.y, c.z + D * C.lockZ * 1.1),
       new Vector3(c.x + side * W * C.lockX * 0.94, c.y + H * C.lockLo, c.z + D * C.lockZ * 0.9)];
     taper(scene, "iceMageHairLock", pts, W * C.lockRoot, W * C.lockTip, head, hair, out);
   }
