@@ -778,7 +778,8 @@ export class RuntimeUnit {
     this.stopMoving();
     this._velocity.set(dir.x * v, rise, dir.z * v);
     this._grounded = false;
-    this._leapAir = (this.definition.abilities ?? []).includes("jump_charge" as never);
+    // [S] 513 the Ball 'n' Chain's Foolish Jump flies too: the animator takes his stone-first dive from it (STONE_POUND)
+    this._leapAir = (this.definition.abilities ?? []).includes("jump_charge" as never) || this.definition.id === "secret.ball_n_chain";
     return true;
   }
 
