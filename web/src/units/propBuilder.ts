@@ -8636,7 +8636,8 @@ function buildRaptorMount(scene: Scene, body: ArticulatedBody): Mesh {
  * .trim Hh wide on the front face's four edges; a dial .dial Hh across with a knob, a bar handle, two hinge blocks on the flank-side edge; a dark
  * plinth band .plinth of the height at the foot, four corner feet. Team cloth self-lit .12 (LESSONS 449), gold lit cloth, out of the glow.
  */
-const OVERHEAD_SAFE = { pairX: -0.46, wide: 0.6, tall: 0.42, deep: 0.38, over: 0.26, trim: 0.035, dial: 0.11, plinth: 0.1,
+// [S] 520b over .26 -> .2: the safe's floor rests on the robbers' raised fists (RuntimeUnit SAFE_CARRY), not a forearm over them
+const OVERHEAD_SAFE = { pairX: -0.46, wide: 0.6, tall: 0.42, deep: 0.38, over: 0.2, trim: 0.035, dial: 0.11, plinth: 0.1,
   gold: new Color3(0.78, 0.55, 0.14), dark: new Color3(0.12, 0.1, 0.1) };
 function buildOverheadSafe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh {
   const S = OVERHEAD_SAFE, Hh = body.metrics.overallHeight, hipY = body.hip.position.y;

@@ -368,8 +368,10 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         offset: new Vector3(-0.46, 0, -0.08),
         syncFacing: true,
         semantics: { ...emittingCrew, actionPreset: "cart-brace" },
+        // [S] 520b the flank robber stands nearly the lead's height (.78 -> .95; the lead is 1.08), so his raised fists reach the safe's floor
+        // beside the lead's (secret.bank_robbers.png: two near-equal men under it; card "the taller one" is a slight gap)
         visual: visual("flintlock", "cowboy_hat", "none", "none", {
-          proportions: { scale: 0.78, bulk: 0.82, headSize: 1.0 },
+          proportions: { scale: 0.95, bulk: 0.82, headSize: 1.0 },
           materialPreset: "secret_bandit",
           posePreset: "duelist",
           accentColor: "#5b5b5b",
