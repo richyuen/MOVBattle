@@ -108,6 +108,13 @@ const PIRATE_KICK = { units: new Set(["pirate.harpooner", "secret.jester"]), wit
 // (secretDress jesterToeKnives), on his own clock between dagger stabs: .windup s to the blow, .damage of a stab's harm, a smaller boot off the feet.
 const KICK_BY_UNIT: Record<string, typeof PIRATE_KICK> = { "secret.jester": { ...PIRATE_KICK, within: 0.5, windup: 0.3, recover: 0.3, cooldown: 2, damage: 4, fling: 3.5, lift: 2 } };
 const kickOf = (id: string): typeof PIRATE_KICK => KICK_BY_UNIT[id] ?? PIRATE_KICK;
+/*
+ * [S] 514 the Ballooner glued to his man (card Characteristics "use their Ballooner Grabs to glue onto units and lift them up"; audit c.2 "a poke from
+ * 1 m"; probe 514: the two toppled apart under their own crowd push, torsos 2.2 m off through the lift): at his grab he is set in chest to chest,
+ * their centres .chest of their summed radii apart, faced on him, both kept on their feet (RuntimeUnit.holdUpright) every step of the lift, and both
+ * his glue mitts held on the man's trunk (proceduralAnimation GLUE_GRIP) from the grab's own tick until the balloon lets go.
+ */
+const GLUE_HOLD = { chest: 0.5 };
 // [S] 464 the Pike's dropped pike (_dropPike): forward and up as it leaves the fist (m/s), its tumble (rad/s), his first slap after (s)
 // 464b: up .8, spin 1.2 left it level at his chest 150 ms on (the _ability_after shot read as still held): it now leaves falling, tipping
 const PIKE_DROP = { ahead: 0.6, up: -2.4, spin: 3, ready: 0.6 };
@@ -1236,6 +1243,7 @@ export class SimulationSystem {
       const age = now - lift.start;
       if (unit.isDead || target.isDead || age >= 1.8) {
         this._balloonLifts.delete(unit);
+        unit.animator.setGlue(null);
         unit.dropFromHang();
         target.dropFromHang();
         continue;
@@ -1249,6 +1257,8 @@ export class SimulationSystem {
       unit.teleportTo(pos);
       target.hangAt(pos.add(lift.offset), now + 0.1);
       unit.faceTarget(target.position);
+      unit.holdUpright();
+      target.holdUpright();
       if (!lift.logged && age >= 0.24) {
         lift.logged = true;
         this._logAbility(unit, "float_pack", now, target.position);
@@ -4122,12 +4132,18 @@ export class SimulationSystem {
       if (direction.lengthSquared() > 1e-6) {
         this._spentBalloonPacks.add(attacker);
         const reach = attacker.collisionBodyRadius + target.collisionBodyRadius;
-        const offset = direction.normalize().scale(reach * 0.78);
+        // [S] 514 (ballooner c.2) glued chest to chest (GLUE_HOLD): in to .chest of their radii apart, both kept on their feet, his mitts on the
+        // man's trunk from this tick (posed now: the hit's frame is drawn before the animator runs again)
+        const offset = direction.normalize().scale(reach * GLUE_HOLD.chest);
         const contact = target.position.subtract(offset);
         attacker.stopMoving();
         attacker.teleportTo(contact);
+        attacker.faceTarget(target.position);
         this._clearPathState(attacker);
         target.hangAt(target.position, now + 0.1);
+        attacker.holdUpright();
+        target.holdUpright();
+        attacker.animator.setGlue(target.body.torsoMesh, true);
         this._balloonLifts.set(attacker, { target, start: now, base: contact.y, offset, logged: false });
       }
     }

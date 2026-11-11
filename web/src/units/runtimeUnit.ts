@@ -760,6 +760,16 @@ export class RuntimeUnit {
     }
   }
 
+  /**
+   * [S] 514 glued in the Ballooner's grip (simulationSystem GLUE_HOLD): kept on his feet, any topple, sprawl or recovery the crowd push between the
+   * two glued men started this step cleared (probe 514: both toppled apart, torsos 2.2 m off with roots .72 m off).
+   */
+  holdUpright(): void {
+    if (this._isDead) return;
+    this._toppledUntil = 0; this._downedUntil = 0; this._recoveringUntil = 0;
+    this._balancePressure = 0;
+  }
+
   /** Let go off the tendril: he falls from where he hangs (a corpse's fall wakes its death physics). */
   dropFromHang(): void {
     this._hungUntil = 0;
