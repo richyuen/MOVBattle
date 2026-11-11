@@ -523,6 +523,8 @@ const DIVE = { tip: 1.22, trunk: 0.16, head: 0.62, arms: 2.3, elbow: 0.35, knee:
  * blow (setKick's windup); the standing knee bent .plant (the hip half that); the trunk leant back .lean with .headLevel of it given back at the neck.
  * Eased in at .in and out at .out per second.
  */
+/** [S] 519 the Taekwondo's flying kick (spec at ProceduralAnimator.setFlyKick): lead thigh swing, lead knee, tucked thigh and knee, trunk lean back, head given back, arm guard. */
+const FLY_KICK = { lead: 1.55, leadKnee: 0.05, tuck: 1.0, tuckKnee: 1.7, lean: 0.4, headLevel: 0.6, guard: 0.7, out: 0.35, elbow: 1.5 };
 const PIRATE_KICK_POSE = { raise: 1.45, chamberRaise: 0.7, chamber: 1.5, plant: 0.25, lean: 0.3, headLevel: 0.6, in: 20, out: 9 };
 // [S] 427 the Bomb Spin's whirl (simulationSystem BOMB_SPIN; card pirate.pirate_queen "spin and release several bombs, then ... helicopter upwards"): both
 // arms thrown out level to the sides (.out rad off the hang), elbows straight, so the two blades sweep round her like rotor blades; the head tipped
@@ -1412,6 +1414,30 @@ export class ProceduralAnimator {
   private _leapAirOn = false;
   setLeapAir(on: boolean): void {
     this._leapAirOn = on;
+    if (!on) this._flyKick = false;
+  }
+  /**
+   * [S] 519 the Taekwondo Kick in flight (card Abilities "very powerful kicks to the head, chest"; secret.taekwondo.jpg: a flying front kick, the lead leg
+   * thrust straight out level at the man, the other knee tucked up under him, the trunk leant back over the hips, fists up in a guard). FLY_KICK, joint
+   * angles set outright (rad), not eased: the ability shot is the take-off tick (LESSONS 393, 437), so the sim also calls poseFlyKick on that tick.
+   * Held while the leap is in the air; dropped when he lands (setLeapAir off).
+   */
+  private _flyKick = false;
+  setFlyKick(on: boolean): void {
+    this._flyKick = on;
+  }
+  poseFlyKick(): void {
+    const F = FLY_KICK, b = this._body;
+    b.rightHip.rotation.set(-F.lead, 0, 0);
+    b.rightKnee.rotation.set(F.leadKnee, 0, 0);
+    b.leftHip.rotation.set(-F.tuck, 0, 0);
+    b.leftKnee.rotation.set(F.tuckKnee, 0, 0);
+    b.torso.rotation.x = -F.lean;
+    b.neck.rotation.x = F.lean * F.headLevel;
+    b.leftShoulder.rotation.set(-F.guard, 0, -F.out);
+    b.rightShoulder.rotation.set(-F.guard, 0, F.out);
+    b.leftElbow.rotation.set(-F.elbow, 0, 0);
+    b.rightElbow.rotation.set(-F.elbow, 0, 0);
   }
 
   /** A beast on a charge run (the mammoth's): eases into CHARGE_POSE while on, out of it after. */
@@ -2418,6 +2444,7 @@ export class ProceduralAnimator {
       b.leftElbow.rotation.x += (-0.45 - b.leftElbow.rotation.x) * a;
       b.rightElbow.rotation.x += (-0.45 - b.rightElbow.rotation.x) * a;
     }
+    if (this._flyKick && this._leapAirOn && this._state !== AnimState.Dead && this._limp < 0.5 && this.walkStyle !== "quadruped") this.poseFlyKick();
     // Waist break (additive): the legs carry the body's lean while the torso bends part-way back against it and
     // the head hangs the way the body is going, so a pressed, running or toppling body is an S, not one plank.
     if (this._state !== AnimState.Dead && this.walkStyle !== "quadruped") {

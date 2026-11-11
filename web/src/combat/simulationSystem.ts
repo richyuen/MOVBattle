@@ -2346,6 +2346,8 @@ export class SimulationSystem {
         unit.setAttackCooldown(now, attackProfile.cooldown * 0.35);
         // [S] 437 the Vampire flies it as a bat (spookyDress VAMPIRE_BAT, RuntimeUnit.startBatForm)
         if (unit.definition.id === "spooky.vampire") unit.startBatForm();
+        // [S] 519 the Taekwondo flies it as a flying kick, posed outright on this tick (ProceduralAnimator.setFlyKick)
+        if (unit.definition.id === "secret.taekwondo") { unit.animator.setFlyKick(true); unit.animator.poseFlyKick(); }
         this._logAbility(unit, flies ? "swoop" : "leap", now);
         return;
       }
