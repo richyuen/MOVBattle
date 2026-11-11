@@ -1892,3 +1892,44 @@ export function taekwondoGi(scene: Scene, body: ArticulatedBody, team: Color3): 
   return out;
 }
 
+/**
+ * [S] 516 Cupid's curly mop (secret.cupid.red.png: a golden curly mop of small lumps over the whole crown, from just over the eyes to a little
+ * above the head's top, down the sides to the ear and the back of the head to the nape; audit 515 a.3 "bald team head"). Spec in head widths W,
+ * heights H, depths D (head box, head frame): a cap of .rows rings of curls, each ring .perRing ico lumps .curl W across on an ellipse .ringW W wide,
+ * from the eye tops + .lo H up to .hi H over the centre, the front arc (within .gap rad of the face) left open under the top ring so the eyes show;
+ * a crown lump on top. Unlit gold x.7 off palette.png (LESSONS 442: lit tan reads grey), out of the glow.
+ */
+const CUPID_HAIR = { rows: 4, perRing: 9, curl: 0.34, ringW: 1.08, lo: 0.04, hi: 0.66, gap: 0.75, back: -0.4, gold: new Color3(0.7, 0.5, 0.15) };
+export function cupidHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CUPID_HAIR, glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const gold = getMaterialFactory().get("unlit", C.gold, { emissive: C.gold });
+  const out: Mesh[] = [];
+  const curl = (x: number, y: number, z: number, r: number, k: number): void => {
+    const m = MeshBuilder.CreateIcoSphere("cupidCurl", { radius: r, subdivisions: 1 }, scene);
+    m.parent = head; m.material = gold; m.position.set(x, y, z); m.rotation.set(k * 0.9, k * 1.7, k * 0.6);
+    out.push(m);
+  };
+  const top = c.y + H * C.hi;
+  let k = 0;
+  for (let row = 0; row < C.rows; row++) {
+    const t = row / (C.rows - 1);
+    // the lowest ring runs from the eye tops at the front to the nape at the back; each ring higher and narrower to the crown
+    const y0 = e + H * C.lo, shrink = Math.cos(t * 1.1);
+    for (let i = 0; i < C.perRing; i++) {
+      const a = (i / C.perRing) * Math.PI * 2 + row * 0.35;
+      const facing = Math.cos(a); // +1 at the face (+z)
+      if (row < C.rows - 1 && facing > Math.cos(C.gap) && row < 2) continue;
+      const y = y0 + (top - y0) * t + (facing < 0 ? H * C.back * (1 - t) * -facing : 0);
+      const rx = W * C.ringW * 0.5 * shrink, rz = D * C.ringW * 0.5 * shrink;
+      curl(c.x + Math.sin(a) * rx, y, c.z + facing * rz, W * C.curl * 0.5 * (1.05 - 0.25 * t), k++);
+    }
+  }
+  curl(c.x, top + H * 0.04, c.z - D * 0.05, W * C.curl * 0.55, k++);
+  // the brow fringe: three curls along the front over the eyes
+  for (const s of [-1, 0, 1]) curl(c.x + s * W * 0.26, e + H * (C.lo + 0.14), c.z + D * 0.44, W * C.curl * 0.42, k++);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
