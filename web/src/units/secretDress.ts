@@ -503,6 +503,23 @@ export function balloonerGlueMitts(scene: Scene, body: ArticulatedBody): Mesh[] 
  */
 const JESTER_CAP = { hoodW: 1.14, hoodH: 1.1, hoodD: 1.12, hoodBack: 0.1, chin: 0.12, root: 0.34, tip: 0.14, bell: 0.22, spike: 0.62, spikeRoot: 0.26, knob: 0.16, shade: 0.85, brown: new Color3(0.38, 0.2, 0.09) };
 const JESTER_POINT: [number, number][] = [[0.2, 0.42], [0.5, 0.72], [0.85, 0.86], [1.15, 0.78], [1.32, 0.56], [1.36, 0.36]];
+
+/**
+ * [S] 513 the Jester's team outfit (secret.jester.red.png, .blue.png; card Appearance "team-colored jester outfit and hat"; CONFIRM 512 a.1 "the
+ * jester outfit reads olive/khaki under pink team arms ... in unit_secret.jester_idle a teal shade"). The faction tint and the clothed recolour
+ * shift the shared body cloth off the team hue (LESSONS 449), so every mesh still in body.bodyMaterial once the generic tunic skirt is hung (trunk,
+ * yoke, shoulder pads, pelvis, tunic skirt, legs, stubs) is moved onto the hood's own team cloth (team x JESTER_CAP.shade, self-lit .12), out of
+ * the glow. Run after the skirt (unitFactory), so the skirt is caught too.
+ */
+export function jesterTunic(scene: Scene, body: ArticulatedBody, team: Color3, props: Mesh[]): void {
+  const clothC = team.scale(JESTER_CAP.shade), glow = scene.getGlowLayerByName("glow");
+  const cloth = getMaterialFactory().get("cloth", clothC, { emissive: clothC.scale(0.12), roughness: 1 });
+  for (const mesh of [...body.allMeshes, ...props]) {
+    if (mesh.material !== body.bodyMaterial) continue;
+    mesh.material = cloth;
+    glow?.addExcludedMesh(mesh);
+  }
+}
 export function jesterCap(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const C = JESTER_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   for (const m of body.root.getChildMeshes(false)) if (/^jester(Cap|Horn|Bell)$/.test(m.name)) m.setEnabled(false);
