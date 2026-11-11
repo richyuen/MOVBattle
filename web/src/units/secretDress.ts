@@ -8,34 +8,62 @@ import { limbBox } from "./medievalDress";
  * Secret faction cloth, hats and ornaments (loop: new per-unit dress goes here, not into unitFactory or propBuilder).
  */
 
-/** Bare team chest under a narrow dark sash over the right shoulder. */
+/**
+ * [S] 515 the Fan Bearer's wrapped sash (secret.fan_bearer.red.png: a broad cloth in a darker shade of team colour, about a third of the chest
+ * wide, thrown over his right shoulder, falling across the chest to the left hip, where its end hangs down over the skirt, with fold lines along
+ * it; card Appearance "a sash over its right shoulder"; CONFIRM 514 a.2 "a thin dark strap"). Bare team chest under it. Spec in the torso mesh's
+ * frame (box centre c, half size s): front and back runs .wide s.x across and .thick s.z deep from the shoulder point (x .sx, y .sy) to the hip
+ * point (x .hx, y .hy), standing .out s.z off the chest; a shoulder drape .capW s.x wide over the top, .capH s.y deep, rolled down the arm side;
+ * a hip fall .fallW s.x wide and .fall s.y long hanging from the hip point, slanted .fallTilt rad; two fold ridges .fold s.x wide along the front
+ * run at .foldAt of its width either side of the middle, team x .foldShade. Team x .shade self-lit .4 (FAN_SKIRT's flaps), own material, out of the glow.
+ */
+const FAN_SASH = {
+  wide: 0.66, thick: 0.16, sx: 0.78, sy: 1.06, hx: -0.8, hy: -0.86, out: 1.1, capW: 0.72, capH: 0.22, fallW: 0.5, fall: 0.62, fallTilt: 0.16,
+  fold: 0.07, foldAt: 0.28, shade: 0.45, foldShade: 0.3,
+};
 export function fanBearerSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
-  const torso = body.torsoMesh;
+  const F = FAN_SASH, torso = body.torsoMesh, glow = scene.getGlowLayerByName("glow");
   const { center: c, extendSize: s } = torso.getBoundingInfo().boundingBox;
   for (const mesh of [torso, ...body.allMeshes.filter(m => /_yoke$|_[lr]Pad$/.test(m.name))]) {
     mesh.material = body.skinMaterial;
-    scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+    glow?.addExcludedMesh(mesh);
   }
-  const dark = team.scale(0.25);
-  const cloth = getMaterialFactory().get("cloth", dark, { emissive: dark.scale(0.12) });
+  const mf = getMaterialFactory();
+  const shade = (k: number) => { const col = team.scale(k); return mf.get("cloth", col, { emissive: col.scale(0.4), roughness: 1 }); };
+  const cloth = shade(F.shade), foldCloth = shade(F.foldShade);
   const out: Mesh[] = [];
-  // Front and back diagonal runs meet over the right shoulder and left waist.
-  for (const front of [-1, 1]) {
-    const a = new Vector3(c.x + s.x * 0.82, c.y + s.y * 1.08, c.z + front * s.z * 1.10);
-    const b = new Vector3(c.x - s.x * 0.78, c.y - s.y * 0.82, c.z + front * s.z * 1.14);
+  const slab = (name: string, a: Vector3, b: Vector3, width: number, depth: number, material: Material) => {
     const run = b.subtract(a);
-    const sash = MeshBuilder.CreateBox("fanBearerSash", {
-      width: s.x * 0.31, height: run.length(), depth: s.z * 0.15,
-    }, scene);
-    sash.parent = torso; sash.position.copyFrom(a.add(b).scale(0.5));
-    sash.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), run.normalize(), new Quaternion());
-    sash.material = cloth; out.push(sash);
+    const m = MeshBuilder.CreateBox(name, { width, height: run.length(), depth }, scene);
+    m.parent = torso; m.position.copyFrom(a.add(b).scale(0.5));
+    m.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), run.normalize(), new Quaternion());
+    m.material = material; out.push(m);
+    return m;
+  };
+  // Front and back runs from the right shoulder to the left hip, broad and standing off the chest
+  for (const front of [-1, 1]) {
+    const a = new Vector3(c.x + s.x * F.sx, c.y + s.y * F.sy, c.z + front * s.z * F.out);
+    const b = new Vector3(c.x + s.x * F.hx, c.y + s.y * F.hy, c.z + front * s.z * (F.out + 0.04));
+    slab("fanBearerSash", a, b, s.x * F.wide, s.z * F.thick, cloth);
+    if (front > 0) {
+      // fold ridges along the front run, either side of its middle
+      const across = new Vector3(b.y - a.y, -(b.x - a.x), 0).normalize();
+      for (const k of [-1, 1]) {
+        const o = across.scale(k * s.x * F.wide * F.foldAt).add(new Vector3(0, 0, s.z * F.thick * 0.55));
+        slab("fanBearerSashFold", a.add(o), b.add(o), s.x * F.fold, s.z * F.thick * 0.5, foldCloth);
+      }
+    }
   }
-  const bridge = MeshBuilder.CreateBox("fanBearerSashShoulder", {
-    width: s.x * 0.34, height: s.y * 0.16, depth: s.z * 2.32,
-  }, scene);
-  bridge.parent = torso; bridge.position.set(c.x + s.x * 0.82, c.y + s.y * 1.10, c.z);
-  bridge.material = cloth; out.push(bridge);
+  // the drape over the shoulder top, rolled a little down the arm side
+  const cap = MeshBuilder.CreateBox("fanBearerSashShoulder", { width: s.x * F.capW, height: s.y * F.capH, depth: s.z * (F.out * 2 + F.thick) }, scene);
+  cap.parent = torso; cap.position.set(c.x + s.x * F.sx, c.y + s.y * (F.sy + 0.02), c.z); cap.rotation.z = -0.22;
+  cap.material = cloth; out.push(cap);
+  // the end hanging from the left hip over the skirt
+  const hip = new Vector3(c.x + s.x * F.hx, c.y + s.y * F.hy, c.z + s.z * (F.out + 0.06));
+  const fall = MeshBuilder.CreateBox("fanBearerSashFall", { width: s.x * F.fallW, height: s.y * F.fall, depth: s.z * F.thick }, scene);
+  fall.parent = torso; fall.position.set(hip.x, hip.y - (s.y * F.fall) / 2, hip.z); fall.rotation.z = F.fallTilt;
+  fall.material = cloth; out.push(fall);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
 
