@@ -110,7 +110,9 @@ function originIn(node: TransformNode, frame: TransformNode): Vector3 {
  * flaps .flapW h.x wide over it, .flapOut proud, the left reaching .left of the under-skirt's length and the right .right, each slanted .slant rad.
  * Shades team x .under / .left / .right. The thighs in skin. Own team cloth (LESSONS 449), out of the glow. No generic tunic skirt (unitFactory).
  */
-const FAN_SKIRT = { r: 1.18, flare: 1.3, long: 0.62, deep: 1.25, flapW: 1.15, flapOut: 0.06, left: 0.96, right: 0.82, slant: 0.18, under: 0.7, leftShade: 0.42, rightShade: 0.55 };
+// [S] 515 (a.1, CONFIRM 514 "pale grey-blue, lighter than the skin"): the skirt body is the darker team cloth (.under); the light under-layer
+// shows only as a band .hemH of the length deep below its hem, .hemOut wider, team x .hemShade (secret.fan_bearer.red.png: pale only at the hem)
+const FAN_SKIRT = { r: 1.18, flare: 1.3, long: 0.62, deep: 1.25, flapW: 1.15, flapOut: 0.06, left: 0.96, right: 0.82, slant: 0.18, under: 0.36, leftShade: 0.42, rightShade: 0.3, hemH: 0.16, hemOut: 1.04, hemShade: 0.8 };
 export function fanBearerSkirt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const F = FAN_SKIRT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
@@ -123,6 +125,11 @@ export function fanBearerSkirt(scene: Scene, body: ArticulatedBody, team: Color3
   const under = MeshBuilder.CreateCylinder("fanBearerSkirt", { height: long, diameterTop: h.x * 2 * F.r, diameterBottom: h.x * 2 * F.r * F.flare, tessellation: 8 }, scene);
   under.parent = pelvis; under.position.set(c.x, top - long / 2, c.z); under.scaling.z = (h.z * F.deep) / (h.x * F.r); under.rotation.y = Math.PI / 8;
   under.material = cloth(F.under); out.push(under);
+  // the light under-layer, a band showing only below the dark skirt's hem
+  const hemH = long * F.hemH, rHem = h.x * F.r * F.flare * F.hemOut;
+  const band = MeshBuilder.CreateCylinder("fanBearerSkirtHem", { height: hemH, diameterTop: rHem * 2 * 0.97, diameterBottom: rHem * 2, tessellation: 8 }, scene);
+  band.parent = pelvis; band.position.set(c.x, top - long - hemH / 2 + hemH * 0.3, c.z); band.scaling.z = (h.z * F.deep) / (h.x * F.r); band.rotation.y = Math.PI / 8;
+  band.material = cloth(F.hemShade); out.push(band);
   // the flaps lean out with the under-skirt's flare, standing .flapOut off it
   const zTop = h.z * F.deep, flareOut = zTop * (F.flare - 1), lean = Math.atan2(flareOut, long);
   for (const [side, reach, shade] of [[1, F.left, F.leftShade], [-1, F.right, F.rightShade]] as const) {
