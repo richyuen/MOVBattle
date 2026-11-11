@@ -322,6 +322,7 @@ const LANCE_AIM = { hold: 0.6, rate: 4 };
 /** [S] 502 the Ball 'n' Chain's hug (_hugStone): fists on the stone's flanks, in its radii out, ahead and down from its centre. */
 const STONE_HUG = { side: 0.8, front: -0.1, drop: 0.3 };
 /** [S] 511 the Chu Ko Nu's level carry (_holdRepeatingCrossbow): the weapon fist ahead of the trunk, out to his side and down from the chest's middle (m); the off fist under the stock .under of the magazine's height below the stock. */
+const GLUE_GRIP = { side: 0.85, up: 0.25 };
 const RCB_HOLD = { ahead: 0.16, across: 0.06, drop: 0.12, under: 0.45 };
 const POLE_GRIP = {
   fanGrip: [-0.28, -0.15],
@@ -2444,6 +2445,7 @@ export class ProceduralAnimator {
     this._aimPick();
     this._twoHandPole();
     this._holdRepeatingCrossbow();
+    this._glueHold();
     this._holdArbiterBook();
     this._hugStone();
     this._levelPike();
@@ -4648,6 +4650,29 @@ export class ProceduralAnimator {
    * the crossbow is laid level in it, its shooting line (-z) along his heading, the fist kept where it held the stock; the off fist is solved onto
    * the stock's underside at the magazine (.under of the magazine's height below its middle). Eased off as he goes limp.
    */
+  /** [S] 511 the Ballooner's glue grip (simulationSystem GLUE_DIVE): both fists solved onto the held man's trunk, GLUE_GRIP.side of its half width out, .up of its half height up from its middle, toward this man. */
+  private _glue: Mesh | null = null;
+  setGlue(trunk: Mesh | null): void {
+    this._glue = trunk;
+  }
+  private _glueHold(): void {
+    const m = this._glue;
+    if (!m || m.isDisposed() || this.walkStyle === "quadruped" || this._state === AnimState.Dead) return;
+    const b = this._body;
+    for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.rightShoulder]) n.computeWorldMatrix(true);
+    m.computeWorldMatrix(true);
+    const box = m.getBoundingInfo().boundingBox, c = box.centerWorld;
+    const { right } = this._heading();
+    const toMe = b.torso.getAbsolutePosition().subtract(c);
+    toMe.y = 0;
+    const near = toMe.lengthSquared() > 1e-6 ? toMe.normalize().scale(box.extendSizeWorld.z * 0.8) : Vector3.Zero();
+    const half = Math.max(box.extendSizeWorld.x, box.extendSizeWorld.z);
+    for (const side of [1, -1]) {
+      const grip = c.add(right.scale(side * half * GLUE_GRIP.side)).addInPlace(near).addInPlace(new Vector3(0, box.extendSizeWorld.y * GLUE_GRIP.up, 0));
+      if (side > 0) this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, grip, 1, 2);
+      else this._offArmTo(grip, 1, 2);
+    }
+  }
   private _rcb: TransformNode | null | undefined = undefined;
   private _rcbRest: Vector3 | null = null;
   private _holdRepeatingCrossbow(): void {
