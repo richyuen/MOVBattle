@@ -1312,6 +1312,31 @@ export function teacherShoes(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /**
+ * [S] 513 the Teacher's trousers (secret.the_teacher.blue.png, .red.png: dark trousers in the jacket's own cloth from the hip to the little black
+ * shoes, straight and a little loose, hemmed just over the shoe; card Appearance "dark pants with little black shoes"; CONFIRM 512 a.1 "bare team
+ * skin from hip to ankle"). Per thigh and shin an 8-sided shell .loose of the limb box round (thigh) over its whole length, the shin's flaring to
+ * .flare at its hem; both limbs and the pelvis re-clothed in the jacket's material (body.torsoMesh), so a gap shows the same cloth.
+ */
+const TEACHER_TROUSER = { loose: 1.16, flare: 1.26 };
+export function teacherTrousers(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = TEACHER_TROUSER, jacket = body.torsoMesh.material;
+  if (!jacket) return [];
+  const out: Mesh[] = [];
+  for (const [limb, shin] of [[body.leftUpperLeg, false], [body.rightUpperLeg, false], [body.leftLowerLeg, true], [body.rightLowerLeg, true]] as const) {
+    const { center: c, extendSize: s } = limb.getBoundingInfo().boundingBox;
+    const shell = MeshBuilder.CreateCylinder(shin ? "teacherTrouserShin" : "teacherTrouserThigh", {
+      height: s.y * 2, diameterTop: s.x * 2 * T.loose, diameterBottom: s.x * 2 * (shin ? T.flare : T.loose), tessellation: 8,
+    }, scene);
+    shell.parent = limb; shell.position.copyFrom(c); shell.scaling.z = s.z / s.x; shell.rotation.y = Math.PI / 8;
+    shell.material = jacket; shell.convertToFlatShadedMesh(); out.push(shell);
+    limb.material = jacket;
+  }
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (pelvis) pelvis.material = jacket;
+  return out;
+}
+
+/**
  * [S] 512 the Executioner's trousers tucked into banded boots (secret.executioner.red.png: dark team trousers down the thigh into tall darker boots
  * that reach just under the knee, ridged by four raised bands and topped by a flared cuff; audit 500 a.4 "plain team legs"). Spec in the shin's box
  * (centre c, half size s) and the foot box: thighs and the upper shin in trouser cloth (team x .trouser); a boot shaft .shaft s.x round over the
