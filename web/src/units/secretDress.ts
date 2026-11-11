@@ -2083,7 +2083,8 @@ export function clamsHat(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const ELF_CAP = {
   over: 0.02, bandH: 0.2, bandW: 1.2, capW: 1.08, capTop: 0.52, capH: 0.42, tipRoot: 0.5, tipEnd: 0.14, pom: 0.22, pomY: 0.12,
-  green: new Color3(0.02, 0.2, 0.08), fur: new Color3(0.82, 0.76, 0.6), pomC: new Color3(0.45, 0.12, 0.03),
+  // [S] 517b the green brighter (.02,.2,.08 read near-black in the look), the pompom a brighter orange-brown
+  green: new Color3(0.04, 0.42, 0.17), fur: new Color3(0.82, 0.76, 0.6), pomC: new Color3(0.85, 0.28, 0.06),
 };
 const ELF_TIP: [number, number, number][] = [[0, 0, 0], [0.06, 0.2, -0.05], [0.24, 0.3, 0.05], [0.42, 0.22, 0.2], [0.52, 0.04, 0.32]];
 export function elfCap(scene: Scene, body: ArticulatedBody): Mesh[] {
