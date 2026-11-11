@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+512 | 891ac028, 027436f7 | secret.jester.c | approved [S] (struck 3; c PASS)
+512 | 5ebe1d59 | secret.the_teacher.a | approved [S] (struck 4)
+512 | d5bc11bf | secret.raptor.a | approved [S] (struck 1)
+512 | b1030b43 | secret.jester.a | approved [S] (struck 3; CONFIRM failed a: red tunic olive)
+512 | f1761213 | secret.raptor.a | approved [S] (struck 2; CONFIRM passed, done)
+512 | 19916c69 | secret.shouter.a | approved [S] (struck 3; CONFIRM failed a twice -> plateau)
+512 | ee78ffbe | secret.the_teacher.a | approved [S] (struck 5; CONFIRM failed a)
+512 | cf9030d9 | secret.executioner.a | approved [S] (struck 4)
+512 | 3c31e1a0 | secret.bomb_on_a_stick.a | approved [S] (struck 4)
+
 511 | 65f47ff7, 5dc19fb4 | secret.jester.b | approved [S] (struck 2; b PASS)
 511 | 278dab28, 68792d69 | secret.jester.c | approved [S] (struck 2; added 3 kick mid-flip)
 511 | 32de5d14 | secret.jester.a | approved [S] (struck 4)
@@ -35,26 +45,31 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 508 | ca17f27b | secret.shouter.a | approved [S] (struck 2)
 508 | ca58ecb9 | secret.bomb_on_a_stick.a | approved [S] (struck 3)
 
-507 | b3f04314,473257ab | evil.death_bringer.a | rejected [R] (reverted; skin channels)
-507 | 3fd52380 | secret.bomb_on_a_stick.b | approved [S] (struck 2; b PASS)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
 Evil done units (death_bringer, void_monarch) rows | specs in owning code; ledger@8d2b01e3 | 511 | archived values | unchanged
+SS:KICK start gate | dodge flip drops a pending kick (ready again after the flip); no start while _recovers, toppled, downed or airborne | 512 | approved | start gated on _recovers only
+UV:secret_teacher special | none | 512 | approved | monk_robe (orange torso box and drape)
+raptorBody:RAPTOR_MOUTH | jaw rest .68 shut .04; palate (0,-.1,.24) r(.13,.035,.19), floor (0,.03,.22) r(.12,.03,.2) near-black; tongue (0,.055,.26) r(.085,.03,.2) unlit team x.85 | 512 | approved | jaw rest .46, no mouth or tongue
+raptorBody:RAPTOR_SPOT | 15 three-sided slabs tri 1.7 x size .04-.075, thick .014, sink .25, dropped onto raptorTrunk/raptorTail along hip -y, z +.36 to -.97 x +-.24 | 512 | approved | 511 10 ico blotches on the ideal ellipsoid
+secretDress:JESTER_BELT | y -.5 s.y, h .22, 1.1 yoke half-width, deep .62; buckle .46x.34 steel (.8,.78,.72) + dark bars; leather (.3,.2,.12) | 512 | approved | none
+secretDress:SHOUTER_LEG | breech hem knee+.02 m; 5 wrap bands .07 tall .052 apart from knee+.08, 2.7 shin widths | 512 | approved | 510 hem -1.05 thigh box, 4 bands over the knee
+secretDress:TEACHER_SHOE | ankle .8Wf x .92Hf x .48L, vamp .74 x .42 x .6, nose, heel; black (.08,.06,.07) self-lit .4; team foot hidden | 512 | approved | team boot
+secretDress:EXEC_BOOT | trousers team x.5; boot shaft team x.26 2.25 s.x to .82 of foot-knee, cuff 2.55, 4 bands x.15 2.45 | 512 | approved | plain team legs
+secretDress:BOMBER_VEST | yoke box: fronts .6 h.x at .68, tall 1.86, out 1.04, thick .2; edge .09 team x.95; sides at 1.04; back; team x.55 | 512 | approved | none
 secretDress:JESTER_TOE | blade 1.1 L, root .7 Wf, lift .3 Hf, pitch -.3 (forward, up), clip .16 L | 511 | approved | 511.1 pitch +.28 down (hidden by grass)
 secretDress:JESTER_SHORTS | 8 arc slices team/gold/dark, top 1.22 bulge 1.62 hem 1.2 thigh half-widths, band .16 | 511 | approved (barely bulges) | plain legs
 SS:KICK_BY_UNIT jester | within .5 windup .3 recover .3 cd 2 damage 4 fling 3.5 lift 2; no start while _recovers | 511 | approved | none
 secretDress:BALLOONER_DOUBLET | team trunk, cream V .09 TW to .62 TH, puffs 2.5 arm widths, 3 slashes, belt .1 TH at .12 | 511 | approved | pale tunic
 PA:RCB_HOLD | fist .16 m ahead of trunk front, .06 across, .12 under chest middle; stock .1 ahead, .04 up; off fist .45 mag under | 511 | approved (bow laid along move heading) | shouldered carry
 SS:RCB_VOLLEY | one bolt per .25 s off rcbMuzzle, no scatter | 511 | approved | one-tick burst with random offset
-raptorBody:RAPTOR_SPOT | 10 flat ico spots on trunk ellipsoid (.3,.32,.59) pitch .12, size .055-.085 x1.9 | 511 | approved (proud, shoulder cluster) | none
 secretDress:chuKoNuBelt | eight-sided dark strap, square buckle, loose end | 510 | approved | 509 hidden strap
 secretDress:fanBearerSash | team skin chest/yoke/pads under .155 TW dark diagonal sash; endpoints x +.82,-.78, bridge +.82 half-TW (mirrored, the one X mirror) | 511 | approved [P] | 509 x -.82,+.78
 SS/PA:STONE_POUND | overhead stick swing retained; trial reverted (contact detached torso) | 509 | dropped [S] | three contact-timed pounds
-secretDress:shouterKneeWraps | four overlapping seven-sided tan bands at each shin top | 509 | approved [S] | none
+secretDress:shouterKneeWraps | seven-sided tan bands down the shin from the knee (spec SHOUTER_LEG) | 512 | approved | 509 four bands at the shin top
 secretDress:shouterBracers | six-sided tapered dark team guards and two edge bands | 509 | approved [S] | none
 secretDress:EXECUTIONER_VEST | eight-sided iron shell .96TH, 5 buttons, dark team sleeves | 505 | approved | plain team torso
 secretDress:PRISONER_CAP | 8-sided .29H team cap and .105H cream band above bead eyes | 505 | approved | spiked hood and collar

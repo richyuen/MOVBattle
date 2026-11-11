@@ -21,7 +21,6 @@ Read whole at step 1; one fact per line, merge near cap.
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
-- Fresnel t=|n.v|^power is 1 face-on and ADDS left*(1-t)+right*t: a thin rim wants power<1 (.25, 489). Cull back faces; probing in-page, swap in a new material.
 - The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change). A faceless unit at .6 rad reads as a back: .25 (497).
 - The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent - start at full weight from spawn and keep it in every later re-solve (393 valkyrie, 394 berserker).
 - A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).
@@ -33,19 +32,18 @@ Read whole at step 1; one fact per line, merge near cap.
 - A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
 
 - Gate an idle hold on the fire, not Attacking+throw; props outside _carryProp's regex ride the fist (451). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
-- _heading() is the move heading (backing off, it points away): aim a held weapon at the target (511).
-- Re-laying a fist prop in world space: place it off the hand's world position, not its hand-frame offset (511).
+- _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
+- An ability started while toppled/airborne is wiped by its lander and burns the cooldown: gate starts on his feet (512 kick).
+- A flat ico's faces sit ~20% inside its ellipsoid: seat surface dress by ray-cast onto the mesh (512 raptor).
 ## Rig and dress
-- A pole butt inside the hip box hides the off fist: carry it ahead of the hips (511).
-- Check feather roots in idle (506). Translating torso to reach a target detaches it from the hips; move the whole body (509).
-- A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
+- A pole butt inside the hip box hides the off fist: carry it ahead of the hips (511). Translating torso to reach a target detaches it from the hips; move the whole body (509). A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
 - Retire old hip skirts (482). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450 queen). metrics.overallHeight is pre-cut; shin limbShell 0 is the calf cap, ~.1 m above the knee.
 - A wider thigh shell can bury a shin wrap that extends above the knee joint (510).
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
 - A foot mesh is a merged cuff + toe box ~half the shin tall: a tuft at its bbox middle is buried; the instep's top is lo.y + ~.42 (399). Shoes, anklets, socks go at that height or the boot eats the shin (433); the grass hides a foot box to ~.6, so a shoe must top that (434).
-- A hem or band cut at a share of limbBox(thigh) misses the knee: the thigh runs ~.08 past the joint; anchor to knee.position.y in the hip frame. Shin, foot, trunk and _yoke meshes in the dark body shade read as boots or a vest: recolour them to the dress cloth (433).
+- A hem or band cut at a share of limbBox(thigh) misses the knee: the thigh runs ~.08-.12 past the joint; anchor to knee.position.y - thigh.position.y (shin: -shin.position.y) (512 shouter). Shin, foot, trunk and _yoke meshes in the dark body shade read as boots or a vest: recolour them to the dress cloth (433).
 - A head-hung piece cannot run on down the torso (it sits inside the chest box): build the torso run torso-parented (401).
 - The bead eyes hang off the neck joint, not the head block: a head-hung cap or band must be seated off the eyes' world tops read into the head's frame, or it covers them (403 ice archer); shrinking headSize leaves the eyes where they were (403 headbutter band across the eyes). A peaked cap brim hides them too (429 cannon).
 - A leg-length change reads only if the dress over the leg scales with it: brawlerLegs' boots and cuffs kept the visible belt-to-sole at 41% while the probe hip rose to 52% (406 headbutter). Measure the shot, not the bone.
@@ -55,10 +53,9 @@ Read whole at step 1; one fact per line, merge near cap.
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
 - A glove's blow is blade_slash: gate a fist layer on Attacking, not _attackMotion "strike" (463).
 - A torso-rooted shield detaches in windup (483, 489 pavise); dispose sim meshes in endSimulation (485).
-- A short effect child (cloud bolts) can die inside one capture advance: tie its life to its owner (492).
 - _buildCarry turns only nodes in its name regex; a marker child (uprightHammerCarry) gives the head-up carry. Unmarking a "staff"+"orb" rod hung it head-down (493).
 - A ground-length skirt hides a hover lift: robe below the knee rides each shin (493, 499 lich).
-- Replay probes with capture's seed: mulberry32 0x4d4f5642, _nextRuntimeId 100000 (503).
+- Replay probes as capture: mulberry32 0x4d4f5642 reseeded before resetBattle, resetClock, _nextRuntimeId 100000 (503, 512).
 - hpoint without "haxe" gives the shouldered carry: _twoHandPole's off fist lands over the crown (502 bomb stick).
 - In a fist prop's hand frame +y runs up the forearm (time_gauntlet cuff): past the knuckles is -y (492 claw).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
