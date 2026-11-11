@@ -63,6 +63,8 @@ const HWACHA_ROCKET = {
   fire: new Color3(1, 0.55, 0.12), core: new Color3(1, 0.92, 0.6),
 };
 /** The Skeleton Archer's burning arrow head (_dressFireArrow): flame tongues, longest (m), across (m), splay off the shaft, colours, glow */
+/** [S] 519 Cupid's love arrow (spec at ProjectileSystem._dressHeartArrow), m. */
+const HEART_ARROW_FLY = { head: 0.2, trail: 4, trailSize: 0.16, shrink: 0.8, gap: 0.24, sway: 0.06, lift: 0.04, pink: new Color3(1, 0.22, 0.62), shaft: new Color3(0.9, 0.78, 0.62) };
 const FIRE_ARROW = { burn: 5, tongues: 4, long: 0.38, wide: 0.11, splay: 0.28, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), dark: new Color3(0.1, 0.08, 0.07), glow: 0.9 };
 /** The Pumpkin Catapult's jack-o'-lantern ("pumpkin" case): diameter (m), height of the width, ribbed lobes, skin, stem, carved-face glow */
 /**
@@ -231,6 +233,8 @@ interface ProjectileSpawnOptions {
   iceArrow?: boolean;
   /** A burning arrow: flames round its head and a fire trail (FIRE_ARROW). */
   fireArrow?: boolean;
+  /** [S] 519 Cupid's love arrow: a pink heart head and a trail of pink hearts behind it (_dressHeartArrow). */
+  heartArrow?: boolean;
   /** A potion, carrying its thrower's unit id: it does not blow up but splashes green, and every man in the splash goes drunk (DRUNK_SPLASH, RuntimeUnit.getDrunk). */
   drunk?: string;
   /** [S] 427 A ground point the missile comes down on instead of the man (the Pirate Queen's Bomb Spin bombs, lobbed out all round her): it does not follow him. */
@@ -522,6 +526,7 @@ export class ProjectileSystem {
     if (options.snake && shape === "arrow" && !held) this._dressSnake(mesh);
     if (options.iceArrow && shape === "arrow" && !held) this._dressIceArrow(mesh);
     if (options.fireArrow && shape === "arrow" && !held) this._dressFireArrow(mesh);
+    if (options.heartArrow && shape === "arrow" && !held) this._dressHeartArrow(mesh);
     if (held) {
       // Laid on its line of flight from the frame it leaves the hand, not drawn pointing north until the first flight step turns it
       const dir = targetPos.add(new Vector3(0, options.targetLift ?? 0.5, 0)).subtract(mesh.position);
@@ -1343,6 +1348,40 @@ export class ProjectileSystem {
       cone("fireArrowFlame", F.long * (k % 2 ? 0.7 : 1), F.wide, new Vector3(Math.cos(a) * F.splay, Math.sin(a) * F.splay, -1), outer);
     }
     cone("fireArrowCore", F.long * 0.55, F.wide * 0.8, new Vector3(0, 0, -1), inner);
+  }
+
+  /*
+   * [S] 519 Cupid's love arrow (secret.cupid.png: a pale shaft headed by a big pink heart, a string of small pink hearts trailing behind it; card "shoots
+   * love arrows"). HEART_ARROW_FLY, in m in the arrow's own frame (head first along +z, the shaft's end at .375): the steel tip off, the shaft pale, a heart
+   * .head across standing on the shaft's end, point first; .trail hearts behind the fletching, each .shrink of the one before, .gap apart, swaying .sway
+   * side to side. A heart is two lobes over a turned square, unlit pink, carried with the arrow so a still reads the trail.
+   */
+  private _dressHeartArrow(root: TransformNode): void {
+    const H = HEART_ARROW_FLY;
+    for (const child of root.getChildMeshes(true)) {
+      if (child.name === "tip") child.dispose();
+      if (child.name === "shaft") child.material = this._getMat("heartArrow_shaft", H.shaft, 0.5);
+      if (child.name === "fletch") child.material = this._getMat("heartArrow_fletch", H.pink, 0.8);
+    }
+    const pink = this._getMat("heartArrow_pink", H.pink, 0.9);
+    const heart = (size: number, at: Vector3, flat: boolean): void => {
+      const node = new TransformNode("loveHeart", this._scene);
+      node.parent = root; node.position.copyFrom(at);
+      // point along +z for the head; the trail hearts stand upright, facing sideways so the side-on camera reads their shape
+      if (flat) node.rotation.x = -Math.PI / 2; else node.rotation.y = Math.PI / 2;
+      for (const side of [-1, 1]) {
+        const lobe = MeshBuilder.CreateIcoSphere("loveHeartLobe", { radius: size * 0.3, subdivisions: 1 }, this._scene);
+        lobe.parent = node; lobe.material = pink; lobe.position.set(side * size * 0.22, size * 0.12, 0); lobe.scaling.z = 0.6;
+      }
+      const point = MeshBuilder.CreateBox("loveHeartPoint", { width: size * 0.5, height: size * 0.5, depth: size * 0.3 }, this._scene);
+      point.parent = node; point.material = pink; point.position.set(0, -size * 0.1, 0); point.rotation.z = Math.PI / 4;
+    };
+    heart(H.head, new Vector3(0, 0, 0.375 + H.head * 0.25), true);
+    let size = H.trailSize;
+    for (let i = 0; i < H.trail; i++) {
+      heart(size, new Vector3(Math.sin(i * 1.9) * H.sway, H.lift + Math.cos(i * 1.3) * H.sway * 0.6, -0.42 - i * H.gap), false);
+      size *= H.shrink;
+    }
   }
 
   private _dressIceArrow(root: TransformNode): void {

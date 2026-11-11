@@ -190,6 +190,8 @@ const SNAKE_ARROWS = new Set(["ancient.snake_archer"]);
 const ICE_ARROWS = new Set(["viking.ice_archer"]);
 /** [S] 434 archers whose arrows fly burning (projectileSystem FIRE_ARROW) */
 const FIRE_ARROWS = new Set(["spooky.skeleton_archer"]);
+// [S] 519 Cupid's love arrows (projectileSystem _dressHeartArrow)
+const HEART_ARROWS = new Set(["secret.cupid"]);
 const STIFFY_FEAR = { units: new Set(["spooky.skeleton_warrior"]), every: 2, seconds: 3.5, reach: 4 };
 // [S] 475 Pharaoh Kneel: the struck man and enemies within .radius (KNEEL_AURA's ring) kneel .seconds (RuntimeUnit.applyKneel)
 const PHARAOH_KNEEL = { radius: 2.4, seconds: 3 };
@@ -3710,7 +3712,7 @@ export class SimulationSystem {
             this._units,
             undefined,
             0,
-            { originLift: launchAt ? 0 : originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), fireArrow: FIRE_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined, ...(HAND_LAUNCH[attacker.definition.id] === "barrel" && launchAt ? { arc: BARREL_ROLL.arc, targetLift: 0.3 } : {}) },
+            { originLift: launchAt ? 0 : originLiftForSource(attackOriginInfo.source), balloons: BALLOON_ARROWS.has(attacker.definition.id) ? attacker.definition.id : undefined, broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), snake: SNAKE_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), fireArrow: FIRE_ARROWS.has(attacker.definition.id), heartArrow: HEART_ARROWS.has(attacker.definition.id), drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined, heldProp: loadedBolt?.isEnabled() ? loadedBolt : undefined, ...(HAND_LAUNCH[attacker.definition.id] === "barrel" && launchAt ? { arc: BARREL_ROLL.arc, targetLift: 0.3 } : {}) },
           );
           // [S] 469 the Barrel Roller's shot is the barrel under his feet, rolled along the ground (BARREL_ROLL)
           if (HAND_LAUNCH[attacker.definition.id] === "barrel" && launchAt) this._rollRiddenBarrel(attacker);
@@ -4294,7 +4296,7 @@ export class SimulationSystem {
         // Loosed off the drawn bow: from the bow, where the draw has put it
         const origin = attacker.getAttackOrigin();
         this.projectileSystem.spawnProjectile(
-          t.shape, origin.position, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: originLiftForSource(origin.source), broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), fireArrow: FIRE_ARROWS.has(attacker.definition.id) },
+          t.shape, origin.position, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0, { originLift: originLiftForSource(origin.source), broadhead: BROADHEAD_ARROWS.has(attacker.definition.id), iceArrow: ICE_ARROWS.has(attacker.definition.id), fireArrow: FIRE_ARROWS.has(attacker.definition.id), heartArrow: HEART_ARROWS.has(attacker.definition.id) },
         );
         continue;
       }
