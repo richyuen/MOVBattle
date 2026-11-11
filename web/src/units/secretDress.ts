@@ -533,6 +533,33 @@ export function chuKoNuSleeves(scene: Scene, body: ArticulatedBody, team: Color3
   return out;
 }
 
+/**
+ * [S] 514 the Chu Ko Nu's cloth mitts (secret.chu_ko_nu.blue.png: both hands wrapped in pale cream cloth mitts, bulkier than the bare fist, a
+ * wrapped band at the wrist; audit a.2 "bare team-blue hands"). Per hand mesh a flat-shaded box .mitt of the hand box round it (its own centre),
+ * and a band .band of the hand's width round at the wrist end, .bandH of its height tall; the hand mesh under it in the same cream. Flat unlit cream
+ * (LESSONS 442: lit cream reads grey in the field), out of the glow.
+ */
+const KONU_MITT = { mitt: 1.3, band: 1.45, bandH: 0.28, cream: new Color3(0.86, 0.78, 0.62) };
+export function chuKoNuMitts(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const M = KONU_MITT, glow = scene.getGlowLayerByName("glow");
+  const cream = getMaterialFactory().get("unlit", M.cream, { emissive: M.cream });
+  const out: Mesh[] = [];
+  for (const hand of [body.leftHand, body.rightHand]) {
+    const hm = hand.getChildMeshes(true).find((m) => /_[lr]HandM$/.test(m.name)) as Mesh | undefined;
+    if (!hm) continue;
+    const hb = hm.getBoundingInfo().boundingBox, e = hb.extendSize.multiply(hm.scaling);
+    const at = hm.position.add(hb.center.multiply(hm.scaling));
+    const mitt = MeshBuilder.CreateBox("konuMitt", { width: e.x * 2 * M.mitt, height: e.y * 2 * M.mitt, depth: e.z * 2 * M.mitt }, scene);
+    mitt.parent = hand; mitt.position.copyFrom(at); mitt.rotation.copyFrom(hm.rotation); mitt.material = cream; out.push(mitt);
+    // the wrist band at the hand's top (toward the forearm, +y in the hand frame)
+    const band = MeshBuilder.CreateCylinder("konuMittBand", { height: e.y * 2 * M.bandH, diameter: Math.max(e.x, e.z) * 2 * M.band, tessellation: 8 }, scene);
+    band.parent = hand; band.position.set(at.x, at.y + e.y * (1 - M.bandH), at.z); band.material = cream; out.push(band);
+    hm.material = cream;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 export function chuKoNuRobe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
   const bounds = torso.getBoundingInfo().boundingBox;
