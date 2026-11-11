@@ -1116,3 +1116,37 @@ export function teacherShoes(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 512 the Executioner's trousers tucked into banded boots (secret.executioner.red.png: dark team trousers down the thigh into tall darker boots
+ * that reach just under the knee, ridged by four raised bands and topped by a flared cuff; audit 500 a.4 "plain team legs"). Spec in the shin's box
+ * (centre c, half size s) and the foot box: thighs and the upper shin in trouser cloth (team x .trouser); a boot shaft .shaft s.x round over the
+ * shin from its foot to .top of the way up from the knee joint's foot, a flared cuff .cuff round at its top, .bands raised bands .band s.x round
+ * spread evenly down it, and the foot box re-clothed in boot cloth (team x .boot). Own team cloth (LESSONS 449), out of the glow.
+ */
+const EXEC_BOOT = { trouser: 0.5, boot: 0.26, ridge: 0.15, shaft: 2.25, cuff: 2.55, band: 2.45, top: 0.82, bands: 4 };
+export function executionerBoots(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const E = EXEC_BOOT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cloth = (k: number) => { const c = team.scale(k); return mf.get("cloth", c, { emissive: c.scale(0.12), roughness: 1 }); };
+  const trousers = cloth(E.trouser), boot = cloth(E.boot), ridge = cloth(E.ridge);
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) thigh.material = trousers;
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    shin.material = trousers;
+    const { center: c, extendSize: s } = shin.getBoundingInfo().boundingBox;
+    const kneeY = -shin.position.y, foot = c.y - s.y;
+    const top = foot + (kneeY - foot) * E.top, mid = (top + foot) / 2, len = top - foot;
+    const ring = (name: string, height: number, round: number, y: number, material: Material) => {
+      const mesh = MeshBuilder.CreateCylinder(name, { height, diameterTop: s.x * round, diameterBottom: s.x * round * 0.94, tessellation: 8 }, scene);
+      mesh.parent = shin; mesh.position.set(c.x, y, c.z);
+      mesh.scaling.z = s.z / s.x; mesh.rotation.y = Math.PI / 8;
+      mesh.material = material; out.push(mesh);
+    };
+    ring("executionerBootShaft", len, E.shaft, mid, boot);
+    ring("executionerBootCuff", len * 0.14, E.cuff, top - len * 0.04, boot);
+    for (let k = 0; k < E.bands; k++) ring("executionerBootBand", len * 0.06, E.band, top - len * (0.26 + k * 0.19), ridge);
+  }
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) foot.material = boot;
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
