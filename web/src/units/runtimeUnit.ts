@@ -24,7 +24,8 @@ const RAPTOR_GAIT = { amp: 0.75, rate: 2.6, full: 3, ease: 8, bob: 0.06 };
 /** [S] 520 the Bank Robbers' overhead carry (spec at RuntimeUnit._tendSafeCarry). */
 const SAFE_CARRY = { inset: 0.15 };
 /** [S] 520 the Mace Spinner's fists at his hips (spec at RuntimeUnit._holdSpinnerFists). */
-const SPINNER_FISTS = { out: 0.2, ahead: 0.1, up: 0.02 };
+// 520b out .2 -> .32: the fists met before his belly (probe), the maces crossing his chest; the render holds them at his flanks
+const SPINNER_FISTS = { out: 0.32, ahead: 0.08, up: 0.02 };
 /*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
  * upward. Heavier units may require more balloons to float"; Appearance: the arrow's ball "expand[s] into balloons"). A man a balloon arrow strikes
