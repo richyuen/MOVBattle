@@ -904,7 +904,7 @@ export function bomberShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
  * front face f, length L, width Wf, height Hf): per foot a flat steel blade .blade L long, .root Wf deep at the root to a point, .thin Wf thick, set
  * .lift Hf over the sole at the toe's front and pitched .pitch rad down past it; a dark clip band .clip L long round the toe at its root.
  */
-const JESTER_TOE = { blade: 0.78, root: 0.62, thin: 0.12, lift: 0.18, pitch: 0.28, clip: 0.16, steel: new Color3(0.47, 0.49, 0.53), strap: new Color3(0.17, 0.075, 0.045) };
+const JESTER_TOE = { blade: 1.1, root: 0.7, thin: 0.12, lift: 0.3, pitch: -0.3, clip: 0.16, steel: new Color3(0.47, 0.49, 0.53), strap: new Color3(0.17, 0.075, 0.045) };
 export function jesterToeKnives(scene: Scene, body: ArticulatedBody): Mesh[] {
   const T = JESTER_TOE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const steel = mf.get("cloth", T.steel, { emissive: T.steel.scale(0.35), roughness: 0.6 });
