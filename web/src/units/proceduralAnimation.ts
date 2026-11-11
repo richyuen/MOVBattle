@@ -321,6 +321,8 @@ const LANCE_AIM = { hold: 0.6, rate: 4 };
  */
 /** [S] 502 the Ball 'n' Chain's hug (_hugStone): fists on the stone's flanks, in its radii out, ahead and down from its centre. */
 const STONE_HUG = { side: 0.8, front: -0.1, drop: 0.3 };
+/** [S] 511 the Chu Ko Nu's level carry (_holdRepeatingCrossbow): the weapon fist ahead of the trunk, out to his side and down from the chest's middle (m); the off fist under the stock .under of the magazine's height below the stock. */
+const RCB_HOLD = { ahead: 0.16, across: 0.06, drop: 0.12, under: 0.45 };
 /** [S] 511 the off fist on a two-handed pole stays this share of the shaft's length in from either end (_twoHandPole). */
 const POLE_END_IN = 0.12;
 const POLE_GRIP = {
@@ -2443,6 +2445,7 @@ export class ProceduralAnimator {
     this._restNorseBoard();
     this._aimPick();
     this._twoHandPole();
+    this._holdRepeatingCrossbow();
     this._holdArbiterBook();
     this._hugStone();
     this._levelPike();
@@ -4643,6 +4646,54 @@ export class ProceduralAnimator {
   }
 
   /** The off arm solved onto a world point: shoulder swing and elbow fold, the elbow out to his free side and down, eased in by `w`. */
+  /*
+   * [S] 511 the Chu Ko Nu's two-handed level carry (secret.chu_ko_nu.jpg: all three walk with the repeating crossbow held level across the belly, the
+   * weapon fist on the stock behind the magazine and the off fist under its fore end; audit 511 b.1 "both hands hang clear of the stock", the
+   * crossbow slung behind the shoulder in the windup). With a crossbow carrying "rcbMuzzle" in the weapon fist, in every living state: the weapon
+   * fist is solved (_armTo) onto a point RCB_HOLD.ahead m before the trunk's front, .across to his weapon side and .drop under the chest's middle;
+   * the crossbow is laid level in it, its shooting line (-z) along his heading, the fist kept where it held the stock; the off fist is solved onto
+   * the stock's underside at the magazine (.under of the magazine's height below its middle). Eased off as he goes limp.
+   */
+  private _rcb: TransformNode | null | undefined = undefined;
+  private _rcbRest: Vector3 | null = null;
+  private _holdRepeatingCrossbow(): void {
+    if (this._rcb === undefined) {
+      const slot = this._body.rightHand.getDescendants(false, (n) => n.name === "rcbMuzzle")[0];
+      this._rcb = (slot?.parent as TransformNode | null) ?? null;
+      if (this._rcb) this._rcbRest = this._rcb.position.clone();
+    }
+    const bow = this._rcb;
+    if (!bow || !this._rcbRest || this.walkStyle === "quadruped" || this._state === AnimState.Dead) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const b = this._body, H = RCB_HOLD;
+    for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.rightShoulder]) n.computeWorldMatrix(true);
+    const tb = b.torsoMesh.getBoundingInfo().boundingBox;
+    const { fwd, right } = this._heading();
+    const depth = tb.extendSizeWorld.z;
+    const grip = tb.centerWorld.add(fwd.scale(depth + H.ahead)).addInPlace(right.scale(H.across)).addInPlace(new Vector3(0, -H.drop, 0));
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, grip, w, 2);
+    // lay the crossbow level along the heading, the fist where it held the stock
+    for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
+    const hand = b.rightHand.getWorldMatrix();
+    const handScale = new Vector3(), handRot = new Quaternion(), handPos = new Vector3();
+    hand.decompose(handScale, handRot, handPos);
+    const want = Quaternion.FromLookDirectionLH(fwd.scale(-1), Vector3.Up());
+    const at = handPos.add(this._rcbRest.multiply(handScale).applyRotationQuaternion(want));
+    const bowScale = bow.scaling.multiply(handScale);
+    const local = Matrix.Compose(bowScale, want, at).multiply(Matrix.Invert(hand));
+    const ls = new Vector3(), lr = new Quaternion(), lp = new Vector3();
+    local.decompose(ls, lr, lp);
+    const have = bow.rotationQuaternion ?? Quaternion.FromEulerAngles(bow.rotation.x, bow.rotation.y, bow.rotation.z);
+    bow.rotationQuaternion = Quaternion.Slerp(have, lr, w);
+    bow.position = Vector3.Lerp(this._rcbRest, lp, w);
+    bow.computeWorldMatrix(true);
+    const mag = bow.getChildren().find((c) => c.name === "rcbMagazine") as TransformNode | undefined;
+    if (!mag) return;
+    const under = new Vector3(0, -mag.position.y * H.under, mag.position.z);
+    this._offArmTo(Vector3.TransformCoordinates(under, bow.getWorldMatrix()), w, 2);
+  }
+
   private _offArmTo(grip: Vector3, w: number, settle = 0): void {
     const b = this._body;
     this._armTo(b.leftShoulder, b.leftElbow, b.leftHand, grip, w, settle);
