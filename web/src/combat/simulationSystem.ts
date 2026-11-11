@@ -102,7 +102,12 @@ const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up
 // a man within .within m past body contact, with a kick ready (.cooldown s apart), is front-kicked: the harpooner stops, his foot chambers and drives
 // out over .windup s (proceduralAnimation PIRATE_KICK_POSE), and at the blow the man (still within .slack more) takes .damage of a shot's harm and is
 // booted off his feet .fling m/s along the kick with .lift m/s up; the foot is back down .recover s later. Logged "kick" at the blow.
-const PIRATE_KICK = { units: new Set(["pirate.harpooner"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
+const PIRATE_KICK = { units: new Set(["pirate.harpooner", "secret.jester"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
+// [S] 511 the Jester Kick (card secret.jester Abilities "Jester Kick": damage 80-1500 against the dagger's 70-140, cooldown 2 s, range 1, warm-up .3 s;
+// Characteristics "sharp daggers on their hands and toes ... delivering a lethal kick"; audit 500 c.2): the same front kick, its toe knife leading
+// (secretDress jesterToeKnives), on his own clock between dagger stabs: .windup s to the blow, .damage of a stab's harm, a smaller boot off the feet.
+const KICK_BY_UNIT: Record<string, typeof PIRATE_KICK> = { "secret.jester": { ...PIRATE_KICK, within: 0.5, windup: 0.3, recover: 0.3, cooldown: 2, damage: 4, fling: 3.5, lift: 2 } };
+const kickOf = (id: string): typeof PIRATE_KICK => KICK_BY_UNIT[id] ?? PIRATE_KICK;
 // [S] 464 the Pike's dropped pike (_dropPike): forward and up as it leaves the fist (m/s), its tumble (rad/s), his first slap after (s)
 // 464b: up .8, spin 1.2 left it level at his chest 150 ms on (the _ability_after shot read as still held): it now leaves falling, tipping
 const PIKE_DROP = { ahead: 0.6, up: -2.4, spin: 3, ready: 0.6 };
@@ -2101,12 +2106,13 @@ export class SimulationSystem {
         unit.faceTarget(kick.target.position);
         return;
       }
-      const reach = unit.collisionBodyRadius + enemy.collisionBodyRadius + PIRATE_KICK.within;
+      const KK = kickOf(unit.definition.id);
+      const reach = unit.collisionBodyRadius + enemy.collisionBodyRadius + KK.within;
       if (distance <= reach && now >= (this._kickReadyAt.get(unit) ?? 0)) {
-        const damage = attackProfile.damage * (unit.definition.damageMultiplier ?? 1) * PIRATE_KICK.damage;
-        this._kicks.set(unit, { target: enemy, blowAt: now + PIRATE_KICK.windup, endAt: now + PIRATE_KICK.windup + PIRATE_KICK.recover, done: false, damage });
-        this._kickReadyAt.set(unit, now + PIRATE_KICK.cooldown);
-        unit.animator.setKick(true, PIRATE_KICK.windup);
+        const damage = attackProfile.damage * (unit.definition.damageMultiplier ?? 1) * KK.damage;
+        this._kicks.set(unit, { target: enemy, blowAt: now + KK.windup, endAt: now + KK.windup + KK.recover, done: false, damage });
+        this._kickReadyAt.set(unit, now + KK.cooldown);
+        unit.animator.setKick(true, KK.windup);
         unit.stopMoving();
         this._clearPathState(unit);
         unit.faceTarget(enemy.position);
@@ -4661,8 +4667,8 @@ export class SimulationSystem {
 
   /** Each kick under way (spec at PIRATE_KICK): the man booted off his feet at its blow, the foot back down at its end. */
   private _landKicks(now: number): void {
-    const K = PIRATE_KICK;
     for (const [unit, kick] of this._kicks) {
+      const K = kickOf(unit.definition.id);
       if (unit.isDead || unit.isToppled || unit.isDowned) { unit.animator.setKick(false); this._kicks.delete(unit); continue; }
       if (!kick.done && now >= kick.blowAt) {
         kick.done = true;
