@@ -442,6 +442,13 @@ const BULLET_RAIN = { units: new Set(["wild_west.gunslinger"]), hold: 1.1, raise
  */
 // [P] 448 scale .85 -> .5: the burst whited out half the _flight frame and the miner (critic 447 c defect 1)
 const MINER_BLAST = { units: new Set(["wild_west.miner"]), radius: 2.5, scale: 0.5 };
+/*
+ * [S] 511 the Chu Ko Nu's bolt train (card secret.chu_ko_nu Weapons: count 5, shoot delay per projectile .25 s, speed 30; audit 510 c.1 "bolt train
+ * crosses the air above the visible weapon"): each attack lets go one bolt every .every s off the crossbow's rail (HAND_LAUNCH "muzzle"), each from
+ * where the rail is at its own moment and with no scatter, so the train runs out of the stock; he keeps turned on the man while it runs. Logged
+ * "burst" at the first bolt.
+ */
+const RCB_VOLLEY = { units: new Set(["secret.chu_ko_nu"]), every: 0.25 };
 const QUICK_FAN = { units: new Set(["wild_west.quick_draw"]), shots: 6, every: 0.2, flash: 0.6, damage: 1.18, push: 1.2 };
 const VAMPIRE_LATCH = { round: 0.7, off: 0.75, up: 0.2, first: 0.3, every: 0.35, afterDeath: 0.5, blood: 12 };
 /**
@@ -753,6 +760,7 @@ export class SimulationSystem {
   // Gunslingers' volleys into the sky and the bullets coming down (BULLET_RAIN): when the guns fire up, then each bullet's spot and landing time
   private _rains: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; splash: number; upAt: number; drops: { at: Vector3; lands: number; shown: boolean }[] }[] = [];
   /** [S] 447 Quick Draw's shots still to fire this attack (QUICK_FAN). */
+  private _rcbVolleys: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; splash: number; nextAt: number; left: number }[] = [];
   private _fans: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; splash: number; nextAt: number; left: number }[] = [];
   // Vampires hanging on a man's neck (VAMPIRE_LATCH): the man, his side, the next draught and its damage, when he lets go (set once the man is dead)
   private _latches = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; next: number; draught: number; until: number }>();
@@ -978,6 +986,7 @@ export class SimulationSystem {
     this._latches.clear();
     this._rains = [];
     this._fans = [];
+    this._rcbVolleys = [];
     for (const h of this._hammers) h.hinge.dispose(false, true);
     this._hammers = [];
     this._clearChrono();
@@ -1091,6 +1100,7 @@ export class SimulationSystem {
     if (this._latches.size > 0) this._holdLatches(now);
     if (this._rains.length > 0) this._stepRains(now);
     if (this._fans.length > 0) this._stepFans(now);
+    if (this._rcbVolleys.length > 0) this._stepRcbVolleys(now);
     if (this._impales.size > 0) this._holdImpales(now);
     if (this._lassos.size > 0) this._haulLassos(now);
     this._cactusExplosions(now);
@@ -1290,6 +1300,21 @@ export class SimulationSystem {
   }
 
   /** [S] 447 Fires each Quick Draw's due shots, one revolver shot at a time (spec at QUICK_FAN). */
+  /** Lets go the next bolt of each Chu Ko Nu train off the rail (spec at RCB_VOLLEY). */
+  private _stepRcbVolleys(now: number): void {
+    for (let k = this._rcbVolleys.length - 1; k >= 0; k--) {
+      const v = this._rcbVolleys[k];
+      if (v.attacker.isDead || v.target.isDead || v.left <= 0) { this._rcbVolleys.splice(k, 1); continue; }
+      if (now < v.nextAt) continue;
+      v.left -= 1;
+      v.nextAt = now + RCB_VOLLEY.every;
+      v.attacker.faceTarget(v.target.position);
+      const rail = handLaunchPoint(v.attacker) ?? v.attacker.getAttackOrigin().position;
+      const shape = resolveProjectileShape(v.attacker, getAttackProfile(v.attacker.definition.attackProfileId)) ?? "arrow";
+      this.projectileSystem?.spawnProjectile(shape, rail, v.target, v.damage, v.knockback, v.splash, v.attacker.team, this._units, undefined, 0, { originLift: 0 });
+    }
+  }
+
   private _stepFans(now: number): void {
     const F = QUICK_FAN;
     for (let k = this._fans.length - 1; k >= 0; k--) {
@@ -3504,6 +3529,16 @@ export class SimulationSystem {
     if (BULLET_RAIN.units.has(attacker.definition.id)) {
       attacker.animator.gunsUp(BULLET_RAIN.hold);
       this._rains.push({ attacker, target, damage, knockback, splash: Math.max(splashRadius, BULLET_RAIN.splash), upAt: now + BULLET_RAIN.raise, drops: [] });
+      return;
+    }
+
+    if (RCB_VOLLEY.units.has(attacker.definition.id) && this.projectileSystem) {
+      if (this._rcbVolleys.some((v) => v.attacker === attacker)) return;
+      const shots = Math.max(3, attacker.definition.burstCount ?? 5);
+      this._rcbVolleys.push({ attacker, target, damage: Math.max(1, Math.ceil(damage / shots)), knockback: knockback.scale(0.4), splash: splashRadius > 0 ? splashRadius * 0.5 : 0, nextAt: now, left: shots });
+      this._logAbility(attacker, "burst", now, target.position);
+      this._stepRcbVolleys(now);
+      this._applyOnHitStatuses(attacker, target, now, impactOrigin);
       return;
     }
 
