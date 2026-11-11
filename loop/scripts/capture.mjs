@@ -272,7 +272,8 @@ async function palette(page) {
 void PAIRS;
 // --list: print the shots this run would take and stop
 if (flag("--list")) {
-  const names = unitMode ? [...unitIds.flatMap(UNIT_SHOTS), ...new Set(unitIds.map((id) => `lineup_${id.split(".")[0]}`))] : (wanted ?? ALL_SHOTS);
+  const lineupOf = (id) => { const f = id.split(".")[0]; const sl = batches(loadRoster()).find((b) => b.faction === f && b.units.includes(id)); return `lineup_${sl && sl.name !== f ? sl.name : f}`; };
+  const names = unitMode ? [...unitIds.flatMap(UNIT_SHOTS), ...new Set(unitIds.map(lineupOf))] : (wanted ?? ALL_SHOTS);
   process.stdout.write(`${names.join("\n")}\n`);
   process.exit(0);
 }
@@ -839,8 +840,12 @@ async function main() {
           await take(`unit_${id}_dodge_after`, second.tick + 9, 5, { hold: second.tick });
         } else if (SECOND_ABILITY[id]) summary.notes.push(`unit_${id}: shot may miss: no ${SECOND_ABILITY[id]} within the window`);
         const faction = id.split(".")[0];
-        if (!lineupsDone.has(faction)) {
-          lineupsDone.add(faction);
+        // [evidence 516] a sliced faction gets one lineup per slice touched (lineup_secret_1, lineup_secret_2): one lineup_secret framed only
+        // the first unit's slice, so a secret_2 man's look had no lineup (515)
+        const unitSlice = batches(loadRoster()).find((b) => b.faction === faction && b.units.includes(id));
+        const lineupKey = unitSlice && unitSlice.name !== faction ? unitSlice.name : faction;
+        if (!lineupsDone.has(lineupKey)) {
+          lineupsDone.add(lineupKey);
           // The gallery scene places the rank (spacing, room for a machine, camera distance); the shot then turns every man to face +x and
           // frames him as the idle shot does: a front three-quarter from his weapon side, a little above eye level (the TABS faction jpgs' angle)
           await page.evaluate((n) => {
@@ -893,7 +898,7 @@ async function main() {
               window.game.frameCamera(t, r, al, be);
             }, slice.units);
           }
-          await shot(page, `lineup_${faction}`);
+          await shot(page, `lineup_${lineupKey}`);
           // [evidence 485] lineup_good crops the Chronomancer and the elephant's rider at its right edge: a supplementary wide shot of the same
           // rank, aimed at the rank's middle and pulled back so every man is whole (lineup_good itself is unchanged)
           if (faction === "good") {
