@@ -1836,7 +1836,8 @@ const TKD_GI = {
 };
 export function taekwondoGi(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const C = TKD_GI, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
-  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  // 516b: the jacket in the body's own team material, the trousers' shade (a team cloth of its own read pale lilac beside them, look 516)
+  const cloth = body.bodyMaterial ?? mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
   const cream = mf.get("unlit", C.cream, { emissive: C.cream });
   const black = mf.get("cloth", C.black, { emissive: C.black.scale(0.4), roughness: 1 });
   for (const m of [body.torsoMesh, ...body.allMeshes.filter((x) => /_yoke$|_[lr]Pad$/.test(x.name))]) m.material = cloth;
