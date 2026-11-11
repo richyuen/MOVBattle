@@ -107,13 +107,6 @@ const PIRATE_KICK = { units: new Set(["pirate.harpooner", "secret.jester"]), wit
 // Characteristics "sharp daggers on their hands and toes ... delivering a lethal kick"; audit 500 c.2): the same front kick, its toe knife leading
 // (secretDress jesterToeKnives), on his own clock between dagger stabs: .windup s to the blow, .damage of a stab's harm, a smaller boot off the feet.
 const KICK_BY_UNIT: Record<string, typeof PIRATE_KICK> = { "secret.jester": { ...PIRATE_KICK, within: 0.5, windup: 0.3, recover: 0.3, cooldown: 2, damage: 4, fling: 3.5, lift: 2 } };
-/*
- * [S] 511 the Ballooner's glued dive (card secret.ballooner Abilities "Balloon Backpack ... makes units instinctively dive into their enemies when
- * attacking", Characteristics "use their Ballooner Grabs to glue onto units and lift them up"; audit 500 c.2 "a poke from 1 m"): at his grab he dives
- * head first (proceduralAnimation setDive) from where he stands to the man's front over .seconds s along an arc .arc m high, the man held in place;
- * from then, all through the lift, both glue mitts stay on the man's trunk (proceduralAnimation setGlue).
- */
-const GLUE_DIVE = { seconds: 0.26, arc: 0.35 };
 const kickOf = (id: string): typeof PIRATE_KICK => KICK_BY_UNIT[id] ?? PIRATE_KICK;
 // [S] 464 the Pike's dropped pike (_dropPike): forward and up as it leaves the fist (m/s), its tumble (rad/s), his first slap after (s)
 // 464b: up .8, spin 1.2 left it level at his chest 150 ms on (the _ability_after shot read as still held): it now leaves falling, tipping
@@ -755,7 +748,7 @@ export class SimulationSystem {
   private _aimReadyAt = new Map<RuntimeUnit, number>();
   // Halflings holding on to their man (HALFLING_CLING): the man, the side he hangs on, when he lets go (set once the man is dead)
   private _spentBalloonPacks = new Set<RuntimeUnit>();
-  private _balloonLifts = new Map<RuntimeUnit, { target: RuntimeUnit; start: number; base: number; offset: Vector3; logged: boolean; from: Vector3; contact: Vector3 }>();
+  private _balloonLifts = new Map<RuntimeUnit, { target: RuntimeUnit; start: number; base: number; offset: Vector3; logged: boolean }>();
   private _clings = new Map<RuntimeUnit, { target: RuntimeUnit; side: number; until: number }>();
   // Gunslingers' volleys into the sky and the bullets coming down (BULLET_RAIN): when the guns fire up, then each bullet's spot and landing time
   private _rains: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; splash: number; upAt: number; drops: { at: Vector3; lands: number; shown: boolean }[] }[] = [];
@@ -1241,26 +1234,13 @@ export class SimulationSystem {
     for (const [unit, lift] of this._balloonLifts) {
       const target = lift.target;
       const age = now - lift.start;
-      if (unit.isDead || target.isDead || age >= GLUE_DIVE.seconds + 1.8) {
+      if (unit.isDead || target.isDead || age >= 1.8) {
         this._balloonLifts.delete(unit);
-        unit.animator.setDive(false);
-        unit.animator.setGlue(null);
         unit.dropFromHang();
         target.dropFromHang();
         continue;
       }
-      if (age < GLUE_DIVE.seconds) {
-        // the dive: head first along a low arc from where he struck to the man's front, the man held where he stands
-        const u = age / GLUE_DIVE.seconds;
-        const pos = Vector3.Lerp(lift.from, lift.contact, u * (2 - u));
-        pos.y = lift.base + GLUE_DIVE.arc * 4 * u * (1 - u);
-        unit.teleportTo(pos);
-        unit.faceTarget(target.position);
-        target.hangAt(target.position, now + 0.1);
-        continue;
-      }
-      unit.animator.setDive(false);
-      const t = Math.min(1, (age - GLUE_DIVE.seconds) / 1.25);
+      const t = Math.min(1, age / 1.25);
       const weight = Math.max(1, target.definition.mass);
       const y = lift.base + (3.3 / Math.sqrt(weight)) * t * (2 - t);
       unit.stopMoving();
@@ -1269,7 +1249,7 @@ export class SimulationSystem {
       unit.teleportTo(pos);
       target.hangAt(pos.add(lift.offset), now + 0.1);
       unit.faceTarget(target.position);
-      if (!lift.logged && age >= GLUE_DIVE.seconds + 0.24) {
+      if (!lift.logged && age >= 0.24) {
         lift.logged = true;
         this._logAbility(unit, "float_pack", now, target.position);
       }
@@ -4137,12 +4117,10 @@ export class SimulationSystem {
         const offset = direction.normalize().scale(reach * 0.78);
         const contact = target.position.subtract(offset);
         attacker.stopMoving();
+        attacker.teleportTo(contact);
         this._clearPathState(attacker);
         target.hangAt(target.position, now + 0.1);
-        // [S] 511 (ballooner c.2) he dives onto the man (GLUE_DIVE) and keeps both glued mitts on him for the whole lift
-        this._balloonLifts.set(attacker, { target, start: now, base: contact.y, offset, logged: false, from: attacker.position.clone(), contact });
-        attacker.animator.setDive(true);
-        attacker.animator.setGlue(target.body.torsoMesh);
+        this._balloonLifts.set(attacker, { target, start: now, base: contact.y, offset, logged: false });
       }
     }
     // [S] 473 the Super Boxer's punch bursts in light where it lands (visualEffects PUNCH_BURST): at the man's chest
