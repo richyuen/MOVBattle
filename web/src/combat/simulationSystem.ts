@@ -102,11 +102,18 @@ const GUN_TOSS = { units: new Set(["pirate.flintlock"]), out: 2.6, back: 1.6, up
 // a man within .within m past body contact, with a kick ready (.cooldown s apart), is front-kicked: the harpooner stops, his foot chambers and drives
 // out over .windup s (proceduralAnimation PIRATE_KICK_POSE), and at the blow the man (still within .slack more) takes .damage of a shot's harm and is
 // booted off his feet .fling m/s along the kick with .lift m/s up; the foot is back down .recover s later. Logged "kick" at the blow.
-const PIRATE_KICK = { units: new Set(["pirate.harpooner", "secret.jester"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3 };
+const PIRATE_KICK = { units: new Set(["pirate.harpooner", "secret.jester", "secret.taekwondo"]), within: 0.6, slack: 0.4, windup: 0.25, recover: 0.35, cooldown: 2.5, damage: 0.8, fling: 5, lift: 3, raise: 1.45, plain: false };
 // [S] 511 the Jester Kick (card secret.jester Abilities "Jester Kick": damage 80-1500 against the dagger's 70-140, cooldown 2 s, range 1, warm-up .3 s;
 // Characteristics "sharp daggers on their hands and toes ... delivering a lethal kick"; audit 500 c.2): the same front kick, its toe knife leading
 // (secretDress jesterToeKnives), on his own clock between dagger stabs: .windup s to the blow, .damage of a stab's harm, a smaller boot off the feet.
-const KICK_BY_UNIT: Record<string, typeof PIRATE_KICK> = { "secret.jester": { ...PIRATE_KICK, within: 0.5, windup: 0.3, recover: 0.3, cooldown: 2, damage: 4, fling: 3.5, lift: 2 } };
+// [S] 516 the Taekwondo Kick (card secret.taekwondo Characteristics "deliver a kick to enemy units they encounter, often flinging them away ... the
+// quickest to perform with the shortest cooldown"; Abilities "kicks to the head, chest"; audit 515 c.1 "raised fists, legs planted"): his main blow
+// is the same front kick driven up to the man's chest and head (.raise rad at the hip), every 1.5 s, punches between; the kick is a plain hit too
+// (.plain: hitLog), so it is the release the capture frames.
+const KICK_BY_UNIT: Record<string, typeof PIRATE_KICK> = {
+  "secret.jester": { ...PIRATE_KICK, within: 0.5, windup: 0.3, recover: 0.3, cooldown: 2, damage: 4, fling: 3.5, lift: 2 },
+  "secret.taekwondo": { ...PIRATE_KICK, within: 0.75, windup: 0.22, recover: 0.32, cooldown: 1.5, damage: 3, fling: 7, lift: 3.5, raise: 2.05, plain: true },
+};
 const kickOf = (id: string): typeof PIRATE_KICK => KICK_BY_UNIT[id] ?? PIRATE_KICK;
 /*
  * [S] 514 the Ballooner glued to his man (card Characteristics "use their Ballooner Grabs to glue onto units and lift them up"; audit c.2 "a poke from
@@ -2152,7 +2159,7 @@ export class SimulationSystem {
         const damage = attackProfile.damage * (unit.definition.damageMultiplier ?? 1) * KK.damage;
         this._kicks.set(unit, { target: enemy, blowAt: now + KK.windup, endAt: now + KK.windup + KK.recover, done: false, damage });
         this._kickReadyAt.set(unit, now + KK.cooldown);
-        unit.animator.setKick(true, KK.windup);
+        unit.animator.setKick(true, KK.windup, KK.raise);
         unit.stopMoving();
         this._clearPathState(unit);
         unit.faceTarget(enemy.position);
@@ -4745,6 +4752,13 @@ export class SimulationSystem {
           man.applyBlastLaunch(out, K.fling, K.lift);
           const at = unit.position.add(out.scale(unit.collisionBodyRadius + K.within * 0.5));
           this._logAbility(unit, "kick", now, at);
+          if (K.plain) {
+            if (this.hitLog.length >= 200) this.hitLog.shift();
+            const neck = this._neckOf(man);
+            worldMatrixChain(man.body.headTop);
+            const head = man.body.headTop.getAbsolutePosition();
+            this.hitLog.push({ t: now, attackerUnit: unit.definition.id, targetUnit: man.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
+          }
           this.visualEffects?.spawnKickDust(at, 1.5);
         }
       }

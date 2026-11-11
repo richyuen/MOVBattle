@@ -1485,11 +1485,14 @@ export class ProceduralAnimator {
   private _kickTarget = 0;
   private _kickClock = 0;
   private _kickWindup = 0.25;
-  setKick(on: boolean, windup = 0.25): void {
+  private _kickRaise = PIRATE_KICK_POSE.raise;
+  /** [S] 516 `raise`: the kicking thigh's swing at the blow (rad), the Taekwondo's higher than the front kick's (simulationSystem KICK_BY_UNIT). */
+  setKick(on: boolean, windup = 0.25, raise: number = PIRATE_KICK_POSE.raise): void {
     this._kickTarget = on ? 1 : 0;
     if (on) {
       this._kickClock = 0;
       this._kickWindup = Math.max(0.05, windup);
+      this._kickRaise = raise;
     }
   }
   private _applyKick(dt: number): void {
@@ -1502,12 +1505,14 @@ export class ProceduralAnimator {
     // the knee chambered up, then driven out straight to the blow
     const u = Math.min(1, this._kickClock / this._kickWindup);
     const ext = u * u * (3 - 2 * u);
-    b.rightHip.rotation.x -= K.raise * (K.chamberRaise + (1 - K.chamberRaise) * ext) * k;
+    b.rightHip.rotation.x -= this._kickRaise * (K.chamberRaise + (1 - K.chamberRaise) * ext) * k;
     b.rightKnee.rotation.x += K.chamber * (1 - ext) * k;
     b.leftHip.rotation.x += K.plant * 0.5 * k;
     b.leftKnee.rotation.x += K.plant * k;
-    b.torso.rotation.x -= K.lean * k;
-    b.neck.rotation.x += K.lean * K.headLevel * k;
+    // a higher kick leans the trunk back further, in step with the raise
+    const lean = K.lean * (this._kickRaise / K.raise);
+    b.torso.rotation.x -= lean * k;
+    b.neck.rotation.x += lean * K.headLevel * k;
   }
   /** The Bomb Spin's whirl (spec at BOMB_SPIN_POSE), set by the sim for the length of a spin (simulationSystem BOMB_SPIN). */
   private _bombSpin = 0;
