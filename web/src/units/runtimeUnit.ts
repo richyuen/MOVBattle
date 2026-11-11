@@ -3,7 +3,7 @@ import { createFxAmbient } from "../combat/particleFactory";
 import { getMaterialFactory } from "./materialFactory";
 import { VAMPIRE_BAT_NODE, VAMPIRE_BAT_WING, vampireBatBeat } from "./spookyDress";
 import { RAPTOR_MOUTH } from "./raptorBody";
-import { ChainWhip } from "./secretDress";
+import { ChainWhip, SpinnerMaces } from "./secretDress";
 
 /*
  * [S] spin while firing (330; card Characteristics "During battle, the machine spins around, launching cannonballs from the cannons"; renaissance.da_vinci_tank.jpg).
@@ -23,6 +23,8 @@ const SENTINEL_SWAP = { hold: 2.5 };
 const RAPTOR_GAIT = { amp: 0.75, rate: 2.6, full: 3, ease: 8, bob: 0.06 };
 /** [S] 520 the Bank Robbers' overhead carry (spec at RuntimeUnit._tendSafeCarry). */
 const SAFE_CARRY = { inset: 0.15 };
+/** [S] 520 the Mace Spinner's fists at his hips (spec at RuntimeUnit._holdSpinnerFists). */
+const SPINNER_FISTS = { out: 0.2, ahead: 0.1, up: 0.02 };
 /*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
  * upward. Heavier units may require more balloons to float"; Appearance: the arrow's ball "expand[s] into balloons"). A man a balloon arrow strikes
@@ -1287,6 +1289,7 @@ export class RuntimeUnit {
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
     this._tendSafeCarry();
+    this._holdSpinnerFists();
     this.animator.update(dt);
     this._spinDrum(dt);
     this._throwArm(dt);
@@ -1297,6 +1300,7 @@ export class RuntimeUnit {
     this._applyVisualPresentation(now);
     this._tendChainWhip(dt);
     this._tendRaptorGait(dt);
+    this._tendSpinnerMaces();
     this._movementVelocity.setAll(0);
 
     if (this._linkedParent && this._isAnchoredActor) {
@@ -2732,6 +2736,39 @@ export class RuntimeUnit {
     this.animator.carryOverheadAt = [at(r), at(l)];
   }
 
+  /**
+   * [S] 520 the Mace Spinner's two upright maces (secretDress SPINNER_MACE): built on his first frame, laid on his fists every frame after the pose.
+   * Out of an attack his fists are held at his hips, SPINNER_FISTS.out of his height out to each side and .ahead of it before him, .up over the hip
+   * joint (secret.mace_spinner.blue.png), so the maces stand at his flanks; in the attack his arms are the animator's.
+   */
+  private _spinnerMaces: SpinnerMaces | null = null;
+  private _spinnerHeight = 0;
+  private _tendSpinnerMaces(): void {
+    if (this.definition.id !== "secret.mace_spinner" || this._isAnchoredActor) return;
+    if (!this._spinnerMaces) {
+      const head = this.body.headMesh;
+      head.computeWorldMatrix(true);
+      this._spinnerHeight = head.getAbsolutePosition().y - this.position.y + head.getBoundingInfo().boundingBox.extendSize.y * head.absoluteScaling.y;
+      this._spinnerMaces = new SpinnerMaces(head.getScene(), this.body, this._spinnerHeight);
+      return;
+    }
+    this._spinnerMaces.place();
+  }
+  private _holdSpinnerFists(): void {
+    if (this.definition.id !== "secret.mace_spinner" || this._isAnchoredActor || this._spinnerHeight <= 0) return;
+    if (this._isDead || this.animator.state === AnimState.Attacking) { this.animator.carryOverheadAt = null; return; }
+    const F = SPINNER_FISTS, b = this.body, H = this._spinnerHeight;
+    b.root.computeWorldMatrix(true);
+    b.hip.computeWorldMatrix(true);
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    const right = Vector3.Cross(Vector3.Up(), fwd).normalize();
+    const hip = b.hip.getAbsolutePosition().add(new Vector3(0, H * F.up, 0)).add(fwd.scale(H * F.ahead));
+    this.animator.carryOverheadAt = [hip.add(right.scale(H * F.out)), hip.subtract(right.scale(H * F.out))];
+  }
+
   /** [S] 520 throws the Infernal Whip's chain out at `to()` (secretDress ChainWhip.lash); false without a chain or while a lash is out. */
   lashWhipAt(to: () => Vector3 | null, out: number, hold: number, back: number): boolean {
     return this._chainWhip?.lash(to, out, hold, back) ?? false;
@@ -2740,6 +2777,7 @@ export class RuntimeUnit {
 
   dispose(): void {
     this._chainWhip?.dispose(); this._chainWhip = null;
+    this._spinnerMaces?.dispose(); this._spinnerMaces = null;
     if (this._fearSkull) { this._fearSkull.dispose(false, false); this._fearSkull = null; }
     if (this._loveHearts) { this._loveHearts.dispose(false, false); this._loveHearts = null; }
     if (this._fxParticleSystem) {

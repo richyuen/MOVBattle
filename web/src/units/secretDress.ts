@@ -2463,6 +2463,74 @@ export function cupidFeet(scene: Scene, body: ArticulatedBody): void {
 }
 
 /*
+ * [S] 520 the Mace Spinner's two maces (secret.mace_spinner.blue.png, .red.png: one mace in each fist, held at the hip and stood upright, leaning a
+ * little out; each a long near-black iron shaft with a dark flanged head as wide as his head at the top, a spike over it; card Main Hand and Off Hand
+ * "Mace Spin"; audit 515 b.2 "one mace upright in each fist; ours has the second hanging at the hip, out of hand", b.3 "maces held upright at waist
+ * height; ours lays the shaft across the shoulders"). SPINNER_MACE in his standing height Hs: a 6-sided shaft .shaft Hs long, .thick Hs across, the
+ * fist .grip of it up from its butt, a ring at the butt; the head .head Hs tall: a 6-sided core .core Hs across, .flanges flat flanges .fin Hs out
+ * from it, a collar under it and a spike .spike Hs over it. World-space meshes laid each frame (RuntimeUnit._tendSpinnerMaces) on the fist, the shaft
+ * up the world's up leaned .lean rad out to his side and .fore ahead, so it stands upright whatever the hand's own turn. Near-black lit cloth self-lit
+ * .4 (LESSONS 494), the flanges a dark grey, out of the glow. The unit's own mace props are off (unitVisuals weapon none).
+ */
+const SPINNER_MACE = { shaft: 0.6, thick: 0.03, grip: 0.14, head: 0.17, core: 0.07, flanges: 6, fin: 0.06, spike: 0.08, lean: 0.22, fore: 0.12,
+  iron: new Color3(0.08, 0.075, 0.08), flange: new Color3(0.16, 0.16, 0.17) };
+export class SpinnerMaces {
+  private readonly _roots: TransformNode[] = [];
+  private readonly _meshes: Mesh[] = [];
+  constructor(scene: Scene, private readonly _body: ArticulatedBody, height: number) {
+    const M = SPINNER_MACE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+    const iron = mf.get("cloth", M.iron, { emissive: M.iron.scale(0.4), roughness: 1 });
+    const flange = mf.get("cloth", M.flange, { emissive: M.flange.scale(0.4), roughness: 1 });
+    const L = height * M.shaft, H = height * M.head;
+    for (let k = 0; k < 2; k++) {
+      const root = new TransformNode("spinnerMace", scene);
+      root.rotationQuaternion = Quaternion.Identity();
+      const put = (m: Mesh, material: Material, y: number): Mesh => { m.parent = root; m.material = material; m.position.y = y; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); this._meshes.push(m); return m; };
+      const lo = -L * M.grip, hi = lo + L;
+      put(MeshBuilder.CreateCylinder("spinnerMaceShaft", { height: L, diameter: height * M.thick, tessellation: 6 }, scene), iron, (lo + hi) / 2);
+      put(MeshBuilder.CreateCylinder("spinnerMaceButt", { height: height * 0.025, diameter: height * M.thick * 1.7, tessellation: 6 }, scene), iron, lo);
+      put(MeshBuilder.CreateCylinder("spinnerMaceCollar", { height: H * 0.14, diameterTop: height * M.core, diameterBottom: height * M.thick * 1.6, tessellation: 6 }, scene), iron, hi - H * 0.07);
+      const mid = hi + H / 2;
+      put(MeshBuilder.CreateCylinder("spinnerMaceCore", { height: H, diameter: height * M.core, tessellation: 6 }, scene), iron, mid);
+      for (let f = 0; f < M.flanges; f++) {
+        const a = (f / M.flanges) * Math.PI * 2;
+        const fin = put(MeshBuilder.CreateBox("spinnerMaceFlange", { width: height * M.fin, height: H * 0.92, depth: height * 0.018 }, scene), flange, mid);
+        fin.rotation.y = a;
+        fin.position.x = Math.cos(a) * (height * (M.core + M.fin)) / 2;
+        fin.position.z = -Math.sin(a) * (height * (M.core + M.fin)) / 2;
+      }
+      put(MeshBuilder.CreateCylinder("spinnerMaceSpike", { height: height * M.spike, diameterTop: 0, diameterBottom: height * M.core * 0.7, tessellation: 6 }, scene), iron, hi + H + height * M.spike / 2);
+      this._roots.push(root);
+    }
+    this.place();
+  }
+  get meshes(): Mesh[] { return this._meshes; }
+  /** Lays each mace on its fist (right, then left), upright, leaned out to that side and a little ahead of his facing. */
+  place(): void {
+    const M = SPINNER_MACE, b = this._body;
+    b.root.computeWorldMatrix(true);
+    const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
+    fwd.y = 0;
+    if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+    fwd.normalize();
+    const right = Vector3.Cross(Vector3.Up(), fwd).normalize();
+    [b.rightHand, b.leftHand].forEach((hand, k) => {
+      const chain: TransformNode[] = [];
+      for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      const side = k === 0 ? 1 : -1;
+      const up = Vector3.Up().add(right.scale(side * Math.tan(M.lean))).add(fwd.scale(Math.tan(M.fore))).normalize();
+      const root = this._roots[k];
+      root.position.copyFrom(hand.getAbsolutePosition());
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), up, root.rotationQuaternion!);
+    });
+  }
+  dispose(): void {
+    for (const r of this._roots) r.dispose(false, false);
+  }
+}
+
+/*
  * [S] 519 the Infernal Whip's chain whip (secret.infernal_whip.red.png: a chain of dark iron links about a body length long, hanging from the fist and
  * lying out over the ground, ending in a dark leaf-shaped blade; audit 518 b.1 "a short rigid dark stick with a few loose links behind"). CHAIN_WHIP:
  * .links links, the whole .long of his standing height; each link a dark box .wide x .thick of its length (in link lengths), every other one turned a quarter about the
