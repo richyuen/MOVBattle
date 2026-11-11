@@ -897,3 +897,35 @@ export function bomberShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/**
+ * [S] 511 the Jester's toe knives (secret.jester.red.png: a grey knife blade juts ahead of and below each shoe tip; card Appearance "two knives on
+ * its shoes", Characteristics "sharp daggers on their hands and toes"; audit 500 b.2). Spec in the foot box (the merged boot under the knee, its
+ * front face f, length L, width Wf, height Hf): per foot a flat steel blade .blade L long, .root Wf deep at the root to a point, .thin Wf thick, set
+ * .lift Hf over the sole at the toe's front and pitched .pitch rad down past it; a dark clip band .clip L long round the toe at its root.
+ */
+const JESTER_TOE = { blade: 0.78, root: 0.62, thin: 0.12, lift: 0.18, pitch: 0.28, clip: 0.16, steel: new Color3(0.47, 0.49, 0.53), strap: new Color3(0.17, 0.075, 0.045) };
+export function jesterToeKnives(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = JESTER_TOE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const steel = mf.get("cloth", T.steel, { emissive: T.steel.scale(0.35), roughness: 0.6 });
+  const strap = mf.get("cloth", T.strap, { emissive: T.strap.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) {
+    const { minimum: lo, maximum: hi } = foot.getBoundingInfo().boundingBox;
+    const L = hi.z - lo.z, Wf = hi.x - lo.x, Hf = hi.y - lo.y, x = (lo.x + hi.x) / 2;
+    const blade = MeshBuilder.CreateCylinder("jesterToeKnife", { height: L * T.blade, diameterBottom: Wf * T.root, diameterTop: 0.001, tessellation: 4 }, scene);
+    blade.parent = foot; blade.material = steel;
+    // laid along +z (the toe's way), its flat standing upright, the root on the toe's front face
+    blade.rotation.set(Math.PI / 2 + T.pitch, 0, 0);
+    blade.scaling.x = T.thin / T.root;
+    const dir = new Vector3(0, -Math.sin(T.pitch), Math.cos(T.pitch));
+    blade.position.set(x, lo.y + Hf * T.lift, hi.z).addInPlace(dir.scale((L * T.blade) / 2 - L * 0.06));
+    out.push(blade);
+    const clip = MeshBuilder.CreateBox("jesterToeClip", { width: Wf * 0.86, height: Hf * 0.32, depth: L * T.clip }, scene);
+    clip.parent = foot; clip.material = strap;
+    clip.position.set(x, lo.y + Hf * T.lift, hi.z - L * T.clip * 0.4);
+    out.push(clip);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
