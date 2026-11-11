@@ -595,12 +595,18 @@ export function chuKoNuMitts(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+const KONU_ROBE = { knee: -0.02 };
 export function chuKoNuRobe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
   const bounds = torso.getBoundingInfo().boundingBox;
   const width = bounds.extendSize.x * 2 * torso.scaling.x;
   const depth = bounds.extendSize.z * 2 * torso.scaling.z;
-  const length = Math.abs(body.leftKnee.position.y);
+  // [S] 515 (a.3 "skirt stops at mid-thigh"; secret.chu_ko_nu.red.png: knee-length robe, two orange hem bands): the tiers run from the old top
+  // (.12 hip-to-knee lengths over the torso joint) down to KONU_ROBE.knee m over the knee joint read into the torso frame (LESSONS 512: anchor a
+  // hem to the knee, not a share of a length), so 1 on the tier scale is the knee, wherever the torso joint sits over the hips
+  const hipToKnee = Math.abs(body.leftKnee.position.y);
+  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const topY = hipToKnee * 0.12, length = topY - (kneeY + KONU_ROBE.knee);
   const factory = getMaterialFactory();
   const cloth = factory.get("cloth", team, { emissive: team.scale(0.12) });
   const orange = new Color3(0.7, 0.294, 0.07);
@@ -612,7 +618,7 @@ export function chuKoNuRobe(scene: Scene, body: ArticulatedBody, team: Color3): 
     }, scene);
     panel.parent = body.torso;
     panel.scaling.z = depth / width * 1.16;
-    panel.position.y = length * (0.12 - (from + to) / 2);
+    panel.position.y = topY - length * (from + to) / 2;
     panel.rotation.y = Math.PI / 8;
     panel.material = material;
     panel.convertToFlatShadedMesh();
