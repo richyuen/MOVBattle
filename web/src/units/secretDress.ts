@@ -2386,3 +2386,21 @@ export function cheerleaderHair(scene: Scene, body: ArticulatedBody, team: Color
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 518 Cupid's bare feet (secret.cupid.red.png, .blue.png: bare team-skin feet under the bare legs, no shoe or boot; audit 515 a.5 "grey boots").
+ * The grey boot is the body's own foot mesh (cuff + toe box) in the boot material: both feet re-clothed in the skin material, slimmed to .slim of
+ * their width and lowered in the cuff (.cuff of its height) so they read as a foot under the shin rather than a boot; out of the glow.
+ */
+const CUPID_FOOT = { slim: 0.86, cuff: 0.7 };
+export function cupidFeet(scene: Scene, body: ArticulatedBody): void {
+  const glow = scene.getGlowLayerByName("glow");
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) {
+    const lo = foot.getBoundingInfo().boundingBox.minimum.y;
+    foot.material = body.skinMaterial;
+    foot.scaling.x *= CUPID_FOOT.slim;
+    foot.scaling.y *= CUPID_FOOT.cuff;
+    foot.position.y += lo * (1 - CUPID_FOOT.cuff);
+    glow?.addExcludedMesh(foot);
+  }
+}
