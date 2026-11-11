@@ -184,6 +184,38 @@ export function bomberHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/**
+ * [S] 513 the Bomber's headband (secret.bomb_on_a_stick.red.png: a team-coloured cloth band round the head over the ginger hair, across the
+ * forehead just above the eyes, its ends knotted at the back; audit 500 a.2 "none"). Spec in head widths W, heights H, depths D (the head box,
+ * centre c; e the eyes' top in the head frame): a 10-sided band .band H tall from .over H above e, .round W across (x D/W for depth, over the
+ * crown lock's 1.16 W), centred .back D behind c; a knot (.knot W ico) at its back and two tails .tail H long hanging from it. Own team cloth
+ * (team x .shade, LESSONS 449), out of the glow.
+ */
+const BOMBER_BAND = { band: 0.17, over: 0.03, round: 1.24, back: 0.06, knot: 0.2, tail: 0.38, shade: 0.9 };
+export function bomberHeadband(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const B = BOMBER_BAND, glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, bb = head.getBoundingInfo().boundingBox, c = bb.center;
+  const W = bb.extendSize.x * 2, H = bb.extendSize.y * 2, D = bb.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const color = team.scale(B.shade);
+  const cloth = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const y = e + H * (B.over + B.band / 2), z = c.z - D * B.back;
+  const band = MeshBuilder.CreateCylinder("bomberHeadband", { height: H * B.band, diameter: W * B.round, tessellation: 10 }, scene);
+  band.parent = head; band.position.set(c.x, y, z); band.scaling.z = (D * 1.2) / (W * B.round); band.rotation.y = Math.PI / 10;
+  out.push(band);
+  const backZ = z - D * 0.6;
+  const knot = MeshBuilder.CreateIcoSphere("bomberHeadbandKnot", { radius: (W * B.knot) / 2, subdivisions: 1, flat: true }, scene);
+  knot.parent = head; knot.position.set(c.x, y, backZ); out.push(knot);
+  for (const side of [-1, 1]) {
+    const tail = MeshBuilder.CreateBox("bomberHeadbandTail", { width: W * 0.1, height: H * B.tail, depth: D * 0.05 }, scene);
+    tail.parent = head; tail.position.set(c.x + side * W * 0.07, y - (H * B.tail) / 2, backZ - D * 0.02); tail.rotation.z = side * 0.25;
+    out.push(tail);
+  }
+  for (const m of out) { m.material = cloth; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 export function executionerHood(scene: Scene, body: ArticulatedBody): Mesh[] {
   const head = body.headMesh;
   const { center, extendSize: size } = head.getBoundingInfo().boundingBox;
