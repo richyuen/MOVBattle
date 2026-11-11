@@ -81,6 +81,36 @@ export function prisonerShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
   return sleeves;
 }
 
+export function prisonerTrousers(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const cream = new Color3(0.88, 0.82, 0.65);
+  const mf = getMaterialFactory();
+  const cotton = mf.get("unlit", cream, { emissive: cream });
+  const dyed = mf.get("cloth", team, { emissive: team.scale(0.18) });
+  const glow = scene.getGlowLayerByName("glow");
+  const out: Mesh[] = [];
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) {
+    const { center, extendSize: size } = leg.getBoundingInfo().boundingBox;
+    const upper = leg === body.leftUpperLeg || leg === body.rightUpperLeg;
+    const count = upper ? 3 : 5;
+    const edge = upper ? 1 : 0.86;
+    const height = size.y * (1 + edge) / count;
+    for (let index = 0; index < count; index++) {
+      const radius = (index: number) => size.x * (1.25 - index * 0.19 / count);
+      const band = MeshBuilder.CreateCylinder("prisonerTrouserStripe", {
+        height: height * 1.005, diameterTop: radius(index) * 2, diameterBottom: radius(index + 1) * 2, tessellation: 8,
+      }, scene);
+      band.parent = leg;
+      band.position.set(center.x, center.y + size.y - height * (index + 0.5), center.z);
+      band.scaling.z = size.z / size.x;
+      band.rotation.y = Math.PI / 8;
+      band.material = (index + Number(!upper)) % 2 ? dyed : cotton;
+      glow?.addExcludedMesh(band);
+      out.push(band);
+    }
+  }
+  return out;
+}
+
 /** The bead eyes' top, read into the head mesh's frame (LESSONS: the eyes hang off the neck, not the head block). */
 function eyeTopInHead(body: ArticulatedBody): number | null {
   const head = body.headMesh, eye = body.leftEye ?? body.rightEye;
