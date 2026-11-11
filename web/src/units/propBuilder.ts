@@ -2273,6 +2273,12 @@ export function attachProps(
       shield.parent = body.torso;
       shield.position.set(-body.metrics.shoulderWidth * 0.58, body.neck.position.y * 0.35, body.torsoMesh.getBoundingInfo().boundingBox.maximum.z + scale * 0.23);
       shield.rotation.y = -0.2;
+    } else if (config.shield === "plank") {
+      // [S] 519 (raptor_rider b.2) the plank shield stands upright on his off side, its face out and a little forward (secret.raptor_rider.red.png): on
+      // the forearm it lay flat over the mount's neck, the riding arm being level. Stood on the trunk like the paladin's board.
+      shield.parent = body.torso;
+      shield.position.set(-body.metrics.shoulderWidth * 0.62, body.neck.position.y * 0.3, body.torsoMesh.getBoundingInfo().boundingBox.maximum.z + scale * 0.06);
+      shield.rotation.y = -0.45;
     } else if (pavise) {
       // [S] 489 the pavise stands upright ahead of his off side as a wall, its top at the shoulder and its foot by the shin (PAVISE)
       // [S] 496 (b.2, CONFIRM 495: "the two shields hang low, side by side in front of the hips, with their tops at the belly - TABS: the shield
