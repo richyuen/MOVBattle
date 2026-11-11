@@ -1934,3 +1934,44 @@ export function cupidHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 516 the Cheerleader's pleated skirt (secret.cheerleader.blue.png: a short purple skirt in knife pleats from the waist to mid-thigh, flared;
+ * audit 515 a.2 "team tunic hem"). Spec in torso widths TW, depths TD (torso box, torso frame): .pleats flat panels round an ellipse .waist TW
+ * across at the waist (.top TH over the torso's foot), each .wide of its share of the round, hanging to .hem of the way from the torso's foot down
+ * to the knees (read into the torso frame, LESSONS 512), tipped out .flare rad; alternate panels set .step proud and a shade darker, so the
+ * pleats read. Lit purple cloth off palette.png (purple x .7, x .45), out of the glow. The generic tunic skirt is not hung (unitFactory).
+ */
+const CHEER_SKIRT = { pleats: 14, waist: 1.12, top: 0.06, hem: 0.55, flare: 0.38, wide: 1.18, step: 0.025, purple: new Color3(0.42, 0.14, 0.63), dark: new Color3(0.27, 0.09, 0.4) };
+export function cheerleaderSkirt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CHEER_SKIRT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const light = mf.get("cloth", C.purple, { emissive: C.purple.scale(0.15), roughness: 1 });
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.15), roughness: 1 });
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, sc = tm.scaling;
+  const TW = tb.extendSize.x * 2 * sc.x, TH = tb.extendSize.y * 2 * sc.y, TD = tb.extendSize.z * 2 * sc.z;
+  const foot = tm.position.y + (tb.center.y - tb.extendSize.y) * sc.y, cx = tm.position.x + tb.center.x * sc.x, cz = tm.position.z + tb.center.z * sc.z;
+  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const top = foot + TH * C.top, hem = foot - (foot - kneeY) * C.hem, long = (top - hem) / Math.cos(C.flare);
+  const rx = (TW * C.waist) / 2, rz = Math.max(TD * C.waist, TW * 0.7) / 2;
+  const out: Mesh[] = [];
+  for (let i = 0; i < C.pleats; i++) {
+    const a = (i / C.pleats) * Math.PI * 2;
+    const nx = Math.sin(a), nz = Math.cos(a);
+    const proud = i % 2 ? C.step * TW : 0;
+    const share = (2 * Math.PI * Math.sqrt((rx * rx + rz * rz) / 2)) / C.pleats;
+    const panel = MeshBuilder.CreateBox("cheerSkirtPleat", { width: share * C.wide, height: long, depth: TW * 0.035 }, scene);
+    panel.parent = body.torso; panel.material = i % 2 ? dark : light;
+    // hung from the waist ellipse, its middle half way down the flare
+    const r = (x: number, z: number, out_: number) => new Vector3(cx + x * (1 + out_), 0, cz + z * (1 + out_));
+    const at = r(nx * rx, nz * rz, 0).add(new Vector3(nx, 0, nz).scale(Math.sin(C.flare) * long * 0.5 + proud));
+    panel.position.set(at.x, top - (top - hem) / 2, at.z);
+    // yaw onto the outward normal, then the hem tipped out (Rx(+) would tip the top out)
+    panel.rotation.set(-C.flare, a, 0);
+    out.push(panel);
+  }
+  // a waistband over the panels' tops
+  const band = MeshBuilder.CreateCylinder("cheerSkirtBand", { height: TH * 0.07, diameter: rx * 2 * 1.06, tessellation: 14 }, scene);
+  band.parent = body.torso; band.material = dark; band.position.set(cx, top, cz); band.scaling.z = rz / rx; out.push(band);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
