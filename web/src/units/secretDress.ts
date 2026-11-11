@@ -2295,3 +2295,36 @@ export function cheerleaderSocks(scene: Scene, body: ArticulatedBody, team: Colo
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 518 the Taekwondo's gi trousers (secret.taekwondo.red.png: wide straight team trousers from the jacket's hem to the ankle, about twice the
+ * leg's width, flaring a little to a deep cream cuff a quarter of the shin long over the top of the bare foot; audit 515 a.4 "plain legs").
+ * Spec on each leg (limbBox in its joint's frame, 0 the limb's top, 1 its foot): an 8-sided shell .thigh of the thigh's half-width round from
+ * .over above its top to its foot; on the shin a shell .shin round at the knee flaring to .flare at the ankle, from 0 to .cuffAt; then a cream
+ * cuff band .cuff round from .cuffAt to .low (past the shin's foot, over the instep). The jacket's own material (body.bodyMaterial, so trousers
+ * and jacket share the shade); cream unlit (LESSONS 442). The grey boot gone: both feet bare team skin. Out of the glow.
+ */
+const TKD_TROUSER = { thigh: 2.0, over: 0.12, shin: 2.15, flare: 2.4, cuffAt: 0.72, cuff: 2.55, low: 1.12, cream: new Color3(0.95, 0.86, 0.76) };
+export function taekwondoTrousers(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const T = TKD_TROUSER, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cloth = body.bodyMaterial ?? mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const cream = mf.get("unlit", T.cream, { emissive: T.cream });
+  const out: Mesh[] = [];
+  const shell = (name: string, limb: Mesh, from: number, to: number, rTop: number, rBot: number, material: Material): void => {
+    const L = limbBox(limb), top = L.mid + L.half, r = Math.max(L.wide, L.deep), sz = L.deep / r;
+    const yTop = top - from * L.half * 2, yBot = top - to * L.half * 2;
+    const m = MeshBuilder.CreateCylinder(name, { height: yTop - yBot, diameterTop: r * 2 * rTop, diameterBottom: r * 2 * rBot, tessellation: 8 }, scene);
+    m.parent = limb.parent; m.position.set(0, (yTop + yBot) / 2, 0); m.scaling.z = Math.max(0.8, sz); m.rotation.y = Math.PI / 8; m.material = material;
+    out.push(m);
+  };
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) { shell("tkdTrouserThigh", thigh, -T.over, 1, T.thigh, T.thigh * 1.04, cloth); thigh.material = cloth; }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const k = T.shin + (T.flare - T.shin) * T.cuffAt;
+    shell("tkdTrouserShin", shin, -0.02, T.cuffAt, T.shin, k, cloth);
+    shell("tkdTrouserCuff", shin, T.cuffAt, T.low, T.cuff, T.cuff * 1.04, cream);
+    shin.material = cloth;
+  }
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) foot.material = body.skinMaterial;
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
