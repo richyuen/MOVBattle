@@ -1128,7 +1128,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_executioner":
       // [S] 500 (b.1) a two-handed pole axe taller than him, a grey bearded crescent at the top (propBuilder EXECUTIONER_AXE on the halberd's chop)
-      return vis({ scale: 1.42, bulk: 1.4, headSize: 1.05 }, "halberd", "hood", "none", "cape", "#4a1f1f", undefined, {
+      return vis({ scale: 1.42, bulk: 1.4, headSize: 1.05 }, "halberd", "none", "none", "cape", "#4a1f1f", undefined, {
         posePreset: "duelist", materialPreset: "secret_demon", weaponVariant: "executioner_axe",
       });
     case "secret_shouter":

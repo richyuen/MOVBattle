@@ -124,6 +124,27 @@ export function bomberHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+export function executionerHood(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const head = body.headMesh;
+  const { center, extendSize: size } = head.getBoundingInfo().boundingBox;
+  const black = new Color3(0.11, 0.12, 0.15);
+  const cloth = getMaterialFactory().get("cloth", black, { emissive: black.scale(0.12) });
+  const outline = [
+    [0, -1.87], [0.59, -1.87], [0.82, -1.35], [1.04, -0.69],
+    [1.1, 0.3], [0.96, 0.82], [0.52, 1.05], [0, 1.09],
+  ].map(([radius, height]) => new Vector3(radius * size.x, height * size.y, 0));
+  const hood = MeshBuilder.CreateLathe("executionerHood", { shape: outline, tessellation: 10 }, scene);
+  hood.parent = head;
+  hood.position.copyFrom(center);
+  hood.scaling.z = size.z / size.x * 1.13;
+  hood.material = cloth;
+  hood.convertToFlatShadedMesh();
+  head.isVisible = false;
+  body.leftEye?.setEnabled(false);
+  body.rightEye?.setEnabled(false);
+  return [hood];
+}
+
 export function executionerVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
   const { center, extendSize } = torso.getBoundingInfo().boundingBox;
