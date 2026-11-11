@@ -595,6 +595,37 @@ export function chuKoNuMitts(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/**
+ * [S] 515 the Chu Ko Nu's wrapped leggings (secret.chu_ko_nu.blue.png: dark team leggings from the knee to the ankle, three orange-red wrap bands
+ * stacked down each shin, the lowest just over the shoe; audit a.4 "plain shins"). Per shin mesh (box centre c, half size s; knee at -position.y):
+ * an 8-sided shell .shell s.x round from .top m under the knee to the shin box's foot, tapering to .taper of that at the ankle, team x .shade; .bands
+ * bands .bandH m tall, .wrap s.x round, from .first of the way down to .last, each tilted a little in turn. Own cloth (LESSONS 449), out of the glow.
+ */
+const KONU_LEG = { shell: 1.32, taper: 0.86, top: 0.03, shade: 0.3, bands: 3, bandH: 0.04, wrap: 1.5, first: 0.3, last: 0.88, orange: new Color3(0.7, 0.2, 0.05) };
+export function chuKoNuLeggings(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = KONU_LEG, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const dark = team.scale(K.shade);
+  const cloth = mf.get("cloth", dark, { emissive: dark.scale(0.3), roughness: 1 });
+  const orange = mf.get("cloth", K.orange, { emissive: K.orange.scale(0.25), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const { center: c, extendSize: s } = shin.getBoundingInfo().boundingBox;
+    const top = -shin.position.y - K.top, foot = c.y - s.y, long = top - foot;
+    const legging = MeshBuilder.CreateCylinder("konuLegging", { height: long, diameterTop: s.x * 2 * K.shell, diameterBottom: s.x * 2 * K.shell * K.taper, tessellation: 8 }, scene);
+    legging.parent = shin; legging.position.set(c.x, foot + long / 2, c.z); legging.scaling.z = s.z / s.x; legging.rotation.y = Math.PI / 8;
+    legging.material = cloth; out.push(legging);
+    for (let k = 0; k < K.bands; k++) {
+      const f = K.first + (K.last - K.first) * (k / (K.bands - 1));
+      const r = s.x * K.shell * (1 - (1 - K.taper) * f) * K.wrap / K.shell;
+      const band = MeshBuilder.CreateCylinder("konuLegBand", { height: K.bandH, diameter: r * 2, tessellation: 8 }, scene);
+      band.parent = shin; band.position.set(c.x, top - long * f, c.z); band.scaling.z = s.z / s.x; band.rotation.set(0, Math.PI / 8, k % 2 ? -0.08 : 0.08);
+      band.material = orange; out.push(band);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 const KONU_ROBE = { knee: -0.02 };
 export function chuKoNuRobe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
