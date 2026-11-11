@@ -929,3 +929,46 @@ export function jesterToeKnives(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 511 the Jester's puffy striped shorts (secret.jester.red.png: from the hip to just over the knee each thigh is wrapped in a ballooning short
+ * of upright stripes, team, gold and dark team in turn, closed at the hem by a dark team band; audit 500 a.4 "plain team legs"). Spec in the thigh
+ * mesh's box (centre c, half size h, its long axis y): per thigh .slices upright arc slices, each two frustums from .top h.x round at the hip to
+ * .bulge h.x at .mid of the way down and back to .hem h.x at the hem (.from h.y over c to .to h.y under it), coloured JESTER_STRIPES in turn; a band
+ * .band h.y tall .hem*1.06 round at the hem in dark team. Team cloth of its own (LESSONS 449), out of the glow.
+ */
+const JESTER_SHORTS = { slices: 8, top: 1.22, bulge: 1.62, hem: 1.2, mid: 0.48, from: 1.08, to: 0.78, band: 0.16, gold: new Color3(0.78, 0.55, 0.14) };
+const JESTER_STRIPES = [0, 1, 2, 1];
+export function jesterShorts(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const J = JESTER_SHORTS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const dark = team.scale(0.5);
+  const mats = [
+    mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 }),
+    mf.get("cloth", J.gold, { emissive: J.gold.scale(0.12), roughness: 1 }),
+    mf.get("cloth", dark, { emissive: dark.scale(0.12), roughness: 1 }),
+  ];
+  const out: Mesh[] = [];
+  for (const leg of [body.leftUpperLeg, body.rightUpperLeg]) {
+    const { center: c, extendSize: h } = leg.getBoundingInfo().boundingBox;
+    const yTop = c.y + h.y * J.from, yHem = c.y - h.y * J.to, yMid = yTop + (yHem - yTop) * J.mid;
+    for (let k = 0; k < J.slices; k++) {
+      for (const [a, b, ra, rb] of [[yTop, yMid, J.top, J.bulge], [yMid, yHem, J.bulge, J.hem]]) {
+        const piece = MeshBuilder.CreateCylinder("jesterShortsStripe", {
+          height: a - b, diameterTop: h.x * ra * 2, diameterBottom: h.x * rb * 2, tessellation: J.slices * 2, arc: 1 / J.slices,
+        }, scene);
+        piece.parent = leg; piece.material = mats[JESTER_STRIPES[k % JESTER_STRIPES.length]];
+        piece.position.set(c.x, (a + b) / 2, c.z);
+        piece.rotation.y = (k * 2 * Math.PI) / J.slices;
+        piece.scaling.z = h.z / h.x;
+        out.push(piece);
+      }
+    }
+    const band = MeshBuilder.CreateCylinder("jesterShortsHem", { height: h.y * J.band, diameter: h.x * J.hem * 2.12, tessellation: 8 }, scene);
+    band.parent = leg; band.material = mats[2];
+    band.position.set(c.x, yHem + h.y * J.band * 0.3, c.z);
+    band.scaling.z = h.z / h.x;
+    out.push(band);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
