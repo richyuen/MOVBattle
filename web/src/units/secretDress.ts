@@ -972,3 +972,64 @@ export function jesterShorts(scene: Scene, body: ArticulatedBody, team: Color3):
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 511 the Ballooner's slashed doublet (secret.ballooner.red.png: a team doublet with a cream V insert from the collar's points to the belly,
+ * big puffed team shoulders over the upper arms slashed with cream, and a dark belt with a buckle at the waist; audit 500 a.3 "a plain pale-blue
+ * tunic block"). Spec in torso widths TW, heights TH, depths TD (the torso mesh's box, its top the collar): the trunk, yoke and pads in team cloth;
+ * the V two cream slats .vW TW wide from .vTop TW out at the collar to the middle .vDeep TH down, .vOut proud of the chest; per arm a puff, an ico
+ * ball .puff upper-arm widths across and .puffLong of its length, over the arm's top .puffAt, with .slashes cream slats down its outer face; the
+ * belt a band .beltH TH tall .beltOut wider than the trunk at .beltAt TH over its foot, a brass buckle. Team cloth of its own (LESSONS 449), the
+ * cream flat unlit (LESSONS 442), out of the glow.
+ */
+const BALLOONER_DOUBLET = {
+  vW: 0.09, vTop: 0.2, vDeep: 0.62, vOut: 0.03, puff: 2.5, puffLong: 0.62, puffAt: 0.3, slashes: 3, beltH: 0.1, beltOut: 1.06, beltAt: 0.12,
+  cream: new Color3(0.95, 0.88, 0.7), belt: new Color3(0.16, 0.08, 0.04), brass: new Color3(0.75, 0.55, 0.15),
+};
+export function balloonerDoublet(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = BALLOONER_DOUBLET, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const cream = mf.get("unlit", C.cream, { emissive: C.cream });
+  const belt = mf.get("cloth", C.belt, { emissive: C.belt.scale(0.12), roughness: 1 });
+  const brass = mf.get("cloth", C.brass, { emissive: C.brass.scale(0.12) });
+  for (const m of [body.torsoMesh, ...body.allMeshes.filter((x) => /_yoke$|_[lr]Pad$/.test(x.name))]) m.material = cloth;
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, sc = tm.scaling;
+  const TW = tb.extendSize.x * 2 * sc.x, TH = tb.extendSize.y * 2 * sc.y, TD = tb.extendSize.z * 2 * sc.z;
+  const top = tm.position.y + (tb.center.y + tb.extendSize.y) * sc.y, cx = tm.position.x + tb.center.x * sc.x, cz = tm.position.z + tb.center.z * sc.z;
+  const front = cz + TD / 2;
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    // a slat of the V: from the collar's point down and in to the middle
+    const a = new Vector3(cx + side * TW * C.vTop, top - TH * 0.02, front + TW * C.vOut), e = new Vector3(cx, top - TH * C.vDeep, front + TW * C.vOut);
+    const d = e.subtract(a);
+    const slat = MeshBuilder.CreateBox("balloonerDoubletV", { width: TW * C.vW, height: d.length(), depth: TW * 0.03 }, scene);
+    slat.parent = body.torso; slat.material = cream; slat.position.copyFrom(a.add(e).scale(0.5));
+    slat.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d.normalize(), new Quaternion());
+    out.push(slat);
+  }
+  const beltY = top - TH + TH * C.beltAt;
+  const band = MeshBuilder.CreateBox("balloonerBelt", { width: TW * C.beltOut, height: TH * C.beltH, depth: TD * C.beltOut + TW * 0.04 }, scene);
+  band.parent = body.torso; band.material = belt; band.position.set(cx, beltY, cz); out.push(band);
+  const buckle = MeshBuilder.CreateBox("balloonerBeltBuckle", { width: TW * 0.13, height: TH * C.beltH * 1.25, depth: TW * 0.03 }, scene);
+  buckle.parent = body.torso; buckle.material = brass; buckle.position.set(cx + TW * 0.08, beltY, cz + (TD * C.beltOut) / 2 + TW * 0.03); out.push(buckle);
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const { center: c, extendSize: h } = arm.getBoundingInfo().boundingBox;
+    const outward = arm === body.leftUpperArm ? -1 : 1;
+    const R = h.x * C.puff, y = c.y + h.y * (1 - C.puffAt);
+    const puff = MeshBuilder.CreateIcoSphere("balloonerPuff", { radius: R, subdivisions: 1 }, scene);
+    puff.parent = arm; puff.material = cloth; puff.position.set(c.x, y, c.z);
+    puff.scaling.set(1, (h.y * 2 * C.puffLong) / (2 * R), (h.z / h.x) * 1.05);
+    out.push(puff);
+    for (let k = 0; k < C.slashes; k++) {
+      const ang = (k - (C.slashes - 1) / 2) * 0.75;
+      const slash = MeshBuilder.CreateBox("balloonerPuffSlash", { width: R * 0.22, height: h.y * 2 * C.puffLong * 0.62, depth: R * 0.12 }, scene);
+      slash.parent = arm; slash.material = cream;
+      // on the puff's outer face, fanned round it from the front to the back
+      slash.position.set(c.x + outward * Math.cos(ang) * R * 0.93, y, c.z + Math.sin(ang) * R * 0.93 * (h.z / h.x));
+      slash.rotation.y = -outward * ang;
+      out.push(slash);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
