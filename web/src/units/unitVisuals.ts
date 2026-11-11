@@ -1167,7 +1167,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_mace_spinner":
       // [S] 520 (b.2) the cross-body mace and the hip mace are off: one upright mace in each fist (secretDress SpinnerMaces, RuntimeUnit._tendSpinnerMaces)
-      return vis({ scale: 1.3, bulk: 1.2 }, "none", "helmet", "none", "none", "#8e8e8e", undefined, {
+      // [S] 520 (a.2) the team "helmet" cap is off: his round grey closed helm is secretDress maceSpinnerHelm
+      return vis({ scale: 1.3, bulk: 1.2 }, "none", "none", "none", "none", "#8e8e8e", undefined, {
         posePreset: "spinner", materialPreset: "secret_bandit",
       });
     case "secret_clams":

@@ -2531,6 +2531,46 @@ export class SpinnerMaces {
 }
 
 /*
+ * [S] 520 the Mace Spinner's helmet (secret.mace_spinner.blue.png: a round grey closed helm, a smooth dome over the crown running down the sides and
+ * back of the head to the jaw, the face closed under the eyes, the eyes showing through a slit; a gold brow band across over the eyes and a gold
+ * nose guard down the middle of the face plate; card "a helmet very similar to the one of a Squire but a lot less cubic and more round with no
+ * holes"; audit 515 a.2 "ours is a team flat cap"). Spec in head widths W, heights H, depths D (head box, centre c, front +z; e/eb the eyes' top and
+ * bottom in the head's frame): dome .dome W wide from .rim H over the eye top to .crown H over c; a 10-sided skirt .skirt W wide from the eye top
+ * down to .jaw H under c, open across the front (the slit and the face plate's place); a face plate from the eye bottom to the jaw; gold brow
+ * band .brow H tall across the front at the eye top, .browW W wide; a nose guard .nose W wide from the band to the plate's foot. Grey lit cloth
+ * self-lit .12, gold unlit (LESSONS 400), all out of the glow. The shared team "helmet" hat is off (unitVisuals hat none).
+ */
+const SPINNER_HELM = { dome: 1.24, rim: 0.03, crown: 0.68, skirt: 1.22, jaw: 0.56, brow: 0.1, browW: 1.08, nose: 0.13, stand: 0.03,
+  grey: new Color3(0.36, 0.37, 0.39), gold: new Color3(0.62, 0.26, 0.03) };
+export function maceSpinnerHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = SPINNER_HELM, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const eyes = eyeBoxInHead(body) ?? { lo: new Vector3(c.x - W * 0.3, c.y, c.z + D * 0.4), hi: new Vector3(c.x + W * 0.3, c.y + H * 0.15, c.z + D * 0.55) };
+  const e = eyes.hi.y, eb = eyes.lo.y;
+  const grey = mf.get("cloth", C.grey, { emissive: C.grey.scale(0.12), roughness: 1 });
+  const gold = mf.get("unlit", C.gold, { emissive: C.gold });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, material: Material = grey): Mesh => { m.parent = head; m.material = material; out.push(m); return m; };
+  const foot = e + H * C.rim, crown = c.y + H * C.crown, jaw = c.y - H * C.jaw;
+  const dome = put(MeshBuilder.CreateSphere("spinnerHelmDome", { diameter: 1, segments: 6, slice: 0.5 }, scene));
+  dome.scaling.set(W * C.dome, (crown - foot) * 2, D * C.dome); dome.position.set(c.x, foot, c.z);
+  // the skirt: sides and back from the dome's foot to the jaw, its front arc left open (arc .78 of the round), turned so the gap faces +z
+  const skirt = put(MeshBuilder.CreateCylinder("spinnerHelmSkirt", { height: foot - jaw, diameter: W * C.skirt, tessellation: 10, arc: 0.78, enclose: true }, scene));
+  skirt.scaling.z = (D * C.dome) / (W * C.skirt); skirt.position.set(c.x, (foot + jaw) / 2, c.z); skirt.rotation.y = Math.PI / 2 + Math.PI * 0.22;
+  const front = Math.max(eyes.lo.z, c.z + D / 2) + D * C.stand;
+  const plateTop = eb - H * 0.01;
+  const plate = put(MeshBuilder.CreateBox("spinnerHelmFace", { width: W * C.skirt * 0.72, height: plateTop - jaw, depth: D * 0.12 }, scene));
+  plate.position.set(c.x, (plateTop + jaw) / 2, front - D * 0.04);
+  const brow = put(MeshBuilder.CreateBox("spinnerHelmBrow", { width: W * C.browW, height: H * C.brow, depth: D * 0.1 }, scene), gold);
+  brow.position.set(c.x, e + (H * C.brow) / 2, front + D * 0.01);
+  const nose = put(MeshBuilder.CreateBox("spinnerHelmNose", { width: W * C.nose, height: e - jaw, depth: D * 0.1 }, scene), gold);
+  nose.position.set(c.x, (e + jaw) / 2, front + D * 0.04);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/*
  * [S] 519 the Infernal Whip's chain whip (secret.infernal_whip.red.png: a chain of dark iron links about a body length long, hanging from the fist and
  * lying out over the ground, ending in a dark leaf-shaped blade; audit 518 b.1 "a short rigid dark stick with a few loose links behind"). CHAIN_WHIP:
  * .links links, the whole .long of his standing height; each link a dark box .wide x .thick of its length (in link lengths), every other one turned a quarter about the
