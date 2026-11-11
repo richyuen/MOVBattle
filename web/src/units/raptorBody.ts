@@ -1,4 +1,4 @@
-import { Color3, Mesh, MeshBuilder, Scene, TransformNode, Vector3 } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Vector3 } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
@@ -101,4 +101,39 @@ export function dressRaptorTeeth(scene: Scene, body: ArticulatedBody): Mesh[] {
     }
   }
   return teeth;
+}
+
+/*
+ * [S] 511 the Raptor's team spots (card Appearance; secret.raptor.red.png: irregular team blotches run down the dark back from the neck to the tail's
+ * root; audit 500 a.5 "none"). Spec in half-rig units (as dressRaptorBody): RAPTOR_SPOTS [a across, c along] on the trunk's ellipsoid (centre .trunk,
+ * radii .radii, pitched .pitch), each a flat ico blotch .size[i] across, .flat thick, .long times longer down the spine, laid on the surface along
+ * its normal and turned .twist[i] about it; team cloth, a little self-lit, out of the glow.
+ */
+const RAPTOR_SPOT = { trunk: [0, 0.12, -0.03], radii: [0.3, 0.32, 0.59], pitch: 0.12, flat: 0.28, long: 1.5 };
+const RAPTOR_SPOTS: [number, number, number, number][] = [
+  [0.0, 0.62, 0.075, 0.2], [-0.32, 0.42, 0.06, -0.5], [0.3, 0.3, 0.07, 0.4], [-0.05, 0.18, 0.085, 0.1], [-0.36, -0.02, 0.065, -0.3],
+  [0.34, -0.14, 0.07, 0.6], [0.04, -0.32, 0.08, -0.2], [-0.3, -0.5, 0.06, 0.5], [0.26, -0.62, 0.065, -0.4], [0.0, -0.78, 0.055, 0.3],
+];
+export function dressRaptorSpots(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const S = RAPTOR_SPOT, scale = body.metrics.overallHeight / 2;
+  const paint = getMaterialFactory().get("cloth", team, { emissive: team.scale(0.18), roughness: 1 });
+  const glow = scene.getGlowLayerByName("glow");
+  const tilt = Quaternion.RotationAxis(new Vector3(1, 0, 0), S.pitch);
+  const centre = new Vector3(S.trunk[0], S.trunk[1], S.trunk[2]).scale(scale);
+  const R = new Vector3(S.radii[0], S.radii[1], S.radii[2]).scale(scale);
+  const out: Mesh[] = [];
+  for (const [a, c, size, twist] of RAPTOR_SPOTS) {
+    const b = Math.sqrt(Math.max(0, 1 - a * a - c * c));
+    const at = new Vector3(R.x * a, R.y * b, R.z * c).applyRotationQuaternion(tilt).addInPlace(centre);
+    const normal = new Vector3(a / R.x, b / R.y, c / R.z).normalize().applyRotationQuaternion(tilt);
+    const spot = MeshBuilder.CreateIcoSphere("raptorSpot", { radius: (scale * size) / 2, subdivisions: 1, flat: true }, scene);
+    spot.parent = body.hip; spot.material = paint;
+    spot.position.copyFrom(at.add(normal.scale(scale * size * 0.06)));
+    spot.scaling.set(1, S.flat, S.long);
+    const lay = Quaternion.FromUnitVectorsToRef(Vector3.Up(), normal, new Quaternion());
+    spot.rotationQuaternion = lay.multiply(Quaternion.RotationAxis(Vector3.Up(), twist));
+    glow?.addExcludedMesh(spot);
+    out.push(spot);
+  }
+  return out;
 }
