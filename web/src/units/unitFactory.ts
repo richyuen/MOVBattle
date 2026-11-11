@@ -14,7 +14,7 @@ import { getCrowdPhysicsProfile, getRagdollProfile } from "../data/combatProfile
 import { FACTION_COLORS, FactionId, TEAM_COLORS } from "../data/factionColors";
 import { buildArticulatedBody, crewProportions, type ArticulatedBody } from "./bodyBuilder";
 import { getUnitVisual, type MaterialPreset, type UnitVisualConfig } from "./unitVisuals";
-import { attachProps, buildPerchedCrow } from "./propBuilder";
+import { attachProps, buildPerchedCrow, RAPTOR_MOUNT } from "./propBuilder";
 import { dressRaptorBody, dressRaptorSpots, dressRaptorTeeth } from "./raptorBody";
 import { isVehicleUnit, buildVehicleBody, dressCannonCrew, wheelbarrowCrew, type WheelbarrowCrew } from "./vehicleBuilder";
 import { RuntimeUnit } from "./runtimeUnit";
@@ -461,6 +461,8 @@ export class UnitFactory {
       );
       // Attach weapon, hat, shield, special props
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0, teamColor);
+      // [S] 518 (a.1): the Raptor Rider sits on his raptor's back: his hip lifts as the mount's does (propBuilder buildRaptorMount)
+      if (definition.id === "secret.raptor_rider" && visual.special !== "raptor_mount") body.hip.position.y *= 1 + RAPTOR_MOUNT.lift;
       // Arms are bare team-coloured skin (TABS); the torso and thighs keep the cloth or armour colour as a
       // tunic and trousers down to the ankle, and the feet are boots a shade darker than the trousers. Whole-body presets (ghost, bone, void...)
       // stay one material.

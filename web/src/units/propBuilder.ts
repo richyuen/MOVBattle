@@ -8462,6 +8462,98 @@ function buildChanfron(scene: Scene, head: Mesh, headLong: number, H: number, pa
     pupil.position.set(ex + x * H * C.eye * 0.5 * Math.cos(C.eyeTurn), at + H * C.eye * 0.2, ez - H * C.eye * 0.5 * Math.sin(C.eyeTurn));
   }
 }
+/**
+ * [S] 518 the Raptor Rider's mount (secret.raptor_rider.red.png: a big dark-brown raptor, its back at the rider's seat, a long neck up to a head
+ * at his chest with the jaw wide open showing a red mouth ringed by white teeth, a row of dark spikes down the neck and back, long two-jointed
+ * legs to white-clawed feet, a thick tail behind; card "a larger, tamed variant of the Raptor"; audit 515 a.1 "a small green box on stubs at the
+ * rider's knee"). Built on the hidden mount body's hip; the mount's hip and the rider's (unitFactory, the same RAPTOR_MOUNT.lift) are lifted
+ * .lift of their rest height so he sits on its back. Spec in H, the hip's rest height (ground at -H(1+lift) under the lifted hip; +z ahead):
+ *  - trunk: a flat ico .trunkW H wide, .trunkH H deep, .trunkL H long, centred .trunkY H under the hip, nose up .pitch rad;
+ *  - neck: a 6-sided tapered run from the trunk's front top to the head, .neckW H thick; head: a block .headL x .headW x .headH H at NECK_TOP,
+ *    an upper jaw and a lower jaw hinged at its back, opened .gape rad apart, a dark-red mouth plate between, .teeth white cones on each jaw edge;
+ *  - spikes: .spikes dark 4-sided cones .spike H tall along the neck and back; tail: a tapered run .tailL H back, drooping;
+ *  - legs per side .legX H out: thigh (hip socket to knee forward), shin (knee back to ankle), foot (ankle forward to the toe on the ground),
+ *    three white claws. Dark brown lit cloth a little self-lit (LESSONS 494), teeth and claws cream-white, out of the glow.
+ */
+export const RAPTOR_MOUNT = {
+  lift: 0.7, trunkW: 0.62, trunkH: 0.62, trunkL: 1.45, trunkY: 0.32, pitch: -0.12, neckW: 0.3, headL: 0.62, headW: 0.38, headH: 0.22, gape: 0.75, teeth: 6,
+  spikes: 9, spike: 0.2, tailL: 1.5, legX: 0.3, legW: 0.22,
+  hide: new Color3(0.12, 0.08, 0.055), ivory: new Color3(0.92, 0.9, 0.84), mouth: new Color3(0.42, 0.06, 0.08),
+};
+function buildRaptorMount(scene: Scene, body: ArticulatedBody): Mesh {
+  const R = RAPTOR_MOUNT, H = body.hip.position.y;
+  body.hip.position.y = H * (1 + R.lift);
+  const ground = -H * (1 + R.lift);
+  const glow = scene.getGlowLayerByName("glow");
+  const hide = mat(scene, R.hide, 0.4, "cloth"), ivory = mat(scene, R.ivory, 0.35, "cloth"), mouth = mat(scene, R.mouth, 0.3, "cloth");
+  const parts: Mesh[] = [];
+  const trunk = MeshBuilder.CreateIcoSphere("raptorMount", { radius: 0.5, subdivisions: 1, flat: true }, scene);
+  trunk.parent = body.hip; trunk.scaling.set(H * R.trunkW, H * R.trunkH, H * R.trunkL); trunk.position.y = -H * R.trunkY; trunk.rotation.x = R.pitch; trunk.material = hide;
+  const frame = new TransformNode("raptorMountFrame", scene);
+  frame.parent = body.hip;
+  const v = (x: number, y: number, z: number) => new Vector3(x * H, y * H, z * H);
+  const seg = (name: string, a: Vector3, b: Vector3, wa: number, wb: number, material: typeof hide, sides = 6): Mesh => {
+    const d = b.subtract(a);
+    const m = MeshBuilder.CreateCylinder(name, { height: d.length(), diameterBottom: wa * H, diameterTop: wb * H, tessellation: sides }, scene);
+    m.parent = frame; m.material = material; m.position.copyFrom(a.add(b).scale(0.5));
+    m.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d.normalize(), new Quaternion());
+    parts.push(m);
+    return m;
+  };
+  // neck from the trunk's front top up to the head
+  const neckFoot = v(0, -0.12, 0.55), neckTop = v(0, 0.48, 0.92);
+  seg("raptorMountNeck", neckFoot, neckTop, R.neckW * 1.35, R.neckW, hide);
+  // head: skull block, then the two jaws hinged at its back, opened round x
+  const head = new TransformNode("raptorMountHead", scene);
+  head.parent = frame; head.position.copyFrom(neckTop);
+  const skull = MeshBuilder.CreateBox("raptorMountSkull", { width: H * R.headW, height: H * R.headH * 1.3, depth: H * R.headL * 0.45 }, scene);
+  skull.parent = head; skull.position.set(0, H * R.headH * 0.3, 0); skull.material = hide; parts.push(skull);
+  for (const [k, sign] of [["Upper", -1], ["Lower", 1]] as const) {
+    const hinge = new TransformNode(`raptorMountJaw${k}`, scene);
+    hinge.parent = head; hinge.position.set(0, 0, H * R.headL * 0.15); hinge.rotation.x = sign * R.gape * 0.5;
+    const jaw = MeshBuilder.CreateBox(`raptorMount${k}Jaw`, { width: H * R.headW * (k === "Upper" ? 1 : 0.86), height: H * R.headH * (k === "Upper" ? 0.75 : 0.5), depth: H * R.headL }, scene);
+    jaw.parent = hinge; jaw.position.set(0, -sign * H * R.headH * 0.3, H * R.headL * 0.5); jaw.material = hide; parts.push(jaw);
+    const inner = MeshBuilder.CreateBox(`raptorMountMouth${k}`, { width: H * R.headW * 0.7, height: H * 0.02, depth: H * R.headL * 0.9 }, scene);
+    inner.parent = hinge; inner.position.set(0, sign * H * 0.03, H * R.headL * 0.5); inner.material = mouth; parts.push(inner);
+    for (let i = 0; i < R.teeth; i++) {
+      for (const x of [-1, 1]) {
+        const tooth = MeshBuilder.CreateCylinder("raptorMountTooth", { height: H * 0.09, diameterBottom: H * 0.05, diameterTop: 0, tessellation: 4 }, scene);
+        tooth.parent = hinge; tooth.material = ivory;
+        tooth.position.set(x * H * R.headW * 0.36, sign * H * 0.07, H * R.headL * (0.25 + (0.72 * i) / R.teeth));
+        tooth.rotation.x = sign < 0 ? Math.PI : 0;
+        parts.push(tooth);
+      }
+    }
+  }
+  // tail behind, drooping, in two runs
+  const tailRoot = v(0, -0.28, -0.6), tailMid = v(0, -0.36, -0.6 - R.tailL * 0.5), tailTip = v(0, -0.3, -0.6 - R.tailL);
+  seg("raptorMountTail", tailRoot, tailMid, 0.4, 0.22, hide);
+  seg("raptorMountTail", tailMid, tailTip, 0.22, 0.03, hide);
+  // dorsal spikes from the head's back down the neck and the back to the tail root
+  const ridge = [neckTop.add(v(0, 0.12, -0.12)), neckFoot.add(v(0, 0.16, -0.05)), v(0, 0.02, 0.05), v(0, -0.02, -0.4), tailRoot.add(v(0, 0.17, -0.1))];
+  for (let i = 0; i < R.spikes; i++) {
+    const f = (i / (R.spikes - 1)) * (ridge.length - 1), j = Math.min(ridge.length - 2, Math.floor(f));
+    const at = Vector3.Lerp(ridge[j], ridge[j + 1], f - j);
+    const spike = MeshBuilder.CreateCylinder("raptorMountSpike", { height: H * R.spike, diameterBottom: H * R.spike * 0.6, diameterTop: 0, tessellation: 4 }, scene);
+    spike.parent = frame; spike.material = hide; spike.position.copyFrom(at.add(v(0, R.spike * 0.4, 0))); spike.rotation.x = -0.45;
+    parts.push(spike);
+  }
+  // legs: thigh forward and down to the knee, shin back to the ankle, foot forward to the toe on the ground, three claws
+  const g = ground / H;
+  for (const x of [-R.legX, R.legX]) {
+    const hipJ = v(x, -0.3, -0.08), knee = v(x * 1.05, g * 0.48, 0.32), ankle = v(x, g * 0.9, -0.18), toe = v(x, g + 0.05, 0.16);
+    seg("raptorMountThigh", hipJ, knee, R.legW * 1.5, R.legW, hide);
+    seg("raptorMountShin", knee, ankle, R.legW * 0.85, R.legW * 0.6, hide);
+    seg("raptorMountFoot", ankle, toe, R.legW * 0.6, R.legW * 0.55, hide);
+    for (const dx of [-0.07, 0, 0.07]) {
+      const claw = MeshBuilder.CreateCylinder("raptorMountClaw", { height: H * 0.11, diameterBottom: H * 0.06, diameterTop: 0, tessellation: 4 }, scene);
+      claw.parent = frame; claw.material = ivory; claw.position.copyFrom(toe.add(v(dx, -0.03, 0.08))); claw.rotation.x = 1.3;
+      parts.push(claw);
+    }
+  }
+  for (const m of [trunk, ...parts]) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return trunk;
+}
 function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: HorseStyle = "barded", s = 1): Mesh {
   const pinto = style === "pinto";
   const H = body.hip.position.y;
@@ -9006,37 +9098,8 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       drape.material = mat(scene, new Color3(0.9, 0.55, 0.1), 0.05);
       return robe;
     }
-    case "raptor_mount": {
-      const bodyMesh = MeshBuilder.CreateBox("raptorBody", { width: 0.22 * s, height: 0.42 * s, depth: 0.85 * s }, scene);
-      bodyMesh.position.y = -0.38 * s;
-      bodyMesh.parent = body.hip;
-      bodyMesh.material = mat(scene, new Color3(0.45, 0.55, 0.28));
-      const neck = MeshBuilder.CreateCylinder("raptorNeck", { height: 0.28 * s, diameter: 0.08 * s, tessellation: 6 }, scene);
-      neck.position.set(0, -0.08 * s, 0.38 * s);
-      neck.rotation.x = -0.7;
-      neck.parent = bodyMesh;
-      neck.material = mat(scene, new Color3(0.45, 0.55, 0.28));
-      const head = MeshBuilder.CreateSphere("raptorHead", { diameter: 0.16 * s, segments: 6 }, scene);
-      head.position.set(0, 0.08 * s, 0.52 * s);
-      head.parent = bodyMesh;
-      head.material = mat(scene, new Color3(0.5, 0.62, 0.3));
-      const tail = MeshBuilder.CreateCylinder("raptorTail", { height: 0.45 * s, diameterTop: 0, diameterBottom: 0.05 * s, tessellation: 6 }, scene);
-      tail.position.set(0, -0.02 * s, -0.5 * s);
-      tail.rotation.x = 1.05;
-      tail.parent = bodyMesh;
-      tail.material = mat(scene, new Color3(0.4, 0.5, 0.24));
-      for (const side of [-1, 1]) {
-        const leg = MeshBuilder.CreateCylinder("raptorLeg", { height: 0.32 * s, diameter: 0.05 * s, tessellation: 6 }, scene);
-        leg.position.set(side * 0.12 * s, -0.32 * s, side > 0 ? -0.18 * s : 0.18 * s);
-        leg.parent = bodyMesh;
-        leg.material = mat(scene, new Color3(0.4, 0.5, 0.24));
-      }
-      const crest = MeshBuilder.CreateBox("raptorCrest", { width: 0.04 * s, height: 0.14 * s, depth: 0.03 * s }, scene);
-      crest.position.set(0, 0.16 * s, 0.54 * s);
-      crest.parent = bodyMesh;
-      crest.material = mat(scene, accent, 0.1);
-      return bodyMesh;
-    }
+    case "raptor_mount":
+      return buildRaptorMount(scene, body);
     case "clam_shell": {
       const shell = MeshBuilder.CreateSphere("clamShell", { diameter: 0.7 * s, segments: 8 }, scene);
       shell.scaling.y = 0.45;
