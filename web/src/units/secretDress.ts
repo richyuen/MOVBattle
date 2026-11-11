@@ -216,6 +216,56 @@ export function bomberHeadband(scene: Scene, body: ArticulatedBody, team: Color3
   return out;
 }
 
+/**
+ * [S] 513 the Bomber's breeches (secret.bomb_on_a_stick.red.png: baggy team breeches from the waist to just under the knee, a turned-up cuff band
+ * round each just below the knee, a lighter stitched square patch on the front of his left thigh, then bare team-skin shins down to the team
+ * shoes; audit 500 a.5 "straight legs"). The thigh hidden; per leg a 7-sided lathe in the thigh's box (centre c, half size s) from .top s.y down
+ * to .hem m under the knee joint (LESSONS 433: anchor to the joint, not the box), .waist / .bulge / .low s.x round at its top / middle / hem; a cuff
+ * on the shin .cuffH m tall from the knee down, .cuff shin widths round; on the left a patch .patch s.x square on the front .patchY of the way up
+ * with three cream stitch bars across its outer edge. Pelvis in the breech cloth, shins in skin. Own team cloth (LESSONS 449), out of the glow.
+ */
+const BOMBER_BREECH = { top: 0.96, hem: -0.06, waist: 1.18, bulge: 1.42, low: 1.22, cuffH: 0.075, cuff: 2.6, patch: 0.85, patchY: 0.45, shade: 0.8 };
+export function bomberBreeches(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const B = BOMBER_BREECH, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const color = team.scale(B.shade), patchC = team.scale(1.0), cream = new Color3(0.88, 0.82, 0.65);
+  const cloth = mf.get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
+  const patchCloth = mf.get("cloth", patchC, { emissive: patchC.scale(0.2), roughness: 1 });
+  const stitch = mf.get("unlit", cream, { emissive: cream });
+  const out: Mesh[] = [];
+  for (const [thigh, knee, shin, left] of [[body.leftUpperLeg, body.leftKnee, body.leftLowerLeg, true], [body.rightUpperLeg, body.rightKnee, body.rightLowerLeg, false]] as const) {
+    const { center: c, extendSize: s } = thigh.getBoundingInfo().boundingBox;
+    const hem = (knee.position.y - thigh.position.y + B.hem - c.y) / s.y;
+    const at = (f: number) => hem + (B.top - hem) * f;
+    const shape = [[0, hem], [B.low, hem], [B.bulge, at(0.4)], [B.bulge * 0.96, at(0.7)], [B.waist, B.top], [0, B.top]]
+      .map(([w, h]) => new Vector3(w * s.x, h * s.y, 0));
+    const breech = MeshBuilder.CreateLathe("bomberBreech", { shape, tessellation: 7 }, scene);
+    breech.parent = thigh; breech.position.copyFrom(c); breech.scaling.z = s.z / s.x; breech.material = cloth;
+    out.push(breech);
+    thigh.isVisible = false;
+    if (left) {
+      const front = c.z + s.z * B.bulge * 0.95, y = c.y + s.y * (hem + (B.top - hem) * B.patchY);
+      const patch = MeshBuilder.CreateBox("bomberBreechPatch", { width: s.x * B.patch, height: s.x * B.patch, depth: s.z * 0.12 }, scene);
+      patch.parent = thigh; patch.position.set(c.x + s.x * 0.15, y, front); patch.rotation.z = 0.12; patch.material = patchCloth;
+      out.push(patch);
+      for (let k = -1; k <= 1; k++) {
+        const bar = MeshBuilder.CreateBox("bomberBreechStitch", { width: s.x * 0.22, height: s.x * 0.06, depth: s.z * 0.06 }, scene);
+        bar.parent = thigh; bar.position.set(c.x + s.x * (0.15 + B.patch / 2), y + k * s.x * B.patch * 0.3, front + s.z * 0.06); bar.material = stitch;
+        out.push(bar);
+      }
+    }
+    const sc = shin.getBoundingInfo().boundingBox;
+    const kneeY = -shin.position.y;
+    const cuff = MeshBuilder.CreateCylinder("bomberBreechCuff", { height: B.cuffH, diameter: sc.extendSize.x * B.cuff, tessellation: 7 }, scene);
+    cuff.parent = shin; cuff.position.set(sc.center.x, kneeY + B.hem - B.cuffH / 2 + 0.01, sc.center.z); cuff.scaling.z = sc.extendSize.z / sc.extendSize.x;
+    cuff.material = cloth; out.push(cuff);
+    shin.material = body.skinMaterial;
+  }
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (pelvis) pelvis.material = cloth;
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 export function executionerHood(scene: Scene, body: ArticulatedBody): Mesh[] {
   const head = body.headMesh;
   const { center, extendSize: size } = head.getBoundingInfo().boundingBox;
