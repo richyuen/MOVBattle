@@ -1941,6 +1941,9 @@ export class SimulationSystem {
       this._clearPathState(unit);
       return;
     }
+    // [S] 515 (chu_ko_nu b.5) the Chu Ko Nu lays his crossbow toward his man every step, backing off included (his windup is a back-off,
+    // which never reaches the in-range readyAim below): secret.chu_ko_nu.jpg, the crossbow points ahead at the enemy
+    if (RCB_VOLLEY.units.has(unit.definition.id)) unit.readyAim(this._chestOf(enemy));
 
     // Reach is to the target's hide, not its middle: a giant's body keeps a man farther from its centre than his weapon is long, and he never swung.
     // ...and a giant is struck from the second rank too: it stands over the men at its hide, and those a rank's depth behind them reach it past their shoulders.

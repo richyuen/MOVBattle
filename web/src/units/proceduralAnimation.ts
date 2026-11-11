@@ -1669,9 +1669,10 @@ export class ProceduralAnimator {
   readyAim(at?: Vector3): void {
     this._aimReadyTimer = 0.6;
     // [S] 456 the man's chest (world): the levelled Winchester points at it, not along her facing while she still turns to him
-    if (at) this._aimAt = at.clone();
+    if (at) { this._aimAt = at.clone(); this._aimAtTime = this._time; }
   }
   private _aimAt: Vector3 | null = null;
+  private _aimAtTime = -Infinity;
 
   private _aimReadyTimer = 0;
 
@@ -4737,7 +4738,18 @@ export class ProceduralAnimator {
     const b = this._body, H = RCB_HOLD;
     for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.rightShoulder]) n.computeWorldMatrix(true);
     const tb = b.torsoMesh.getBoundingInfo().boundingBox;
-    const { fwd, right } = this._heading();
+    const heading = this._heading();
+    // [S] 514 (chu_ko_nu b.5) laid toward the man he aims at (readyAim's chest, while it holds), not along his heading: backing off his heading
+    // points away and the bow trailed behind him (secret.chu_ko_nu.jpg: the crossbow points ahead at the enemy)
+    let fwd = heading.fwd, right = heading.right;
+    if (this._aimAt && this._time - this._aimAtTime < 0.6) {
+      const to = this._aimAt.subtract(tb.centerWorld);
+      to.y = 0;
+      if (to.lengthSquared() > 1e-4) {
+        fwd = to.normalize();
+        right = new Vector3(fwd.z, 0, -fwd.x);
+      }
+    }
     const depth = tb.extendSize.z * Math.abs(b.torsoMesh.absoluteScaling.z);
     const grip = tb.centerWorld.add(fwd.scale(depth + H.ahead)).addInPlace(right.scale(H.across)).addInPlace(new Vector3(0, -H.drop, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, grip, w, 2);
@@ -4746,7 +4758,8 @@ export class ProceduralAnimator {
     const hand = b.rightHand.getWorldMatrix();
     const handScale = new Vector3(), handRot = new Quaternion(), handPos = new Vector3();
     hand.decompose(handScale, handRot, handPos);
-    const want = Quaternion.FromLookDirectionLH(fwd.scale(-1), Vector3.Up());
+    // 514 probe: looking along -fwd left the muzzle .5 m behind the fist with him square to the man (the lay was reversed): look along fwd
+    const want = Quaternion.FromLookDirectionLH(fwd, Vector3.Up());
     // the stock's middle just ahead of the fist, the fist under it
     const at = handPos.add(fwd.scale(H.lead)).addInPlace(new Vector3(0, H.lift, 0));
     const bowScale = bow.absoluteScaling.clone();
