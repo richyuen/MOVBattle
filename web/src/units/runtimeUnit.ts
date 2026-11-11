@@ -2,6 +2,7 @@ import { Vector3, Mesh, MeshBuilder, Color3, Quaternion, Scene, ParticleSystem, 
 import { createFxAmbient } from "../combat/particleFactory";
 import { getMaterialFactory } from "./materialFactory";
 import { VAMPIRE_BAT_NODE, VAMPIRE_BAT_WING, vampireBatBeat } from "./spookyDress";
+import { RAPTOR_MOUTH } from "./raptorBody";
 
 /*
  * [S] spin while firing (330; card Characteristics "During battle, the machine spins around, launching cannonballs from the cannons"; renaissance.da_vinci_tank.jpg).
@@ -1955,7 +1956,7 @@ export class RuntimeUnit {
     bite.neck.scaling.y = axis.length() / (2 * scale);
     bite.neck.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), axis.normalize(), new Quaternion());
     bite.skull.rotation.x = Math.atan2(-shift.y, scale * 1.1);
-    bite.jaw.rotation.x = 0.46 - 0.42 * thrust;
+    bite.jaw.rotation.x = RAPTOR_MOUTH.jawRest - (RAPTOR_MOUTH.jawRest - RAPTOR_MOUTH.jawShut) * thrust;
     if (elapsed >= 0.3) this._raptorBite = null;
   }
 

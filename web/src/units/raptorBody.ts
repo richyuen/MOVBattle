@@ -2,6 +2,20 @@ import { Color3, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Vector3 } 
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 
+/*
+ * [S] 512 the Raptor's open mouth (card Appearance "a tongue corresponding to its team's colors"; secret.raptor.blue.png: the jaw hangs open on a
+ * dark mouth with a team tongue between the white tooth rows; audit a.1). Spec in half-rig units: the jaw rests RAPTOR_MOUTH.jawRest rad open (the
+ * bite closes it to .jawShut, runtimeUnit _updateRaptorBite); a near-black palate under the skull (.palate centre, .palateSize radii) and a
+ * near-black floor on the jaw (.floor, .floorSize) fill the gap, and a flat team tongue (.tongue, .tongueSize) lies on the floor between the
+ * lower tooth rows (x under .115), flat lit team colour out of the glow.
+ */
+export const RAPTOR_MOUTH = {
+  jawRest: 0.68, jawShut: 0.04,
+  palate: [0, -0.1, 0.24], palateSize: [0.13, 0.035, 0.19],
+  floor: [0, 0.03, 0.22], floorSize: [0.12, 0.03, 0.2],
+  tongue: [0, 0.055, 0.26], tongueSize: [0.085, 0.03, 0.2],
+};
+
 export function dressRaptorBody(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   for (const mesh of body.allMeshes) mesh.isVisible = false;
   const mf = getMaterialFactory();
@@ -45,8 +59,17 @@ export function dressRaptorBody(scene: Scene, body: ArticulatedBody, team: Color
   const jaw = new TransformNode("raptorJawPivot", scene);
   jaw.parent = skull;
   jaw.position.copyFrom(v(0, -0.03, 0.01).scale(scale));
-  jaw.rotation.x = 0.46;
+  const M = RAPTOR_MOUTH;
+  jaw.rotation.x = M.jawRest;
   shape("raptorJaw", jaw, v(0, -0.04, 0.21), v(0.18, 0.08, 0.29), dark);
+  const throat = mf.get("cloth", new Color3(0.035, 0.02, 0.02), { roughness: 1 });
+  const tongueColor = team.scale(0.85);
+  const tongue = mf.get("unlit", tongueColor, { emissive: tongueColor });
+  const glow = scene.getGlowLayerByName("glow");
+  shape("raptorPalate", skull, v(M.palate[0], M.palate[1], M.palate[2]), v(M.palateSize[0], M.palateSize[1], M.palateSize[2]), throat);
+  shape("raptorMouthFloor", jaw, v(M.floor[0], M.floor[1], M.floor[2]), v(M.floorSize[0], M.floorSize[1], M.floorSize[2]), throat);
+  const tongueMesh = shape("raptorTongue", jaw, v(M.tongue[0], M.tongue[1], M.tongue[2]), v(M.tongueSize[0], M.tongueSize[1], M.tongueSize[2]), tongue);
+  glow?.addExcludedMesh(tongueMesh);
   for (const side of [-1, 1]) {
     shape("raptorEye", skull, v(side * 0.21, 0.09, 0.10), v(0.07, 0.09, 0.09), eye);
     shape("raptorPupil", skull, v(side * 0.259, 0.09, 0.12), v(0.029, 0.05, 0.05), dark);
