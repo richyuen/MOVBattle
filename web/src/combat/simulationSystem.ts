@@ -4036,7 +4036,7 @@ export class SimulationSystem {
       this.visualEffects?.spawnHitSparks(parry, 1.6);
       return;
     }
-    const raptorBite = attacker.startRaptorBite(now);
+    const raptorBite = attacker.startRaptorBite(now, target);
     if (raptorBite) {
       knockback = knockback.scale(0.22);
       this._logAbility(attacker, "raptor_bite", now, target.position);

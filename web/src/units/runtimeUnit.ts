@@ -1917,15 +1917,26 @@ export class RuntimeUnit {
     }
   }
 
-  private _raptorBite: { jaw: TransformNode; skull: TransformNode; neck: Mesh; rest: Vector3; at: number } | null = null;
+  private _raptorBite: { jaw: TransformNode; skull: TransformNode; neck: Mesh; rest: Vector3; neckRest: Vector3; reach: Vector3; at: number } | null = null;
 
-  startRaptorBite(now: number): boolean {
+  startRaptorBite(now: number, target: RuntimeUnit): boolean {
     if (this.definition.id !== "secret.raptor") return false;
     const skull = this.body.hip.getChildTransformNodes(true).find(node => node.name === "raptorSkullPivot");
     const jaw = skull?.getChildTransformNodes(true).find(node => node.name === "raptorJawPivot");
     const neck = this.body.hip.getChildMeshes(true).find(mesh => mesh.name === "raptorNeck");
     if (!skull || !jaw || !(neck instanceof Mesh)) return false;
-    this._raptorBite = { jaw, skull, neck, rest: this._raptorBite?.rest ?? skull.position.clone(), at: now };
+    const rest = this._raptorBite?.rest ?? skull.position.clone();
+    const neckRest = this._raptorBite?.neckRest ?? neck.position.clone();
+    const scale = this.body.metrics.overallHeight / 2;
+    const chest = target.body.torsoMesh;
+    chest.computeWorldMatrix(true);
+    const aim = Vector3.TransformCoordinates(chest.getBoundingInfo().boundingBox.centerWorld,
+      this.body.hip.computeWorldMatrix(true).clone().invert());
+    const reach = aim.subtract(rest).subtractInPlace(new Vector3(0, 0, scale * 0.53));
+    reach.x = Math.max(-scale * 0.22, Math.min(scale * 0.22, reach.x));
+    reach.y = Math.max(-scale * 0.32, Math.min(scale * 0.28, reach.y));
+    reach.z = Math.max(0, Math.min(scale * 0.68, reach.z));
+    this._raptorBite = { jaw, skull, neck, rest, neckRest, reach, at: now };
     this._updateRaptorBite(now);
     return true;
   }
@@ -1934,12 +1945,12 @@ export class RuntimeUnit {
     const bite = this._raptorBite;
     if (!bite) return;
     const elapsed = Math.max(0, now - bite.at);
-    const thrust = Math.max(0, 1 - elapsed / 0.3);
-    bite.neck.scaling.z = 0.26 + 0.24 * thrust;
-    bite.skull.position.copyFrom(bite.rest);
-    bite.skull.position.z += this.body.metrics.overallHeight * 0.14 * thrust;
-    bite.skull.rotation.x = 0.28 * thrust;
-    bite.jaw.rotation.x = elapsed < 0.12 ? 0.76 - 0.72 * elapsed / 0.12 : 0.46 - 0.7 * thrust;
+    const thrust = Math.max(0, 1 - Math.max(0, elapsed - 0.07) / 0.23);
+    const shift = bite.reach.scale(thrust);
+    bite.skull.position.copyFrom(bite.rest).addInPlace(shift);
+    bite.neck.position.copyFrom(bite.neckRest).addInPlace(shift.scale(0.5));
+    bite.neck.scaling.z = 0.26 + shift.length() / this.body.metrics.overallHeight;
+    bite.jaw.rotation.x = 0.46 - 0.42 * thrust;
     if (elapsed >= 0.3) this._raptorBite = null;
   }
 
