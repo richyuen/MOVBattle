@@ -1,18 +1,16 @@
 # secret.ball_n_chain
 Status: open   Audited: 500 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (1 since 500, 3 struck)
- 3. shirt in unit_secret.ball_n_chain_idle — a plain team torso; TABS a white shirt with team horizontal stripes on the sleeves (ref: secret.ball_n_chain.red.png)
- 4. trousers in unit_secret.ball_n_chain_idle — plain team legs; TABS wide team/white horizontal stripes down the legs (ref: secret.ball_n_chain.red.png)
+a PASS (510 striped prisoner shirt and trousers)
 b PASS (502 stone hugged at the chest in both arms)
 c FAIL (1 since 500, 1 struck)
  2. blow in unit_secret.ball_n_chain_release — an overhead stick swing; TABS dives with the stone ball and pounds repeatedly (ref: card Characteristics)
 d PASS (509 stats)
 ## Ranked gaps
-1. [S] secret.ball_n_chain.a prisoner shirt — blocker 3: build a white shirt with alternating team bands around the sleeves — ref: reference/units/secret.ball_n_chain.blue.png — ours: unit_secret.ball_n_chain_idle.png
-2. [S] secret.ball_n_chain.a striped trousers — blocker 4: add broad alternating white/team trouser sections down both legs — ref: reference/units/secret.ball_n_chain.blue.png — ours: unit_secret.ball_n_chain_idle.png
-3. [S] secret.ball_n_chain.c stone pounding — blocker 2: stone-led diving contact followed by repeated contact-timed pounds, keeping torso and stone attached — ref: card Characteristics — ours: unit_secret.ball_n_chain_release.png / _flight.png
+1. [S] secret.ball_n_chain.c stone-led attack — blocker 2: make the full rig dive with the stone leading, then deliver repeated contact-timed stone pounds — ref: card Characteristics — ours: unit_secret.ball_n_chain_release.png / unit_secret.ball_n_chain_flight.png
 ## Attempts (iter | gap | criterion | verdict)
+510 | cream shirt and alternating sleeve bands (a8b184ab) | a | approved (struck 3)
+510 | alternating trouser bands and skirt removal (07986a12, e9179b7c) | a | approved (struck 4)
 509 | stone dive and pounds (724ec250, 4eb56a9b, 13352468; reverted fc1d5642,d5c6f5c4,a01ad5e1) | c | dropped: contact beyond arm reach; forward torso detached from hips
 505 | low team cap with cream hem in place of hood (f8f54345) | a | approved (struck 1, 2, 5)
 504 | back-step windup and forward leap holding the stone (f91998de) | c | approved (struck 1)

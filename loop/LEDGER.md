@@ -2,7 +2,15 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
-## Structural attempts (last 5 iterations)
+$1510 | b60b1a73 | secret.raptor.a | approved [S] (struck 4)
+510 | 0313ad73 | secret.raptor.b | approved [S] (struck 2)
+510 | 3bc37fcc, fbe5fa90 | secret.raptor.c | approved [S] (struck 1)
+510 | df0f3fe6 | secret.executioner.a | approved [S] (struck 3)
+510 | a8b184ab | secret.ball_n_chain.a | approved [S] (struck 3)
+510 | e8df8cbb, f1846fde | secret.chu_ko_nu.a | approved [S] (struck 4; CONFIRM failed a/b/c)
+510 | 3b45f093 | secret.shouter.a | approved [S] (struck 1; added 3)
+510 | f008ee0e | secret.shouter.a | approved [S] (struck 2)
+510 | 07986a12, e9179b7c | secret.ball_n_chain.a | approved [S] (struck 4)
 
 509 | 8a76bf73 | evil.death_bringer.a | approved [R] (struck 1; CONFIRM passed a, done)
 509 | c3516851, b317dbe1 | secret.chu_ko_nu.a | dropped [S] (belt hidden in idle)
@@ -30,15 +38,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 506 | 83f17efd,c2e1505e | secret.fan_bearer.b | approved [S]
 506 | 2f45b912 | secret.jester.a | approved [S] (struck 2)
 
-505 | 37724d45 | evil.death_bringer.a | approved [R] (struck 1)
-505 | 81a7d921 | secret.executioner.a | approved (struck 2)
-505 | f8f54345 | secret.ball_n_chain.a | approved (struck 1, 2, 5)
-505 | 1ff4ba0b | secret.shouter.a | approved (struck 5)
-505 | c4965761 | secret.bomb_on_a_stick.a | approved (struck 1)
-505 | 140582e4,67439484 | secret.the_teacher.c | approved (struck 1)
-505 | 18710e8b | secret.raptor.a | approved (struck 1, 2, 3)
-505 | 53a75e63 | secret.raptor.b | approved (struck 1)
-505 | be96b2b5,d7165ae8 | secret.raptor.c | approved
 
 
 
@@ -50,7 +49,7 @@ Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuil
 
 ## Rows
 evilDress:deathBringerBareTorso | six-sided skin shells; upper .27-.23 TW, forearm .23-.14 TW, depth .88 | 509 | approved [R] | thin rig meshes
-secretDress:chuKoNuBelt | none (reverted: hidden by crossbow) | 509 | dropped [S] | dark strap, square buckle and loose end
+secretDress:chuKoNuBelt | eight-sided dark strap, square buckle, loose end | 510 | approved | 509 hidden strap
 secretDress:fanBearerSash | team skin chest/yoke/pads under .155 TW dark diagonal sash; endpoints x -.82,+.78, bridge -.82 half-TW | 509 | approved [S] (root-blocker exception: mirror X once per critic 509) | grey chest
 SS/PA:STONE_POUND | overhead stick swing retained; trial reverted (contact detached torso) | 509 | dropped [S] | three contact-timed pounds
 secretDress:shouterKneeWraps | four overlapping seven-sided tan bands at each shin top | 509 | approved [S] | none
@@ -62,7 +61,7 @@ secretDress:SHOUTER_VEST | two dark iron front panels, darkened team torso | 505
 secretDress:BOMBER_HAIR | ginger crown, three locks per side and seven tapered braid segments | 505 | approved | bald
 RU/SS:TEACHER_PARRY | frontal cone dot .45; hold .24 s, recover .55 s; intercept in melee contact, emit sparks | 505 | approved | no melee deflection
 raptorBody:RAPTOR | articulated biped, long trunk, hinged skull, raised taper tail and opposing triangular teeth | 505 | approved | green four-legged mount on humanoid
-RU/SS:RAPTOR_BITE | forward head and neck .3 s, closure .12 s, target impulse .22 of melee | 505 | approved (contact blocker stands) | generic unarmed hit
+RU/SS:RAPTOR_BITE | chest-directed hip-local reach; neck follows jaw; .07s hold, .3s recovery | 510 | approved | 505 fixed forward snap
 SS:Executioner jump | range .65 engage to engage+1.5 m, aim .45 engage short; rise 5, axe visual .46 s, jump cooldown 2 s | 504 | approved | planted before chop
 SS:Foolish Jump | windup .24 s, backstep goal .5 m, approach band engage+3.4, rise 6.5, lands .4 engage short, cooldown 5 s | 504 | approved | spin_move
 evilDress:DEATH_HAIR crown/back | 4 locks per side .032-.046 TW in both axes, staggered behind mask; 6 narrow rear strands | 504 | approved | 503 flat side locks and 9 back strands
@@ -75,7 +74,7 @@ PA:STONE_HUG | side.8 front-.1 drop.3 of the stone's radius;_armTo both fists | 
 PB/SS:rcbMuzzle | slot on the stock nose, HAND_LAUNCH chu_ko_nu muzzle | 502 | approved | face-height origin
 SS/FX:SHOUT | reach9 half.55 speed10 lift4.5 large.6 giant.3, no damage;wave 4 rings .5-3.4 m,10 streaks,.6s | 502 | approved (no lean, thin ring) | melee hit from 7.8 m
 secretDress:TEACHER_HAIR | brown(.16,.085,.06);cap1.12W e+.06H to .6H;3 puffs/side .42W at .6W;3 back lumps | 502 | approved (cap reads boxy) | bald
-evilDress:DEATH_LEGS | [R] 503 shin mesh itself unlit pale(.62,.58,.5),6 seams unlit(.4,.37,.32) 1.1 out .035 tall slant.22;thigh stub past knee wrapped 1.03;feet team skin;shorts hem/seat/puff/cuff kept | 503 | approved (shins struck) | 501 grey(.45) wrap1.3 whole shin,5 bands 1.45 (CONFIRM: greaves);shorts to thigh box foot (.39 m);evilWrap rings
+evilDress:DEATH_LEGS | 503 fitted pale shin cloth and six slanted seams, team feet | 503 | approved [R] | full prior values ledger@66a5d680
 SS/RU:SECRET_503 | FAN_BLOW reach10 half.32 push10 + FX FAN_GUST 16 streaks 3 waves .85s,2 swirls;BOMB_SMACK radius3.5 scale.7 push1.6 chest1,engageRangeOverride2.6;RU steadfast blast slide .2 no lift;STEADFAST_UPRIGHT .3 | 503 | approved (fan streaks straight bars; monarch head leans 25 deg) | none (fan melee hit from 7.8 m; bomb thrown 6 m; monarch flung by blasts, swing rolled him flat)
 secretDress:SECRET_503 | BALLOONER_GLUE unlit(.66,.5,.3) mitt3.4HW lump1.9;JESTER_CAP hood1.14W points root.34 tip.14 bell.22,brown spike.62H;KONU_KNOT black(.05) cap.62H,band.16H team stripe,bun.42H | 503 | approved (glue near-white, hand only; jester points thin; hair maroon-brown) | shuriken; maroon disc cap; conical hat
 evilDress:DEATH_BELT | black belt.12H;3 tusks/side at.38/.5/.58W drop.32 hook.24 root.13W tan | 500 | approved | drop.14 hook.1 root.07 (look 500, hidden)
@@ -87,13 +86,13 @@ PB:SPADROON | rapier variant;blade.95s .022 flat.35;gold(.85,.6,.12) shell.12s,b
 PB:REPEATING_CROSSBOW | crossbow variant;stock.56s,magazine.17x.24s,2 studs/side,lever,arm.66s sweep.1 | 501 | approved | small bow arc
 evilDress:MONARCH_CROWN | tan(.66,.5,.2) band1.22W,6 rays.95H,5 spikes;black pole2.6H,5 wraps,tip;pink ring1.35W | 500 | approved | MONARCH_SPIKES;tan(.72,.56,.3) pole2 (look)
 PB:EXECUTIONER_AXE | buildJarlAxe long1.3 grip.12 wide.22,steel(.52) crescent(.3) bulge.18 | 500 | approved | short axe stick
-secretDress:SHOUTER_HELM | iron(.2,.21,.23) bowl1.22W rim e+.02H top.66H;nose.2W,cheeks.24W at.46W;horns.28W path to1.04W | 500 | approved | bare head
+secretDress:SHOUTER_HELM | iron bowl/nose/cheeks; lateral tan horns .39W root,1.22W span/side | 510 | approved | 500 upward .28W horns
 PB:GIANT_FAN | halberd variant;haft1.0 stand grip.3;mount.32L;team half-oval1.4L x.8L | 500 | approved | hand fan
 secret_1 stats cost/hm/dm/cm (10 units, b4d5ff95) | d PASS 10/10;fan dm .00064 | 500 | stats | initial manifest
 evilDress:MONARCH_TUNIC | trunk/yoke lit(.08,.06,.07);3 bone chevrons at.62/.45/.28H reach.46W dip.12H bar.085W proud.09W;belt.14H +.05W,7 studs.09W | 497 | approved | lilac team block
 evilDress:MONARCH_HARNESS | bone V straps .13W foot.06H to shoulders .44W;tube wings .16W via mid(.74,.22,-.05) tip(1.05,.38,-.12),4 spikes.17W;evil preset harness flag | 496 | approved | pauldrons (custom keeps)
 evilDress:DEATH_MASK | tan(.8,.6,.35) prism brow1.04W@.56H cheek1.18W chin.42W@-.62H deep1.12D;sockets.3x.11 droop.35;nose.14W;horns team x.5;skull/jaw boxes off | 496 | approved (mask reads square, pale) | cream skull+jaw boxes
-evilDress:DEATH_HAIR | [R] 503 cap/crown/side boxes gone: scalp ellipsoid 1.06x1.0x1.04 under the head top;6 locks/side .045TW across x .08-.12 deep at .52W;back fall rooted inside .8 head W;was cap1.3W,sides.66W lit(.025);cape off;skull+body out of glow;trunk,yoke,upper arms team skin;fall 11 strands .06-.12TW over .62TW 1.25TH,kink.035 at.55,2 shoulder/side,unlit(.016) fog off;[S] 502 4 crown locks/side .14-.2TW at .58W to .8TH,9 back strands from the crown .8TW to 1.0TH | 503 | approved [R] (side locks merge into a flat plate; reads maroon-brown) | 502 CONFIRM: head box read a slab/hood; 501 fall .95TH,5 back strands .8TH; 5 even wedges (bib read, 500); 7 front spread.66 over dark body cloth (495)
+evilDress:DEATH_HAIR | 503 fitted scalp and narrow side/back fall; later mantle tracked separately | 503 | approved [R] | full prior values ledger@66a5d680
 UV:DEATH build/stance | 1.26,.9bulk,.84W,arms1.2 .7/.68,legs1.12 .8/.76;duelist | 495 | rejected [P] default stand (65d585c3, reverted: ledger reversal, idle still side-on; wants an [S] idle pose) | 1.74,1.44bulk;giant pose
 manifest/UV:void_monarch size | no size class;vis 1.2,1.12bulk;hm.27 | 494 | approved | giant;2.08,1.46;hm.14
 SS/PS:SENTINEL_CATCH | warn.15,front cos.4,shafts lodged in the board met | 494 | approved | none
@@ -130,3 +129,9 @@ secretDress:chuKoNuHarness | two leather runs over shoulders to a six-sided rear
 secretDress:teacherJabot | three overlapping faceted cream folds beneath beard | 508 | approved [S] | no jabot
 secretDress:shouterFurTrim | seven faceted tufts on each shoulder and forearm opening | 508 | approved [S] | bare openings
 secretDress:bomberShirt | cream torso and widened upper sleeves; two folded cuffs per elbow and cross-lacing | 508 | approved [S] | dark team torso and sleeves
+raptorBody:raptorTailFeather | three dark feathers per side | 510 | approved | bare taper
+raptorBody:raptorClaw | two toes per foot, one tip per forelimb | 510 | approved | none
+secretDress:executionerHood | face-covering ten-sided tapered cloth | 510 | approved | spike and disc
+secretDress:prisonerShirt | cream body, 1/2 cream bands per upper/lower arm | 510 | approved | team shirt
+secretDress:shouterBreeches | seven-sided leg shells, split hem | 510 | approved | flared skirt
+secretDress:prisonerTrousers | alternating 3/5 stripes per thigh/shin | 510 | approved | plain legs

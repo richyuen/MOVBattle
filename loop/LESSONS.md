@@ -38,7 +38,8 @@ Read whole at step 1; one fact per line, merge near cap.
 - Check feather roots in idle (506). Translating torso to reach a target detaches it from the hips; move the whole body (509).
 - A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
 - Retire old hip skirts (482). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
-- A short-legged read is measured in the shot: probe the hem's SIDES, the cuff top and the hip sink before a stance change (450 queen: 3 rejections cut the front hem while the sides hung to the ankle). metrics.overallHeight is the PRE-CUT height; a shin limbShell's 0 is the calf cap, ~.1 m over the knee.
+- Before changing stance, probe hem sides, cuff top and hip sink (450 queen). metrics.overallHeight is pre-cut; shin limbShell 0 is the calf cap, ~.1 m above the knee.
+- A wider thigh shell can bury a shin wrap that extends above the knee joint (510).
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
 - A foot mesh is a merged cuff + toe box ~half the shin tall: a tuft at its bbox middle is buried; the instep's top is lo.y + ~.42 (399). Shoes, anklets, socks go at that height or the boot eats the shin (433); the grass hides a foot box to ~.6, so a shoe must top that (434).
