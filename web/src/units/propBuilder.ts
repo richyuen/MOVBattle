@@ -4313,6 +4313,7 @@ function buildRepeatingCrossbow(scene: Scene, s: number): Mesh {
  * across standing off each tip. A heart is two balls over a diamond, faced along the stave's normal. Unlit orange and magenta (palette.png).
  */
 const HEART_BOW = { tall: 0.62, belly: 0.3, thick: 0.026, at: [0.32, 0.5, 0.68], heart: 0.05, tipHeart: 0.085, orange: new Color3(0.8, 0.38, 0.1), pink: new Color3(0.8, 0.12, 0.55), string: 0.012 };
+const HEART_ARROW = { long: 0.56, back: 0.06, thick: 0.018, head: 0.12, fletch: 0.05, shaft: new Color3(0.85, 0.72, 0.55) };
 function buildHeartBow(scene: Scene, s: number): Mesh {
   const C = HEART_BOW, mf = getMaterialFactory();
   const orange = mf.get("unlit", C.orange, { emissive: C.orange }), pink = mf.get("unlit", C.pink, { emissive: C.pink });
@@ -4343,6 +4344,17 @@ function buildHeartBow(scene: Scene, s: number): Mesh {
     const tipY = side * (C.tall * s * 0.5 + C.tipHeart * s * 0.4);
     heart(C.tipHeart * s, tipY, z(side) , side > 0 ? 0 : Math.PI);
   }
+  // [S] 519 (b.2) the nocked love arrow (secret.cupid.blue.png: a pale shaft laid from the string through the grip, a big pink heart for its head, point
+  // forward): HEART_ARROW in s, the shaft from .back behind the string to .long ahead of it along the bow's forward (-z), the heart .head s across.
+  const A = HEART_ARROW;
+  const shaft = MeshBuilder.CreateCylinder("loveShaft", { height: A.long * s, diameter: A.thick * s, tessellation: 5 }, scene);
+  shaft.parent = bow; shaft.rotation.x = Math.PI / 2; shaft.position.set(0, 0, (0.04 + A.back - A.long / 2) * s);
+  shaft.material = mf.get("unlit", A.shaft, { emissive: A.shaft });
+  for (const side of [-1, 1]) {
+    const vane = MeshBuilder.CreateBox("loveFletch", { width: A.fletch * s, height: 0.006 * s, depth: A.fletch * 1.6 * s }, scene);
+    vane.parent = bow; vane.material = pink; vane.position.set(side * A.fletch * 0.5 * s, 0, (0.04 + A.back - A.fletch) * s);
+  }
+  heart(A.head * s, 0, (0.04 + A.back - A.long - A.head * 0.3) * s, Math.PI / 2);
   bow.rotation.z = Math.PI / 2;
   bow.position.y = 0.1 * s;
   return bow;
