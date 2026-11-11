@@ -1975,3 +1975,42 @@ export function cheerleaderSkirt(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 516 the CLAMS' clam-shell hat (secret.clams.blue.png: a big grey scalloped half-shell fanned up behind the head, its hinge behind the nape,
+ * its rim standing a head's height over the crown and twice the head wide, cupped toward the front, radial ridges in two greys; audit 515 a.2
+ * "bare head"). Spec in head widths W, heights H, depths D (head box, head frame): from a hinge .hingeY H under the centre and .hingeZ D behind
+ * it, .ribs tapered ribs fanned over .span rad either side of straight up, each .long H long, .rim W wide at the rim and .root W at the hinge, .thick
+ * W deep, leaned back .lean rad and cupped forward .cup rad at the sides; lighter and darker grey in turn; a scalloped rim lump on each rib's end.
+ * Lit stone-grey cloth (CLAM_HAND's greys), out of the glow.
+ */
+const CLAM_HAT = { ribs: 9, span: 1.3, long: 1.55, rim: 0.5, root: 0.08, thick: 0.1, hingeY: 0.42, hingeZ: 0.62, lean: 0.32, cup: 0.35, light: new Color3(0.5, 0.48, 0.47), dark: new Color3(0.3, 0.29, 0.29) };
+export function clamsHat(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CLAM_HAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const light = mf.get("cloth", C.light, { emissive: C.light.scale(0.15), roughness: 1 });
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.15), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const hinge = new TransformNode("clamHatHinge", scene);
+  hinge.parent = head; hinge.position.set(c.x, c.y - H * C.hingeY, c.z - D * C.hingeZ); hinge.rotation.x = -C.lean;
+  const out: Mesh[] = [];
+  for (let i = 0; i < C.ribs; i++) {
+    const f = (i / (C.ribs - 1)) * 2 - 1; // -1 .. 1 across the fan
+    const ang = f * C.span;
+    const arm = new TransformNode("clamHatArm", scene);
+    // fanned in the head's x-y plane, the sides cupped forward (+z)
+    arm.parent = hinge; arm.rotation.z = -ang;
+    // the cup in the rib's own frame (a child turn), so a side rib tips forward too
+    const cup = new TransformNode("clamHatCup", scene);
+    cup.parent = arm; cup.rotation.x = C.cup * Math.abs(f);
+    const rib = MeshBuilder.CreateCylinder("clamHatRib", { height: H * C.long, diameterTop: W * C.rim, diameterBottom: W * C.root, tessellation: 4 }, scene);
+    rib.parent = cup; rib.position.y = (H * C.long) / 2; rib.rotation.y = Math.PI / 4; rib.scaling.z = C.thick / C.rim;
+    rib.material = i % 2 ? dark : light;
+    out.push(rib);
+    const lump = MeshBuilder.CreateIcoSphere("clamHatScallop", { radius: W * C.rim * 0.42, subdivisions: 1 }, scene);
+    lump.parent = cup; lump.position.y = H * C.long; lump.scaling.set(1, 0.55, 0.45); lump.material = i % 2 ? light : dark;
+    out.push(lump);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
