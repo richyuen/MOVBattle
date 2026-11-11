@@ -173,7 +173,7 @@ export interface UnitVisualConfig {
   /** ...and its own cut of the off-hand weapon (the Berserker's second bearded axe is still an "axe") */
   offhandVariant?: WeaponVariant;
   /** A unit's own cut of the shared "wings" special (the Valkyrie's layered feathers; the shard fan is the default) */
-  wingStyle?: "layered";
+  wingStyle?: "layered" | "cupid";
 }
 
 export type WeaponVariant =
@@ -1156,7 +1156,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_cupid":
       return vis({ scale: 0.9, bulk: 0.85, armLength: 1.08 }, "bow", "none", "none", "wings", "#ffbfd1", undefined, {
-        posePreset: "archer", materialPreset: "secret_holy", attachmentPreset: "bow_ready",
+        posePreset: "archer", materialPreset: "secret_holy", attachmentPreset: "bow_ready", wingStyle: "cupid",
         stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
       });
     case "secret_mace_spinner":

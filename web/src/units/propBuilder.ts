@@ -8166,6 +8166,17 @@ const VALKYRIE_WINGS_LAYERED: FeatherWingStyle = {
   bar: new Color3(0.36, 0.24, 0.15), glow: 0.1, wrist: 0, fly: true,
   barTall: 0.16, barDeep: 0.14, len: [0.5, 0.95], wide: 0.5, tip: 0.6,
 };
+/*
+ * [S] 515 Cupid's wings (secret.cupid.blue.png, .red.png: broad white feathered wings spread level out from the shoulder blades, each wider than
+ * he is tall, long overlapping white feather planks in stepped rows, a magenta strap along the leading edge; audit a.1 "grey-blue spiky blades
+ * raised in a V"). The valkyrie's layered rows (CROW_LAYERS) in white, raised only .raise, the bar magenta and broad; he flies on them (fly).
+ */
+const CUPID_WINGS: FeatherWingStyle = {
+  span: 2.5, raise: 0.08, sweep: WING_SWEEP, feathers: 8, rows: 2,
+  feather: new Color3(0.9, 0.9, 0.88), covert: new Color3(0.95, 0.95, 0.93),
+  bar: new Color3(0.7, 0.08, 0.5), glow: 0.12, wrist: 0, fly: true,
+  barTall: 0.2, barDeep: 0.16, len: [0.45, 0.9], wide: 0.48, tip: 0.6,
+};
 const CROW_WINGS: FeatherWingStyle = { span: 2.7, raise: 0.55, sweep: 0.22, feathers: 9, feather: new Color3(0.09, 0.09, 0.13), covert: new Color3(0.13, 0.13, 0.18), bar: new Color3(0.1, 0.1, 0.14), glow: 0.06, wrist: 0.48, rows: 3 };
 function buildFeatherWings(scene: Scene, body: ArticulatedBody, style: FeatherWingStyle = VALKYRIE_WINGS, teamColor?: Color3): void {
   const torsoH = body.torsoMesh.position.y * 2;
@@ -8757,7 +8768,7 @@ const QUIVER_HIP = {
   arrows: [[-0.03, -0.02, 0.12], [0.0, 0.03, -0.05], [0.03, -0.01, -0.16], [0.01, -0.035, 0.02]] as const,
 };
 
-function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3, body: ArticulatedBody, teamColor?: Color3, horse: HorseStyle = "barded", wingStyle?: "layered"): Mesh | null {
+function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3, body: ArticulatedBody, teamColor?: Color3, horse: HorseStyle = "barded", wingStyle?: "layered" | "cupid"): Mesh | null {
   switch (type) {
     case "none": return null;
 
@@ -8819,7 +8830,7 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
         }
       } else {
         // [S] 394 the Valkyrie's own cut: broad layered feathers on a thick dark spar; the other winged units keep the shard fan
-        buildFeatherWings(scene, body, wingStyle === "layered" ? VALKYRIE_WINGS_LAYERED : VALKYRIE_WINGS);
+        buildFeatherWings(scene, body, wingStyle === "layered" ? VALKYRIE_WINGS_LAYERED : wingStyle === "cupid" ? CUPID_WINGS : VALKYRIE_WINGS);
       }
       // Return a dummy mesh for disposal tracking
       const marker = MeshBuilder.CreateBox("wingMarker", { width: 0.01, height: 0.01, depth: 0.01 }, scene);
