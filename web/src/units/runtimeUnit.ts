@@ -3,6 +3,7 @@ import { createFxAmbient } from "../combat/particleFactory";
 import { getMaterialFactory } from "./materialFactory";
 import { VAMPIRE_BAT_NODE, VAMPIRE_BAT_WING, vampireBatBeat } from "./spookyDress";
 import { RAPTOR_MOUTH } from "./raptorBody";
+import { ChainWhip } from "./secretDress";
 
 /*
  * [S] spin while firing (330; card Characteristics "During battle, the machine spins around, launching cannonballs from the cannons"; renaissance.da_vinci_tank.jpg).
@@ -1289,6 +1290,7 @@ export class RuntimeUnit {
       this._blowTarget.animator.triggerFlinch();
     }
     this._applyVisualPresentation(now);
+    this._tendChainWhip(dt);
     this._movementVelocity.setAll(0);
 
     if (this._linkedParent && this._isAnchoredActor) {
@@ -2649,7 +2651,22 @@ export class RuntimeUnit {
     this.animator.setState(AnimState.Idle);
   }
 
+  /** [S] 519 the Infernal Whip's chain (secretDress CHAIN_WHIP): laid out at his first frame, then pinned to his fist and dragged each step. */
+  private _chainWhip: ChainWhip | null = null;
+  private _tendChainWhip(dt: number): void {
+    if (this.definition.id !== "secret.infernal_whip" || this._isAnchoredActor) return;
+    if (!this._chainWhip) {
+      const head = this.body.headMesh;
+      head.computeWorldMatrix(true);
+      const height = head.getAbsolutePosition().y - this.position.y + head.getBoundingInfo().boundingBox.extendSize.y * head.absoluteScaling.y;
+      this._chainWhip = new ChainWhip(head.getScene(), this.body.rightHand, height, this._getFacingVector());
+      return;
+    }
+    this._chainWhip.step(dt);
+  }
+
   dispose(): void {
+    this._chainWhip?.dispose(); this._chainWhip = null;
     if (this._fearSkull) { this._fearSkull.dispose(false, false); this._fearSkull = null; }
     if (this._loveHearts) { this._loveHearts.dispose(false, false); this._loveHearts = null; }
     if (this._fxParticleSystem) {

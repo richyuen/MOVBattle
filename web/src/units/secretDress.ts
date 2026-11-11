@@ -2461,3 +2461,111 @@ export function cupidFeet(scene: Scene, body: ArticulatedBody): void {
     glow?.addExcludedMesh(foot);
   }
 }
+
+/*
+ * [S] 519 the Infernal Whip's chain whip (secret.infernal_whip.red.png: a chain of dark iron links about a body length long, hanging from the fist and
+ * lying out over the ground, ending in a dark leaf-shaped blade; audit 518 b.1 "a short rigid dark stick with a few loose links behind"). CHAIN_WHIP:
+ * .links links, the whole .long of his standing height; each link a dark box .wide x .thick of its length (in link lengths), every other one turned a quarter about the
+ * chain so it reads as linked rings; the blade a flat four-sided point .blade of the length past the last link. The chain is a little rope laid in the
+ * world (not under the hand: a rigid prop cannot hang from a swinging fist): its first point pinned to the fist each frame, the rest falling under
+ * .gravity with .drag, lying on the ground (.ground m up) with .friction, held to their link length by .passes passes; stepped at most .step s at a time
+ * (the capture advances 100 ms chunks). Laid out at spawn hanging to the ground and out ahead-and-aside (.out rad off his facing), so the idle shot
+ * finds it lying. Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow.
+ */
+const CHAIN_WHIP = { links: 14, long: 1.0, wide: 0.5, thick: 0.22, blade: 0.13, gravity: 22, drag: 2.5, ground: 0.03, friction: 12, passes: 8, step: 1 / 60, out: 0.6, dark: new Color3(0.08, 0.06, 0.07) };
+export class ChainWhip {
+  private readonly _pts: Vector3[] = [];
+  private readonly _prev: Vector3[] = [];
+  private readonly _links: Mesh[] = [];
+  private readonly _blade: Mesh;
+  private readonly _seg: number;
+  constructor(scene: Scene, private readonly _hand: TransformNode, height: number, facing: Vector3) {
+    const C = CHAIN_WHIP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+    const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
+    const L = Math.max(0.6, height * C.long);
+    this._seg = L / C.links;
+    for (let i = 0; i < C.links; i++) {
+      const link = MeshBuilder.CreateBox("chainWhipLink", { width: this._seg * C.wide, height: this._seg * 1.08, depth: this._seg * C.thick }, scene);
+      link.material = dark; link.isPickable = false; link.rotationQuaternion = Quaternion.Identity();
+      glow?.addExcludedMesh(link);
+      this._links.push(link);
+    }
+    this._blade = MeshBuilder.CreateCylinder("chainWhipBlade", { height: L * C.blade, diameterTop: 0, diameterBottom: L * C.blade * 0.55, tessellation: 4 }, scene);
+    this._blade.scaling.z = 0.3; this._blade.material = dark; this._blade.isPickable = false; this._blade.rotationQuaternion = Quaternion.Identity();
+    glow?.addExcludedMesh(this._blade);
+    // spawn layout: down from the fist to the ground, then out over it ahead and to his weapon side
+    _hand.computeWorldMatrix(true);
+    const h = _hand.getAbsolutePosition().clone();
+    const f = new Vector3(facing.x, 0, facing.z);
+    if (f.lengthSquared() < 1e-6) f.set(0, 0, 1);
+    f.normalize();
+    const along = new Vector3(f.x * Math.cos(C.out) + f.z * Math.sin(C.out), 0, -f.x * Math.sin(C.out) + f.z * Math.cos(C.out));
+    let p = h.clone();
+    for (let i = 0; i <= C.links; i++) {
+      if (i > 0) {
+        const down = p.y - C.ground;
+        if (down > this._seg * 0.5) p = p.add(new Vector3(along.x * 0.3, -0.95, along.z * 0.3).normalize().scale(this._seg));
+        else p = new Vector3(p.x + along.x * this._seg, C.ground, p.z + along.z * this._seg);
+      }
+      this._pts.push(p.clone());
+      this._prev.push(p.clone());
+    }
+    this._place();
+  }
+  get meshes(): Mesh[] { return [...this._links, this._blade]; }
+  step(dt: number): void {
+    const C = CHAIN_WHIP;
+    let left = Math.min(0.25, Math.max(0, dt));
+    while (left > 1e-6) {
+      const h = Math.min(C.step, left);
+      left -= h;
+      this._hand.computeWorldMatrix(true);
+      const pin = this._hand.getAbsolutePosition();
+      const keep = Math.exp(-C.drag * h);
+      for (let i = 1; i < this._pts.length; i++) {
+        const p = this._pts[i], q = this._prev[i];
+        const v = p.subtract(q).scale(keep);
+        if (p.y <= C.ground + 1e-3) { const k = Math.exp(-C.friction * h); v.x *= k; v.z *= k; }
+        q.copyFrom(p);
+        p.addInPlace(v);
+        p.y -= C.gravity * h * h;
+        if (p.y < C.ground) p.y = C.ground;
+      }
+      this._pts[0].copyFrom(pin);
+      this._prev[0].copyFrom(pin);
+      for (let k = 0; k < C.passes; k++) {
+        for (let i = 0; i < this._pts.length - 1; i++) {
+          const a = this._pts[i], b = this._pts[i + 1];
+          const d = b.subtract(a);
+          const len = d.length();
+          if (len < 1e-6) continue;
+          const corr = d.scale((len - this._seg) / len);
+          if (i === 0) b.subtractInPlace(corr);
+          else { a.addInPlace(corr.scale(0.5)); b.subtractInPlace(corr.scale(0.5)); }
+          if (b.y < C.ground) b.y = C.ground;
+        }
+      }
+    }
+    this._place();
+  }
+  private _place(): void {
+    for (let i = 0; i < this._links.length; i++) {
+      const a = this._pts[i], b = this._pts[i + 1], link = this._links[i];
+      const d = b.subtract(a);
+      if (d.lengthSquared() < 1e-8) continue;
+      link.position.copyFrom(a.add(b).scale(0.5));
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), d.normalize(), link.rotationQuaternion!);
+      if (i % 2) link.rotationQuaternion!.multiplyInPlace(Quaternion.RotationAxis(Vector3.Up(), Math.PI / 2));
+    }
+    const n = this._pts.length, tip = this._pts[n - 1], dir = tip.subtract(this._pts[n - 2]);
+    if (dir.lengthSquared() > 1e-8) {
+      dir.normalize();
+      const half = this._blade.getBoundingInfo().boundingBox.extendSize.y;
+      this._blade.position.copyFrom(tip.add(dir.scale(half)));
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, this._blade.rotationQuaternion!);
+    }
+  }
+  dispose(): void {
+    for (const m of this.meshes) m.dispose(false, false);
+  }
+}
