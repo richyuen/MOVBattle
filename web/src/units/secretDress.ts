@@ -9,6 +9,65 @@ import { limbBox } from "./medievalDress";
  */
 
 /**
+ * [R] 517 the Fan Bearer's whole dress, one pass owning sash, skirt, legs and shoes (plateau a: CONFIRM 514 "skirt shade, sash width", CONFIRM
+ * 515 "dark navy wraps covering the whole lower leg"). Spec read off secret.fan_bearer.red.png and .blue.png, card Appearance ("a sash over its
+ * right shoulder and a three piece skirt, all of which are different shades of team color ... wrist guards and shoes identical to those of the
+ * Sarissa"):
+ *  - cloth: every garment piece is a SATURATED deep shade of team colour (TABS: deep navy on blue, deep crimson on red, never grey). The team
+ *    colour is saturated by raising it to the power .sat (renormalised to its own peak) and scaled per piece: sash .sash, skirt body .skirt,
+ *    left flap .left, right flap .right, the light under-layer band .hem (paler than the skirt, still team). Lit cloth self-lit .12 (the palette
+ *    wall's "cloth" swatches read saturated; the 515 self-light .4 on an unsaturated team x .36 read grey), own materials, out of the glow.
+ *  - sash: the 515 geometry (FAN_SASH), broad over the right shoulder to the left hip with its hip fall and two folds.
+ *  - skirt: the 513/515 geometry (FAN_SKIRT): under-skirt to .62 of the thigh, two slanted front flaps, the light hem band below.
+ *  - legs: bare team skin from the skirt to the ankle: thighs AND shins in the skin material (the shins were the dark body cloth: the navy wraps).
+ *  - shoes: the grey team boot hidden; small dark-brown low shoes per foot (FAN_SHOE, the Teacher's cut, lower): ankle .ankleH of the foot
+ *    box tall (tops the grass at ~.6, LESSONS 434), vamp, bevelled nose. Dark brown lit cloth self-lit .4, out of the glow.
+ */
+const FAN_DRESS = { sat: 2, sash: 0.42, skirt: 0.5, left: 0.38, right: 0.3, hem: 0.95 };
+const FAN_SHOE = { ankleW: 0.86, ankleH: 0.7, ankleL: 0.5, toeW: 0.8, toeH: 0.4, toeL: 0.58, brown: new Color3(0.13, 0.07, 0.04) };
+export function fanBearerDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const D = FAN_DRESS, mf = getMaterialFactory();
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** D.sat, team.g ** D.sat, team.b ** D.sat);
+  const deep = sat.scale(peak / Math.max(sat.r, sat.g, sat.b, 1e-3));
+  const cloth = (k: number) => { const col = deep.scale(k); return mf.get("cloth", col, { emissive: col.scale(0.12), roughness: 1 }); };
+  const hemCol = team.scale(D.hem), hemCloth = mf.get("cloth", hemCol, { emissive: hemCol.scale(0.12), roughness: 1 });
+  const out = [
+    ...fanBearerSash(scene, body, cloth(D.sash), cloth(D.sash * 0.7)),
+    ...fanBearerSkirt(scene, body, cloth(D.skirt), cloth(D.left), cloth(D.right), hemCloth),
+    ...fanBearerShoes(scene, body),
+  ];
+  // bare team legs from the skirt to the shoes (the shins wore the dark body cloth); the pelvis under the skirt in its cloth
+  for (const limb of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) limb.material = body.skinMaterial;
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (pelvis) pelvis.material = cloth(D.skirt);
+  return out;
+}
+
+function fanBearerShoes(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = FAN_SHOE, glow = scene.getGlowLayerByName("glow");
+  const brown = getMaterialFactory().get("cloth", T.brown, { emissive: T.brown.scale(0.4), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) {
+    const { minimum: lo, maximum: hi } = foot.getBoundingInfo().boundingBox;
+    const L = hi.z - lo.z, Wf = hi.x - lo.x, Hf = hi.y - lo.y, x = (lo.x + hi.x) / 2;
+    const part = (name: string, w: number, h: number, d: number, y: number, z: number) => {
+      const mesh = MeshBuilder.CreateBox(name, { width: Wf * w, height: Hf * h, depth: L * d }, scene);
+      mesh.parent = foot; mesh.material = brown;
+      mesh.position.set(x, lo.y + Hf * y, lo.z + L * z);
+      out.push(mesh);
+      return mesh;
+    };
+    part("fanBearerShoeAnkle", T.ankleW, T.ankleH, T.ankleL, T.ankleH / 2, T.ankleL / 2);
+    part("fanBearerShoeVamp", T.toeW, T.toeH, T.toeL, T.toeH / 2, 1 - T.toeL / 2);
+    const nose = part("fanBearerShoeNose", T.toeW * 0.9, T.toeH * 0.7, 0.16, T.toeH * 0.42, 1 - 0.02);
+    nose.rotation.x = 0.5;
+    foot.isVisible = false;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 515 the Fan Bearer's wrapped sash (secret.fan_bearer.red.png: a broad cloth in a darker shade of team colour, about a third of the chest
  * wide, thrown over his right shoulder, falling across the chest to the left hip, where its end hangs down over the skirt, with fold lines along
  * it; card Appearance "a sash over its right shoulder"; CONFIRM 514 a.2 "a thin dark strap"). Bare team chest under it. Spec in the torso mesh's
@@ -19,18 +78,16 @@ import { limbBox } from "./medievalDress";
  */
 const FAN_SASH = {
   wide: 0.66, thick: 0.16, sx: 0.78, sy: 1.06, hx: -0.8, hy: -0.86, out: 1.1, capW: 0.72, capH: 0.22, fallW: 0.5, fall: 0.62, fallTilt: 0.16,
-  fold: 0.07, foldAt: 0.28, shade: 0.45, foldShade: 0.3,
+  fold: 0.07, foldAt: 0.28,
 };
-export function fanBearerSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+// [R] 517 materials from fanBearerDress (the saturated team shades); FAN_SASH.shade/.foldShade retired
+function fanBearerSash(scene: Scene, body: ArticulatedBody, cloth: Material, foldCloth: Material): Mesh[] {
   const F = FAN_SASH, torso = body.torsoMesh, glow = scene.getGlowLayerByName("glow");
   const { center: c, extendSize: s } = torso.getBoundingInfo().boundingBox;
   for (const mesh of [torso, ...body.allMeshes.filter(m => /_yoke$|_[lr]Pad$/.test(m.name))]) {
     mesh.material = body.skinMaterial;
     glow?.addExcludedMesh(mesh);
   }
-  const mf = getMaterialFactory();
-  const shade = (k: number) => { const col = team.scale(k); return mf.get("cloth", col, { emissive: col.scale(0.4), roughness: 1 }); };
-  const cloth = shade(F.shade), foldCloth = shade(F.foldShade);
   const out: Mesh[] = [];
   const slab = (name: string, a: Vector3, b: Vector3, width: number, depth: number, material: Material) => {
     const run = b.subtract(a);
@@ -112,34 +169,33 @@ function originIn(node: TransformNode, frame: TransformNode): Vector3 {
  */
 // [S] 515 (a.1, CONFIRM 514 "pale grey-blue, lighter than the skin"): the skirt body is the darker team cloth (.under); the light under-layer
 // shows only as a band .hemH of the length deep below its hem, .hemOut wider, team x .hemShade (secret.fan_bearer.red.png: pale only at the hem)
-const FAN_SKIRT = { r: 1.18, flare: 1.3, long: 0.62, deep: 1.25, flapW: 1.15, flapOut: 0.06, left: 0.96, right: 0.82, slant: 0.18, under: 0.36, leftShade: 0.42, rightShade: 0.3, hemH: 0.16, hemOut: 1.04, hemShade: 0.8 };
-export function fanBearerSkirt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
-  const F = FAN_SKIRT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+// [R] 517 materials from fanBearerDress (skirt body, left and right flaps, hem band); the shade numbers retired, thighs re-skinned there
+const FAN_SKIRT = { r: 1.18, flare: 1.3, long: 0.62, deep: 1.25, flapW: 1.15, flapOut: 0.06, left: 0.96, right: 0.82, slant: 0.18, hemH: 0.16, hemOut: 1.04 };
+function fanBearerSkirt(scene: Scene, body: ArticulatedBody, skirtCloth: Material, leftCloth: Material, rightCloth: Material, hemCloth: Material): Mesh[] {
+  const F = FAN_SKIRT, glow = scene.getGlowLayerByName("glow");
   const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
   if (!pelvis) return [];
   const { center: c, extendSize: h, maximum: hi } = pelvis.getBoundingInfo().boundingBox;
-  const cloth = (k: number) => { const col = team.scale(k); return mf.get("cloth", col, { emissive: col.scale(0.4), roughness: 1 }); };
   const kneeY = (originIn(body.leftKnee, pelvis).y + originIn(body.rightKnee, pelvis).y) / 2;
   const top = hi.y, hem = top + (kneeY - top) * F.long, long = top - hem;
   const out: Mesh[] = [];
   const under = MeshBuilder.CreateCylinder("fanBearerSkirt", { height: long, diameterTop: h.x * 2 * F.r, diameterBottom: h.x * 2 * F.r * F.flare, tessellation: 8 }, scene);
   under.parent = pelvis; under.position.set(c.x, top - long / 2, c.z); under.scaling.z = (h.z * F.deep) / (h.x * F.r); under.rotation.y = Math.PI / 8;
-  under.material = cloth(F.under); out.push(under);
+  under.material = skirtCloth; out.push(under);
   // the light under-layer, a band showing only below the dark skirt's hem
   const hemH = long * F.hemH, rHem = h.x * F.r * F.flare * F.hemOut;
   const band = MeshBuilder.CreateCylinder("fanBearerSkirtHem", { height: hemH, diameterTop: rHem * 2 * 0.97, diameterBottom: rHem * 2, tessellation: 8 }, scene);
   band.parent = pelvis; band.position.set(c.x, top - long - hemH / 2 + hemH * 0.3, c.z); band.scaling.z = (h.z * F.deep) / (h.x * F.r); band.rotation.y = Math.PI / 8;
-  band.material = cloth(F.hemShade); out.push(band);
+  band.material = hemCloth; out.push(band);
   // the flaps lean out with the under-skirt's flare, standing .flapOut off it
   const zTop = h.z * F.deep, flareOut = zTop * (F.flare - 1), lean = Math.atan2(flareOut, long);
-  for (const [side, reach, shade] of [[1, F.left, F.leftShade], [-1, F.right, F.rightShade]] as const) {
+  for (const [side, reach, shade] of [[1, F.left, leftCloth], [-1, F.right, rightCloth]] as const) {
     const flapLong = long * reach, k = reach / 2;
     const flap = MeshBuilder.CreateBox("fanBearerSkirtFlap", { width: h.x * F.flapW, height: flapLong, depth: h.z * 0.14 }, scene);
     flap.parent = pelvis;
     flap.position.set(c.x + side * h.x * 0.38, top - flapLong / 2, c.z + zTop + flareOut * k + h.z * F.flapOut + (side > 0 ? 0 : h.z * 0.1));
-    flap.rotation.set(-lean, 0, side * F.slant); flap.material = cloth(shade); out.push(flap); // hem out (+z)
+    flap.rotation.set(-lean, 0, side * F.slant); flap.material = shade; out.push(flap); // hem out (+z)
   }
-  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) thigh.material = body.skinMaterial;
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
