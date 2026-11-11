@@ -10,18 +10,18 @@ a FAIL (0 since 519)
 b FAIL (1 since 519, 1 struck)
  1. spear in unit_secret.raptor_rider_idle — TABS: short wooden spear with a dark knapped stone head and wrist binding; ours is a long thin pole with a steel leaf tip, taller than the man (ref: secret.raptor_rider.red.png)
  3. plank shield wood in unit_secret.raptor_rider_idle — TABS: mid red-brown weathered planks; ours is a near-black board, its planks unreadable behind the glowing white bones (ref: secret.raptor_rider.red.png)
-c FAIL (0 since 515)
+c FAIL (1 since 515, 1 struck)
  1. trample bursts under the mount in unit_secret.raptor_rider_release/_flight — TABS: cavalry trample explosions where it runs; ours has none (ref: card Characteristics)
- 2. charging mount in unit_secret.raptor_rider_release/_flight — TABS: the raptor runs the rider into the target (hit-and-run); ours has the box static while the rider thrusts from a standing pose (ref: secret.raptor_rider.jpg)
 d PASS (519 stats)
 ## Ranked gaps
-1. [S] secret.raptor_rider.b spear — blocker 1: short wooden spear with a knapped stone head and wrist binding
-2. [S] secret.raptor_rider.a rider's build — blocker 1: lanky narrow bare-chested torso with long thin arms
-3. [S] secret.raptor_rider.c charging mount — blocker 2: the raptor runs the rider through the target
+1. [S] secret.raptor_rider.c trample bursts — blocker 1: dust/blast burst at each trampled man on the RAPTOR_CHARGE run — ref: card Characteristics — ours: unit_secret.raptor_rider_flight.png
+2. [S] secret.raptor_rider.b spear — blocker 1: short wooden spear with a knapped stone head and wrist binding
+3. [S] secret.raptor_rider.a rider's build — blocker 1: lanky narrow bare-chested torso with long thin arms
 4. [P] secret.raptor_rider.b plank wood shade — blocker 3: PLANK_SHIELD.wood to about (0.45, 0.22, 0.14), bones out of the glow (fallout of [S] 604033c4)
 ## Attempts (iter | gap | criterion | verdict)
-519 | plank shield of four rough boards, lashed crossed bones, skull, stood upright on the off side of the trunk, propBuilder PLANK_SHIELD (604033c4, 135e2158) | b | approved (struck 2; added 3 wood shade)
-518 | dark raptor mount, open toothed jaw, spikes, two-jointed legs, rider lifted onto its back, propBuilder buildRaptorMount RAPTOR_MOUNT (8e341463) | a | approved (struck 1, 4 by lineup)
+520 | raptor runs him through his man and on, legs striding, simulationSystem RAPTOR_CHARGE, RU _tendRaptorGait (2adeaa70) | c | approved (struck 2)
+519 | plank shield of four rough boards, lashed crossed bones, skull, propBuilder PLANK_SHIELD (604033c4, 135e2158) | b | approved (struck 2; added 3 wood shade)
+518 | dark raptor mount, open toothed jaw, spikes, two-jointed legs, propBuilder buildRaptorMount RAPTOR_MOUNT (8e341463) | a | approved (struck 1, 4 by lineup)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
 - 518: the mount is a linked actor with the rider's id: gate dress on visual.special.

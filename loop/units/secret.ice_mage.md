@@ -10,19 +10,21 @@ a FAIL (0 since 518)
  6. gold studs and chain on the pinafore bib in unit_secret.ice_mage_idle — TABS: two gold shoulder studs joined by a hanging gold chain; ours has none (ref: secret.ice_mage.red.png)
 b FAIL (1 since 518, 1 struck)
  2. icy glow orbs round both hands in unit_secret.ice_mage_idle — TABS: white glowing frost balls with particles at each hand; ours has none (ref: secret.ice_mage.blue.png)
-c FAIL (0 since 515)
- 1. projectile in unit_secret.ice_mage_release — TABS: icicle; ours is a dark arrow shaft with a steel tip (ref: card Weapons, secret.ice_mage.png)
+c FAIL (1 since 515, 1 struck)
  2. launch point in unit_secret.ice_mage_release — TABS: thrown from the open hand; ours leaves from beside the staff at chest height (ref: card Characteristics)
  3. freeze in unit_secret.ice_mage_struck — TABS: target trapped in a block of ice; ours shows a few icy spikes on the knight (ref: card Characteristics)
 d PASS (519 stats)
 ## Ranked gaps
-1. [S] secret.ice_mage.b frost balls — blocker 2: unlit white glowing ball at each hand (secretDress) — ref: secret.ice_mage.blue.png — ours: unit_secret.ice_mage_idle
-2. [S] secret.ice_mage.c icicle projectile — blocker 1: pale-blue faceted icicle missile instead of the arrow (projectileSystem dress) — ref: secret.ice_mage.png — ours: unit_secret.ice_mage_release
-3. [S] secret.ice_mage.a pinafore — blocker 1: dark-red strapped apron dress to the thigh (secretDress) — ref: secret.ice_mage.blue.png — ours: unit_secret.ice_mage_idle
+1. [S] secret.ice_mage.c freeze block — blocker 3: translucent pale-blue faceted ice block round the frozen man — ref: card Characteristics — ours: unit_secret.ice_mage_struck.png
+2. [S] secret.ice_mage.c launch point — blocker 2: icicle spawned at the throwing hand atop an overhand throw — ref: card Characteristics — ours: unit_secret.ice_mage_release.png
+3. [S] secret.ice_mage.b frost balls — blocker 2: unlit white glowing ball at each hand (secretDress) — ref: secret.ice_mage.blue.png — ours: unit_secret.ice_mage_idle
+4. [S] secret.ice_mage.a pinafore — blocker 1: dark-red strapped apron dress to the thigh (secretDress) — ref: secret.ice_mage.blue.png — ours: unit_secret.ice_mage_idle
 ## Attempts (iter | gap | criterion | verdict)
+520 | pale-blue faceted icicle with splinters at its butt, not a dark bolt, projectileSystem _dressIcicle ICICLE (d0b30045) | c | approved (struck 1)
 519 | staff off, both hands empty and open, unitVisuals weapon none (cddeb53a) | b | approved (struck 1)
 517 | long cream-white hair, dome cap, fringe, side locks, hood off, secretDress iceMageHair (c46885b9, b82fd72b) | a | approved (struck 1)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 517 DEFECTS: hair cap and locks blocky square slabs up close; TABS tapers in points along the face.
-- a.5 is the secret_ice materialPreset (pale tint): a team-material body fixes it with the pinafore.
+- 520 DEFECTS: the icicle leaves at chest height by her shoulder while both fists are low at her waist (c.2).
+- 517 DEFECTS: hair slabs blocky up close; TABS tapers in points.
+- a.5 is the secret_ice materialPreset tint: a team body fixes it with the pinafore.

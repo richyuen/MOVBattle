@@ -41,7 +41,8 @@ Read whole at step 1; one fact a line, merge near cap.
 - Two men pinned together topple apart under their crowd push: RU.holdUpright each step (514).
 ## Rig and dress
 - A chain or rope off a moving fist: a world-space rope pinned to the hand in RU.update, laid out at spawn (secretDress ChainWhip, 519).
-- A pole butt inside the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target, not the torso (509). A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
+- A pole butt in the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target (509). A tall crown tips with the head pitch: stand it on the torso joint (500).
+- Upright prop in a moving fist: a world-space node laid on the fist each frame; fists onto world points: animator.carryOverheadAt (520).
 - A linked actor (mount, safe) spawns with its parent's definition id: id-keyed dress hits both bodies, gate on visual.special. A posePreset is shared (spinner: mace_spinner + done ball_n_chain): gate an overlay on the id (518).
 - Retire old skirts (482); a belt hides in the tunicSkirt's flare: build it off its top ring after hangSkirt (517). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450 queen). metrics.overallHeight is pre-cut; shin limbShell 0 is the calf cap, ~.1 m above the knee.
@@ -52,7 +53,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - A head-hung piece cannot run on down the torso (it sits inside the chest box): build the torso run torso-parented (401).
 - The bead eyes hang off the neck joint, not the head block: a head-hung cap or band must be seated off the eyes' world tops read into the head's frame, or it covers them (403 ice archer); shrinking headSize leaves the eyes where they were (403 headbutter band across the eyes). A peaked cap brim hides them too (429 cannon).
 - A leg-length change reads only if the dress over the leg scales with it (406). Measure the shot, not the bone.
-- Flat dress pieces are closed slabs (a one-sided disc can face away, 390; a plate on a ribbon needs 7+ cm stand-off, 398); a trapezoid plate is a 4-tessellation frustum squashed in z (KABUTO); arc cylinders are one-sided ribbons SSAO greys (421).
+- Flat dress pieces are closed slabs (a one-sided disc can face away, 390; a plate on a ribbon needs 7+ cm stand-off, 398); arc cylinders are one-sided ribbons SSAO greys (421).
 - A faction tint plus the clothed recolour's warm hue shift turns red-team body cloth tan (449 wild_west): a garment the ref shows in team colour gets its own team cloth material, not body.bodyMaterial; check the red team on a --noglow swatch.
 
 - The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
@@ -60,8 +61,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - A torso-rooted shield detaches in windup (483, 489 pavise); dispose sim meshes in endSimulation (485).
 - _buildCarry turns only nodes in its name regex (marker child uprightHammerCarry: head-up carry, 493).
 - A ground-length skirt hides a hover lift: robe below the knee rides each shin (493, 499 lich).
-- Replay probes as capture: mulberry32 0x4d4f5642 reseeded before resetBattle, resetClock, _nextRuntimeId 100000 (503, 512).
-- hpoint without "haxe": shouldered carry, _twoHandPole's off fist over the crown (502).
+- Replay probes as capture: mulberry32 0x4d4f5642 reseeded before resetBattle, resetClock, _nextRuntimeId 100000 (503, 512). hpoint without "haxe": shouldered carry (502).
 - Fist prop hand frame: +y up the forearm, knuckles -y (492).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
