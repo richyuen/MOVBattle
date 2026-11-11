@@ -4260,8 +4260,10 @@ function buildBombStick(scene: Scene, fit: BladeFit): Mesh {
  * butt; the bow arm a flat tube .span s across through 9 points bowed .sweep s back at its tips, .armT s thick; the string from its tips to the
  * magazine's back. Brown wood lit cloth.
  */
+// [R] 516 (b.2 "deep rectangular receiver dominates the torso"): a narrower, shorter magazine (.07 x .17 x .24 -> .05 x .13 x .19) and a wider bow
+// arm (.66 -> .78), so the limbs are the dominant span (secret.chu_ko_nu.blue.png)
 const REPEATING_CROSSBOW = {
-  stock: 0.56, stockW: 0.06, stockH: 0.075, nose: 0.3, mag: 0.17, magW: 0.07, magL: 0.24, studs: 2, leverT: 0.025, span: 0.66, sweep: 0.1, armT: 0.03,
+  stock: 0.56, stockW: 0.06, stockH: 0.075, nose: 0.3, mag: 0.13, magW: 0.05, magL: 0.19, studs: 2, leverT: 0.025, span: 0.78, sweep: 0.12, armT: 0.035,
   wood: new Color3(0.5, 0.27, 0.12), dark: new Color3(0.32, 0.17, 0.08), brass: new Color3(0.7, 0.62, 0.45),
 };
 function buildRepeatingCrossbow(scene: Scene, s: number): Mesh {

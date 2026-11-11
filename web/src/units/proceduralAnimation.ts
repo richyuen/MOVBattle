@@ -332,7 +332,15 @@ const STONE_POUND = { lift: 0.55, back: 0.45, slam: 1.15, hold: 0.14, neck: 0.45
 /** [S] 511 the Chu Ko Nu's level carry (_holdRepeatingCrossbow): the weapon fist ahead of the trunk, out to his side and down from the chest's middle (m); the off fist under the stock .under of the magazine's height below the stock. */
 /** [S] 514 the Ballooner's glue grip (_glueHold): shares of the held man's trunk half width out, half height up, half depth in from his near face. */
 const GLUE_GRIP = { side: 0.75, up: 0.2, near: 0.95 };
-const RCB_HOLD = { ahead: 0.16, across: 0.06, drop: 0.12, under: 0.45, lead: 0.1, lift: 0.04 };
+/**
+ * [R] 516 the Chu Ko Nu's crossbow hold (plateau b: 2 "deep receiver", 4 "upright, limbs at hip height", 5 "points backwards in the windup").
+ * Spec (secret.chu_ko_nu.blue.png, .jpg): carried, the crossbow lies across the chest, the weapon fist at his right breast .carry.across m out and
+ * .carry.drop under the chest's middle, .carry.ahead before the trunk's front; its shooting line runs up and across to his left (.port: left, fwd,
+ * up shares), so the stock crosses his body on a diagonal and the prod sits at chest height by his left shoulder. In range of his man (readyAim
+ * calls), the fist comes up level to the chest's middle (.aim) and the shooting line points at the man's chest. The probe (516) found the lay
+ * reversed: FromLookDirectionLH left the bow's nose (-z) pointing behind him, so the lay is now built from an explicit basis (+z opposite the line).
+ */
+const RCB_HOLD = { under: 0.45, lead: 0.1, lift: 0.04, carry: { ahead: 0.12, across: 0.1, drop: 0.08 }, aim: { ahead: 0.2, across: 0.05, drop: 0.02 }, port: { left: 0.5, fwd: 0.85, up: 0.22 } };
 const POLE_GRIP = {
   fanGrip: [0.13, 0.24], // [S] 514 the off fist ahead of the weapon fist, down the shaft toward the fan (secret.fan_bearer.red.png)
   bombStickGrip: [0.10, 0.14],
@@ -4739,16 +4747,32 @@ export class ProceduralAnimator {
     const tb = b.torsoMesh.getBoundingInfo().boundingBox;
     const { fwd, right } = this._heading();
     const depth = tb.extendSize.z * Math.abs(b.torsoMesh.absoluteScaling.z);
-    const grip = tb.centerWorld.add(fwd.scale(depth + H.ahead)).addInPlace(right.scale(H.across)).addInPlace(new Vector3(0, -H.drop, 0));
+    const chest = tb.centerWorld;
+    // in range of his man: level at the chest, the line on the man; else carried across the chest, the line up to his left
+    const aiming = this._aimReadyTimer > 0 && this._aimAt !== null;
+    let line: Vector3;
+    if (aiming) {
+      line = this._aimAt!.subtract(chest);
+      line.y = Math.max(-0.25, Math.min(0.25, line.y / Math.max(0.5, Math.hypot(line.x, line.z))));
+      line.normalize();
+      line = new Vector3(line.x, line.y * 0.6, line.z).normalize();
+    } else {
+      line = right.scale(-H.port.left).addInPlace(fwd.scale(H.port.fwd)).addInPlace(new Vector3(0, H.port.up, 0)).normalize();
+    }
+    const P = aiming ? H.aim : H.carry;
+    const grip = chest.add(fwd.scale(depth + P.ahead)).addInPlace(right.scale(P.across)).addInPlace(new Vector3(0, -P.drop, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, grip, w, 2);
-    // lay the crossbow level along the heading, the fist where it held the stock
+    // lay the crossbow along the line, the fist where it held the stock: +z (the butt) opposite the line, +y up
     for (const n of [b.rightShoulder, b.rightElbow, b.rightHand]) n.computeWorldMatrix(true);
     const hand = b.rightHand.getWorldMatrix();
     const handScale = new Vector3(), handRot = new Quaternion(), handPos = new Vector3();
     hand.decompose(handScale, handRot, handPos);
-    const want = Quaternion.FromLookDirectionLH(fwd.scale(-1), Vector3.Up());
-    // the stock's middle just ahead of the fist, the fist under it
-    const at = handPos.add(fwd.scale(H.lead)).addInPlace(new Vector3(0, H.lift, 0));
+    const zAxis = line.scale(-1);
+    const yAxis = Vector3.Up().subtract(zAxis.scale(Vector3.Dot(Vector3.Up(), zAxis))).normalize();
+    const xAxis = Vector3.Cross(yAxis, zAxis).normalize();
+    const want = Quaternion.RotationQuaternionFromAxis(xAxis, yAxis, zAxis);
+    // the stock's middle just ahead of the fist along the line, the fist under it
+    const at = handPos.add(line.scale(H.lead)).addInPlace(new Vector3(0, H.lift, 0));
     const bowScale = bow.absoluteScaling.clone();
     const local = Matrix.Compose(bowScale, want, at).multiply(Matrix.Invert(hand));
     const ls = new Vector3(), lr = new Quaternion(), lp = new Vector3();
