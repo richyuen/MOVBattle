@@ -626,6 +626,49 @@ export function chuKoNuLeggings(scene: Scene, body: ArticulatedBody, team: Color
   return out;
 }
 
+/**
+ * [S] 515 the CLAMS' clam hands (secret.clams.red.png: each hand is a grey clam, two faceted half-shells closed on each other, as long as the
+ * forearm is thick x4, pointed off the wrist, two bead eyes on its top shell; card Main/Off Hand Clam; audit b.1 "bare fists"). Per hand mesh
+ * (box centre at, half size e, hand frame: +y up the forearm): two flat-shaded ico half-shells .long e.y*2 long, .wide e.x*2 wide, .thick e.z*2 deep,
+ * centred .past e.y past the knuckles (-y), upper and lower stood .gap apart, upper grey .grey, lower .dark; two
+ * bead eyes (white ball .eye e.x, dark pupil) on the upper shell near its wrist end. The fist hidden. Lit cloth (stone greys), out of the glow.
+ */
+const CLAM_HAND = { long: 3.2, wide: 2.6, thick: 1.3, past: 1.1, gap: 0.22, eye: 0.55, grey: new Color3(0.42, 0.4, 0.4), dark: new Color3(0.22, 0.2, 0.2) };
+export function clamsHands(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CLAM_HAND, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const grey = mf.get("cloth", C.grey, { emissive: C.grey.scale(0.15), roughness: 1 });
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.15), roughness: 1 });
+  const white = mf.get("unlit", new Color3(0.95, 0.95, 0.92), { emissive: new Color3(0.95, 0.95, 0.92) });
+  const pupil = mf.get("unlit", new Color3(0.04, 0.04, 0.05), { emissive: new Color3(0.04, 0.04, 0.05) });
+  const out: Mesh[] = [];
+  for (const hand of [body.leftHand, body.rightHand]) {
+    const hm = hand.getChildMeshes(true).find((m) => /_[lr]HandM$/.test(m.name)) as Mesh | undefined;
+    if (!hm) continue;
+    const hb = hm.getBoundingInfo().boundingBox, e = hb.extendSize.multiply(hm.scaling);
+    const at = hm.position.add(hb.center.multiply(hm.scaling)).add(new Vector3(0, -e.y * C.past, 0));
+    for (const [side, material] of [[1, grey], [-1, dark]] as const) {
+      const shell = MeshBuilder.CreateIcoSphere("clamShell", { radius: 1, subdivisions: 1 }, scene);
+      shell.parent = hand; shell.material = material;
+      shell.scaling.set(e.x * C.wide, e.y * C.long, e.z * C.thick * 0.5);
+      shell.position.set(at.x, at.y, at.z + side * e.z * (C.thick * 0.35 + C.gap));
+      out.push(shell);
+    }
+    for (const sx of [-1, 1]) {
+      const r = e.x * C.eye;
+      const eye = MeshBuilder.CreateSphere("clamEye", { diameter: r * 2, segments: 6 }, scene);
+      eye.parent = hand; eye.material = white;
+      eye.position.set(at.x + sx * r * 1.1, at.y + e.y * C.long * 0.45, at.z + e.z * (C.thick * 0.85 + C.gap));
+      const dot = MeshBuilder.CreateSphere("clamPupil", { diameter: r, segments: 6 }, scene);
+      dot.parent = hand; dot.material = pupil;
+      dot.position.copyFrom(eye.position.add(new Vector3(0, -r * 0.25, r * 0.7)));
+      out.push(eye, dot);
+    }
+    hm.isVisible = false;
+  }
+  for (const m of out) { if (!/clamEye|clamPupil/.test(m.name)) m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 const KONU_ROBE = { knee: -0.02 };
 export function chuKoNuRobe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
