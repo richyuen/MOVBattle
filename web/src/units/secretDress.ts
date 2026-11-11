@@ -20,8 +20,8 @@ export function fanBearerSash(scene: Scene, body: ArticulatedBody, team: Color3)
   const out: Mesh[] = [];
   // Front and back diagonal runs meet over the right shoulder and left waist.
   for (const front of [-1, 1]) {
-    const a = new Vector3(c.x - s.x * 0.82, c.y + s.y * 1.08, c.z + front * s.z * 1.10);
-    const b = new Vector3(c.x + s.x * 0.78, c.y - s.y * 0.82, c.z + front * s.z * 1.14);
+    const a = new Vector3(c.x + s.x * 0.82, c.y + s.y * 1.08, c.z + front * s.z * 1.10);
+    const b = new Vector3(c.x - s.x * 0.78, c.y - s.y * 0.82, c.z + front * s.z * 1.14);
     const run = b.subtract(a);
     const sash = MeshBuilder.CreateBox("fanBearerSash", {
       width: s.x * 0.31, height: run.length(), depth: s.z * 0.15,
@@ -33,7 +33,7 @@ export function fanBearerSash(scene: Scene, body: ArticulatedBody, team: Color3)
   const bridge = MeshBuilder.CreateBox("fanBearerSashShoulder", {
     width: s.x * 0.34, height: s.y * 0.16, depth: s.z * 2.32,
   }, scene);
-  bridge.parent = torso; bridge.position.set(c.x - s.x * 0.82, c.y + s.y * 1.10, c.z);
+  bridge.parent = torso; bridge.position.set(c.x + s.x * 0.82, c.y + s.y * 1.10, c.z);
   bridge.material = cloth; out.push(bridge);
   return out;
 }
