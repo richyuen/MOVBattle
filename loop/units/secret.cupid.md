@@ -1,20 +1,19 @@
 # secret.cupid
 Status: open   Audited: 515 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (3 since 515, 4 struck)
- 5. grey boots in unit_secret.cupid_idle — TABS: bare team feet (ref: secret.cupid.red.png)
+a PASS (518: struck 5; curls, wings, diaper, bare body and feet)
 b FAIL (1 since 515, 1 struck)
  2. arrow in unit_secret.cupid_windup — TABS: arrow with a pink heart head; ours is a plain dark shaft (ref: secret.cupid.blue.png)
 c FAIL (0 since 515)
  1. projectile in unit_secret.cupid_release/_flight — TABS: heart-headed arrow trailing pink hearts; ours is a plain dark arrow with a steel tip (ref: secret.cupid.png)
  2. missing: lovestruck status — summary records only volley/missile/impact, and unit_secret.cupid_struck shows no hearts on the hit knight, who doesn't turn on his allies (ref: card Characteristics)
-d PASS (517 stats)
+d PASS (518 stats)
 ## Ranked gaps
-1. [S] secret.cupid.a bare feet — blocker 5: hide the generic boot, bare team foot boxes (unitFactory/secretDress) — ref: reference/units/secret.cupid.red.png — ours: unit_secret.cupid_idle.png
+1. [S] secret.cupid.b heart arrow — blocker 2: pink heart arrowhead on the nocked arrow (bow_ready drawn_arrow is a glow orb at the string hand: needs a real arrow mesh aimed at the bow hand) — ref: reference/units/secret.cupid.blue.png — ours: unit_secret.cupid_windup.png
 2. [S] secret.cupid.c heart projectile — blocker 1: heart-headed arrow trailing pink hearts (projectile shape + trail) — ref: reference/units/secret.cupid.png — ours: unit_secret.cupid_flight.png
-3. [S] secret.cupid.b heart arrow — blocker 2: pink heart arrowhead on the nocked arrow (bow_ready drawn_arrow is a glow orb at the string hand: needs a real arrow mesh aimed at the bow hand) — ref: reference/units/secret.cupid.blue.png — ours: unit_secret.cupid_windup.png
-4. [S] secret.cupid.c lovestruck — blocker 2: lovestruck status with hearts over the hit unit, which turns on its allies — ref: loop/cards/secret.cupid.md — ours: unit_secret.cupid_struck.png
+3. [S] secret.cupid.c lovestruck — blocker 2: lovestruck status with hearts over the hit unit, which turns on its allies — ref: loop/cards/secret.cupid.md — ours: unit_secret.cupid_struck.png
 ## Attempts (iter | gap | criterion | verdict)
+518 | bare team feet, grey boot gone, secretDress cupidFeet (341eb7f4) | a | approved (struck 5; a PASS)
 517 | cream diaper on a bare team body, no tunic, secretDress cupidDiaper (7159b2bf) | a | approved (struck 4)
 516 | golden curly mop, secretDress cupidHair (463d1578) | a | approved (struck 3, 2 by lineup)
 516 | orange heart bow, pink hearts on limbs and tips, propBuilder HEART_BOW (2cd491c9) | b | approved (struck 1)

@@ -2,6 +2,14 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+518 | 5ac81c17 | secret.taekwondo.a | approved [S] (struck 4)
+518 | a8cf176b | secret.taekwondo.a | approved [S] (struck 6; a PASS)
+518 | d6710917 | secret.cheerleader.a | approved [S] (struck 5; a PASS)
+518 | 341eb7f4 | secret.cupid.a | approved [S] (struck 5; a PASS)
+518 | 2b32ed39 | secret.cheerleader.c | approved [S] (struck 1)
+518 | a80a6032 | secret.mace_spinner.c | rejected [S] (reverted aef00f7b: shared spinner preset, whirl only on the attack frame)
+518 | 8e341463 | secret.raptor_rider.a | approved [S] (struck 1; 4 by lineup)
+518 | a9080780 | secret.bank_robbers.a | approved [S] (struck 6 by lineup; safe too small)
 517 | 798bbba5 | secret.fan_bearer.a | approved [R] (struck 1; a PASS; CONFIRM passed, done)
 517 | b34b4519, 8142c383 | secret.present_elf.a | approved [S] (struck 1, 7, 6 by lineup)
 517 | c46885b9, b82fd72b | secret.ice_mage.a | approved [S] (struck 1)
@@ -40,21 +48,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 514 | d85e50bc | secret.chu_ko_nu.a | approved [S] (struck 2)
 514 | baed6b00 | secret.ballooner.a | approved [S] (struck 5)
 
-513 | ecb2f1d2 | secret.shouter.a | approved [R] (struck 1-4; CONFIRM passed, done)
-513 | 0e3163cb | secret.executioner.a | approved [S] (struck 1; CONFIRM passed, done)
-513 | bd5c8bce, 9e93b061 | secret.ball_n_chain.c | approved [S] (struck 2; CONFIRM passed, done)
-513 | aec49ae0 | secret.jester.a | approved [S] (struck 1; CONFIRM passed, done)
-513 | 1ed2fd7e | secret.bomb_on_a_stick.a | approved [S] (struck 2)
-513 | fdf374b2 | secret.bomb_on_a_stick.a | approved [S] (struck 5; CONFIRM passed, done)
-513 | 75907159 | secret.fan_bearer.a | approved [S] (struck 3)
-513 | b919c5d4 | secret.the_teacher.a | approved [S] (struck 1)
-513 | ce979dd8 | secret.the_teacher.a | approved [S] (struck 2)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/PB/FX:518 | TKD_TROUSER thigh 2.0 shin 2.15->2.4 cuff 2.55 .72->1.12 cream unlit, feet skin; TKD_HAIR cap 1.12W .6H (.11,.08,.07), bun .34W .4H, team band; CHEER_HAIR cap 1.14W .56H team x.72, fringe .9W; CUPID_FOOT skin slim .86 cuff .7; CONFETTI 36 chips .11 ring .55 1.6 s; RAPTOR_MOUNT lift .7 trunk .62x.62x1.45H, jaw gape .75, 9 spikes, legs .3H out; OVERHEAD_SAFE .6x.42x.38 Hh over .26 | 518 | approved | none (bandanas, boots, smoke, box mount, hip safe)
 secretDress:517 | ELF_CAP fur .2H at e+.02H W1.2, cone .42H 1.08->.52W, 5-pt tip, pom .22W, green (.04,.42,.17), fur unlit (.82,.76,.6), pom (.85,.28,.06); ICE_HAIR half-dome 1.16W to c+.6H, fringe .62W tilt .32, locks .34->.2W x.64 z.3 to c-.42H, unlit (.74,.68,.52); ROCK_HAIR ico 1.18W .5H, 7 spikes .3W to .62H, (.07,.045,.04) self-lit .4, 3 magma cracks; TKD_BELT off the tunic skirt: band .17h sink .04 out 1.1, knot, tails .62h splay .3; CUPID_DIAPER lathe waist 1.18 bulge 1.34 low .62 drop .9 unlit (.74,.64,.46), bare body; CHEER_SOCK shin .08-1 out 1.28, cuff, 8 stripes team x.85 | 517 | approved | none (hoods; belt inside the skirt; vest; plain legs)
 secretDress/PB/SS/UV:516 | BALLOONER_LEG hem +.03 m waist 1.08 bulge 1.22 low 1.1 cuff 2.3, UV legLength 1.2 upperLegWidth .9; TKD_GI lapels .17TW to .86TH, belt .1TH, sleeves 1.7/1.85 flare 1.3, body material; KICK_BY_UNIT taekwondo within .75 windup .22 cooldown 1.5 damage 3 fling 7 raise 2.05 plain; CUPID_HAIR 4 rings x9 curls .34W unlit gold (.7,.5,.15); HEART_BOW tall .62 belly .3 unlit orange (.8,.38,.1) hearts pink (.8,.12,.55); CHEER_SKIRT 14 pleats flare .38 hem .55 purple (.42,.14,.63); CLAM_HAT 9 ribs span 1.3 long 1.5 rim .8 | 516 | approved | 515 BALLOONER_LEG hem -.07 bulge 1.5 low 1.36
 UV/PA:secret_shouter build | scale 1.1 bulk .88 torsoWidth .95 head 1.08 legLength 1.3 upperLeg .92 lowerLeg .82; upright stance by shouterHelmDome | 513 | approved | 1.35/1.25/1.18 squat, hashed crouch
@@ -64,8 +63,7 @@ secretDress:SHOUTER_VEST | 10-sided yoke shell wide 2.3 hem .9 deep 2.5 top 1.04
 secretDress:BOMBER_BAND/BREECH | band .17H over .03H round 1.24W, knot, tails; breech lathe .96 to knee-.06 m, 1.18/1.42/1.22, cuff 2.6 shin, patch, skin shins | 513 | approved | none
 secretDress:FAN_DRESS [R] 517 | team saturated ^2 (peak-renormalised), sash x.42 folds x.29, skirt x.5, flaps .38/.3, hem team x.95, all self-lit .12; FAN_SASH wide .66 thick .16; legs skin; FAN_SHOE ankle .7 Hf brown (.13,.07,.04) self-lit .4 | 517 | approved | 515 skirt team x.36 flaps .42/.3 hem x.8, sash x.45, all self-lit .4; navy shins, grey boot
 secretDress:TEACHER_TROUSER/SLEEVE | jacket-material shells loose 1.16/1.18, shin flare 1.26, cuff 1.42 x.16 | 513 | approved | skin limbs
-Done secret_1 raptor and jester rows (raptorBody, RAPTOR_BITE, JESTER_*, jester kick/dodge/dagger/cap) | specs in owning code; ledger@823dc1cf | 515 | archived values | unchanged
-Evil done units (death_bringer, void_monarch) rows | specs in owning code; ledger@8d2b01e3 | 511 | archived values | unchanged
+Archived rows: secret_1 raptor/jester ledger@823dc1cf; evil death_bringer/void_monarch @8d2b01e3, walker/sentinel/cultist/mechanic/lich @87af4842 | specs in owning code | 515 | archived values | unchanged
 SS:KICK start gate | dodge flip drops a pending kick (ready again after the flip); no start while _recovers, toppled, downed or airborne | 512 | approved | start gated on _recovers only
 UV:secret_teacher special | none | 512 | approved | monk_robe (orange torso box and drape)
 secretDress:SHOUTER_LEG | breech hem knee+.02 m; 5 wrap bands .07 tall .052 apart from knee+.08, 2.7 shin widths | 512 | approved | 510 hem -1.05 thigh box, 4 bands over the knee
@@ -106,7 +104,6 @@ secret_2 stats cost/hm/dm/cm (10 units, 1890e47d) | d PASS 10/10;cheer hm .012 |
 secretDress/PB:515 | BALLOONER_LEG lathe top .98 hem -.07 m waist 1.2 bulge 1.5 low 1.36, roll 2.7, stocking unlit (.6,.44,.22), shoe unlit (1,.2,.05) .82 Hf; KONU_ROBE knee -.02 m (tiers knee-anchored); KONU_LEG shell 1.32 taper .86 team x.3, 3 orange (.7,.2,.05) bands 1.5; CLAM_HAND long 3.2 wide 2.6 thick 1.3 past 1.1, eyes .55; POM_POM core .17 26 spikes .1 root .15 team x.8; CUPID_WINGS span 2.5 raise .08 rows 2 white, magenta bar | 515 | approved | none (shoe (1,.42,.12) read tan)
 secret_1 stats cost/hm/dm/cm (10 units, b4d5ff95) | d PASS 10/10;fan dm .00064 | 500 | stats | initial manifest
 SS/PS:SENTINEL_CATCH | warn.15,front cos.4,shafts lodged in the board met | 494 | approved | none
-Completed evil units (walker, sentinel, cultist, mechanic, lich) rows | specs in owning code; ledger@87af4842 | 501 | archived values | unchanged
 Completed good, legacy_2 and earlier rows | specs in owning code; ledger@7b0ae2f6 (legacy_2@b9daeaea, legacy_1@7090fef5) | 494 | archived values | unchanged
 secretDress:balloonerGlueMitts forearm | three faceted lobes each, spanning .41-.84 of elbow-to-wrist and 1.85-2.35 lower-arm widths | 506 | approved | mitts and hand lumps only
 SS:Balloon Backpack | once per fight, up to 3.3 m mass-scaled paired rise, release after 1.8 s, log float_pack | 506 | approved | generic pull and knock-up
