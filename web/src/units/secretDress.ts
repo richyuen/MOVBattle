@@ -1490,6 +1490,67 @@ export function balloonerDoublet(scene: Scene, body: ArticulatedBody, team: Colo
 }
 
 /**
+ * [S] 515 the Ballooner's legs (secret.ballooner.blue.png: loose team knee pantaloons in the doublet's cloth from the belt to just under the knee,
+ * a little fuller at the thigh and flared at the hem; tan stockings from the hem to the ankle; low orange shoes with a team tongue; audit a.6
+ * "straight team legs in boots"). Spec per thigh (limb box centre c, half size s, in its joint frame): a 7-sided lathe from .top s.y down to .hem m
+ * under the knee joint (LESSONS 512: anchored to the knee, not a share of the thigh box), .waist s.x round at the top, .bulge at .4 of the way up,
+ * .low at the hem, with a .cuffH m roll .cuff shin widths round at the hem. Shin and pelvis re-clothed (stocking, pantaloon). Per foot box (L, Wf, Hf)
+ * an orange shoe .shoeH Hf tall over its whole length (tops the grass, LESSONS 434), a low toe, and a team tongue on the instep; the team foot hidden.
+ * Stocking and shoe flat unlit (LESSONS 442: lit cream/tan reads grey in shade), picked off palette.png. No generic tunic skirt (unitFactory).
+ */
+const BALLOONER_LEG = {
+  top: 0.98, hem: -0.07, waist: 1.2, bulge: 1.5, low: 1.36, cuffH: 0.06, cuff: 2.7, shoeW: 1.08, shoeH: 0.82, toeH: 0.5, tongueW: 0.42,
+  stocking: new Color3(0.6, 0.44, 0.22), shoe: new Color3(1, 0.42, 0.12),
+};
+export function balloonerBreeches(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const B = BALLOONER_LEG, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const stocking = mf.get("unlit", B.stocking, { emissive: B.stocking });
+  const shoe = mf.get("unlit", B.shoe, { emissive: B.shoe });
+  const tongue = mf.get("cloth", team, { emissive: team.scale(0.3), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const [thigh, knee, shin] of [[body.leftUpperLeg, body.leftKnee, body.leftLowerLeg], [body.rightUpperLeg, body.rightKnee, body.rightLowerLeg]] as const) {
+    const { center: c, extendSize: s } = thigh.getBoundingInfo().boundingBox;
+    const hem = (knee.position.y - thigh.position.y + B.hem - c.y) / s.y;
+    const at = (f: number) => hem + (B.top - hem) * f;
+    const shape = [[0, hem], [B.low, hem], [B.bulge * 0.94, at(0.2)], [B.bulge, at(0.45)], [B.bulge * 0.92, at(0.75)], [B.waist, B.top], [0, B.top]]
+      .map(([w, h]) => new Vector3(w * s.x, h * s.y, 0));
+    const leg = MeshBuilder.CreateLathe("balloonerPantaloon", { shape, tessellation: 7 }, scene);
+    leg.parent = thigh; leg.position.copyFrom(c); leg.scaling.z = s.z / s.x; leg.material = cloth;
+    out.push(leg);
+    thigh.isVisible = false;
+    const sc = shin.getBoundingInfo().boundingBox;
+    const kneeY = -shin.position.y;
+    const roll = MeshBuilder.CreateCylinder("balloonerPantaloonCuff", { height: B.cuffH, diameter: sc.extendSize.x * B.cuff, tessellation: 7 }, scene);
+    roll.parent = shin; roll.position.set(sc.center.x, kneeY + B.hem + B.cuffH / 2 - 0.01, sc.center.z); roll.scaling.z = sc.extendSize.z / sc.extendSize.x;
+    roll.material = cloth; out.push(roll);
+    shin.material = stocking;
+    glow?.addExcludedMesh(shin);
+  }
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) {
+    const { minimum: lo, maximum: hi } = foot.getBoundingInfo().boundingBox;
+    const L = hi.z - lo.z, Wf = hi.x - lo.x, Hf = hi.y - lo.y, x = (lo.x + hi.x) / 2;
+    const part = (name: string, w: number, h: number, d: number, y: number, z: number, material: Material) => {
+      const mesh = MeshBuilder.CreateBox(name, { width: Wf * w, height: Hf * h, depth: L * d }, scene);
+      mesh.parent = foot; mesh.material = material;
+      mesh.position.set(x, lo.y + Hf * y, lo.z + L * z);
+      out.push(mesh);
+      return mesh;
+    };
+    part("balloonerShoe", B.shoeW, B.shoeH, 0.62, B.shoeH / 2, 0.31, shoe);
+    const toe = part("balloonerShoeToe", B.shoeW * 0.94, B.toeH, 0.44, B.toeH / 2, 0.76, shoe);
+    toe.rotation.x = 0.12;
+    const tg = part("balloonerShoeTongue", B.tongueW, 0.3, 0.2, B.shoeH * 0.8, 0.66, tongue);
+    tg.rotation.x = -0.5;
+    foot.isVisible = false;
+  }
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (pelvis) pelvis.material = cloth;
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 512 the Teacher's little black shoes (card Appearance "dark pants with little black shoes"; secret.the_teacher.red.png: small near-black
  * ankle shoes under the trouser legs, much slimmer than a boot; audit 500 a.5 "team boots"). The team boot (foot box: length L, width Wf, height
  * Hf, toe +z) is hidden; in its place per foot a slim ankle quarter .ankleW Wf wide, .ankleH Hf tall over the rear .ankleL L (it tops the grass,

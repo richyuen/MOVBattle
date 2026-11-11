@@ -32,7 +32,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerSash, jesterToeKnives, jesterShorts, jesterBelt, balloonerDoublet, teacherShoes, executionerBoots, bomberVest, jesterTunic, bomberHeadband, bomberBreeches, fanBearerSkirt, teacherTrousers, teacherSleeves, fanBearerWristGuards, balloonerRuff, chuKoNuSleeves, chuKoNuMitts, balloonerHead } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerSash, jesterToeKnives, jesterShorts, jesterBelt, balloonerDoublet, teacherShoes, executionerBoots, bomberVest, jesterTunic, bomberHeadband, bomberBreeches, fanBearerSkirt, teacherTrousers, teacherSleeves, fanBearerWristGuards, balloonerRuff, chuKoNuSleeves, chuKoNuMitts, balloonerHead, balloonerBreeches } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1085,6 +1085,8 @@ export class UnitFactory {
       propMeshes.push(...balloonerRuff(this._scene, body));
       // [S] 514 (a.5): brown shoulder-length hair and round goggle rims round the eyes (secretDress balloonerHead)
       propMeshes.push(...balloonerHead(this._scene, body));
+      // [S] 515 (a.6): team knee pantaloons, tan stockings, orange shoes (secretDress balloonerBreeches)
+      propMeshes.push(...balloonerBreeches(this._scene, body, teamColor));
     }
     if (definition.id === "secret.chu_ko_nu" && !shouldUseVehicleBody) {
       // [S] 503 (a.1): black hair with a tall bun on the crown and a black headband with a team stripe, no hat (secretDress chuKoNuTopknot)
@@ -1302,6 +1304,7 @@ export class UnitFactory {
         // [S] 453 nor the Quick Draw: his vest stops at the belt and the team trousers run straight down from it (CONFIRM 451 quick_draw a.2)
         : definition.id === "dynasty.monkey_king" || definition.id === "wild_west.miner" || definition.id === "wild_west.quick_draw" || definition.id === "good.devout_gauntlet" // Devout's trousers have their own waist folds.
           || definition.id === "secret.fan_bearer" // [S] 513 his own layered skirt (secretDress fanBearerSkirt)
+          || definition.id === "secret.ballooner" // [S] 515 knee pantaloons from the belt (secretDress balloonerBreeches)
         ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
