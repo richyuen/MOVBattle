@@ -819,9 +819,11 @@ async function main() {
           // [evidence 426] ...and his kick lands on that man at his feet: framed on him too
           // [evidence 436] the skeleton archer's fire arrow sets the struck man alight 7 m off (critic 435): his burn is framed on him
           const burnOnMan = id === "spooky.skeleton_archer" && ability.kind === "status:fire";
+          // [evidence 519] Cupid's love arrow leaves the struck man lovestruck 7.5 m off: framed on him, the after shot 1 s on as he turns to his friends
+          const love = id === "secret.cupid" && ability.kind === "status:love";
           const aura = bearer && (ability.kind === "haste" || ability.kind === "stay");
           // [evidence 475] the wizard's firework bursts on the man his spell spun up, 7.8 m off: framed on him
-          const onMan = snake || burnOnMan || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
+          const onMan = snake || burnOnMan || love || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
           // blanketed him and the re-framed camera hid the step)
           const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
@@ -830,7 +832,7 @@ async function main() {
           // [evidence 494] arrows caught in the Sentinel's pavise faces: framed as the idle (front three-quarter), the boards toward the camera
           const catchShot = ability.kind === "pavise_block";
           await take(`unit_${id}_ability`, ability.tick, catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
-          await take(`unit_${id}_ability_after`, ability.tick + (slow ? 60 : snake ? 30 : 9), catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow || love ? 60 : snake ? 30 : 9), catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far, pair);
           if (darkGrab) await take(`unit_${id}_grab_blast`, ability.tick + 36, 2, pair);
         }
         const second = SECOND_ABILITY[id] ? det.events.find((e) => e.kind === SECOND_ABILITY[id]) : null;
