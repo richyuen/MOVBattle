@@ -1922,18 +1922,7 @@ export function taekwondoGi(scene: Scene, body: ArticulatedBody, team: Color3): 
     const wing = MeshBuilder.CreateBox("tkdCollarSide", { width: TW * 0.05, height: TH * 0.08, depth: TD * 1.02 }, scene);
     wing.parent = body.torso; wing.material = cream; wing.position.set(cx + side * TW * (C.lapTop + C.lapW / 2), top + TH * 0.01, cz); out.push(wing);
   }
-  // the belt, its knot and two tails
-  const beltY = top - TH + TH * C.beltAt;
-  const band = MeshBuilder.CreateBox("tkdBelt", { width: TW * C.beltOut, height: TH * C.beltH, depth: TD * C.beltOut + TW * 0.05 }, scene);
-  band.parent = body.torso; band.material = black; band.position.set(cx, beltY, cz); out.push(band);
-  const kz = cz + (TD * C.beltOut) / 2 + TW * 0.05;
-  const knot = MeshBuilder.CreateBox("tkdBeltKnot", { width: TW * 0.2, height: TH * C.beltH * 1.5, depth: TW * 0.08 }, scene);
-  knot.parent = body.torso; knot.material = black; knot.position.set(cx, beltY, kz); knot.rotation.z = 0.25; out.push(knot);
-  for (const side of [-1, 1]) {
-    const a = new Vector3(cx + side * TW * 0.05, beltY - TH * C.beltH * 0.3, kz + TW * 0.01);
-    const e = a.add(new Vector3(side * Math.sin(C.splay) * TH * C.tail, -Math.cos(C.splay) * TH * C.tail, TW * 0.03));
-    slab("tkdBeltTail", a, e, TW * 0.1, TW * 0.035, black);
-  }
+  // [S] 517 the belt moved to taekwondoBelt, built over the jacket's skirt (it sat inside the skirt's flare here: only side wedges showed)
   // wide sleeves to the wrist
   for (const [arm, lower] of [[body.leftUpperArm, false], [body.rightUpperArm, false], [body.leftLowerArm, true], [body.rightLowerArm, true]] as const) {
     const { center: c, extendSize: s } = arm.getBoundingInfo().boundingBox;
@@ -2186,6 +2175,53 @@ export function infernalRockHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const [x, y, t] of [[-0.22, 0.16, 0.5], [0.18, 0.22, -0.6], [0.02, 0.32, 0.2]]) {
     const crack = MeshBuilder.CreateBox("infernalRockCrack", { width: W * 0.2, height: H * 0.025, depth: D * 0.04 }, scene);
     crack.parent = head; crack.position.set(c.x + x * W, lo + y * H, z0 + D * C.capD * 0.47); crack.rotation.z = t; crack.material = magma; out.push(crack);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
+ * [S] 517 the Taekwondo's black belt, proud of the jacket (secret.taekwondo.red.png: a near-black belt round the waist where the jacket's skirt
+ * flares out below it, a square knot at the front and two tails hanging from it down over the skirt, splayed apart; audit 515 a.3 "none"; 516
+ * DEFECTS "the belt band sits inside the jacket, only side wedges show"). Built after the jacket's skirt (unitFactory tunicSkirt, hip frame) and
+ * sized off its top ring (radius rx/rz at its top, flaring to its hem over its height h): an 8-sided band .band h tall centred .sink h under the
+ * skirt top, .out of the skirt's radius there (top and foot each, so it stands over the flare); a knot box .knotW rx wide, .knotH band tall on
+ * its front, .stand rz proud; two tails .tail h long from under the knot, splayed .splay rad apart, leaning out with the skirt's flare plus
+ * .stand. Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow.
+ */
+const TKD_BELT = { band: 0.17, sink: 0.04, out: 1.1, knotW: 0.42, knotH: 1.5, stand: 0.12, tail: 0.62, splay: 0.3, black: new Color3(0.08, 0.06, 0.07) };
+export function taekwondoBelt(scene: Scene, body: ArticulatedBody, skirt: Mesh): Mesh[] {
+  const B = TKD_BELT, glow = scene.getGlowLayerByName("glow");
+  const black = getMaterialFactory().get("cloth", B.black, { emissive: B.black.scale(0.4), roughness: 1 });
+  const pos = skirt.getVerticesData("position");
+  if (!pos) return [];
+  let yHi = -Infinity, yLo = Infinity;
+  for (let i = 1; i < pos.length; i += 3) { yHi = Math.max(yHi, pos[i]); yLo = Math.min(yLo, pos[i]); }
+  let rTop = 0, rBot = 0;
+  for (let i = 0; i < pos.length; i += 3) {
+    const r = Math.hypot(pos[i], pos[i + 2]);
+    if (pos[i + 1] > yHi - 1e-4) rTop = Math.max(rTop, r); else if (pos[i + 1] < yLo + 1e-4) rBot = Math.max(rBot, r);
+  }
+  const sz = skirt.scaling.z, h = yHi - yLo, top = skirt.position.y + yHi, x0 = skirt.position.x, z0 = skirt.position.z;
+  const rAt = (drop: number) => rTop + (rBot - rTop) * (drop / h);
+  const out: Mesh[] = [];
+  const bandH = h * B.band, mid = top - h * B.sink;
+  const band = MeshBuilder.CreateCylinder("tkdBelt", {
+    height: bandH, diameterTop: rAt(Math.max(0, h * B.sink - bandH / 2)) * 2 * B.out, diameterBottom: rAt(h * B.sink + bandH / 2) * 2 * B.out, tessellation: 8,
+  }, scene);
+  band.parent = body.hip; band.position.set(x0, mid, z0); band.scaling.z = sz; band.rotation.y = Math.PI / 8; band.material = black; out.push(band);
+  const front = (drop: number) => z0 + rAt(drop) * B.out * sz + rTop * sz * B.stand;
+  const knot = MeshBuilder.CreateBox("tkdBeltKnot", { width: rTop * B.knotW, height: bandH * B.knotH, depth: rTop * 0.2 }, scene);
+  knot.parent = body.hip; knot.position.set(x0, mid, front(h * B.sink)); knot.rotation.z = 0.25; knot.material = black; out.push(knot);
+  for (const side of [-1, 1]) {
+    const d0 = h * B.sink + bandH * 0.3, d1 = d0 + h * B.tail * Math.cos(B.splay);
+    const a = new Vector3(x0 + side * rTop * 0.08, top - d0, front(d0));
+    const e = new Vector3(x0 + side * (rTop * 0.08 + h * B.tail * Math.sin(B.splay)), top - d1, front(d1));
+    const v = e.subtract(a);
+    const tail = MeshBuilder.CreateBox("tkdBeltTail", { width: rTop * 0.24, height: v.length(), depth: rTop * 0.07 }, scene);
+    tail.parent = body.hip; tail.position.copyFrom(a.add(e).scale(0.5));
+    tail.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), v.normalize(), new Quaternion());
+    tail.material = black; out.push(tail);
   }
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
