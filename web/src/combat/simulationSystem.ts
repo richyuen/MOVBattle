@@ -1631,6 +1631,8 @@ export class SimulationSystem {
     const lead = attacker.linkedParent ?? attacker;
     const actor = lead.linkedChildren.find((c) => c.visualConfig.special === "safe_bundle");
     const safe = actor?.body.hip.getChildMeshes(false).find((m) => m.name === "safe") as Mesh | undefined;
+    // 520b: neither robber shoots while their safe is still in the air: it lands first
+    if (this._safeHurls.some((h) => h.attacker === lead && !h.landed)) return true;
     if (!safe || safe.isDisposed() || !safe.isEnabled()) return false;
     if (attacker !== lead) return true;
     worldMatrixChain(safe);
