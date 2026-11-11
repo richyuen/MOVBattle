@@ -1934,7 +1934,7 @@ export class RuntimeUnit {
       this.body.hip.computeWorldMatrix(true).clone().invert());
     const reach = aim.subtract(rest).subtractInPlace(new Vector3(0, 0, scale * 0.53));
     reach.x = Math.max(-scale * 0.22, Math.min(scale * 0.22, reach.x));
-    reach.y = Math.max(-scale * 0.32, Math.min(scale * 0.28, reach.y));
+    reach.y = Math.max(-scale * 1.05, Math.min(scale * 0.28, reach.y));
     reach.z = Math.max(0, Math.min(scale * 0.68, reach.z));
     this._raptorBite = { jaw, skull, neck, rest, neckRest, reach, at: now };
     this._updateRaptorBite(now);
@@ -1948,8 +1948,13 @@ export class RuntimeUnit {
     const thrust = Math.max(0, 1 - Math.max(0, elapsed - 0.07) / 0.23);
     const shift = bite.reach.scale(thrust);
     bite.skull.position.copyFrom(bite.rest).addInPlace(shift);
+    const scale = this.body.metrics.overallHeight / 2;
+    const axis = new Vector3(0, Math.cos(0.44), Math.sin(0.44)).scaleInPlace(scale * 0.62);
+    axis.addInPlace(shift);
     bite.neck.position.copyFrom(bite.neckRest).addInPlace(shift.scale(0.5));
-    bite.neck.scaling.z = 0.26 + shift.length() / this.body.metrics.overallHeight;
+    bite.neck.scaling.y = axis.length() / (2 * scale);
+    bite.neck.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), axis.normalize(), new Quaternion());
+    bite.skull.rotation.x = Math.atan2(-shift.y, scale * 1.1);
     bite.jaw.rotation.x = 0.46 - 0.42 * thrust;
     if (elapsed >= 0.3) this._raptorBite = null;
   }
