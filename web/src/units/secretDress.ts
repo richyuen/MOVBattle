@@ -1984,7 +1984,8 @@ export function cheerleaderSkirt(scene: Scene, body: ArticulatedBody): Mesh[] {
  * W deep, leaned back .lean rad and cupped forward .cup rad at the sides; lighter and darker grey in turn; a scalloped rim lump on each rib's end.
  * Lit stone-grey cloth (CLAM_HAND's greys), out of the glow.
  */
-const CLAM_HAT = { ribs: 9, span: 1.3, long: 1.55, rim: 0.5, root: 0.08, thick: 0.1, hingeY: 0.42, hingeZ: 0.62, lean: 0.32, cup: 0.35, light: new Color3(0.5, 0.48, 0.47), dark: new Color3(0.3, 0.29, 0.29) };
+// 516b: rim .5 -> .8, root .08 -> .16 (look 516: the ribs stood apart as fingers, not one shell): neighbours now overlap at the rim
+const CLAM_HAT = { ribs: 9, span: 1.3, long: 1.5, rim: 0.8, root: 0.16, thick: 0.1, hingeY: 0.42, hingeZ: 0.62, lean: 0.32, cup: 0.35, light: new Color3(0.5, 0.48, 0.47), dark: new Color3(0.3, 0.29, 0.29) };
 export function clamsHat(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = CLAM_HAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const light = mf.get("cloth", C.light, { emissive: C.light.scale(0.15), roughness: 1 });
