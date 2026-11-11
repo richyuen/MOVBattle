@@ -32,7 +32,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerSash, jesterToeKnives, jesterShorts, jesterBelt, balloonerDoublet, teacherShoes, executionerBoots, bomberVest, jesterTunic, bomberHeadband, bomberBreeches, fanBearerSkirt, teacherTrousers, teacherSleeves } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerSash, jesterToeKnives, jesterShorts, jesterBelt, balloonerDoublet, teacherShoes, executionerBoots, bomberVest, jesterTunic, bomberHeadband, bomberBreeches, fanBearerSkirt, teacherTrousers, teacherSleeves, fanBearerWristGuards } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1044,6 +1044,8 @@ export class UnitFactory {
       propMeshes.push(...fanBearerSash(this._scene, body, teamColor));
       // [S] 513 (a.3): a three-piece layered team skirt to mid-thigh over bare legs (secretDress fanBearerSkirt)
       propMeshes.push(...fanBearerSkirt(this._scene, body, teamColor));
+      // [S] 514 (a.4): brown leather wrist guards with dark end straps (secretDress fanBearerWristGuards)
+      propMeshes.push(...fanBearerWristGuards(this._scene, body));
     }
     if (definition.id === "secret.raptor" && !shouldUseVehicleBody) {
       propMeshes.push(...dressRaptorBody(this._scene, body, teamColor));

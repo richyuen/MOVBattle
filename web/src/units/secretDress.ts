@@ -2,6 +2,7 @@ import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Ve
 import type { Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
+import { limbBox } from "./medievalDress";
 
 /*
  * Secret faction cloth, hats and ornaments (loop: new per-unit dress goes here, not into unitFactory or propBuilder).
@@ -35,6 +36,34 @@ export function fanBearerSash(scene: Scene, body: ArticulatedBody, team: Color3)
   }, scene);
   bridge.parent = torso; bridge.position.set(c.x + s.x * 0.82, c.y + s.y * 1.10, c.z);
   bridge.material = cloth; out.push(bridge);
+  return out;
+}
+
+/**
+ * [S] 514 the Fan Bearer's wrist guards (card Appearance "wrist guards ... identical to those of the Sarissa"; secret.fan_bearer.red.png: a tan
+ * leather guard over each forearm from about its middle down to the wrist, flaring a little toward the elbow, a darker strap round each end; audit
+ * a.4 "wrists: none"). Spec on each lower arm (limbBox: its length and half-width in its joint's frame, 0 its top, 1 the wrist): an 8-sided
+ * flat-shaded shell from .from to .to of the way down, .out of the half-width round at the top tapering to .taper of that at the wrist; a strap
+ * .strap of the length tall and .band round at each end. The Sarissa's leather and dark browns, self-lit .12, out of the glow.
+ */
+const FAN_GUARD = { from: 0.36, to: 0.97, out: 1.7, taper: 0.84, strap: 0.07, band: 1.12, leather: new Color3(0.4, 0.24, 0.13), dark: new Color3(0.2, 0.11, 0.06) };
+export function fanBearerWristGuards(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const G = FAN_GUARD, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const leather = mf.get("cloth", G.leather, { emissive: G.leather.scale(0.12), roughness: 1 });
+  const dark = mf.get("cloth", G.dark, { emissive: G.dark.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
+    const L = limbBox(fore), r = Math.max(L.wide, L.deep), top = L.mid + L.half;
+    const at = (t: number) => top - t * L.half * 2;
+    const ring = (name: string, a: number, b: number, rTop: number, rBot: number, material: Material) => {
+      const m = MeshBuilder.CreateCylinder(name, { height: at(a) - at(b), diameterTop: rTop * 2, diameterBottom: rBot * 2, tessellation: 8 }, scene);
+      m.parent = fore.parent; m.position.y = (at(a) + at(b)) / 2; m.scaling.z = (L.deep / r) * 1.1; m.rotation.y = Math.PI / 8;
+      m.material = material; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m);
+    };
+    const rAt = (t: number) => r * G.out * (1 - (1 - G.taper) * ((t - G.from) / (G.to - G.from)));
+    ring("fanBearerWristGuard", G.from, G.to, rAt(G.from), rAt(G.to), leather);
+    for (const t of [G.from, G.to - G.strap]) ring("fanBearerGuardStrap", t, t + G.strap, rAt(t) * G.band, rAt(t + G.strap) * G.band, dark);
+  }
   return out;
 }
 
