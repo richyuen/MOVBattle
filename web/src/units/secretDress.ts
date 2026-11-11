@@ -2226,3 +2226,38 @@ export function taekwondoBelt(scene: Scene, body: ArticulatedBody, skirt: Mesh):
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 517 Cupid's diaper on a bare body (secret.cupid.blue.png, .red.png: a bare team-skin body from neck to feet, only a cream cloth diaper
+ * at the hips, bunched round the waist, full over the seat and crotch, the thighs coming out of its leg holes, a small gold pin at the front;
+ * audit 515 a.4 "ours wears a team vest and tunic"). Spec in the pelvis frame (box centre c, half size h; front +z): a 9-sided lathe shell from
+ * .top h.y over the pelvis top through a waist roll .waist h.x round, the seat bulge .bulge h.x at .bulgeAt of the way down, to the crotch
+ * .low h.x round at .drop h.y under the pelvis foot, .deep h.z/h.x deep; a waist roll ring .roll h.x round .rollH h.y tall at its top; a gold
+ * pin ico .pin h.x across on the front of the roll. Torso, yoke, pads, belt, pelvis and every leg limb in the skin material; no tunic skirt
+ * (unitFactory). Cream unlit (LESSONS 442), the pin lit gold self-lit .12; out of the glow.
+ */
+const CUPID_DIAPER = { top: 0.35, waist: 1.18, bulge: 1.34, bulgeAt: 0.45, low: 0.62, drop: 0.9, deep: 1.2, roll: 1.26, rollH: 0.3, pin: 0.3,
+  cream: new Color3(0.74, 0.64, 0.46), gold: new Color3(0.8, 0.52, 0.1) };
+export function cupidDiaper(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CUPID_DIAPER, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (!pelvis) return [];
+  const { center: c, extendSize: h } = pelvis.getBoundingInfo().boundingBox;
+  const cream = mf.get("unlit", C.cream, { emissive: C.cream });
+  const gold = mf.get("cloth", C.gold, { emissive: C.gold.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const yTop = c.y + h.y * (1 + C.top), yLow = c.y - h.y * (1 + C.drop), span = yTop - yLow;
+  const shape = [[0, yLow], [C.low, yLow], [C.bulge * 0.92, yLow + span * (1 - C.bulgeAt) * 0.55], [C.bulge, yTop - span * C.bulgeAt], [C.waist, yTop], [0, yTop]]
+    .map(([w, y]) => new Vector3(w * h.x, y - c.y, 0));
+  const shell = MeshBuilder.CreateLathe("cupidDiaper", { shape, tessellation: 9 }, scene);
+  shell.parent = pelvis; shell.position.set(c.x, c.y, c.z); shell.scaling.z = (h.z * C.deep) / h.x; shell.material = cream; out.push(shell);
+  const roll = MeshBuilder.CreateCylinder("cupidDiaperRoll", { height: h.y * C.rollH, diameter: h.x * 2 * C.roll, tessellation: 9 }, scene);
+  roll.parent = pelvis; roll.position.set(c.x, yTop - h.y * C.rollH * 0.5, c.z); roll.scaling.z = (h.z * C.deep) / h.x; roll.material = cream; out.push(roll);
+  const pin = MeshBuilder.CreateIcoSphere("cupidDiaperPin", { radius: (h.x * C.pin) / 2, subdivisions: 1, flat: true }, scene);
+  pin.parent = pelvis; pin.position.set(c.x + h.x * 0.25, yTop - h.y * C.rollH * 0.5, c.z + h.z * C.deep * C.roll * 1.02); pin.material = gold; out.push(pin);
+  // the bare team body: the torso block, its yoke and pads, the belt, the pelvis and both legs in the skin material
+  for (const m of [body.torsoMesh, pelvis, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg,
+    ...body.allMeshes.filter((x) => /_yoke$|_[lr]Pad$|_belt$/.test(x.name))]) { m.material = body.skinMaterial; glow?.addExcludedMesh(m); }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}

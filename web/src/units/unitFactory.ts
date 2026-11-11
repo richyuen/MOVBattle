@@ -32,7 +32,7 @@ import { dressAfro, dressBeard, dressTribalBracelets, dressTribalHair, dressTrib
 import { aegisField, aegisOrbits } from "../combat/goodMagic";
 import { cultistBeard, cultistBoots, cultistBuckler, cultistCoatLength, cultistDarkRobe, cultistHalo, monarchBeak, monarchBone, monarchCrown, monarchElbowBalls, monarchHarness, monarchKneePlates, monarchTunic, lichCoat, lichStaffCrystal, lichStaffFoot, lichStaffPole, lichTunic, mechanicGoggles, mechanicHairFall, mechanicOveralls, mechanicSleeves, mechanicTank, mechanicTrousers, sentinelConeHat, sentinelLeggings, sentinelMane, sentinelShoulderSpikes, walkerBoots, walkerHair, walkerHelm, walkerHornBone, walkerKneePads, walkerVest } from "./evilDress";
 import { deathBringerBareTorso, deathBringerBelt, deathBringerShinWraps, sentinelUniform } from "./evilDress";
-import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerDress, jesterToeKnives, jesterShorts, jesterBelt, balloonerDoublet, teacherShoes, executionerBoots, bomberVest, jesterTunic, bomberHeadband, bomberBreeches, teacherTrousers, teacherSleeves, fanBearerWristGuards, balloonerRuff, chuKoNuSleeves, chuKoNuMitts, balloonerHead, balloonerBreeches, chuKoNuLeggings, clamsHands, taekwondoGi, cupidHair, cheerleaderSkirt, clamsHat, elfCap, iceMageHair, infernalRockHair, taekwondoBelt } from "./secretDress";
+import { ballStone, balloonerGlueMitts, balloonerPack, bomberHair, chuKoNuRobe, chuKoNuTopknot, executionerHood, executionerVest, jesterCap, prisonerCap, prisonerShirt, prisonerTrousers, shouterHelm, shouterVest, teacherHair, chuKoNuHarness, chuKoNuBelt, teacherJabot, shouterFurTrim, shouterKneeWraps, shouterBreeches, shouterBracers, bomberShirt, fanBearerDress, jesterToeKnives, jesterShorts, jesterBelt, balloonerDoublet, teacherShoes, executionerBoots, bomberVest, jesterTunic, bomberHeadband, bomberBreeches, teacherTrousers, teacherSleeves, fanBearerWristGuards, balloonerRuff, chuKoNuSleeves, chuKoNuMitts, balloonerHead, balloonerBreeches, chuKoNuLeggings, clamsHands, taekwondoGi, cupidHair, cheerleaderSkirt, clamsHat, elfCap, iceMageHair, infernalRockHair, taekwondoBelt, cupidDiaper } from "./secretDress";
 import { aegisButterflyHair, arbiterMitre, paladinCuirass, paladinLegArmour, chronoBackRing, radiantVest, aegisHoodie, aegisSkirt, arbiterPetalCollar, devoutArmWraps, devoutCirclet, devoutMoustache, devoutShoulders, devoutTrousers, chronoCrown, paladinHair, radiantHelmet, radiantTrousers, radiantCape, arbiterRobe, arbiterCoatSkirt, chronoCropTop, chronoBreeches, chronoArmBands } from "./goodDress";
 import { bardTunic, dressMedieval, healerRobeTrim, knightCuirass, squireTabardTrim } from "./medievalDress";
 import { halflingFootFur, halflingJacket, halflingMop, harvesterBraids, potionHead, potionJerkin } from "./farmerDress";
@@ -1107,6 +1107,8 @@ export class UnitFactory {
     if (definition.id === "secret.cupid" && !shouldUseVehicleBody) {
       // [S] 516 (a.3): a golden curly mop over the crown (secretDress cupidHair)
       propMeshes.push(...cupidHair(this._scene, body));
+      // [S] 517 (a.4): a cream diaper at the hips on a bare team body, no vest or tunic (secretDress cupidDiaper)
+      propMeshes.push(...cupidDiaper(this._scene, body));
     }
     if (definition.id === "secret.cheerleader" && !shouldUseVehicleBody) {
       // [S] 516 (a.2): a purple pleated skirt to mid-thigh (secretDress cheerleaderSkirt), no tunic skirt
@@ -1331,6 +1333,7 @@ export class UnitFactory {
           || definition.id === "secret.fan_bearer" // [S] 513 his own layered skirt ([R] 517 secretDress fanBearerDress)
           || definition.id === "secret.ballooner" // [S] 515 knee pantaloons from the belt (secretDress balloonerBreeches)
           || definition.id === "secret.cheerleader" // [S] 516 her own pleated skirt (secretDress cheerleaderSkirt)
+          || definition.id === "secret.cupid" // [S] 517 a diaper on a bare body, no tunic (secretDress cupidDiaper)
         ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
