@@ -1,28 +1,22 @@
 # secret.chu_ko_nu
-Status: open   Audited: 500 (AUDIT x2), 510 (CONFIRM: passed d; failed a, b, c), 511 (RE-AUDIT a, b x2)   Done: -
+Status: done   Audited: 500 (AUDIT x2), 510 (CONFIRM: passed d; failed a, b, c), 511 (RE-AUDIT a, b x2), 516 (CONFIRM: passed a, b, c, d)   Done: 516
 ## Verdicts
-a PASS (515 robe to the knee, banded leggings)
-b FAIL plateau (2 rejected [S] since 511 RE-AUDIT, 2 struck)
- 2. Deep rectangular receiver dominates the torso in unit_secret.chu_ko_nu_idle — TABS: a narrower magazine sits above the stock, leaving the limbs as the dominant crossbow span (ref: reference/units/secret.chu_ko_nu.blue.png).
- 4. Crossbow held upright with its limbs at hip height in unit_secret.chu_ko_nu_idle — TABS: held level across the chest, limbs at chest height and the stock running diagonally across the body (ref: reference/units/secret.chu_ko_nu.blue.png).
- 5. crossbow in unit_secret.chu_ko_nu_windup — laid level but pointing backwards, prod and magazine trailing behind him away from the man he faces — TABS: the crossbow points ahead of him toward the enemy (ref: reference/units/secret.chu_ko_nu.jpg)
-c FAIL (1 since 510 CONFIRM)
- 1. Bolt train crosses the air above the visible weapon in unit_secret.chu_ko_nu_flight — TABS: the repeating crossbow bolts should leave the crossbow rail (ref: loop/cards/secret.chu_ko_nu.md, Weapons).
-d PASS (515 stats)
+a PASS (515 robe to the knee, banded leggings; 516 CONFIRM)
+b PASS (516 [R] level across the chest carried, laid on his man in range, slimmer magazine; CONFIRM)
+c PASS (516 bolts flat off the rail to the chest; CONFIRM)
+d PASS (516 stats)
 ## Ranked gaps
-1. [R] secret.chu_ko_nu.b hold and back-off — blockers 2, 4, 5: a backpedal whose body yaw is locked on the enemy (verify the move step honours holdHeading), the crossbow hugged across the chest, stock diagonal, limbs at chest height, lay toward the man, a slimmer magazine — ref: reference/units/secret.chu_ko_nu.blue.png, .jpg — ours: unit_secret.chu_ko_nu_idle.png, _windup.png
-2. [S] secret.chu_ko_nu.c bolt origin — blocker 1: bolts leave the held crossbow's rail (rcbMuzzle on the laid bow) — ref: card Weapons — ours: unit_secret.chu_ko_nu_flight.png
 ## Attempts (iter | gap | criterion | verdict)
-515 | robe tiers anchored to the knee joint (ea39c522) | a | approved (struck 3)
-515 | dark team leggings, three orange wraps, secretDress chuKoNuLeggings (79e1a268) | a | approved (struck 4; a PASS)
-515 | readyAim every step + lay flipped + holdHeading on the man (19b0b661, 3948d262; reverted 823dc1cf, c248299a) | b | rejected
+516 | [R] RCB_HOLD rebuilt: explicit-basis lay (nose was backwards), port carry across the chest, aim on readyAim, slim magazine; grip off a fresh torso box (a4b70e94, 602fa00f) | b | approved (struck 2, 4, 5; b PASS)
+516 | bolts run flat (arc 0) off the rail to the chest, RCB_VOLLEY (66e47ff2) | c | approved (struck 1; c PASS)
+515 | robe tiers knee-anchored; leggings with orange wraps (ea39c522, 79e1a268) | a | approved (a PASS)
+515 | readyAim every step + lay flipped + holdHeading (19b0b661, 3948d262; reverted) | b | rejected
 514 | bow toward readyAim, lay flipped (09540a69, reverted 4d6431b2) | b | rejected
-511 | level two-fist crossbow hold, PA _holdRepeatingCrossbow (7f696d24, 44e1c3fa) | b | approved (struck 1, 3; added 5)
-511 | timed bolt train off the rail, SS RCB_VOLLEY (feef9d94) | c | approved (no strike)
+511 | level two-fist crossbow hold (7f696d24, 44e1c3fa); timed bolt train (feef9d94) | b, c | approved
 503-514 | hair/bun, robe, harness, belt, sleeves, mitts | a | approved
 ## Rejected (last 4)
-515 | b.5 (19b0b661, 3948d262) | attempts 2 | still faces his retreat in the side shots; bow behind him; idle bow thrust to arm's length at head height
+515 | b.5 (19b0b661, 3948d262) | attempts 2 | still faces his retreat in the side shots; bow behind him
 514 | b.5 (09540a69) | attempts 1 | windup is a back-off without readyAim: bow trails
 ## Notes (max 3 lines)
-- 515 probes never ran his AI back-off: the motion seen was a knight knocking him back limp (limp 0 to 1). The code moving him away is unfound (holdHeading grep: farmer, sarissa, fencer only). The [R] probes at 6.3 m, no contact; a 2nd rejected [R] parks b.
-- c starves at 516 (last attempt 511).
+- 516 probe: no back-off exists (he walks in); the "retreat" was the fist trailing a stale torso bounding box in multi-tick replays (LESSONS).
+- 516 DEFECTS (minor): magazine a little tall beside the head; prod rolls toward vertical at arm's length in the flight.

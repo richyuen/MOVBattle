@@ -21,4 +21,4 @@ d PASS (515 stats)
 ## Attempts (iter | gap | criterion | verdict)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 515 AUDIT 2: idle shot framed from behind; evidence commit first (re-aim the idle to the front three-quarter) before a or b picks.
+- 516 probe: the idle IS a front three-quarter (eyes face the camera); the ball hood (a.1) hides the face, so it reads as a back. Pick a.1 first; then RE-AUDIT a, b on the new idle.

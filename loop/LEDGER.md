@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+516 | a4b70e94, 602fa00f | secret.chu_ko_nu.b | approved [R] (struck 2, 4, 5; b PASS; CONFIRM passed, done)
+516 | 66e47ff2 | secret.chu_ko_nu.c | approved [S] (struck 1; c PASS; CONFIRM passed, done)
+516 | aac1740a | secret.ballooner.a | approved [S] (struck 1; a PASS; CONFIRM passed, done)
+516 | 1955e016, f438c488 | secret.taekwondo.a | approved [S] (struck 1, 2)
+516 | 23d145b2 | secret.taekwondo.c | approved [S] (struck 1)
+516 | 463d1578 | secret.cupid.a | approved [S] (struck 3, 2 by lineup)
+516 | 2cd491c9 | secret.cupid.b | approved [S] (struck 1)
+516 | 848338c6 | secret.cheerleader.a | approved [S] (struck 2, 1 by lineup)
+516 | deb199cb, 30b1375a | secret.clams.a | approved [S] (struck 2)
+
 515 | 19b0b661, 3948d262 | secret.chu_ko_nu.b | rejected [S] (reverted 823dc1cf, c248299a: still faces his retreat; b plateau)
 515 | b8a58d45, d8a671fe | secret.ballooner.a | approved [S] (struck 6; CONFIRM failed a: pantaloons too long)
 515 | e473f7f3 | secret.fan_bearer.a | approved [S] (struck 2)
@@ -42,21 +52,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 512 | cf9030d9 | secret.executioner.a | approved [S] (struck 4)
 512 | 3c31e1a0 | secret.bomb_on_a_stick.a | approved [S] (struck 4)
 
-511 | 65f47ff7, 5dc19fb4 | secret.jester.b | approved [S] (struck 2; b PASS)
-511 | 278dab28, 68792d69 | secret.jester.c | approved [S] (struck 2; added 3 kick mid-flip)
-511 | 32de5d14 | secret.jester.a | approved [S] (struck 4)
-511 | f7143acb | secret.ballooner.a | approved [S] (struck 3 doublet/V clause)
-511 | 026039a3 | secret.ballooner.c | dropped [S] (reverted e2a612c1: dive and grip not visible)
-511 | e64bd0b8 | secret.fan_bearer.b | dropped [S] (reverted f553726d: shaft hidden in pelvis)
-511 | 7f696d24, 44e1c3fa | secret.chu_ko_nu.b | approved [S] (struck 1, 3; added 5 reversed bow)
-511 | 70e26c54, 3ec7bafc | secret.raptor.a | approved [S] (struck 5; CONFIRM failed a)
-511 | feef9d94 | secret.chu_ko_nu.c | approved [S] (no strike)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/PB/SS/UV:516 | BALLOONER_LEG hem +.03 m waist 1.08 bulge 1.22 low 1.1 cuff 2.3, UV legLength 1.2 upperLegWidth .9; TKD_GI lapels .17TW to .86TH, belt .1TH, sleeves 1.7/1.85 flare 1.3, body material; KICK_BY_UNIT taekwondo within .75 windup .22 cooldown 1.5 damage 3 fling 7 raise 2.05 plain; CUPID_HAIR 4 rings x9 curls .34W unlit gold (.7,.5,.15); HEART_BOW tall .62 belly .3 unlit orange (.8,.38,.1) hearts pink (.8,.12,.55); CHEER_SKIRT 14 pleats flare .38 hem .55 purple (.42,.14,.63); CLAM_HAT 9 ribs span 1.3 long 1.5 rim .8 | 516 | approved | 515 BALLOONER_LEG hem -.07 bulge 1.5 low 1.36
 UV/PA:secret_shouter build | scale 1.1 bulk .88 torsoWidth .95 head 1.08 legLength 1.3 upperLeg .92 lowerLeg .82; upright stance by shouterHelmDome | 513 | approved | 1.35/1.25/1.18 squat, hashed crouch
 UV/PA:secret_executioner build | scale 1.22 bulk .9 torsoWidth .9 legLength 1.3 upperLeg .9 lowerLeg .82; upright by executionerHood | 513 | approved | 1.42/1.4 slab
 PA/RU:STONE_POUND | lift .55 back .45 slam 1.15 hold .14 neck .45 knee .35; DIVE at full weight in the Foolish Jump (RU _leapAir for ball_n_chain) | 513 | approved | generic mace swing, upright leap
@@ -73,8 +74,8 @@ secretDress:TEACHER_SHOE | ankle .8Wf x .92Hf x .48L, vamp .74 x .42 x .6, nose,
 secretDress:EXEC_BOOT | trousers team x.5; boot shaft team x.26 2.25 s.x to .82 of foot-knee, cuff 2.55, 4 bands x.15 2.45 | 512 | approved | plain team legs
 secretDress:BOMBER_VEST | yoke box: fronts .6 h.x at .68, tall 1.86, out 1.04, thick .2; edge .09 team x.95; sides at 1.04; back; team x.55 | 512 | approved | none
 secretDress:BALLOONER_DOUBLET | team trunk, cream V .09 TW to .62 TH, puffs 2.5 arm widths, 3 slashes, belt .1 TH at .12 | 511 | approved | pale tunic
-PA:RCB_HOLD | fist .16 m ahead of trunk front, .06 across, .12 under chest middle; stock .1 ahead, .04 up; off fist .45 mag under | 511 | approved (bow laid along move heading) | shouldered carry
-SS:RCB_VOLLEY | one bolt per .25 s off rcbMuzzle, no scatter | 511 | approved | one-tick burst with random offset
+PA:RCB_HOLD | [R] 516 explicit-basis lay (+z opposite the line); carry: fist .12 ahead .1 across .08 under chest, line left .5 fwd .85 up .22; aim (readyAim): .2/.05/.02, line on the chest; grip off a fresh torsoMesh box; off fist .45 mag under | 516 | approved | 511 fist .16/.06/.12 laid along heading (nose pointed backwards)
+SS:RCB_VOLLEY | one bolt per .25 s off rcbMuzzle, no scatter, arc 0, targetLift = chest | 516 | approved | 511 default bolt arc .06
 secretDress:chuKoNuBelt | eight-sided dark strap, square buckle, loose end | 510 | approved | 509 hidden strap
 secretDress:fanBearerSash | FAN_SASH wide .66 thick .16 shoulder (.78,1.06) hip (-.8,-.86) out 1.1, drape .72x.22, fall .5x.62, 2 folds; team x.45 self-lit .4 | 515 | approved [S] | 511 .155 TW dark strap x +.82,-.78
 SS/PA:STONE_POUND | overhead stick swing retained; trial reverted (contact detached torso) | 509 | dropped [S] | three contact-timed pounds
@@ -99,7 +100,7 @@ secretDress:BALLOONER_PACK | satchel.62x.5TH x.42TD brown,flap,straps.09TW;5 unl
 PB:BOMB_STICK | halberd variant;haft1.05 grip.32;ico bomb.26L,2 orange bands,neck,fuse,unlit flame | 501 | approved (one-handed hold) | fist bomb
 secretDress:BALL_STONE | torso ico 1.3TW .5TH down .62TW ahead,grey(.42);6 links.22TW to 1.05TH;flail hidden | 501 | approved (no hug) | flail
 PB:SPADROON | rapier variant;blade.95s .022 flat.35;gold(.85,.6,.12) shell.12s,bow,ring.075s | 501 | approved | katana
-PB:REPEATING_CROSSBOW | crossbow variant;stock.56s,magazine.17x.24s,2 studs/side,lever,arm.66s sweep.1 | 501 | approved | small bow arc
+PB:REPEATING_CROSSBOW | crossbow variant;stock.56s,magazine.13x.05x.19s,2 studs/side,lever,arm.78s sweep.12 thick .035 | 516 | approved | 501 magazine .17x.07x.24, arm .66 sweep .1
 PB:EXECUTIONER_AXE | buildJarlAxe long1.3 grip.12 wide.22,steel(.52) crescent(.3) bulge.18 | 500 | approved | short axe stick
 secretDress:SHOUTER_HELM | [R] 513 dome 1.24W to crown .64H, band, ear guards .5H, back plate, mask (brow V, cheeks, under-eye bars, nose .34H) off the eye box; horns .39W root 1.22W span | 513 | approved | 510 bowl cylinder + cheek blocks
 PB:GIANT_FAN | halberd variant;haft1.0 stand grip.3;mount.32L;team half-oval1.4L x.8L | 500 | approved | hand fan

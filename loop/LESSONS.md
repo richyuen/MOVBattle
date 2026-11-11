@@ -16,7 +16,7 @@ Read whole at step 1; one fact per line, merge near cap.
 - stats.mjs rounds knobs to .01: under .005 prints 0 (NaN next run); set the exact ratio.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter: the headbutt pushes a hitLog entry, so release and ability land on the same tick).
 - stats.json is stats.mjs's; every non-regression capture wipes iter-N (stats.json, a tail batch's audit.md): back audit.md up before step 5, rerun `stats.mjs <ids> --iter N` after the final capture (422). Checkpoint replaces summary.json: back up first (483).
-- Probes in loop/scripts/probes/, repo root (--build after source changes): probe_bbox (--unit --pat --frame=torso), probe_near/close/head/local/axes/impale/bowdraw; probe_close takes --aim=head|torso|y:<y>, --dist, --yaw, --noglow; probe_eval --unit --expr=<file> runs a function body on the spawned unit (u, game, scene) and prints its JSON (materials, a scene with extra men, event timing).
+- Probes (loop/scripts/probes/, repo root, --build after source changes): probe_bbox (--unit --pat --frame=torso), probe_near/close/head/local/axes/impale/bowdraw; probe_close --aim=head|torso|y:<y> --dist --yaw --noglow; probe_eval --unit --expr=<file> runs a function body (u, game, scene), prints its JSON.
 - capture's PLAIN regex takes any ability kind starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475 wizard firework: no ability shot).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
@@ -29,17 +29,18 @@ Read whole at step 1; one fact per line, merge near cap.
 - Aim at a toppled target's current torso bounds (509). stats.mjs takes ids comma-joined in one argument; spaced, only the first (515).
 - An instant slam logs at swing start: use the pending blow (426). A special logged at let-go owns its missile (427). A cast status can put _struck before impact: use ABILITY_PREF for on-landing effects (435).
 - _ability/_release are on the log tick, before RuntimeUnit.update: pose explicitly for contact, and use the next frame for motion (437 bat, 505 parry). A latch reads on the pin before its damage ticks (444 vampire).
-- A piece rooted at the neck must clear the head box: probe_bbox it beside the headM (439 vampire spikes sat inside the head). A pose over a swing: probe yaw and torso world pitch at the hit before flipping signs (439 bite).
+- A neck-rooted piece must clear the head box: probe_bbox it (439). Before flipping a pose's sign, probe yaw and world pitch at the frame (439).
+- A mesh's world box refreshes only on render: computeWorldMatrix(true) it before reading centerWorld in a per-tick pose, else a replay grips where he stood at the last render (516).
 
 - Gate an idle hold on the fire, not Attacking+throw; props outside _carryProp's regex ride the fist (451). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 - _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
 - An ability started while toppled/airborne is wiped by its lander and burns the cooldown: gate starts on his feet (512 kick).
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
-- A flat ico's faces sit ~20% inside its ellipsoid: seat surface dress by ray-cast onto the mesh (512 raptor).
+- A flat ico's faces sit ~20% inside its ellipsoid: ray-cast surface dress on (512).
 - Two men pinned together topple apart under their crowd push: RU.holdUpright each step (514).
 ## Rig and dress
 - A pole butt inside the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target, not the torso (509). A tall crown hung off the head tips with the head pitch: stand it on the torso joint (500).
-- Retire old hip skirts (482). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
+- Retire old skirts (482). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450 queen). metrics.overallHeight is pre-cut; shin limbShell 0 is the calf cap, ~.1 m above the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
 - unitFactory replaces every mesh's metadata ({ runtimeUnit }): mark a prop for the animator with a named child node, not metadata (427 dragon pistol).
