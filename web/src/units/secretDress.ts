@@ -52,6 +52,35 @@ function taper(scene: Scene, name: string, pts: Vector3[], root: number, tip: nu
   }
 }
 
+export function prisonerShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const cream = new Color3(0.88, 0.82, 0.65);
+  const cotton = getMaterialFactory().get("unlit", cream, { emissive: cream });
+  const glow = scene.getGlowLayerByName("glow");
+  for (const mesh of [body.torsoMesh, ...body.allMeshes.filter(mesh => /_yoke$|_[lr]Pad$/.test(mesh.name))]) {
+    mesh.material = cotton;
+    glow?.addExcludedMesh(mesh);
+  }
+  const sleeves: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+    const { center, extendSize: size } = arm.getBoundingInfo().boundingBox;
+    const upper = arm === body.leftUpperArm || arm === body.rightUpperArm;
+    const bands = upper ? [[0.39, 1.27]] : [[0.14, 0.57], [-0.68, 0.25]];
+    for (const [height, length] of bands) {
+      const band = MeshBuilder.CreateCylinder("prisonerSleeveBand", {
+        height: size.y * length, diameterTop: size.x * 2.42, diameterBottom: size.x * 2.22, tessellation: 8,
+      }, scene);
+      band.parent = arm;
+      band.position.set(center.x, center.y + size.y * height, center.z);
+      band.scaling.z = size.z / size.x;
+      band.rotation.y = Math.PI / 8;
+      band.material = cotton;
+      glow?.addExcludedMesh(band);
+      sleeves.push(band);
+    }
+  }
+  return sleeves;
+}
+
 /** The bead eyes' top, read into the head mesh's frame (LESSONS: the eyes hang off the neck, not the head block). */
 function eyeTopInHead(body: ArticulatedBody): number | null {
   const head = body.headMesh, eye = body.leftEye ?? body.rightEye;
