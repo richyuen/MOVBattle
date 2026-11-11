@@ -1172,7 +1172,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });
     case "secret_present_elf":
-      return vis({ scale: 0.95, bulk: 0.88 }, "present_box", "hood_liripipe", "none", "none", "#7ad957", undefined, {
+      return vis({ scale: 0.95, bulk: 0.88 }, "present_box", "none", "none", "none", "#7ad957", undefined, {
         posePreset: "support", materialPreset: "secret_festive", attachmentPreset: "present_elf",
         stateVariants: { attacking: ["present_spark"], "ability-active": ["present_spark"] },
       });

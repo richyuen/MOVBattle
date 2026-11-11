@@ -2071,3 +2071,40 @@ export function clamsHat(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * [S] 517 the Present Elf's elf cap (secret.present_elf.png: a deep green floppy cap over the crown, a thick cream fur band round the brow just
+ * over the eyes, an orange-brown pompom on the cap's front above the band, the cap's tip flopping over to one side; the face bare under it;
+ * audit 515 a.1 "a green ball covering the whole head over a brim"). Spec in head widths W, heights H, depths D (head box, centre c, front +z;
+ * e the eyes' top): a 10-sided fur band .bandH H tall from .over H above e, .bandW W across (x D/W deep); the cap a 10-sided cone from the
+ * band's top, .capW W at its foot to .capTop W, .capH H tall; its tip a tapered chain over ELF_TIP [x W, y H over the cap top, z D] from
+ * .tipRoot W to .tipEnd W; a pompom ico .pom W across on the cap front .pomY H over the band top. Green and pompom lit cloth self-lit .12,
+ * the fur unlit cream (LESSONS 442); all out of the glow. The generic hood off (unitVisuals hat none).
+ */
+const ELF_CAP = {
+  over: 0.02, bandH: 0.2, bandW: 1.2, capW: 1.08, capTop: 0.52, capH: 0.42, tipRoot: 0.5, tipEnd: 0.14, pom: 0.22, pomY: 0.12,
+  green: new Color3(0.02, 0.2, 0.08), fur: new Color3(0.82, 0.76, 0.6), pomC: new Color3(0.45, 0.12, 0.03),
+};
+const ELF_TIP: [number, number, number][] = [[0, 0, 0], [0.06, 0.2, -0.05], [0.24, 0.3, 0.05], [0.42, 0.22, 0.2], [0.52, 0.04, 0.32]];
+export function elfCap(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = ELF_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const green = mf.get("cloth", C.green, { emissive: C.green.scale(0.12), roughness: 1 });
+  const fur = mf.get("unlit", C.fur, { emissive: C.fur });
+  const pomM = mf.get("cloth", C.pomC, { emissive: C.pomC.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const bandLo = e + H * C.over, bandHi = bandLo + H * C.bandH;
+  const band = MeshBuilder.CreateCylinder("elfCapFur", { height: bandHi - bandLo, diameterTop: W * C.bandW * 0.97, diameterBottom: W * C.bandW, tessellation: 10 }, scene);
+  band.parent = head; band.position.set(c.x, (bandLo + bandHi) / 2, c.z); band.scaling.z = D / W; band.material = fur; out.push(band);
+  const capTop = bandHi + H * C.capH;
+  const cap = MeshBuilder.CreateCylinder("elfCap", { height: capTop - bandHi, diameterTop: W * C.capTop, diameterBottom: W * C.capW, tessellation: 10 }, scene);
+  cap.parent = head; cap.position.set(c.x, (bandHi + capTop) / 2, c.z - D * 0.04); cap.scaling.z = D / W; cap.material = green; out.push(cap);
+  const pts = ELF_TIP.map(([x, y, z]) => new Vector3(c.x + x * W, capTop + y * H - H * 0.04, c.z - D * 0.04 + z * D));
+  taper(scene, "elfCapTip", pts, W * C.tipRoot, W * C.tipEnd, head, green, out);
+  const pom = MeshBuilder.CreateIcoSphere("elfCapPompom", { radius: (W * C.pom) / 2, subdivisions: 1, flat: true }, scene);
+  pom.parent = head; pom.position.set(c.x, bandHi + H * C.pomY, c.z + D * 0.5 + W * C.pom * 0.2); pom.material = pomM; out.push(pom);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
