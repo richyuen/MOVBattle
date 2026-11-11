@@ -1601,6 +1601,17 @@ export class ProceduralAnimator {
       this._armTo(shoulderJ, elbowJ, handJ, fist, w, 2);
     }
   }
+  /** [S] 520 an overhead carry: the right and left fists solved onto these world points each frame (RuntimeUnit._tendSafeCarry sets them; null: off). */
+  carryOverheadAt: [Vector3, Vector3] | null = null;
+  private _carryOverhead(): void {
+    const pts = this.carryOverheadAt;
+    if (!pts) return;
+    const w = 1 - Math.min(1, this._limp);
+    if (w <= 0.01) return;
+    const b = this._body;
+    this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, pts[0], w, 2);
+    this._armTo(b.leftShoulder, b.leftElbow, b.leftHand, pts[1], w, 2);
+  }
   private _applyBullFists(): void {
     if (!this.bullFists || this.walkStyle === "quadruped" || (this._state !== AnimState.Idle && this._state !== AnimState.Walking)) return;
     const b = this._body, F = BULL_FISTS, k = (1 - this._charge) * (1 - Math.min(1, this._limp));
@@ -2508,6 +2519,7 @@ export class ProceduralAnimator {
     this._carryDory();
     this._applyBullFists();
     this._raiseGuns(dt);
+    this._carryOverhead();
     this._hangFlasks();
     this._carryBoulder();
     this._holdDynamite();

@@ -21,6 +21,8 @@ const CATAPULT_THROW = { swing: 0.12, hold: 0.5, lower: 0.7 };
 const SENTINEL_SWAP = { hold: 2.5 };
 /** [S] 520 the raptor mount's run (spec at RuntimeUnit._tendRaptorGait). */
 const RAPTOR_GAIT = { amp: 0.75, rate: 2.6, full: 3, ease: 8, bob: 0.06 };
+/** [S] 520 the Bank Robbers' overhead carry (spec at RuntimeUnit._tendSafeCarry). */
+const SAFE_CARRY = { inset: 0.15 };
 /*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
  * upward. Heavier units may require more balloons to float"; Appearance: the arrow's ball "expand[s] into balloons"). A man a balloon arrow strikes
@@ -1284,6 +1286,7 @@ export class RuntimeUnit {
       this._drawnFlung = flung;
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
+    this._tendSafeCarry();
     this.animator.update(dt);
     this._spinDrum(dt);
     this._throwArm(dt);
@@ -2691,6 +2694,42 @@ export class RuntimeUnit {
     g.amp += (Math.min(1, speed / G.full) * G.amp - g.amp) * Math.min(1, dt * G.ease);
     g.legs.forEach((leg, i) => { leg.rotation.x = Math.sin(g.phase + i * Math.PI) * g.amp; });
     this.body.hip.position.y = g.rest + Math.abs(Math.sin(g.phase)) * g.amp / G.amp * G.bob * g.rest;
+  }
+
+  /**
+   * [S] 520 the Bank Robbers carry the safe overhead (audit 515 b.1: "TABS: both men with hands raised under the safe; ours both point pistols
+   * forward"; secret.bank_robbers.png; card "a duo of outlaws carrying an enormous safe"). While the pair's safe (the "safe" box on the safe actor,
+   * propBuilder OVERHEAD_SAFE) is up, each robber's fists are held under its floor straight over his shoulders, .inset of the shoulder span in
+   * toward his middle, the arms solved up onto them (ProceduralAnimator.carryOverheadAt); his pistols are put away (the "flintlock" props hidden).
+   * Off once the safe is gone or hidden, or he is down.
+   */
+  private _safeCarry: { safe: TransformNode | null; pistols: TransformNode[] } | null = null;
+  private _tendSafeCarry(): void {
+    if (this.definition.id !== "secret.bank_robbers" || this.visualConfig.special === "safe_bundle") return;
+    if (!this._safeCarry) {
+      const lead = this._linkedParent ?? this;
+      const actor = [...lead._linkedChildren].find((c) => c.visualConfig.special === "safe_bundle");
+      const safe = actor?.body.hip.getChildMeshes(false).find((m) => m.name === "safe") ?? null;
+      if (!safe) return;
+      const pistols = [this.body.rightHand, this.body.leftHand].flatMap((h) => h.getDescendants(false, (n) => n.name === "flintlock") as TransformNode[]);
+      this._safeCarry = { safe, pistols };
+    }
+    const c = this._safeCarry!;
+    const up = c.safe && !c.safe.isDisposed() && c.safe.isEnabled() && !this._isDead;
+    for (const p of c.pistols) p.setEnabled(!up);
+    if (!up) { this.animator.carryOverheadAt = null; return; }
+    const safe = c.safe as Mesh;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = safe; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const box = safe.getBoundingInfo().boundingBox;
+    const floor = box.minimumWorld.y;
+    const b = this.body;
+    for (const n of [b.root, b.hip, b.torso, b.rightShoulder, b.leftShoulder]) n.computeWorldMatrix(true);
+    const r = b.rightShoulder.getAbsolutePosition(), l = b.leftShoulder.getAbsolutePosition();
+    const mid = r.add(l).scale(0.5);
+    const at = (s: Vector3) => new Vector3(s.x + (mid.x - s.x) * SAFE_CARRY.inset, floor, s.z + (mid.z - s.z) * SAFE_CARRY.inset);
+    this.animator.carryOverheadAt = [at(r), at(l)];
   }
 
   /** [S] 520 throws the Infernal Whip's chain out at `to()` (secretDress ChainWhip.lash); false without a chain or while a lash is out. */
