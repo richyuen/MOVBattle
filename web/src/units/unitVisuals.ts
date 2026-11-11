@@ -1133,7 +1133,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "duelist", materialPreset: "secret_demon", weaponVariant: "executioner_axe",
       });
     case "secret_shouter":
-      return vis({ scale: 1.35, bulk: 1.25, headSize: 1.18 }, "none", "none", "none", "cape", "#92d7ff", undefined, {
+      // [R] 513 (a.1) a standard lanky Wobbler (card Size 1.05x; secret.shouter.red.png: crotch to sole ~43% of his height, slim hips), not the
+      // 1.35 squat hulk: the slim long-legged cut of the other lanky men (legLength 1.3, thin thighs and shins)
+      return vis({ scale: 1.1, bulk: 0.88, torsoWidth: 0.95, headSize: 1.08, legLength: 1.3, upperLegWidth: 0.92, lowerLegWidth: 0.82 }, "none", "none", "none", "cape", "#92d7ff", undefined, {
         posePreset: "shouter", materialPreset: "secret_holy", attachmentPreset: "shouter", fxPreset: "wind",
         stateVariants: { attacking: ["shout_ring"], "ability-active": ["shout_ring"] },
       });

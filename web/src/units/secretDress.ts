@@ -238,46 +238,88 @@ export function executionerVest(scene: Scene, body: ArticulatedBody, team: Color
   return out;
 }
 
+/** The bead eyes' box (both eyes and rims), read into the head mesh's frame. */
+function eyeBoxInHead(body: ArticulatedBody): { lo: Vector3; hi: Vector3 } | null {
+  const head = body.headMesh;
+  const eyes = body.allMeshes.filter((m) => /_[lr]Eye(Rim)?$/.test(m.name));
+  if (!eyes.length) return null;
+  for (let n: TransformNode | null = head; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+  const inv = Matrix.Invert(head.getWorldMatrix());
+  const lo = new Vector3(Infinity, Infinity, Infinity), hi = new Vector3(-Infinity, -Infinity, -Infinity);
+  for (const eye of eyes) {
+    for (let n: TransformNode | null = eye; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+    eye.refreshBoundingInfo();
+    for (const v of eye.getBoundingInfo().boundingBox.vectorsWorld) {
+      const p = Vector3.TransformCoordinates(v, inv);
+      lo.minimizeInPlace(p); hi.maximizeInPlace(p);
+    }
+  }
+  return { lo, hi };
+}
+
 /**
- * [S] 500 the Shouter's Nordic helmet (secret.shouter.red.png; audit 500 a.1: "helmet: a bare team head - TABS a dark iron Nordic helmet with
- * curled brown horns and a nose guard"). The render: a dark grey faceted iron bowl over the crown and the sides of the head, its rim just over the
- * bead eyes, a broad nose guard and two cheek plates hanging down the face either side of it to the mouth, the eyes looking out between them; out
- * of each side over the ears a thick tan horn extending sideways, with a short downturned tip.
- * Spec in head widths W, heights H, depths D (the head box, its centre c; e the eyes' top in the head frame): an 8-sided iron bowl .bowl W across
- * from .rim H over e up to .top H over the centre, domed over the top (a half sphere .dome H tall); a brow band .band H tall round its foot,
- * .bandOut proud; a nose guard .noseW W wide from the band down .nose H, standing .proud D in front of the face; cheek plates .cheekW W wide,
- * .cheek H long at .cheekX W out, tipped in .cheekTilt rad; per side a horn rooted at the bowl's side .hornY H over e, through HORN_PATH
- * [x W out, y H up, z D back] tapering from .hornRoot W to .hornTip W. Iron dark lit cloth .iron self-lit .12 (LESSONS: metal reads near black);
- * horn brown .horn. All out of the glow.
+ * [R] 513 the Shouter's Nordic helm, rebuilt (CONFIRM 509 and 512 failed a on the figure; blockers a.2 "a flat-topped box cap with a brim-like front
+ * edge", a.3 "two small dark blocks beside the eyes like goggles"). Spec read off secret.shouter.red.png and .blue.png: a dark iron helm that is a
+ * low rounded dome over the crown, its rim coming down to the brow just over the eyes and on down the sides of the head to the jaw (ear guards) and
+ * round the back to the nape; on the face a plate from the brow to the nose: a brow bar dipping to a point between the eyes, cheek plates outside
+ * each eye down to below it, an under-eye bar from each cheek plate in to a nose guard that narrows to a point over the mouth; the eyes look out of
+ * the two holes so framed, the chin and mouth bare team skin. Out of each side a thick tan horn, out sideways then curled down at the tip.
+ * Spec in head widths W, heights H, depths D (the head box, centre c) and the eye box (lo..hi, both eyes) in the head frame:
+ *   dome: a 5-segment half sphere .dome W across (x D for z), from .rim H over the eye top up to .crown H over c (no straight bowl wall);
+ *   brow band round its foot .band H tall, .bandW W across; ear guards per side .earW D long, .ear H down from the band, .earX W out, splayed .earTilt;
+ *   back plate .backW W wide down to the ear guards' foot; on the face (front at the eyes' back + .stand D): a brow V .browH H tall over the eyes,
+ *   cheek plates .cheekW W wide outside the eyes from the band to .under H under the eye bottom; under-eye bars .barH H tall from cheek to nose;
+ *   a nose guard .noseW W wide at the eyes narrowing to .noseTip W, .nose H down from the eye bottom.
+ *   Horns: HORN_PATH [x W out, y H up, z D back] from the dome's side .hornY H over the eye top, .hornRoot W to .hornTip W.
+ * Iron dark lit cloth .iron self-lit .12 (LESSONS: metal reads near black); horn brown .horn. All flat-shaded, out of the glow.
  */
 const SHOUTER_HELM = {
-  iron: new Color3(0.2, 0.21, 0.23), horn: new Color3(0.72, 0.44, 0.24), bowl: 1.22, rim: 0.02, top: 0.66, dome: 0.32, band: 0.12, bandOut: 0.04,
-  noseW: 0.2, nose: 0.42, proud: 0.56, cheekW: 0.24, cheek: 0.36, cheekX: 0.46, cheekTilt: 0.12, hornY: 0.12, hornRoot: 0.39, hornTip: 0.11,
+  iron: new Color3(0.2, 0.21, 0.23), horn: new Color3(0.72, 0.44, 0.24), dome: 1.24, rim: 0.03, crown: 0.64, band: 0.11, bandW: 1.27,
+  earW: 0.78, ear: 0.5, earX: 0.58, earTilt: 0.08, backW: 1.1, stand: 0.02, browH: 0.11, cheekW: 0.24, under: 0.14, barH: 0.1,
+  noseW: 0.16, noseTip: 0.07, nose: 0.34, hornY: 0.16, hornRoot: 0.39, hornTip: 0.11,
 };
 const HORN_PATH: [number, number, number][] = [[0.52, 0, 0], [0.73, 0.035, 0.015], [0.94, 0.047, 0.04], [1.12, 0.015, 0.07], [1.20, -0.065, 0.08], [1.22, -0.14, 0.08]];
 export function shouterHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
   const C = SHOUTER_HELM, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
   const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
-  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const eyes = eyeBoxInHead(body) ?? { lo: new Vector3(c.x - W * 0.3, c.y, c.z + D * 0.4), hi: new Vector3(c.x + W * 0.3, c.y + H * 0.15, c.z + D * 0.55) };
+  const e = eyes.hi.y, eb = eyes.lo.y, ex = (eyes.lo.x + eyes.hi.x) / 2, eHalf = (eyes.hi.x - eyes.lo.x) / 2;
   const iron = mf.get("cloth", C.iron, { emissive: C.iron.scale(0.12), roughness: 1 });
   const horn = mf.get("cloth", C.horn, { emissive: C.horn.scale(0.12), roughness: 1 });
   const out: Mesh[] = [];
-  const put = (m: Mesh, material: Material): Mesh => { m.parent = head; m.material = material; out.push(m); return m; };
-  const foot = e + H * C.rim, crown = c.y + H * C.top, bowlH = crown - foot;
-  const bowl = put(MeshBuilder.CreateCylinder("shouterHelm", { height: bowlH, diameterTop: W * C.bowl * 1.02, diameterBottom: W * C.bowl, tessellation: 8 }, scene), iron);
-  bowl.rotation.y = Math.PI / 8; bowl.scaling.z = (D * C.bowl) / (W * C.bowl); bowl.position.set(c.x, foot + bowlH / 2, c.z);
-  const dome = put(MeshBuilder.CreateSphere("shouterHelmDome", { diameter: 1, segments: 4, slice: 0.5 }, scene), iron);
-  dome.scaling.set(W * C.bowl * 1.02, H * C.dome * 2, D * C.bowl * 1.02); dome.position.set(c.x, crown, c.z);
-  const band = put(MeshBuilder.CreateCylinder("shouterHelmBand", { height: H * C.band, diameter: W * (C.bowl + C.bandOut * 2), tessellation: 8 }, scene), iron);
-  band.rotation.y = Math.PI / 8; band.scaling.z = D / W; band.position.set(c.x, foot + (H * C.band) / 2, c.z);
-  const face = c.z + D * C.proud;
-  const nose = put(MeshBuilder.CreateBox("shouterHelmNose", { width: W * C.noseW, height: H * C.nose, depth: D * 0.1 }, scene), iron);
-  nose.position.set(c.x, foot + H * 0.04 - (H * C.nose) / 2, face);
+  const put = (m: Mesh, material: Material = iron): Mesh => { m.parent = head; m.material = material; out.push(m); return m; };
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number): Mesh => {
+    const m = put(MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene));
+    m.position.set(x, y, z);
+    return m;
+  };
+  const foot = e + H * C.rim, crown = c.y + H * C.crown;
+  const dome = put(MeshBuilder.CreateSphere("shouterHelmDome", { diameter: 1, segments: 5, slice: 0.5 }, scene));
+  dome.scaling.set(W * C.dome, (crown - foot) * 2, D * C.dome); dome.position.set(c.x, foot, c.z);
+  const band = put(MeshBuilder.CreateCylinder("shouterHelmBand", { height: H * C.band, diameter: W * C.bandW, tessellation: 10 }, scene));
+  band.rotation.y = Math.PI / 10; band.scaling.z = (D * C.dome) / (W * C.bandW); band.position.set(c.x, foot + (H * C.band) / 2 - H * 0.02, c.z);
+  const guardFoot = foot - H * C.ear;
   for (const side of [-1, 1]) {
-    const cheek = put(MeshBuilder.CreateBox("shouterHelmCheek", { width: W * C.cheekW, height: H * C.cheek, depth: D * 0.08 }, scene), iron);
-    cheek.position.set(c.x + side * W * C.cheekX, foot - (H * C.cheek) / 2 - H * 0.12, face - D * 0.03);
-    cheek.rotation.z = side * C.cheekTilt;
+    const ear = box("shouterHelmEar", W * 0.1, H * C.ear, D * C.earW, c.x + side * W * C.earX, foot - (H * C.ear) / 2, c.z - D * 0.06);
+    ear.rotation.z = side * C.earTilt;
+  }
+  box("shouterHelmBack", W * C.backW, foot - guardFoot, D * 0.1, c.x, (foot + guardFoot) / 2, c.z - D * 0.58);
+  // the face plate, in front of the face just behind the eyes' front
+  const front = Math.max(eyes.lo.z, c.z + D / 2) + D * C.stand, depth = D * 0.09;
+  for (const side of [-1, 1]) {
+    const brow = box("shouterHelmMaskBrow", eHalf * 1.15, H * C.browH, depth, ex + side * eHalf * 0.55, e + (H * C.browH) / 2 - H * 0.01, front);
+    brow.rotation.z = side * 0.22; // dips to a point between the eyes
+    const outer = ex + side * (eHalf + (W * C.cheekW) / 2);
+    const cheekTop = foot, cheekBot = eb - H * C.under;
+    const cheek = box("shouterHelmMaskCheek", W * C.cheekW, cheekTop - cheekBot, depth, outer, (cheekTop + cheekBot) / 2, front - D * 0.02);
+    cheek.rotation.z = side * 0.1;
+    const bar = box("shouterHelmMaskBar", eHalf * 1.1, H * C.barH, depth, ex + side * eHalf * 0.5, eb - (H * C.barH) / 2 - H * 0.01, front);
+    bar.rotation.z = side * -0.3; // slopes down to the nose guard
+  }
+  const nose = put(MeshBuilder.CreateCylinder("shouterHelmMaskNose", { height: H * C.nose, diameterTop: W * C.noseW, diameterBottom: W * C.noseTip, tessellation: 4 }, scene));
+  nose.rotation.y = Math.PI / 4; nose.scaling.z = 0.45; nose.position.set(ex, eb - (H * C.nose) / 2 + H * 0.02, front + D * 0.02);
+  for (const side of [-1, 1]) {
     const pts = HORN_PATH.map(([x, y, z]) => new Vector3(c.x + side * x * W, e + H * C.hornY + y * H, c.z - z * D));
     taper(scene, "shouterHorn", pts, W * C.hornRoot, W * C.hornTip, head, horn, out);
   }
@@ -285,25 +327,32 @@ export function shouterHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/**
+ * [R] 513 the Shouter's iron vest, rebuilt (blocker a.4 "a flat slab on the chest front, with team torso showing at the sides and shoulders").
+ * Spec read off secret.shouter.blue.png: a grey iron shell round the whole trunk from over the shoulders to just under the waist, wider at the chest
+ * than at its hem, faceted, its hem cut with a shallow point at the front; the team tunic shows under it to the crotch. In the yoke's box (centre c,
+ * half size h; front +z): a 10-sided shell .wide h.x across at the top and .hem of that at the foot, .deep h.z deep, from .top h.y over c down to
+ * .low h.y under it; a front point .point h.y deep at the hem; the trunk under it re-clothed in team cloth x .tunic. Iron as the helm, out of the glow.
+ */
+const SHOUTER_VEST = { wide: 2.3, hem: 0.9, deep: 2.5, top: 1.04, low: 1.3, point: 0.2, tunic: 0.8 };
 export function shouterVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
-  const torso = body.torsoMesh;
-  const { center, extendSize } = torso.getBoundingInfo().boundingBox;
-  const mf = getMaterialFactory();
-  const iron = SHOUTER_HELM.iron;
-  const material = mf.get("cloth", iron, { emissive: iron.scale(0.12) });
-  torso.material = mf.get("cloth", team.scale(0.52));
+  const V = SHOUTER_VEST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const yoke = body.allMeshes.find((mesh) => mesh.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const { center: c, extendSize: h } = yoke.getBoundingInfo().boundingBox;
+  const iron = mf.get("cloth", SHOUTER_HELM.iron, { emissive: SHOUTER_HELM.iron.scale(0.12), roughness: 1 });
+  const tunicColor = team.scale(V.tunic);
+  body.torsoMesh.material = mf.get("cloth", tunicColor, { emissive: tunicColor.scale(0.12), roughness: 1 });
   const out: Mesh[] = [];
-  for (const side of [-1, 1]) {
-    const panel = MeshBuilder.CreateBox("shouterVestPanel", {
-      width: extendSize.x * 0.93, height: extendSize.y * 1.78, depth: extendSize.z * 0.49,
-    }, scene);
-    panel.parent = torso;
-    panel.position.set(center.x + side * extendSize.x * 0.45, center.y + extendSize.y * 0.08, center.z + extendSize.z * 0.94);
-    panel.rotation.y = side * 0.19;
-    panel.rotation.z = side * 0.07;
-    panel.material = material;
-    out.push(panel);
-  }
+  const top = c.y + h.y * V.top, low = c.y - h.y * V.low, tall = top - low;
+  const shell = MeshBuilder.CreateCylinder("shouterVestShell", { height: tall, diameterTop: h.x * V.wide, diameterBottom: h.x * V.wide * V.hem, tessellation: 10 }, scene);
+  shell.parent = yoke; shell.position.set(c.x, (top + low) / 2, c.z);
+  shell.rotation.y = Math.PI / 10; shell.scaling.z = (h.z * V.deep) / (h.x * V.wide);
+  shell.material = iron; out.push(shell);
+  const point = MeshBuilder.CreateCylinder("shouterVestPoint", { height: h.y * V.point, diameterTop: h.x * 0.9, diameterBottom: 0, tessellation: 3 }, scene);
+  point.parent = yoke; point.rotation.y = Math.PI; point.scaling.z = 0.25;
+  point.position.set(c.x, low - (h.y * V.point) / 2, c.z + (h.z * V.deep) / 2 - h.z * 0.12);
+  point.material = iron; out.push(point);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
 
@@ -792,7 +841,7 @@ export function shouterBreeches(scene: Scene, body: ArticulatedBody, team: Color
     const { center, extendSize: size } = thigh.getBoundingInfo().boundingBox;
     const top = 0.94, hem = (knee.position.y - thigh.position.y + SHOUTER_LEG.hem - center.y) / size.y;
     const at = (f: number) => hem + (top - hem) * f;
-    const shape = [[0, hem], [1.1, hem], [1.46, at(0.3)], [1.42, at(0.62)], [1.14, top], [0, top]]
+    const shape = [[0, hem], [1.1, hem], [1.3, at(0.3)], [1.26, at(0.62)], [1.08, top], [0, top]] // [R] 513 narrower at the hip (a.1 "wide bulging hips")
       .map(([width, height]) => new Vector3(width * size.x, height * size.y, 0));
     const breech = MeshBuilder.CreateLathe("shouterBreech", { shape, tessellation: 7 }, scene);
     breech.parent = thigh;
@@ -835,6 +884,10 @@ export function shouterKneeWraps(scene: Scene, body: ArticulatedBody): Mesh[] {
       band.material = cloth; band.convertToFlatShadedMesh(); out.push(band);
     }
   }
+  // [R] 513 brown boots under the wraps (secret.shouter.red.png), not the team foot
+  const brown = new Color3(0.2, 0.09, 0.06);
+  const boot = getMaterialFactory().get("cloth", brown, { emissive: brown.scale(0.15), roughness: 1 });
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) { foot.material = boot; scene.getGlowLayerByName("glow")?.addExcludedMesh(foot); }
   return out;
 }
 
