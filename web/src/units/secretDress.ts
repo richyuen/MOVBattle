@@ -1819,3 +1819,76 @@ export function bomberVest(scene: Scene, body: ArticulatedBody, team: Color3): M
   return out;
 }
 
+/**
+ * [S] 516 the Taekwondo's gi jacket (secret.taekwondo.red.png: a team wrap jacket, a broad cream lapel band from each side of the neck down and in
+ * to cross at the belt, the right over the left; wide straight team sleeves to the wrist; a near-black belt knotted at the front with two tails
+ * hanging and splayed; audit 515 a.1 "sleeveless team vest block", a.2 "bare team arms", a.3 "no belt"). Spec in torso widths TW, heights TH,
+ * depths TD (torso box, torso frame): torso, yoke and pads in team cloth; per side a cream lapel .lapW TW wide from .lapTop TW out at the collar
+ * to .cross TW past the middle at .lapDeep TH down, .lapOut TW proud of the chest; a cream collar band round the back of the neck; the belt
+ * .beltH TH tall at .beltAt TH over the torso foot, .beltOut round, a knot box and two tails .tail TH long splayed .splay rad. Per upper and lower
+ * arm an 8-sided team shell (.upper/.lower of the limb's width round, the forearm's flaring .flare at the wrist). Cream unlit (LESSONS 442),
+ * near-black lit cloth self-lit .4 (LESSONS 494), out of the glow.
+ */
+const TKD_GI = {
+  lapW: 0.17, lapTop: 0.24, lapDeep: 0.86, cross: 0.06, lapOut: 0.035, beltH: 0.1, beltAt: 0.08, beltOut: 1.1, tail: 0.42, splay: 0.32,
+  upper: 1.7, lower: 1.85, flare: 1.3, over: 0.12,
+  cream: new Color3(0.95, 0.86, 0.76), black: new Color3(0.08, 0.06, 0.07),
+};
+export function taekwondoGi(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = TKD_GI, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cloth = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const cream = mf.get("unlit", C.cream, { emissive: C.cream });
+  const black = mf.get("cloth", C.black, { emissive: C.black.scale(0.4), roughness: 1 });
+  for (const m of [body.torsoMesh, ...body.allMeshes.filter((x) => /_yoke$|_[lr]Pad$/.test(x.name))]) m.material = cloth;
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, sc = tm.scaling;
+  const TW = tb.extendSize.x * 2 * sc.x, TH = tb.extendSize.y * 2 * sc.y, TD = tb.extendSize.z * 2 * sc.z;
+  const top = tm.position.y + (tb.center.y + tb.extendSize.y) * sc.y, cx = tm.position.x + tb.center.x * sc.x, cz = tm.position.z + tb.center.z * sc.z;
+  const front = cz + TD / 2;
+  const out: Mesh[] = [];
+  const slab = (name: string, a: Vector3, e: Vector3, w: number, d: number, material: Material): Mesh => {
+    const v = e.subtract(a);
+    const m = MeshBuilder.CreateBox(name, { width: w, height: v.length(), depth: d }, scene);
+    m.parent = body.torso; m.material = material; m.position.copyFrom(a.add(e).scale(0.5));
+    m.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), v.normalize(), new Quaternion());
+    out.push(m);
+    return m;
+  };
+  // the lapels: the left one first, the right one laid over it a little prouder, each running past the middle so they cross
+  for (const side of [-1, 1]) {
+    const z = front + TW * (C.lapOut + (side > 0 ? 0.02 : 0));
+    slab("tkdLapel", new Vector3(cx + side * TW * C.lapTop, top + TH * 0.02, z), new Vector3(cx - side * TW * C.cross, top - TH * C.lapDeep, z), TW * C.lapW, TW * 0.04, cream);
+  }
+  // the collar band round the back of the neck, joining the lapels' tops
+  const collar = MeshBuilder.CreateBox("tkdCollar", { width: TW * C.lapTop * 2 + TW * C.lapW, height: TH * 0.08, depth: TW * 0.05 }, scene);
+  collar.parent = body.torso; collar.material = cream; collar.position.set(cx, top + TH * 0.01, cz - TD / 2 - TW * 0.02); out.push(collar);
+  for (const side of [-1, 1]) {
+    const wing = MeshBuilder.CreateBox("tkdCollarSide", { width: TW * 0.05, height: TH * 0.08, depth: TD * 1.02 }, scene);
+    wing.parent = body.torso; wing.material = cream; wing.position.set(cx + side * TW * (C.lapTop + C.lapW / 2), top + TH * 0.01, cz); out.push(wing);
+  }
+  // the belt, its knot and two tails
+  const beltY = top - TH + TH * C.beltAt;
+  const band = MeshBuilder.CreateBox("tkdBelt", { width: TW * C.beltOut, height: TH * C.beltH, depth: TD * C.beltOut + TW * 0.05 }, scene);
+  band.parent = body.torso; band.material = black; band.position.set(cx, beltY, cz); out.push(band);
+  const kz = cz + (TD * C.beltOut) / 2 + TW * 0.05;
+  const knot = MeshBuilder.CreateBox("tkdBeltKnot", { width: TW * 0.2, height: TH * C.beltH * 1.5, depth: TW * 0.08 }, scene);
+  knot.parent = body.torso; knot.material = black; knot.position.set(cx, beltY, kz); knot.rotation.z = 0.25; out.push(knot);
+  for (const side of [-1, 1]) {
+    const a = new Vector3(cx + side * TW * 0.05, beltY - TH * C.beltH * 0.3, kz + TW * 0.01);
+    const e = a.add(new Vector3(side * Math.sin(C.splay) * TH * C.tail, -Math.cos(C.splay) * TH * C.tail, TW * 0.03));
+    slab("tkdBeltTail", a, e, TW * 0.1, TW * 0.035, black);
+  }
+  // wide sleeves to the wrist
+  for (const [arm, lower] of [[body.leftUpperArm, false], [body.rightUpperArm, false], [body.leftLowerArm, true], [body.rightLowerArm, true]] as const) {
+    const { center: c, extendSize: s } = arm.getBoundingInfo().boundingBox;
+    const r = s.x * 2 * (lower ? C.lower : C.upper), over = lower ? 0 : s.y * 2 * C.over;
+    const shell = MeshBuilder.CreateCylinder(lower ? "tkdSleeveLower" : "tkdSleeveUpper", {
+      height: s.y * 2 + over, diameterTop: lower ? r * C.flare : r, diameterBottom: lower ? r * C.flare : r * 1.02, tessellation: 8,
+    }, scene);
+    shell.parent = arm; shell.position.set(c.x, c.y + over / 2, c.z); shell.scaling.z = s.z / s.x; shell.rotation.y = Math.PI / 8;
+    shell.material = cloth; out.push(shell);
+    arm.material = cloth;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
