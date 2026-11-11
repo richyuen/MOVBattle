@@ -3751,6 +3751,13 @@ export class SimulationSystem {
     unit.holdHeading(Math.atan2(-away.x, -away.z));
     this._recovers.set(unit, { dir, from: now, foe, dist: D.dist, seconds: D.seconds, flip });
     this._dodgeReadyAt.set(unit, now + D.cooldown);
+    // the flip takes the Jester off his feet: a kick he was winding up is dropped, and he may kick again once he lands
+    const kick = this._kicks.get(unit);
+    if (kick) {
+      unit.animator.setKick(false);
+      this._kicks.delete(unit);
+      if (!kick.done) this._kickReadyAt.set(unit, now + D.seconds);
+    }
     // the blow was struck at where he stood: it comes down on air
     this._pendingBlows = this._pendingBlows.filter((b) => !(b.attacker === foe && b.target === unit));
     this._logAbility(unit, D.kind, now, foe.position);
