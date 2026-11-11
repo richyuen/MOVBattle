@@ -49,6 +49,9 @@ const ICE_ARROW = {
   shaft: new Color3(0.34, 0.6, 0.86), ice: new Color3(0.46, 0.74, 0.98),
 };
 
+/** [S] 520 the Ice Mage's icicle (spec at _dressIcicle). */
+const ICICLE = { long: 0.62, wide: 0.13, shards: 4, shard: 0.42, splay: 0.32, ice: new Color3(0.55, 0.82, 1), self: 0.35 };
+
 /** [S] 413 the Firework Arrow in flight: tube long/wide (m), green bands, head and flame cones, the arc as a share of the distance (was .25: it flew over the frame). */
 /** [S] 418 the Firework Arrow's blast round the man it strikes (_fireworkBurst). */
 const FIREWORK_BLAST = { radius: 2.5, share: 1 };
@@ -237,6 +240,8 @@ interface ProjectileSpawnOptions {
   fireArrow?: boolean;
   /** [S] 519 Cupid's love arrow: a pink heart head and a trail of pink hearts behind it (_dressHeartArrow). */
   heartArrow?: boolean;
+  /** [S] 520 the Ice Mage's icicle: a long pale-blue faceted spike of ice, point first, in place of the bolt (_dressIcicle). */
+  icicle?: boolean;
   /** A potion, carrying its thrower's unit id: it does not blow up but splashes green, and every man in the splash goes drunk (DRUNK_SPLASH, RuntimeUnit.getDrunk). */
   drunk?: string;
   /** [S] 427 A ground point the missile comes down on instead of the man (the Pirate Queen's Bomb Spin bombs, lobbed out all round her): it does not follow him. */
@@ -529,6 +534,7 @@ export class ProjectileSystem {
     if (options.iceArrow && shape === "arrow" && !held) this._dressIceArrow(mesh);
     if (options.fireArrow && shape === "arrow" && !held) this._dressFireArrow(mesh);
     if (options.heartArrow && shape === "arrow" && !held) this._dressHeartArrow(mesh);
+    if (options.icicle && !held) this._dressIcicle(mesh);
     if (held) {
       // Laid on its line of flight from the frame it leaves the hand, not drawn pointing north until the first flight step turns it
       const dir = targetPos.add(new Vector3(0, options.targetLift ?? 0.5, 0)).subtract(mesh.position);
@@ -1431,6 +1437,36 @@ export class ProjectileSystem {
       const dir = new Vector3(side * I.icleOut * 0.4, -1, -I.icleRake);
       shard("iceArrowIcic", len, I.icleWide * (0.72 + 0.28 * ((i * 3) % 3) / 2), dir,
         new Vector3(side * I.icleWide * 0.5, -I.icleDrop - I.icleWide * 0.25, foot - I.icleFrom - t * I.icleSpan));
+    }
+  }
+
+  /**
+   * [S] 520 the Ice Mage's Icicle (audit 515 c.1: "projectile - TABS: icicle; ours is a dark arrow shaft with a steel tip"; card Weapons "Icicle Throw:
+   * projectile Icicle"; secret.ice_mage.png). The bolt's shaft and tip are gone; in their place a long six-sided spike of pale-blue ice (ICICLE.long m,
+   * .wide m across its butt) point first along +z, a short blunt butt cone behind it, and .shards thinner splinters standing out of the butt raked back,
+   * so it reads as a jagged shard of ice and not a dart. Ice-blue, a little self-lit so it stays pale against the grass, out of the glow.
+   */
+  private _dressIcicle(root: TransformNode): void {
+    const C = ICICLE;
+    for (const child of root.getChildMeshes(true)) child.dispose();
+    const ice = this._getMat("icicle_ice", C.ice, C.self);
+    const glow = this._scene.getGlowLayerByName("glow");
+    const spike = (name: string, len: number, wide: number, dir: Vector3, at: Vector3, sides = 6): void => {
+      const m = MeshBuilder.CreateCylinder(name, { height: len, diameterTop: 0, diameterBottom: wide, tessellation: sides }, this._scene);
+      m.convertToFlatShadedMesh();
+      m.rotationQuaternion = Quaternion.Identity();
+      Quaternion.FromUnitVectorsToRef(new Vector3(0, 1, 0), dir.normalize(), m.rotationQuaternion);
+      m.position.copyFrom(at.add(dir.normalize().scale(len * 0.5)));
+      m.material = ice;
+      m.parent = root;
+      glow?.addExcludedMesh(m);
+    };
+    const butt = -C.long * 0.35;
+    spike("icicleBody", C.long, C.wide, new Vector3(0, 0, 1), new Vector3(0, 0, butt));
+    spike("icicleButt", C.wide * 1.2, C.wide, new Vector3(0, 0, -1), new Vector3(0, 0, butt));
+    for (let k = 0; k < C.shards; k++) {
+      const a = k * ((Math.PI * 2) / C.shards) + 0.4;
+      spike("icicleShard", C.long * C.shard * (0.75 + 0.25 * (k % 2)), C.wide * 0.45, new Vector3(Math.cos(a) * C.splay, Math.sin(a) * C.splay, 1), new Vector3(Math.cos(a) * C.wide * 0.3, Math.sin(a) * C.wide * 0.3, butt), 4);
     }
   }
 
