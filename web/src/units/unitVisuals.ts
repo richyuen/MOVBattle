@@ -179,7 +179,7 @@ export interface UnitVisualConfig {
 export type WeaponVariant =
   | "jester_dagger"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -1157,8 +1157,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { moving: ["pom_streamers"], attacking: ["pom_streamers"], "ability-active": ["pom_streamers"] },
       });
     case "secret_cupid":
+      // [S] 516 (b.1) the Heart Bow (propBuilder HEART_BOW): orange, pink hearts along both limbs and at the tips
       return vis({ scale: 0.9, bulk: 0.85, armLength: 1.08 }, "bow", "none", "none", "wings", "#ffbfd1", undefined, {
-        posePreset: "archer", materialPreset: "secret_holy", attachmentPreset: "bow_ready", wingStyle: "cupid",
+        posePreset: "archer", materialPreset: "secret_holy", attachmentPreset: "bow_ready", wingStyle: "cupid", weaponVariant: "heart_bow",
         stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
       });
     case "secret_mace_spinner":

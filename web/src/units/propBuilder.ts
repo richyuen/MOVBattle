@@ -4305,6 +4305,48 @@ function buildRepeatingCrossbow(scene: Scene, s: number): Mesh {
   slot.parent = root; slot.position.set(0, (C.stockH * s) / 2 + 0.02 * s, zNose - 0.02 * s);
   return root;
 }
+/*
+ * [S] 516 Cupid's Heart Bow (card Main Hand "Heart Bow"; secret.cupid.red.png: a tall orange recurve as long as his trunk and thighs, a small
+ * pink-magenta heart on each tip and a row of small hearts along each limb's outer face; audit 515 b.1 "plain dark-brown arc"). Spec in prop units
+ * s, in the plain bow's frame (stave along y before the plain bow's lay, belly toward -z): the stave .tall s long through 9 points, bowed .belly of
+ * its length, .thick s round; .hearts hearts a limb at .at of the half length on the belly's outer face, each .heart s across, and one .tipHeart s
+ * across standing off each tip. A heart is two balls over a diamond, faced along the stave's normal. Unlit orange and magenta (palette.png).
+ */
+const HEART_BOW = { tall: 0.62, belly: 0.3, thick: 0.026, at: [0.32, 0.5, 0.68], heart: 0.05, tipHeart: 0.085, orange: new Color3(0.8, 0.38, 0.1), pink: new Color3(0.8, 0.12, 0.55), string: 0.012 };
+function buildHeartBow(scene: Scene, s: number): Mesh {
+  const C = HEART_BOW, mf = getMaterialFactory();
+  const orange = mf.get("unlit", C.orange, { emissive: C.orange }), pink = mf.get("unlit", C.pink, { emissive: C.pink });
+  const z = (t: number): number => (0.04 - C.tall * C.belly * (1 - t * t)) * s;
+  const path: Vector3[] = [];
+  for (let i = 0; i <= 8; i++) { const t = i / 4 - 1; path.push(new Vector3(0, t * C.tall * s * 0.5, z(t))); }
+  const bow = MeshBuilder.CreateTube("bow", { path, radius: C.thick * s, tessellation: 6, cap: Mesh.CAP_ALL }, scene);
+  bow.material = orange; bow.convertToFlatShadedMesh();
+  const string = MeshBuilder.CreateCylinder("string", { height: C.tall * s, diameter: C.string * s, tessellation: 4 }, scene);
+  string.parent = bow; string.position.z = 0.04 * s; string.material = mat(scene, new Color3(0.85, 0.8, 0.75));
+  const heart = (size: number, y: number, zz: number, tilt: number): void => {
+    const root = new TransformNode("bowHeart", scene);
+    root.parent = bow; root.position.set(0, y, zz); root.rotation.x = tilt;
+    for (const side of [-1, 1]) {
+      const lobe = MeshBuilder.CreateIcoSphere("bowHeartLobe", { radius: size * 0.3, subdivisions: 1 }, scene);
+      lobe.parent = root; lobe.material = pink; lobe.position.set(side * size * 0.22, size * 0.12, 0); lobe.scaling.z = 0.6; lobe.convertToFlatShadedMesh();
+    }
+    const point = MeshBuilder.CreateBox("bowHeartPoint", { width: size * 0.5, height: size * 0.5, depth: size * 0.3 }, scene);
+    point.parent = root; point.material = pink; point.position.set(0, -size * 0.1, 0); point.rotation.z = Math.PI / 4; point.convertToFlatShadedMesh();
+  };
+  for (const side of [-1, 1]) {
+    for (const f of C.at) {
+      const t = side * f;
+      // on the belly's outer face (-z of the stave), stood up the limb, tilted to the limb's slope
+      heart(C.heart * s, t * C.tall * s * 0.5, z(t) - C.thick * s * 1.6, -side * Math.atan2(2 * C.tall * C.belly * f, C.tall * 0.5) * 0.6);
+    }
+    // the tip heart stands off the tip along the limb, point inward
+    const tipY = side * (C.tall * s * 0.5 + C.tipHeart * s * 0.4);
+    heart(C.tipHeart * s, tipY, z(side) , side > 0 ? 0 : Math.PI);
+  }
+  bow.rotation.z = Math.PI / 2;
+  bow.position.y = 0.1 * s;
+  return bow;
+}
 function buildJarlAxe(scene: Scene, fit: BladeFit, A = JARL_AXE, crescent = JARL_CRESCENT): Mesh {
   const L = fit.stand * A.long;
   const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: A.thick * L, tessellation: 7 }, scene);
@@ -5519,6 +5561,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         return stave;
       }
       if (type === "crossbow" && variant === "repeating_crossbow") return buildRepeatingCrossbow(scene, s); // [S] 501 (REPEATING_CROSSBOW)
+      if (type === "bow" && variant === "heart_bow") return buildHeartBow(scene, s); // [S] 516 (HEART_BOW)
       // The stave is an arc: its tips meet the string and its belly bows a third of its length away from it
       const bowHeight = type === "crossbow" ? 0.25 : 0.4;
       const stavePath: Vector3[] = [];
