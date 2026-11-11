@@ -2538,7 +2538,8 @@ export class SimulationSystem {
     let healAmount = Math.max(20, attackProfile.damage);
     if (getBehaviorPreset(supporter) === "secret_cheerleader") {
       healAmount = Math.max(healAmount, 45);
-      if (this.visualEffects) this.visualEffects.spawnSmokePuff(ally.position);
+      // [S] 518 (c.1) multi-coloured confetti round the buffed man (card Characteristics), not a smoke puff
+      if (this.visualEffects) this.visualEffects.spawnConfetti(ally.position);
     }
     ally.heal(healAmount);
     // The Healer's Priest Staff: a gold beam from the staff's orb to the man, who goes gold while it holds (HEAL_BEAM, GILD), until near the next heal

@@ -114,6 +114,11 @@ const FIREWORK_BURST = {
   sparks: 26, radius: 1.25, long: 0.34, thick: 0.05, grow: 0.45, fall: 0.35, lift: 0.9, coreSize: 0.45, seconds: 0.65,
   core: new Color3(1, 0.95, 0.75), colors: [new Color3(1, 0.55, 0.12), new Color3(1, 0.88, 0.25), new Color3(0.45, 1, 0.35), new Color3(1, 0.3, 0.2)],
 };
+/** [S] 518 the Cheerleader's confetti round the buffed ally (spawnConfetti). */
+const CONFETTI = {
+  chips: 36, size: 0.11, thin: 0.012, ring: 0.55, spread: 0.35, low: 0.5, high: 2.1, rise: 0.6, fall: 0.9, swirl: 1.6, seconds: 1.6,
+  colors: [new Color3(1, 0.2, 0.55), new Color3(1, 0.85, 0.15), new Color3(0.2, 0.85, 1), new Color3(0.4, 1, 0.3), new Color3(0.75, 0.35, 1), new Color3(1, 0.5, 0.1)],
+};
 /** [S] 417 the Samurai's block slash (spawnSlashArc). */
 const SLASH_ARC = { arc: 2.2, radius: 0.75, band: 0.16, steps: 12, tilt: 0.6, sweep: 0.7, seconds: 0.3, white: new Color3(1, 1, 0.92) };
 const FLAME_JET = {
@@ -378,6 +383,50 @@ export class VisualEffects {
       }
       mat.alpha = Math.max(0, Math.min(1, remaining * 2));
     }, dispose: () => mat.dispose() });
+  }
+
+  /**
+   * [S] 518 the Cheerleader's buff (card Characteristics: "units that are being buffed will have multi-coloured confetti appear around them"): .chips
+   * flat square chips .size across in six bright unlit colours, scattered on a ring .ring m round the man (golden-angle spread, +-.spread) from .low
+   * to .high m up, drifting up .rise m then down .fall m while swirling round him at .swirl rad/s and tumbling, fading out over the last third of
+   * their .seconds. Out of the glow.
+   */
+  spawnConfetti(at: Vector3): void {
+    const C = CONFETTI;
+    const root = new TransformNode("confetti", this._scene);
+    root.position.copyFrom(at);
+    const glow = this._scene.getGlowLayerByName("glow");
+    const mats = C.colors.map((c) => {
+      const m = new StandardMaterial("confettiMat", this._scene);
+      m.disableLighting = true; m.emissiveColor = c; m.diffuseColor = c; m.backFaceCulling = false;
+      return m;
+    });
+    const golden = Math.PI * (3 - Math.sqrt(5));
+    const chips: { m: Mesh; a: number; r: number; y: number; spin: number }[] = [];
+    for (let i = 0; i < C.chips; i++) {
+      const m = MeshBuilder.CreateBox("confettiChip", { width: C.size, height: C.thin, depth: C.size * 0.7 }, this._scene);
+      m.parent = root; m.material = mats[i % mats.length]; m.isPickable = false;
+      m.rotation.set(i * 1.3, i * 0.7, i * 2.1);
+      glow?.addExcludedMesh(m);
+      const f = (i + 0.5) / C.chips;
+      chips.push({ m, a: golden * i, r: C.ring * (1 + C.spread * Math.sin(i * 2.7)), y: C.low + (C.high - C.low) * ((f * 7.3) % 1), spin: 4 + (i % 5) });
+    }
+    this._effects.push({
+      root,
+      remaining: C.seconds,
+      update: (dt, remaining) => {
+        const t = 1 - Math.max(0, Math.min(1, remaining / C.seconds));
+        const dy = C.rise * Math.min(1, t * 4) - C.fall * t * t;
+        for (const c of chips) {
+          const a = c.a + C.swirl * t * C.seconds;
+          c.m.position.set(Math.cos(a) * c.r, c.y + dy, Math.sin(a) * c.r);
+          c.m.rotation.x += c.spin * dt; c.m.rotation.z += c.spin * 0.7 * dt;
+        }
+        const fade = Math.min(1, (1 - t) * 3);
+        for (const m of mats) m.alpha = fade;
+      },
+      dispose: () => { for (const m of mats) m.dispose(); },
+    });
   }
 
   spawnFireworkBurst(at: Vector3, lift = FIREWORK_BURST.lift): void {
