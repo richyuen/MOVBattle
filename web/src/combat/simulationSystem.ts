@@ -547,6 +547,8 @@ const DEATH_CHARGE = { from: 1.5, reach: 14, speed: 2.4, seconds: 1.6, overrun: 
  */
 /** [S] 520 the Infernal Whip's lash (spec at _tryWhipLash). */
 const WHIP_LASH = { out: 0.22, hold: 0.3, back: 0.35, radius: 1.25, blast: 0.35 };
+/** [S] 520 the Bank Robbers' safe hurl (spec at _trySafeHurl). */
+const SAFE_HURL = { speed: 9, apex: 1.6, spin: 4, radius: 5, damage: 3, edge: 0.5, push: 6, lift: 4, ring: 3, lie: 6, sink: 3 };
 const RAPTOR_CHARGE = { from: 1.2, reach: 14, speed: 1.7, seconds: 3, overrun: 4, contact: 0.6, damage: 12, fling: 4, lift: 3, cooldown: 2.5, through: true, log: true };
 /*
  * [S] 387 Big Headbutt (card Weapons "Big Headbutt: Ability - Melee; damage 30; cooldown 5 s; ... force 32500; explosion radius 4.5", Characteristics "a
@@ -1002,6 +1004,8 @@ export class SimulationSystem {
     this._fearHits.clear();
     this._pendingBlows = [];
     this._lashes = [];
+    for (const h of this._safeHurls) h.mesh.dispose(false, false);
+    this._safeHurls = [];
     this._clings.clear();
     this._spentBalloonPacks.clear();
     this._balloonLifts.clear();
@@ -1090,6 +1094,7 @@ export class SimulationSystem {
     // After the animation step, so the frame a blow lands on is the frame its club is down on the man
     if (this._pendingBlows.length > 0) this._landPendingBlows(now);
     if (this._lashes.length > 0) this._landLashes(now);
+    if (this._safeHurls.length > 0) this._stepSafeHurls(now);
     if (this._pendingLaunches.length > 0) this._fireDwelledLaunches(now);
     if (this._pendingThrows.length > 0) this._launchPendingThrows(now);
     this._stepBurning(now);
@@ -1599,6 +1604,82 @@ export class SimulationSystem {
       worldMatrixChain(target.body.headTop);
       const head = target.body.headTop.getAbsolutePosition();
       this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: at.x, y: at.y, z: at.z, head: { x: head.x, y: head.y, z: head.z } });
+    }
+  }
+
+  /**
+   * [S] 520 the Bank Robbers' safe hurl (audit 515 c.1: "missing: safe hurl - summary records only a pistol burst"; card Characteristics "carrying it
+   * nefariously until they come across an enemy unit from 7 away, where they will hurl the safe at the approaching assailants. Upon landing, the safe
+   * will ... [create] a shockwave that will injure or kill everyone in its 5 WM radius. The safe will stay on the ground for a while ... before slowly
+   * sinking into the ground"). Their first attack, while the safe is up over their heads (propBuilder OVERHEAD_SAFE, RuntimeUnit._tendSafeCarry), is
+   * the hurl, not a shot: the carried safe is hidden (their arms come down) and a copy of it flies from where it was in an arc .apex m high at
+   * .speed m/s onto the man's spot, tumbling .spin rad/s; where it lands every foe within .radius m takes the attack's damage times .damage and a
+   * push out from it, a dust ring and smoke go up. It lies there .lie s, then sinks into the ground over .sink s and is gone. The flank robber
+   * holds his fire while the safe is up. Logged "throw_safe" as it leaves their hands (the capture's release) and "safe_land" where it lands.
+   */
+  private _safeHurls: { mesh: Mesh; from: Vector3; to: Vector3; t0: number; dur: number; landed: boolean; half: number; attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3 }[] = [];
+  private _trySafeHurl(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, now: number): boolean {
+    const S = SAFE_HURL;
+    if (attacker.definition.id !== "secret.bank_robbers" || attacker.isDead || target.isDead) return false;
+    const lead = attacker.linkedParent ?? attacker;
+    const actor = lead.linkedChildren.find((c) => c.visualConfig.special === "safe_bundle");
+    const safe = actor?.body.hip.getChildMeshes(false).find((m) => m.name === "safe") as Mesh | undefined;
+    if (!safe || safe.isDisposed() || !safe.isEnabled()) return false;
+    if (attacker !== lead) return true;
+    worldMatrixChain(safe);
+    const from = safe.getAbsolutePosition().clone();
+    const scale = safe.absoluteScaling.clone();
+    const flying = safe.clone("safeThrown", null, false);
+    if (!flying) return false;
+    flying.parent = null;
+    flying.position.copyFrom(from);
+    flying.scaling.copyFrom(scale);
+    flying.rotationQuaternion = null;
+    flying.rotation.set(0, lead.body.root.rotation.y, 0);
+    const glow = flying.getScene().getGlowLayerByName("glow");
+    for (const m of [flying, ...flying.getChildMeshes(false)]) { glow?.addExcludedMesh(m as Mesh); m.setEnabled(true); }
+    safe.setEnabled(false);
+    const half = safe.getBoundingInfo().boundingBox.extendSize.y * scale.y;
+    const to = new Vector3(target.position.x, half, target.position.z);
+    const dur = Math.max(0.35, Vector3.Distance(new Vector3(from.x, 0, from.z), new Vector3(to.x, 0, to.z)) / S.speed);
+    this._safeHurls.push({ mesh: flying, from, to, t0: now, dur, landed: false, half, attacker, target, damage: damage * S.damage, knockback });
+    this._logAbility(attacker, "throw_safe", now, target.position);
+    return true;
+  }
+  private _stepSafeHurls(now: number): void {
+    const S = SAFE_HURL;
+    for (const h of [...this._safeHurls]) {
+      const age = now - h.t0;
+      if (!h.landed) {
+        const u = Math.min(1, age / h.dur);
+        h.mesh.position.copyFrom(Vector3.Lerp(h.from, h.to, u));
+        h.mesh.position.y += 4 * S.apex * u * (1 - u);
+        h.mesh.rotation.x = S.spin * age;
+        if (u < 1) continue;
+        h.landed = true;
+        h.mesh.rotation.x = 0;
+        const at = new Vector3(h.to.x, 0, h.to.z);
+        for (const u2 of this._units) {
+          if (u2.isDead || u2.team === h.attacker.team || !u2.isTargetable || u2.linkedParent) continue;
+          const off = u2.position.subtract(at);
+          off.y = 0;
+          const d = off.length();
+          if (d > S.radius) continue;
+          const out = d > 1e-3 ? off.scale(1 / d) : new Vector3(1, 0, 0);
+          u2.applyDamage(h.damage * (1 - S.edge * d / S.radius), out.scale(S.push));
+          u2.applyBlastLaunch(out, S.push, S.lift);
+        }
+        this.visualEffects?.spawnTrampleRing(at, S.ring);
+        this.visualEffects?.spawnSmokePuff(at, CHARGE_DUST);
+        this._logAbility(h.attacker, "safe_land", now, at);
+        continue;
+      }
+      const sunk = (age - h.dur - S.lie) / S.sink;
+      if (sunk > 0) h.mesh.position.y = h.half - sunk * h.half * 2.2;
+      if (sunk >= 1) {
+        h.mesh.dispose(false, false);
+        this._safeHurls.splice(this._safeHurls.indexOf(h), 1);
+      }
     }
   }
 
@@ -3272,6 +3353,8 @@ export class SimulationSystem {
     if (this._tryBombSmack(attacker, target, damage, knockback, now)) return;
     // [S] 520 the Infernal Whip lashes his chain out onto the man; no dart leaves his hand (WHIP_LASH)
     if (this._tryWhipLash(attacker, target, damage, knockback, now)) return;
+    // [S] 520 the Bank Robbers open by hurling their safe at the man (SAFE_HURL)
+    if (this._trySafeHurl(attacker, target, damage, knockback, now)) return;
 
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
     if (abilities.has("push_force")) {
