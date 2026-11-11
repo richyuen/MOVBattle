@@ -323,7 +323,7 @@ const LANCE_AIM = { hold: 0.6, rate: 4 };
 const STONE_HUG = { side: 0.8, front: -0.1, drop: 0.3 };
 /** [S] 511 the Chu Ko Nu's level carry (_holdRepeatingCrossbow): the weapon fist ahead of the trunk, out to his side and down from the chest's middle (m); the off fist under the stock .under of the magazine's height below the stock. */
 const GLUE_GRIP = { side: 0.85, up: 0.25 };
-const RCB_HOLD = { ahead: 0.16, across: 0.06, drop: 0.12, under: 0.45 };
+const RCB_HOLD = { ahead: 0.16, across: 0.06, drop: 0.12, under: 0.45, lead: 0.1, lift: 0.04 };
 const POLE_GRIP = {
   fanGrip: [-0.28, -0.15],
   bombStickGrip: [0.10, 0.14],
@@ -4689,7 +4689,7 @@ export class ProceduralAnimator {
     for (const n of [b.root, b.hip, b.torso, b.leftShoulder, b.rightShoulder]) n.computeWorldMatrix(true);
     const tb = b.torsoMesh.getBoundingInfo().boundingBox;
     const { fwd, right } = this._heading();
-    const depth = tb.extendSizeWorld.z;
+    const depth = tb.extendSize.z * Math.abs(b.torsoMesh.absoluteScaling.z);
     const grip = tb.centerWorld.add(fwd.scale(depth + H.ahead)).addInPlace(right.scale(H.across)).addInPlace(new Vector3(0, -H.drop, 0));
     this._armTo(b.rightShoulder, b.rightElbow, b.rightHand, grip, w, 2);
     // lay the crossbow level along the heading, the fist where it held the stock
@@ -4698,8 +4698,9 @@ export class ProceduralAnimator {
     const handScale = new Vector3(), handRot = new Quaternion(), handPos = new Vector3();
     hand.decompose(handScale, handRot, handPos);
     const want = Quaternion.FromLookDirectionLH(fwd.scale(-1), Vector3.Up());
-    const at = handPos.add(this._rcbRest.multiply(handScale).applyRotationQuaternion(want));
-    const bowScale = bow.scaling.multiply(handScale);
+    // the stock's middle just ahead of the fist, the fist under it
+    const at = handPos.add(fwd.scale(H.lead)).addInPlace(new Vector3(0, H.lift, 0));
+    const bowScale = bow.absoluteScaling.clone();
     const local = Matrix.Compose(bowScale, want, at).multiply(Matrix.Invert(hand));
     const ls = new Vector3(), lr = new Quaternion(), lp = new Vector3();
     local.decompose(ls, lr, lp);
