@@ -2651,6 +2651,7 @@ export class RuntimeUnit {
 
   dispose(): void {
     if (this._fearSkull) { this._fearSkull.dispose(false, false); this._fearSkull = null; }
+    if (this._loveHearts) { this._loveHearts.dispose(false, false); this._loveHearts = null; }
     if (this._fxParticleSystem) {
       this._fxParticleSystem.stop();
       this._fxParticleSystem.dispose(false);
