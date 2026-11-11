@@ -725,6 +725,65 @@ export function clamsHands(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 520 the CLAMS' summoned clam (secret.clams.png: a clam as wide as a man's shoulders, two grey scalloped half-shells gaping open on a big red
+ * mouth with a pale lip round it, two bead eyes on the top shell; card "throw dozens of weak but quick Clams"; audit 515 c.1 "summoned units - TABS:
+ * clams with eyes and red mouths; ours summons bomb-on-a-stick men"). Built on a summoned small man's root, his own body and props hidden
+ * (simulationSystem _summonUnits): CLAM_CRITTER in metres, +z ahead: a lower shell (a flat half-dome, dome down) .wide x .deep x .low, the upper
+ * one .high tall hinged at the back and gaped .gape rad open, both ribbed by .ribs dark grey ridges; between them a red mouth plate and a pale lip
+ * ring; two white bead eyes with dark pupils on the top shell's front. Sat .lift m off his root (the ground when he walks, his foe's chest when he
+ * clings). Greys and red lit cloth a little self-lit, the eyes and lip unlit, all out of the glow.
+ */
+const CLAM_CRITTER = { wide: 0.62, deep: 0.5, low: 0.12, high: 0.16, gape: 0.6, ribs: 5, lift: 0.14, eye: 0.075,
+  grey: new Color3(0.42, 0.4, 0.4), rib: new Color3(0.22, 0.2, 0.2), red: new Color3(0.62, 0.05, 0.08), lip: new Color3(0.86, 0.84, 0.8) };
+export function clamCritter(scene: Scene, root: TransformNode): Mesh[] {
+  const C = CLAM_CRITTER, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const grey = mf.get("cloth", C.grey, { emissive: C.grey.scale(0.15), roughness: 1 });
+  const rib = mf.get("cloth", C.rib, { emissive: C.rib.scale(0.15), roughness: 1 });
+  const red = mf.get("cloth", C.red, { emissive: C.red.scale(0.25), roughness: 1 });
+  const lip = mf.get("unlit", C.lip, { emissive: C.lip });
+  const white = mf.get("unlit", new Color3(0.95, 0.95, 0.92), { emissive: new Color3(0.95, 0.95, 0.92) });
+  const pupil = mf.get("unlit", new Color3(0.04, 0.04, 0.05), { emissive: new Color3(0.04, 0.04, 0.05) });
+  const out: Mesh[] = [];
+  const base = new TransformNode("clamCritter", scene);
+  base.parent = root; base.position.y = C.lift;
+  const shell = (name: string, parent: TransformNode, h: number, down: boolean): Mesh => {
+    const s = MeshBuilder.CreateSphere(name, { diameter: 1, segments: 5, slice: 0.5 }, scene);
+    s.parent = parent; s.material = grey; s.scaling.set(C.wide, h * 2 * (down ? -1 : 1), C.deep);
+    s.position.z = C.deep / 2;
+    if (down) s.flipFaces(true);
+    out.push(s);
+    for (let i = 0; i < C.ribs; i++) {
+      const a = -0.9 + (1.8 * i) / (C.ribs - 1);
+      const r = MeshBuilder.CreateBox(`${name}Rib`, { width: 0.02, height: 0.02, depth: C.deep * 0.95 }, scene);
+      r.parent = parent; r.material = rib;
+      r.position.set(Math.sin(a) * C.wide * 0.3, (down ? -1 : 1) * h * 0.72, C.deep * 0.5 + Math.cos(a) * 0.02);
+      r.rotation.y = a * 0.6; r.rotation.x = (down ? 1 : -1) * 0.25;
+      out.push(r);
+    }
+    return s;
+  };
+  shell("clamLower", base, C.low, true);
+  const hinge = new TransformNode("clamHinge", scene);
+  hinge.parent = base; hinge.rotation.x = -C.gape;
+  shell("clamUpper", hinge, C.high, false);
+  const mouth = MeshBuilder.CreateCylinder("clamMouth", { height: 0.02, diameter: 1, tessellation: 14 }, scene);
+  mouth.parent = base; mouth.material = red; mouth.scaling.set(C.wide * 0.88, 1, C.deep * 0.85); mouth.position.set(0, 0.01, C.deep * 0.5);
+  mouth.rotation.x = -C.gape * 0.45; out.push(mouth);
+  const ring = MeshBuilder.CreateTorus("clamLip", { diameter: 1, thickness: 0.035, tessellation: 16 }, scene);
+  ring.parent = base; ring.material = lip; ring.scaling.set(C.wide * 0.9, 1, C.deep * 0.88); ring.position.set(0, 0.015, C.deep * 0.5);
+  ring.rotation.x = -C.gape * 0.45; out.push(ring);
+  for (const sx of [-1, 1]) {
+    const eye = MeshBuilder.CreateSphere("clamCritterEye", { diameter: C.eye * 2, segments: 6 }, hinge.getScene());
+    eye.parent = hinge; eye.material = white; eye.position.set(sx * C.eye * 1.15, C.high * 1.6, C.deep * 0.72);
+    const dot = MeshBuilder.CreateSphere("clamCritterPupil", { diameter: C.eye, segments: 6 }, scene);
+    dot.parent = hinge; dot.material = pupil; dot.position.copyFrom(eye.position.add(new Vector3(0, -C.eye * 0.1, C.eye * 0.75)));
+    out.push(eye, dot);
+  }
+  for (const m of out) { if (!/Eye|Pupil|Lip/.test(m.name)) m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 const KONU_ROBE = { knee: -0.02 };
 export function chuKoNuRobe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;

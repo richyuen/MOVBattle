@@ -18,6 +18,7 @@ import { reaperSpear } from "../units/spookyDress";
 import { lassoRope } from "../units/wildWestDress";
 import { bearerReach } from "../units/legacyDress";
 import { monarchDemonForm } from "../units/evilDress";
+import { clamCritter } from "../units/secretDress";
 import { aegisField, aegisOrbits, chronoLights, chronoRingLit, paladinGiantHammer } from "./goodMagic";
 import { TEAM_COLORS } from "../data/factionColors";
 
@@ -4648,6 +4649,11 @@ export class SimulationSystem {
       });
       if (unit) {
         summoned = true;
+        // [S] 520 a CLAMS' summon is a biting clam (secretDress clamCritter): the small man's own body and props are hidden under it
+        if (attacker.definition.id === "secret.clams") {
+          for (const m of [...unit.body.allMeshes, ...unit.propMeshes]) { m.isVisible = false; m.setEnabled(false); }
+          clamCritter(unit.body.root.getScene(), unit.body.root);
+        }
         this._logAbility(attacker, "summon", RuntimeUnit.timeNowSeconds(), pos);
         if (this.visualEffects) {
           this.visualEffects.spawnSmokePuff(
