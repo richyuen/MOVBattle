@@ -545,6 +545,8 @@ const DEATH_CHARGE = { from: 1.5, reach: 14, speed: 2.4, seconds: 1.6, overrun: 
  * spear (his plain attack, if ready), and every enemy within .contact m of its body ahead of its middle is trampled (.damage, flung .fling/.lift).
  * Then it turns and comes again, .cooldown s between runs. Logged "charge" at the start and "trample" at each man.
  */
+/** [S] 520 the Infernal Whip's lash (spec at _tryWhipLash). */
+const WHIP_LASH = { out: 0.22, hold: 0.3, back: 0.35, radius: 1.25, blast: 0.35 };
 const RAPTOR_CHARGE = { from: 1.2, reach: 14, speed: 1.7, seconds: 3, overrun: 4, contact: 0.6, damage: 12, fling: 4, lift: 3, cooldown: 2.5, through: true, log: true };
 /*
  * [S] 387 Big Headbutt (card Weapons "Big Headbutt: Ability - Melee; damage 30; cooldown 5 s; ... force 32500; explosion radius 4.5", Characteristics "a
@@ -999,6 +1001,7 @@ export class SimulationSystem {
     this._burnTickAt = 0;
     this._fearHits.clear();
     this._pendingBlows = [];
+    this._lashes = [];
     this._clings.clear();
     this._spentBalloonPacks.clear();
     this._balloonLifts.clear();
@@ -1086,6 +1089,7 @@ export class SimulationSystem {
     if (this._boxerDashes.size > 0) this._stepBoxerDashes(now);
     // After the animation step, so the frame a blow lands on is the frame its club is down on the man
     if (this._pendingBlows.length > 0) this._landPendingBlows(now);
+    if (this._lashes.length > 0) this._landLashes(now);
     if (this._pendingLaunches.length > 0) this._fireDwelledLaunches(now);
     if (this._pendingThrows.length > 0) this._launchPendingThrows(now);
     this._stepBurning(now);
@@ -1559,6 +1563,43 @@ export class SimulationSystem {
     const recoil = new Vector3(attacker.position.x - target.position.x, 0, attacker.position.z - target.position.z).normalize();
     attacker.applyDamage(attacker.currentHealth, recoil.scale(6).add(new Vector3(0, 4, 0)));
     return true;
+  }
+
+  /**
+   * [S] 520 the Infernal Whip's lash (audit 515 c.1: "the whip extends to the target, range 10; ours throws a dark dart from the hand"; card Weapons
+   * "Infernal Whip: Whip - Melee; range 10; explosion radius 1.25", Characteristics "two flaming whips that will extend toward enemy units, lighting
+   * them on fire as well as inflicting considerable damage to anyone close"). His attack throws the chain in his fist (secretDress ChainWhip.lash)
+   * straight out onto the man's chest over WHIP_LASH.out s; it rests on him .hold s and draws back over .back s. When it reaches him the blade end
+   * bursts (spawnExplosionBurst at .blast) and the blow's harm lands out to .radius m round him, with his burn (on-hit statuses). Logged "throw_lash"
+   * as it leaves the fist (the capture's release) and the landing as a hit on the man.
+   */
+  private _lashes: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; landAt: number }[] = [];
+  private _tryWhipLash(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, now: number): boolean {
+    const W = WHIP_LASH;
+    if (attacker.definition.id !== "secret.infernal_whip" || attacker.isDead || target.isDead) return false;
+    if (attacker.whipLashing || this._lashes.some((l) => l.attacker === attacker)) return true;
+    const chest = (): Vector3 | null => (target.isDead || !this._units.includes(target) ? null : this._chestOf(target));
+    if (!attacker.lashWhipAt(chest, W.out, W.hold, W.back)) return false;
+    this._lashes.push({ attacker, target, damage, knockback, landAt: now + W.out });
+    this._logAbility(attacker, "throw_lash", now, target.position);
+    return true;
+  }
+  private _landLashes(now: number): void {
+    const W = WHIP_LASH;
+    const due = this._lashes.filter((l) => now >= l.landAt);
+    if (due.length === 0) return;
+    this._lashes = this._lashes.filter((l) => now < l.landAt);
+    for (const l of due) {
+      const { attacker, target } = l;
+      if (attacker.isDead || target.isDead || !this._units.includes(target)) continue;
+      const at = this._chestOf(target);
+      this.visualEffects?.spawnExplosionBurst(at, W.blast);
+      this._applyDirectOrSplash(target, l.damage, W.radius, attacker.team, l.knockback);
+      this._applyOnHitStatuses(attacker, target, now, at);
+      worldMatrixChain(target.body.headTop);
+      const head = target.body.headTop.getAbsolutePosition();
+      this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: at.x, y: at.y, z: at.z, head: { x: head.x, y: head.y, z: head.z } });
+    }
   }
 
   /** [S] 446 shows or hides the rider's rope at the ready (wildWestDress LASSO_COIL, the "lassoCoil" node in his right fist). */
@@ -3229,6 +3270,8 @@ export class SimulationSystem {
     if (this._tryFanBlow(attacker, target, damage, now)) return;
     // [S] 503 the Bomb on a Stick smacks the man with the bomb on its pole, which blows up there; it is never thrown (BOMB_SMACK)
     if (this._tryBombSmack(attacker, target, damage, knockback, now)) return;
+    // [S] 520 the Infernal Whip lashes his chain out onto the man; no dart leaves his hand (WHIP_LASH)
+    if (this._tryWhipLash(attacker, target, damage, knockback, now)) return;
 
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
     if (abilities.has("push_force")) {

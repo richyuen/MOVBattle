@@ -2472,7 +2472,7 @@ export function cupidFeet(scene: Scene, body: ArticulatedBody): void {
  * (the capture advances 100 ms chunks). Laid out at spawn hanging to the ground and out ahead-and-aside (.out rad off his facing), so the idle shot
  * finds it lying. Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow.
  */
-const CHAIN_WHIP = { links: 14, long: 1.0, wide: 0.5, thick: 0.22, blade: 0.13, gravity: 22, drag: 2.5, ground: 0.03, friction: 12, passes: 8, step: 1 / 60, out: 0.6, dark: new Color3(0.08, 0.06, 0.07) };
+const CHAIN_WHIP = { links: 14, long: 1.0, wide: 0.5, thick: 0.22, blade: 0.13, gravity: 22, drag: 2.5, ground: 0.03, friction: 12, passes: 8, step: 1 / 60, out: 0.6, sag: 0.04, dark: new Color3(0.08, 0.06, 0.07) };
 export class ChainWhip {
   private readonly _pts: Vector3[] = [];
   private readonly _prev: Vector3[] = [];
@@ -2513,8 +2513,49 @@ export class ChainWhip {
     this._place();
   }
   get meshes(): Mesh[] { return [...this._links, this._blade]; }
+  /**
+   * [S] 520 the lash (audit 515 c.1: "the whip extends to the target, range 10; ours throws a dark dart from the hand"; card Weapons "Whip - Melee;
+   * range 10", Characteristics "two flaming whips that will extend toward enemy units"): for .out s the chain runs straight out of the fist toward
+   * `to()` (the man's chest), its links stretched to cover the gap, sagging .sag of the reach at its middle; it stays on him .hold s, then draws back
+   * to its own length over .back s and falls slack under the rope again. True while a lash is under way.
+   */
+  private _lash: { to: () => Vector3 | null; t: number; out: number; hold: number; back: number; last: Vector3 } | null = null;
+  lash(to: () => Vector3 | null, out: number, hold: number, back: number): boolean {
+    if (this._lash) return false;
+    const at = to();
+    if (!at) return false;
+    this._lash = { to, t: 0, out, hold, back, last: at.clone() };
+    return true;
+  }
+  get lashing(): boolean { return this._lash !== null; }
+  private _stepLash(dt: number): void {
+    const l = this._lash!, n = this._pts.length - 1, natural = this._seg * n;
+    l.t += dt;
+    const at = l.to();
+    if (at) l.last.copyFrom(at);
+    this._hand.computeWorldMatrix(true);
+    const pin = this._hand.getAbsolutePosition().clone();
+    const dir = l.last.subtract(pin);
+    const far = Math.max(natural, dir.length());
+    if (dir.lengthSquared() < 1e-6) dir.set(0, 0, 1);
+    dir.normalize();
+    const ease = (u: number) => 1 - (1 - u) * (1 - u);
+    const reach = l.t < l.out ? natural + (far - natural) * ease(l.t / l.out)
+      : l.t < l.out + l.hold ? far
+        : far + (natural - far) * Math.min(1, (l.t - l.out - l.hold) / l.back);
+    for (let i = 0; i <= n; i++) {
+      const u = i / n;
+      const p = pin.add(dir.scale(reach * u));
+      p.y -= Math.sin(Math.PI * u) * reach * CHAIN_WHIP.sag;
+      if (p.y < CHAIN_WHIP.ground) p.y = CHAIN_WHIP.ground;
+      this._pts[i].copyFrom(p);
+      this._prev[i].copyFrom(p);
+    }
+    if (l.t >= l.out + l.hold + l.back) this._lash = null;
+  }
   step(dt: number): void {
     const C = CHAIN_WHIP;
+    if (this._lash) { this._stepLash(Math.max(0, dt)); this._place(); return; }
     let left = Math.min(0.25, Math.max(0, dt));
     while (left > 1e-6) {
       const h = Math.min(C.step, left);
@@ -2554,6 +2595,8 @@ export class ChainWhip {
       const d = b.subtract(a);
       if (d.lengthSquared() < 1e-8) continue;
       link.position.copyFrom(a.add(b).scale(0.5));
+      // a link stretches along the chain to cover a lash's longer gaps (520), and is its own length at rest
+      link.scaling.y = Math.max(1, d.length() / this._seg);
       Quaternion.FromUnitVectorsToRef(Vector3.Up(), d.normalize(), link.rotationQuaternion!);
       if (i % 2) link.rotationQuaternion!.multiplyInPlace(Quaternion.RotationAxis(Vector3.Up(), Math.PI / 2));
     }

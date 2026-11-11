@@ -2693,6 +2693,12 @@ export class RuntimeUnit {
     this.body.hip.position.y = g.rest + Math.abs(Math.sin(g.phase)) * g.amp / G.amp * G.bob * g.rest;
   }
 
+  /** [S] 520 throws the Infernal Whip's chain out at `to()` (secretDress ChainWhip.lash); false without a chain or while a lash is out. */
+  lashWhipAt(to: () => Vector3 | null, out: number, hold: number, back: number): boolean {
+    return this._chainWhip?.lash(to, out, hold, back) ?? false;
+  }
+  get whipLashing(): boolean { return this._chainWhip?.lashing ?? false; }
+
   dispose(): void {
     this._chainWhip?.dispose(); this._chainWhip = null;
     if (this._fearSkull) { this._fearSkull.dispose(false, false); this._fearSkull = null; }
