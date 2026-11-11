@@ -547,6 +547,8 @@ const DEATH_CHARGE = { from: 1.5, reach: 14, speed: 2.4, seconds: 1.6, overrun: 
  */
 /** [S] 520 the Infernal Whip's lash (spec at _tryWhipLash). */
 const WHIP_LASH = { out: 0.22, hold: 0.3, back: 0.35, radius: 1.25, blast: 0.35 };
+/** [S] 520 the Present Elf's thrown present (spec at _tryPresentThrow). */
+const PRESENT_THROW = { speed: 13.5, apex: 1.4, spin: 6, radius: 1, open: 3, rearm: 12 };
 /** [S] 520 the Bank Robbers' safe hurl (spec at _trySafeHurl). */
 const SAFE_HURL = { speed: 9, apex: 1.6, spin: 4, radius: 5, damage: 3, edge: 0.5, push: 6, lift: 4, ring: 3, lie: 6, sink: 3 };
 const RAPTOR_CHARGE = { from: 1.2, reach: 14, speed: 1.7, seconds: 3, overrun: 4, contact: 0.6, damage: 12, fling: 4, lift: 3, cooldown: 2.5, through: true, log: true };
@@ -1006,6 +1008,10 @@ export class SimulationSystem {
     this._lashes = [];
     for (const h of this._safeHurls) h.mesh.dispose(false, false);
     this._safeHurls = [];
+    for (const p of this._presents) p.node.dispose(false, false);
+    this._presents = [];
+    for (const held of this._presentsAway.keys()) if (!held.isDisposed()) held.setEnabled(true);
+    this._presentsAway.clear();
     this._clings.clear();
     this._spentBalloonPacks.clear();
     this._balloonLifts.clear();
@@ -1095,6 +1101,7 @@ export class SimulationSystem {
     if (this._pendingBlows.length > 0) this._landPendingBlows(now);
     if (this._lashes.length > 0) this._landLashes(now);
     if (this._safeHurls.length > 0) this._stepSafeHurls(now);
+    if (this._presents.length > 0 || this._presentsAway.size > 0) this._stepPresents(now);
     if (this._pendingLaunches.length > 0) this._fireDwelledLaunches(now);
     if (this._pendingThrows.length > 0) this._launchPendingThrows(now);
     this._stepBurning(now);
@@ -1680,6 +1687,88 @@ export class SimulationSystem {
         h.mesh.dispose(false, false);
         this._safeHurls.splice(this._safeHurls.indexOf(h), 1);
       }
+    }
+  }
+
+  /**
+   * [S] 520 the Present Elf's thrown present (audit 515 c.1: "present throw - TABS: the present is thrown at the enemy; ours keeps the box in hand
+   * while summons appear"; card Weapons "Thrown Present: Throwable - Ranged; damage 120-240; range 13; projectile Present; projectile speed 13.5",
+   * Characteristics "throws a present at the opponent, which opens after around 3 seconds, releasing a random unit ... as an ally"). His attack throws
+   * the present held before his chest (secretDress PRESENT, "presentRoot"): it is hidden there and a copy of it flies from where it was in an arc
+   * .apex m high at .speed m/s onto the man's spot, turning .spin rad/s. It lands upright on the ground: the man there takes the attack's damage out to
+   * .radius m. .open s later it bursts open in a puff and one of his summons (summonUnitIds, in turn) steps out of it as his ally; the box is gone.
+   * His hands get a new present .rearm s after the throw. Logged "throw_present" at the let-go (the capture's release), "present_open" at the opening.
+   */
+  private _presents: { node: TransformNode; from: Vector3; to: Vector3; t0: number; dur: number; landed: boolean; openAt: number; attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3 }[] = [];
+  private _presentsAway = new Map<TransformNode, number>();
+  private _presentTurn = new Map<RuntimeUnit, number>();
+  private _tryPresentThrow(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, now: number): boolean {
+    const P = PRESENT_THROW;
+    if (attacker.definition.id !== "secret.present_elf" || attacker.isDead || target.isDead) return false;
+    const held = attacker.body.torso.getChildTransformNodes(true).find((n) => n.name === "presentRoot");
+    if (!held || held.isDisposed()) return false;
+    if (!held.isEnabled()) return true;
+    worldMatrixChain(held);
+    for (const m of held.getChildMeshes(false)) m.computeWorldMatrix(true);
+    const from = held.getAbsolutePosition().clone();
+    const scale = held.absoluteScaling.clone();
+    const node = held.clone("presentThrown", null, false);
+    if (!node) return false;
+    node.parent = null;
+    node.position.copyFrom(from);
+    node.scaling.copyFrom(scale);
+    node.rotationQuaternion = null;
+    node.rotation.set(0, attacker.body.root.rotation.y, 0);
+    const glow = attacker.body.root.getScene().getGlowLayerByName("glow");
+    for (const m of node.getChildMeshes(false)) glow?.addExcludedMesh(m as Mesh);
+    node.setEnabled(true);
+    held.setEnabled(false);
+    this._presentsAway.set(held, now + P.rearm);
+    // the box's floor on the ground: half its height (the box mesh, root-centred) under the root
+    const box = held.getChildMeshes(true).find((m) => m.name === "presentBox");
+    const half = box ? box.getBoundingInfo().boundingBox.extendSize.y * scale.y : 0.25;
+    const to = new Vector3(target.position.x, half, target.position.z);
+    const dur = Math.max(0.3, Vector3.Distance(new Vector3(from.x, 0, from.z), new Vector3(to.x, 0, to.z)) / P.speed);
+    this._presents.push({ node, from, to, t0: now, dur, landed: false, openAt: Infinity, attacker, target, damage, knockback });
+    this._logAbility(attacker, "throw_present", now, target.position);
+    return true;
+  }
+  private _stepPresents(now: number): void {
+    const P = PRESENT_THROW;
+    for (const [held, at] of this._presentsAway) {
+      if (held.isDisposed()) { this._presentsAway.delete(held); continue; }
+      if (now >= at) { held.setEnabled(true); this._presentsAway.delete(held); }
+    }
+    for (const p of [...this._presents]) {
+      if (!p.landed) {
+        const u = Math.min(1, (now - p.t0) / p.dur);
+        p.node.position.copyFrom(Vector3.Lerp(p.from, p.to, u));
+        p.node.position.y += 4 * P.apex * u * (1 - u);
+        p.node.rotation.x = u < 1 ? P.spin * (now - p.t0) : 0;
+        if (u < 1) continue;
+        p.landed = true;
+        p.openAt = now + P.open;
+        if (!p.target.isDead && this._units.includes(p.target)) {
+          this._applyDirectOrSplash(p.target, p.damage, P.radius, p.attacker.team, p.knockback);
+          const neck = this._neckOf(p.target);
+          worldMatrixChain(p.target.body.headTop);
+          const head = p.target.body.headTop.getAbsolutePosition();
+          this.hitLog.push({ t: now, attackerUnit: p.attacker.definition.id, targetUnit: p.target.definition.id, x: neck.x, y: neck.y, z: neck.z, head: { x: head.x, y: head.y, z: head.z } });
+        }
+        this.visualEffects?.spawnKickDust(new Vector3(p.to.x, 0, p.to.z), 1);
+        continue;
+      }
+      if (now < p.openAt) continue;
+      const spot = new Vector3(p.to.x, 0, p.to.z);
+      p.node.dispose(false, false);
+      this._presents.splice(this._presents.indexOf(p), 1);
+      this.visualEffects?.spawnSmokePuff(spot, new Color3(0.95, 0.85, 0.5));
+      this._logAbility(p.attacker, "present_open", now, spot);
+      const ids = p.attacker.definition.summonUnitIds ?? [];
+      if (ids.length === 0 || !this.spawnUnitById || p.attacker.isDead || this.getLivingCount(p.attacker.team) >= this.summonLivingCap) continue;
+      const turn = this._presentTurn.get(p.attacker) ?? 0;
+      this._presentTurn.set(p.attacker, turn + 1);
+      this.spawnUnitById(ids[turn % ids.length], p.attacker.team, spot, { role: "summoned", linkedParent: p.attacker, linkedRelation: "spawned-child" });
     }
   }
 
@@ -3355,6 +3444,8 @@ export class SimulationSystem {
     if (this._tryWhipLash(attacker, target, damage, knockback, now)) return;
     // [S] 520 the Bank Robbers open by hurling their safe at the man (SAFE_HURL)
     if (this._trySafeHurl(attacker, target, damage, knockback, now)) return;
+    // [S] 520 the Present Elf throws the present he holds at the man; nothing appears beside him (PRESENT_THROW)
+    if (this._tryPresentThrow(attacker, target, damage, knockback, now)) return;
 
     if (abilities.has("pull_hook")) knockback = knockback.scale(-0.8);
     if (abilities.has("push_force")) {
