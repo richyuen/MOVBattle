@@ -3963,3 +3963,40 @@ export function bansheeSpiritRings(scene: Scene, body: ArticulatedBody): Mesh[] 
   });
   return out;
 }
+
+/*
+ * [S] 528 (a.2) the Solar Architect's sun halo (secret.solar_architect.red.png: a big flat gold sun standing upright behind and above the bald head, its
+ * middle about a head over the crown: a small 12-sided inner ring about a head and a quarter across, a larger 12-sided outer ring about two heads across,
+ * and 12 thin straight spikes radiating from the outer ring, long ones up and out to the sides about two and a half heads from the middle, shorter ones
+ * between). SUN_HALO in head widths W: centre .up W over the head's top, .back W behind its middle; rings .inner and .outer W across, bars .bar W thick;
+ * .spikes spikes from the outer ring, the long ones (every third, starting straight up) .long W from the middle, the rest .short W; spikes .spikeW W wide
+ * at the root. Unlit gold (palette right wall gold x1), out of the glow, parented to the head.
+ */
+const SUN_HALO = { up: 0.95, back: 0.55, inner: 1.25, outer: 2.1, bar: 0.07, spikes: 12, long: 2.55, short: 1.75, spikeW: 0.11, gold: new Color3(1, 0.7, 0.18) };
+export function solarArchitectHalo(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = SUN_HALO, glow = scene.getGlowLayerByName("glow");
+  const gold = getMaterialFactory().get("unlit", S.gold, { emissive: S.gold });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, top = c.y + b.extendSize.y;
+  const root = new Mesh("sunHalo", scene);
+  root.parent = head;
+  root.position.set(c.x, top + S.up * W, c.z - S.back * W);
+  const out: Mesh[] = [];
+  const put = (m: Mesh): Mesh => { m.parent = root; m.material = gold; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  for (const d of [S.inner, S.outer]) {
+    const path: Vector3[] = [];
+    for (let k = 0; k <= 12; k++) { const a = (k / 12) * Math.PI * 2 + Math.PI / 12; path.push(new Vector3(Math.cos(a) * d * W / 2, Math.sin(a) * d * W / 2, 0)); }
+    put(MeshBuilder.CreateTube("sunHaloRing", { path, radius: (S.bar * W) / 2, tessellation: 4 }, scene));
+  }
+  const R0 = (S.outer * W) / 2;
+  for (let k = 0; k < S.spikes; k++) {
+    const a = Math.PI / 2 + (k / S.spikes) * Math.PI * 2, len = (k % 3 === 0 ? S.long : S.short) * W - R0;
+    const spike = MeshBuilder.CreateCylinder("sunHaloSpike", { height: len, diameterBottom: S.spikeW * W, diameterTop: 0, tessellation: 4 }, scene);
+    spike.scaling.z = 0.4;
+    spike.rotation.z = a - Math.PI / 2;
+    spike.position.set(Math.cos(a) * (R0 + len / 2), Math.sin(a) * (R0 + len / 2), 0);
+    put(spike);
+  }
+  out.push(root as Mesh);
+  return out;
+}

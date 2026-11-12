@@ -1221,7 +1221,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });
     case "secret_solar_architect":
-      return vis({ scale: 1.18, bulk: 0.98 }, "staff", "laurel", "none", "halo", "#f7dd6f", undefined, {
+      // [S] 528 (a.2) the sun halo is secretDress solarArchitectHalo; the small torus halo special retired
+      return vis({ scale: 1.18, bulk: 0.98 }, "staff", "laurel", "none", "none", "#f7dd6f", undefined, {
         posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "hero_halo", fxPreset: "solar",
         stateVariants: { attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
       });
