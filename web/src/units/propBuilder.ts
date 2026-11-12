@@ -3989,6 +3989,71 @@ function buildWizardStaff(scene: Scene, fit: BladeFit): Mesh {
   return shaft;
 }
 /*
+ * [S] 528 (b.1, b.2) the Witch Staff (secret.witch.red.png, .blue.png: a knobbly brown branch taller than she is, wandering a little, a few stub
+ * knots down it and a rope lashed round it under the head; on top a pale whittled stem flaring up into a huge team-coloured mushroom cap, a broad
+ * low faceted dome about three heads across that overhangs the stem). WITCH_STAFF in her standing height H: the branch .long H, .thick H across at
+ * the top and .foot of that at the butt, wandering .wander H; .knots stubs .knot H long; .wraps rope turns .rope H thick from .ropeAt H under the
+ * top; the stem .stem H tall from .stemFoot to .stemTop H across; the cap .cap H across and .capH H tall, 9-sided and flat-shaded, its rim .lip of
+ * its width under the dome's foot. Team cap self-lit cloth, pale stem lit cloth, wood self-lit. Root "staff" with the uprightPole marker (planted
+ * carry, like the Wizard's); its hidden "orb" in the cap, where her spell leaves.
+ */
+const WITCH_STAFF = { long: 1.32, thick: 0.04, foot: 0.75, wander: 0.014, knots: 4, knot: 0.05, wraps: 3, rope: 0.012, ropeAt: 0.06, stem: 0.17,
+  stemFoot: 0.05, stemTop: 0.085, cap: 0.36, capH: 0.11, lip: 0.18, grip: 0.42,
+  wood: new Color3(0.36, 0.17, 0.08), pale: new Color3(0.86, 0.8, 0.66), ropeC: new Color3(0.5, 0.26, 0.12) };
+function buildWitchStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const W = WITCH_STAFF, H = fit.stand, L = W.long * H;
+  const wood = mat(scene, W.wood, 0.14, "cloth"), pale = mat(scene, W.pale, 0.2, "cloth"), rope = mat(scene, W.ropeC, 0.12, "cloth");
+  const capM = mat(scene, team, 0.16, "cloth");
+  const top = L / 2 - W.stem * H;
+  const path: Vector3[] = [];
+  const n = 12;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    path.push(new Vector3(Math.sin(t * Math.PI * 2.5) * W.wander * H, -L / 2 + t * (top + L / 2), Math.cos(t * Math.PI * 1.7) * W.wander * H * 0.6));
+  }
+  const r0 = (W.thick * H) / 2;
+  const shaft = MeshBuilder.CreateTube("staff", { path, radiusFunction: (i) => r0 * (W.foot + (1 - W.foot) * (i / n)), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
+  shaft.id = "witchStaff";
+  new TransformNode("uprightPole", scene).parent = shaft;
+  shaft.material = wood;
+  shaft.convertToFlatShadedMesh();
+  // stub knots where side twigs were cut off, alternating sides down the branch
+  for (let k = 0; k < W.knots; k++) {
+    const p = path[3 + k * 2], side = k % 2 ? -1 : 1;
+    const knot = MeshBuilder.CreateCylinder("witchStaffKnot", { height: W.knot * H, diameterBottom: r0 * 1.5, diameterTop: r0 * 0.9, tessellation: 5 }, scene);
+    knot.setPivotPoint(new Vector3(0, -(W.knot * H) / 2, 0));
+    knot.position.set(p.x, p.y + (W.knot * H) / 2, p.z);
+    knot.rotation.set(0.3 * side, k * 1.3, -side * 0.95);
+    knot.material = wood; knot.convertToFlatShadedMesh(); knot.parent = shaft;
+  }
+  // the rope lashed round the branch under the head, turns slanting across it
+  const tp = path[n];
+  for (let k = 0; k < W.wraps; k++) {
+    const band = MeshBuilder.CreateTorus("witchStaffRope", { diameter: r0 * 2.3, thickness: W.rope * H, tessellation: 10 }, scene);
+    band.position.set(tp.x, tp.y - W.ropeAt * H - k * W.rope * H * 1.6, tp.z);
+    band.rotation.z = (k % 2 ? -1 : 1) * 0.35;
+    band.material = rope; band.parent = shaft;
+  }
+  // the pale stem flaring up from the branch's top into the cap
+  const SH = W.stem * H;
+  const stem = MeshBuilder.CreateCylinder("witchStaffStem", { height: SH, diameterBottom: W.stemFoot * H, diameterTop: W.stemTop * H, tessellation: 7 }, scene);
+  stem.position.set(tp.x, tp.y + SH / 2, tp.z);
+  stem.material = pale; stem.convertToFlatShadedMesh(); stem.parent = shaft;
+  // the cap: a broad low faceted dome on a short drooping rim
+  const C = W.cap * H, CH = W.capH * H;
+  const dome = MeshBuilder.CreateSphere("orb", { diameterX: C, diameterZ: C, diameterY: CH * 2, segments: 4, slice: 0.5 }, scene);
+  dome.position.set(tp.x, tp.y + SH - CH * W.lip, tp.z);
+  dome.material = capM; dome.convertToFlatShadedMesh(); dome.parent = shaft;
+  const rim = MeshBuilder.CreateCylinder("witchStaffCapRim", { height: CH * W.lip * 1.4, diameterTop: C, diameterBottom: C * 0.9, tessellation: 9 }, scene);
+  rim.position.set(tp.x, tp.y + SH - CH * W.lip * 0.7, tp.z);
+  rim.material = capM; rim.convertToFlatShadedMesh(); rim.parent = shaft;
+  const under = MeshBuilder.CreateCylinder("witchStaffGills", { height: CH * 0.08, diameter: C * 0.88, tessellation: 9 }, scene);
+  under.position.set(tp.x, tp.y + SH - CH * W.lip * 1.4, tp.z);
+  under.material = pale; under.parent = shaft;
+  shaft.position.y = (0.5 - W.grip) * L;
+  return shaft;
+}
+/*
  * [S] 469 the Pharaoh's crook (audit 468 pharaoh b.1: "main hand: a long dark club capped with a glowing pale orb - TABS: a striped team/gold crook with a
  * curled hook top"; legacy.pharaoh.red.png, card Main Hand Pharaoh Sickle: a shaft about two-thirds his height, banded team and gold all along, held a third
  * of the way up; at its top it bends over into a round hook that curls back down on itself like a question mark). PHARAOH_CROOK in his standing height H:
@@ -5595,6 +5660,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (type === "staff" && variant === "pharaoh_crook") return buildPharaohCrook(scene, fit, teamColor ?? accent); // [S] 469 (PHARAOH_CROOK)
       if (type === "staff" && variant === "pharaoh_flail") return buildPharaohFlail(scene, fit, teamColor ?? accent); // [S] 470 (PHARAOH_FLAIL)
       if (type === "staff" && variant === "wizard_staff") return buildWizardStaff(scene, fit); // [S] 475 (WIZARD_STAFF)
+      if (type === "staff" && variant === "witch_staff") return buildWitchStaff(scene, fit, teamColor ?? accent); // [S] 528 (WITCH_STAFF)
       const color = type === "bo_staff" ? new Color3(0.6, 0.35, 0.15)
         : new Color3(0.5, 0.35, 0.2);
       const shaft = MeshBuilder.CreateCylinder("staff", { height: 0.85 * s, diameter: 0.05 * s }, scene);

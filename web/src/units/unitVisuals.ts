@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log"
+  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
   | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear";
 
@@ -1203,8 +1203,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["loot_flash"] },
       });
     case "secret_witch":
+      // [S] 528 (b.1) the Witch Staff: a knobbly branch under a big team mushroom cap (propBuilder buildWitchStaff)
       return vis({ scale: 1.05, bulk: 0.95, headSize: 1.08 }, "staff", "witch_hat", "none", "cape", "#7d5ba6", undefined, {
-        posePreset: "caster", materialPreset: "secret_ghost", attachmentPreset: "summoner", fxPreset: "spectral",
+        weaponVariant: "witch_staff", posePreset: "caster", materialPreset: "secret_ghost", attachmentPreset: "summoner", fxPreset: "spectral",
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });
     case "secret_banshee":
