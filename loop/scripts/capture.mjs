@@ -858,6 +858,12 @@ async function main() {
           await take(`unit_${id}_ability`, ability.tick, abilityFrame, pair);
           await take(`unit_${id}_ability_after`, ability.tick + (slow || love ? 60 : snake ? 30 : 9), abilityFrame, pair);
           if (darkGrab) await take(`unit_${id}_grab_blast`, ability.tick + 36, 2, pair);
+          // [evidence 524] the landed safe stays as a barrier, then sinks (card Characteristics; c.3): the same landing camera 3 s on (lying,
+          // SAFE_HURL.lie 6 s) and 7.5 s on (half way down its 3 s sink)
+          if (safeLand) {
+            await take(`unit_${id}_barrier`, ability.tick + 180, abilityFrame, pair);
+            await take(`unit_${id}_sink`, ability.tick + 450, abilityFrame, pair);
+          }
         }
         const second = SECOND_ABILITY[id] ? det.events.find((e) => e.kind === SECOND_ABILITY[id]) : null;
         if (second) {
