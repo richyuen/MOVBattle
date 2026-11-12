@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+525 | 553aa464 | secret.present_elf.a | approved [S] (struck 2; vest on unit_secret.present_elf_front)
+525 | b2419661 | secret.present_elf.a | approved [S] (struck 3)
+525 | 3928c3e9 | secret.ice_mage.a | approved [S] (struck 3; pinafore hem .72->.58)
+525 | 955447c8 | secret.clams.a | approved [S] (struck 5)
+525 | d6371769 | secret.clams.a | approved [S] (struck 6, a PASS; CONFIRM failed a, b)
+525 | 828f37d3 | secret.present_elf.a | approved [S] (struck 4, a PASS, CONFIRM passed a)
+525 | a2721aa3 | secret.ice_mage.a | approved [S] (struck 4)
+525 | adcd07d8 | secret.infernal_whip.a | approved [S] (struck 3)
+525 | 3df5c0a3 | secret.raptor_rider.c | approved [S] (struck 1, c PASS)
+
 524 | 0bf6073a | secret.ice_mage.c | approved [S] (struck 2, c PASS)
 524 | 19c243c3 | secret.clams.c | approved [S] (struck 2, c PASS)
 524 | 0662d3b5, 44a4985b | secret.clams.a | approved [S] (struck 3)
@@ -40,33 +50,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 521 | 16906db2 | secret.clams.a | approved [S] (struck 1)
 521 | 7586c05a, d8013ac0 | secret.mace_spinner.c | approved [S] (struck 1 and 2, c PASS)
 
-520 | 2adeaa70 | secret.raptor_rider.c | approved [S] (struck 2)
-520 | 64e33a1e | secret.infernal_whip.c | approved [S] (struck 1)
-520 | 9ac31691, 60abe3c1 | secret.bank_robbers.b | approved [S] (struck 1, 2; b PASS; a.6 struck)
-520 | 37d214e6, 66d5e2d6 | secret.bank_robbers.c | approved [S] (struck 1)
-520 | d0b30045 | secret.ice_mage.c | approved [S] (struck 1)
-520 | ed6474a0 | secret.present_elf.c | approved [S] (struck 1)
-520 | 30b10961, 7515543f | secret.mace_spinner.b | approved [S] (struck 1, 2, 3; b PASS)
-520 | 24828404 | secret.mace_spinner.a | approved [S] (struck 2)
-520 | 1be75f32 | secret.clams.c | approved [S] (struck 1, 3)
-
-519 | 39a25143 | secret.taekwondo.c | approved [S] (struck 2; c PASS; CONFIRM passed, done)
-519 | f5bf16bc | secret.cheerleader.c | approved [S] (struck 2; c PASS; CONFIRM failed a: cream top, sash)
-519 | 4d2fdb20 | secret.cupid.b | approved [S] (struck 2; b PASS; CONFIRM passed, done)
-519 | 679bc01a, c9417b8f | secret.cupid.c | approved [S] (struck 1)
-519 | a2784aa2, 25713663 | secret.cupid.c | approved [S] (struck 2; c PASS)
-519 | cddeb53a | secret.ice_mage.b | approved [S] (struck 1)
-519 | 604033c4, 135e2158 | secret.raptor_rider.b | approved [S] (struck 2; added 3: wood near-black)
-519 | b2600e04 | secret.present_elf.b | approved [S] (struck 1; bells hidden in the knot)
-519 | 8182f4b6 | secret.infernal_whip.b | approved [S] (struck 1)
-
-
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/SS:525 | ELF_VEST off the yoke, yoke+pads to shirt cream; ELF_TROUSER thigh 1.14 shin 1.12 green (.03,.36,.15) self .25, no tunic skirt; ELF_BOOT shaft .55 round 1.36 cuff 1.52 black; ICE_SHORTS hem knee+.035 round 1.2/1.26 deepTeam .42; iceMagePinafore hem .58 of waist-to-knee; ICE_BOOT shaft .42 round 1.3 fur cuff 1.78 h .17 red (.29,.1,.12); CLAM_TROUSER thigh 1.12 shin 1.1 tan (.72,.5,.3) rope (.78,.42,.28), no tunic skirt; CLAM_BOOT shaft .45 cuff 1.62 wraps 1.46 brown (.26,.11,.06) rust (.62,.24,.12); MAGMA_BAND pad 1.85 padH .42 spike .32 band 1.5 bandH .2 at .55, 4-5 cracks; RAPTOR_STOMP every .22 size .42 ahead .6 side .45; CHAIN_EMBER crack 1.0 crackH .45 spark 2.0 sparkOut .6 | 525 | approved | pinafore hem .72; CHAIN_EMBER crack .8 crackH .16 spark .9 sparkOut .35; none else (team legs/feet, tunic skirts, no bands, no stomp)
 RU/SS/secretDress/PB:524 | ICE_THROW fore 1.5 inward .12 back .45 hold .22 ease .25, HAND_LAUNCH palm; CLAM_THROW every .15 speed 11 apex 1.5 spin 9 short 1.4 spread .9; CLAM_COLLAR neck .9 rim 1.95 rimUp .32 thick .45 inside team^2 x.7; PLANK_WEATHER 4 tones ~(.6,.27,.17) cloth, 2 grooves, 3 teeth .06, bones out of glow; PRESENT_CANE long 1.05 r .035 14 stripes hook .1; INFERNAL_SLEEVE out 1.12 fore .62 cuff .2 flare 1.42; CHAIN_EMBER every 3 crack .8 crackH .16 spark .9 sparkOut .35 hot (1.6,.5,.05); BANK_SLEEVE charcoal (.1,.095,.1) self-lit .4 fore .72 cuff .18; ICE_SASH tall .22 out 1.12 brooch .42 tail .95 | 524 | approved | none (chest launch, summons beside him, no collar, (.2,.11,.055) planks, no cane, bare arms, plain chain, no sleeves, no sash)
 UV/PA:mace spinner build | scale 1.1, bulk 1, square stance, crouch 0, lean .04 | 523 | approved | scale 1.3, bulk 1.2, hashed crouch
 secretDress:PRESENT bell | open 9-sided cup .21W with clapper, splay .34 | 523 | approved | solid .13W cone at bow knot
