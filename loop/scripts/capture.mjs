@@ -866,6 +866,23 @@ async function main() {
           if (safeLand) {
             await take(`unit_${id}_barrier`, ability.tick + 180, abilityFrame, pair);
             await take(`unit_${id}_sink`, ability.tick + 450, abilityFrame, pair);
+            // [evidence 526] once the safe has left their hands the robbers fight on with their fists (card Characteristics; c.4): the first blow
+            // either robber lands after the landing, framed on the robber (1) at the blow and 9 ticks on
+            const punchTick = await page.evaluate(({ id, d, support, from }) => {
+              if (!window.__unitStart(id, d, support)) return null;
+              const t0 = window.__t0;
+              for (let tick = 6; tick <= 900; tick += 6) {
+                window.advanceTime(100);
+                const h = window.game.getHitLog().filter((e) => e.attackerUnit === id && (e.t - t0) * 60 > from);
+                if (h.length) return Math.max(1, Math.round((h[0].t - t0) * 60));
+              }
+              return null;
+            }, { id, d, support, from: ability.tick });
+            if (punchTick) {
+              summary.notes.push(`unit_${id}: first punch after the landing at ${Math.round(punchTick * TICK)} ms`);
+              await take(`unit_${id}_punch`, punchTick, 1, { hold: punchTick });
+              await take(`unit_${id}_punch_after`, punchTick + 9, 1, { hold: punchTick });
+            } else summary.notes.push(`unit_${id}: shot may miss: no punch within 15 s of the landing`);
           }
         }
         const second = SECOND_ABILITY[id] ? det.events.find((e) => e.kind === SECOND_ABILITY[id]) : null;
