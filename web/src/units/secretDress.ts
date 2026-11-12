@@ -2930,6 +2930,32 @@ export function iceMagePinafore(scene: Scene, body: ArticulatedBody): Mesh[] {
     strap.material = cloth;
     out.push(strap);
   }
+  const brass = new Color3(0.8, 0.43, 0.12);
+  const gold = getMaterialFactory().get("cloth", brass, { emissive: brass.scale(0.18), roughness: 0.8 });
+  const glow = scene.getGlowLayerByName("glow");
+  const studY = center.y + size.y * 0.24;
+  const studZ = center.z + size.z * 1.25;
+  for (const side of [-1, 1]) {
+    const stud = MeshBuilder.CreateIcoSphere("iceMageStrapStud", { radius: size.x * 0.15, subdivisions: 1 }, scene);
+    stud.parent = body.torso;
+    stud.position.set(center.x + side * size.x * 0.61, studY, studZ);
+    stud.scaling.z = 0.6;
+    stud.material = gold;
+    glow?.addExcludedMesh(stud);
+    out.push(stud);
+  }
+  for (let index = 0; index < 11; index++) {
+    const offset = (index - 5) / 5;
+    const link = MeshBuilder.CreateTorus("iceMageBibChainLink", {
+      diameter: size.x * 0.15, thickness: size.x * 0.048, tessellation: 8,
+    }, scene);
+    link.parent = body.torso;
+    link.position.set(center.x + offset * size.x * 0.59, studY - size.y * (0.56 - 0.51 * offset ** 2), studZ);
+    link.rotation.set(Math.PI * (index % 2 ? 0.32 : 0.5), 0, offset * 0.65);
+    link.material = gold;
+    glow?.addExcludedMesh(link);
+    out.push(link);
+  }
   return out;
 }
 
