@@ -2754,6 +2754,8 @@ export function maceSpinnerGreaves(scene: Scene, body: ArticulatedBody): Mesh[] 
  * finds it lying. Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow.
  */
 const CHAIN_WHIP = { links: 14, long: 1.0, wide: 0.5, thick: 0.22, blade: 0.13, gravity: 22, drag: 2.5, ground: 0.03, friction: 12, passes: 8, step: 1 / 60, out: 0.6, sag: 0.04, dark: new Color3(0.08, 0.06, 0.07) };
+const CHAIN_EMBER = { every: 3, from: 1, crack: 0.8, crackH: 0.16, tilt: 0.5, sparkEvery: 4, spark: 0.9, sparkOut: 0.35, sparkTilt: 0.9,
+  hot: new Color3(1.6, 0.5, 0.05), sparkC: new Color3(1.5, 1.15, 0.45) };
 export class ChainWhip {
   private readonly _pts: Vector3[] = [];
   private readonly _prev: Vector3[] = [];
@@ -2771,6 +2773,7 @@ export class ChainWhip {
       glow?.addExcludedMesh(link);
       this._links.push(link);
     }
+    this._dressEmbers(scene);
     this._blade = MeshBuilder.CreateCylinder("chainWhipBlade", { height: L * C.blade, diameterTop: 0, diameterBottom: L * C.blade * 0.55, tessellation: 4 }, scene);
     this._blade.scaling.z = 0.3; this._blade.material = dark; this._blade.isPickable = false; this._blade.rotationQuaternion = Quaternion.Identity();
     glow?.addExcludedMesh(this._blade);
@@ -2794,7 +2797,39 @@ export class ChainWhip {
     }
     this._place();
   }
-  get meshes(): Mesh[] { return [...this._links, this._blade]; }
+  /*
+   * [S] 524 (b.3) the chain burns (secret.infernal_whip.red.png: bright orange-white cracks glow in the links all along both whips, sparks and glowing
+   * flecks standing off them). CHAIN_EMBER: on every .every-th link, staggered from .from, a hot crack across both broad faces (.crack of the link's
+   * width, .crackH tall, tilted .tilt), unlit hot orange in the glow layer so it blooms; on every .sparkEvery-th link a spark: a thin bright diamond
+   * .spark of a link long standing .sparkOut out from the link's side at .sparkTilt, unlit yellow-white. Children of their links, so they ride the chain.
+   */
+  private _embers: Mesh[] = [];
+  private _dressEmbers(scene: Scene): void {
+    const E = CHAIN_EMBER, mf = getMaterialFactory();
+    const hot = mf.get("unlit", E.hot, { emissive: E.hot });
+    const spark = mf.get("unlit", E.sparkC, { emissive: E.sparkC });
+    const s = this._seg;
+    this._links.forEach((link, i) => {
+      if ((i + E.from) % E.every === 0) {
+        for (const face of [-1, 1]) {
+          const crack = MeshBuilder.CreateBox("chainWhipEmber", { width: s * CHAIN_WHIP.wide * E.crack, height: s * E.crackH, depth: s * 0.02 }, scene);
+          crack.parent = link; crack.material = hot; crack.isPickable = false;
+          crack.position.z = face * s * CHAIN_WHIP.thick * 0.52;
+          crack.rotation.z = (i % 2 ? 1 : -1) * E.tilt;
+          this._embers.push(crack);
+        }
+      }
+      if ((i + 1) % E.sparkEvery === 0) {
+        const fleck = MeshBuilder.CreateCylinder("chainWhipSpark", { height: s * E.spark, diameterTop: 0, diameterBottom: s * 0.12, tessellation: 4 }, scene);
+        fleck.parent = link; fleck.material = spark; fleck.isPickable = false;
+        const side = i % 4 < 2 ? 1 : -1;
+        fleck.position.set(side * s * (CHAIN_WHIP.wide * 0.5 + E.sparkOut), s * 0.2, 0);
+        fleck.rotation.z = -side * E.sparkTilt;
+        this._embers.push(fleck);
+      }
+    });
+  }
+  get meshes(): Mesh[] { return [...this._links, this._blade, ...this._embers]; }
   /**
    * [S] 520 the lash (audit 515 c.1: "the whip extends to the target, range 10; ours throws a dark dart from the hand"; card Weapons "Whip - Melee;
    * range 10", Characteristics "two flaming whips that will extend toward enemy units"): for .out s the chain runs straight out of the fist toward
