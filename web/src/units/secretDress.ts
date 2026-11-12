@@ -3158,51 +3158,6 @@ export function iceMageFrostHands(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
-/*
- * [S] 524 (a.2) the Present Elf's open vest (secret.present_elf.png: a team vest open down the front over the cream shirt, cream piping along its open
- * edges, three green toggles on one side and three orange pegs on the other; its sides and back closed). ELF_VEST in torso half-sizes, on the torso
- * joint: a back panel and two side panels standing .out off the torso, and two front panels .front wide each from the sides in, leaving the shirt
- * bare between them; a cream strip .trim wide down each front panel's inner edge; .toggles toggles a side, green bars on one and orange pegs on the
- * other. From .top to .low of the torso's height. Team in a deep shade (team squared, as the present), cream unlit; all out of the glow.
- */
-const ELF_VEST = { out: 1.07, front: 0.6, thick: 0.08, trim: 0.1, top: 0.98, low: 0.86, toggles: 3,
-  cream: new Color3(0.9, 0.86, 0.74), green: new Color3(0.04, 0.42, 0.17), orange: new Color3(0.85, 0.36, 0.07) };
-export function presentElfVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
-  const V = ELF_VEST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
-  const T = limbBox(body.torsoMesh);
-  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
-  const deep = sat.scale(peak / Math.max(sat.r, sat.g, sat.b, 1e-3) * 0.8);
-  const vestM = mf.get("cloth", deep, { emissive: deep.scale(0.12), roughness: 1 });
-  const creamM = mf.get("unlit", V.cream, { emissive: V.cream });
-  const greenM = mf.get("cloth", V.green, { emissive: V.green.scale(0.15), roughness: 1 });
-  const orangeM = mf.get("cloth", V.orange, { emissive: V.orange.scale(0.15), roughness: 1 });
-  const top = T.mid + T.half * V.top, low = T.mid - T.half * V.low, h = top - low, cy = (top + low) / 2;
-  const wx = T.wide * V.out, dz = T.deep * V.out, th = T.deep * V.thick;
-  const out: Mesh[] = [];
-  const box = (name: string, w: number, hh: number, d: number, x: number, y: number, z: number, m: Material): Mesh => {
-    const b = MeshBuilder.CreateBox(name, { width: w, height: hh, depth: d }, scene);
-    b.parent = body.torso; b.position.set(x, y, z); b.material = m; glow?.addExcludedMesh(b); out.push(b);
-    return b;
-  };
-  box("elfVestBack", wx * 2 + th, h, th, 0, cy, -dz, vestM);
-  const fw = T.wide * V.front;
-  for (const side of [-1, 1]) {
-    box("elfVestSide", th, h, dz * 2 + th, side * wx, cy, 0, vestM);
-    const fx = side * (wx - fw / 2);
-    box("elfVestFront", fw, h, th, fx, cy, dz, vestM);
-    const inner = side * (wx - fw);
-    box("elfVestTrim", T.wide * V.trim, h, th * 1.3, inner + side * T.wide * V.trim / 2, cy, dz + th * 0.2, creamM);
-    for (let k = 0; k < V.toggles; k++) {
-      const y = top - h * (0.22 + 0.24 * k);
-      const peg = side < 0
-        ? box("elfVestToggle", T.wide * 0.26, T.half * 0.07, th * 1.6, inner + side * T.wide * 0.05, y, dz + th * 0.9, greenM)
-        : box("elfVestPeg", T.wide * 0.16, T.half * 0.06, th * 1.6, inner + side * T.wide * 0.16, y, dz + th * 0.9, orangeM);
-      peg.rotation.z = side * 0.25;
-    }
-  }
-  return out;
-}
-
 /** Cream undershirt with bell sleeves that finish at the wrists. */
 export function presentElfShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
   const color = new Color3(0.9, 0.8, 0.64);
