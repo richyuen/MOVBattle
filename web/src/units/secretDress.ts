@@ -2754,7 +2754,7 @@ export function maceSpinnerGreaves(scene: Scene, body: ArticulatedBody): Mesh[] 
  * finds it lying. Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow.
  */
 const CHAIN_WHIP = { links: 14, long: 1.0, wide: 0.5, thick: 0.22, blade: 0.13, gravity: 22, drag: 2.5, ground: 0.03, friction: 12, passes: 8, step: 1 / 60, out: 0.6, sag: 0.04, dark: new Color3(0.08, 0.06, 0.07) };
-const CHAIN_EMBER = { every: 3, from: 1, crack: 0.8, crackH: 0.16, tilt: 0.5, sparkEvery: 4, spark: 0.9, sparkOut: 0.35, sparkTilt: 0.9,
+const CHAIN_EMBER = { every: 3, from: 1, crack: 1.0, crackH: 0.45, tilt: 0.5, sparkEvery: 4, spark: 2.0, sparkOut: 0.6, sparkTilt: 0.9,
   hot: new Color3(1.6, 0.5, 0.05), sparkC: new Color3(1.5, 1.15, 0.45) };
 export class ChainWhip {
   private readonly _pts: Vector3[] = [];
