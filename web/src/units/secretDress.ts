@@ -3213,7 +3213,8 @@ export function iceMagePinafore(scene: Scene, body: ArticulatedBody): Mesh[] {
   const cloth = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.2), roughness: 1 });
   const top = center.y - size.y * 0.78;
   const knee = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
-  const hem = top + (knee - top) * 0.72;
+  // [S] 525 (a.3): the skirt stops .58 of the way to the knee (was .72), so the dark shorts show below it as in secret.ice_mage.blue.png
+  const hem = top + (knee - top) * 0.58;
   const skirt = MeshBuilder.CreateLathe("iceMagePinaforeSkirt", {
     shape: [new Vector3(size.x * 1.37, hem, 0), new Vector3(size.x * 1.22, hem + (top - hem) * 0.45, 0), new Vector3(size.x * 1.02, top, 0)],
     tessellation: 10,
@@ -3394,3 +3395,24 @@ export function presentElfTrousers(scene: Scene, body: ArticulatedBody): Mesh[] 
   return out;
 }
 
+/*
+ * [S] 525 (a.3) the Ice Mage's dark shorts (secret.ice_mage.blue.png: deep team shorts from under the pinafore skirt to just above the knee, the
+ * team shins bare below them). ICE_SHORTS: per thigh an 8-sided shell from its box top down to .hem above the knee joint (anchored on the knee,
+ * LESSONS 512), .round of the box round at the hip, .hemRound at the hem; thighs and pelvis in the same deep team cloth (team saturated x .deep,
+ * self-lit .12), so the secret_ice tint is off them. Out of the glow.
+ */
+const ICE_SHORTS = { hem: 0.035, round: 1.2, hemRound: 1.26, deep: 0.42 };
+export function iceMageShorts(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const S = ICE_SHORTS, glow = scene.getGlowLayerByName("glow");
+  const deep = deepTeam(team, S.deep);
+  const cloth = getMaterialFactory().get("cloth", deep, { emissive: deep.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const [thigh, knee] of [[body.leftUpperLeg, body.leftKnee], [body.rightUpperLeg, body.rightKnee]] as const) {
+    const { center: c, extendSize: s } = thigh.getBoundingInfo().boundingBox;
+    const hemY = knee.position.y - thigh.position.y + S.hem;
+    out.push(legShell(scene, "iceMageShorts", thigh, cloth, c.y + s.y, hemY, S.round, S.hemRound));
+  }
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (pelvis) { pelvis.material = cloth; glow?.addExcludedMesh(pelvis); }
+  return out;
+}
