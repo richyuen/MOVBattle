@@ -2849,3 +2849,13 @@ export function bareRaptorRiderChest(body: ArticulatedBody): void {
   for (const mesh of body.allMeshes.filter((m) => m.name.endsWith("_yoke"))) mesh.material = body.skinMaterial;
   for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) arm.material = body.skinMaterial;
 }
+
+/** Team cloth for the Infernal Whip's fitted shirt and short shoulder caps. */
+export function infernalShirt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const color = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(0.48);
+  const cloth = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
+  body.torsoMesh.material = cloth;
+  for (const mesh of body.allMeshes.filter((m) => m.name.endsWith("_yoke"))) mesh.material = cloth;
+  return [body.leftUpperArm, body.rightUpperArm].map((arm) =>
+    shirtSleeve(scene, arm, cloth, "infernalShirtCap", 0.45, 1.35, 1.15));
+}
