@@ -265,7 +265,8 @@ function harpoonMuzzleOf(unit: RuntimeUnit): TransformNode | null {
 // 462: the blowdarter's "mouth" was rejected (critic 462: the dart still left at crown height, the pipe on his back): his launch waits for the blowgun hold
 // [S] 463/464 now he holds the blowgun at his mouth (proceduralAnimation BLOWGUN_HOLD): "muzzle" launches from the blowgun's tip, its "blowgunMuzzle" node
 // [S] 502 the Chu Ko Nu's bolts leave his repeating crossbow's nose ("rcbMuzzle", propBuilder REPEATING_CROSSBOW), not the face (audit 500 c.1)
-const HAND_LAUNCH: Record<string, "bow" | "mouth" | "muzzle" | "barrel"> = { "legacy.poacher": "bow", "legacy.blowdarter": "muzzle", "legacy.barrel_roller": "barrel", "secret.chu_ko_nu": "muzzle" };
+// [S] 524 the Ice Mage's icicle leaves the open palm that throws it ("palm": RuntimeUnit.startIceThrow poses the arm and names the hand; audit 515 c.2)
+const HAND_LAUNCH: Record<string, "bow" | "mouth" | "muzzle" | "barrel" | "palm"> = { "legacy.poacher": "bow", "legacy.blowdarter": "muzzle", "legacy.barrel_roller": "barrel", "secret.chu_ko_nu": "muzzle", "secret.ice_mage": "palm" };
 /*
  * [S] 468 the Barrel Roller rolls his barrel into the enemy (audit 457 c.2: "the blast arrives by a throw from 6 m while he stands - TABS: he walks the
  * barrel forward under his feet into the enemy"; card Appearance "to move towards his destination, the Barrel Roller walks forward"). He closes on the
@@ -303,6 +304,12 @@ function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
     if (!core) return null;
     worldMatrixChain(core);
     return core.getAbsolutePosition().clone();
+  }
+  if (how === "palm") {
+    const hand = unit.startIceThrow();
+    if (!hand) return null;
+    worldMatrixChain(hand);
+    return hand.getAbsolutePosition().clone();
   }
   if (how === "muzzle") {
     const muzzle = b.root.getDescendants(false, (n) => n.name === "blowgunMuzzle" || n.name === "rcbMuzzle")[0] as TransformNode | undefined;

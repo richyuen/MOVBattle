@@ -66,6 +66,13 @@ const FROST = { shards: 4, wide: 0.42, color: new Color3(0.5, 0.82, 1.0), glow: 
 const KNEEL_POSE = { hip: 0.1, knee: 1.55, drop: 0.9, bow: 0.35, arms: 0.25 };
 /** [S] 519 the Cheerleader's cheer (spec at RuntimeUnit.startCheer): s held after a buff, raised-V arm angle, forward tip, pump drop, beats per s, elbow. */
 const CHEER = { hold: 1.4, up: 2.5, fore: 0.35, pump: 1.1, hz: 2.5, elbow: 0.15 };
+/*
+ * [S] 524 the Ice Mage throws each icicle from an open hand (card secret.ice_mage: "shoot icicles out of their hands", Main and Off Hand "Icicle
+ * Throw"). Her hands take turns: the throwing arm snaps straight out at the man, shoulder pitched .fore rad forward and .inward toward the midline,
+ * elbow straight; the other arm draws back .back rad. Held .hold s at full reach, then eased back over .ease s. The icicle leaves that palm
+ * (simulationSystem HAND_LAUNCH "palm", startIceThrow).
+ */
+const ICE_THROW = { fore: 1.5, inward: 0.12, back: 0.45, hold: 0.22, ease: 0.25 };
 /** [S] 519 Lovestruck hearts (spec at RuntimeUnit.applyLove), in head widths: big heart, small hearts and their size, height over the head, circle radius, orbit rad/s. */
 const LOVE_HEARTS = { big: 0.95, small: 2, smallSize: 0.45, over: 0.85, ring: 0.75, orbit: 2.4, pink: new Color3(1, 0.18, 0.6) };
 const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
@@ -1929,6 +1936,7 @@ export class RuntimeUnit {
     this._applyPoseOverlay(isAttacking);
     if (this._maceWhirling(now)) this._applyMaceWhirl(now);
     this._applyCheer(now);
+    this._applyIceThrow(now);
     this._holdTeacherParry(now);
     this._updateRaptorBite(now);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
@@ -2458,6 +2466,32 @@ export class RuntimeUnit {
     if (this._isDead) return;
     this._cheerUntil = now + CHEER.hold;
     this._applyCheer(now);
+  }
+  /** [S] 524 ICE_THROW: the next hand throws now; the pose is applied at once so the icicle leaves that palm on this tick. Returns the palm. */
+  private _iceThrowAt = -1;
+  private _iceThrowLeft = true;
+  startIceThrow(): TransformNode | null {
+    const b = this.body;
+    if (!b.leftHand || !b.rightHand) return null;
+    this._iceThrowLeft = !this._iceThrowLeft;
+    this._iceThrowAt = RuntimeUnit.timeNowSeconds();
+    this._applyIceThrow(this._iceThrowAt);
+    return this._iceThrowLeft ? b.leftHand : b.rightHand;
+  }
+  private _applyIceThrow(now: number): void {
+    if (this._iceThrowAt < 0 || this._isDead || this.isToppled || this.isDowned) return;
+    const C = ICE_THROW, t = now - this._iceThrowAt;
+    if (t > C.hold + C.ease) { this._iceThrowAt = -1; return; }
+    const k = t <= C.hold ? 1 : 1 - (t - C.hold) / C.ease;
+    const b = this.body;
+    const [throwS, throwE, restS, side] = this._iceThrowLeft
+      ? [b.leftShoulder, b.leftElbow, b.rightShoulder, 1] as const
+      : [b.rightShoulder, b.rightElbow, b.leftShoulder, -1] as const;
+    throwS.rotation.x += (-C.fore - throwS.rotation.x) * k;
+    throwS.rotation.y += (0 - throwS.rotation.y) * k;
+    throwS.rotation.z += (side * C.inward - throwS.rotation.z) * k;
+    throwE.rotation.x += (0 - throwE.rotation.x) * k;
+    restS.rotation.x += C.back * k;
   }
   private _applyCheer(now: number): void {
     if (now >= this._cheerUntil || this._isDead || this.isToppled || this.isDowned) return;
