@@ -558,7 +558,8 @@ const WHIP_LASH = { out: 0.22, hold: 0.3, back: 0.35, radius: 1.25 };
 /** [S] 520 the Present Elf's thrown present (spec at _tryPresentThrow). */
 const PRESENT_THROW = { speed: 13.5, apex: 1.4, spin: 6, radius: 1, open: 3, rearm: 12 };
 /** [S] 520 the Bank Robbers' safe hurl (spec at _trySafeHurl). */
-const SAFE_HURL = { speed: 9, apex: 1.6, spin: 4, radius: 5, damage: 3, edge: 0.5, push: 6, lift: 4, lie: 6, sink: 3, cashInterval: 0.08 };
+// .fistReady: s after the safe leaves (the flank robber) or lands (the thrower) before the first punch (526)
+const SAFE_HURL = { speed: 9, apex: 1.6, spin: 4, radius: 5, damage: 3, edge: 0.5, push: 6, lift: 4, lie: 6, sink: 3, cashInterval: 0.08, fistReady: 0.5 };
 const RAPTOR_CHARGE = { from: 1.2, reach: 14, speed: 1.7, seconds: 3, overrun: 4, contact: 0.6, damage: 12, fling: 4, lift: 3, cooldown: 2.5, through: true, log: true };
 // [S] 525 (c.1) the raptor's run throws small trample explosions under its feet wherever it moves (card Characteristics "an ability that creates
 // explosions wherever they move"): every .every s of a run a burst (visualEffects spawnExplosionBurst, .size) on the ground .ahead body radii ahead of
@@ -1646,9 +1647,16 @@ export class SimulationSystem {
     const lead = attacker.linkedParent ?? attacker;
     const actor = lead.linkedChildren.find((c) => c.visualConfig.special === "safe_bundle");
     const safe = actor?.body.hip.getChildMeshes(false).find((m) => m.name === "safe") as Mesh | undefined;
-    // 520b: neither robber shoots while their safe is still in the air: it lands first
-    if (this._safeHurls.some((h) => h.attacker === lead && !h.landed)) return true;
-    if (!safe || safe.isDisposed() || !safe.isEnabled()) return false;
+    // [S] 526 (audit c.4; card Characteristics: after the hurl the pair fight on with their fists) once the safe has left their hands each robber
+    // becomes a bare-fisted brawler on his own next attack, pistols kept put away (RuntimeUnit._tendSafeCarry), his first punch SAFE_HURL.fistReady s on
+    if (attacker.fistsOnly) return false;
+    const gone = !safe || safe.isDisposed() || !safe.isEnabled();
+    if (gone) {
+      attacker.animator.dropPistols();
+      attacker.disarmToFists(now, SAFE_HURL.fistReady);
+      this._logAbility(attacker, "fists", now);
+      return true;
+    }
     if (attacker !== lead) return true;
     worldMatrixChain(safe);
     const from = safe.getAbsolutePosition().clone();
@@ -1668,6 +1676,9 @@ export class SimulationSystem {
     const dur = Math.max(0.35, Vector3.Distance(new Vector3(from.x, 0, from.z), new Vector3(to.x, 0, to.z)) / S.speed);
     this._safeHurls.push({ mesh: flying, from, to, t0: now, dur, landed: false, half, attacker, target, damage: damage * S.damage, knockback, nextCashAt: now });
     this._logAbility(attacker, "throw_safe", now, target.position);
+    // 526: the thrower's hands are empty now: he closes with his fists, first punch after the safe has landed
+    attacker.animator.dropPistols();
+    attacker.disarmToFists(now, dur + S.fistReady);
     return true;
   }
   private _stepSafeHurls(now: number): void {
@@ -3854,7 +3865,7 @@ export class SimulationSystem {
       return;
     }
 
-    if (abilities.has("rapid_fire") || preset === "secret_burst_crossbow" || preset === "secret_bank_robbers" || preset === "secret_sensei" || preset === "secret_gatling") {
+    if ((abilities.has("rapid_fire") || preset === "secret_burst_crossbow" || preset === "secret_bank_robbers" || preset === "secret_sensei" || preset === "secret_gatling") && !attacker.fistsOnly) {
       this._fireBurst(attacker, target, damage, knockback, splashRadius, Math.max(3, attacker.definition.burstCount ?? 3));
       this._applyOnHitStatuses(attacker, target, now, impactOrigin);
       return;

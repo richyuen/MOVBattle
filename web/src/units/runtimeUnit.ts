@@ -576,6 +576,8 @@ export class RuntimeUnit {
     this._nextAttackAt = Math.min(this._nextAttackAt, now + ready);
   }
   private _fists = false;
+  /** True once disarmToFists has turned him into a bare-fisted brawler. */
+  get fistsOnly(): boolean { return this._fists; }
 
   setAttackCooldown(now: number, cooldown: number): void {
     this._nextAttackAt = now + Math.max(0.05, cooldown);
@@ -2816,7 +2818,8 @@ export class RuntimeUnit {
     }
     const c = this._safeCarry!;
     const up = c.safe && !c.safe.isDisposed() && c.safe.isEnabled() && !this._isDead;
-    for (const p of c.pistols) p.setEnabled(!up);
+    // [S] 526 once the safe has left their hands they fight with their fists: the pistols stay put away
+    for (const p of c.pistols) p.setEnabled(!up && !this._fists);
     if (!up) { this.animator.carryOverheadAt = null; return; }
     const safe = c.safe as Mesh;
     const chain: TransformNode[] = [];
