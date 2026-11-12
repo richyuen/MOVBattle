@@ -3512,3 +3512,16 @@ export function presentElfBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
   const black = getMaterialFactory().get("cloth", ELF_BOOT.black, { emissive: ELF_BOOT.black.scale(0.4), roughness: 1 });
   return shinBoot(scene, body, "elfBoot", black, black, ELF_BOOT);
 }
+
+/*
+ * [S] 525 (a.4) the Ice Mage's fur-cuffed boots (secret.ice_mage.red.png, .blue.png: brown-red ankle boots under a thick cream fur cuff round the
+ * lower shin, the team shin bare above it). ICE_BOOT: the foot in the pinafore's brown-red, a shaft .shaft of the shin tall, and a fur cuff
+ * .cuff round and .cuffH of the shin tall at its top in unlit cream (LESSONS 442), out of the glow.
+ */
+const ICE_BOOT = { shaft: 0.42, round: 1.3, cuff: 1.78, cuffH: 0.17, red: new Color3(0.29, 0.1, 0.12), fur: new Color3(0.82, 0.76, 0.6) };
+export function iceMageBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const mf = getMaterialFactory();
+  const red = mf.get("cloth", ICE_BOOT.red, { emissive: ICE_BOOT.red.scale(0.2), roughness: 1 });
+  const fur = mf.get("unlit", ICE_BOOT.fur, { emissive: ICE_BOOT.fur });
+  return shinBoot(scene, body, "iceMageBoot", red, fur, ICE_BOOT);
+}
