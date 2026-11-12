@@ -3125,6 +3125,28 @@ export function bankRobberSleeves(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 527 (a.4) the Bank Robbers' cowboy boots (secret.bank_robbers.png, .red.png: broad near-black boot shafts over the lower half of each shin,
+ * their tops folded down into a wide turned cuff that flares out over the shaft). BANK_BOOT: the foot and a shaft .shaft of the shin tall .round of
+ * its box in near-black; at the shaft's top a band .cuff round, and the turned fold hung from it, .turnH of the shin long, flaring from .turn to
+ * .turnHem round downward, in .turnShade of the black. Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow. Both men, not the safe actor.
+ */
+const BANK_BOOT = { shaft: 0.62, round: 1.42, cuff: 1.5, cuffH: 0.06, turn: 1.52, turnHem: 1.82, turnH: 0.17, turnShade: 1.3,
+  black: new Color3(0.1, 0.08, 0.075) };
+export function bankRobberBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = BANK_BOOT, mf = getMaterialFactory();
+  const black = mf.get("cloth", B.black, { emissive: B.black.scale(0.4), roughness: 1 });
+  const turnC = B.black.scale(B.turnShade);
+  const turnM = mf.get("cloth", turnC, { emissive: turnC.scale(0.4), roughness: 1 });
+  const out = shinBoot(scene, body, "bankBoot", black, black, B);
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const { center: c, extendSize: s } = shin.getBoundingInfo().boundingBox;
+    const top = c.y - s.y + s.y * 2 * B.shaft;
+    out.push(legShell(scene, "bankBootTurn", shin, turnM, top + s.y * 0.02, top - s.y * 2 * B.turnH, B.turn, B.turnHem));
+  }
+  return out;
+}
+
 /** Three sewn bands run diagonally from shoulder to opposite hip. */
 export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
