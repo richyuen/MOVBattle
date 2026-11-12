@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+521 | 219259ad | secret.cheerleader.a | approved [S] (struck 1)
+521 | 457aea4d, 3a78a68b | secret.cheerleader.a | approved [S] (struck 2, a PASS and confirmed)
+521 | 307b20ca | secret.raptor_rider.a | approved [S] (struck 1 and 4 by lineup)
+521 | 1985b55a | secret.infernal_whip.a | approved [S] (struck 1)
+521 | d14602dd, 9615069e | secret.ice_mage.a | approved [S] (pinafore visible, studs and chain remain)
+521 | fca3b6fb | secret.ice_mage.b | approved [S] (struck 2, b PASS)
+521 | d7ddb060 | secret.present_elf.a | approved [S] (struck 1)
+521 | 16906db2 | secret.clams.a | approved [S] (struck 1)
+521 | 7586c05a, d8013ac0 | secret.mace_spinner.c | approved [S] (struck 1 and 2, c PASS)
+
 520 | 2adeaa70 | secret.raptor_rider.c | approved [S] (struck 2)
 520 | 64e33a1e | secret.infernal_whip.c | approved [S] (struck 1)
 520 | 9ac31691, 60abe3c1 | secret.bank_robbers.b | approved [S] (struck 1, 2; b PASS; a.6 struck)
@@ -38,21 +48,21 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 517 | 7159b2bf | secret.cupid.a | approved [S] (struck 4)
 517 | 9a0c8787 | secret.cheerleader.a | approved [S] (struck 3, 4 by lineup)
 
-516 | a4b70e94, 602fa00f | secret.chu_ko_nu.b | approved [R] (struck 2, 4, 5; b PASS; CONFIRM passed, done)
-516 | 66e47ff2 | secret.chu_ko_nu.c | approved [S] (struck 1; c PASS; CONFIRM passed, done)
-516 | aac1740a | secret.ballooner.a | approved [S] (struck 1; a PASS; CONFIRM passed, done)
-516 | 1955e016, f438c488 | secret.taekwondo.a | approved [S] (struck 1, 2)
-516 | 23d145b2 | secret.taekwondo.c | approved [S] (struck 1)
-516 | 463d1578 | secret.cupid.a | approved [S] (struck 3, 2 by lineup)
-516 | 2cd491c9 | secret.cupid.b | approved [S] (struck 1)
-516 | 848338c6 | secret.cheerleader.a | approved [S] (struck 2, 1 by lineup)
-516 | deb199cb, 30b1375a | secret.clams.a | approved [S] (struck 2)
 
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress:cheerleaderTop | unlit cream (.94,.90,.79), cap coverage .34, flare 1.43/1.2 | 521 | approved | teal torso
+secretDress:cheerleaderSash | three bands .19 half-width each, shoulder z 1.34 torso half-depth | 521 | approved | no sash
+UV:secret_raptor_rider | bulk .88, torso width/depth .8/.82, arms 1.18 long and .76/.72 wide | 521 | approved | bulk 1.1
+secretDress:infernalShirt | team squared x .48, self-lit .12, caps cover .45 | 521 | approved | lilac torso
+secretDress:iceMagePinafore | skirt .72 to knee, 10 faces, brown-red (.29,.10,.12), straps outside yoke | 521 | approved | no apron
+secretDress:iceMageFrostHands | cyan-white core .49/.72 head radius, 4 satellites each hand | 521 | approved | empty fists
+secretDress:presentElfShirt | unlit cream (.9,.8,.64), full sleeves, lower cuff flare 1.65 | 521 | approved | bare team arms
+UV:secret_clams | scale 1.2, bulk .86, torso .88/.82, legs 1.22, arms 1.13 | 521 | approved | 1.18, 1.55, legs .8
+RU/secretDress:maceWhirl | 15 rad/s in place through attack cooldown, fists level, maces anchored in hand space | 521 | approved | upright carry
 SS/RU/secretDress/PS/PB/LAP:520 | RAPTOR_CHARGE from 1.2 speed 1.7 overrun 4 contact .6 cooldown 2.5 through; RAPTOR_GAIT amp .75 rate 2.6 bob .06; WHIP_LASH out .22 hold .3 back .35 radius 1.25 blast .35, CHAIN_WHIP sag .04; SAFE_CARRY inset .15, OVERHEAD_SAFE over .26->.2, flank robber scale .78->.95; SAFE_HURL speed 9 apex 1.6 radius 5 damage x3 lie 6 sink 3; ICICLE long .62 wide .13 4 shards (.55,.82,1) self .35; PRESENT_THROW speed 13.5 apex 1.4 open 3 rearm 12; SPINNER_MACE shaft .6 head .17 6 flanges lean .22, SPINNER_FISTS out .2->.32; SPINNER_HELM grey (.36,.37,.39) gold unlit; CLAM_CRITTER .62x.5 gape .6, clams summon farmer.halfling x3 | 520 | approved | none (static mount, dart, pistols out, bolt, summons beside him, shoulder mace, team cap, bomb men)
 secretDress/PB/PS/SS/RU/PA:519 | FLY_KICK lead 1.55 knee .05 tuck 1.0/1.7 lean .4 guard .7 out .35 elbow 1.5 set outright on the leap tick; CHEER hold 1.4 up 2.5 fore .35 pump 1.1 2.5 Hz; HEART_ARROW long .56 head .12 s; HEART_ARROW_FLY head .2 m, 4 trail hearts .16 x.8 gap .24, pink (1,.22,.62), love 10 s; LOVE_HEARTS big .95 small 2x.45 over .85; LOVE_KISS reach .9 every .5 drain 4; PLANK_SHIELD 4 planks .36x.55 s wood (.2,.11,.055) torso-stood x-.62 sw; PRESENT 1.55x1.25x1.5 torso, band .2 x.55, bell .13; CHAIN_WHIP 14 links 1.0 H, blade .13, rope g22 drag 2.5 friction 12 | 519 | approved | none (hop, still poms, plain arrow, empty off hand, hand box, stick whip)
 secretDress/PB/FX:518 | TKD_TROUSER thigh 2.0 shin 2.15->2.4 cuff 2.55 .72->1.12 cream unlit, feet skin; TKD_HAIR cap 1.12W .6H (.11,.08,.07), bun .34W .4H, team band; CHEER_HAIR cap 1.14W .56H team x.72, fringe .9W; CUPID_FOOT skin slim .86 cuff .7; CONFETTI 36 chips .11 ring .55 1.6 s; RAPTOR_MOUNT lift .7 trunk .62x.62x1.45H, jaw gape .75, 9 spikes, legs .3H out; OVERHEAD_SAFE .6x.42x.38 Hh over .26 | 518 | approved | none (bandanas, boots, smoke, box mount, hip safe)
@@ -62,4 +72,3 @@ Archived rows: secret_1 (all done) ledger@1cbd21bd; secret_1 raptor/jester @823d
 SS:KICK start gate | dodge flip drops a pending kick (ready again after the flip); no start while _recovers, toppled, downed or airborne | 512 | approved | start gated on _recovers only
 secret_2 stats cost/hm/dm/cm (10 units, 1890e47d) | d PASS 10/10;cheer hm .012 | 515 | stats | initial manifest
 secretDress/PB:515 | BALLOONER_LEG lathe top .98 hem -.07 m waist 1.2 bulge 1.5 low 1.36, roll 2.7, stocking unlit (.6,.44,.22), shoe unlit (1,.2,.05) .82 Hf; KONU_ROBE knee -.02 m (tiers knee-anchored); KONU_LEG shell 1.32 taper .86 team x.3, 3 orange (.7,.2,.05) bands 1.5; CLAM_HAND long 3.2 wide 2.6 thick 1.3 past 1.1, eyes .55; POM_POM core .17 26 spikes .1 root .15 team x.8; CUPID_WINGS span 2.5 raise .08 rows 2 white, magenta bar | 515 | approved | none (shoe (1,.42,.12) read tan)
-Completed good, legacy_2 and earlier rows | specs in owning code; ledger@7b0ae2f6 (legacy_2@b9daeaea, legacy_1@7090fef5) | 494 | archived values | unchanged

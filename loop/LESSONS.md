@@ -42,7 +42,7 @@ Read whole at step 1; one fact a line, merge near cap.
 ## Rig and dress
 - A chain or rope off a moving fist: a world-space rope pinned to the hand in RU.update, laid out at spawn (secretDress ChainWhip, 519).
 - A pole butt in the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target (509). A tall crown tips with the head pitch: stand it on the torso joint (500).
-- Upright prop in a moving fist: a world-space node laid on the fist each frame; fists onto world points: animator.carryOverheadAt (520).
+- A prop placed before movement can lag a turn: parent to the fist and convert world aim to hand space (521). IK: carryOverheadAt (520).
 - A linked actor (mount, safe) spawns with its parent's definition id: id-keyed dress hits both bodies, gate on visual.special. A posePreset is shared (spinner: mace_spinner + done ball_n_chain): gate an overlay on the id (518).
 - Retire old skirts (482); a belt hides in the tunicSkirt's flare: build it off its top ring after hangSkirt (517). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450 queen). metrics.overallHeight is pre-cut; shin limbShell 0 is the calf cap, ~.1 m above the knee.

@@ -1,11 +1,9 @@
 # secret.raptor_rider
 Status: open   Audited: 515 (AUDIT x2), 519 (RE-AUDIT a, b x2)   Done: -
 ## Verdicts
-a FAIL (0 since 519)
- 1. rider's build in unit_secret.raptor_rider_idle — TABS: lanky Wobbler with a narrow bare chest and long thin arms; ours is a square slab torso wider than the raptor's neck (ref: secret.raptor_rider.red.png)
+a FAIL (1 since 519, 2 struck)
  2. rider's head in unit_secret.raptor_rider_idle — TABS: team face with brown shoulder-length hair; ours is a grey-beige lumpy mask/helmet (ref: secret.raptor_rider.blue.png)
  3. green-black feather headdress in unit_secret.raptor_rider_idle — TABS: upright fan of dark feathers on a headband; ours has none (ref: secret.raptor_rider.red.png)
- 4. cord necklace with a green feather pendant in unit_secret.raptor_rider_idle — TABS: dark cord at the neck with a green leaf/feather charm (card Appearance "tribal trinkets"); ours has a bare neck (ref: secret.raptor_rider.blue.png)
  5. fur loincloth in unit_secret.raptor_rider_idle — TABS: bare team torso over a dark fur loincloth; ours is a team box tunic (ref: secret.raptor_rider.jpg)
 b FAIL (1 since 519, 1 struck)
  1. spear in unit_secret.raptor_rider_idle — TABS: short wooden spear with a dark knapped stone head and wrist binding; ours is a long thin pole with a steel leaf tip, taller than the man (ref: secret.raptor_rider.red.png)
@@ -14,11 +12,11 @@ c FAIL (1 since 515, 1 struck)
  1. trample bursts under the mount in unit_secret.raptor_rider_release/_flight — TABS: cavalry trample explosions where it runs; ours has none (ref: card Characteristics)
 d PASS (519 stats)
 ## Ranked gaps
-1. [S] secret.raptor_rider.c trample bursts — blocker 1: dust/blast burst at each trampled man on the RAPTOR_CHARGE run — ref: card Characteristics — ours: unit_secret.raptor_rider_flight.png
-2. [S] secret.raptor_rider.b spear — blocker 1: short wooden spear with a knapped stone head and wrist binding
-3. [S] secret.raptor_rider.a rider's build — blocker 1: lanky narrow bare-chested torso with long thin arms
-4. [P] secret.raptor_rider.b plank wood shade — blocker 3: PLANK_SHIELD.wood to about (0.45, 0.22, 0.14), bones out of the glow (fallout of [S] 604033c4)
+1. [S] secret.raptor_rider.a head — blocker 2: remove the mask, frame the team face with shoulder-length brown hair — ref: secret.raptor_rider.blue.png — ours: unit_secret.raptor_rider_idle.png
+2. [S] secret.raptor_rider.c trample — blocker 1: ground-contact explosion for units under the raptor charge — ref: loop/cards/secret.raptor_rider.md Characteristics — ours: unit_secret.raptor_rider_flight.png
+3. [S] secret.raptor_rider.b spear — blocker 1: short wooden spear with a knapped stone head and wrist binding
 ## Attempts (iter | gap | criterion | verdict)
+521 | give the rider a narrow bare torso and long thin arms (307b20ca) | a | approved (struck 1 and 4 by lineup)
 520 | raptor runs him through his man and on, legs striding, simulationSystem RAPTOR_CHARGE, RU _tendRaptorGait (2adeaa70) | c | approved (struck 2)
 519 | plank shield of four rough boards, lashed crossed bones, skull, propBuilder PLANK_SHIELD (604033c4, 135e2158) | b | approved (struck 2; added 3 wood shade)
 518 | dark raptor mount, open toothed jaw, spikes, two-jointed legs, propBuilder buildRaptorMount RAPTOR_MOUNT (8e341463) | a | approved (struck 1, 4 by lineup)

@@ -6,15 +6,13 @@ a FAIL (1 since 515, 1 struck)
  3. steel knee cops and greaves in unit_secret.mace_spinner_idle — TABS: grey plate from knee to ankle; ours has plain team legs (ref: secret.mace_spinner.red.png)
  4. squat bow-legged stance with a wide torso in unit_secret.mace_spinner_idle — TABS: upright Wobbler build at 1.1x (ref: secret.mace_spinner.blue.png)
 b PASS (520: struck 1, 2, 3; flanged upright mace in each fist)
-c FAIL (0 since 515, 1 rejected)
- 1. whole-body spin with both arms out in unit_secret.mace_spinner_release/_flight — TABS: spins like a blender with both maces extended; ours does an overhead chop (ref: card Characteristics)
- 2. spin ability in unit_secret.mace_spinner_ability/_ability_after — summary logs spin at 17 ms, but the pair shows a shoulder carry and a run (ref: card Abilities, Spin to Win)
+c PASS (521)
 d PASS (518 stats)
 ## Ranked gaps
-1. [S] secret.mace_spinner.c whirl redone — blocker 1: id-gated (secret.mace_spinner, not posePreset "spinner") whole-body spin held through the attack cooldown and spin_move, both arms out, the maces laid along the forearms (SpinnerMaces.place) — ref: card Characteristics — ours: unit_secret.mace_spinner_release.png
-2. [S] secret.mace_spinner.a chest plate — blocker 1: rounded grey breastplate with fauld over the team vest (secretDress) — ref: secret.mace_spinner.red.png — ours: unit_secret.mace_spinner_idle.png
-3. [S] secret.mace_spinner.a greaves — blocker 3: grey knee cops and greaves knee to ankle (secretDress) — ref: secret.mace_spinner.red.png — ours: unit_secret.mace_spinner_idle.png
+1. [S] secret.mace_spinner.a breastplate — blocker 1: grey breastplate and fauld over the chest and waist — ref: secret.mace_spinner.red.png — ours: unit_secret.mace_spinner_idle.png
+2. [S] secret.mace_spinner.a greaves — blocker 3: grey knee cops and greaves knee to ankle (secretDress) — ref: secret.mace_spinner.red.png — ours: unit_secret.mace_spinner_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+521 | whirl with both maces extended through the attack cooldown (7586c05a, d8013ac0) | c | approved (struck 1 and 2, c PASS)
 520 | round grey closed helm, gold brow band and nose guard, team cap off, secretDress maceSpinnerHelm SPINNER_HELM (24828404) | a | approved (struck 2)
 520 | a flanged iron mace upright in each fist at his flanks, world-space, secretDress SpinnerMaces, RU _tendSpinnerMaces SPINNER_FISTS (30b10961, 7515543f) | b | approved (struck 1, 2, 3; b PASS)
 518 | arms-out whirl with hip yaw while attacking/spinning, runtimeUnit _applyMaceWhirl (a80a6032) | c | rejected (reverted aef00f7b)
