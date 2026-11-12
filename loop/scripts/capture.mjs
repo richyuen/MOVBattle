@@ -575,13 +575,15 @@ async function main() {
           // rather than aiming at the ground below the chest burst.
           if (on === 2 && a.definition.id === "legacy.wizard") on = 4;
           const pa = a.body.root.position, pt = t.body.root.position;
-          // The present opens at its landing spot even after the target walks away.
-          if (on === 11) {
-            const box = a.body.root.getScene().getTransformNodeByName("presentThrown");
+          // Frame the prop where it lands while the target walks away or is knocked back.
+          if (on === 11 || on === 12) {
+            const scene = a.body.root.getScene();
+            const safe = on === 12;
+            const box = safe ? scene.getMeshByName("safeThrown") : scene.getTransformNodeByName("presentThrown");
             if (box) {
               const spot = box.position;
-              window.game.frameCamera({ x: spot.x, y: spot.y + 0.6 * s, z: spot.z }, 4.5 * s,
-                Math.atan2(spot.x - pa.x, pa.z - spot.z), Math.PI / 2.2);
+              window.game.frameCamera({ x: spot.x, y: spot.y + 0.6 * s, z: spot.z }, (safe ? 6.5 : 4.5) * s,
+                Math.atan2(spot.x - pa.x, pa.z - spot.z) - (safe ? 0.48 : 0), Math.PI / 2.2);
               return;
             }
             on = 2;
@@ -843,15 +845,16 @@ async function main() {
           const aura = bearer && (ability.kind === "haste" || ability.kind === "stay");
           // [evidence 475] the wizard's firework bursts on the man his spell spun up, 7.8 m off: framed on him
           const presentOpen = ability.kind === "present_open";
+          const safeLand = ability.kind === "safe_land";
           const onMan = snake || burnOnMan || love || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
           // blanketed him and the re-framed camera hid the step)
           const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
           const darkGrab = id === "legacy.dark_peasant";
-          const pair = dodge || darkGrab || presentOpen ? { hold: ability.tick, clean: dodge } : {};
+          const pair = dodge || darkGrab || presentOpen || safeLand ? { hold: ability.tick, clean: dodge } : {};
           // [evidence 494] arrows caught in the Sentinel's pavise faces: framed as the idle (front three-quarter), the boards toward the camera
           const catchShot = ability.kind === "pavise_block";
-          const abilityFrame = presentOpen ? 11 : catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far;
+          const abilityFrame = safeLand ? 12 : presentOpen ? 11 : catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far;
           await take(`unit_${id}_ability`, ability.tick, abilityFrame, pair);
           await take(`unit_${id}_ability_after`, ability.tick + (slow || love ? 60 : snake ? 30 : 9), abilityFrame, pair);
           if (darkGrab) await take(`unit_${id}_grab_blast`, ability.tick + 36, 2, pair);
