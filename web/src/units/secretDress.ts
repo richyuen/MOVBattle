@@ -2779,3 +2779,40 @@ export class ChainWhip {
     for (const m of this.meshes) m.dispose(false, false);
   }
 }
+
+/** Cream cheer top with short caps that follow the shoulder joints. */
+export function cheerleaderTop(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const color = new Color3(0.94, 0.9, 0.79);
+  const cream = getMaterialFactory().get("unlit", color, { emissive: color });
+  const glow = scene.getGlowLayerByName("glow");
+  body.torsoMesh.material = cream;
+  glow?.addExcludedMesh(body.torsoMesh);
+  for (const mesh of body.allMeshes.filter((m) => m.name.endsWith("_yoke"))) {
+    mesh.material = cream;
+    glow?.addExcludedMesh(mesh);
+  }
+  return [body.leftUpperArm, body.rightUpperArm].map((arm) =>
+    shirtSleeve(scene, arm, cream, "cheerTopCap", 0.34, 1.43, 1.2));
+}
+
+function shirtSleeve(
+  scene: Scene, arm: Mesh, material: Material, name: string, coverage: number, flareTop: number, flareBottom: number,
+): Mesh {
+  const { center, extendSize } = arm.getBoundingInfo().boundingBox;
+  const length = extendSize.y * 2 * coverage;
+  const diameter = extendSize.x * 2;
+  const sleeve = MeshBuilder.CreateCylinder(name, {
+    height: length,
+    diameterTop: diameter * flareTop,
+    diameterBottom: diameter * flareBottom,
+    tessellation: 8,
+  }, scene);
+  sleeve.parent = arm;
+  sleeve.position.set(center.x, center.y + extendSize.y - length / 2, center.z);
+  sleeve.rotation.y = Math.PI / 8;
+  sleeve.scaling.z = extendSize.z / extendSize.x;
+  sleeve.material = material;
+  sleeve.convertToFlatShadedMesh();
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(sleeve);
+  return sleeve;
+}
