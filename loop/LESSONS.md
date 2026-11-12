@@ -22,12 +22,13 @@ Read whole at step 1; one fact a line, merge near cap.
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
-- The idle and lineup shots are a front three-quarter on the weapon side; a blocker on a face, chest ornament or shield face judged in a side shot is mis-aimed (re-aim with an evidence commit, not a dress change); a prop over the chest: a post-release shot at the idle angle (525). Faceless at .6 rad reads as a back: .25 (497).
-- The idle shot is ~100 ms after spawn: a lift, pose or weight eased in from zero reads as absent: full weight from spawn, kept in every re-solve (393).
+- Idle/lineup are a front three-quarter on the weapon side; a face/chest/shield blocker judged side-on is mis-aimed (evidence commit, not dress); a prop over the chest: post-release shot at the idle angle (525); hips behind a shield: rear three-quarter (frame 13, 526). Faceless at .6 rad reads as a back: .25 (497).
+- Size a held prop off joint spreads (originIn), not limbBox, which reads half on slim rigs (526 present, clam hands).
+- The idle is ~100 ms after spawn: ease nothing in from zero; full weight from spawn, kept in every re-solve (393).
 - A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).
 - `--units` takes comma-separated IDs and re-shoots lineup_<f> (498); a lethal blast freezes a duel: off-camera reserves (504).
 - A dress change aimed at the idle must clear the rest pose: probe what covers it first (442). A giant's metrics.overallHeight is pre-hover: use headTop world y.
-- Frame prop openings at the landing spot (522–523), toppled targets at torso bounds (509). Comma-join stats IDs (515).
+- Frame prop openings at the landing spot (522), toppled targets at torso bounds (509).
 - An instant slam logs at swing start: use the pending blow (426). A special logged at let-go owns its missile (427). A cast status can put _struck before impact: use ABILITY_PREF for on-landing effects (435).
 - _ability/_release are on the log tick, before RuntimeUnit.update: pose explicitly for contact, and use the next frame for motion (437 bat, 505 parry). A latch reads on the pin before its damage ticks (444 vampire).
 - A neck-rooted piece must clear the head box: probe_bbox it (439). Before flipping a pose's sign, probe yaw and world pitch at the frame (439).
@@ -35,7 +36,7 @@ Read whole at step 1; one fact a line, merge near cap.
 
 - Gate an idle hold on the fire, not Attacking+throw (451). Team garment shade: saturate (c^2), scale, self-lit .12; x k at self-lit .4 reads grey (517). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 - _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
-- An ability started while toppled/airborne is wiped by its lander and burns the cooldown: gate starts on his feet (512 kick).
+- Gate ability starts on his feet: a toppled/airborne start is wiped and burns the cooldown (512).
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
 - A flat ico's faces sit ~20% inside its ellipsoid: ray-cast surface dress on (512).
 - Two men pinned together topple apart under their crowd push: RU.holdUpright each step (514).

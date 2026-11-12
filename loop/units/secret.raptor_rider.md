@@ -1,27 +1,23 @@
 # secret.raptor_rider
-Status: open   Audited: 515 (AUDIT x2), 519 (RE-AUDIT a, b x2)   Done: -
+Status: done   Audited: 515 (AUDIT x2), 519 (RE-AUDIT a, b x2), 526 (CONFIRM: passed a, b, c, d)   Done: 526
 ## Verdicts
-a FAIL (1 since 519, 2 struck)
- 2. rider's head in unit_secret.raptor_rider_idle — TABS: team face with brown shoulder-length hair; ours is a grey-beige lumpy mask/helmet (ref: secret.raptor_rider.blue.png)
- 3. green-black feather headdress in unit_secret.raptor_rider_idle — TABS: upright fan of dark feathers on a headband; ours has none (ref: secret.raptor_rider.red.png)
- 5. fur loincloth in unit_secret.raptor_rider_idle — TABS: bare team torso over a dark fur loincloth; ours is a team box tunic (ref: secret.raptor_rider.jpg)
-b PASS (524: struck 3, weathered red-brown planks)
-c PASS (525: struck 1, trample explosions under the run)
-d PASS (525 stats)
+a PASS (526: struck 2, 3, 5; CONFIRM passed)
+b PASS (524: struck 3, weathered red-brown planks; CONFIRM 526 passed)
+c PASS (525: struck 1, trample explosions under the run; CONFIRM 526 passed)
+d PASS (526 stats)
 ## Ranked gaps
-1. [S] secret.raptor_rider.a rider's head — blocker 2: team head with brown shoulder-length hair chunks in place of the grey-beige mask — ref: secret.raptor_rider.blue.png — ours: unit_secret.raptor_rider_idle
-2. [S] secret.raptor_rider.a feather headdress — blocker 3: headband with an upright fan of green-black feathers — ref: secret.raptor_rider.red.png — ours: unit_secret.raptor_rider_idle
-3. [S] secret.raptor_rider.a fur loincloth — blocker 5: bare team torso over a dark fur loincloth chunk in place of the box tunic — ref: secret.raptor_rider.jpg — ours: unit_secret.raptor_rider_idle
 ## Attempts (iter | gap | criterion | verdict)
+526 | dark fur wrap and ragged flaps on bare hips, tunic skirt off, secretDress raptorRiderLoincloth RIDER_LOIN (18a98a20) | a | approved (struck 5, a PASS)
+526 | red-brown headband, upright fan of six dark green feathers, secretDress raptorRiderFeathers RIDER_FEATHERS (605d0072) | a | approved (struck 3)
+526 | bone mask off, brown cap, side locks and back mass, secretDress raptorRiderHair RIDER_HAIR (7a65dce6) | a | approved (struck 2)
+526 | evidence: unit_secret.raptor_rider_back, the hips from a rear three-quarter (647605af) | a | evidence
 525 | small explosion bursts under alternate feet every .22 s of the run, simulationSystem RAPTOR_STOMP (3df5c0a3) | c | approved (struck 1, c PASS)
 524 | four red-brown planks each its own shade, grain, splintered tops, PLANK_WEATHER (fb46a15f) | b | approved (struck 3, b PASS)
 523 | short wooden spear, lashed faceted stone tip (5472e586) | b | approved (struck 1)
 521 | give the rider a narrow bare torso and long thin arms (307b20ca) | a | approved (struck 1 and 4 by lineup)
-520 | raptor runs him through his man and on, legs striding, RAPTOR_CHARGE, RU _tendRaptorGait (2adeaa70) | c | approved (struck 2)
-519 | plank shield of four rough boards, lashed crossed bones, skull, PLANK_SHIELD (604033c4, 135e2158) | b | approved (struck 2; added 3 wood shade)
-518 | dark raptor mount, open toothed jaw, spikes, two-jointed legs, propBuilder buildRaptorMount RAPTOR_MOUNT (8e341463) | a | approved (struck 1, 4 by lineup)
+518-520 | mount, plank shield, charge through his man | a, b, c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 518: the mount is a linked actor with the rider's id: gate dress on visual.special.
-- 519: audit2 flags the hide colour (TABS near-black olive-grey, ours maroon); audit 1 no blocker.
-- a last attempted 521: it starves in 527 (pick it in 526).
+- 526: the plank shield hides his hips from the front and side-on; the loincloth is judged in unit_secret.raptor_rider_back.
+- 526 DEFECTS: hair locks stop at the jaw (TABS shoulders); feathers .6 head tall (TABS ~1); loincloth flaps short.
+- CONFIRM 526: raptor reddish brown where TABS is darker olive-grey (sub-lineup).
