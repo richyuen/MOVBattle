@@ -7683,6 +7683,10 @@ function buildPaladinShield(scene: Scene, stand: number): Mesh {
   return rim;
 }
 
+const PLANK_WEATHER = {
+  tones: [new Color3(0.6, 0.27, 0.17), new Color3(0.5, 0.22, 0.15), new Color3(0.66, 0.31, 0.2), new Color3(0.54, 0.26, 0.19)],
+  groove: new Color3(0.16, 0.07, 0.05), grooves: 2, teeth: 3, tooth: 0.06,
+};
 const PLANK_SHIELD = { planks: 4, wide: 0.36, tall: 0.55, ragged: 0.07, thick: 0.035, boneLong: 0.3, crossY: 0.18, skull: 0.13, wood: new Color3(0.2, 0.11, 0.055), cord: new Color3(0.05, 0.12, 0.08), bone: new Color3(0.8, 0.74, 0.55) };
 function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, teamColor: Color3): Mesh | null {
   // A cool team colour is held as deep as the plate behind it and not washed with white: the sky-blue team colour paled is a slate board.
@@ -7855,21 +7859,54 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
     case "plank": {
       const P = PLANK_SHIELD;
       const shield = new Mesh("plankshield", scene);
-      const wood = mat(scene, P.wood, 0.12, "cloth");
       const bone = getMaterialFactory().get("unlit", P.bone, { emissive: P.bone });
       const cord = mat(scene, P.cord, 0.1, "cloth");
       const dark = mat(scene, new Color3(0.06, 0.05, 0.04), 0.05, "cloth");
       const strip = P.wide / P.planks;
+      const glow = scene.getGlowLayerByName("glow");
+      /*
+       * [S] 524 (b.3) weathered red-brown boards, each its own shade (secret.raptor_rider.red.png: four mid red-brown planks, no two alike, grain
+       * streaks down them and a split, splintered top). PLANK_WEATHER: each plank a cloth shade of .tones (palette 524: cloth brown x1 reads mid
+       * red-brown; the 519 (.2,.11,.055) read near black), .grooves dark grain streaks down both faces, a splintered top of .teeth wedges; the bones and
+       * skull out of the glow, whose halo hid the boards behind them.
+       */
+      const W = PLANK_WEATHER;
+      const groove = mat(scene, W.groove, 0.08, "cloth");
       for (let i = 0; i < P.planks; i++) {
         const h = P.tall - P.ragged * ((i * 7) % 5) / 4;
+        const tone = mat(scene, W.tones[i % W.tones.length], 0.12, "cloth");
         const b = MeshBuilder.CreateBox("plankBoard", { width: strip * 0.94 * s, height: h * s, depth: P.thick * s }, scene);
         b.position.set((-P.wide / 2 + strip * (i + 0.5)) * s, ((i % 2 ? 1 : -1) * P.ragged * 0.25) * s, 0);
         b.rotation.z = (i - (P.planks - 1) / 2) * 0.03;
-        b.parent = shield; b.material = wood; b.convertToFlatShadedMesh();
+        b.parent = shield; b.material = tone; b.convertToFlatShadedMesh();
+        glow?.addExcludedMesh(b);
+        for (let g = 0; g < W.grooves; g++) {
+          const x = (g - (W.grooves - 1) / 2) * strip * 0.34 + (((i * 5 + g * 3) % 4) - 1.5) * strip * 0.04;
+          const len = h * (0.55 + 0.12 * ((i + g * 2) % 3));
+          for (const face of [-1, 1]) {
+            const line = MeshBuilder.CreateBox("plankGrain", { width: strip * 0.06 * s, height: len * s, depth: P.thick * 0.2 * s }, scene);
+            line.parent = b; line.material = groove;
+            line.position.set(x * s, (((i + g) % 2 ? 1 : -1) * (h - len) * 0.3) * s, face * P.thick * 0.5 * s);
+            glow?.addExcludedMesh(line);
+          }
+        }
+        // a splintered top: .teeth wedges of the plank's own wood standing up off its top edge, uneven
+        for (let k = 0; k < W.teeth; k++) {
+          const tw = strip * 0.94 / W.teeth;
+          const tall = W.tooth * (0.5 + 0.5 * (((i * 3 + k * 7) % 5) / 4));
+          const tooth = MeshBuilder.CreateCylinder("plankSplinter", { height: tall * s, diameterTop: 0, diameterBottom: tw * s, tessellation: 3 }, scene);
+          tooth.parent = b; tooth.material = tone;
+          tooth.position.set((-strip * 0.47 + tw * (k + 0.5)) * s, (h / 2 + tall / 2) * s, 0);
+          tooth.scaling.z = P.thick / tw;
+          tooth.convertToFlatShadedMesh();
+          glow?.addExcludedMesh(tooth);
+        }
       }
+      const battenWood = mat(scene, W.tones[1].scale(0.7), 0.1, "cloth");
       for (const yy of [0.32, -0.3]) {
         const batten = MeshBuilder.CreateBox("plankBatten", { width: P.wide * 1.02 * s, height: 0.035 * s, depth: P.thick * 0.6 * s }, scene);
-        batten.position.set(0, yy * P.tall * s, -P.thick * 0.7 * s); batten.parent = shield; batten.material = wood;
+        batten.position.set(0, yy * P.tall * s, -P.thick * 0.7 * s); batten.parent = shield; batten.material = battenWood;
+        glow?.addExcludedMesh(batten);
       }
       const cy = P.crossY * P.tall * s, front = (P.thick * 0.5 + 0.02) * s;
       for (const side of [-1, 1]) {
@@ -7893,6 +7930,7 @@ function buildShield(scene: Scene, type: ShieldType, s: number, accent: Color3, 
         const eye = MeshBuilder.CreateIcoSphere("plankSkullEye", { radius: P.skull * 0.13 * s, subdivisions: 1 }, scene);
         eye.parent = skull; eye.material = dark; eye.position.set(side * P.skull * 0.2 * s, -P.skull * 0.02 * s, P.skull * 0.42 * s);
       }
+      for (const m of shield.getChildMeshes(false)) if (/^plank(Bone|Skull|Lash)/.test(m.name)) glow?.addExcludedMesh(m as Mesh);
       return shield;
     }
     case "tower": {
