@@ -2824,7 +2824,7 @@ export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color
   const c = torso.position.add(center.multiply(torso.scaling));
   const e = extendSize.multiply(torso.scaling);
   const from = c.add(new Vector3(-0.72 * e.x, -0.87 * e.y, 0.94 * e.z));
-  const to = c.add(new Vector3(0.77 * e.x, 0.84 * e.y, 0.94 * e.z));
+  const to = c.add(new Vector3(0.77 * e.x, 0.84 * e.y, 1.34 * e.z));
   const axis = to.subtract(from);
   const angle = Math.atan2(-axis.x, axis.y);
   const across = new Vector3(Math.cos(angle), Math.sin(angle), 0);
@@ -2836,7 +2836,7 @@ export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color
     }, scene);
     band.parent = body.torso;
     band.position.copyFrom(Vector3.Center(from, to).add(across.scale((index - 1) * width)));
-    band.rotation.z = angle;
+    band.rotation.set(Math.atan2(axis.z, Math.hypot(axis.x, axis.y)), 0, angle);
     band.material = getMaterialFactory().get("unlit", color, { emissive: color });
     scene.getGlowLayerByName("glow")?.addExcludedMesh(band);
     return band;
