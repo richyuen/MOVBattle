@@ -650,6 +650,11 @@ async function main() {
               window.game.frameCamera({ x: pa.x, y: 1.0 * s, z: pa.z }, 3.8 * s, beltSide, Math.PI / 1.94);
               return;
             }
+            // Frame the carriers and the full portrait vault above their fists.
+            if (a.definition.id === "secret.bank_robbers") {
+              window.game.frameCamera({ x: pa.x, y: 1.55 * s, z: pa.z }, 5.15 * s, alpha, Math.PI / 2.15);
+              return;
+            }
             const fencer = a.definition.id === "renaissance.fencer" || a.definition.id === "viking.brawler";
             // the mammoth's idle sat on his legs (evidence 378): pulled back 2x and aimed at .75 of the rig, as his motion shots are
             const big = a.definition.id === "tribal.mammoth" ? 2 : 1;
