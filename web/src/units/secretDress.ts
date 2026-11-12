@@ -3160,6 +3160,49 @@ function infernalSleeves(scene: Scene, body: ArticulatedBody, shirt: Color3): Me
   return out;
 }
 
+/*
+ * [S] 524 (a.2) the Ice Mage's sash (secret.ice_mage.red.png: a team-coloured sash round the waist where the bib meets the skirt, a round teal brooch in
+ * a gold rim at its front, a broad team tail hanging from under the brooch half way down the skirt). ICE_SASH in torso half-sizes, on the torso joint
+ * at the skirt's top: a band .tall high and .out wide (squashed as the skirt, .depth), a gold ring .brooch across and a teal boss inside it standing
+ * off the band's front, and a tail .tailW wide hanging .tail down from the brooch, flaring .flare to its end. Team in a deep shade (team squared),
+ * teal and gold unlit; all out of the glow.
+ */
+const ICE_SASH = { tall: 0.22, out: 1.12, depth: 1.28, brooch: 0.42, tailW: 0.42, tail: 0.95, flare: 1.35,
+  teal: new Color3(0.2, 0.62, 0.58), gold: new Color3(0.62, 0.3, 0.05) };
+export function iceMageSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const S = ICE_SASH, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const torso = body.torsoMesh, bounds = torso.getBoundingInfo().boundingBox;
+  const center = torso.position.add(bounds.center.multiply(torso.scaling));
+  const size = bounds.extendSize.multiply(torso.scaling);
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const deep = sat.scale(peak / Math.max(sat.r, sat.g, sat.b, 1e-3) * 0.85);
+  const cloth = mf.get("cloth", deep, { emissive: deep.scale(0.12), roughness: 1 });
+  const teal = mf.get("unlit", S.teal, { emissive: S.teal });
+  const gold = mf.get("unlit", S.gold, { emissive: S.gold });
+  const waist = center.y - size.y * 0.78;
+  const zScale = Math.max(0.75, size.z / size.x * S.depth);
+  const out: Mesh[] = [];
+  const band = MeshBuilder.CreateCylinder("iceMageSash", { height: size.y * S.tall, diameter: 2 * size.x * S.out, tessellation: 10 }, scene);
+  band.parent = body.torso; band.position.set(center.x, waist, center.z); band.scaling.z = zScale; band.material = cloth;
+  band.convertToFlatShadedMesh();
+  out.push(band);
+  const front = center.z + size.x * S.out * zScale;
+  const r = size.x * S.brooch / 2;
+  const ring = MeshBuilder.CreateTorus("iceMageSashBroochRim", { diameter: r * 2, thickness: r * 0.4, tessellation: 12 }, scene);
+  ring.parent = body.torso; ring.position.set(center.x, waist, front + r * 0.15); ring.rotation.x = Math.PI / 2; ring.material = gold;
+  const boss = MeshBuilder.CreateCylinder("iceMageSashBrooch", { height: r * 0.35, diameter: r * 1.7, tessellation: 10 }, scene);
+  boss.parent = body.torso; boss.position.set(center.x, waist, front + r * 0.2); boss.rotation.x = Math.PI / 2; boss.material = teal;
+  const tailLen = size.y * S.tail, tw = size.x * S.tailW;
+  const tail = MeshBuilder.CreateCylinder("iceMageSashTail", { height: tailLen, diameterTop: tw, diameterBottom: tw * S.flare, tessellation: 4 }, scene);
+  tail.parent = body.torso; tail.material = cloth;
+  tail.position.set(center.x, waist - size.y * S.tall * 0.4 - tailLen / 2, front - r * 0.1);
+  tail.scaling.z = 0.18; tail.rotation.x = -0.08;
+  tail.convertToFlatShadedMesh();
+  out.push(ring, boss, tail);
+  for (const m of out) glow?.addExcludedMesh(m);
+  return out;
+}
+
 /** The pinafore's brown-red bib and straps meet a flared, thigh-length skirt. */
 export function iceMagePinafore(scene: Scene, body: ArticulatedBody): Mesh[] {
   const torso = body.torsoMesh;
