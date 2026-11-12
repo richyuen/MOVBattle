@@ -2937,6 +2937,52 @@ export function clamsShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 524 CLAMS' shell collar (secret.clams.red.png, .blue.png: his neck comes up out of a clam's lower half-shell, a wide shallow dish round the
+ * neck as wide as the shoulders, its underside dark charcoal, its inside team coloured, a pale grey lip round the edge; audit 515 a.3). CLAM_COLLAR
+ * in torso half-widths, on the torso joint at the chest's top: a closed lathe dish from the neck (.neck) down and out to its rim (.rim, .rimUp above
+ * the neck's foot), .thick deep at the middle, squashed front to back to .depth of its width; a team-coloured inside disc .inset under the rim's top;
+ * a pale lip torus .lip thick round the rim. Lit cloth a little self-lit, the lip unlit, all out of the glow.
+ */
+const CLAM_COLLAR = { neck: 0.42, rim: 1.22, rimUp: 0.16, thick: 0.2, drop: 0.06, depth: 0.82, inset: 0.035, lip: 0.07, segs: 14,
+  dark: new Color3(0.07, 0.068, 0.072), pale: new Color3(0.62, 0.62, 0.6) };
+export function clamsCollar(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = CLAM_COLLAR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const chest = limbBox(body.torsoMesh);
+  const W = chest.wide, top = chest.mid + chest.half * (1 - C.drop);
+  const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
+  const inside = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const pale = mf.get("unlit", C.pale, { emissive: C.pale });
+  const root = new TransformNode("clamsCollar", scene);
+  root.parent = body.torso;
+  root.position.set(0, top, 0);
+  root.scaling.set(1, 1, C.depth);
+  // a closed profile, out along the underside and back along the top, so the dish is a solid with no open faces
+  const n = C.neck * W, r = C.rim * W, up = C.rimUp * W, th = C.thick * W;
+  const profile = [
+    new Vector3(n, up * 0.6, 0), new Vector3(n * 1.05, -th * 0.5, 0), new Vector3((n + r) / 2, -th * 0.45, 0), new Vector3(r, up - th * 0.25, 0),
+    new Vector3(r * 1.02, up + th * 0.15, 0), new Vector3((n + r) / 2, th * 0.05, 0), new Vector3(n, up * 0.6, 0),
+  ];
+  const dish = MeshBuilder.CreateLathe("clamsCollarShell", { shape: profile, tessellation: C.segs, closed: true }, scene);
+  dish.parent = root;
+  dish.material = dark;
+  dish.convertToFlatShadedMesh();
+  const disc = MeshBuilder.CreateCylinder("clamsCollarInside", {
+    height: th * 0.12, diameterTop: 2 * (r - C.lip * W), diameterBottom: 2 * n * 1.4, tessellation: C.segs,
+  }, scene);
+  disc.parent = root;
+  disc.position.y = up * 0.55 + th * 0.06 - C.inset * W;
+  disc.material = inside;
+  disc.convertToFlatShadedMesh();
+  const lip = MeshBuilder.CreateTorus("clamsCollarLip", { diameter: 2 * r * 1.01, thickness: C.lip * W, tessellation: C.segs }, scene);
+  lip.parent = root;
+  lip.position.y = up + th * 0.08;
+  lip.material = pale;
+  const out = [dish, disc, lip];
+  for (const m of out) glow?.addExcludedMesh(m);
+  return out;
+}
+
 /** Three sewn bands run diagonally from shoulder to opposite hip. */
 export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
