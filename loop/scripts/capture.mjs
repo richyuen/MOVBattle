@@ -189,6 +189,7 @@ const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 // [evidence 435] the candlehead's ability pair is the spirit fire's knock-up where it lands on the man (audit 434 c.2), not the burn logged as he casts
 // [evidence 426] the harpooner's ability pair is his Pirate Kick on the reeled man (audit 422 c.2), not the reel (struck at 425; its haul shows in _struck)
 const ABILITY_PREF = { "secret.ballooner": "float_pack", "secret.jester": "kick", "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst", "pirate.harpooner": "kick", "spooky.candlehead": "knockup", "spooky.reaper": "impale", "legacy.super_peasant": "flight", "evil.exiled_sentinel": "pavise_block", "evil.death_bringer": "quick_dodge", "evil.void_monarch": "demon_form" };
+ABILITY_PREF["secret.present_elf"] = "present_open";
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
 // swatches between a squire of each team (the skin reference): the left wall "cloth" with emissive = colour x PALETTE_GLOW (the dress
@@ -825,7 +826,7 @@ async function main() {
           const love = id === "secret.cupid" && ability.kind === "status:love";
           const aura = bearer && (ability.kind === "haste" || ability.kind === "stay");
           // [evidence 475] the wizard's firework bursts on the man his spell spun up, 7.8 m off: framed on him
-          const onMan = snake || burnOnMan || love || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
+          const onMan = snake || burnOnMan || love || ability.kind === "present_open" || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
           // blanketed him and the re-framed camera hid the step)
           const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
