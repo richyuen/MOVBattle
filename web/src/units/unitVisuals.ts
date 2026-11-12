@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff"
+  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff" | "necro_knife"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
   | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear";
 
@@ -1215,8 +1215,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { moving: ["ghost_stream"], "ability-active": ["ghost_stream"] },
       });
     case "secret_necromancer":
-      return vis({ scale: 1.12, bulk: 0.95, headSize: 1.08 }, "bone_staff", "hood", "none", "cape", "#ddd4bf", undefined, {
-        posePreset: "caster", materialPreset: "secret_bone", attachmentPreset: "summoner", fxPreset: "spectral",
+      // [S] 528 (b.1) the Necromancer Knife, a hooked sickle blade on a team grip, not the bone mage's skull staff (propBuilder buildNecroKnife)
+      return vis({ scale: 1.12, bulk: 0.95, headSize: 1.08 }, "dagger", "hood", "none", "cape", "#ddd4bf", undefined, {
+        weaponVariant: "necro_knife", posePreset: "caster", materialPreset: "secret_bone", attachmentPreset: "summoner", fxPreset: "spectral",
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });
     case "secret_solar_architect":

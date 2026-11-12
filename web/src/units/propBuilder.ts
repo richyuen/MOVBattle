@@ -4706,6 +4706,55 @@ function buildWarglaive(scene: Scene, fit: BladeFit): Mesh {
   return root;
 }
 
+/*
+ * [S] 528 (b.1) the Necromancer Knife (secret.necromancer.red.png: a short knife hanging point-down out of his main fist, a team-coloured grip about a
+ * fist and a half long with pale bone collars at both ends, and a long thin grey blade about his forearm long that sweeps forward a little and ends in a
+ * hooked point, a notch cut into its back near the tip, like a slim sickle). NECRO_KNIFE: grip .grip fists, collars .collar fists tall; the blade
+ * .long of his standing height in .segs flat segments, .wide of it across at the root narrowing to .tipW, .thick of the width thin, swept forward
+ * .curve; the hook .hook of the blade long turned .hookTurn back toward the grip; the notch .notch of the blade from the tip. Built down -y under a
+ * hold turned half round z, the Shadow Walker dagger's reverse grip. Grey steel in lit cloth (metal renders black), team grip self-lit cloth.
+ */
+const NECRO_KNIFE = { grip: 2.6, collar: 0.6, long: 0.21, segs: 5, wide: 0.13, tipW: 0.45, thick: 0.18, curve: 0.18, hook: 0.16, hookTurn: 1.15, notch: 0.3,
+  steel: new Color3(0.56, 0.57, 0.6), bone: new Color3(0.88, 0.78, 0.6) };
+function buildNecroKnife(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const K = NECRO_KNIFE, f = fit.fist, L = fit.stand * K.long;
+  const root = new Mesh("necroKnife", scene);
+  const hold = new Mesh("necroKnifeHold", scene); hold.parent = root; hold.rotation.z = Math.PI;
+  const steel = mat(scene, K.steel, 0.18, "cloth"), bone = mat(scene, K.bone, 0.25, "cloth"), grip = mat(scene, team, 0.14, "cloth");
+  const G = f * K.grip;
+  const handle = MeshBuilder.CreateCylinder("necroKnifeGrip", { height: G, diameter: f * 1.0, tessellation: 6 }, scene);
+  handle.parent = hold; handle.material = grip; handle.convertToFlatShadedMesh();
+  for (const end of [-1, 1]) {
+    const collar = MeshBuilder.CreateCylinder("necroKnifeCollar", { height: f * K.collar, diameter: f * 1.35, tessellation: 6 }, scene);
+    collar.parent = hold; collar.position.y = end * (G / 2 + f * K.collar * 0.3); collar.material = bone; collar.convertToFlatShadedMesh();
+  }
+  // the blade: flat segments running down from the lower collar, each bent a little further forward (+z)
+  let y = -G / 2 - f * K.collar * 0.6, z = 0, ang = 0;
+  const W = L * K.wide;
+  for (let k = 0; k < K.segs; k++) {
+    const t0 = k / K.segs, t1 = (k + 1) / K.segs, h = L / K.segs;
+    const w0 = W * (1 - (1 - K.tipW) * t0), w1 = W * (1 - (1 - K.tipW) * t1);
+    const step = K.curve * (t1 * t1 - t0 * t0) * 2;
+    const seg = MeshBuilder.CreateBox("necroKnifeBlade", { width: W * K.thick, height: h * 1.06, depth: 1 }, scene);
+    seg.scaling.z = (w0 + w1) / 2;
+    const bend = new Mesh("necroKnifeBend", scene); bend.parent = hold;
+    bend.position.set(0, y - (h / 2) * Math.cos(ang), z + (h / 2) * Math.sin(ang)); bend.rotation.x = -ang;
+    seg.parent = bend; seg.material = steel; seg.convertToFlatShadedMesh();
+    y -= h * Math.cos(ang); z += h * Math.sin(ang); ang += step;
+  }
+  // the hooked point turned back up toward the grip on the edge (+z) side
+  const HL = L * K.hook;
+  const hook = MeshBuilder.CreateCylinder("necroKnifeHook", { height: HL, diameterBottom: W * K.tipW * Math.SQRT2, diameterTop: 0, tessellation: 4 }, scene);
+  hook.rotation.y = Math.PI / 4; hook.bakeCurrentTransformIntoVertices(); hook.rotation.y = 0; hook.scaling.x = K.thick;
+  const hb = new Mesh("necroKnifeHookBend", scene); hb.parent = hold; hb.position.set(0, y, z); hb.rotation.x = Math.PI - K.hookTurn;
+  hook.parent = hb; hook.position.y = HL / 2; hook.material = steel; hook.convertToFlatShadedMesh();
+  // the notch: a small dark wedge cut into the back (-z) edge near the tip
+  const notch = MeshBuilder.CreateBox("necroKnifeNotch", { width: W * K.thick * 1.3, height: L * 0.05, depth: W * 0.45 }, scene);
+  notch.parent = hold; notch.position.set(0, y + L * K.notch * Math.cos(ang), z - W * 0.35 - L * K.notch * Math.sin(ang * 0.5)); notch.rotation.x = 0.6;
+  notch.material = mat(scene, new Color3(0.1, 0.09, 0.1), 0.05, "cloth");
+  return root;
+}
+
 function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
   hand.computeWorldMatrix(true);
   const fist = hand.getChildMeshes(true).find(m => /HandM$/.test(m.name));
@@ -4733,6 +4782,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     return root;
   }
   if (variant === "warglaive") return buildWarglaive(scene, fit); // [S] 491 (WARGLAIVE)
+  if (variant === "necro_knife") return buildNecroKnife(scene, fit, teamColor ?? accent); // [S] 528 (NECRO_KNIFE)
   if (variant === "bone_dagger") {
     /*
      * [S] 489 the Shadow Walker's dagger (evil.shadow_walker.red.png, .png; card Main Hand "Shadow Walker Dagger"): a long curved bone-tan blade
