@@ -8637,7 +8637,7 @@ function buildRaptorMount(scene: Scene, body: ArticulatedBody): Mesh {
  * plinth band .plinth of the height at the foot, four corner feet. Team cloth self-lit .12 (LESSONS 449), gold lit cloth, out of the glow.
  */
 // [S] 520b over .26 -> .2: the safe's floor rests on the robbers' raised fists (RuntimeUnit SAFE_CARRY), not a forearm over them
-const OVERHEAD_SAFE = { pairX: -0.46, wide: 0.6, tall: 0.42, deep: 0.38, over: 0.2, trim: 0.035, dial: 0.11, plinth: 0.1,
+const OVERHEAD_SAFE = { pairX: -0.46, wide: 0.72, tall: 0.92, deep: 0.38, over: 0.2, trim: 0.035, dial: 0.11, plinth: 0.1,
   gold: new Color3(0.78, 0.55, 0.14), dark: new Color3(0.12, 0.1, 0.1) };
 function buildOverheadSafe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh {
   const S = OVERHEAD_SAFE, Hh = body.metrics.overallHeight, hipY = body.hip.position.y;
@@ -8658,6 +8658,13 @@ function buildOverheadSafe(scene: Scene, body: ArticulatedBody, team: Color3): M
   box("safeTrim", t, T * (1 - S.plinth), t, -W / 2 + t / 2, T * S.plinth / 2, fz, gold);
   box("safeTrim", t, T * (1 - S.plinth), t, W / 2 - t / 2, T * S.plinth / 2, fz, gold);
   box("safePlinth", W * 1.03, T * S.plinth, D * 1.03, 0, -T / 2 + (T * S.plinth) / 2, 0, dark);
+  const doorWidth = W * 0.59, doorHeight = T * 0.65, doorY = T * 0.045;
+  box("safeDoor", doorWidth, doorHeight, t * 0.8, 0, doorY, fz, steel);
+  for (const side of [-1, 1]) {
+    box("safeDoorBead", doorWidth, t * 0.55, t, 0, doorY + side * doorHeight / 2, fz + t * 0.4, gold);
+    box("safeDoorBead", t * 0.55, doorHeight, t, side * doorWidth / 2, doorY, fz + t * 0.4, gold);
+    box("safeDoorHinge", t * 2.1, t * 2.6, t * 1.25, doorWidth / 2, doorY + side * doorHeight * 0.28, fz + t * 0.4, dark);
+  }
   const dial = MeshBuilder.CreateCylinder("safeDial", { height: t, diameter: Hh * S.dial, tessellation: 10 }, scene);
   dial.parent = safe; dial.material = gold; dial.rotation.x = Math.PI / 2; dial.position.set(-W * 0.12, T * 0.08, fz + t * 0.3); parts.push(dial);
   box("safeDialKnob", Hh * S.dial * 0.25, Hh * S.dial * 0.25, t * 1.6, -W * 0.12, T * 0.08, fz + t, dark);
