@@ -739,7 +739,9 @@ async function main() {
         // the far rig (`far`, the thrower and the metres ahead of him) rather than the 2 m camera on the struck man, which sat inside the impact dust while
         // the thrown man left its frame (critic 318)
         const shortThrow = Boolean(release && release.kind === "throw" && impact && impact.tick - release.tick < 15);
-        const struckTick = release ? (shortThrow ? impact.tick + 9 : impact && impact.tick > release.tick + 20 ? impact.tick + 6 : release.tick + 20) : null;
+        // The Infernal Whip's tip flashes on contact with the victim (secret.infernal_whip c.3).
+        const whipContact = id === "secret.infernal_whip" && impact;
+        const struckTick = release ? (whipContact ? impact.tick : shortThrow ? impact.tick + 9 : impact && impact.tick > release.tick + 20 ? impact.tick + 6 : release.tick + 20) : null;
         const s = Math.min(4, Math.max(1, det.rig / 1.8));
         const ms = (e) => Math.round(e.tick * TICK);
         summary.units[id] = { release: release && { ...release, ms: ms(release) }, ability: ability && { ...ability, ms: ms(ability) }, impact: impact && { ...impact, ms: ms(impact) }, events: det.events, rigHeight: +det.rig.toFixed(2), d, s: +s.toFixed(2), support };
