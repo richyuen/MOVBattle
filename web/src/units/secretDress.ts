@@ -2143,11 +2143,22 @@ const ELF_CAP = {
  * tails .tail W; bells .bell W. Box team (saturated, self-lit .12, FAN_DRESS rule), band team x .band2, gold unlit, all out of the glow. Torso-rooted
  * so it is held before the chest in every pose; the hand prop is off (unitVisuals weapon none).
  */
-const PRESENT = { w: 1.55, h: 1.25, d: 1.5, top: 0.95, gap: 0.15, lid: 1.07, lidH: 0.14, band: 0.2, stripe: 0.04, band2: 0.55, loop: 0.38, loopUp: 0.6, tail: 0.55, bell: 0.21, gold: new Color3(0.62, 0.26, 0.03) };
+/*
+ * [S] 526 (b.1, b.2) the present is a near-cube, not a trunk-sized slab (secret.present_elf.blue.png: the box about twice his shoulder span wide,
+ * its lid under the chin and its floor at the knees, only shins and boots below it; it hides his whole front). Sized off the joints, not the torso
+ * mesh (limbBox reads about half the shown width on these slim rigs): W = .span x the shoulder joints' spread, its floor .knee of the way from the
+ * knee joint up to the hip joint (0: at the knee), its top as before; D = .deepW x W. His fists hold its side walls (RuntimeUnit._tendPresentHold).
+ */
+const PRESENT = { span: 2.0, knee: 0, deepW: 0.82, w: 1.55, h: 1.25, d: 1.5, top: 0.95, gap: 0.15, lid: 1.07, lidH: 0.14, band: 0.2, stripe: 0.04, band2: 0.55, loop: 0.38, loopUp: 0.6, tail: 0.55, bell: 0.21, gold: new Color3(0.62, 0.26, 0.03) };
 export function presentElfPresent(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const P = PRESENT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const T = limbBox(body.torsoMesh);
-  const W = T.wide * 2 * P.w, H = T.half * 2 * P.h, D = T.deep * 2 * P.d;
+  const rs = originIn(body.rightShoulder, body.torso), ls = originIn(body.leftShoulder, body.torso);
+  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const hipY = (originIn(body.leftHip, body.torso).y + originIn(body.rightHip, body.torso).y) / 2;
+  const floorY = kneeY + (hipY - kneeY) * P.knee;
+  const W = Math.max(T.wide * 2 * P.w, Math.abs(rs.x - ls.x) * P.span);
+  const H = Math.max(T.half * 2 * P.h, T.mid + T.half * P.top - floorY), D = Math.max(T.deep * 2 * P.d, W * P.deepW);
   const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
   const deep = sat.scale(peak / Math.max(sat.r, sat.g, sat.b, 1e-3));
   const boxCol = deep.scale(0.85), bandCol = deep.scale(P.band2);

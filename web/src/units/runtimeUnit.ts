@@ -23,6 +23,8 @@ const SENTINEL_SWAP = { hold: 2.5 };
 const RAPTOR_GAIT = { amp: 0.75, rate: 2.6, full: 3, ease: 8, bob: 0.06 };
 /** [S] 520 the Bank Robbers' overhead carry (spec at RuntimeUnit._tendSafeCarry). */
 const SAFE_CARRY = { inset: 0.15 };
+// [S] 526 the Present Elf's fists on the box's side walls: .out of its half-width out from its centre, .down of its half-height below it
+const PRESENT_HOLD = { out: 1.02, down: 0.1 };
 /** [S] 520 the Mace Spinner's fists at his hips (spec at RuntimeUnit._holdSpinnerFists). */
 // 520b out .2 -> .32: the fists met before his belly (probe), the maces crossing his chest; the render holds them at his flanks
 const SPINNER_FISTS = { out: 0.32, ahead: 0.08, up: 0.02 };
@@ -1302,6 +1304,7 @@ export class RuntimeUnit {
       for (const mesh of this.body.root.getChildMeshes()) mesh.renderingGroupId = flung ? FLUNG_RENDER_GROUP : 0;
     }
     this._tendSafeCarry();
+    this._tendPresentHold();
     this._holdSpinnerFists();
     if (this._maceWhirlYaw) {
       this.body.hip.rotation.y -= this._maceWhirlYaw;
@@ -2833,6 +2836,33 @@ export class RuntimeUnit {
     const mid = r.add(l).scale(0.5);
     const at = (s: Vector3) => new Vector3(s.x + (mid.x - s.x) * SAFE_CARRY.inset, floor, s.z + (mid.z - s.z) * SAFE_CARRY.inset);
     this.animator.carryOverheadAt = [at(r), at(l)];
+  }
+
+  /**
+   * [S] 526 the Present Elf holds his present by its sides (secret.present_elf.blue.png: both arms down the box's flanks, his fists on its side
+   * walls). While the present (secretDress PRESENT, "presentRoot" on the torso) is in his hands, each fist is solved onto the middle of its side wall,
+   * PRESENT_HOLD.down of the box's height below its centre, the arms laid on by ProceduralAnimator.carryOverheadAt. Off while it is away (thrown,
+   * rearming) or he is down.
+   */
+  private _presentHold: { root: TransformNode; halfW: number; halfH: number } | null | undefined = undefined;
+  private _tendPresentHold(): void {
+    if (this.definition.id !== "secret.present_elf") return;
+    if (this._presentHold === undefined) {
+      const root = this.body.torso.getChildTransformNodes(true).find((n) => n.name === "presentRoot") ?? null;
+      const box = root?.getChildMeshes(true).find((m) => m.name === "presentBox");
+      const wall = root?.getChildMeshes(true).find((m) => m.name === "presentWall" && Math.abs(m.position.z) > 1e-4);
+      this._presentHold = root && box && wall
+        ? { root, halfW: box.getBoundingInfo().boundingBox.extendSize.x, halfH: wall.getBoundingInfo().boundingBox.extendSize.y }
+        : null;
+    }
+    const h = this._presentHold;
+    if (!h) return;
+    if (h.root.isDisposed() || !h.root.isEnabled() || this._isDead || this.isDowned) { this.animator.carryOverheadAt = null; return; }
+    for (let n: TransformNode | null = h.root; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
+    const m = h.root.getWorldMatrix();
+    const side = Math.sign(this.body.rightShoulder.position.x) || 1;
+    const at = (s: number) => Vector3.TransformCoordinates(new Vector3(s * h.halfW * PRESENT_HOLD.out, -h.halfH * PRESENT_HOLD.down, 0), m);
+    this.animator.carryOverheadAt = [at(side), at(-side)];
   }
 
   /**
