@@ -547,7 +547,7 @@ const DEATH_CHARGE = { from: 1.5, reach: 14, speed: 2.4, seconds: 1.6, overrun: 
  * Then it turns and comes again, .cooldown s between runs. Logged "charge" at the start and "trample" at each man.
  */
 /** [S] 520 the Infernal Whip's lash (spec at _tryWhipLash). */
-const WHIP_LASH = { out: 0.22, hold: 0.3, back: 0.35, radius: 1.25, blast: 0.35 };
+const WHIP_LASH = { out: 0.22, hold: 0.3, back: 0.35, radius: 1.25 };
 /** [S] 520 the Present Elf's thrown present (spec at _tryPresentThrow). */
 const PRESENT_THROW = { speed: 13.5, apex: 1.4, spin: 6, radius: 1, open: 3, rearm: 12 };
 /** [S] 520 the Bank Robbers' safe hurl (spec at _trySafeHurl). */
@@ -1583,7 +1583,7 @@ export class SimulationSystem {
    * "Infernal Whip: Whip - Melee; range 10; explosion radius 1.25", Characteristics "two flaming whips that will extend toward enemy units, lighting
    * them on fire as well as inflicting considerable damage to anyone close"). His attack throws the chain in his fist (secretDress ChainWhip.lash)
    * straight out onto the man's chest over WHIP_LASH.out s; it rests on him .hold s and draws back over .back s. When it reaches him the blade end
-   * bursts (spawnExplosionBurst at .blast) and the blow's harm lands out to .radius m round him, with his burn (on-hit statuses). Logged "throw_lash"
+   * bursts (spawnWhipTipBlast) and the blow's harm lands out to .radius m round him, with his burn (on-hit statuses). Logged "throw_lash"
    * as it leaves the fist (the capture's release) and the landing as a hit on the man.
    */
   private _lashes: { attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; landAt: number }[] = [];
@@ -1606,7 +1606,7 @@ export class SimulationSystem {
       const { attacker, target } = l;
       if (attacker.isDead || target.isDead || !this._units.includes(target)) continue;
       const at = this._chestOf(target);
-      this.visualEffects?.spawnExplosionBurst(at, W.blast);
+      this.visualEffects?.spawnWhipTipBlast(at, W.radius);
       this._applyDirectOrSplash(target, l.damage, W.radius, attacker.team, l.knockback);
       this._applyOnHitStatuses(attacker, target, now, at);
       worldMatrixChain(target.body.headTop);

@@ -2345,6 +2345,45 @@ export class VisualEffects {
     });
   }
 
+  /** A short flash at the whip tip, with two expanding fronts and outward sparks. */
+  spawnWhipTipBlast(at: Vector3, radius: number): void {
+    const duration = 0.48;
+    const root = new TransformNode("whipTipBlast", this._scene);
+    root.position.copyFrom(at);
+    const hot = this._fxMat(new Color3(1, 0.35, 0.08), new Color3(1.25, 0.46, 0.12));
+    const core = this._fxMat(new Color3(1, 0.81, 0.35), new Color3(1.35, 0.91, 0.36));
+    const rings = [-0.35, 0.7].map((tilt, index) => {
+      const ring = MeshBuilder.CreateTorus("whipBlastFront", { diameter: 2, thickness: 0.15, tessellation: 16 }, this._scene);
+      ring.parent = root;
+      ring.material = index === 0 ? hot : core;
+      ring.isPickable = false;
+      ring.rotation.set(tilt, 0, tilt * 0.8);
+      ring.scaling.setAll(0.28);
+      return ring;
+    });
+    const sparks = Array.from({ length: 12 }, (_, index) => {
+      const y = (index + 0.5) / 6 - 1;
+      const angle = index * Math.PI * (3 - Math.sqrt(5));
+      const horizontal = Math.sqrt(1 - y * y);
+      const direction = new Vector3(Math.cos(angle) * horizontal, y, Math.sin(angle) * horizontal);
+      const spark = MeshBuilder.CreateBox("whipBlastSpark", { width: 0.042, height: 0.042, depth: 0.28 }, this._scene);
+      spark.parent = root;
+      spark.material = index % 3 === 0 ? hot : core;
+      spark.isPickable = false;
+      spark.position.copyFrom(direction.scale(0.22));
+      spark.rotationQuaternion = Quaternion.FromUnitVectorsToRef(new Vector3(0, 0, 1), direction, new Quaternion());
+      return { spark, direction };
+    });
+    this._effects.push({ root, remaining: duration, update: (_dt, remaining) => {
+      const age = duration - remaining;
+      const reach = 0.28 + (radius - 0.28) * Math.min(1, age / 0.22);
+      rings[0].scaling.setAll(reach);
+      rings[1].scaling.setAll(reach * 0.78);
+      for (const { spark, direction } of sparks) spark.position.copyFrom(direction.scale(reach * 1.13));
+      hot.alpha = core.alpha = Math.min(1, remaining / 0.25);
+    }, dispose: () => { hot.dispose(); core.dispose(); } });
+  }
+
   // ══════════════════ EXPLOSION BURST ══════════════════
   /** A lumpy two-tone fireball, fat yellow lobes each inside an orange shell with a few orange flecks thrown clear, that burns out piece by piece, a head-sized white smoke puff, the dark ball, a low bank of tan dust puffs billowing out along the ground wider than the fire and a spray of clods that outlasts the smoke. No particles. */
   spawnExplosionBurst(position: Vector3, scale = 1): void {
