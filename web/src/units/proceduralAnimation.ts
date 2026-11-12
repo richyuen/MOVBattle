@@ -5035,6 +5035,8 @@ export class ProceduralAnimator {
     arms: Array<{ out: number; elbow: number; swing: number; rate: number; phase: number }>;
   } | null = null;
   private _idleSink = 0;
+  /** A crewman with a cutlass in his right fist: his reload is the raised-blade signal (found once). */
+  private _reloadCutlass: boolean | null = null;
   private _buildIdlePose(): NonNullable<ProceduralAnimator["_idlePose"]> {
     const h = (n: number): number => {
       const v = Math.sin(this._wobblePhase * 12.9898 + n * 78.233) * 43758.5453;
@@ -5498,6 +5500,18 @@ export class ProceduralAnimator {
 
     switch (this._attackMotion) {
       case "reload":
+        // [S] 527 a crewman reloading with a cutlass in his fist raises it high over his head, blade up, the cannon's ready signal
+        // (secret.bomb_cannon.jpg: the small pirate on top holds his curved cutlass up as the shot is readied)
+        if ((this._reloadCutlass ??= b.rightHand.getChildMeshes(false).some((m) => m.name === "cutlassBlade" || m.name === "blade"))) {
+          b.torso.rotation.x = -0.08;
+          b.rightShoulder.rotation.x = -2.7 - pulse * 0.25;
+          b.rightShoulder.rotation.z = -0.25;
+          b.rightElbow.rotation.x = -0.15;
+          b.leftShoulder.rotation.x = -0.1 + pulse * 0.12;
+          b.leftElbow.rotation.x = -0.24;
+          b.neck.rotation.x = -0.12;
+          break;
+        }
         b.torso.rotation.x = -0.05 + pulse * 0.08;
         b.rightShoulder.rotation.x = -0.18 + pulse * 0.28;
         b.rightElbow.rotation.x = -0.42 + pulse * 0.22;
