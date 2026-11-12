@@ -3227,6 +3227,44 @@ export function skeletonGiantHelm(scene: Scene, body: ArticulatedBody, team: Col
   return out;
 }
 
+/*
+ * [S] 527 (a.1) the Cavalry knight's helmet (secret.cavalry.red.png, .png: a grey steel helm closing round the head, a brow band over the eyes,
+ * a bevor plate over the mouth and chin below them so only the eyes show between, and a tall team crest running front to back over the crown).
+ * CAV_HELM in the head box (W, H, D, c) and the bead eyes: a half-sphere bowl .bowl W across from .rim H over the eye tops to .crown H over c;
+ * a back plate and two side plates from the rim down .side H; a brow band .browH H tall in front over the eyes; a bevor .bevorW W wide from .gap H
+ * under the eye bottoms down .bevor H, with a ridge down its middle; a crest fin .crestH H tall and .crestL D long on the bowl's top. Steel in
+ * pale lit cloth (metal renders near black), crest team self-lit .12, out of the glow. The hat's plain "helm" cup and "plume" are hidden.
+ */
+const CAV_HELM = { bowl: 1.24, rim: 0.02, crown: 0.62, side: 0.72, browH: 0.12, bevorW: 1.02, gap: 0.03, bevor: 0.42, crestH: 0.42, crestL: 1.05,
+  steel: new Color3(0.5, 0.51, 0.54) };
+export function cavalryHelm(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = CAV_HELM, glow = scene.getGlowLayerByName("glow"), mf = getMaterialFactory();
+  for (const m of [...body.headTop.getChildMeshes(false), ...body.headMesh.getChildMeshes(false)]) if (/^(helm|plume)$/.test(m.name)) m.setEnabled(false);
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const eyes = eyeBoxInHead(body) ?? { lo: new Vector3(c.x - W * 0.3, c.y, c.z + D * 0.4), hi: new Vector3(c.x + W * 0.3, c.y + H * 0.15, c.z + D * 0.55) };
+  const steel = mf.get("cloth", C.steel, { emissive: C.steel.scale(0.15), roughness: 0.9 });
+  const crestM = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material = steel): Mesh => { m.parent = head; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mt: Material = steel): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z); return put(m, mt);
+  };
+  const foot = eyes.hi.y + H * C.rim, crown = c.y + H * C.crown;
+  const bowl = put(MeshBuilder.CreateSphere("cavHelmBowl", { diameter: 1, segments: 6, slice: 0.5 }, scene));
+  bowl.scaling.set(W * C.bowl, (crown - foot) * 2, D * C.bowl); bowl.position.set(c.x, foot, c.z);
+  box("cavHelmBack", W * 1.16, H * C.side, D * 0.1, c.x, foot - (H * C.side) / 2, c.z - D * 0.57);
+  for (const side of [-1, 1]) box("cavHelmSide", W * 0.1, H * C.side, D * 1.08, c.x + side * W * 0.6, foot - (H * C.side) / 2, c.z);
+  const front = Math.max(eyes.hi.z, c.z + D / 2) + D * 0.03;
+  box("cavHelmBrow", W * 1.18, H * C.browH, D * 0.1, c.x, foot + (H * C.browH) / 2 - H * 0.02, front);
+  const top = eyes.lo.y - H * C.gap, bot = top - H * C.bevor;
+  box("cavHelmBevor", W * C.bevorW, top - bot, D * 0.1, c.x, (top + bot) / 2, front);
+  box("cavHelmRidge", W * 0.08, top - bot, D * 0.16, c.x, (top + bot) / 2, front + D * 0.04);
+  box("cavHelmCrest", W * 0.1, H * C.crestH, D * C.crestL, c.x, crown + (H * C.crestH) / 2 - H * 0.06, c.z, crestM);
+  return out;
+}
+
 /** Three sewn bands run diagonally from shoulder to opposite hip. */
 export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
