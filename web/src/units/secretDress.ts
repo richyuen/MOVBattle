@@ -2662,6 +2662,24 @@ export function maceSpinnerBreastplate(scene: Scene, body: ArticulatedBody): Mes
   });
 }
 
+/** Steel knee cops sit over tapered shin plates. */
+export function maceSpinnerGreaves(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const color = new Color3(0.54, 0.5, 0.43);
+  const steel = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.2), roughness: 1 });
+  const glow = scene.getGlowLayerByName("glow");
+  return [body.leftLowerLeg, body.rightLowerLeg].flatMap((shin) => {
+    const { center, extendSize } = shin.getBoundingInfo().boundingBox;
+    const greave = shirtSleeve(scene, shin, steel, "spinnerGreave", 0.9, 1.58, 1.32);
+    const knee = MeshBuilder.CreateIcoSphere("spinnerKneeCop", { radius: 1, subdivisions: 1 }, scene);
+    knee.parent = shin;
+    knee.position.set(center.x, center.y + extendSize.y * 0.77, center.z + extendSize.z * 0.7);
+    knee.scaling.set(extendSize.x * 1.55, extendSize.x * 1.2, extendSize.z * 0.95);
+    knee.material = steel;
+    glow?.addExcludedMesh(knee);
+    return [greave, knee];
+  });
+}
+
 /*
  * [S] 519 the Infernal Whip's chain whip (secret.infernal_whip.red.png: a chain of dark iron links about a body length long, hanging from the fist and
  * lying out over the ground, ending in a dark leaf-shaped blade; audit 518 b.1 "a short rigid dark stick with a few loose links behind"). CHAIN_WHIP:
