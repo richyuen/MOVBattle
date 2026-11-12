@@ -3612,3 +3612,51 @@ export function infernalArmbands(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 526 (a.4) the Infernal Whip's dark legs (secret.infernal_whip.blue.png, .red.png: deep team trousers from the tunic to the shins, near-black
+ * boots to mid-shin, and a dark rock plate over each knee split by glowing magma cracks; ours had the secret_demon tint's pale lilac legs).
+ * MAGMA_LEG in each limb's box (centre c, half size s, the hip/knee end +y): thigh an 8-sided shell .round over its length; shin a shell .round from
+ * its top down .shin of its length, a boot shaft .boot round from there to its foot end; thighs, shins and pelvis in deep team (team^2, renormalised,
+ * x .deep, self-lit .12), boot shafts and feet near-black rock (ROCK_HAIR, LESSONS 494); a knee plate, a flat ico .knee of the shin's width across,
+ * .kneeH of its length tall, on the shin's front at its top, with .cracks magma slivers on its face (ROCK_HAIR magma, left in the glow).
+ */
+const MAGMA_LEG = { round: 1.14, shin: 0.5, boot: 1.24, deep: 0.38, knee: 1.5, kneeH: 0.26, cracks: 3 };
+export function infernalTrousers(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const M = MAGMA_LEG, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const c0 = deepTeam(team, M.deep);
+  const cloth = mf.get("cloth", c0, { emissive: c0.scale(0.12), roughness: 1 });
+  const rock = mf.get("cloth", ROCK_HAIR.rock, { emissive: ROCK_HAIR.rock.scale(0.4), roughness: 1 });
+  const magma = mf.get("unlit", ROCK_HAIR.magma, { emissive: ROCK_HAIR.magma });
+  const out: Mesh[] = [];
+  for (const thigh of [body.leftUpperLeg, body.rightUpperLeg]) {
+    const { center: c, extendSize: s } = thigh.getBoundingInfo().boundingBox;
+    out.push(legShell(scene, "infernalTrouserThigh", thigh, cloth, c.y + s.y, c.y - s.y, M.round));
+    thigh.material = cloth; glow?.addExcludedMesh(thigh);
+  }
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const { center: c, extendSize: s } = shin.getBoundingInfo().boundingBox;
+    const top = c.y + s.y, L = s.y * 2, cut = top - L * M.shin;
+    out.push(legShell(scene, "infernalTrouserShin", shin, cloth, top, cut, M.round));
+    out.push(legShell(scene, "infernalBootShaft", shin, rock, cut, c.y - s.y, M.boot, M.boot * 1.06));
+    shin.material = rock; glow?.addExcludedMesh(shin);
+    const plate = MeshBuilder.CreateIcoSphere("infernalKneePlate", { radius: 0.5, subdivisions: 1, flat: true }, scene);
+    plate.parent = shin; plate.material = rock; glow?.addExcludedMesh(plate);
+    plate.scaling.set(s.x * 2 * M.knee, L * M.kneeH, s.z * 1.1);
+    const pz = c.z + s.z * 1.05, py = top - L * M.kneeH * 0.3;
+    plate.position.set(c.x, py, pz);
+    out.push(plate);
+    for (let k = 0; k < M.cracks; k++) {
+      const crack = MeshBuilder.CreateBox("infernalKneeCrack", { width: s.x * 0.16, height: L * M.kneeH * 0.62, depth: s.z * 0.12 }, scene);
+      crack.parent = shin; crack.material = magma;
+      crack.position.set(c.x + (k - (M.cracks - 1) / 2) * s.x * 0.55, py, pz + s.z * 0.52);
+      crack.rotation.z = (k % 2 ? 1 : -1) * 0.5;
+      out.push(crack);
+    }
+  }
+  for (const m of body.allMeshes) {
+    if (m.name.endsWith("_pelvis")) { m.material = cloth; glow?.addExcludedMesh(m); }
+    if (m.name.endsWith("_lFootM") || m.name.endsWith("_rFootM")) { m.material = rock; glow?.addExcludedMesh(m); }
+  }
+  return out;
+}
