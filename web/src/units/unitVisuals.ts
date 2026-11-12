@@ -1197,7 +1197,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["flame_lash"], "ability-active": ["flame_lash"] },
       });
     case "secret_bank_robbers":
-      return vis({ scale: 1.08, bulk: 1.08 }, "flintlock", "cowboy_hat", "none", "safe_bundle", "#5b5b5b", "flintlock", {
+      // [S] 527 (a.5) long-legged Wobblers under the safe (secret.bank_robbers.png): legLength 1.22, the straight stance in ProceduralAnimator ROBBER_STANCE
+      return vis({ scale: 1.08, bulk: 1.08, legLength: 1.22 }, "flintlock", "cowboy_hat", "none", "safe_bundle", "#5b5b5b", "flintlock", {
         posePreset: "support", materialPreset: "secret_bandit", attachmentPreset: "bank_robbers",
         stateVariants: { attacking: ["loot_flash"] },
       });

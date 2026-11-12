@@ -223,6 +223,8 @@ const CASTER_CROUCH = 0.3;
 const JAVELIN_UPRIGHT = { crouch: 0.04, lean: 0.08, lean2: 0.06 };
 /** The halberdier's rest stance (376, _buildIdlePose): square on straight legs, hip tilt .tilt, stride .stride, no crouch, lean .lean. */
 const HALBERD_SQUARE = { tilt: 0.03, stride: 0.12, lean: 0.04, spread: 0.09, knee: 0.06 };
+/** [S] 527 the Bank Robbers' carry stance: square, no crouch, a short stride, chest upright under the safe. */
+const ROBBER_STANCE = { tilt: 0.02, stride: 0.14, crouch: 0, chin: 0, cock: 0, lean: 0.02 };
 /*
  * [S] 387 the halfling stands up on straight legs planted wide (farmer.halfling.blue.png, factions/farmer.jpg: upright, chest over the hips, the feet
  * well apart either side of him, knees straight, both arms hung at his sides; critic 383: a deep crouch on bent knees). The halberdier's square stance
@@ -5109,13 +5111,17 @@ export class ProceduralAnimator {
     // The Mace Spinner carries both maces beside a level pelvis with straight knees.
     const maceSpinner = this._body.headMesh.getChildMeshes(true).some(m => m.name === "spinnerHelmDome");
     if (maceSpinner) Object.assign(stance, { tilt: 0, stride: 0.08, crouch: 0, chin: 0, cock: 0 });
+    // [S] 527 the Bank Robbers stand tall and straight-legged under the safe (secret.bank_robbers.png, .red.png: long straight legs, feet a
+    // short stride apart, chest upright under the raised arms; ours sank on bent knees and bowed), found by their charcoal sleeves (ROBBER_STANCE)
+    const robber = this._body.leftUpperArm.getChildMeshes(true).some(m => m.name === "bankSleeveUpper");
+    if (robber) Object.assign(stance, ROBBER_STANCE);
     // [S] 488 he stands square with his feet parted (good.righteous_paladin.red.png: a hand's width of air between the knees, each cop
     // on its own leg), not one white column: the square stance at PALADIN_SPLAY rad out at each hip
     return {
-      square: square || paladin || maceSpinner,
+      square: square || paladin || maceSpinner || robber,
       wide,
       spread: paladin ? PALADIN_SPLAY : undefined,
-      lean: pharaoh || thor || superBoxer || wizard || devout || paladin || glaive || aegis || arbiter || chrono || shouter || executioner || maceSpinner ? 0.04 : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
+      lean: pharaoh || thor || superBoxer || wizard || devout || paladin || glaive || aegis || arbiter || chrono || shouter || executioner || maceSpinner ? 0.04 : robber ? ROBBER_STANCE.lean : miner ? MINER_UPRIGHT.lean : cactus ? CACTUS_UPRIGHT.lean : queen ? QUEEN_UPRIGHT.lean : snake ? SNAKE_UPRIGHT.lean : wide ? HALFLING_STANCE.lean : square ? HALBERD_SQUARE.lean : upright ? JAVELIN_UPRIGHT.lean + h(41) * JAVELIN_UPRIGHT.lean2 : 0.26 + h(41) * 0.14,
       side: h(42) < 0.5 ? -1 : 1,
       turn: (h(44) < 0.5 ? -1 : 1) * (0.2 + h(45) * 0.4),
       ...stance,
