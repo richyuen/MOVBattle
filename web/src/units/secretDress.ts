@@ -696,7 +696,8 @@ export function chuKoNuLeggings(scene: Scene, body: ArticulatedBody, team: Color
  * .thick Hw deep (half each), its inside face flattened to .flat and its far end drawn to a blunt point (.point of the width left there), set .past
  * of its length beyond the knuckles; the two halves .gap of the thickness apart; a bead eye pair .eye Hw on the upper shell at its tip end.
  */
-const CLAM_HAND = { long: 1.3, wide: 1.05, thick: 0.62, past: 0.38, gap: 0.08, flat: 0.25, point: 0.35, eye: 0.13, grey: new Color3(0.42, 0.4, 0.4), dark: new Color3(0.22, 0.2, 0.2) };
+// 526.6b: the look read the shells as slivers edge-on (each half was a quarter of .thick deep): each half is now half of it, bigger overall
+const CLAM_HAND = { long: 1.55, wide: 1.25, thick: 0.85, past: 0.4, gap: 0.06, flat: 0.35, point: 0.45, eye: 0.13, grey: new Color3(0.42, 0.4, 0.4), dark: new Color3(0.22, 0.2, 0.2) };
 function clamHalfShell(scene: Scene, side: number, C: typeof CLAM_HAND): Mesh {
   const shell = MeshBuilder.CreateIcoSphere("clamShell", { radius: 1, subdivisions: 1, updatable: true }, scene);
   const p = shell.getVerticesData("position")!;
@@ -731,15 +732,15 @@ export function clamsHands(scene: Scene, body: ArticulatedBody): Mesh[] {
     for (const [side, material] of [[1, grey], [-1, dark]] as const) {
       const shell = clamHalfShell(scene, side, C);
       shell.parent = hand; shell.material = material;
-      shell.scaling.set(W / 2, L / 2, T / 4);
-      shell.position.set(at.x, at.y, at.z + side * T * (0.25 * C.flat + C.gap / 2));
+      shell.scaling.set(W / 2, L / 2, T / 2);
+      shell.position.set(at.x, at.y, at.z + side * T * (0.5 * C.flat + C.gap / 2));
       out.push(shell);
     }
     for (const sx of [-1, 1]) {
       const r = Hw * C.eye / hs.x;
       const eye = MeshBuilder.CreateSphere("clamEye", { diameter: r * 2, segments: 6 }, scene);
       eye.parent = hand; eye.material = white;
-      eye.position.set(at.x + sx * r * 1.15, at.y - L * 0.3, at.z + T * (0.25 + C.gap / 2) + r * 0.2);
+      eye.position.set(at.x + sx * r * 1.15, at.y - L * 0.3, at.z + T * (0.5 * C.flat + C.gap / 2) + T * 0.38 + r * 0.2);
       const dot = MeshBuilder.CreateSphere("clamPupil", { diameter: r, segments: 6 }, scene);
       dot.parent = hand; dot.material = pupil;
       dot.position.copyFrom(eye.position.add(new Vector3(0, -r * 0.25, r * 0.7)));
