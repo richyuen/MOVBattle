@@ -2859,3 +2859,43 @@ export function infernalShirt(scene: Scene, body: ArticulatedBody, team: Color3)
   return [body.leftUpperArm, body.rightUpperArm].map((arm) =>
     shirtSleeve(scene, arm, cloth, "infernalShirtCap", 0.45, 1.35, 1.15));
 }
+
+/** The pinafore's brown-red bib and straps meet a flared, thigh-length skirt. */
+export function iceMagePinafore(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const torso = body.torsoMesh;
+  const bounds = torso.getBoundingInfo().boundingBox;
+  const center = torso.position.add(bounds.center.multiply(torso.scaling));
+  const size = bounds.extendSize.multiply(torso.scaling);
+  const color = new Color3(0.29, 0.10, 0.12);
+  const cloth = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.2), roughness: 1 });
+  const top = center.y - size.y * 0.78;
+  const knee = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const hem = top + (knee - top) * 0.72;
+  const skirt = MeshBuilder.CreateLathe("iceMagePinaforeSkirt", {
+    shape: [new Vector3(size.x * 1.37, hem, 0), new Vector3(size.x * 1.22, hem + (top - hem) * 0.45, 0), new Vector3(size.x * 1.02, top, 0)],
+    tessellation: 10,
+  }, scene);
+  skirt.parent = body.torso;
+  skirt.position.set(center.x, 0, center.z);
+  skirt.scaling.z = Math.max(0.75, size.z / size.x * 1.28);
+  skirt.material = cloth;
+  skirt.convertToFlatShadedMesh();
+  const bib = MeshBuilder.CreateBox("iceMagePinaforeBib", {
+    width: size.x * 1.48, height: size.y * 1.16, depth: size.z * 0.44,
+  }, scene);
+  bib.parent = body.torso;
+  bib.position.set(center.x, center.y - size.y * 0.29, center.z + size.z * 0.9);
+  bib.material = cloth;
+  const out = [skirt, bib];
+  for (const side of [-1, 1]) {
+    const strap = MeshBuilder.CreateBox("iceMagePinaforeStrap", {
+      width: size.x * 0.23, height: size.y * 0.92, depth: size.z * 0.2,
+    }, scene);
+    strap.parent = body.torso;
+    strap.position.set(center.x + side * size.x * 0.57, center.y + size.y * 0.57, center.z + size.z * 0.85);
+    strap.rotation.z = -side * 0.16;
+    strap.material = cloth;
+    out.push(strap);
+  }
+  return out;
+}
