@@ -3355,3 +3355,42 @@ export function presentElfShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
     return shirtSleeve(scene, arm, cloth, "elfShirtSleeve", 1.0, 1.26, index < 2 ? 1.2 : 1.65);
   });
 }
+
+/** An 8-sided cloth shell round a leg limb, from local y `topY` down to `hemY` of the limb mesh, `round` (top) and `hemRound` of its box wide. */
+function legShell(scene: Scene, name: string, limb: Mesh, material: Material, topY: number, hemY: number, round: number, hemRound = round): Mesh {
+  const { center: c, extendSize: s } = limb.getBoundingInfo().boundingBox;
+  const shell = MeshBuilder.CreateCylinder(name, { height: topY - hemY, diameterTop: s.x * 2 * round, diameterBottom: s.x * 2 * hemRound, tessellation: 8 }, scene);
+  shell.parent = limb; shell.position.set(c.x, (topY + hemY) / 2, c.z);
+  shell.scaling.z = s.z / s.x; shell.rotation.y = Math.PI / 8;
+  shell.material = material; shell.convertToFlatShadedMesh();
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(shell);
+  return shell;
+}
+
+/** A team colour saturated (squared, renormalised to its own peak) and scaled by k: TABS's deep team cloth (LESSONS 517). */
+function deepTeam(team: Color3, k: number): Color3 {
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  return sat.scale(peak / Math.max(sat.r, sat.g, sat.b, 1e-3) * k);
+}
+
+/*
+ * [S] 525 (a.3) the Present Elf's green trousers (secret.present_elf.png, .blue.png: straight green trousers from the belt to the boots on both
+ * teams; ours had team legs). ELF_TROUSER: per thigh an 8-sided shell .thigh of its box round over its whole length, per shin one .shin round to
+ * its foot end; thighs, shins and pelvis re-clothed in the same green (own lit cloth, self-lit .selfLit, out of the glow). The tunic skirt is off
+ * for him (unitFactory), so the trousers run up to the vest.
+ */
+const ELF_TROUSER = { thigh: 1.14, shin: 1.12, selfLit: 0.25, green: new Color3(0.03, 0.36, 0.15) };
+export function presentElfTrousers(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const E = ELF_TROUSER, glow = scene.getGlowLayerByName("glow");
+  const green = getMaterialFactory().get("cloth", E.green, { emissive: E.green.scale(E.selfLit), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const [limb, shin] of [[body.leftUpperLeg, false], [body.rightUpperLeg, false], [body.leftLowerLeg, true], [body.rightLowerLeg, true]] as const) {
+    const { center: c, extendSize: s } = limb.getBoundingInfo().boundingBox;
+    out.push(legShell(scene, shin ? "elfTrouserShin" : "elfTrouserThigh", limb, green, c.y + s.y, c.y - s.y, shin ? E.shin : E.thigh));
+    limb.material = green; glow?.addExcludedMesh(limb);
+  }
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (pelvis) { pelvis.material = green; glow?.addExcludedMesh(pelvis); }
+  return out;
+}
+
