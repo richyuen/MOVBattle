@@ -3525,3 +3525,53 @@ export function iceMageBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
   const fur = mf.get("unlit", ICE_BOOT.fur, { emissive: ICE_BOOT.fur });
   return shinBoot(scene, body, "iceMageBoot", red, fur, ICE_BOOT);
 }
+
+/*
+ * [S] 525 (a.3) the Infernal Whip's magma armbands (secret.infernal_whip.blue.png, .red.png: a dark rock plate over each shoulder with a short spike,
+ * and a dark rock band round the upper arm, both split by bright orange glowing cracks). MAGMA_BAND in the upper arm's box (centre c, half size s,
+ * the shoulder end +y): a pauldron, a flat ico .pad of the box round and .padH of its length tall over the shoulder end, a spike cone .spike long
+ * up and out of it; a band .bandH of the arm long and .band round, its middle .bandAt down the arm from the shoulder (outside the 524 sleeve, out
+ * 1.12, and the shirt cap, 1.35); .cracks thin magma slivers round each, standing proud of the rock. Rock near-black lit self-lit .4 (ROCK_HAIR),
+ * cracks unlit magma (ROCK_HAIR) left in the glow so they bloom.
+ */
+const MAGMA_BAND = { pad: 1.85, padH: 0.42, spike: 0.32, band: 1.5, bandH: 0.2, bandAt: 0.55, cracks: 4, crackW: 0.16, tilt: 0.45 };
+export function infernalArmbands(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const M = MAGMA_BAND, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const rock = mf.get("cloth", ROCK_HAIR.rock, { emissive: ROCK_HAIR.rock.scale(0.4), roughness: 1 });
+  const magma = mf.get("unlit", ROCK_HAIR.magma, { emissive: ROCK_HAIR.magma });
+  const out: Mesh[] = [];
+  for (const [arm, side] of [[body.leftUpperArm, -1], [body.rightUpperArm, 1]] as const) {
+    const { center: c, extendSize: s } = arm.getBoundingInfo().boundingBox;
+    const L = s.y * 2, zs = s.z / s.x;
+    const crackRing = (y: number, r: number, h: number, n: number, phase: number) => {
+      for (let k = 0; k < n; k++) {
+        const a = phase + (k / n) * Math.PI * 2;
+        const crack = MeshBuilder.CreateBox("infernalMagmaCrack", { width: r * M.crackW, height: h, depth: r * 0.08 }, scene);
+        crack.parent = arm; crack.material = magma;
+        crack.position.set(c.x + Math.cos(a) * r * 1.02, y, c.z + Math.sin(a) * r * zs * 1.02);
+        crack.rotation.set(0, Math.PI / 2 - a, (k % 2 ? 1 : -1) * M.tilt);
+        out.push(crack);
+      }
+    };
+    const top = c.y + s.y;
+    const pad = MeshBuilder.CreateIcoSphere("infernalPauldron", { radius: 0.5, subdivisions: 1, flat: true }, scene);
+    pad.parent = arm; pad.material = rock; glow?.addExcludedMesh(pad);
+    pad.scaling.set(s.x * 2 * M.pad, L * M.padH, s.z * 2 * M.pad);
+    pad.position.set(c.x, top - L * M.padH * 0.25, c.z);
+    out.push(pad);
+    const spike = MeshBuilder.CreateCylinder("infernalPauldronSpike", { height: L * M.spike, diameterTop: 0, diameterBottom: s.x * 0.7, tessellation: 5 }, scene);
+    spike.parent = arm; spike.material = rock; glow?.addExcludedMesh(spike);
+    spike.position.set(c.x + side * s.x * 0.45, top + L * M.spike * 0.3, c.z);
+    spike.rotation.z = -side * 0.5;
+    out.push(spike);
+    crackRing(top - L * M.padH * 0.25, s.x * M.pad, L * M.padH * 0.4, 5, 0.3);
+    const bandY = top - L * M.bandAt;
+    const band = MeshBuilder.CreateCylinder("infernalArmband", { height: L * M.bandH, diameter: s.x * 2 * M.band, tessellation: 8 }, scene);
+    band.parent = arm; band.material = rock; glow?.addExcludedMesh(band);
+    band.position.set(c.x, bandY, c.z); band.scaling.z = zs; band.rotation.y = Math.PI / 8;
+    band.convertToFlatShadedMesh();
+    out.push(band);
+    crackRing(bandY, s.x * M.band, L * M.bandH * 0.8, M.cracks, 0);
+  }
+  return out;
+}
