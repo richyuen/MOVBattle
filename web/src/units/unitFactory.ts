@@ -1147,7 +1147,8 @@ export class UnitFactory {
     // [S] 527 (a.2): the Skeleton Giant's team Greek helmet in place of the grey crown ball (secretDress skeletonGiantHelm)
     if (definition.id === "secret.skeleton_giant" && !shouldUseVehicleBody) propMeshes.push(...skeletonGiantHelm(this._scene, body, teamColor));
     // [S] 527 (a.1): the Cavalry rider's grey knight helm with a bevor and team crest (secretDress cavalryHelm)
-    if (definition.id === "secret.cavalry" && !shouldUseVehicleBody && visual.special === "mount_horse") propMeshes.push(...cavalryHelm(this._scene, body, teamColor));
+    // (527.7b: the horse actor carries the "mount_horse" special; the rider is the one without it)
+    if (definition.id === "secret.cavalry" && !shouldUseVehicleBody && visual.special !== "mount_horse") propMeshes.push(...cavalryHelm(this._scene, body, teamColor));
     // [S] 517 (a.1): an elf cap with a cream fur band and pompom, the face bare (secretDress elfCap)
     if (definition.id === "secret.present_elf" && !shouldUseVehicleBody) propMeshes.push(...elfCap(this._scene, body));
     // [S] 519 (b.1): a torso-sized team present with gold-edged ribbons, a big bow and bells, held before the chest (secretDress presentElfPresent)
