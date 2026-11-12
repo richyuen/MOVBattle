@@ -1702,7 +1702,7 @@ export class SimulationSystem {
    * .radius m. .open s later it bursts open in a puff and one of his summons (summonUnitIds, in turn) steps out of it as his ally; the box is gone.
    * His hands get a new present .rearm s after the throw. Logged "throw_present" at the let-go (the capture's release), "present_open" at the opening.
    */
-  private _presents: { node: TransformNode; from: Vector3; to: Vector3; t0: number; dur: number; landed: boolean; openAt: number; attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3 }[] = [];
+  private _presents: { node: TransformNode; from: Vector3; to: Vector3; t0: number; dur: number; landed: boolean; openAt: number; opened: boolean; lid: Mesh | null; lidY: number; attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3 }[] = [];
   private _presentsAway = new Map<TransformNode, number>();
   private _presentTurn = new Map<RuntimeUnit, number>();
   private _tryPresentThrow(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, now: number): boolean {
@@ -1727,12 +1727,14 @@ export class SimulationSystem {
     node.setEnabled(true);
     held.setEnabled(false);
     this._presentsAway.set(held, now + P.rearm);
-    // the box's floor on the ground: half its height (the box mesh, root-centred) under the root
+    // Set the lower face of the box's floor on the ground.
     const box = held.getChildMeshes(true).find((m) => m.name === "presentBox");
-    const half = box ? box.getBoundingInfo().boundingBox.extendSize.y * scale.y : 0.25;
+    const half = box ? (box.getBoundingInfo().boundingBox.extendSize.y - box.position.y) * scale.y : 0.25;
     const to = new Vector3(target.position.x, half, target.position.z);
     const dur = Math.max(0.3, Vector3.Distance(new Vector3(from.x, 0, from.z), new Vector3(to.x, 0, to.z)) / P.speed);
-    this._presents.push({ node, from, to, t0: now, dur, landed: false, openAt: Infinity, attacker, target, damage, knockback });
+    const lid = node.getChildMeshes(true).find((m) => m.name === "presentThrown.presentLid") as Mesh | undefined;
+    this._presents.push({ node, from, to, t0: now, dur, landed: false, openAt: Infinity,
+      opened: false, lid: lid ?? null, lidY: lid?.position.y ?? 0, attacker, target, damage, knockback });
     this._logAbility(attacker, "throw_present", now, target.position);
     return true;
   }
@@ -1762,10 +1764,20 @@ export class SimulationSystem {
         continue;
       }
       if (now < p.openAt) continue;
+      const age = now - p.openAt;
+      if (age >= 0.8) {
+        p.node.dispose(false, false);
+        this._presents.splice(this._presents.indexOf(p), 1);
+        continue;
+      }
+      if (p.lid) {
+        p.lid.position.set(0.12 + age * 1.6, p.lidY + Math.max(0, 0.32 + 3.2 * age - 5.2 * age ** 2), -0.12 - age * 0.45);
+        p.lid.rotation.set(0.35 + age * 2.8, 0, -0.2 - age * 2.3);
+      }
+      if (p.opened) continue;
+      p.opened = true;
       const spot = new Vector3(p.to.x, 0, p.to.z);
-      p.node.dispose(false, false);
-      this._presents.splice(this._presents.indexOf(p), 1);
-      this.visualEffects?.spawnSmokePuff(spot, new Color3(0.95, 0.85, 0.5));
+      this.visualEffects?.spawnConfetti(spot.add(new Vector3(0, p.to.y, 0)));
       this._logAbility(p.attacker, "present_open", now, spot);
       const ids = p.attacker.definition.summonUnitIds ?? [];
       if (ids.length === 0 || !this.spawnUnitById || p.attacker.isDead || this.getLivingCount(p.attacker.team) >= this.summonLivingCap) continue;

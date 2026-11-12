@@ -2164,20 +2164,29 @@ export function presentElfPresent(scene: Scene, body: ArticulatedBody, team: Col
     b.parent = parent; b.position.set(x, y, z); b.material = m; out.push(b); glow?.addExcludedMesh(b);
     return b;
   };
-  box("presentBox", W, H, D, 0, 0, 0, boxMat);
+  const wall = Math.min(W, D) * 0.075;
+  box("presentBox", W, wall, D, 0, (wall - H) / 2, 0, boxMat);
+  for (const side of [-1, 1]) {
+    box("presentWall", W, H, wall, 0, 0, side * (D - wall) / 2, boxMat);
+    box("presentWall", wall, H, D - wall * 2, side * (W - wall) / 2, 0, 0, boxMat);
+  }
   const lidY = H / 2 - H * P.lidH / 2;
-  box("presentLid", W * P.lid, H * P.lidH, D * P.lid, 0, lidY, 0, boxMat);
+  const lid = box("presentLid", W * P.lid, H * P.lidH, D * P.lid, 0, lidY, 0, boxMat);
   const bw = W * P.band, sw = W * P.stripe, eps = 0.006;
   // the band down the front and over the lid both ways, gold stripes at its edges
-  box("presentBand", bw, H * 1.01, D * P.lid + eps * 2, 0, 0, 0, bandMat);
-  box("presentBandX", W * P.lid + eps * 2, H * P.lidH + eps, bw, 0, lidY, 0, bandMat);
+  box("presentBandX", W * P.lid + eps * 2, H * P.lidH + eps, bw, 0, 0, 0, bandMat, lid);
+  box("presentBandZ", bw, H * P.lidH + eps, D * P.lid + eps * 2, 0, 0, 0, bandMat, lid);
   for (const side of [-1, 1]) {
-    box("presentStripe", sw, H * 1.02, D * P.lid + eps * 4, side * (bw / 2 - sw / 2), 0, 0, gold);
-    box("presentStripeX", W * P.lid + eps * 4, H * P.lidH + eps * 2, sw, 0, lidY, side * (bw / 2 - sw / 2), gold);
+    box("presentBand", bw, H, eps, 0, 0, side * (D + eps) / 2, bandMat);
+    for (const edge of [-1, 1]) {
+      box("presentStripe", sw, H, eps, edge * (bw - sw) / 2, 0, side * (D + eps * 2) / 2, gold);
+    }
+    box("presentStripeX", W * P.lid + eps * 4, H * P.lidH + eps * 2, sw, 0, 0, side * (bw / 2 - sw / 2), gold, lid);
+    box("presentStripeZ", sw, H * P.lidH + eps * 2, D * P.lid + eps * 4, side * (bw / 2 - sw / 2), 0, 0, gold, lid);
   }
   // the bow on the lid: a knot, two loops flaring up and out, two long tails fanned back, two gold bells at the knot's front
   const bow = new TransformNode("presentBow", scene);
-  bow.parent = root; bow.position.set(0, H / 2 + W * 0.06, 0);
+  bow.parent = lid; bow.position.set(0, H / 2 + W * 0.06 - lidY, 0);
   box("presentKnot", W * 0.16, W * 0.13, W * 0.16, 0, 0, 0, bandMat, bow);
   for (const side of [-1, 1]) {
     const loop = box("presentLoop", W * P.loop, W * 0.16, W * 0.12, side * W * P.loop * 0.45, W * 0.06, 0, bandMat, bow);
