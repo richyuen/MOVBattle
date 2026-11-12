@@ -2,6 +2,13 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+522 | 7bca30d3 | secret.bank_robbers.a | approved [S] (struck 1 and 3 by lineup)
+522 | da6e9b4a | secret.mace_spinner.a | approved [S] (struck 1)
+522 | 1b6811a1 | secret.ice_mage.a | approved [S] (struck 1 and 6)
+522 | 20ef0217 | secret.infernal_whip.c | approved [S] (struck 2)
+522 | a56f3ca0 | secret.mace_spinner.a | approved [S] (struck 3)
+522 | d8255310 | secret.present_elf.c | approved [S] (struck 2, c PASS)
+
 521 | 219259ad | secret.cheerleader.a | approved [S] (struck 1)
 521 | 457aea4d, 3a78a68b | secret.cheerleader.a | approved [S] (struck 2, a PASS and confirmed)
 521 | 307b20ca | secret.raptor_rider.a | approved [S] (struck 1 and 4 by lineup)
@@ -54,6 +61,11 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+PB:OVERHEAD_SAFE | W .72 H .92 of body, inset hinged door .59W x .65H; floor unchanged | 522 | approved | W .6 H .42, flat face
+secretDress:maceSpinnerBreastplate/maceSpinnerGreaves | five-ring breastplate and three-ring fauld; 1.58 to 1.32 tapered shin shell with ico knee cop | 522 | approved | team vest and bare legs
+secretDress:iceMagePinafore hardware | two brass studs, 11 links with .56 torso half-height sag | 522 | approved | plain straps
+SS/RU:Infernal Whip burn | applyBurn for existing status duration, materialize flames on hit tick | 522 | approved | one-off fire burst
+secretDress/SS:present opening | hollow box, lid toss and confetti, discard box after .8 s | 522 | approved | solid box disappears at opening
 secretDress:cheerleaderTop | unlit cream (.94,.90,.79), cap coverage .34, flare 1.43/1.2 | 521 | approved | teal torso
 secretDress:cheerleaderSash | three bands .19 half-width each, shoulder z 1.34 torso half-depth | 521 | approved | no sash
 UV:secret_raptor_rider | bulk .88, torso width/depth .8/.82, arms 1.18 long and .76/.72 wide | 521 | approved | bulk 1.1

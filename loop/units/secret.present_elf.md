@@ -8,20 +8,19 @@ a FAIL (1 since 518, 1 struck)
 b FAIL (1 since 518, 1 struck)
  2. bells on the present in unit_secret.present_elf_idle — TABS: two gold bells on the bow; ours has none (ref: secret.present_elf.blue.png)
  3. candy cane on the present in unit_secret.present_elf_idle — TABS: a cream-and-team striped cane laid across the lid; ours has none (ref: secret.present_elf.red.png)
-c FAIL (1 since 515, 1 struck)
- 2. present opening in unit_secret.present_elf_ability/_ability_after — TABS: the present lands and bursts open after ~3 s to release the unit; ours has the units appear standing beside the elf (ref: card Characteristics)
+c PASS (522)
 d PASS (519 stats)
 ## Ranked gaps
 1. [S] secret.present_elf.a open vest — blocker 2: two open team-coloured panels with toggles over the cream shirt — ref: secret.present_elf.png — ours: unit_secret.present_elf_idle.png
 2. [S] secret.present_elf.b gift bells — blocker 2: mount the two bells visibly in front of the ribbon knot — ref: secret.present_elf.blue.png — ours: unit_secret.present_elf_idle.png
-3. [S] secret.present_elf.c present opening — blocker 2: a lid burst and the unit stepping out — ref: card Characteristics — ours: unit_secret.present_elf_ability.png
 ## Attempts (iter | gap | criterion | verdict)
+522 | the hollow present kicks its lid clear and releases the ally in confetti (d8255310) | c | approved (struck 2, c PASS)
 521 | add a cream undershirt and flared wrist sleeves (d7ddb060) | a | approved (struck 1)
 520 | throws the present from his chest at the man; it lands, opens 3 s on and his ally steps out, simulationSystem PRESENT_THROW (ed6474a0) | c | approved (struck 1)
 519 | torso-sized team present, gold-edged band, bow with tails and small bells, secretDress presentElfPresent PRESENT (b2600e04) | b | approved (struck 1)
 517 | green elf cap, cream fur band, pompom, hood off, secretDress elfCap (b34b4519, 8142c383) | a | approved (struck 1, 7, 6 by lineup)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 521: the ability pair now waits for present_open and frames its target (1fd866ae).
+- 522: the ability pair holds on the box's landing spot at present_open (da9a1858).
 - 519 DEFECTS: bells (PRESENT.bell .13 W) hidden in the knot; box narrower than tall, bow small.
 - 517 DEFECTS: the cap is short and upright; TABS taller, flopping forward over the band.

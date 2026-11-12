@@ -27,7 +27,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).
 - `--units` takes comma-separated IDs and re-shoots lineup_<f> (498); a lethal blast freezes a duel: off-camera reserves (504).
 - A dress change aimed at the idle must clear the rest pose: probe what covers it first (442). A giant's metrics.overallHeight is pre-hover: use headTop world y.
-- Aim at a toppled target's torso bounds (509). stats.mjs takes ids comma-joined in one argument; spaced, only the first (515).
+- Frame a delayed prop opening at its landing spot (522), a toppled target at torso bounds (509). Pass stats IDs comma-joined (515).
 - An instant slam logs at swing start: use the pending blow (426). A special logged at let-go owns its missile (427). A cast status can put _struck before impact: use ABILITY_PREF for on-landing effects (435).
 - _ability/_release are on the log tick, before RuntimeUnit.update: pose explicitly for contact, and use the next frame for motion (437 bat, 505 parry). A latch reads on the pin before its damage ticks (444 vampire).
 - A neck-rooted piece must clear the head box: probe_bbox it (439). Before flipping a pose's sign, probe yaw and world pitch at the frame (439).
