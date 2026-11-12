@@ -6754,17 +6754,39 @@ function buildHat(scene: Scene, type: HatType, _s: number, accent: Color3, teamC
       return band;
     }
     case "cowboy_hat": {
-      const brim = MeshBuilder.CreateCylinder("cowboyBrim", { height: 0.02 * s, diameter: 0.34 * s, tessellation: 18 }, scene);
-      brim.material = mat(scene, new Color3(0.22, 0.15, 0.1));
-      brim.position.y = 0.04 * s;
-      const crown = MeshBuilder.CreateCylinder("cowboyCrown", { height: 0.12 * s, diameterTop: 0.14 * s, diameterBottom: 0.18 * s, tessellation: 14 }, scene);
-      crown.position.y = 0.08 * s;
+      // The two Bank Robbers wear low, pinched felt crowns with the sides of the brim curled up.
+      const radius = 0.139 * s;
+      const brim = MeshBuilder.CreateCylinder("cowboyBrim", { height: 0.014 * s, diameter: radius * 2, tessellation: 20 }, scene);
+      brim.updateMeshPositions((positions) => {
+        for (let i = 0; i < positions.length; i += 3) {
+          const x = positions[i] / radius;
+          const z = positions[i + 2] / radius;
+          positions[i + 1] += s * (0.05 * Math.abs(x) ** 4 - 0.011 * z ** 2);
+          positions[i + 2] *= 0.82;
+        }
+      });
+      brim.material = mat(scene, new Color3(0.24, 0.075, 0.075), 0.28, "cloth");
+      brim.position.y = -0.005 * s;
+      brim.convertToFlatShadedMesh();
+      const rings = [[0, 0], [0.091, 0], [0.087, 0.047], [0.068, 0.083], [0.039, 0.086], [0, 0.086]];
+      const crown = MeshBuilder.CreateLathe("cowboyCrown", {
+        shape: rings.map(([r, y]) => new Vector3(r * s, y * s, 0)), tessellation: 14,
+      }, scene);
+      crown.updateMeshPositions((positions) => {
+        for (let i = 0; i < positions.length; i += 3) {
+          const x = positions[i] / s;
+          const top = Math.max(0, positions[i + 1] / s - 0.045) / 0.041;
+          positions[i + 1] -= 0.032 * s * top * Math.exp(-((x / 0.032) ** 2));
+          positions[i] *= 1 - 0.22 * top * Math.max(0, positions[i + 2] / (0.07 * s));
+        }
+      });
       crown.parent = brim;
-      crown.material = mat(scene, new Color3(0.24, 0.17, 0.11));
-      const band = MeshBuilder.CreateTorus("cowboyBand", { diameter: 0.17 * s, thickness: 0.012 * s, tessellation: 16 }, scene);
-      band.position.y = 0.01 * s;
-      band.parent = crown;
-      band.material = mat(scene, accent, 0.05);
+      crown.material = brim.material;
+      crown.convertToFlatShadedMesh();
+      const band = MeshBuilder.CreateCylinder("cowboyBand", { height: 0.012 * s, diameter: 0.186 * s, tessellation: 14 }, scene);
+      band.position.y = 0.013 * s;
+      band.parent = brim;
+      band.material = mat(scene, new Color3(0.09, 0.022, 0.025), 0.18, "cloth");
       return brim;
     }
     case "miner_hat": {
