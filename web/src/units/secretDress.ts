@@ -2944,14 +2944,17 @@ export function clamsShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
  * the neck's foot), .thick deep at the middle, squashed front to back to .depth of its width; a team-coloured inside disc .inset under the rim's top;
  * a pale lip torus .lip thick round the rim. Lit cloth a little self-lit, the lip unlit, all out of the glow.
  */
-const CLAM_COLLAR = { neck: 0.42, rim: 1.22, rimUp: 0.16, thick: 0.2, drop: 0.06, depth: 0.82, inset: 0.035, lip: 0.07, segs: 14,
+// 524b: the limbBox width of his slim torso is about half its shown half-width: rim 1.22 read as a neck ring the head's width
+const CLAM_COLLAR = { neck: 0.9, rim: 1.95, rimUp: 0.32, thick: 0.45, drop: 0.06, depth: 0.82, inset: 0.035, lip: 0.07, segs: 14,
   dark: new Color3(0.07, 0.068, 0.072), pale: new Color3(0.62, 0.62, 0.6) };
 export function clamsCollar(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const C = CLAM_COLLAR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const chest = limbBox(body.torsoMesh);
   const W = chest.wide, top = chest.mid + chest.half * (1 - C.drop);
   const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
-  const inside = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  // the inside is a deep team shade (team squared, x.7): plain team cloth read near white in the sun
+  const deep = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(0.7);
+  const inside = mf.get("cloth", deep, { emissive: deep.scale(0.12), roughness: 1 });
   const pale = mf.get("unlit", C.pale, { emissive: C.pale });
   const root = new TransformNode("clamsCollar", scene);
   root.parent = body.torso;
