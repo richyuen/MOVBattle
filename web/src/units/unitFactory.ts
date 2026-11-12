@@ -1131,7 +1131,8 @@ export class UnitFactory {
       // [S] 515 (b.1): a grey clam with bead eyes in place of each hand (secretDress clamsHands)
       propMeshes.push(...clamsHands(this._scene, body));
       // [S] 516 (a.2): a grey scalloped clam shell fanned up behind the head (secretDress clamsHat)
-      propMeshes.push(...clamsHat(this._scene, body), ...clamsShirt(this._scene, body));
+      propMeshes.push(...clamsHat(this._scene, body));
+      if (visual.special !== "clam_shell") propMeshes.push(...clamsShirt(this._scene, body));
     }
     // [S] 517 (a.1): an elf cap with a cream fur band and pompom, the face bare (secretDress elfCap)
     if (definition.id === "secret.present_elf" && !shouldUseVehicleBody) propMeshes.push(...elfCap(this._scene, body));
