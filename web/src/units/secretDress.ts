@@ -2889,10 +2889,10 @@ export function iceMagePinafore(scene: Scene, body: ArticulatedBody): Mesh[] {
   const out = [skirt, bib];
   for (const side of [-1, 1]) {
     const strap = MeshBuilder.CreateBox("iceMagePinaforeStrap", {
-      width: size.x * 0.23, height: size.y * 0.92, depth: size.z * 0.2,
+      width: size.x * 0.23, height: size.y * 0.92, depth: size.z * 0.36,
     }, scene);
     strap.parent = body.torso;
-    strap.position.set(center.x + side * size.x * 0.57, center.y + size.y * 0.57, center.z + size.z * 0.85);
+    strap.position.set(center.x + side * size.x * 0.57, center.y + size.y * 0.57, center.z + size.z * 1.04);
     strap.rotation.z = -side * 0.16;
     strap.material = cloth;
     out.push(strap);
