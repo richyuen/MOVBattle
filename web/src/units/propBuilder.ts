@@ -3048,6 +3048,51 @@ function buildCutlass(scene: Scene, name: string, fit: BladeFit, cut: typeof CUT
  * Same mount as the plain sword (the guard on the fist).
  */
 /*
+ * [S] 527 (b.1) the Cavalry's spear (secret.cavalry.red.png, .png: a long plain team-coloured shaft; at its head a broad steel leaf blade, two small
+ * swept-back side prongs at the blade's foot, and three team cloth flags hanging off the shaft below them, side by side like a split pennon).
+ * CAVALRY_SPEAR in his standing heights (fit.stand): shaft .long, .thick across, held .grip of the way up; blade .blade long, .bladeW across at its
+ * belly .belly up it, flat (.flat of its width deep); prongs .prong long, curved back .prongTilt; flags .flags strips .flagL long and .flagW wide
+ * (in shaft lengths), the first .flagAt below the blade's foot, .flagGap apart, hung out to the side and drooping .droop. Steel in pale lit cloth
+ * ("metal" renders near black), team shaft and flags in self-lit cloth. Root named "lance" and tipped forward about the fist as the jousting lance is.
+ */
+const CAVALRY_SPEAR = { long: 1.5, thick: 0.04, grip: 0.2, blade: 0.13, bladeW: 0.045, belly: 0.35, flat: 0.22, prong: 0.05, prongTilt: 0.9,
+  flags: 3, flagL: 0.15, flagW: 0.026, flagAt: 0.035, flagGap: 0.03, droop: 0.35, steel: new Color3(0.6, 0.61, 0.64) };
+function buildCavalrySpear(scene: Scene, fit: BladeFit, team: Color3): Mesh {
+  const C = CAVALRY_SPEAR, L = fit.stand * C.long, r = (fit.stand * C.thick) / 2;
+  const back = C.grip * L, front = L - back, lift = (0.5 - C.grip) * L;
+  const shaftM = mat(scene, team, 0.12, "cloth"), steel = mat(scene, C.steel, 0.15, "cloth"), flagM = mat(scene, team, 0.14, "cloth");
+  const shaft = MeshBuilder.CreateCylinder("lance", { height: L, diameter: 2 * r, tessellation: 8 }, scene);
+  shaft.position.y = lift; shaft.material = shaftM; shaft.convertToFlatShadedMesh();
+  const at = (y: number) => y - lift; // shaft-local y from fist-local y
+  const B = fit.stand * C.blade, BW = fit.stand * C.bladeW, foot = front;
+  const lower = MeshBuilder.CreateCylinder("cavSpearBlade", { height: B * C.belly, diameterBottom: r * 2.4 * Math.SQRT2, diameterTop: BW * Math.SQRT2, tessellation: 4 }, scene);
+  lower.rotation.y = Math.PI / 4; lower.bakeCurrentTransformIntoVertices(); lower.scaling.z = C.flat;
+  lower.position.y = at(foot + (B * C.belly) / 2); lower.material = steel; lower.convertToFlatShadedMesh(); lower.parent = shaft;
+  const upper = MeshBuilder.CreateCylinder("cavSpearPoint", { height: B * (1 - C.belly), diameterBottom: BW * Math.SQRT2, diameterTop: 0, tessellation: 4 }, scene);
+  upper.rotation.y = Math.PI / 4; upper.bakeCurrentTransformIntoVertices(); upper.scaling.z = C.flat;
+  upper.position.y = at(foot + B * C.belly + (B * (1 - C.belly)) / 2); upper.material = steel; upper.convertToFlatShadedMesh(); upper.parent = shaft;
+  const P = fit.stand * C.prong;
+  for (const side of [-1, 1]) {
+    const prong = MeshBuilder.CreateCylinder("cavSpearProng", { height: P, diameterBottom: r * 1.6, diameterTop: 0, tessellation: 4 }, scene);
+    prong.setPivotPoint(new Vector3(0, -P / 2, 0));
+    prong.position.set(side * r, at(foot) + P / 2, 0); prong.rotation.z = -side * (Math.PI - C.prongTilt);
+    prong.material = steel; prong.convertToFlatShadedMesh(); prong.parent = shaft;
+  }
+  const FL = L * C.flagL, FW = L * C.flagW;
+  for (let k = 0; k < C.flags; k++) {
+    const flag = MeshBuilder.CreateBox("cavSpearFlag", { width: FW, height: FL, depth: r * 0.5 }, scene);
+    flag.setPivotPoint(new Vector3(0, FL / 2, 0));
+    flag.position.set(r + FW * (0.6 + k * 1.15), at(foot - L * C.flagAt - k * L * C.flagGap) - FL / 2, 0);
+    flag.rotation.z = C.droop; flag.material = flagM; flag.convertToFlatShadedMesh(); flag.parent = shaft;
+  }
+  const grip = MeshBuilder.CreateCylinder("cavSpearButt", { height: r * 3, diameter: r * 2.4, tessellation: 6 }, scene);
+  grip.position.y = at(-back + r * 1.5); grip.material = steel; grip.parent = shaft;
+  shaft.setPivotPoint(new Vector3(0, -lift, 0));
+  shaft.rotation.x = -0.3;
+  return shaft;
+}
+
+/*
  * [S] 527 (b.1) the Giant Stiffy Sword (secret.skeleton_giant.red.png, .jpg: a long pale bone-tan blade standing past the giant's head from his fist,
  * broad and flat, its edges chipped into irregular jags, a long tapering point; a short bone bar guard and grip). GIANT_STIFFY_SWORD in his standing
  * heights (fit.stand): blade .long, .wide across, .thick of its width deep, cut into .segs runs whose widths jag by .jag (seeded, both edges), the
@@ -5402,6 +5447,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return shaft;
     }
     case "lance": {
+      if (variant === "cavalry_spear") return buildCavalrySpear(scene, fit, teamColor ?? accent);
       // The jousting lance, built to the spec at LANCE: a tapered tan shaft from the fist, a team band wound round it (LANCE_CANDY), vamplate and crown
       const L = fit.stand * LANCE.long;
       const back = LANCE.grip * L, front = (1 - LANCE.grip) * L;
