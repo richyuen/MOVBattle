@@ -3189,6 +3189,44 @@ export function bankRobberVest(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 527 (a.2) the Skeleton Giant's Greek helmet (secret.skeleton_giant.red.png, .jpg: a team-coloured helmet that hoods the skull, a rounded bowl
+ * over the crown, broad cheek guards down both sides framing the face to below the eyes, a back plate to the neck; the face open in the middle).
+ * GIANT_HELM in the head box (W wide, H tall, D deep, c centre) and the bead eyes (eyeBoxInHead): a half-sphere bowl .bowl W across from .rim H over
+ * the eye tops to .crown H over c; a back plate .backW W wide from the rim down .back H at the back; per side a side plate .sideD D long from the
+ * rim down .side H, .sideX W out; and a cheek guard .cheekW W wide in front of the face just outside the eyes, from the rim to .under H under the
+ * eye bottoms. Team in a deep shade (deepTeam .shade), lit cloth self-lit .12, out of the glow. The grey crown ball and its horns are hidden.
+ */
+const GIANT_HELM = { bowl: 1.26, rim: 0.03, crown: 0.66, backW: 1.18, back: 0.62, sideD: 0.95, side: 0.6, sideX: 0.6, cheekW: 0.26, under: 0.2, shade: 0.85 };
+export function skeletonGiantHelm(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = GIANT_HELM, glow = scene.getGlowLayerByName("glow");
+  for (const m of body.headTop.getChildMeshes(false)) if (/^(giantCrown|boneHorn)$/.test(m.name)) m.setEnabled(false);
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const eyes = eyeBoxInHead(body) ?? { lo: new Vector3(c.x - W * 0.3, c.y, c.z + D * 0.4), hi: new Vector3(c.x + W * 0.3, c.y + H * 0.15, c.z + D * 0.55) };
+  const col = deepTeam(team, C.shade);
+  const helm = getMaterialFactory().get("cloth", col, { emissive: col.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const put = (m: Mesh): Mesh => { m.parent = head; m.material = helm; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number): Mesh => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z); return put(m);
+  };
+  const foot = eyes.hi.y + H * C.rim, crown = c.y + H * C.crown;
+  const bowl = put(MeshBuilder.CreateSphere("giantHelmBowl", { diameter: 1, segments: 5, slice: 0.5 }, scene));
+  bowl.scaling.set(W * C.bowl, (crown - foot) * 2, D * C.bowl); bowl.position.set(c.x, foot, c.z);
+  box("giantHelmBack", W * C.backW, H * C.back, D * 0.12, c.x, foot - (H * C.back) / 2, c.z - D * 0.56);
+  for (const side of [-1, 1]) {
+    const plate = box("giantHelmSide", W * 0.12, H * C.side, D * C.sideD, c.x + side * W * C.sideX, foot - (H * C.side) / 2, c.z - D * 0.02);
+    plate.rotation.z = side * 0.06;
+    const ex = side < 0 ? eyes.lo.x : eyes.hi.x;
+    const cheekBot = eyes.lo.y - H * C.under, front = Math.max(eyes.lo.z, c.z + D / 2) + D * 0.02;
+    const cheek = box("giantHelmCheek", W * C.cheekW, foot - cheekBot, D * 0.12, ex + side * (W * C.cheekW) / 2, (foot + cheekBot) / 2, front - D * 0.04);
+    cheek.rotation.y = -side * 0.35;
+  }
+  return out;
+}
+
 /** Three sewn bands run diagonally from shoulder to opposite hip. */
 export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
