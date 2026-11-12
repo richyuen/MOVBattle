@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "jester_dagger"
+  | "jester_dagger" | "giant_stiffy_sword"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
   | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear";
 
@@ -1228,8 +1228,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["dragon_glow"], "ability-active": ["dragon_glow"] },
       });
     case "secret_skeleton_giant":
-      return vis({ scale: 2.35, bulk: 1.7, headSize: 1.15, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_bones", "#e5ddd0", undefined, {
-        posePreset: "giant", materialPreset: "secret_bone", attachmentPreset: "giant_aura", fxPreset: "spectral",
+      // [S] 527 (b.1) the Giant Stiffy Sword in his main hand (propBuilder buildGiantStiffySword)
+      return vis({ scale: 2.35, bulk: 1.7, headSize: 1.15, armLength: 1.12, legLength: 0.92 }, "sword", "none", "none", "giant_bones", "#e5ddd0", undefined, {
+        weaponVariant: "giant_stiffy_sword", posePreset: "giant", materialPreset: "secret_bone", attachmentPreset: "giant_aura", fxPreset: "spectral",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
       });

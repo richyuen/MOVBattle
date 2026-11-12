@@ -3047,6 +3047,43 @@ function buildCutlass(scene: Scene, name: string, fit: BladeFit, cut: typeof CUT
  * a bar guard .guard across, a grip .grip long, a knob pommel. Self-lit cloth grey (pale steel "stone" read blue in the field; "metal" renders black).
  * Same mount as the plain sword (the guard on the fist).
  */
+/*
+ * [S] 527 (b.1) the Giant Stiffy Sword (secret.skeleton_giant.red.png, .jpg: a long pale bone-tan blade standing past the giant's head from his fist,
+ * broad and flat, its edges chipped into irregular jags, a long tapering point; a short bone bar guard and grip). GIANT_STIFFY_SWORD in his standing
+ * heights (fit.stand): blade .long, .wide across, .thick of its width deep, cut into .segs runs whose widths jag by .jag (seeded, both edges), the
+ * last .point drawn to a tip; in fists: a bar guard .guard across, a grip .grip long. Lit bone cloth self-lit .15, flat-shaded. Mounted as the plain
+ * sword (the guard on the fist).
+ */
+const GIANT_STIFFY_SWORD = { long: 0.5, wide: 0.075, thick: 0.18, segs: 7, jag: 0.22, point: 0.22, guard: 3.6, grip: 1.7,
+  bone: new Color3(0.66, 0.58, 0.45), hilt: new Color3(0.42, 0.36, 0.28) };
+function buildGiantStiffySword(scene: Scene, name: string, fit: BladeFit): { blade: Mesh; hilt: number } {
+  const C = GIANT_STIFFY_SWORD, L = fit.stand * C.long, Wd = fit.stand * C.wide, F = fit.fist;
+  const bone = mat(scene, C.bone, 0.15, "cloth"), hiltMat = mat(scene, C.hilt, 0.12, "cloth");
+  const blade = new Mesh(name, scene);
+  const body = L * (1 - C.point), seg = body / C.segs;
+  // fixed jag pattern (deterministic): each run's width and a small sideways step, so the two edges chip unevenly
+  const jags = [0.1, -0.7, 0.45, -0.3, 0.8, -0.55, 0.2];
+  for (let k = 0; k < C.segs; k++) {
+    const w0 = Wd * (1 + C.jag * jags[k % jags.length]), w1 = Wd * (1 + C.jag * jags[(k + 3) % jags.length]) * (k === C.segs - 1 ? 0.85 : 1);
+    const run = MeshBuilder.CreateCylinder(`${name}Run`, { height: seg * 1.02, diameterBottom: w0 * Math.SQRT2, diameterTop: w1 * Math.SQRT2, tessellation: 4 }, scene);
+    run.rotation.y = Math.PI / 4; run.bakeCurrentTransformIntoVertices();
+    run.scaling.z = C.thick; run.position.set(Wd * 0.06 * jags[(k + 1) % jags.length], -L / 2 + seg * (k + 0.5), 0);
+    run.material = bone; run.convertToFlatShadedMesh(); run.parent = blade;
+  }
+  const tip = MeshBuilder.CreateCylinder(`${name}Point`, { height: L * C.point, diameterBottom: Wd * 0.85 * Math.SQRT2, diameterTop: 0, tessellation: 4 }, scene);
+  tip.rotation.y = Math.PI / 4; tip.bakeCurrentTransformIntoVertices();
+  tip.scaling.z = C.thick; tip.position.y = L / 2 - (L * C.point) / 2; tip.material = bone; tip.convertToFlatShadedMesh(); tip.parent = blade;
+  const guardHeight = F * 0.7, hilt = L / 2 + guardHeight / 2;
+  const guard = MeshBuilder.CreateBox("guard", { width: F * C.guard, height: guardHeight, depth: F * 0.9 }, scene);
+  guard.position.y = -hilt; guard.material = hiltMat; guard.parent = blade;
+  const gripLong = F * C.grip;
+  const grip = MeshBuilder.CreateCylinder("grip", { height: gripLong, diameter: F * 0.65, tessellation: 6 }, scene);
+  grip.position.y = -hilt - guardHeight * 0.5 - gripLong * 0.5; grip.material = hiltMat; grip.parent = blade;
+  const pommel = MeshBuilder.CreateSphere("pommel", { diameter: F * 0.95, segments: 3 }, scene);
+  pommel.position.y = grip.position.y - gripLong * 0.5 - F * 0.3; pommel.material = hiltMat; pommel.parent = blade;
+  return { blade, hilt };
+}
+
 const STIFFY_SWORD = { long: 0.26, base: 0.03, belly: 0.05, bellyAt: 0.55, thick: 0.25, point: 0.22, guard: 3.2, grip: 1.6, steel: new Color3(0.42, 0.43, 0.45), spine: new Color3(0.22, 0.22, 0.24), hilt: new Color3(0.18, 0.12, 0.08) };
 function buildLeafSword(scene: Scene, name: string, fit: BladeFit): { blade: Mesh; hilt: number } {
   const C = STIFFY_SWORD;
@@ -4837,7 +4874,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       const cut = type === "sword" ? (variant === "longsword" ? LONGSWORD : variant === "valkyrie_sword" ? VALKYRIE_SWORD : undefined) : undefined;
       // [S] 425 the pirates' cutlass and sabre are slim curved blades on tan hilts (CUTLASS), not the straight broad slab
       const { blade, hilt } = type === "cutlass" ? buildCutlass(scene, "blade", fit, variant === "queen_cutlass" ? QUEEN_CUTLASS : CUTLASS)
-        : variant === "stiffy_sword" ? buildLeafSword(scene, "blade", fit) : buildSlabSword(scene, "blade", fit, accent, false, cut);
+        : variant === "stiffy_sword" ? buildLeafSword(scene, "blade", fit)
+        : variant === "giant_stiffy_sword" ? buildGiantStiffySword(scene, "blade", fit) : buildSlabSword(scene, "blade", fit, accent, false, cut);
       // The guard stays where the old one sat on the fist, whatever the blade above it is cut to
       blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
       // The Knight's arming sword (355): grey steel guard, grip and pommel (the metal accent rendered black at the hip), held out by its marker
