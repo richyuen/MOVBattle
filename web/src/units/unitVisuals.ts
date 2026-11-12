@@ -1172,7 +1172,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "spinner", materialPreset: "secret_bandit",
       });
     case "secret_clams":
-      return vis({ scale: 1.18, bulk: 1.55, legLength: 0.8 }, "none", "none", "none", "clam_shell", "#8db4be", undefined, {
+      return vis({ scale: 1.2, bulk: 0.86, torsoWidth: 0.88, torsoDepth: 0.82, armLength: 1.13, legLength: 1.22, upperLegWidth: 0.84, lowerLegWidth: 0.8 }, "none", "none", "none", "clam_shell", "#8db4be", undefined, {
         posePreset: "support", materialPreset: "secret_holy", attachmentPreset: "summoner",
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });
