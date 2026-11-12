@@ -2923,3 +2923,18 @@ export function iceMageFrostHands(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/** Cream undershirt with bell sleeves that finish at the wrists. */
+export function presentElfShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const color = new Color3(0.9, 0.8, 0.64);
+  const cloth = getMaterialFactory().get("unlit", color, { emissive: color });
+  const glow = scene.getGlowLayerByName("glow");
+  body.torsoMesh.material = cloth;
+  glow?.addExcludedMesh(body.torsoMesh);
+  const arms = [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm];
+  return arms.map((arm, index) => {
+    arm.material = cloth;
+    glow?.addExcludedMesh(arm);
+    return shirtSleeve(scene, arm, cloth, "elfShirtSleeve", 1.0, 1.26, index < 2 ? 1.2 : 1.65);
+  });
+}
