@@ -3462,3 +3462,42 @@ export function clamsTrousers(scene: Scene, body: ArticulatedBody): Mesh[] {
   for (const m of out) if (m.name.startsWith("clamsRope")) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/**
+ * A boot: the foot mesh re-clothed in `boot`, a shaft over the shin's foot end `shaft` of its length tall and `round` of its box round, and a cuff
+ * band `cuffH` of the shin long at the shaft's top, `cuff` round, in `cuffMat`. Returns the shaft and cuff meshes (flat shaded, out of the glow).
+ */
+function shinBoot(scene: Scene, body: ArticulatedBody, name: string, boot: Material, cuffMat: Material,
+  B: { shaft: number; round: number; cuff: number; cuffH: number }): Mesh[] {
+  const glow = scene.getGlowLayerByName("glow"), out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const { center: c, extendSize: s } = shin.getBoundingInfo().boundingBox;
+    const foot = c.y - s.y, top = foot + s.y * 2 * B.shaft, cuffLen = s.y * 2 * B.cuffH;
+    out.push(legShell(scene, `${name}Shaft`, shin, boot, top, foot, B.round, B.round * 1.04));
+    out.push(legShell(scene, `${name}Cuff`, shin, cuffMat, top + cuffLen * 0.35, top - cuffLen * 0.65, B.cuff, B.cuff * 0.94));
+  }
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) { foot.material = boot; glow?.addExcludedMesh(foot); }
+  return out;
+}
+
+/*
+ * [S] 525 (a.6) CLAMS' boots (secret.clams.red.png, .blue.png: dark brown boots with a wide rust rope wrap round the ankle and lower shin; card
+ * Appearance "shoes with ropes around them"). CLAM_BOOT: the foot in brown, a brown shaft .shaft of the shin tall (the foot box is ~.34 of it), a rust rope cuff .cuff round at
+ * its top, and two thin rope rings wound below it. Lit cloth, out of the glow.
+ */
+const CLAM_BOOT = { shaft: 0.45, round: 1.28, cuff: 1.62, cuffH: 0.13, wraps: 2, wrap: 1.46,
+  brown: new Color3(0.26, 0.11, 0.06), rust: new Color3(0.62, 0.24, 0.12) };
+export function clamsBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CLAM_BOOT, mf = getMaterialFactory();
+  const brown = mf.get("cloth", C.brown, { emissive: C.brown.scale(0.3), roughness: 1 });
+  const rust = mf.get("cloth", C.rust, { emissive: C.rust.scale(0.2), roughness: 1 });
+  const out = shinBoot(scene, body, "clamsBoot", brown, rust, C);
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const { center: c, extendSize: s } = shin.getBoundingInfo().boundingBox;
+    for (let k = 0; k < C.wraps; k++) {
+      const y = c.y - s.y + s.y * 2 * C.shaft * (0.6 + k * 0.2);
+      out.push(legShell(scene, "clamsBootWrap", shin, rust, y + s.y * 0.035, y - s.y * 0.035, C.wrap));
+    }
+  }
+  return out;
+}
