@@ -8684,9 +8684,9 @@ function buildOverheadSafe(scene: Scene, body: ArticulatedBody, team: Color3): M
   safe.parent = body.hip; safe.material = steel;
   safe.position.set(S.pairX / 2, body.metrics.headTopY - hipY + Hh * S.over + T / 2, 0);
   const parts: Mesh[] = [safe];
-  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, material: typeof steel): Mesh => {
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, material: typeof steel, parent: TransformNode = safe): Mesh => {
     const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
-    m.parent = safe; m.material = material; m.position.set(x, y, z); parts.push(m); return m;
+    m.parent = parent; m.material = material; m.position.set(x, y, z); parts.push(m); return m;
   };
   const t = Hh * S.trim, fz = D / 2 + t * 0.3;
   box("safeTrim", W, t, t, 0, T / 2 - t / 2, fz, gold);
@@ -8695,16 +8695,21 @@ function buildOverheadSafe(scene: Scene, body: ArticulatedBody, team: Color3): M
   box("safeTrim", t, T * (1 - S.plinth), t, W / 2 - t / 2, T * S.plinth / 2, fz, gold);
   box("safePlinth", W * 1.03, T * S.plinth, D * 1.03, 0, -T / 2 + (T * S.plinth) / 2, 0, dark);
   const doorWidth = W * 0.59, doorHeight = T * 0.65, doorY = T * 0.045;
-  box("safeDoor", doorWidth, doorHeight, t * 0.8, 0, doorY, fz, steel);
+  box("safeInterior", doorWidth, doorHeight, t * 0.24, 0, doorY, fz - t * 0.1, dark);
+  const door = new TransformNode("safeDoorPivot", scene);
+  door.parent = safe;
+  door.position.set(doorWidth / 2, doorY, fz);
+  box("safeDoor", doorWidth, doorHeight, t * 0.8, -doorWidth / 2, 0, 0, steel, door);
   for (const side of [-1, 1]) {
-    box("safeDoorBead", doorWidth, t * 0.55, t, 0, doorY + side * doorHeight / 2, fz + t * 0.4, gold);
-    box("safeDoorBead", t * 0.55, doorHeight, t, side * doorWidth / 2, doorY, fz + t * 0.4, gold);
+    box("safeDoorBead", doorWidth, t * 0.55, t, -doorWidth / 2, side * doorHeight / 2, t * 0.4, gold, door);
+    box("safeDoorBead", t * 0.55, doorHeight, t, (side - 1) * doorWidth / 2, 0, t * 0.4, gold, door);
     box("safeDoorHinge", t * 2.1, t * 2.6, t * 1.25, doorWidth / 2, doorY + side * doorHeight * 0.28, fz + t * 0.4, dark);
   }
   const dial = MeshBuilder.CreateCylinder("safeDial", { height: t, diameter: Hh * S.dial, tessellation: 10 }, scene);
-  dial.parent = safe; dial.material = gold; dial.rotation.x = Math.PI / 2; dial.position.set(-W * 0.12, T * 0.08, fz + t * 0.3); parts.push(dial);
-  box("safeDialKnob", Hh * S.dial * 0.25, Hh * S.dial * 0.25, t * 1.6, -W * 0.12, T * 0.08, fz + t, dark);
-  box("safeHandle", W * 0.2, t * 0.9, t * 1.4, W * 0.2, T * 0.08, fz + t * 0.5, gold);
+  dial.parent = door; dial.material = gold; dial.rotation.x = Math.PI / 2;
+  dial.position.set(-W * 0.12 - door.position.x, T * 0.08 - doorY, t * 0.3); parts.push(dial);
+  box("safeDialKnob", Hh * S.dial * 0.25, Hh * S.dial * 0.25, t * 1.6, dial.position.x, dial.position.y, t, dark, door);
+  box("safeHandle", W * 0.2, t * 0.9, t * 1.4, W * 0.2 - door.position.x, dial.position.y, t * 0.5, gold, door);
   for (const y of [0.28, -0.12]) box("safeHinge", t * 1.6, T * 0.16, t * 1.6, -Math.sign(S.pairX) * (W / 2 + t * 0.2), T * y, D / 2 - t, gold);
   for (const x of [-1, 1]) for (const z of [-1, 1]) box("safeFoot", W * 0.1, T * 0.08, D * 0.12, x * W * 0.42, -T / 2 - T * 0.04, z * D * 0.38, dark);
   for (const m of parts) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }

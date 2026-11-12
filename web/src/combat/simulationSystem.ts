@@ -551,7 +551,7 @@ const WHIP_LASH = { out: 0.22, hold: 0.3, back: 0.35, radius: 1.25, blast: 0.35 
 /** [S] 520 the Present Elf's thrown present (spec at _tryPresentThrow). */
 const PRESENT_THROW = { speed: 13.5, apex: 1.4, spin: 6, radius: 1, open: 3, rearm: 12 };
 /** [S] 520 the Bank Robbers' safe hurl (spec at _trySafeHurl). */
-const SAFE_HURL = { speed: 9, apex: 1.6, spin: 4, radius: 5, damage: 3, edge: 0.5, push: 6, lift: 4, ring: 3, lie: 6, sink: 3 };
+const SAFE_HURL = { speed: 9, apex: 1.6, spin: 4, radius: 5, damage: 3, edge: 0.5, push: 6, lift: 4, lie: 6, sink: 3, cashInterval: 0.08 };
 const RAPTOR_CHARGE = { from: 1.2, reach: 14, speed: 1.7, seconds: 3, overrun: 4, contact: 0.6, damage: 12, fling: 4, lift: 3, cooldown: 2.5, through: true, log: true };
 /*
  * [S] 387 Big Headbutt (card Weapons "Big Headbutt: Ability - Melee; damage 30; cooldown 5 s; ... force 32500; explosion radius 4.5", Characteristics "a
@@ -1625,7 +1625,7 @@ export class SimulationSystem {
    * push out from it, a dust ring and smoke go up. It lies there .lie s, then sinks into the ground over .sink s and is gone. The flank robber
    * holds his fire while the safe is up. Logged "throw_safe" as it leaves their hands (the capture's release) and "safe_land" where it lands.
    */
-  private _safeHurls: { mesh: Mesh; from: Vector3; to: Vector3; t0: number; dur: number; landed: boolean; half: number; attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3 }[] = [];
+  private _safeHurls: { mesh: Mesh; from: Vector3; to: Vector3; t0: number; dur: number; landed: boolean; half: number; attacker: RuntimeUnit; target: RuntimeUnit; damage: number; knockback: Vector3; nextCashAt: number }[] = [];
   private _trySafeHurl(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, now: number): boolean {
     const S = SAFE_HURL;
     if (attacker.definition.id !== "secret.bank_robbers" || attacker.isDead || target.isDead) return false;
@@ -1652,7 +1652,7 @@ export class SimulationSystem {
     const half = safe.getBoundingInfo().boundingBox.extendSize.y * scale.y;
     const to = new Vector3(target.position.x, half, target.position.z);
     const dur = Math.max(0.35, Vector3.Distance(new Vector3(from.x, 0, from.z), new Vector3(to.x, 0, to.z)) / S.speed);
-    this._safeHurls.push({ mesh: flying, from, to, t0: now, dur, landed: false, half, attacker, target, damage: damage * S.damage, knockback });
+    this._safeHurls.push({ mesh: flying, from, to, t0: now, dur, landed: false, half, attacker, target, damage: damage * S.damage, knockback, nextCashAt: now });
     this._logAbility(attacker, "throw_safe", now, target.position);
     return true;
   }
@@ -1665,9 +1665,20 @@ export class SimulationSystem {
         h.mesh.position.copyFrom(Vector3.Lerp(h.from, h.to, u));
         h.mesh.position.y += 4 * S.apex * u * (1 - u);
         h.mesh.rotation.x = S.spin * age;
-        if (u < 1) continue;
+        if (u < 1) {
+          if (now >= h.nextCashAt) {
+            const drift = h.from.subtract(h.to);
+            drift.y = 0;
+            drift.normalize().scaleInPlace(1.4);
+            this.visualEffects?.spawnSafeCash(h.mesh.position, drift);
+            h.nextCashAt = now + S.cashInterval;
+          }
+          continue;
+        }
         h.landed = true;
         h.mesh.rotation.x = 0;
+        const door = h.mesh.getChildTransformNodes(true).find((node) => node.name.endsWith("safeDoorPivot"));
+        if (door) door.rotation.y = Math.PI * 0.62;
         const at = new Vector3(h.to.x, 0, h.to.z);
         for (const u2 of this._units) {
           if (u2.isDead || u2.team === h.attacker.team || !u2.isTargetable || u2.linkedParent) continue;
@@ -1679,7 +1690,8 @@ export class SimulationSystem {
           u2.applyDamage(h.damage * (1 - S.edge * d / S.radius), out.scale(S.push));
           u2.applyBlastLaunch(out, S.push, S.lift);
         }
-        this.visualEffects?.spawnTrampleRing(at, S.ring);
+        this.visualEffects?.spawnTrampleRing(at, S.radius);
+        this.visualEffects?.spawnSafeCash(h.mesh.position);
         this.visualEffects?.spawnSmokePuff(at, CHARGE_DUST);
         this._logAbility(h.attacker, "safe_land", now, at);
         continue;

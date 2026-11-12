@@ -385,6 +385,52 @@ export class VisualEffects {
     }, dispose: () => mat.dispose() });
   }
 
+  /** Toss bound stacks of cash behind the moving safe or fan them out on impact. */
+  spawnSafeCash(at: Vector3, drift?: Vector3): void {
+    const root = new TransformNode("safeCash", this._scene);
+    root.position.copyFrom(at);
+    const count = drift ? 2 : 24;
+    const duration = drift ? 0.8 : 1.4;
+    const mf = getMaterialFactory();
+    const green = new Color3(0.35, 0.72, 0.15);
+    const paper = mf.get("cloth", green, { emissive: green.scale(0.55), roughness: 1 });
+    const bandColor = new Color3(0.9, 0.77, 0.45);
+    const band = mf.get("cloth", bandColor, { emissive: bandColor.scale(0.42), roughness: 1 });
+    const glow = this._scene.getGlowLayerByName("glow");
+    const bills = Array.from({ length: count }, (_, index) => {
+      const bill = MeshBuilder.CreateBox("safeCashStack", { width: 0.23, height: 0.035, depth: 0.12 }, this._scene);
+      bill.parent = root;
+      bill.material = paper;
+      bill.isPickable = false;
+      bill.rotation.set(index * 1.7, index * 2.1, index * 0.9);
+      const strap = MeshBuilder.CreateBox("safeCashBand", { width: 0.055, height: 0.038, depth: 0.123 }, this._scene);
+      strap.parent = bill;
+      strap.material = band;
+      strap.isPickable = false;
+      glow?.addExcludedMesh(bill);
+      glow?.addExcludedMesh(strap);
+      const angle = index * Math.PI * (3 - Math.sqrt(5));
+      const radial = new Vector3(Math.cos(angle), 0, Math.sin(angle));
+      const start = radial.scale(drift ? 0.3 + index * 0.27 : 0.4 + (index % 5) * 0.17);
+      start.y = 0.35 + (index % 4) * 0.09;
+      bill.position.copyFrom(start);
+      const velocity = radial.scale(drift ? 0.5 : 2.3 + index % 4);
+      if (drift) velocity.addInPlace(drift);
+      velocity.y = drift ? 1.15 : 3.3 + (index % 5) * 0.52;
+      return { bill, start, velocity };
+    });
+    this._effects.push({ root, remaining: duration, update: (dt, remaining) => {
+      const age = duration - remaining;
+      for (const { bill, start, velocity } of bills) {
+        bill.position.copyFrom(start).addInPlace(velocity.scale(age));
+        bill.position.y = Math.max(0.04 - root.position.y, bill.position.y - 5.7 * age * age);
+        bill.rotation.x += dt * 7;
+        bill.rotation.z += dt * 4;
+        bill.scaling.setAll(Math.min(1, remaining / 0.18));
+      }
+    } });
+  }
+
   /**
    * [S] 518 the Cheerleader's buff (card Characteristics: "units that are being buffed will have multi-coloured confetti appear around them"): .chips
    * flat square chips .size across in six bright unlit colours, scattered on a ring .ring m round the man (golden-angle spread, +-.spread) from .low
