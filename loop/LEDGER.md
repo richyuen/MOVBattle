@@ -2,6 +2,17 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+524 | 0bf6073a | secret.ice_mage.c | approved [S] (struck 2, c PASS)
+524 | 19c243c3 | secret.clams.c | approved [S] (struck 2, c PASS)
+524 | 0662d3b5, 44a4985b | secret.clams.a | approved [S] (struck 3)
+524 | fb46a15f | secret.raptor_rider.b | approved [S] (struck 3, b PASS)
+524 | eff4e629 | secret.present_elf.b | approved [S] (struck 3, b PASS)
+524 | 68161f8e | secret.present_elf.a | dropped [S] (vest hidden behind the present; reverted 23b2afbd)
+524 | c2752b3e | secret.infernal_whip.a | approved [S] (struck 2)
+524 | 1410759b | secret.infernal_whip.b | approved [S] (no strike; [P] CHAIN_EMBER size fallout)
+524 | e976a1b4 | secret.bank_robbers.a | approved [S] (struck 3)
+524 | cd9ab43a | secret.ice_mage.a | approved [S] (struck 2)
+
 523 | 8999f026 | secret.mace_spinner.a | approved [S] (struck 4, a PASS, CONFIRM passed)
 523 | a369ec7a | secret.present_elf.b | approved [S] (struck 2)
 523 | 5472e586 | secret.raptor_rider.b | approved [S] (struck 1)
@@ -49,14 +60,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 519 | b2600e04 | secret.present_elf.b | approved [S] (struck 1; bells hidden in the knot)
 519 | 8182f4b6 | secret.infernal_whip.b | approved [S] (struck 1)
 
-518 | 5ac81c17 | secret.taekwondo.a | approved [S] (struck 4)
-518 | a8cf176b | secret.taekwondo.a | approved [S] (struck 6; a PASS)
-518 | d6710917 | secret.cheerleader.a | approved [S] (struck 5; a PASS)
-518 | 341eb7f4 | secret.cupid.a | approved [S] (struck 5; a PASS)
-518 | 2b32ed39 | secret.cheerleader.c | approved [S] (struck 1)
-518 | a80a6032 | secret.mace_spinner.c | rejected [S] (reverted aef00f7b: shared spinner preset, whirl only on the attack frame)
-518 | 8e341463 | secret.raptor_rider.a | approved [S] (struck 1; 4 by lineup)
-518 | a9080780 | secret.bank_robbers.a | approved [S] (struck 6 by lineup; safe too small)
 
 
 ## Spent (never retry as [P])
@@ -64,6 +67,7 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+RU/SS/secretDress/PB:524 | ICE_THROW fore 1.5 inward .12 back .45 hold .22 ease .25, HAND_LAUNCH palm; CLAM_THROW every .15 speed 11 apex 1.5 spin 9 short 1.4 spread .9; CLAM_COLLAR neck .9 rim 1.95 rimUp .32 thick .45 inside team^2 x.7; PLANK_WEATHER 4 tones ~(.6,.27,.17) cloth, 2 grooves, 3 teeth .06, bones out of glow; PRESENT_CANE long 1.05 r .035 14 stripes hook .1; INFERNAL_SLEEVE out 1.12 fore .62 cuff .2 flare 1.42; CHAIN_EMBER every 3 crack .8 crackH .16 spark .9 sparkOut .35 hot (1.6,.5,.05); BANK_SLEEVE charcoal (.1,.095,.1) self-lit .4 fore .72 cuff .18; ICE_SASH tall .22 out 1.12 brooch .42 tail .95 | 524 | approved | none (chest launch, summons beside him, no collar, (.2,.11,.055) planks, no cane, bare arms, plain chain, no sleeves, no sash)
 UV/PA:mace spinner build | scale 1.1, bulk 1, square stance, crouch 0, lean .04 | 523 | approved | scale 1.3, bulk 1.2, hashed crouch
 secretDress:PRESENT bell | open 9-sided cup .21W with clapper, splay .34 | 523 | approved | solid .13W cone at bow knot
 PB:raptor_spear | wood .49s with lashed faceted flint .256s | 523 | approved | wood 1.0s and steel point
