@@ -2213,6 +2213,45 @@ export function presentElfPresent(scene: Scene, body: ArticulatedBody, team: Col
     glow?.addExcludedMesh(bell);
     glow?.addExcludedMesh(clapper);
   }
+  out.push(...presentCandyCane(scene, lid, W, H * P.lidH / 2, deep));
+  return out;
+}
+/*
+ * [S] 524 (b.3) the candy cane laid across the present's lid (secret.present_elf.red.png: a cream-and-team striped cane lying on the lid behind the bow,
+ * its straight end run out past the box's side, its hook curled up at the other end). PRESENT_CANE in present widths W: a straight shaft .long long
+ * of .stripes short cylinders .r thick, alternating unlit cream and the box's deep team shade, lying on the lid's top turned .yaw rad, set .back
+ * behind the bow and shifted .out toward the straight end; at its end a hook of .hookSegs pieces round a half circle .hook in radius, rising up
+ * off the lid. All out of the glow.
+ */
+const PRESENT_CANE = { long: 1.05, r: 0.035, stripes: 14, yaw: 0.28, back: 0.22, out: -0.2, hook: 0.1, hookSegs: 7, cream: new Color3(0.9, 0.86, 0.76) };
+function presentCandyCane(scene: Scene, lid: TransformNode, W: number, lidTop: number, team: Color3): Mesh[] {
+  const C = PRESENT_CANE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cream = mf.get("unlit", C.cream, { emissive: C.cream });
+  const red = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const r = C.r * W, len = C.long * W, seg = len / C.stripes;
+  const cane = new TransformNode("presentCane", scene);
+  cane.parent = lid;
+  cane.position.set(C.out * W, lidTop + r, -C.back * W);
+  cane.rotation.y = C.yaw;
+  const out: Mesh[] = [];
+  const piece = (a: Vector3, b: Vector3, i: number): void => {
+    const d = b.subtract(a), l = d.length();
+    const m = MeshBuilder.CreateCylinder("presentCaneStripe", { height: l * 1.04, diameter: r * 2, tessellation: 8 }, scene);
+    m.parent = cane; m.material = i % 2 ? red : cream;
+    m.position.copyFrom(Vector3.Center(a, b));
+    // the cylinder's axis (+y) turned onto a->b
+    const axis = Vector3.Cross(Vector3.Up(), d.normalize());
+    const ang = Math.acos(Math.max(-1, Math.min(1, Vector3.Dot(Vector3.Up(), d))));
+    m.rotationQuaternion = axis.lengthSquared() > 1e-8 ? Quaternion.RotationAxis(axis.normalize(), ang) : Quaternion.Identity();
+    glow?.addExcludedMesh(m); out.push(m);
+  };
+  for (let i = 0; i < C.stripes; i++) piece(new Vector3(-len / 2 + i * seg, 0, 0), new Vector3(-len / 2 + (i + 1) * seg, 0, 0), i);
+  // the hook: up and over from the shaft's +x end, a half circle in the x-y plane
+  const hx = len / 2, hr = C.hook * W;
+  for (let k = 0; k < C.hookSegs; k++) {
+    const a0 = -Math.PI / 2 + (Math.PI * k) / C.hookSegs, a1 = -Math.PI / 2 + (Math.PI * (k + 1)) / C.hookSegs;
+    piece(new Vector3(hx + Math.cos(a0) * hr, hr + Math.sin(a0) * hr, 0), new Vector3(hx + Math.cos(a1) * hr, hr + Math.sin(a1) * hr, 0), C.stripes + k);
+  }
   return out;
 }
 const ELF_TIP: [number, number, number][] = [[0, 0, 0], [0.06, 0.2, -0.05], [0.24, 0.3, 0.05], [0.42, 0.22, 0.2], [0.52, 0.04, 0.32]];
