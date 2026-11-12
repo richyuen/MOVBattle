@@ -560,6 +560,10 @@ const PRESENT_THROW = { speed: 13.5, apex: 1.4, spin: 6, radius: 1, open: 3, rea
 /** [S] 520 the Bank Robbers' safe hurl (spec at _trySafeHurl). */
 const SAFE_HURL = { speed: 9, apex: 1.6, spin: 4, radius: 5, damage: 3, edge: 0.5, push: 6, lift: 4, lie: 6, sink: 3, cashInterval: 0.08 };
 const RAPTOR_CHARGE = { from: 1.2, reach: 14, speed: 1.7, seconds: 3, overrun: 4, contact: 0.6, damage: 12, fling: 4, lift: 3, cooldown: 2.5, through: true, log: true };
+// [S] 525 (c.1) the raptor's run throws small trample explosions under its feet wherever it moves (card Characteristics "an ability that creates
+// explosions wherever they move"): every .every s of a run a burst (visualEffects spawnExplosionBurst, .size) on the ground .ahead body radii ahead of
+// its middle and .side out, left and right foot in turn
+const RAPTOR_STOMP = { every: 0.22, size: 0.42, ahead: 0.6, side: 0.45 };
 /*
  * [S] 387 Big Headbutt (card Weapons "Big Headbutt: Ability - Melee; damage 30; cooldown 5 s; ... force 32500; explosion radius 4.5", Characteristics "a
  * headbutt ability like the Headbutter"; critic 378: missing). With a man within .within m past his reach and the butt ready (.cooldown s apart), he stops,
@@ -2898,6 +2902,15 @@ export class SimulationSystem {
           at.y = unit.position.y;
           this.visualEffects.spawnKickDust(at, MAMMOTH_DUST.size);
         }
+      }
+      if (run.spec === RAPTOR_CHARGE && this.visualEffects && now >= (this._chargeDustAt.get(unit) ?? 0)) {
+        const k = this._chargeDustKick.get(unit) ?? 0;
+        this._chargeDustKick.set(unit, k + 1);
+        this._chargeDustAt.set(unit, now + RAPTOR_STOMP.every);
+        const across = new Vector3(run.dir.z, 0, -run.dir.x), r = unit.collisionBodyRadius;
+        const at = unit.position.add(run.dir.scale(RAPTOR_STOMP.ahead * r)).add(across.scale((k % 2 ? 1 : -1) * RAPTOR_STOMP.side * r));
+        at.y = unit.position.y;
+        this.visualEffects.spawnExplosionBurst(at, RAPTOR_STOMP.size);
       }
       if (run.spec === MAMMOTH_CHARGE || run.spec === JOUSTER_CHARGE || run.spec === MINOTAUR_CHARGE) {
         unit.animator.setCharging(true, run.spec === MINOTAUR_CHARGE);
