@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+527 | 08766f4b, 0fe341bb | secret.bank_robbers.a | approved [S] (struck 5)
+527 | 361f605c | secret.bank_robbers.a | approved [S] (struck 4)
+527 | 1838836b | secret.bank_robbers.a | approved [S] (struck 2, a PASS; CONFIRM failed a, b)
+527 | 77116afd | secret.skeleton_giant.b | approved [S] (struck 1)
+527 | deff238b | secret.skeleton_giant.a | approved [S] (struck 2)
+527 | 1cd9657d | secret.cavalry.b | approved [S] (struck 1, 3; [P] CAVALRY_SPEAR flagW/flagL fallout)
+527 | 99708be7, 36fdeb97 | secret.cavalry.a | approved [S] (struck 1)
+527 | 1d6cb656 | secret.vlad.b | approved [S] (struck 1, b PASS)
+527 | 7d5002bd | secret.bomb_cannon.b | approved [S] (struck 1; added 2; [P] crew cutlass flip fallout)
+
 526 | 10af68b7, 3d7752aa | secret.bank_robbers.c | approved [S] (struck 4, c PASS; fists judged in unit_secret.bank_robbers_punch)
 526 | 588e761d | secret.present_elf.b | approved [S] (struck 1, 2, b PASS, CONFIRM passed; [P] PRESENT.knee fallout)
 526 | 3260de91 | secret.clams.a | approved [S] (struck 1, a PASS, CONFIRM passed)
@@ -43,18 +53,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 523 | 53ebabd6, ab43da19 | secret.clams.a | approved [S] (struck 4)
 523 | d97f5061 | secret.infernal_whip.c | approved [S] (struck 3, c PASS)
 
-522 | 7bca30d3 | secret.bank_robbers.a | approved [S] (struck 1 and 3 by lineup)
-522 | da6e9b4a | secret.mace_spinner.a | approved [S] (struck 1)
-522 | 1b6811a1 | secret.ice_mage.a | approved [S] (struck 1 and 6)
-522 | 20ef0217 | secret.infernal_whip.c | approved [S] (struck 2)
-522 | a56f3ca0 | secret.mace_spinner.a | approved [S] (struck 3)
-522 | d8255310 | secret.present_elf.c | approved [S] (struck 2, c PASS)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/PA/UV/PB/LAP:527 | ROBBER_STANCE square crouch 0 stride .14 lean .02, robbers legLength 1.22, OVERHEAD_SAFE over .2->.3; BANK_BOOT shaft .62 round 1.42 turn 1.52->1.82 h .17 (.1,.08,.075); BANK_VEST out 1.08 vee .46 open .62 6 rows 4 buttons, torso charcoal, no tunic skirt; GIANT_STIFFY_SWORD long .5 wide .075 7 jag runs bone (.66,.58,.45); GIANT_HELM bowl 1.26 side .6 cheek .26 deepTeam .85; CAVALRY_SPEAR long 1.5 thick .04 grip .2 blade .13 3 flags .15x.026; CAV_HELM steel (.5,.51,.54) bevor .42 crest .42; VLAD_LOG long .78 thick .1 point .4 grip .22; bomb crew cutlasses, reload raise shoulder -2.7 | 527 | approved | crouched hashed stance, legLength 1, over .2; low ankle boots; team torso + tunic skirt; empty fist; grey crown ball; striped jousting lance; plume cap; thin iron spear; bomb in loader's hand
 secretDress/SS/RU/PB/UV:526 | PRESENT span 2.0 x shoulder joints, floor at knee 0, deepW .82, PRESENT_HOLD out 1.02 down .1; SAFE_HURL fistReady .5, robbers disarmToFists at the throw; CLAM_HAND head-sized long 1.55 wide 1.25 thick .85 past .4 flat .35 point .45 eye .13; clam_shell special builds nothing; ICE_SLEEVE out 1.16 fore .8 cuff .16 flare 1.42 deep .72, ice mage default preset; MAGMA_LEG round 1.14 shin .5 boot 1.24 deep .38 knee 1.5 kneeH .26; RIDER_HAIR lockLo -.62 brown (.2,.1,.05); RIDER_FEATHERS 6 long .78 fan .42; RIDER_LOIN wrapH .7 flapL .55 fur (.07,.065,.05), bone mask off | 526 | approved | torso-box present 1.55W; pistols after the throw; hand-sized CLAM_HAND 3.2/2.6/1.3; blue thigh disc; secret_ice tint; demon-tinted legs; bone mask, tunic skirt
 secretDress/SS:525 | ELF_VEST off the yoke, yoke+pads to shirt cream; ELF_TROUSER thigh 1.14 shin 1.12 green (.03,.36,.15) self .25, no tunic skirt; ELF_BOOT shaft .55 round 1.36 cuff 1.52 black; ICE_SHORTS hem knee+.035 round 1.2/1.26 deepTeam .42; iceMagePinafore hem .58 of waist-to-knee; ICE_BOOT shaft .42 round 1.3 fur cuff 1.78 h .17 red (.29,.1,.12); CLAM_TROUSER thigh 1.12 shin 1.1 tan (.72,.5,.3) rope (.78,.42,.28), no tunic skirt; CLAM_BOOT shaft .45 cuff 1.62 wraps 1.46 brown (.26,.11,.06) rust (.62,.24,.12); MAGMA_BAND pad 1.85 padH .42 spike .32 band 1.5 bandH .2 at .55, 4-5 cracks; RAPTOR_STOMP every .22 size .42 ahead .6 side .45; CHAIN_EMBER crack 1.0 crackH .45 spark 2.0 sparkOut .6 | 525 | approved | pinafore hem .72; CHAIN_EMBER crack .8 crackH .16 spark .9 sparkOut .35; none else (team legs/feet, tunic skirts, no bands, no stomp)
 RU/SS/secretDress/PB:524 | ICE_THROW fore 1.5 inward .12 back .45 hold .22 ease .25, HAND_LAUNCH palm; CLAM_THROW every .15 speed 11 apex 1.5 spin 9 short 1.4 spread .9; CLAM_COLLAR neck .9 rim 1.95 rimUp .32 thick .45 inside team^2 x.7; PLANK_WEATHER 4 tones ~(.6,.27,.17) cloth, 2 grooves, 3 teeth .06, bones out of glow; PRESENT_CANE long 1.05 r .035 14 stripes hook .1; INFERNAL_SLEEVE out 1.12 fore .62 cuff .2 flare 1.42; CHAIN_EMBER every 3 crack .8 crackH .16 spark .9 sparkOut .35 hot (1.6,.5,.05); BANK_SLEEVE charcoal (.1,.095,.1) self-lit .4 fore .72 cuff .18; ICE_SASH tall .22 out 1.12 brooch .42 tail .95 | 524 | approved | none (chest launch, summons beside him, no collar, (.2,.11,.055) planks, no cane, bare arms, plain chain, no sleeves, no sash)
