@@ -3147,6 +3147,48 @@ export function bankRobberBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 527 (a.2) the Bank Robbers' vests (secret.bank_robbers.red.png, .blue.png: a fitted team vest closed down the front from the belt to a deep
+ * V at the chest, the charcoal shirt showing in the V, a row of small grey buttons down the closing; straight sides, no flare at the waist).
+ * BANK_VEST in the yoke's half-sizes, on the torso joint: back and side panels standing .out off the yoke from .top to .low of its height; the
+ * front closed below the V's point (.vee of the height down from the top) and above it in .rows strips whose inner edges close from .open of
+ * the half-width at the top to the middle at the point; .buttons grey buttons down the middle below the point. The torso and yoke take the
+ * shirt's charcoal (BANK_SLEEVE) so the V shows it; the vest wears the body's team cloth. Out of the glow. Both men, not the safe actor.
+ */
+const BANK_VEST = { out: 1.08, thick: 0.08, top: 0.98, low: 0.95, vee: 0.46, open: 0.62, rows: 6, buttons: 4, grey: new Color3(0.42, 0.42, 0.44) };
+export function bankRobberVest(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const V = BANK_VEST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const vestM = body.torsoMesh.material as Material;
+  const ch = BANK_SLEEVE.charcoal, shirt = mf.get("cloth", ch, { emissive: ch.scale(0.4), roughness: 1 });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  for (const m of [body.torsoMesh, ...body.allMeshes.filter((x) => /_yoke$|_[lr]Pad$/.test(x.name))]) { m.material = shirt; glow?.addExcludedMesh(m); }
+  const greyM = mf.get("cloth", V.grey, { emissive: V.grey.scale(0.2), roughness: 0.8 });
+  const T = limbBox(yoke);
+  const top = T.mid + T.half * V.top, low = T.mid - T.half * V.low, h = top - low, cy = (top + low) / 2;
+  const wx = T.wide * V.out, dz = T.deep * V.out, th = T.deep * V.thick;
+  const out: Mesh[] = [];
+  const box = (name: string, w: number, hh: number, d: number, x: number, y: number, z: number, m: Material): Mesh => {
+    const b = MeshBuilder.CreateBox(name, { width: w, height: hh, depth: d }, scene);
+    b.parent = body.torso; b.position.set(x, y, z); b.material = m; glow?.addExcludedMesh(b); out.push(b);
+    return b;
+  };
+  box("bankVestBack", wx * 2 + th, h, th, 0, cy, -dz, vestM);
+  for (const side of [-1, 1]) box("bankVestSide", th, h, dz * 2 + th, side * wx, cy, 0, vestM);
+  const point = top - h * V.vee;
+  box("bankVestFront", wx * 2 + th, point - low, th, 0, (point + low) / 2, dz, vestM);
+  const rowH = (top - point) / V.rows;
+  for (let k = 0; k < V.rows; k++) {
+    const t = (k + 0.5) / V.rows, gap = wx * V.open * (1 - t);
+    const y = top - rowH * (k + 0.5), w = wx + th / 2 - gap;
+    for (const side of [-1, 1]) box("bankVestLapel", w, rowH * 1.04, th, side * (gap + w / 2), y, dz, vestM);
+  }
+  for (let k = 0; k < V.buttons; k++) {
+    const y = point - (point - low) * (0.14 + 0.24 * k);
+    box("bankVestButton", T.wide * 0.1, T.half * 0.07, th * 1.2, 0, y, dz + th * 0.7, greyM);
+  }
+  return out;
+}
+
 /** Three sewn bands run diagonally from shoulder to opposite hip. */
 export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
