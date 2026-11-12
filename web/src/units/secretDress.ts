@@ -3933,3 +3933,33 @@ export function infernalTrousers(scene: Scene, body: ArticulatedBody, team: Colo
   }
   return out;
 }
+
+/*
+ * [S] 528 (b.1, b.2) the Banshee Hands (secret.banshee.red.png: no weapon and no wings, both hands empty and open, held out low; round each forearm at the
+ * wrist a pale-blue glowing spirit ring, loose and a little wobbly, wider than the hand is long, tipped off the forearm's axis). SPIRIT_RING per forearm:
+ * a ring .wide of the forearm's length across, .thick of it thick, .at of the forearm's length up from its wrist end, tipped .tilt rad, its radius
+ * wobbling .wobble in .lobes lobes; pale blue unlit (emissive only) and left in the glow so it shines.
+ */
+const SPIRIT_RING = { wide: 1.15, thick: 0.045, at: 0.12, tilt: 0.38, wobble: 0.07, lobes: 3, blue: new Color3(0.72, 0.9, 1.15) };
+export function bansheeSpiritRings(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const R = SPIRIT_RING, mf = getMaterialFactory();
+  const glowM = mf.get("unlit", R.blue, { emissive: R.blue });
+  const out: Mesh[] = [];
+  [body.leftLowerArm, body.rightLowerArm].forEach((arm, i) => {
+    const { center: c, extendSize: s } = arm.getBoundingInfo().boundingBox;
+    const L = s.y * 2, rad = (L * R.wide) / 2;
+    const path: Vector3[] = [];
+    const n = 28;
+    for (let k = 0; k <= n; k++) {
+      const a = (k / n) * Math.PI * 2, r = rad * (1 + R.wobble * Math.sin(a * R.lobes + i * 1.7));
+      path.push(new Vector3(Math.cos(a) * r, R.wobble * rad * 0.5 * Math.sin(a * 2 + i), Math.sin(a) * r));
+    }
+    const ring = MeshBuilder.CreateTube("bansheeSpiritRing", { path, radius: (L * R.thick) / 2, tessellation: 5 }, scene);
+    ring.parent = arm;
+    ring.position.set(c.x, c.y - s.y + L * R.at, c.z);
+    ring.rotation.set((i ? -1 : 1) * R.tilt, 0, R.tilt * 0.6);
+    ring.material = glowM;
+    out.push(ring);
+  });
+  return out;
+}
