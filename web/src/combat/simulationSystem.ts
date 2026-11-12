@@ -52,6 +52,8 @@ function hasAbility(unit: RuntimeUnit, ability: string): boolean {
 }
 
 function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): ProjectileShape | null {
+  // [S] 528 (c.1) the Gatling Gun fires bullets with tracer lines, not crossbow bolts (projectileSystem GATLING_BULLET)
+  if (unit.definition.id === "secret.gatling_gun") return "gatling_bullet";
   switch (unit.definition.projectileHint) {
     case "arrow": return "arrow";
     case "small_arrow": return "small_arrow"; // [S] 465 the Poacher's Small Arrow (projectileSystem SMALL_ARROW)
@@ -361,13 +363,14 @@ function muzzleScaleForProjectile(shape: ProjectileShape): number {
     case "bomb": case "pumpkin": return 1.4;
     case "rocket_arrow": return 0.65;
     case "bolt": return 0.7;
+    case "gatling_bullet": return 0.55;
     case "davinci_ball": return 0.8;
     default: return 1;
   }
 }
 
 function shouldSpawnProjectileMuzzleFx(shape: ProjectileShape): boolean {
-  return shape === "shell" || shape === "bomb" || shape === "pumpkin" || shape === "rocket_arrow" || shape === "bolt" || shape === "davinci_ball";
+  return shape === "shell" || shape === "bomb" || shape === "pumpkin" || shape === "rocket_arrow" || shape === "bolt" || shape === "gatling_bullet" || shape === "davinci_ball";
 }
 
 function countAliveSpawnedChildren(attacker: RuntimeUnit): number {

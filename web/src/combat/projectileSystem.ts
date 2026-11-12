@@ -88,7 +88,7 @@ const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, flet
  * (audit 457 blowdarter c.2: the dart flew as a full arrow).
  */
 const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
-export type ProjectileShape = "time_bolt" | "radiant_glaive" | "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
+export type ProjectileShape = "time_bolt" | "radiant_glaive" | "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "gatling_bullet" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -183,6 +183,9 @@ const MUZZLE_PUFFS = 7;
 const PISTOL_SHOT = { flash: 0.16, flashLife: 0.12, puff: 0.32, puffLife: 1.4, streak: 0.3, thick: 0.035, speed: 65 };
 // [S] 455 a rifle's tracer (spawnTracer): the white line's thickness (m), seconds held full, whole life (s)
 const RIFLE_TRACER = { thick: 0.035, hold: 0.12, life: 0.3 };
+// [S] 528 the Gatling Gun's bullet (secret.gatling_gun.jpg: a stream of small fast rounds, each a short thin white tracer line; card bullet speed 150):
+// speed (m/s, kept slow enough that a capture frame catches it), a brass slug .slug m long .slugW across, a white line .trail m long .thick square behind it
+const GATLING_BULLET = { speed: 48, slug: 0.09, slugW: 0.055, trail: 1.4, thick: 0.03 };
 
 interface TrailPuff {
   mesh: Mesh;
@@ -485,6 +488,7 @@ export class ProjectileSystem {
       case "small_arrow": speed = 35; arcHeight = dist * 0.08; break;
       case "blowdart": speed = 32; arcHeight = dist * 0.04; break;
       case "bolt":    speed = 30; arcHeight = dist * 0.06; break;
+      case "gatling_bullet": speed = GATLING_BULLET.speed; arcHeight = dist * 0.004; break;
       case "spear":   speed = 18; arcHeight = dist * 0.15; break;
       case "bomb":    speed = 12; arcHeight = dist * 0.35; break;
       case "pumpkin": speed = 12; arcHeight = dist * 0.35; break;
@@ -1562,6 +1566,19 @@ export class ProjectileSystem {
         tip.position.z = 0.24;
         tip.material = this._getMat(`bolt_tip_${attackerTeam}`, palette.primary);
         tip.parent = root;
+        break;
+      }
+      case "gatling_bullet": {
+        // [S] 528 a brass slug with a long thin white tracer line trailing it (GATLING_BULLET)
+        const G = GATLING_BULLET;
+        const slug = MeshBuilder.CreateCylinder("gatlingSlug", { height: G.slug, diameterBottom: G.slugW, diameterTop: G.slugW * 0.55, tessellation: 6 }, this._scene);
+        slug.rotation.x = Math.PI / 2;
+        slug.material = this._getMat("gatlingSlug", new Color3(1, 0.72, 0.3), 0.8);
+        slug.parent = root;
+        const line = MeshBuilder.CreateBox("gatlingTracer", { width: G.thick, height: G.thick, depth: G.trail }, this._scene);
+        line.position.z = -G.trail / 2;
+        line.material = this._getMat("rifleTracer", new Color3(1, 1, 0.96), 1);
+        line.parent = root;
         break;
       }
       case "spear": {
