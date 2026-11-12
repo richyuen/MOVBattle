@@ -3064,8 +3064,38 @@ export function infernalShirt(scene: Scene, body: ArticulatedBody, team: Color3)
   const cloth = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
   body.torsoMesh.material = cloth;
   for (const mesh of body.allMeshes.filter((m) => m.name.endsWith("_yoke"))) mesh.material = cloth;
-  return [body.leftUpperArm, body.rightUpperArm].map((arm) =>
+  const out = [body.leftUpperArm, body.rightUpperArm].map((arm) =>
     shirtSleeve(scene, arm, cloth, "infernalShirtCap", 0.45, 1.35, 1.15));
+  out.push(...infernalSleeves(scene, body, color));
+  return out;
+}
+/*
+ * [S] 524 (a.2) the Infernal Whip's long dark sleeves (secret.infernal_whip.red.png: his arms are sleeved in a dark team shade from the shoulder caps
+ * to the wrist, darker on the forearm, a turned cuff at the wrist, only the hands bare). INFERNAL_SLEEVE: the arm meshes themselves take the shirt's
+ * shade (upper) and .fore of it (forearm), each covered by a full tapered sleeve shell .out over the limb, and a cuff ring .cuff long flared .flare
+ * at the wrist end of the forearm, .cuffShade of the shirt. Out of the glow.
+ */
+const INFERNAL_SLEEVE = { out: 1.12, fore: 0.62, cuff: 0.2, flare: 1.42, cuffShade: 0.4 };
+function infernalSleeves(scene: Scene, body: ArticulatedBody, shirt: Color3): Mesh[] {
+  const S = INFERNAL_SLEEVE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const upper = mf.get("cloth", shirt, { emissive: shirt.scale(0.12), roughness: 1 });
+  const foreC = shirt.scale(S.fore), cuffC = shirt.scale(S.cuffShade);
+  const fore = mf.get("cloth", foreC, { emissive: foreC.scale(0.12), roughness: 1 });
+  const cuffM = mf.get("cloth", cuffC, { emissive: cuffC.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    arm.material = upper;
+    out.push(shirtSleeve(scene, arm, upper, "infernalSleeveUpper", 1.0, S.out, S.out));
+  }
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    arm.material = fore;
+    out.push(shirtSleeve(scene, arm, fore, "infernalSleeveFore", 1.0, S.out, S.out * 1.05));
+    const cuff = shirtSleeve(scene, arm, cuffM, "infernalSleeveCuff", S.cuff, S.flare * 0.92, S.flare);
+    cuff.position.y -= arm.getBoundingInfo().boundingBox.extendSize.y * 2 * (1 - S.cuff);
+    out.push(cuff);
+  }
+  for (const m of out) glow?.addExcludedMesh(m);
+  return out;
 }
 
 /** The pinafore's brown-red bib and straps meet a flared, thigh-length skirt. */
