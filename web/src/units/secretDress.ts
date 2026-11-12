@@ -2842,3 +2842,10 @@ export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color
     return band;
   });
 }
+
+/** The rider is bare-chested above the waist. */
+export function bareRaptorRiderChest(body: ArticulatedBody): void {
+  body.torsoMesh.material = body.skinMaterial;
+  for (const mesh of body.allMeshes.filter((m) => m.name.endsWith("_yoke"))) mesh.material = body.skinMaterial;
+  for (const arm of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) arm.material = body.skinMaterial;
+}

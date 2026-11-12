@@ -1150,7 +1150,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_raptor_rider":
       // [S] 519 (b.2) the plank shield with lashed bones and a skull on the off arm (propBuilder PLANK_SHIELD)
-      return vis({ scale: 1.24, bulk: 1.1 }, "spear", "bone_mask", "plank", "raptor_mount", "#8c6b45", undefined, {
+      return vis({ scale: 1.24, bulk: 0.88, torsoWidth: 0.8, torsoDepth: 0.82, armLength: 1.18, upperArmWidth: 0.76, lowerArmWidth: 0.72 }, "spear", "bone_mask", "plank", "raptor_mount", "#8c6b45", undefined, {
         posePreset: "mounted", materialPreset: "secret_beast",
       });
     case "secret_cheerleader":
