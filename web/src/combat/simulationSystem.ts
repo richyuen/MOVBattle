@@ -1016,6 +1016,8 @@ export class SimulationSystem {
     this._lashes = [];
     for (const h of this._safeHurls) h.mesh.dispose(false, false);
     this._safeHurls = [];
+    for (const c of this._clamThrows) c.node?.dispose(false, false);
+    this._clamThrows = [];
     for (const p of this._presents) p.node.dispose(false, false);
     this._presents = [];
     for (const held of this._presentsAway.keys()) if (!held.isDisposed()) held.setEnabled(true);
@@ -1109,6 +1111,7 @@ export class SimulationSystem {
     if (this._pendingBlows.length > 0) this._landPendingBlows(now);
     if (this._lashes.length > 0) this._landLashes(now);
     if (this._safeHurls.length > 0) this._stepSafeHurls(now);
+    if (this._clamThrows.length > 0) this._stepClamThrows(now);
     if (this._presents.length > 0 || this._presentsAway.size > 0) this._stepPresents(now);
     if (this._pendingLaunches.length > 0) this._fireDwelledLaunches(now);
     if (this._pendingThrows.length > 0) this._launchPendingThrows(now);
@@ -3637,6 +3640,9 @@ export class SimulationSystem {
       return;
     }
 
+    // [S] 524 CLAMS throws his clams from his hands at the man (CLAM_THROW): they become his clams where they land
+    if (attacker.definition.id === "secret.clams" && this._throwClams(attacker, target, now)) return;
+
     if ((abilities.has("summon") || abilities.has("clone") || abilities.has("revive")) && this._summonUnits(attacker)) {
       if (attacker.definition.archetype === "summoner" || attacker.definition.archetype === "support_buff") {
         return;
@@ -4627,6 +4633,75 @@ export class SimulationSystem {
         { originLift: 0, heldProp: prop ?? undefined, drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
       );
       if (prop) attacker.animator.letGoOfThrow(prop);
+    }
+  }
+
+  /*
+   * [S] 524 CLAMS throws his clams (card Weapons "Clam Throw: Throwable - Ranged; range 22; projectile Clam; count 3; shoot delay Per Projectile:
+   * 0.15 s"; audit 515 c.2 "TABS: clams thrown from the hands; ours has summons appear standing beside him"). One attack throws summonCount clams,
+   * .every s apart, from his clam hands in turn (left, right, left). Each is a clam (secretDress clamCritter, built on a loose node) that leaves the
+   * hand's world spot and flies at .speed m/s in an arc .apex m high, tumbling .spin rad/s, to a spot .short m short of the man, the three fanned
+   * .spread m across his line. Where it lands a puff goes up and his summon (summonUnitIds, a hidden small man under a clam, as _summonUnits) is
+   * spawned there. Logged "throw_clams" at the first let-go (the capture's release) and "summon" at each landing.
+   */
+  private static readonly CLAM_THROW = { every: 0.15, speed: 11, apex: 1.5, spin: 9, short: 1.4, near: 1.2, spread: 0.9 };
+  private _clamThrows: { node: TransformNode | null; from: Vector3; to: Vector3; t0: number; dur: number; attacker: RuntimeUnit; summonId: string; left: boolean }[] = [];
+  private _throwClams(attacker: RuntimeUnit, target: RuntimeUnit, now: number): boolean {
+    const C = SimulationSystem.CLAM_THROW;
+    const ids = attacker.definition.summonUnitIds;
+    if (!ids || ids.length === 0 || attacker.isDead || target.isDead) return false;
+    if (this._clamThrows.some((c) => c.attacker === attacker)) return true;
+    const ahead = target.position.subtract(attacker.position);
+    ahead.y = 0;
+    const dist = ahead.length();
+    if (dist < 1e-3) return false;
+    ahead.scaleInPlace(1 / dist);
+    const side = new Vector3(ahead.z, 0, -ahead.x);
+    const count = Math.max(1, attacker.definition.summonCount ?? 1);
+    const reach = Math.max(C.near, dist - C.short);
+    for (let i = 0; i < count; i++) {
+      const fan = (i - (count - 1) / 2) * C.spread;
+      const to = attacker.position.add(ahead.scale(reach)).add(side.scale(fan));
+      to.y = 0;
+      this._clamThrows.push({ node: null, from: attacker.position.clone(), to, t0: now + i * C.every, dur: 0, attacker, summonId: ids[i % ids.length], left: i % 2 === 0 });
+    }
+    this._logAbility(attacker, "throw_clams", now, target.position);
+    return true;
+  }
+  private _stepClamThrows(now: number): void {
+    const C = SimulationSystem.CLAM_THROW;
+    for (const c of [...this._clamThrows]) {
+      if (now < c.t0) continue;
+      const scene = c.attacker.body.root.getScene();
+      if (!c.node) {
+        if (c.attacker.isDead) { this._clamThrows.splice(this._clamThrows.indexOf(c), 1); continue; }
+        const b = c.attacker.body;
+        const hand = (c.left ? b.leftHand : b.rightHand) ?? b.rightHand ?? b.root;
+        worldMatrixChain(hand);
+        c.from = hand.getAbsolutePosition().clone();
+        c.node = new TransformNode("clamThrown", scene);
+        clamCritter(scene, c.node);
+        c.node.position.copyFrom(c.from);
+        c.node.rotation.y = Math.atan2(c.to.x - c.from.x, c.to.z - c.from.z);
+        c.dur = Math.max(0.3, Vector3.Distance(new Vector3(c.from.x, 0, c.from.z), c.to) / C.speed);
+      }
+      const age = now - c.t0;
+      const u = Math.min(1, age / c.dur);
+      c.node.position.copyFrom(Vector3.Lerp(c.from, c.to, u));
+      c.node.position.y += 4 * C.apex * u * (1 - u);
+      c.node.rotation.x = u < 1 ? C.spin * age : 0;
+      if (u < 1) continue;
+      c.node.dispose(false, false);
+      this._clamThrows.splice(this._clamThrows.indexOf(c), 1);
+      if (c.attacker.isDead || this.getLivingCount(c.attacker.team) >= this.summonLivingCap) continue;
+      const unit = this.spawnUnitById?.(c.summonId, c.attacker.team, c.to.clone(), {
+        role: "summoned", linkedParent: c.attacker, linkedRelation: "spawned-child", expireAfterSeconds: c.attacker.definition.summonLifetimeSeconds,
+      });
+      if (!unit) continue;
+      for (const m of [...unit.body.allMeshes, ...unit.propMeshes]) { m.isVisible = false; m.setEnabled(false); }
+      clamCritter(unit.body.root.getScene(), unit.body.root);
+      this._logAbility(c.attacker, "summon", now, c.to);
+      this.visualEffects?.spawnSmokePuff(c.to);
     }
   }
 
