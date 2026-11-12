@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear"
+  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
   | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear";
 
@@ -1244,8 +1244,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         weaponVariant: "cavalry_spear", posePreset: "mounted", materialPreset: "secret_royal",
       });
     case "secret_vlad":
+      // [S] 527 (b.1) a giant whittled log with a pale pencil point (propBuilder buildVladLog)
       return vis({ scale: 1.4, bulk: 1.22, headSize: 1.08 }, "spear", "crown", "none", "vampire_collar", "#822f2f", undefined, {
-        posePreset: "duelist", materialPreset: "secret_pirate", fxPreset: "spectral",
+        weaponVariant: "vlad_log", posePreset: "duelist", materialPreset: "secret_pirate", fxPreset: "spectral",
       });
     case "secret_gatling_gun":
       return vis({ scale: 1.6, bulk: 1.75, legLength: 0.7 }, "none", "none", "none", "none", "#6f5f48", undefined, {

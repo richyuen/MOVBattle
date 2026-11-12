@@ -3048,6 +3048,28 @@ function buildCutlass(scene: Scene, name: string, fit: BladeFit, cut: typeof CUT
  * Same mount as the plain sword (the guard on the fist).
  */
 /*
+ * [S] 527 (b.1) Vlad's whittled log (secret.vlad.red.png: a giant stake about his height long and thick as his forearm, a faceted brown log with a
+ * slight bend, whittled at its front into a long pale pencil point, about a third of its length; held in both fists near its butt). VLAD_LOG in
+ * unit scales (s): the log .long, .thick across at the butt tapering to .neck at the cut, 7-sided and flat-shaded, in two runs kinked .kink rad;
+ * the point .point long from the cut to a tip, its pale whittled wood. The fist .grip of the log's length up from the butt. Lit cloth wood.
+ */
+const VLAD_LOG = { long: 0.78, thick: 0.1, neck: 0.115, kink: 0.08, point: 0.4, grip: 0.22, bark: new Color3(0.4, 0.22, 0.12), pale: new Color3(0.86, 0.66, 0.42) };
+function buildVladLog(scene: Scene, s: number): Mesh {
+  const V = VLAD_LOG, L = V.long * s, half = L / 2;
+  const bark = mat(scene, V.bark, 0.12, "cloth"), pale = mat(scene, V.pale, 0.15, "cloth");
+  const shaft = MeshBuilder.CreateCylinder("shaft", { height: half, diameterBottom: V.thick * s, diameterTop: V.thick * s * 1.04, tessellation: 7 }, scene);
+  shaft.material = bark; shaft.convertToFlatShadedMesh();
+  shaft.position.y = half / 2 - L * V.grip;
+  const upper = MeshBuilder.CreateCylinder("vladLogUpper", { height: half, diameterBottom: V.thick * s * 1.04, diameterTop: V.neck * s, tessellation: 7 }, scene);
+  upper.setPivotPoint(new Vector3(0, -half / 2, 0));
+  upper.position.y = half; upper.rotation.z = V.kink; upper.material = bark; upper.convertToFlatShadedMesh(); upper.parent = shaft;
+  const P = V.point * s;
+  const point = MeshBuilder.CreateCylinder("tip", { height: P, diameterBottom: V.neck * s, diameterTop: 0, tessellation: 7 }, scene);
+  point.position.y = half / 2 + P / 2; point.material = pale; point.convertToFlatShadedMesh(); point.parent = upper;
+  return shaft;
+}
+
+/*
  * [S] 527 (b.1) the Cavalry's spear (secret.cavalry.red.png, .png: a long plain team-coloured shaft; at its head a broad steel leaf blade, two small
  * swept-back side prongs at the blade's foot, and three team cloth flags hanging off the shaft below them, side by side like a split pennon).
  * CAVALRY_SPEAR in his standing heights (fit.stand): shaft .long, .thick across, held .grip of the way up; blade .blade long, .bladeW across at its
@@ -5169,6 +5191,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "spear": {
       if (variant === "long_pike") return buildLongPike(scene, s);
+      if (variant === "vlad_log") return buildVladLog(scene, s);
       if (variant === "raptor_spear") {
         // A short wooden haft, lashings at the fist and socket, and a broad chipped stone head.
         const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.49 * s, diameter: 0.035 * s, tessellation: 6 }, scene);
