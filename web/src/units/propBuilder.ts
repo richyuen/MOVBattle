@@ -5086,6 +5086,20 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "spear": {
       if (variant === "long_pike") return buildLongPike(scene, s);
+      if (variant === "raptor_spear") {
+        // A short wooden haft, lashings at the fist and socket, and a broad chipped stone head.
+        const shaft = MeshBuilder.CreateCylinder("shaft", { height: 0.49 * s, diameter: 0.035 * s, tessellation: 6 }, scene);
+        shaft.material = mat(scene, new Color3(0.45, 0.28, 0.13));
+        const stone = MeshBuilder.CreateIcoSphere("tip", { radius: 1, subdivisions: 1, flat: true }, scene);
+        stone.parent = shaft;
+        stone.scaling.set(0.065 * s, 0.128 * s, 0.028 * s);
+        stone.position.y = 0.31 * s;
+        stone.rotation.z = 0.12;
+        const flint = new Color3(0.1125, 0.1125, 0.125);
+        stone.material = getMaterialFactory().get("cloth", flint, { emissive: flint.scale(0.12), roughness: 1 });
+        addGripWraps(scene, shaft, [-0.04 * s, -0.015 * s, 0.01 * s, 0.203 * s, 0.228 * s], 0.048 * s);
+        return shaft;
+      }
       // Half as tall again as the unit and no more: body height is ~1.3 at scale 1 and s carries the 1.25 exaggeration under the 1.6 prop oversize, so a 1.3 shaft stood twice a man and a rank of them was a forest of poles
       // A stick with a small point: a head 0.09 across and 0.22 long was as big as a torso once oversized, and a 0.036 shaft a pole as thick as its own point.
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: 1.0 * s, diameter: 0.024 * s, tessellation: 6 }, scene);

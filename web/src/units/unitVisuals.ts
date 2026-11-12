@@ -179,7 +179,7 @@ export interface UnitVisualConfig {
 export type WeaponVariant =
   | "jester_dagger"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -1151,7 +1151,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "secret_raptor_rider":
       // [S] 519 (b.2) the plank shield with lashed bones and a skull on the off arm (propBuilder PLANK_SHIELD)
       return vis({ scale: 1.24, bulk: 0.88, torsoWidth: 0.8, torsoDepth: 0.82, armLength: 1.18, upperArmWidth: 0.76, lowerArmWidth: 0.72 }, "spear", "bone_mask", "plank", "raptor_mount", "#8c6b45", undefined, {
-        posePreset: "mounted", materialPreset: "secret_beast",
+        posePreset: "mounted", materialPreset: "secret_beast", weaponVariant: "raptor_spear",
       });
     case "secret_cheerleader":
       // [S] 518 (a.5) no bandana: her own short team hair (secretDress cheerleaderHair)
