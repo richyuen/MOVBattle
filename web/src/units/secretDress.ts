@@ -3217,6 +3217,45 @@ export function raptorRiderFeathers(scene: Scene, body: ArticulatedBody): Mesh[]
   return out;
 }
 
+/*
+ * [S] 526 (a.5) the Raptor Rider's fur loincloth (secret.raptor_rider.jpg, card Appearance "a fur loincloth": a bare team torso over a dark shaggy fur
+ * wrap round the hips, ragged flaps hanging front and back to mid-thigh; ours wore a team box tunic). The tunic skirt is off for him (unitFactory).
+ * RIDER_LOIN off the pelvis mesh's box (centre c, half size s): an 8-sided wrap .round of the pelvis round and .wrapH of its height tall at its top;
+ * front and back flaps .flapW of its width wide hanging .flapL of the thigh's length below the wrap, each with .teeth ragged points along its hem;
+ * pelvis mesh in the same fur. Near-black olive-grey lit fur self-lit .4 (LESSONS 494), out of the glow.
+ */
+const RIDER_LOIN = { round: 1.16, wrapH: 0.7, flapW: 0.8, flapL: 0.55, teeth: 4, fur: new Color3(0.07, 0.065, 0.05) };
+export function raptorRiderLoincloth(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = RIDER_LOIN, glow = scene.getGlowLayerByName("glow");
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (!pelvis) return [];
+  const fur = getMaterialFactory().get("cloth", C.fur, { emissive: C.fur.scale(0.4), roughness: 1 });
+  const { center: c, extendSize: s } = pelvis.getBoundingInfo().boundingBox;
+  const thighL = body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2;
+  const out: Mesh[] = [];
+  const wrapH = s.y * 2 * C.wrapH, top = c.y + s.y;
+  const wrap = MeshBuilder.CreateCylinder("riderLoinWrap", { height: wrapH, diameterTop: s.x * 2 * C.round, diameterBottom: s.x * 2 * C.round * 1.08, tessellation: 8 }, scene);
+  wrap.parent = pelvis; wrap.position.set(c.x, top - wrapH / 2, c.z); wrap.scaling.z = s.z / s.x; wrap.rotation.y = Math.PI / 8; wrap.material = fur; out.push(wrap);
+  const flapW = s.x * 2 * C.flapW, flapL = thighL * C.flapL, flapTop = top - wrapH * 0.6;
+  for (const side of [-1, 1]) {
+    const flap = MeshBuilder.CreateBox("riderLoinFlap", { width: flapW, height: flapL, depth: s.z * 0.12 }, scene);
+    flap.parent = pelvis; flap.material = fur;
+    const z = c.z + side * s.z * C.round * 1.02;
+    flap.position.set(c.x, flapTop - flapL / 2, z); flap.rotation.x = side * 0.12; out.push(flap);
+    for (let k = 0; k < C.teeth; k++) {
+      const tw = flapW / C.teeth;
+      const tooth = MeshBuilder.CreateCylinder("riderLoinTooth", { height: flapL * 0.28, diameterTop: tw * 0.9, diameterBottom: 0, tessellation: 4 }, scene);
+      tooth.parent = pelvis; tooth.material = fur; tooth.scaling.z = 0.25;
+      tooth.position.set(c.x - flapW / 2 + tw * (k + 0.5), flapTop - flapL - flapL * 0.14 + (k % 2) * flapL * 0.06, z + side * flapL * 0.12 * 0.5);
+      out.push(tooth);
+    }
+  }
+  pelvis.material = fur;
+  glow?.addExcludedMesh(pelvis);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 /** The rider is bare-chested above the waist. */
 export function bareRaptorRiderChest(body: ArticulatedBody): void {
   body.torsoMesh.material = body.skinMaterial;
