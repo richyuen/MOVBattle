@@ -3078,7 +3078,7 @@ function buildVladLog(scene: Scene, s: number): Mesh {
  * ("metal" renders near black), team shaft and flags in self-lit cloth. Root named "lance" and tipped forward about the fist as the jousting lance is.
  */
 const CAVALRY_SPEAR = { long: 1.5, thick: 0.04, grip: 0.2, blade: 0.13, bladeW: 0.045, belly: 0.35, flat: 0.22, prong: 0.05, prongTilt: 0.9,
-  flags: 3, flagL: 0.15, flagW: 0.026, flagAt: 0.035, flagGap: 0.03, droop: 0.35, steel: new Color3(0.6, 0.61, 0.64) };
+  flags: 3, flagL: 0.2, flagW: 0.06, flagAt: 0.035, flagGap: 0.03, droop: 0.35, steel: new Color3(0.6, 0.61, 0.64) };
 function buildCavalrySpear(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const C = CAVALRY_SPEAR, L = fit.stand * C.long, r = (fit.stand * C.thick) / 2;
   const back = C.grip * L, front = L - back, lift = (0.5 - C.grip) * L;
