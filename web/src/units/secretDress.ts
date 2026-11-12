@@ -2143,7 +2143,7 @@ const ELF_CAP = {
  * tails .tail W; bells .bell W. Box team (saturated, self-lit .12, FAN_DRESS rule), band team x .band2, gold unlit, all out of the glow. Torso-rooted
  * so it is held before the chest in every pose; the hand prop is off (unitVisuals weapon none).
  */
-const PRESENT = { w: 1.55, h: 1.25, d: 1.5, top: 0.95, gap: 0.15, lid: 1.07, lidH: 0.14, band: 0.2, stripe: 0.04, band2: 0.55, loop: 0.38, loopUp: 0.6, tail: 0.55, bell: 0.13, gold: new Color3(0.62, 0.26, 0.03) };
+const PRESENT = { w: 1.55, h: 1.25, d: 1.5, top: 0.95, gap: 0.15, lid: 1.07, lidH: 0.14, band: 0.2, stripe: 0.04, band2: 0.55, loop: 0.38, loopUp: 0.6, tail: 0.55, bell: 0.21, gold: new Color3(0.62, 0.26, 0.03) };
 export function presentElfPresent(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const P = PRESENT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const T = limbBox(body.torsoMesh);
@@ -2194,9 +2194,24 @@ export function presentElfPresent(scene: Scene, body: ArticulatedBody, team: Col
     box("presentLoopStripe", W * P.loop * 0.98, W * 0.03, W * 0.125, 0, 0, 0, gold, loop);
     const tail = box("presentTail", W * 0.08, W * 0.012, W * P.tail, side * W * 0.12, -W * 0.03, -W * P.tail * 0.45, bandMat, bow);
     tail.rotation.y = side * 0.35; tail.rotation.x = -0.25;
-    const bell = MeshBuilder.CreateCylinder("presentBell", { height: W * P.bell, diameterTop: W * P.bell * 0.45, diameterBottom: W * P.bell * 1.1, tessellation: 7 }, scene);
-    bell.parent = bow; bell.material = gold; bell.position.set(side * W * 0.07, -W * 0.01, W * 0.11); bell.rotation.x = 0.5; bell.convertToFlatShadedMesh();
-    out.push(bell); glow?.addExcludedMesh(bell);
+    // Flared open mouths face outward from the bow so the rims and clappers read against the lid.
+    const size = W * P.bell;
+    const profile = [[0, 0.46], [0.23, 0.46], [0.34, 0.31], [0.39, -0.08], [0.53, -0.31], [0.53, -0.42], [0.4, -0.42], [0.29, -0.21], [0.18, 0.27], [0, 0.27]];
+    const bell = MeshBuilder.CreateLathe("presentBell", {
+      shape: profile.map(([radius, y]) => new Vector3(radius * size, y * size, 0)), tessellation: 9,
+    }, scene);
+    bell.parent = bow;
+    bell.material = mf.get("cloth", new Color3(1, 0.7, 0.18), { emissive: P.gold.scale(0.24), roughness: 0.75 });
+    bell.position.set(side * W * 0.17, W * 0.06, W * 0.21);
+    bell.rotation.set(-1.15, 0, side * 0.34);
+    bell.convertToFlatShadedMesh();
+    const clapper = MeshBuilder.CreateIcoSphere("presentBellClapper", { radius: size * 0.13, subdivisions: 1, flat: true }, scene);
+    clapper.parent = bell;
+    clapper.position.y = -size * 0.39;
+    clapper.material = gold;
+    out.push(bell, clapper);
+    glow?.addExcludedMesh(bell);
+    glow?.addExcludedMesh(clapper);
   }
   return out;
 }
