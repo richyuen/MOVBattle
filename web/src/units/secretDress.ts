@@ -3150,6 +3150,39 @@ export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color
   });
 }
 
+/*
+ * [S] 526 (a.2) the Raptor Rider's own head (secret.raptor_rider.red.png, .blue.png: the team face bare, brown hair parted over the crown and
+ * falling straight to the shoulders either side of the face and down the back; audit "a grey-beige lumpy mask"). The bone mask is off (unitVisuals
+ * hat none). RIDER_HAIR in head widths W, heights H, depths D (head box, centre c, front +z; e the eyes' top): a half-dome cap .capW W x .capD D
+ * from .capLo H over e to .capTop H over c, .capBack D back; per side a lock tapering from .lockRoot W at the cap's side to .lockTip W at .lockLo H
+ * under c, .lockX W out and .lockZ D forward (outside the eyes, framing the face); a back mass .backW W wide to .backLo H under c. Lit brown cloth
+ * self-lit .3, out of the glow.
+ */
+const RIDER_HAIR = {
+  capW: 1.14, capD: 1.12, capLo: 0.02, capTop: 0.56, capBack: 0.06, lockRoot: 0.3, lockTip: 0.22, lockLo: -0.62, lockX: 0.6, lockZ: 0.12,
+  backW: 1.02, backLo: -0.6, brown: new Color3(0.2, 0.1, 0.05),
+};
+export function raptorRiderHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = RIDER_HAIR, glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const hair = getMaterialFactory().get("cloth", C.brown, { emissive: C.brown.scale(0.3), roughness: 1 });
+  const out: Mesh[] = [];
+  const lo = e + H * C.capLo, hi = c.y + H * C.capTop;
+  const cap = MeshBuilder.CreateSphere("riderHairCap", { diameter: 1, segments: 4, slice: 0.5 }, scene);
+  cap.parent = head; cap.scaling.set(W * C.capW, (hi - lo) * 2, D * C.capD); cap.position.set(c.x, lo, c.z - D * C.capBack); cap.material = hair; out.push(cap);
+  for (const side of [-1, 1]) {
+    const pts = [new Vector3(c.x + side * W * 0.54, lo + H * 0.04, c.z + D * C.lockZ), new Vector3(c.x + side * W * C.lockX, c.y - H * 0.1, c.z + D * C.lockZ),
+      new Vector3(c.x + side * W * C.lockX * 1.04, c.y + H * C.lockLo, c.z + D * C.lockZ * 0.4)];
+    taper(scene, "riderHairLock", pts, W * C.lockRoot, W * C.lockTip, head, hair, out);
+  }
+  const back = MeshBuilder.CreateBox("riderHairBack", { width: W * C.backW, height: hi - (c.y + H * C.backLo), depth: D * 0.3 }, scene);
+  back.parent = head; back.position.set(c.x, (hi + c.y + H * C.backLo) / 2, c.z - D * 0.48); back.material = hair; out.push(back);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 /** The rider is bare-chested above the waist. */
 export function bareRaptorRiderChest(body: ArticulatedBody): void {
   body.torsoMesh.material = body.skinMaterial;
