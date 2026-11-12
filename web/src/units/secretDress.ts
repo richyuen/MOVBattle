@@ -3416,3 +3416,49 @@ export function iceMageShorts(scene: Scene, body: ArticulatedBody, team: Color3)
   if (pelvis) { pelvis.material = cloth; glow?.addExcludedMesh(pelvis); }
   return out;
 }
+
+/*
+ * [S] 525 (a.5) CLAMS' tan trousers and rope belt (secret.clams.blue.png: straight tan trousers from the waist to the boots, a pale rust rope
+ * twice round the waist tied in a front knot with two ends hanging to mid-thigh; card Appearance "a rope around its pants that acts as a belt").
+ * CLAM_TROUSER: per thigh and shin an 8-sided shell .thigh/.shin of its box round over its whole length; thighs, shins and pelvis in tan cloth
+ * (own lit cloth, out of the glow). The rope: the body's waist belt re-clothed in rope cloth, a second rope ring .ring of the belt box round
+ * just under it, a knot block at the front and two ends .tail of the thigh long, splayed .splay. The tunic skirt is off for him (unitFactory).
+ */
+const CLAM_TROUSER = { thigh: 1.12, shin: 1.1, ring: 1.08, ringH: 0.42, knot: 0.32, tail: 0.42, splay: 0.2,
+  tan: new Color3(0.72, 0.5, 0.3), rope: new Color3(0.78, 0.42, 0.28) };
+export function clamsTrousers(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = CLAM_TROUSER, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const tan = mf.get("cloth", C.tan, { emissive: C.tan.scale(0.18), roughness: 1 });
+  const rope = mf.get("cloth", C.rope, { emissive: C.rope.scale(0.2), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const [limb, shin] of [[body.leftUpperLeg, false], [body.rightUpperLeg, false], [body.leftLowerLeg, true], [body.rightLowerLeg, true]] as const) {
+    const { center: c, extendSize: s } = limb.getBoundingInfo().boundingBox;
+    out.push(legShell(scene, shin ? "clamsTrouserShin" : "clamsTrouserThigh", limb, tan, c.y + s.y, c.y - s.y, shin ? C.shin : C.thigh));
+    limb.material = tan; glow?.addExcludedMesh(limb);
+  }
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (pelvis) { pelvis.material = tan; glow?.addExcludedMesh(pelvis); }
+  const belt = body.allMeshes.find((m) => m.name.endsWith("_belt"));
+  if (belt) {
+    belt.material = rope; glow?.addExcludedMesh(belt);
+    const { center: c, extendSize: s } = belt.getBoundingInfo().boundingBox;
+    const ring = MeshBuilder.CreateCylinder("clamsRopeRing", { height: s.y * 2 * C.ringH, diameter: s.x * 2 * C.ring, tessellation: 10 }, scene);
+    ring.parent = belt; ring.position.set(c.x, c.y - s.y * (1 + C.ringH * 0.6), c.z); ring.scaling.z = s.z / s.x;
+    ring.material = rope; out.push(ring);
+    const front = c.z + s.z * C.ring;
+    const knot = MeshBuilder.CreateBox("clamsRopeKnot", { width: s.x * C.knot * 1.2, height: s.y * 2 * C.knot * 1.6, depth: s.z * C.knot }, scene);
+    knot.parent = belt; knot.position.set(c.x, c.y - s.y * 0.3, front + s.z * C.knot * 0.3); knot.rotation.z = 0.5;
+    knot.material = rope; out.push(knot);
+    const thigh = body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2;
+    for (const side of [-1, 1]) {
+      const len = thigh * C.tail * (side < 0 ? 1 : 0.85);
+      const end = MeshBuilder.CreateCylinder("clamsRopeEnd", { height: len, diameterTop: s.x * 0.16, diameterBottom: s.x * 0.12, tessellation: 6 }, scene);
+      end.parent = belt; end.material = rope;
+      end.position.set(c.x + side * (s.x * 0.12 + Math.sin(C.splay) * len / 2), c.y - s.y * 0.5 - Math.cos(C.splay) * len / 2, front + s.z * C.knot * 0.35);
+      end.rotation.z = side * C.splay;
+      out.push(end);
+    }
+  }
+  for (const m of out) if (m.name.startsWith("clamsRope")) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
