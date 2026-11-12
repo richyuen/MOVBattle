@@ -2899,3 +2899,27 @@ export function iceMagePinafore(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/** Pale frost gathers around each fist in one large core and small satellites. */
+export function iceMageFrostHands(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const color = new Color3(0.57, 0.88, 1);
+  const frost = getMaterialFactory().get("unlit", color, { emissive: color.scale(1.35) });
+  const radius = body.headMesh.getBoundingInfo().boundingBox.extendSize.x;
+  const out: Mesh[] = [];
+  for (const [hand, side] of [[body.leftHand, -1], [body.rightHand, 1]] as const) {
+    const core = MeshBuilder.CreateIcoSphere("iceMageFrostCore", { radius: radius * (side < 0 ? 0.49 : 0.72), subdivisions: 2 }, scene);
+    core.parent = hand;
+    core.position.set(side * radius * 0.42, -radius * 0.33, radius * 0.29);
+    core.material = frost;
+    out.push(core);
+    for (let index = 0; index < 4; index++) {
+      const angle = index * Math.PI / 2 + side * 0.4;
+      const shard = MeshBuilder.CreateIcoSphere("iceMageFrostBead", { radius: radius * (0.11 + index * 0.024), subdivisions: 1 }, scene);
+      shard.parent = hand;
+      shard.position.copyFrom(core.position.add(new Vector3(Math.cos(angle) * 0.85, Math.sin(angle) * 0.85, 0.3).scale(radius)));
+      shard.material = frost;
+      out.push(shard);
+    }
+  }
+  return out;
+}
