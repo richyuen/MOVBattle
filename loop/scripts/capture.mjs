@@ -805,6 +805,9 @@ async function main() {
           const shotPath = id === "legacy.wizard" ? 7 : far;
           await take(`unit_${id}_release`, release.tick, shotPath);
           if (id === "legacy.wizard") await take(`unit_${id}_cast_origin`, release.tick, far);
+          // [evidence 525] the torso-sized present covers the Present Elf's chest in the idle (a.2 vest): the idle's front three-quarter again,
+          // half a second after the present has left his hands
+          if (id === "secret.present_elf") await take(`unit_${id}_front`, release.tick + 30, 1);
           // A thrown missile at a man who has closed in (the stoner's boulder at 3 m) lands inside the motion pair's 9 ticks: its flight shot is taken
           // under half way to the hit instead, so the missile is still in the air and not yet its impact dust
           // [evidence 454] the Deadeye's bullet (speed 100) lands ~5 ticks after the shot: her flight frame is 3 ticks on, the bullet half way (CONFIRM 453 c.3)
