@@ -1185,7 +1185,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "secret_ice_mage":
       // [S] 519 (b.1) no staff: she throws her icicles from empty open hands (secret.ice_mage.red.png, card Main Hand "Icicle Throw")
       return vis({ scale: 1.08, bulk: 0.95 }, "none", "none", "none", "none", "#87d8ff", undefined, {
-        posePreset: "caster", materialPreset: "secret_ice", attachmentPreset: "summoner", fxPreset: "frost",
+        // [S] 526 (a.5) team skin, not the pale secret_ice tint (secret.ice_mage.blue.png); her sleeves are secretDress iceMageSleeves
+        posePreset: "caster", materialPreset: "default", attachmentPreset: "summoner", fxPreset: "frost",
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });
     case "secret_infernal_whip":

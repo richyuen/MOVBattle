@@ -3412,6 +3412,32 @@ export function presentElfTrousers(scene: Scene, body: ArticulatedBody): Mesh[] 
  * LESSONS 512), .round of the box round at the hip, .hemRound at the hem; thighs and pelvis in the same deep team cloth (team saturated x .deep,
  * self-lit .12), so the secret_ice tint is off them. Out of the glow.
  */
+/*
+ * [S] 526 (a.5) the Ice Mage's team sleeves (secret.ice_mage.blue.png: a deep team undershirt whose full sleeves run from the pinafore straps to the
+ * wrists, flaring a little at a turned cuff; her face and hands plain team skin). The secret_ice tint is off (unitVisuals: default preset), so skin
+ * and body are the team's. ICE_SLEEVE: the upper arm under a full shell .out round; the forearm under a shell over its top .fore, then a cuff .cuff
+ * long flaring .flare; team saturated x .deep, self-lit .12 (LESSONS 517), its own material (LESSONS 449). Out of the glow.
+ */
+const ICE_SLEEVE = { out: 1.16, fore: 0.8, cuff: 0.16, flare: 1.42, deep: 0.72 };
+export function iceMageSleeves(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const S = ICE_SLEEVE, glow = scene.getGlowLayerByName("glow");
+  const c = deepTeam(team, S.deep);
+  const cloth = getMaterialFactory().get("cloth", c, { emissive: c.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    arm.material = cloth;
+    out.push(shirtSleeve(scene, arm, cloth, "iceSleeveUpper", 1.0, S.out, S.out));
+  }
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(shirtSleeve(scene, arm, cloth, "iceSleeveFore", S.fore, S.out, S.out * 1.05));
+    const cuff = shirtSleeve(scene, arm, cloth, "iceSleeveCuff", S.cuff, S.flare * 0.88, S.flare);
+    cuff.position.y -= arm.getBoundingInfo().boundingBox.extendSize.y * 2 * (S.fore - S.cuff);
+    out.push(cuff);
+  }
+  for (const m of out) glow?.addExcludedMesh(m);
+  return out;
+}
+
 const ICE_SHORTS = { hem: 0.035, round: 1.2, hemRound: 1.26, deep: 0.42 };
 export function iceMageShorts(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const S = ICE_SHORTS, glow = scene.getGlowLayerByName("glow");
