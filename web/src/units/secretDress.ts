@@ -4000,3 +4000,38 @@ export function solarArchitectHalo(scene: Scene, body: ArticulatedBody): Mesh[] 
   out.push(root as Mesh);
   return out;
 }
+
+/*
+ * [S] 528 (a.1) the Bank Robbers' bandanas (secret.bank_robbers.blue.png, .red.png: a magenta cloth tied round the face from just under the eyes down
+ * past the chin, its front falling in a point onto the top of the chest; the same magenta on both teams). ROBBER_BANDANA in the head box (W, H, D, c)
+ * and the bead eyes: a band .wrap W and D round, from .gap H under the eye bottoms down to .chin H under the head's bottom; a front fold a little
+ * proud of it; a triangular point .pointW W across and .point H long hanging from the front under the chin, tipped .tip rad out over the chest;
+ * a knot at the back. Magenta lit cloth self-lit .12, out of the glow. Both men, not the safe actor.
+ */
+const ROBBER_BANDANA = { wrap: 1.1, gap: 0.03, chin: 0.06, pointW: 0.95, point: 0.55, tip: 0.35, magenta: new Color3(0.58, 0.05, 0.3) };
+export function bankRobberBandana(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = ROBBER_BANDANA, glow = scene.getGlowLayerByName("glow");
+  const cloth = getMaterialFactory().get("cloth", B.magenta, { emissive: B.magenta.scale(0.12), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const eyes = eyeBoxInHead(body) ?? { lo: new Vector3(c.x - W * 0.3, c.y, c.z + D * 0.4), hi: new Vector3(c.x + W * 0.3, c.y + H * 0.15, c.z + D * 0.55) };
+  const out: Mesh[] = [];
+  const put = (m: Mesh): Mesh => { m.parent = head; m.material = cloth; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const top = eyes.lo.y - H * B.gap, bot = c.y - H / 2 - H * B.chin, h = top - bot;
+  const band = put(MeshBuilder.CreateBox("robberBandana", { width: W * B.wrap, height: h, depth: D * B.wrap }, scene));
+  band.position.set(c.x, (top + bot) / 2, c.z);
+  const front = Math.max(c.z + (D * B.wrap) / 2, eyes.hi.z);
+  const fold = put(MeshBuilder.CreateBox("robberBandanaFold", { width: W * B.wrap * 0.92, height: h * 0.55, depth: D * 0.06 }, scene));
+  fold.position.set(c.x, bot + h * 0.3, front + D * 0.02);
+  // the point: a flat four-sided cone hung point-down from the band's front foot, tipped out over the chest
+  const P = H * B.point;
+  const hinge = new Mesh("robberBandanaHinge", scene); hinge.parent = head; hinge.position.set(c.x, bot + H * 0.02, front - D * 0.04); hinge.rotation.x = -B.tip;
+  const point = MeshBuilder.CreateCylinder("robberBandanaPoint", { height: P, diameterTop: W * B.pointW * Math.SQRT2, diameterBottom: 0, tessellation: 4 }, scene);
+  point.rotation.y = Math.PI / 4; point.bakeCurrentTransformIntoVertices(); point.rotation.y = 0;
+  point.scaling.z = 0.12; point.position.y = -P / 2;
+  put(point); point.parent = hinge;
+  const knot = put(MeshBuilder.CreateBox("robberBandanaKnot", { width: W * 0.22, height: h * 0.4, depth: D * 0.16 }, scene));
+  knot.position.set(c.x, top - h * 0.3, c.z - (D * B.wrap) / 2 - D * 0.06);
+  out.push(hinge);
+  return out;
+}
