@@ -2527,7 +2527,7 @@ export function cupidFeet(scene: Scene, body: ArticulatedBody): void {
  * "Mace Spin"; audit 515 b.2 "one mace upright in each fist; ours has the second hanging at the hip, out of hand", b.3 "maces held upright at waist
  * height; ours lays the shaft across the shoulders"). SPINNER_MACE in his standing height Hs: a 6-sided shaft .shaft Hs long, .thick Hs across, the
  * fist .grip of it up from its butt, a ring at the butt; the head .head Hs tall: a 6-sided core .core Hs across, .flanges flat flanges .fin Hs out
- * from it, a collar under it and a spike .spike Hs over it. World-space meshes laid each frame (RuntimeUnit._tendSpinnerMaces) on the fist, the shaft
+ * from it, a collar under it and a spike .spike Hs over it. Each mace is anchored to a fist and aimed each frame (RuntimeUnit._tendSpinnerMaces), the shaft
  * up the world's up leaned .lean rad out to his side and .fore ahead, so it stands upright whatever the hand's own turn. Near-black lit cloth self-lit
  * .4 (LESSONS 494), the flanges a dark grey, out of the glow. The unit's own mace props are off (unitVisuals weapon none).
  */
@@ -2543,6 +2543,7 @@ export class SpinnerMaces {
     const L = height * M.shaft, H = height * M.head;
     for (let k = 0; k < 2; k++) {
       const root = new TransformNode("spinnerMace", scene);
+      root.parent = k === 0 ? _body.rightHand : _body.leftHand;
       root.rotationQuaternion = Quaternion.Identity();
       const put = (m: Mesh, material: Material, y: number): Mesh => { m.parent = root; m.material = material; m.position.y = y; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); this._meshes.push(m); return m; };
       const lo = -L * M.grip, hi = lo + L;
@@ -2583,8 +2584,9 @@ export class SpinnerMaces {
         ? hand.getAbsolutePosition().subtract(elbow.getAbsolutePosition()).normalize()
         : Vector3.Up().add(right.scale(side * Math.tan(M.lean))).add(fwd.scale(Math.tan(M.fore))).normalize();
       const root = this._roots[k];
-      root.position.copyFrom(hand.getAbsolutePosition());
-      Quaternion.FromUnitVectorsToRef(Vector3.Up(), up, root.rotationQuaternion!);
+      const worldRotation = Quaternion.Identity();
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), up, worldRotation);
+      hand.absoluteRotationQuaternion.conjugate().multiplyToRef(worldRotation, root.rotationQuaternion!);
     });
   }
   dispose(): void {
