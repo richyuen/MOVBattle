@@ -604,6 +604,9 @@ async function main() {
               on === 8 ? 22 * s : Math.max(6 * s, Math.hypot(dx, dz) * 1.15 + 3), Math.atan2(dx, -dz), Math.PI / 2.1);
             return;
           }
+          // [evidence 526] 13: the Raptor Rider's hips and back from a rear three-quarter (his plank shield hides them from the front and in the
+          // side-on motion shots; a.5 loincloth)
+          if (on === 13) { window.game.frameCamera({ x: pa.x, y: 1.1 * s, z: pa.z }, 3.4 * s, a.body.root.rotation.y + Math.PI / 2 + 0.6, Math.PI / 2.2); return; }
           let fx = pt.x - pa.x, fz = pt.z - pa.z; const l = Math.hypot(fx, fz) || 1; fx /= l; fz /= l;
           // the protector's slab hides his head from the front: his idle swings round to his side, where the head shows beside the slab (evidence 366)
           // [evidence 403] the halfling's wide side-by-side stance read as a walk stride from .6 rad off his front (critic 397-402 a.1; probe: his
@@ -799,6 +802,7 @@ async function main() {
         const far = support ? 1 : (d >= 6 && id !== "evil.exiled_sentinel" && id !== "evil.death_bringer") || id === "pirate.blunderbuss" ? 3 : 0;
         await take(`unit_${id}_idle`, null, 1);
         if (id === "good.celestial_aegis") await take(`unit_${id}_field`, null, 10);
+        if (id === "secret.raptor_rider") await take(`unit_${id}_back`, null, 13);
         if (release) {
           // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
           if (release.tick > 9) await take(`unit_${id}_windup`, release.tick - 9, far);
