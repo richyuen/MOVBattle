@@ -3183,6 +3183,40 @@ export function raptorRiderHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 526 (a.3) the Raptor Rider's feather headdress (secret.raptor_rider.red.png: a dark red-brown headband round the brow above the eyes, and from
+ * its back an upright fan of six long dark green-black feathers standing over the crown). RIDER_FEATHERS in head units as RIDER_HAIR: a 10-sided band
+ * .bandH H tall, .bandW W round (x D/W deep), its foot .over H over e; .count feathers, each a flat 4-sided spindle .long H long and .wide W wide,
+ * rooted on the band's back half .back D behind c, fanned .fan rad from the upright across the fan, leaning .lean rad back. Band lit red-brown, the
+ * feathers lit near-black green self-lit .3, all out of the glow; the fan's top stays under the head + .3 unit height (LESSONS 420).
+ */
+const RIDER_FEATHERS = { bandH: 0.14, bandW: 1.2, over: 0.04, count: 6, long: 0.78, wide: 0.13, back: 0.18, fan: 0.42, lean: 0.18,
+  band: new Color3(0.3, 0.09, 0.05), green: new Color3(0.02, 0.09, 0.06) };
+export function raptorRiderFeathers(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = RIDER_FEATHERS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const bandM = mf.get("cloth", C.band, { emissive: C.band.scale(0.3), roughness: 1 });
+  const green = mf.get("cloth", C.green, { emissive: C.green.scale(0.3), roughness: 1 });
+  const out: Mesh[] = [];
+  const by = e + H * C.over + H * C.bandH / 2;
+  const band = MeshBuilder.CreateCylinder("riderHeadband", { height: H * C.bandH, diameter: W * C.bandW, tessellation: 10 }, scene);
+  band.parent = head; band.position.set(c.x, by, c.z); band.scaling.z = D / W; band.material = bandM; out.push(band);
+  for (let k = 0; k < C.count; k++) {
+    const u = C.count > 1 ? k / (C.count - 1) - 0.5 : 0;
+    const f = MeshBuilder.CreateCylinder("riderFeather", { height: H * C.long, diameterTop: 0, diameterBottom: W * C.wide, tessellation: 4 }, scene);
+    f.parent = head; f.material = green; f.scaling.z = 0.3;
+    const tilt = u * 2 * C.fan, len = H * C.long;
+    f.rotation.set(-C.lean, 0, -tilt);
+    const rootX = c.x + u * W * 0.5, rootY = by + H * C.bandH * 0.4, rootZ = c.z - D * C.back;
+    f.position.set(rootX + Math.sin(tilt) * len * 0.5, rootY + Math.cos(tilt) * Math.cos(C.lean) * len * 0.5, rootZ - Math.sin(C.lean) * len * 0.5);
+    out.push(f);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 /** The rider is bare-chested above the waist. */
 export function bareRaptorRiderChest(body: ArticulatedBody): void {
   body.torsoMesh.material = body.skinMaterial;
