@@ -3060,6 +3060,33 @@ export function clamsCollar(scene: Scene, body: ArticulatedBody, team: Color3): 
   return out;
 }
 
+/*
+ * [S] 524 (a.3) the Bank Robbers' charcoal sleeves (secret.bank_robbers.blue.png: a dark charcoal shirt under the vest, its sleeves running up the raised
+ * arms to a turned cuff below the elbow-to-wrist's end, a short strip of team skin between cuff and glove). BANK_SLEEVE: the upper arm mesh charcoal
+ * under a full sleeve shell .out over it; on the forearm a sleeve over its top .fore with a turned cuff .cuff long flared .flare at its end, in .cuffShade
+ * of the charcoal; the rest of the forearm stays team. Near-black lit cloth self-lit (LESSONS 494), out of the glow. Both men, not the safe actor.
+ */
+const BANK_SLEEVE = { out: 1.14, fore: 0.72, cuff: 0.18, flare: 1.5, cuffShade: 1.35, charcoal: new Color3(0.1, 0.095, 0.1) };
+export function bankRobberSleeves(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = BANK_SLEEVE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cloth = mf.get("cloth", S.charcoal, { emissive: S.charcoal.scale(0.4), roughness: 1 });
+  const cuffC = S.charcoal.scale(S.cuffShade);
+  const cuffM = mf.get("cloth", cuffC, { emissive: cuffC.scale(0.4), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    arm.material = cloth;
+    out.push(shirtSleeve(scene, arm, cloth, "bankSleeveUpper", 1.0, S.out, S.out));
+  }
+  for (const arm of [body.leftLowerArm, body.rightLowerArm]) {
+    out.push(shirtSleeve(scene, arm, cloth, "bankSleeveFore", S.fore, S.out, S.out * 1.04));
+    const cuff = shirtSleeve(scene, arm, cuffM, "bankSleeveCuff", S.cuff, S.flare * 0.9, S.flare);
+    cuff.position.y -= arm.getBoundingInfo().boundingBox.extendSize.y * 2 * (S.fore - S.cuff);
+    out.push(cuff);
+  }
+  for (const m of out) glow?.addExcludedMesh(m);
+  return out;
+}
+
 /** Three sewn bands run diagonally from shoulder to opposite hip. */
 export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
