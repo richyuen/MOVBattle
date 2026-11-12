@@ -2721,7 +2721,7 @@ export class ChainWhip {
   private readonly _links: Mesh[] = [];
   private readonly _blade: Mesh;
   private readonly _seg: number;
-  constructor(scene: Scene, private readonly _hand: TransformNode, height: number, facing: Vector3) {
+  constructor(scene: Scene, private readonly _hand: TransformNode, height: number, facing: Vector3, side: 1 | -1 = 1) {
     const C = CHAIN_WHIP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
     const dark = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
     const L = Math.max(0.6, height * C.long);
@@ -2741,7 +2741,8 @@ export class ChainWhip {
     const f = new Vector3(facing.x, 0, facing.z);
     if (f.lengthSquared() < 1e-6) f.set(0, 0, 1);
     f.normalize();
-    const along = new Vector3(f.x * Math.cos(C.out) + f.z * Math.sin(C.out), 0, -f.x * Math.sin(C.out) + f.z * Math.cos(C.out));
+    const angle = C.out * side;
+    const along = new Vector3(f.x * Math.cos(angle) + f.z * Math.sin(angle), 0, -f.x * Math.sin(angle) + f.z * Math.cos(angle));
     let p = h.clone();
     for (let i = 0; i <= C.links; i++) {
       if (i > 0) {

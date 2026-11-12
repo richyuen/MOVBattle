@@ -2675,17 +2675,22 @@ export class RuntimeUnit {
   }
 
   /** [S] 519 the Infernal Whip's chain (secretDress CHAIN_WHIP): laid out at his first frame, then pinned to his fist and dragged each step. */
-  private _chainWhip: ChainWhip | null = null;
+  private _chainWhips: [ChainWhip, ChainWhip] | null = null;
   private _tendChainWhip(dt: number): void {
     if (this.definition.id !== "secret.infernal_whip" || this._isAnchoredActor) return;
-    if (!this._chainWhip) {
+    if (!this._chainWhips) {
       const head = this.body.headMesh;
       head.computeWorldMatrix(true);
       const height = head.getAbsolutePosition().y - this.position.y + head.getBoundingInfo().boundingBox.extendSize.y * head.absoluteScaling.y;
-      this._chainWhip = new ChainWhip(head.getScene(), this.body.rightHand, height, this._getFacingVector());
+      const scene = head.getScene();
+      const facing = this._getFacingVector();
+      this._chainWhips = [
+        new ChainWhip(scene, this.body.rightHand, height, facing),
+        new ChainWhip(scene, this.body.leftHand, height, facing, -1),
+      ];
       return;
     }
-    this._chainWhip.step(dt);
+    for (const whip of this._chainWhips) whip.step(dt);
   }
 
   /**
@@ -2801,12 +2806,17 @@ export class RuntimeUnit {
 
   /** [S] 520 throws the Infernal Whip's chain out at `to()` (secretDress ChainWhip.lash); false without a chain or while a lash is out. */
   lashWhipAt(to: () => Vector3 | null, out: number, hold: number, back: number): boolean {
-    return this._chainWhip?.lash(to, out, hold, back) ?? false;
+    if (!this._chainWhips) return false;
+    const [main, off] = this._chainWhips;
+    if (!main.lash(to, out, hold, back)) return false;
+    off.lash(to, out, hold, back);
+    return true;
   }
-  get whipLashing(): boolean { return this._chainWhip?.lashing ?? false; }
+  get whipLashing(): boolean { return this._chainWhips?.[0].lashing ?? false; }
 
   dispose(): void {
-    this._chainWhip?.dispose(); this._chainWhip = null;
+    for (const whip of this._chainWhips ?? []) whip.dispose();
+    this._chainWhips = null;
     this._spinnerMaces?.dispose(); this._spinnerMaces = null;
     if (this._fearSkull) { this._fearSkull.dispose(false, false); this._fearSkull = null; }
     if (this._loveHearts) { this._loveHearts.dispose(false, false); this._loveHearts = null; }
