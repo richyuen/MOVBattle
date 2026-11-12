@@ -1676,9 +1676,12 @@ export class SimulationSystem {
     const dur = Math.max(0.35, Vector3.Distance(new Vector3(from.x, 0, from.z), new Vector3(to.x, 0, to.z)) / S.speed);
     this._safeHurls.push({ mesh: flying, from, to, t0: now, dur, landed: false, half, attacker, target, damage: damage * S.damage, knockback, nextCashAt: now });
     this._logAbility(attacker, "throw_safe", now, target.position);
-    // 526: the thrower's hands are empty now: he closes with his fists, first punch after the safe has landed
-    attacker.animator.dropPistols();
-    attacker.disarmToFists(now, dur + S.fistReady);
+    // 526: both robbers' hands are empty now: they close with their fists, first punch after the safe has landed
+    for (const r of [lead, ...lead.linkedChildren.filter((c) => c.definition.id === lead.definition.id && c.visualConfig.special !== "safe_bundle")]) {
+      if (r.isDead || r.fistsOnly) continue;
+      r.animator.dropPistols();
+      r.disarmToFists(now, dur + S.fistReady);
+    }
     return true;
   }
   private _stepSafeHurls(now: number): void {
