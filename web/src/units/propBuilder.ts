@@ -4755,6 +4755,64 @@ function buildNecroKnife(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   return root;
 }
 
+/*
+ * [S] 528 (a.1) the Wheelbarrow Dragon's barrow (secret.wheelbarrow_dragon.red.png, .jpg: a long plain brown wooden wheelbarrow pushed out in front of the
+ * man: an open plank tray about his shoulders wide and as long as his legs, its sides flaring a little, standing on two short legs at the back and a
+ * thick sawn-log wheel at the front, and two long handle poles running back from under the tray up to his hands at hip height). DRAGON_BARROW in the
+ * cart actor's standing height H, from its root on the ground, forward +z: handles from .gripZ H ahead at .gripY H high, .gripX H out, down to the
+ * axle; the tray from .trayZ0 to .trayZ1 H ahead, .trayW H wide (.flare wider at the top), its floor .trayY H up and its sides .trayH H tall, planks
+ * .plank H thick, each side in .boards boards; .legs H-tall legs under the tray's back; the wheel .wheel H across, .wheelW H thick at .axleZ H ahead,
+ * its sawn face a paler ring. Brown wood in lit cloth with a small self-light (the timber lesson), the sawn face tan. The cart actor's hidden body
+ * carries it on its root (its ground), so it turns with the driver.
+ */
+const DRAGON_BARROW = { gripZ: 0.2, gripY: 0.4, gripX: 0.17, trayZ0: 0.42, trayZ1: 1.12, trayW: 0.34, flare: 1.18, trayY: 0.22, trayH: 0.17, plank: 0.022, boards: 2,
+  legs: 0.22, wheel: 0.27, wheelW: 0.09, axleZ: 1.2, wood: new Color3(0.3, 0.16, 0.085), face: new Color3(0.62, 0.42, 0.22) };
+function buildDragonBarrow(scene: Scene, body: ArticulatedBody): Mesh {
+  const B = DRAGON_BARROW, H = body.metrics.overallHeight;
+  const wood = mat(scene, B.wood, 0.14, "cloth"), dark = mat(scene, B.wood.scale(0.75), 0.12, "cloth"), face = mat(scene, B.face, 0.16, "cloth");
+  const root = new Mesh("dragonBarrow", scene);
+  root.parent = body.root;
+  const put = (m: Mesh, mt: PBRMetallicRoughnessMaterial = wood): Mesh => { m.parent = root; m.material = mt; m.convertToFlatShadedMesh(); return m; };
+  const P = B.plank * H, z0 = B.trayZ0 * H, z1 = B.trayZ1 * H, L = z1 - z0, W = B.trayW * H, y0 = B.trayY * H, TH = B.trayH * H;
+  const axle = new Vector3(0, (B.wheel * H) / 2, B.axleZ * H);
+  // the handle poles, grip to axle, one each side
+  for (const side of [-1, 1]) {
+    const a = new Vector3(side * B.gripX * H, B.gripY * H, B.gripZ * H), b = new Vector3(side * W * 0.42, axle.y, axle.z);
+    const pole = put(MeshBuilder.CreateCylinder("dragonBarrowHandle", { height: Vector3.Distance(a, b), diameter: P * 1.5, tessellation: 6 }, scene), dark);
+    pole.position.copyFrom(Vector3.Center(a, b));
+    const d = b.subtract(a).normalize();
+    pole.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d, new Quaternion());
+    const grip = put(MeshBuilder.CreateCylinder("dragonBarrowGrip", { height: P * 5, diameter: P * 1.9, tessellation: 6 }, scene), dark);
+    grip.position.copyFrom(a.add(d.scale(P * 2.5)));
+    grip.rotationQuaternion = pole.rotationQuaternion.clone();
+    // a short leg under the tray's back to the ground
+    const leg = put(MeshBuilder.CreateBox("dragonBarrowLeg", { width: P * 1.4, height: B.legs * H, depth: P * 1.4 }, scene), dark);
+    leg.position.set(side * W * 0.4, (B.legs * H) / 2, z0 + P * 2);
+  }
+  // the tray: a plank floor, flared plank sides, a back board and a raked front board
+  const floor = put(MeshBuilder.CreateBox("dragonBarrowFloor", { width: W, height: P, depth: L }, scene));
+  floor.position.set(0, y0, (z0 + z1) / 2);
+  const bh = TH / B.boards;
+  for (const side of [-1, 1]) for (let k = 0; k < B.boards; k++) {
+    const board = put(MeshBuilder.CreateBox("dragonBarrowSide", { width: P, height: bh * 0.94, depth: L * (1 + k * 0.04) }, scene), k % 2 ? wood : dark);
+    const t = (k + 0.5) / B.boards;
+    board.position.set(side * (W / 2) * (1 + (B.flare - 1) * t), y0 + P / 2 + bh * (k + 0.5), (z0 + z1) / 2);
+    board.rotation.z = side * -0.18;
+  }
+  for (const [z, rake] of [[z0, 0.12], [z1, -0.42]] as const) {
+    const end = put(MeshBuilder.CreateBox("dragonBarrowEnd", { width: W * B.flare, height: TH, depth: P }, scene));
+    end.position.set(0, y0 + TH / 2, z + Math.sin(rake) * TH * 0.5); end.rotation.x = rake;
+  }
+  // the sawn-log wheel on its axle, its paler sawn face out to each side
+  const wheel = put(MeshBuilder.CreateCylinder("dragonBarrowWheel", { height: B.wheelW * H, diameter: B.wheel * H, tessellation: 10 }, scene));
+  wheel.rotation.z = Math.PI / 2; wheel.position.copyFrom(axle);
+  for (const side of [-1, 1]) {
+    const ring = put(MeshBuilder.CreateCylinder("dragonBarrowWheelFace", { height: P * 0.3, diameter: B.wheel * H * 0.8, tessellation: 10 }, scene), face);
+    ring.rotation.z = Math.PI / 2; ring.position.set(side * (B.wheelW * H) / 2, axle.y, axle.z);
+  }
+  return root;
+}
+
 function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
   hand.computeWorldMatrix(true);
   const fist = hand.getChildMeshes(true).find(m => /HandM$/.test(m.name));
@@ -9551,6 +9609,7 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
       horn.material = mat(scene, new Color3(0.92, 0.85, 0.68));
       return cart;
     }
+    case "dragon_barrow": return buildDragonBarrow(scene, body); // [S] 528 (DRAGON_BARROW)
     case "elephant_shrine": {
       const platform = MeshBuilder.CreateBox("elephantShrinePlatform", { width: 0.48 * s, height: 0.1 * s, depth: 0.36 * s }, scene);
       platform.parent = body.torso;

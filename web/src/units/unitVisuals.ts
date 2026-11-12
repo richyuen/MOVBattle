@@ -35,7 +35,7 @@ export type SpecialType =
   | "barrel_body" | "cart" | "longship_body" | "tank_body"
   | "catapult_arm" | "cannon_base" | "hwacha_rack" | "ballista_frame"
   | "balloon" | "dragon_wings" | "scarecrow_post" | "monk_robe"
-  | "raptor_mount" | "clam_shell" | "safe_bundle" | "dragon_cart"
+  | "raptor_mount" | "clam_shell" | "safe_bundle" | "dragon_cart" | "dragon_barrow"
   | "giant_bones" | "giant_tree" | "giant_ice" | "halo"
   | "candle_flame" | "cactus_body" | "banner_back" | "chariot_cart"
   | "vampire_collar" | "quiver_back" | "quiver_hip" | "elephant_shrine";

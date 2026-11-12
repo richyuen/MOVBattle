@@ -392,7 +392,8 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         offset: new Vector3(0, 0, 0),
         syncFacing: true,
         semantics: { ...attachmentOnly, actionPreset: "cart-brace" },
-        visual: visual("none", "none", "none", "dragon_cart", {
+        // [S] 528 (a.1) a wooden barrow on a log wheel pushed ahead of the driver (propBuilder buildDragonBarrow), not the small hip box
+        visual: visual("none", "none", "none", "dragon_barrow", {
           proportions: { scale: 1.18, bulk: 1.0 },
           materialPreset: "secret_beast",
           posePreset: "mounted",
