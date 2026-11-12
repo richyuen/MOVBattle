@@ -2564,8 +2564,8 @@ export class SpinnerMaces {
     this.place();
   }
   get meshes(): Mesh[] { return this._meshes; }
-  /** Lays each mace on its fist (right, then left), upright, leaned out to that side and a little ahead of his facing. */
-  place(): void {
+  /** Keep the maces upright in the carry and extend them past the fists in the whirl. */
+  place(whirling = false): void {
     const M = SPINNER_MACE, b = this._body;
     b.root.computeWorldMatrix(true);
     const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), b.root.getWorldMatrix());
@@ -2578,7 +2578,10 @@ export class SpinnerMaces {
       for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) chain.unshift(n);
       for (const n of chain) n.computeWorldMatrix(true);
       const side = k === 0 ? 1 : -1;
-      const up = Vector3.Up().add(right.scale(side * Math.tan(M.lean))).add(fwd.scale(Math.tan(M.fore))).normalize();
+      const elbow = k === 0 ? b.rightElbow : b.leftElbow;
+      const up = whirling
+        ? hand.getAbsolutePosition().subtract(elbow.getAbsolutePosition()).normalize()
+        : Vector3.Up().add(right.scale(side * Math.tan(M.lean))).add(fwd.scale(Math.tan(M.fore))).normalize();
       const root = this._roots[k];
       root.position.copyFrom(hand.getAbsolutePosition());
       Quaternion.FromUnitVectorsToRef(Vector3.Up(), up, root.rotationQuaternion!);

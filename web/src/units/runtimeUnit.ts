@@ -152,6 +152,8 @@ export class RuntimeUnit {
   private _currentHealth: number;
   private _isDead = false;
   private _nextAttackAt = 0;
+  private _maceWhirlUntil = 0;
+  private _maceWhirlYaw = 0;
   private _deathCleanupAt = Infinity;
   private _deathTime = 0;
 
@@ -570,6 +572,7 @@ export class RuntimeUnit {
 
   setAttackCooldown(now: number, cooldown: number): void {
     this._nextAttackAt = now + Math.max(0.05, cooldown);
+    if (this.definition.id === "secret.mace_spinner") this._maceWhirlUntil = this._nextAttackAt;
     // Trigger attack animation
     this.animator.triggerAttack(this._resolvePrimaryAttackWindup(cooldown), this._resolvePrimaryAttackMotion());
     // ...and the reload it starts (the scarecrow's A-pose, TPOSE)
@@ -1291,6 +1294,10 @@ export class RuntimeUnit {
     }
     this._tendSafeCarry();
     this._holdSpinnerFists();
+    if (this._maceWhirlYaw) {
+      this.body.hip.rotation.y -= this._maceWhirlYaw;
+      this._maceWhirlYaw = 0;
+    }
     this.animator.update(dt);
     this._spinDrum(dt);
     this._throwArm(dt);
@@ -1301,7 +1308,7 @@ export class RuntimeUnit {
     this._applyVisualPresentation(now);
     this._tendChainWhip(dt);
     this._tendRaptorGait(dt);
-    this._tendSpinnerMaces();
+    this._tendSpinnerMaces(this._maceWhirling(now));
     this._movementVelocity.setAll(0);
 
     if (this._linkedParent && this._isAnchoredActor) {
@@ -1920,6 +1927,7 @@ export class RuntimeUnit {
     }
 
     this._applyPoseOverlay(isAttacking);
+    if (this._maceWhirling(now)) this._applyMaceWhirl(now);
     this._applyCheer(now);
     this._holdTeacherParry(now);
     this._updateRaptorBite(now);
@@ -2607,6 +2615,9 @@ export class RuntimeUnit {
     this._deathSpinY = 0;
     this._blastTumbling = false;
     this._nextAttackAt = 0;
+    this._maceWhirlUntil = 0;
+    this.body.hip.rotation.y -= this._maceWhirlYaw;
+    this._maceWhirlYaw = 0;
     this._spawnRole = "placed";
     this._countsTowardVictory = true;
     this._linkedParent = null;
@@ -2744,20 +2755,37 @@ export class RuntimeUnit {
    */
   private _spinnerMaces: SpinnerMaces | null = null;
   private _spinnerHeight = 0;
-  private _tendSpinnerMaces(): void {
+  private _maceWhirling(now: number): boolean {
+    return this.definition.id === "secret.mace_spinner" && !this._isDead &&
+      !this._isAnchoredActor && !this.isToppled && !this.isDowned && (this._spinning || now < this._maceWhirlUntil);
+  }
+
+  private _applyMaceWhirl(now: number): void {
+    const body = this.body;
+    body.leftShoulder.rotation.set(0, 0, -Math.PI / 2);
+    body.rightShoulder.rotation.set(0, 0, Math.PI / 2);
+    body.leftElbow.rotation.set(0, 0, 0);
+    body.rightElbow.rotation.set(0, 0, 0);
+    // Movement spin already rotates the root. The attack spin rotates the rig in place.
+    if (!this._spinning) {
+      this._maceWhirlYaw = (now * 15) % (Math.PI * 2);
+      body.hip.rotation.y += this._maceWhirlYaw;
+    }
+  }
+
+  private _tendSpinnerMaces(whirling: boolean): void {
     if (this.definition.id !== "secret.mace_spinner" || this._isAnchoredActor) return;
     if (!this._spinnerMaces) {
       const head = this.body.headMesh;
       head.computeWorldMatrix(true);
       this._spinnerHeight = head.getAbsolutePosition().y - this.position.y + head.getBoundingInfo().boundingBox.extendSize.y * head.absoluteScaling.y;
       this._spinnerMaces = new SpinnerMaces(head.getScene(), this.body, this._spinnerHeight);
-      return;
     }
-    this._spinnerMaces.place();
+    this._spinnerMaces.place(whirling);
   }
   private _holdSpinnerFists(): void {
     if (this.definition.id !== "secret.mace_spinner" || this._isAnchoredActor || this._spinnerHeight <= 0) return;
-    if (this._isDead || this.animator.state === AnimState.Attacking) { this.animator.carryOverheadAt = null; return; }
+    if (this._isDead || this._maceWhirling(RuntimeUnit.timeNowSeconds()) || this.animator.state === AnimState.Attacking) { this.animator.carryOverheadAt = null; return; }
     const F = SPINNER_FISTS, b = this.body, H = this._spinnerHeight;
     b.root.computeWorldMatrix(true);
     b.hip.computeWorldMatrix(true);
