@@ -2634,6 +2634,34 @@ export function maceSpinnerHelm(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/** Faceted breastplate with a separate flared waist fauld. */
+export function maceSpinnerBreastplate(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const torso = body.torsoMesh;
+  const bounds = torso.getBoundingInfo().boundingBox;
+  const center = torso.position.add(bounds.center.multiply(torso.scaling));
+  const size = bounds.extendSize.multiply(torso.scaling);
+  const color = new Color3(0.54, 0.5, 0.43);
+  const steel = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.2), roughness: 1 });
+  const glow = scene.getGlowLayerByName("glow");
+  const sections = [
+    { name: "spinnerFauld", rings: [[1.48, -1.32], [1.12, -0.88], [1.12, -0.72]] },
+    { name: "spinnerBreastplate", rings: [[0.9, -1.03], [1.38, -0.58], [1.51, 0.1], [1.36, 0.82], [1.07, 1.02]] },
+  ];
+  return sections.map(({ name, rings }) => {
+    const plate = MeshBuilder.CreateLathe(name, {
+      shape: rings.map(([radius, height]) => new Vector3(radius * size.x, height * size.y, 0)),
+      tessellation: 10,
+    }, scene);
+    plate.parent = body.torso;
+    plate.position.copyFrom(center);
+    plate.scaling.z = 1.22 * size.z / size.x;
+    plate.material = steel;
+    plate.convertToFlatShadedMesh();
+    glow?.addExcludedMesh(plate);
+    return plate;
+  });
+}
+
 /*
  * [S] 519 the Infernal Whip's chain whip (secret.infernal_whip.red.png: a chain of dark iron links about a body length long, hanging from the fist and
  * lying out over the ground, ending in a dark leaf-shaped blade; audit 518 b.1 "a short rigid dark stick with a few loose links behind"). CHAIN_WHIP:
