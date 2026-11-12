@@ -4035,3 +4035,52 @@ export function bankRobberBandana(scene: Scene, body: ArticulatedBody): Mesh[] {
   out.push(hinge);
   return out;
 }
+
+/*
+ * [S] 528 (a.1) Vlad's crown (secret.vlad.red.png, .jpg: a dark iron band round the head just over the eyes, a gold eight-pointed star badge on its
+ * front, and above the brow a tall close fan of thin grey iron spikes, six or so, each with a round iron bead at its foot, standing about a head over
+ * the crown). VLAD_CROWN in the head box (W, H, D, c) and the bead eyes: a band .band W across (8-sided) and .bandH H tall from .gap H over the eye
+ * tops; a star .star W across of .points points at the band's front; .spikes spikes over the front half of the band top, spread .spread W across,
+ * .tall H high in the middle falling to .low of that at the ends, splayed .splay rad, .spikeW W thick at the foot; a bead .bead W at each foot.
+ * Iron in lit cloth self-lit .3 (metal renders black), star gold unlit, out of the glow. The plain crown hat is not built (unitVisuals hat none).
+ */
+const VLAD_CROWN = { band: 1.1, bandH: 0.2, gap: 0.0, star: 0.42, points: 8, spikes: 6, spread: 0.62, tall: 0.95, low: 0.7, splay: 0.16, spikeW: 0.08, bead: 0.14,
+  iron: new Color3(0.26, 0.26, 0.29), gold: new Color3(0.85, 0.46, 0.08) };
+export function vladCrown(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const V = VLAD_CROWN, glow = scene.getGlowLayerByName("glow"), mf = getMaterialFactory();
+  const iron = mf.get("cloth", V.iron, { emissive: V.iron.scale(0.3), roughness: 0.9 });
+  const gold = mf.get("unlit", V.gold, { emissive: V.gold });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const eyes = eyeBoxInHead(body) ?? { lo: new Vector3(c.x - W * 0.3, c.y, c.z + D * 0.4), hi: new Vector3(c.x + W * 0.3, c.y + H * 0.15, c.z + D * 0.55) };
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material = iron): Mesh => { m.parent = head; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const foot = eyes.hi.y + H * V.gap, bandTop = foot + H * V.bandH;
+  const band = put(MeshBuilder.CreateCylinder("vladCrownBand", { height: H * V.bandH, diameter: W * V.band, tessellation: 8 }, scene));
+  band.scaling.z = (D / W) * 1.02; band.position.set(c.x, (foot + bandTop) / 2, c.z);
+  const front = c.z + (D * V.band * 1.02) / 2;
+  // the star: points as thin flat diamonds round a boss
+  const S = W * V.star;
+  for (let k = 0; k < V.points; k++) {
+    const ray = MeshBuilder.CreateCylinder("vladCrownStarRay", { height: S / 2, diameterBottom: S * 0.2, diameterTop: 0, tessellation: 4 }, scene);
+    ray.scaling.z = 0.3;
+    const a = (k / V.points) * Math.PI * 2;
+    ray.rotation.z = a; ray.position.set(c.x - Math.sin(a) * S * 0.25, (foot + bandTop) / 2 + Math.cos(a) * S * 0.25, front + D * 0.03);
+    put(ray, gold);
+  }
+  const boss = put(MeshBuilder.CreateIcoSphere("vladCrownStarBoss", { radius: S * 0.16, subdivisions: 1, flat: true }, scene), gold);
+  boss.scaling.z = 0.6; boss.position.set(c.x, (foot + bandTop) / 2, front + D * 0.05);
+  // the spike fan over the brow
+  for (let k = 0; k < V.spikes; k++) {
+    const t = V.spikes > 1 ? k / (V.spikes - 1) - 0.5 : 0;
+    const tall = H * V.tall * (1 - (1 - V.low) * Math.abs(t) * 2);
+    const x = c.x + t * W * V.spread, z = c.z + D * 0.2;
+    const spike = MeshBuilder.CreateCylinder("vladCrownSpike", { height: tall, diameterBottom: W * V.spikeW, diameterTop: W * V.spikeW * 0.25, tessellation: 5 }, scene);
+    spike.setPivotPoint(new Vector3(0, -tall / 2, 0));
+    spike.position.set(x, bandTop + tall / 2, z); spike.rotation.z = -t * V.splay * 2;
+    put(spike);
+    const bead = put(MeshBuilder.CreateIcoSphere("vladCrownBead", { radius: (W * V.bead) / 2, subdivisions: 1, flat: true }, scene));
+    bead.position.set(x, bandTop + W * V.bead * 0.3, z + D * 0.05);
+  }
+  return out;
+}

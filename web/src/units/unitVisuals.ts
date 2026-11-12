@@ -1250,7 +1250,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_vlad":
       // [S] 527 (b.1) a giant whittled log with a pale pencil point (propBuilder buildVladLog)
-      return vis({ scale: 1.4, bulk: 1.22, headSize: 1.08 }, "spear", "crown", "none", "vampire_collar", "#822f2f", undefined, {
+      // [S] 528 (a.1) the crown is secretDress vladCrown (dark iron, star badge, spike fan), not the shared gold crown hat
+      return vis({ scale: 1.4, bulk: 1.22, headSize: 1.08 }, "spear", "none", "none", "vampire_collar", "#822f2f", undefined, {
         weaponVariant: "vlad_log", posePreset: "duelist", materialPreset: "secret_pirate", fxPreset: "spectral",
       });
     case "secret_gatling_gun":
