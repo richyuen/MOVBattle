@@ -2266,6 +2266,7 @@ export class RuntimeUnit {
   private _burnFlames: Mesh[] = [];
   applyBurn(seconds: number, now = RuntimeUnit.timeNowSeconds()): void {
     this._burnUntil = Math.max(this._burnUntil, now + Math.max(0.1, seconds));
+    this._applyBurnFlames(now);
   }
   isBurning(now: number): boolean { return !this._isDead && now < this._burnUntil; }
   get burnUntil(): number { return this._burnUntil; }

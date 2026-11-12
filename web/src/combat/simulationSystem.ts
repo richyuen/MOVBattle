@@ -4904,6 +4904,9 @@ export class SimulationSystem {
       const fireDamage = preset === "secret_fire_whip" || preset === "secret_dragon_cart" ? 14 : 10;
       const source = impactOrigin ?? attacker.position;
       target.applyDamage(fireDamage, target.position.subtract(source).normalize().scale(0.3));
+      if (attacker.definition.id === "secret.infernal_whip" && !target.isDead) {
+        target.applyBurn(statusDuration, now);
+      }
       if (this.visualEffects) this.visualEffects.spawnFireBurst(target.position);
       this._logAbility(attacker, "status:fire", now, target.position);
     }
