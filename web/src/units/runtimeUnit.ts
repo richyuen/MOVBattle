@@ -2212,16 +2212,24 @@ export class RuntimeUnit {
   /** Frozen by an ice arrow (FROST): the crust is worn until `_frostUntil`. */
   private _frostUntil = 0;
   private _frostCrust: Mesh[] = [];
+  private _iceBlockUntil = 0;
+  private _iceBlock: Mesh | null = null;
   /**
    * [S] the ice crust a freeze leaves on the man it hits (395; viking.ice_archer card Characteristics "it will freeze enemy units, causing them to move
    * slower", viking.ice_archer.jpg; critic 391: the target only recoiled, `status:freeze` showed no frost). Pale-blue faceted shards stand out of the
    * trunk, the head, both upper arms and both thighs for the status's length: FROST.shards spikes per part, each a four-sided cone .long of that part's
    * smaller half-extent standing out along a fixed spiral so the ring reads all the way round, self-lit ice so it stays pale blue under the ACES curve.
    */
-  applyFrost(seconds: number, now: number): void {
+  applyFrost(seconds: number, now: number, enclose = false): void {
+    if (enclose) {
+      this._iceBlockUntil = Math.max(this._iceBlockUntil, now + Math.max(0.1, seconds));
+      this._updateIceBlock(now);
+      return;
+    }
     this._frostUntil = Math.max(this._frostUntil, now + Math.max(0.1, seconds));
   }
   private _applyFrostCrust(now: number): void {
+    this._updateIceBlock(now);
     const on = now < this._frostUntil;
     if (!on) {
       if (this._frostCrust.length > 0) {
@@ -2254,6 +2262,42 @@ export class RuntimeUnit {
         this._frostCrust.push(shard);
       }
     }
+  }
+
+  private _updateIceBlock(now: number): void {
+    if (now >= this._iceBlockUntil || this._isDead) {
+      this._iceBlock?.dispose(false, false);
+      this._iceBlock = null;
+      return;
+    }
+    const body = this.body;
+    if (!this._iceBlock) {
+      const scene = body.torsoMesh.getScene();
+      const profile = [[0, -0.5], [0.42, -0.5], [0.55, -0.34], [0.54, 0.32], [0.36, 0.5], [0, 0.5]];
+      this._iceBlock = MeshBuilder.CreateLathe("iceMageFreezeBlock", {
+        shape: profile.map(([radius, y]) => new Vector3(radius, y, 0)), tessellation: 8,
+      }, scene);
+      const ice = new Color3(0.34, 0.77, 1);
+      this._iceBlock.material = getMaterialFactory().get("cloth", ice, { alpha: 0.53, emissive: ice.scale(0.24), roughness: 0.22 });
+      this._iceBlock.isPickable = false;
+      this._iceBlock.convertToFlatShadedMesh();
+      scene.getGlowLayerByName("glow")?.addExcludedMesh(this._iceBlock);
+    }
+    // Follow the target's rig through knockback and recovery with one continuous shell.
+    const lo = new Vector3(Infinity, Infinity, Infinity);
+    const hi = new Vector3(-Infinity, -Infinity, -Infinity);
+    for (const part of body.allMeshes) {
+      if (part.isDisposed() || !part.isEnabled() || !part.isVisible) continue;
+      part.computeWorldMatrix(true);
+      const box = part.getBoundingInfo().boundingBox;
+      lo.minimizeInPlace(box.minimumWorld);
+      hi.maximizeInPlace(box.maximumWorld);
+    }
+    if (!Number.isFinite(lo.x)) return;
+    const size = hi.subtract(lo);
+    const width = Math.max(size.x, size.z, size.y * 0.47) * 1.25;
+    this._iceBlock.position.copyFrom(lo.add(hi).scale(0.5));
+    this._iceBlock.scaling.set(width, size.y * 1.2, width);
   }
 
   /*
@@ -2815,6 +2859,8 @@ export class RuntimeUnit {
   get whipLashing(): boolean { return this._chainWhips?.[0].lashing ?? false; }
 
   dispose(): void {
+    this._iceBlock?.dispose(false, false);
+    this._iceBlock = null;
     for (const whip of this._chainWhips ?? []) whip.dispose();
     this._chainWhips = null;
     this._spinnerMaces?.dispose(); this._spinnerMaces = null;
