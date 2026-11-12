@@ -2893,6 +2893,50 @@ function shirtSleeve(
   return sleeve;
 }
 
+/** CLAMS wears a rolled tan shirt laced across the open collar. */
+export function clamsShirt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const fabric = new Color3(0.8, 0.6, 0.35).scale(0.84);
+  const mf = getMaterialFactory();
+  const cloth = mf.get("cloth", fabric, { emissive: fabric.scale(0.18), roughness: 1 });
+  const fold = mf.get("cloth", fabric.scale(0.72), { emissive: fabric.scale(0.1), roughness: 1 });
+  const laceColor = new Color3(0.26, 0.13, 0.09);
+  const lace = mf.get("cloth", laceColor, { emissive: laceColor.scale(0.18), roughness: 1 });
+  body.torsoMesh.material = cloth;
+  for (const mesh of body.allMeshes.filter((m) => m.name.endsWith("_yoke"))) mesh.material = cloth;
+
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const sleeve = shirtSleeve(scene, arm, cloth, "clamsRolledSleeve", 0.88, 1.35, 1.3);
+    const cuff = shirtSleeve(scene, arm, fold, "clamsShirtRoll", 0.21, 1.4, 1.47);
+    cuff.position.y -= arm.getBoundingInfo().boundingBox.extendSize.y * 1.42;
+    out.push(sleeve, cuff);
+  }
+
+  const chest = limbBox(body.torsoMesh);
+  const top = chest.mid + chest.half * 0.96;
+  const width = chest.wide * 0.39;
+  const front = chest.deep * 1.16;
+  const left = new Vector3(-width, top, front);
+  const right = new Vector3(width, top, front);
+  const point = new Vector3(0, top - chest.half * 0.71, front);
+  const back = new Vector3(0, top - chest.half * 0.21, front - 0.014);
+  const neckline = facetedSolid(scene, "clamsShirtNeckline", [[left, right, point], [left, back, right], [left, point, back], [right, back, point]]);
+  neckline.parent = body.torso;
+  neckline.material = body.skinMaterial;
+  out.push(neckline);
+  for (const start of [0.04, 0.34]) {
+    const end = start + 0.26;
+    for (const [from, to] of [[left, right], [right, left]]) {
+      const a = Vector3.Lerp(from, point, start);
+      const b = Vector3.Lerp(to, point, end);
+      a.z += 0.009;
+      b.z += 0.009;
+      taper(scene, "clamsShirtLacing", [a, b], width * 0.11, width * 0.11, body.torso, lace, out);
+    }
+  }
+  return out;
+}
+
 /** Three sewn bands run diagonally from shoulder to opposite hip. */
 export function cheerleaderSash(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = body.torsoMesh;
