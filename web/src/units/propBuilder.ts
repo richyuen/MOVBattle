@@ -9299,23 +9299,10 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
     }
     case "raptor_mount":
       return buildRaptorMount(scene, body);
-    case "clam_shell": {
-      const shell = MeshBuilder.CreateSphere("clamShell", { diameter: 0.7 * s, segments: 8 }, scene);
-      shell.scaling.y = 0.45;
-      shell.position.y = -0.15 * s;
-      shell.parent = body.hip;
-      shell.material = mat(scene, new Color3(0.5, 0.72, 0.78));
-      const lowerShell = MeshBuilder.CreateSphere("lowerShell", { diameter: 0.68 * s, segments: 8 }, scene);
-      lowerShell.scaling.y = 0.28;
-      lowerShell.position.set(0, -0.08 * s, 0);
-      lowerShell.parent = shell;
-      lowerShell.material = mat(scene, new Color3(0.42, 0.62, 0.68));
-      const pearl = MeshBuilder.CreateSphere("pearl", { diameter: 0.14 * s, segments: 6 }, scene);
-      pearl.position.set(0, 0.08 * s, 0.08 * s);
-      pearl.parent = shell;
-      pearl.material = mat(scene, new Color3(0.95, 0.98, 1), 0.15);
-      return shell;
-    }
+    // [S] 526 (secret.clams a.1) the CLAMS' "clam shell" attachment actor no longer hangs a pale blue shell disc round his thighs
+    // (secret.clams.red.png, .blue.png: tan trousers run bare from the rope belt to the boots). The actor stays (its linked role and
+    // the dress gates in unitFactory key on this special) but builds nothing; his clams are the hand shells, hat and thrown critters.
+    case "clam_shell": return null;
     case "safe_bundle":
       return buildOverheadSafe(scene, body, teamColor ?? accent);
     case "dragon_cart": {
