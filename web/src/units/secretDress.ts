@@ -3501,3 +3501,14 @@ export function clamsBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 525 (a.4) the Present Elf's black boots (secret.present_elf.red.png, .png: black boots to mid-shin over the green trousers, their tops a
+ * little wider). ELF_BOOT: the foot in near-black, a shaft .shaft of the shin tall (over the trouser shell), a flared top band. Near-black lit cloth
+ * self-lit .4 (LESSONS 494), out of the glow.
+ */
+const ELF_BOOT = { shaft: 0.55, round: 1.36, cuff: 1.52, cuffH: 0.09, black: new Color3(0.08, 0.06, 0.07) };
+export function presentElfBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const black = getMaterialFactory().get("cloth", ELF_BOOT.black, { emissive: ELF_BOOT.black.scale(0.4), roughness: 1 });
+  return shinBoot(scene, body, "elfBoot", black, black, ELF_BOOT);
+}
