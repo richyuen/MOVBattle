@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+523 | 8999f026 | secret.mace_spinner.a | approved [S] (struck 4, a PASS, CONFIRM passed)
+523 | a369ec7a | secret.present_elf.b | approved [S] (struck 2)
+523 | 5472e586 | secret.raptor_rider.b | approved [S] (struck 1)
+523 | 2bcec881 | secret.infernal_whip.b | approved [S] (struck 2)
+523 | 73fc448f | secret.ice_mage.c | approved [S] (struck 3)
+523 | 3c3fcc54 | secret.bank_robbers.a | approved [S] (struck 1 and 6 by lineup)
+523 | 4b3b6265 | secret.bank_robbers.c | approved [S] (struck 2)
+523 | 53ebabd6, ab43da19 | secret.clams.a | approved [S] (struck 4)
+523 | d97f5061 | secret.infernal_whip.c | approved [S] (struck 3, c PASS)
+
 522 | 7bca30d3 | secret.bank_robbers.a | approved [S] (struck 1 and 3 by lineup)
 522 | da6e9b4a | secret.mace_spinner.a | approved [S] (struck 1)
 522 | 1b6811a1 | secret.ice_mage.a | approved [S] (struck 1 and 6)
@@ -47,13 +57,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 518 | a80a6032 | secret.mace_spinner.c | rejected [S] (reverted aef00f7b: shared spinner preset, whirl only on the attack frame)
 518 | 8e341463 | secret.raptor_rider.a | approved [S] (struck 1; 4 by lineup)
 518 | a9080780 | secret.bank_robbers.a | approved [S] (struck 6 by lineup; safe too small)
-517 | 798bbba5 | secret.fan_bearer.a | approved [R] (struck 1; a PASS; CONFIRM passed, done)
-517 | b34b4519, 8142c383 | secret.present_elf.a | approved [S] (struck 1, 7, 6 by lineup)
-517 | c46885b9, b82fd72b | secret.ice_mage.a | approved [S] (struck 1)
-517 | 78eabf45 | secret.infernal_whip.a | approved [S] (struck 1; 5, 6 by lineup)
-517 | 6679b6c8 | secret.taekwondo.a | approved [S] (struck 3, 5 by lineup)
-517 | 7159b2bf | secret.cupid.a | approved [S] (struck 4)
-517 | 9a0c8787 | secret.cheerleader.a | approved [S] (struck 3, 4 by lineup)
 
 
 ## Spent (never retry as [P])
@@ -61,6 +64,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+UV/PA:mace spinner build | scale 1.1, bulk 1, square stance, crouch 0, lean .04 | 523 | approved | scale 1.3, bulk 1.2, hashed crouch
+secretDress:PRESENT bell | open 9-sided cup .21W with clapper, splay .34 | 523 | approved | solid .13W cone at bow knot
+PB:raptor_spear | wood .49s with lashed faceted flint .256s | 523 | approved | wood 1.0s and steel point
+secretDress/RU:ChainWhip | one chain per hand, mirrored spawn angle, shared contact | 523 | approved | right hand only
+RU:iceMageFreezeBlock | octagonal bevel, alpha .53, width 1.25x target span | 523 | approved | body-mounted shards
+PB:cowboy_hat | pinched burgundy crown .086s and brim .278s with curled sides | 523 | approved | straight crown .12s, flat .34s brim
+PB/SS/FX:safe landing | pivot .62pi, cash every .08s in flight plus 24 stacks on landing, 5 m ring | 523 | approved | closed safe, no cash, 3 m ring
+secretDress:clamsShirt | tan chest, .88 upper-arm sleeves with rolls, two crossed laces | 523 | approved | team vest
+FX:whip tip blast | two fronts and 12 sparks, grow to 1.25 m, .48 s total | 523 | approved | general explosion burst .35 scale
 PB:OVERHEAD_SAFE | W .72 H .92 of body, inset hinged door .59W x .65H; floor unchanged | 522 | approved | W .6 H .42, flat face
 secretDress:maceSpinnerBreastplate/maceSpinnerGreaves | five-ring breastplate and three-ring fauld; 1.58 to 1.32 tapered shin shell with ico knee cop | 522 | approved | team vest and bare legs
 secretDress:iceMagePinafore hardware | two brass studs, 11 links with .56 torso half-height sag | 522 | approved | plain straps

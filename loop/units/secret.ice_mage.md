@@ -7,15 +7,14 @@ a FAIL (2 since 518, 2 struck)
  4. fur-cuffed boots in unit_secret.ice_mage_idle — TABS: brown-red boots with cream fur cuffs; ours has pale boots (ref: secret.ice_mage.red.png)
  5. pale whitish-blue body tint in unit_secret.ice_mage_idle — TABS: team-coloured skin and sleeves (ref: secret.ice_mage.blue.png)
 b PASS (521)
-c FAIL (1 since 515, 1 struck)
+c FAIL (2 since 515, 2 struck)
  2. launch point in unit_secret.ice_mage_release — TABS: thrown from the open hand; ours leaves from beside the staff at chest height (ref: card Characteristics)
- 3. freeze in unit_secret.ice_mage_struck — TABS: target trapped in a block of ice; ours shows a few icy spikes on the knight (ref: card Characteristics)
 d PASS (519 stats)
 ## Ranked gaps
-1. [S] secret.ice_mage.c freeze — blocker 3: faceted translucent ice block enclosing the frozen target
+1. [S] secret.ice_mage.c launch — blocker 2: spawn the icicle at the throwing palm after its release pose.
 2. [S] secret.ice_mage.a sash — blocker 2: team sash with hanging ends and a gold-rimmed teal brooch.
-3. [S] secret.ice_mage.c launch point — blocker 2: icicle spawned at the throwing hand atop an overhand throw
 ## Attempts (iter | gap | criterion | verdict)
+523 | translucent faceted block enclosing the struck rig (73fc448f) | c | approved (struck 3)
 522 | brass strap studs with a draped chain (1b6811a1) | a | approved (struck 1, 6)
 521 | hang a strapped pinafore with a flared skirt (d14602dd, 9615069e) | a | approved (pinafore visible, studs and chain remain)
 521 | cluster frosted glow orbs at both hands (fca3b6fb) | b | approved (struck 2, b PASS)

@@ -1,14 +1,13 @@
 # secret.mace_spinner
-Status: open   Audited: 515 (AUDIT x2)   Done: -
+Status: done   Audited: 515 (AUDIT x2), 523 (CONFIRM: passed a, b, c)   Done: 523
 ## Verdicts
-a FAIL (3 since 515, 3 struck)
- 4. squat bow-legged stance with a wide torso in unit_secret.mace_spinner_idle — TABS: upright Wobbler build at 1.1x (ref: secret.mace_spinner.blue.png)
+a PASS (523)
 b PASS (520: struck 1, 2, 3; flanged upright mace in each fist)
 c PASS (521)
 d PASS (518 stats)
 ## Ranked gaps
-1. [S] secret.mace_spinner.a stance — blocker 4: straighten the crouched idle stance and fit the torso to the 1.1x Wobbler silhouette.
 ## Attempts (iter | gap | criterion | verdict)
+523 | level hips, straight knees and 1.1x scale (8999f026) | a | approved (struck 4, a PASS, CONFIRM passed)
 522 | faceted breastplate and waist fauld (da6e9b4a) | a | approved (struck 1)
 522 | steel knee cops and tapered greaves (a56f3ca0) | a | approved (struck 3)
 521 | whirl with both maces extended through the attack cooldown (7586c05a, d8013ac0) | c | approved (struck 1 and 2, c PASS)
