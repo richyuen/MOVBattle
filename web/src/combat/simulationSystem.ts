@@ -1056,7 +1056,7 @@ export class SimulationSystem {
     this._boxerDashes.clear(); this._boxerDashReady.clear();
     this._burnTickAt = 0;
     this._fearHits.clear();
-    this._necroCursed.clear(); this._necroTickAt = 0;
+    this._necroCursed.clear(); this._necroTickAt = 0; this._solarShots.clear();
     this._pendingBlows = [];
     this._lashes = [];
     for (const h of this._safeHurls) h.mesh.dispose(false, false);
@@ -3928,7 +3928,15 @@ export class SimulationSystem {
         this.visualEffects.spawnStormCloud(target.position.clone(), splashRadius > 0 ? splashRadius : 2.2);
       } else if (this.visualEffects && attacker.definition.id === "secret.solar_architect") {
         // [S] 531 (c.1, secret.solar_architect.png): a white-gold Solar Orb ray from the wand bursting on the man (radius 1.5 per card), no bolt or dome
-        this.visualEffects.spawnSolarRay(attackOrigin, target.position.add(new Vector3(0, 0.8, 0)), 1.5);
+        // [S] 535 (c.1; card Main and Off Hand: two Solar Architect Wands, each firing the Solar Orb) the ray leaves the gold ring at a wand's tip, the
+        // fists taking turns (RuntimeUnit._laySolarWands holds both up and out), not attackOrigin at his feet
+        const n = this._solarShots.get(attacker) ?? 0;
+        this._solarShots.set(attacker, n + 1);
+        const fist = n % 2 ? attacker.body.leftHand : attacker.body.rightHand;
+        const ring = fist?.getChildMeshes(false).find((m) => m.name === "solarWandRing");
+        let from = attackOrigin;
+        if (ring) { worldMatrixChain(ring); from = ring.getAbsolutePosition().clone(); }
+        this.visualEffects.spawnSolarRay(from, target.position.add(new Vector3(0, 0.8, 0)), 1.5);
       } else if (this.visualEffects) {
         this.visualEffects.spawnLightning(attackOrigin, target.position);
         // The strike's area as one solid shape over the men it hits
@@ -5343,6 +5351,7 @@ export class SimulationSystem {
    * with a sickly green-black puff off him, till he dies; where he falls a skeleton warrior of the Necromancer's side rises (logged "raise_dead" at
    * the corpse). The Necromancer summons nothing else: no free skeletons beside him.
    */
+  private _solarShots = new Map<RuntimeUnit, number>();
   private _necroCursed = new Map<RuntimeUnit, number>();
   private _necroTickAt = 0;
   private _necroCurse = (target: RuntimeUnit, team: number): void => {
