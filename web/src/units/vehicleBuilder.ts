@@ -715,28 +715,53 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
     }
   }
 
-  const carriage = MeshBuilder.CreateBox("gatlingCarriage", { width: 0.35, height: 0.18, depth: 0.45 }, scene);
-  carriage.position.set(0, 0.72, 0.2);
-  carriage.parent = root;
-  carriage.material = metal;
-  allMeshes.push(carriage);
-
-  for (let i = 0; i < 5; i++) {
-    const barrel = MeshBuilder.CreateCylinder("gatlingBarrel", { height: 0.95, diameter: 0.06, tessellation: 10 }, scene);
-    const angle = (Math.PI * 2 * i) / 5;
-    barrel.position.set(Math.cos(angle) * 0.1, 0.76 + Math.sin(angle) * 0.1, 0.55);
-    barrel.rotation.x = Math.PI / 2;
-    barrel.parent = root;
-    barrel.material = metal;
-    allMeshes.push(barrel);
+  /*
+   * [S] 529 (b.1) the Gatling barrel cluster (secret.gatling_gun.red.png: one long gun, ~8 grey barrels packed round a central rod, bound by a
+   * collar ring at the muzzle and one at mid-length, running back into a round breech housing; the whole held in a long dark open frame of two
+   * side rails joined by a curved yoke under the muzzle; a crank handle on the side of the breech). GATLING_CLUSTER on the gun axis (y .axis, from
+   * z .back to .front): .count barrels .bore across on a ring .ring round the axis, a rod; collars .collar across and .collarL long at .rings of the
+   * length; a breech .breech across and .breechL long at the back; per side a rail .railW wide and .railH tall .railX off the axis from the breech
+   * to .front, joined by a yoke under the muzzle; a crank arm .crank long off the breech's side with a handle. Barrels grey, frame and breech dark,
+   * in lit cloth (makeMat greys; metal renders black).
+   */
+  const G = { axis: 0.76, back: -0.05, front: 1.06, count: 8, bore: 0.055, ring: 0.075, collar: 0.25, collarL: 0.07, rings: [0.97, 0.55],
+    breech: 0.27, breechL: 0.34, railW: 0.04, railH: 0.12, railX: 0.17, crank: 0.16 };
+  const litM = (c: Color3, glow: number) => getMaterialFactory().get("cloth", c, { emissive: c.scale(glow) });
+  const gunGrey = litM(new Color3(0.36, 0.37, 0.4), 0.18), frameDark = litM(new Color3(0.13, 0.13, 0.15), 0.3);
+  const axial = (name: string, d: number, len: number, x: number, y: number, z: number, mat: PBRMetallicRoughnessMaterial | Material, tess = 10) => {
+    const m = MeshBuilder.CreateCylinder(name, { height: len, diameter: d, tessellation: tess }, scene);
+    m.rotation.x = Math.PI / 2; m.position.set(x, y, z); m.parent = root; m.material = mat; allMeshes.push(m);
+    return m;
+  };
+  const gunLen = G.front - G.back;
+  for (let i = 0; i < G.count; i++) {
+    const a = (Math.PI * 2 * i) / G.count;
+    axial("gatlingBarrel", G.bore, gunLen, Math.cos(a) * G.ring, G.axis + Math.sin(a) * G.ring, (G.front + G.back) / 2, gunGrey);
+    // a pale muzzle lip on each barrel's end
+    axial("gatlingMuzzleLip", G.bore * 1.25, 0.02, Math.cos(a) * G.ring, G.axis + Math.sin(a) * G.ring, G.front, litM(new Color3(0.7, 0.7, 0.72), 0.2), 8);
   }
-
-  const crank = MeshBuilder.CreateCylinder("gatlingCrank", { height: 0.25, diameter: 0.03, tessellation: 6 }, scene);
-  crank.position.set(0.2, 0.72, -0.05);
-  crank.rotation.z = Math.PI / 2;
-  crank.parent = root;
-  crank.material = metal;
-  allMeshes.push(crank);
+  axial("gatlingRod", G.bore * 1.1, gunLen + 0.06, 0, G.axis, (G.front + G.back) / 2 + 0.03, frameDark);
+  for (const t of G.rings) axial("gatlingCollar", G.collar, G.collarL, 0, G.axis, G.back + gunLen * t, gunGrey, 12);
+  axial("gatlingBreech", G.breech, G.breechL, 0, G.axis, G.back - G.breechL / 2 + 0.04, frameDark, 12);
+  for (const side of [-1, 1]) {
+    const railL = G.front - G.back + G.breechL;
+    const rail = MeshBuilder.CreateBox("gatlingRail", { width: G.railW, height: G.railH, depth: railL }, scene);
+    rail.position.set(side * G.railX, G.axis - 0.02, G.front - railL / 2 + 0.02); rail.parent = root; rail.material = frameDark; allMeshes.push(rail);
+  }
+  const yoke = MeshBuilder.CreateBox("gatlingYoke", { width: G.railX * 2 + G.railW, height: 0.05, depth: 0.08 }, scene);
+  yoke.position.set(0, G.axis - G.ring - 0.07, G.front - 0.02); yoke.parent = root; yoke.material = frameDark; allMeshes.push(yoke);
+  for (const side of [-1, 1]) {
+    const cheek = MeshBuilder.CreateBox("gatlingYokeCheek", { width: G.railW, height: G.ring + 0.1, depth: 0.08 }, scene);
+    cheek.position.set(side * G.railX, G.axis - (G.ring + 0.04) / 2 - 0.03, G.front - 0.02); cheek.parent = root; cheek.material = frameDark; allMeshes.push(cheek);
+  }
+  // the carriage cradle under the breech, standing the gun on the chassis
+  const carriage = MeshBuilder.CreateBox("gatlingCarriage", { width: G.railX * 2, height: G.axis - 0.54 - G.breech / 2, depth: 0.3 }, scene);
+  carriage.position.set(0, 0.54 + (G.axis - 0.54 - G.breech / 2) / 2, G.back + 0.1); carriage.parent = root; carriage.material = frameDark; allMeshes.push(carriage);
+  // the crank: an arm off the breech's right side with a handle
+  const crank = MeshBuilder.CreateBox("gatlingCrank", { width: 0.03, height: G.crank, depth: 0.035 }, scene);
+  crank.position.set(G.breech / 2 + 0.03, G.axis - G.crank / 2, G.back - G.breechL / 2 + 0.06); crank.parent = root; crank.material = gunGrey; allMeshes.push(crank);
+  const handle = MeshBuilder.CreateCylinder("gatlingCrankHandle", { height: 0.09, diameter: 0.03, tessellation: 6 }, scene);
+  handle.rotation.z = Math.PI / 2; handle.position.set(G.breech / 2 + 0.07, G.axis - G.crank + 0.01, G.back - G.breechL / 2 + 0.06); handle.parent = root; handle.material = frameDark; allMeshes.push(handle);
 
   let operator: VehicleOperator | null = null;
   if (options.showOperators !== false) {
