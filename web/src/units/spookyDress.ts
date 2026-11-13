@@ -663,8 +663,8 @@ export function skeletonArcherBelt(scene: Scene, body: ArticulatedBody, teamColo
 const STIFFY_SHORTS = { top: 0.16, hem: 0.72, out: 3.6, flare: 1.15, deep: 0.88, sides: 7, rags: 6, rag: 0.7, ragLong: 0.2, belt: 0.2, beltOut: 1.3, glow: 0.14, leather: new Color3(0.4, 0.17, 0.07) };
 
 /** Baggy team shorts to the knee with rag-point hems and a brown belt, over the bone legs (spec at STIFFY_SHORTS). */
-export function stiffyShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
-  const S = STIFFY_SHORTS;
+export function stiffyShorts(scene: Scene, body: ArticulatedBody, teamColor: Color3, cut: Partial<typeof STIFFY_SHORTS> = {}): Mesh[] {
+  const S = { ...STIFFY_SHORTS, ...cut };
   const f = getMaterialFactory();
   const team = f.get("cloth", teamColor, { emissive: teamColor.scale(S.glow) });
   const leather = f.get("cloth", S.leather, { emissive: S.leather.scale(S.glow) });

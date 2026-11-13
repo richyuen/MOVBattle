@@ -171,6 +171,14 @@ const SKELETON_UNITS = new Set(["spooky.skeleton_warrior", "spooky.skeleton_arch
   "secret.skeleton_giant",
   // [S] 531 (a.1) and so is the Necromancer (secret.necromancer.red.png; card Appearance): cream bone under his dress
   "secret.necromancer"]);
+/*
+ * [S] 534 (secret.skeleton_giant a.1; CONFIRM 533: "squat build: a wide team cloth block runs from mid-chest to the knees over short legs";
+ * secret.skeleton_giant.jpg, .blue.png: a lanky Stiffy, a thin rib cage, long thin bone legs, ragged team shorts only from the hips to mid-thigh,
+ * bare bone knees above the greaves). GIANT_BUILD: no pelvis-to-knee skirt; the pelvis box slimmed to .pelvisW wide, .pelvisD deep, .pelvisH tall;
+ * the Skeleton Warrior's ragged shorts (spookyDress STIFFY_SHORTS) cut to .hem of the thigh, .out of the bone's half-width round; his legs
+ * lengthened in unitVisuals (legLength .legs).
+ */
+const GIANT_BUILD = { pelvisW: 0.62, pelvisD: 0.72, pelvisH: 0.7, hem: 0.42, out: 2.8, legs: 1.2 };
 // Bone: spookyDress SKELETON_BONE (441: shared, self-lit)
 const SKELETON_LIMB = 0.42;
 const SKELETON_SPINE = 0.16;
@@ -750,6 +758,8 @@ export class UnitFactory {
     if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyHelmet(this._scene, body, teamColor));
     // [S] 439 ...and baggy team shorts to the knee with rag-point hems and a brown belt, in place of the skirt (spookyDress STIFFY_SHORTS)
     if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyShorts(this._scene, body, teamColor));
+    // [S] 534 the Skeleton Giant's are cut to mid-thigh (spec at GIANT_BUILD)
+    if (definition.id === "secret.skeleton_giant" && !shouldUseVehicleBody) propMeshes.push(...stiffyShorts(this._scene, body, teamColor, { hem: GIANT_BUILD.hem, out: GIANT_BUILD.out }));
     // [S] 440 ...and team greaves from the knee down the shin over slim bare bone feet (spookyDress STIFFY_GREAVES)
     if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyGreaves(this._scene, body, teamColor));
     // [S] 437 the Skeleton Archer's team hood round the skull with a ragged shoulder capelet (spookyDress SKELETON_HOOD)
@@ -1580,6 +1590,11 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3, u
   if (pelvis && unitId === "spooky.skeleton_archer") pelvis.material = bone;
   // [S] 439 not on the Skeleton Warrior either: he wears two-legged shorts (spookyDress STIFFY_SHORTS)
   else if (pelvis && unitId === "spooky.skeleton_warrior") pelvis.material = cloth;
+  // [S] 534 nor on the Skeleton Giant: short ragged shorts over a slim pelvis (spec at GIANT_BUILD)
+  else if (pelvis && unitId === "secret.skeleton_giant") {
+    pelvis.material = cloth;
+    pelvis.scaling.x *= GIANT_BUILD.pelvisW; pelvis.scaling.z *= GIANT_BUILD.pelvisD; pelvis.scaling.y *= GIANT_BUILD.pelvisH;
+  }
   else if (pelvis) {
     pelvis.material = cloth;
     const pExt = pelvis.getBoundingInfo().boundingBox.extendSize;
