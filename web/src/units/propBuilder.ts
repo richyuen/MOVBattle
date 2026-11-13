@@ -8109,7 +8109,7 @@ const PAVISE_STAND = { gap: 0.12, lift: 0.07, ahead: 0.21, splay: 0.06 };
  * hip to .top over the shoulder, .wide again across; its middle .out of the shoulder's spread to his left, .ahead of that height past the chest
  * front, turned .turn rad in toward his front, tipped .tip back at the top.
  */
-const CAV_SHIELD = { span: 0.53, topAt: 0.186, top: 0.06, below: 0.04, wide: 1.4, out: 1.3, ahead: 0.18, turn: 0.22, tip: -0.06 };
+const CAV_SHIELD = { span: 0.53, topAt: 0.186, top: 0.2, below: 0.45, wide: 1.6, out: 1.6, ahead: 0.32, turn: 0.3, tip: -0.06 };
 function coffinPlate(scene: Scene, name: string, w: number, h: number, d: number): Mesh {
   const P = PAVISE, outline = [[-w * P.foot / 2, -h / 2], [w * P.foot / 2, -h / 2], [w / 2, h * (P.shoulder - 0.5)], [w * P.top / 2, h / 2], [-w * P.top / 2, h / 2], [-w / 2, h * (P.shoulder - 0.5)]];
   const pos: number[] = [], idx: number[] = [], n = outline.length;
