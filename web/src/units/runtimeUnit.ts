@@ -72,6 +72,8 @@ const KNEEL_POSE = { hip: 0.1, knee: 1.55, drop: 0.9, bow: 0.35, arms: 0.25 };
 /** [S] 519 the Cheerleader's cheer (spec at RuntimeUnit.startCheer): s held after a buff, raised-V arm angle, forward tip, pump drop, beats per s, elbow. */
 /** [S] 535 the Banshee's two-handed curse cast (spec at RuntimeUnit.startCurseCast) */
 const CURSE_CAST = { fore: 1.45, inward: 0.18, hold: 0.55, ease: 0.3 };
+/** [S] 535 the Solar Architect's wand lay (spec at RuntimeUnit._laySolarWands): torso-frame direction of the rod, and its middle's share of a half-length out of the fist */
+const SOLAR_WAND_LAY = { out: 0.55, up: 0.75, fore: 0.35, seat: 0.6 };
 const CHEER = { hold: 1.4, up: 2.5, fore: 0.35, pump: 1.1, hz: 2.5, elbow: 0.15 };
 /*
  * [S] 524 the Ice Mage throws each icicle from an open hand (card secret.ice_mage: "shoot icicles out of their hands", Main and Off Hand "Icicle
@@ -1997,6 +1999,7 @@ export class RuntimeUnit {
     this._applyCheer(now);
     this._applyIceThrow(now);
     this._applyCurseCast(now);
+    if (this.definition.id === "secret.solar_architect") this._laySolarWands();
     this._holdTeacherParry(now);
     this._updateRaptorBite(now);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
@@ -2570,6 +2573,31 @@ export class RuntimeUnit {
     throwE.rotation.x += (0 - throwE.rotation.x) * k;
     restS.rotation.x += C.back * k;
   }
+  /**
+   * [S] 535 (solar_architect b.2; secret.solar_architect.red.png: in each fist a wand rising up and out from the body, its ring high beside the
+   * shoulder, a gold knob under the fist) the sword mount laid both wands back along the forearms, where they read as bracers (probe: rod axis
+   * -z in the torso frame). Each tick, after the pose, each wand is turned in its fist so its rod (+y) runs SOLAR_WAND_LAY in the torso frame
+   * (.out to his side, .up, .fore ahead), its middle .seat of its length out of the fist, so the butt knob shows under it.
+   */
+  private _laySolarWands(): void {
+    const L = SOLAR_WAND_LAY, b = this.body;
+    if (this._isDead) return;
+    b.torso.computeWorldMatrix(true);
+    const torso = b.torso.getWorldMatrix();
+    for (const [hand, side] of [[b.leftHand, -1], [b.rightHand, 1]] as const) {
+      if (!hand) continue;
+      const wand = hand.getChildMeshes(true).find((m) => m.name === "solarWand");
+      if (!wand) continue;
+      const world = Vector3.TransformNormal(new Vector3(side * L.out, L.up, L.fore), torso).normalize();
+      hand.computeWorldMatrix(true);
+      const inv = hand.getWorldMatrix().clone().invert();
+      const d = Vector3.TransformNormal(world, inv).normalize();
+      const half = wand.getBoundingInfo().boundingBox.extendSize.y;
+      wand.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d, wand.rotationQuaternion ?? new Quaternion());
+      wand.position.copyFrom(d.scale(half * L.seat));
+    }
+  }
+
   /**
    * [S] 535 the Banshee casts her curse from both open hands (card Weapons Banshee Hands, main and off): both arms thrust straight out at the man,
    * shoulders pitched CURSE_CAST.fore forward and .inward toward the midline, elbows straight, held .hold s, eased back over .ease s. Applied at once,
