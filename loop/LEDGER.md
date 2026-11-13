@@ -2,6 +2,17 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+539 | 01f56fe3 | secret.necromancer.a | approved [S] (struck 6, a PASS; CONFIRM failed a, b)
+539 | 25ff6c1c | secret.necromancer.a | approved [P] NECRO_SHORTS hem (row spent for further nudging)
+539 | b948a7cf | secret.vlad.a | approved [S] (struck 1)
+539 | 7adefe06, 209ee003 | secret.vlad.a | approved [S] (no strike; log covers the chest)
+539 | 2658848b | secret.vlad.a | approved [S] (struck 3; CONFIRM passed a)
+539 | 349ed27b | secret.blackbeard.b | approved [S] (struck 2, b PASS)
+539 | 58c71fd3, 8fdee906 | secret.blackbeard.c | approved [S] (no strike; balls unseen, evidence first)
+539 | 2b444e72, 2206053a | secret.blackbeard.a | approved [S] (struck 1)
+539 | 658d7e0f | secret.artemis.a | approved [S] (struck 1)
+539 | 896b1aac | secret.sensei.a | approved [S] (struck 1, 5)
+
 538 | 9c9fe16d | secret.witch.a | approved [S] (struck 5, a PASS; CONFIRM 536 copied, D)
 538 | 5c8ac1db | secret.banshee.a | approved [S] (struck 5)
 538 | 966b784f | secret.banshee.a | approved [S] (struck 6, a PASS; CONFIRM passed, D)
@@ -41,21 +52,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 535 | a156627c | secret.witch.a | approved [S] (struck 1, 6)
 535 | cbb156f0 | secret.witch.b | approved [S] (struck 2, b PASS)
 
-534 | 48478b9e, 21b3bc3f | secret.cavalry.b | approved [R] (struck 1, b PASS; CONFIRM passed, D)
-534 | c9d9173d | secret.gatling_gun.b | approved [S] (struck 2; added 3 tall cheeks; CONFIRM passed b)
-534 | 08ff24b5 | secret.bomb_cannon.a | approved [S] (struck 1)
-534 | ede7b8a5 | secret.bomb_cannon.a | approved [S] (struck 2, a PASS; CONFIRM failed a: third man, plateau)
-534 | 0db15db3 | secret.bomb_cannon.b | approved [S] (struck 1, b PASS; [P] RIDER_CUTLASS out fallout)
-534 | bb0b15da | secret.witch.c | approved [S] (struck 2)
-534 | 746fb2cd | secret.necromancer.b | approved [S] (struck 3, b PASS)
-534 | c60e101a | secret.banshee.a | approved [S] (struck 1)
-534 | 5144914b | secret.skeleton_giant.a | approved [S] (no strike; [P] bulk 1.7 -> 1.2, hem .42 -> .3 fallout)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/UF/UV/PB/SS/capture:539 | NECRO_ARMBAND at .3/.62 round 2.7 tall .2 grey (.62,.62,.64) gap ring purple; [P] NECRO_SHORTS hem .55 -> .4 (spent); VLAD_MANTLE top .72 foot 1.6 drop .62 deep 1.3 tufts 14 fur (.8,.5,.2), closed collar, stoles off; VLAD_ROSETTE size .36 8+8 points at .42/.66 stand .9 (per-height shell front); VLAD_CAP round 1.1 crown .06 dome .12 badgeAt .42; blackbeard offhand cutlass+blackbeard_anchor default grip; CANNON_BARRAGE first 0 cd 8 balls 8 every .15 spread 2.2 lean .8 up 14 dmg 45 splash 1.4 push 6; BB_HAT black (.035,.03,.035) cords 2/side long .62 flame unlit, hat tricorn; ARTEMIS_BAND round 1.08 top .84 tall .42 tip -.42 gold (1,.62,.14), halo off; SENSEI_HOOD dome 1.14 domeH .78 band 1.16 star .34 flare 1.12->2.3, hat none; capture barrage onMan after +40 | 539 | approved | no armbands, hem .55, grey chunk mantle + stoles, 5-ray stars .26, thin band, flintlock off hand, no barrage, captain_hat, halo + laurel, cone hat
 secretDress/UF/SS/PB/UV:538 | WITCH_BROOM club rebuild lift .38 lean .24 clear .1 thin .045 mid .065 thick .115 neck .55, no brush; BANSHEE_WAIST at .06 out 1.06 sag .05 link .075 step .056 cuff 1.55 at .72 dangle 5; BANSHEE_ARMBAND at .34/.66 round 1.42 tall .17 gold; NECRO_SHORTS hem .55 belt .12 out 1.36 pink (.55,.2,.36), no skeleton skirt; NECRO_BOOT shaft .97 round 2.5 laces 4 brown (.36,.17,.13); NECRO_GRAVES push reaches the trigger man (+ radius round him); VLAD_BOOT shaft .72 round 1.3 tan (.8,.6,.35) -> (.62,.36,.16); BEARD_BB chestW .62 tip .55 braids 2 ties 2 black lit .4; BB_ANCHOR size 1 -> 1.8 long .56 arm .2 sweep 2.1 flukes, weaponVariant blackbeard_anchor | 538 | approved | level brushed broom pitch .9 lift .3, no chains, bare arms, rag skirt, bare bone shins, 2.2 m push round the wall only, team feet, bare face, cutlass
 secretDress/UF/UV/SS/FX:537 | [P] WITCH_BROOM pitch .18 -> .9, lift .2 -> .3; GIANT_FEET wide .34 toe .55 tall .36 long .86 heel 1.05 peg .5 pegUp .6 (wedge); NECRO_VEST top .08 below .06 out 1.16 flare 1.24 rags 8 laces 5 dark .42; NECRO_GRAVES first .5 cd 8 near 4 ahead 1.3 apart .85 radius 2.2 dmg 20 push 6 lift 4, GRAVESTONES w .62 h 1.05; BANSHEE_CROWN r 1.3 foot .2 back .5 lean .18 ribs 5 spike .26 top 1.5, hood hat off; BANSHEE_FACE long 1.5 top .4 wide 1.0 ahead .32 eye .27; BANSHEE_HAIR x .58 seg .7/.6 w .22 tufts 7; VLAD_COAT fitTop .9 fitFoot 1.04 fitDeep 1.08 mantleFoot 1.38 -> 1.12 collarH .45 collarW .62, vampire_collar off; VLAD_HAIR lockX .55 lockW .3; VLAD_STACHE seg .26/.22/.16 thick .15 droop .25 curl 1.3 | 537 | approved | broom pitch .18 lift .2, box feet .48, no vest, no graves, hood dish, ball head, no hair, box coat shell + mantle 1.38, tuft, no mustache
 secretDress/UF/RU/PS/SS/FX/UV:536 | WITCH_BROOM lift .2 seat .01 ahead .78 behind .22 pitch .18 thin .045 thick .075 brush .28 brushW .18; WITCH_ROBE hem .45 out 1.2 flare 1.5 rags 9 bands .12 at .2 sash .13 dark .42 light .22, shorts hem .5; SHROOMS seconds 6 size .2 clear .9 shoulder .45 cap .62 (1,.22,.75); SHROOM_TURN reach 1.1 every 1 dmg 12; GIANT_HELM hood .62 hoodTop 1.24 hoodFoot 1.5 back .36 cheekW .3 under .32; GIANT_FEET wide .48 tall .5 long .8; SOLAR_MAELSTROM near 7 cd 12 radius 3.5 seconds 3 heal .04 pull 7, cast on the target, FX from .75; SOLAR_COAT out 1.16 flare 1.32 hem .5 white (.9,.9,.88) gold (.85,.6,.15); SOLAR_LEGS cuff .11; NECRO_CAP horns 3 segs out 1.05 bend .62 shade .42, hood hat off | 536 | approved | standing witch, no robe, pink head glow, bucket helm, block feet, pink dome, grey vest, dark trousers + boots, hood ball
