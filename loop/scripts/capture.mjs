@@ -191,6 +191,7 @@ const RELOAD_SHOT = { "farmer.scarecrow": 72 };
 const ABILITY_PREF = { "secret.ballooner": "float_pack", "secret.jester": "kick", "ancient.minotaur": "headbutt", "ancient.snake_archer": "snake_land", "viking.berserker": "leap", "dynasty.firework_archer": "burst", "pirate.harpooner": "kick", "spooky.candlehead": "knockup", "spooky.reaper": "impale", "legacy.super_peasant": "flight", "evil.exiled_sentinel": "pavise_block", "evil.death_bringer": "quick_dodge", "evil.void_monarch": "demon_form" };
 ABILITY_PREF["secret.present_elf"] = "present_open";
 ABILITY_PREF["secret.banshee"] = "scream"; // [evidence 530] her ability shots frame the scream, not her swoop
+ABILITY_PREF["secret.cavalry"] = "shockwave"; // [evidence 530] a hoof shockwave, not the pull-back at spawn
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
 // swatches between a squire of each team (the skin reference): the left wall "cloth" with emissive = colour x PALETTE_GLOW (the dress
