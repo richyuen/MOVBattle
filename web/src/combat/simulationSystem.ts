@@ -161,6 +161,13 @@ const MECHANIC_FIRE = { seconds: 0.8, ahead: 0.25, chest: 0.9, near: 0.08, far: 
  */
 const DEATH_SLASH = { white: new Color3(1.2, 0.25, 0.7), radius: 1.0, band: 0.2, tilt: 1.25, seconds: 0.45, chest: 1.0 };
 /*
+ * [S] 532 the Skeleton Giant's sword blow (audit 527 c.1: "the hit is a punch - TABS: a sword blow"; card Weapons Giant Stiffy Sword, a 2 s
+ * overhead blade): every blow he lands leaves the arc the long blade cut, a bone-pale crescent (spawnSlashArc) .radius m round and .band m wide
+ * standing upright in the plane from him to the man, centred .between of the way to the man and .up m over his feet, leant .tilt rad toward the
+ * man so it falls from over the giant's head onto him, fading over .seconds.
+ */
+const GIANT_SLASH = { white: new Color3(1.15, 1.08, 0.95), radius: 1.7, band: 0.38, tilt: 0.55, seconds: 0.55, between: 0.45, up: 1.5 };
+/*
  * [S] 493 the Void Monarch's sword burst (audit 489 c.1: "he summons two Shadow Walkers - TABS: a two-sword melee strike with a radius-2 burst"; card
  * Weapons "Void Monarch Sword ... explosion radius 2"; evil.void_monarch.jpg: pink-magenta void light): the Reaper's shockwave (visualEffects
  * spawnReaperBurst) in a hot-pink ring over a dark magenta dome .dome m across, run out to .radius m at the man.
@@ -4708,6 +4715,13 @@ export class SimulationSystem {
       const n = (this._deathSlashes.get(attacker) ?? 0) + 1; this._deathSlashes.set(attacker, n);
       const look = { ...DEATH_SLASH, tilt: (n % 2 ? 1 : -1) * DEATH_SLASH.tilt };
       this.visualEffects.spawnSlashArc(target.position.add(new Vector3(0, DEATH_SLASH.chest, 0)), across.lengthSquared() > 1e-6 ? across.normalize() : new Vector3(0, 0, 1), look);
+    }
+    // [S] 532 the Skeleton Giant's sword stroke leaves its arc (GIANT_SLASH): a bone-pale crescent stood in the plane of the chop between him and the man
+    if (this.visualEffects && attacker.definition.id === "secret.skeleton_giant" && !attacker.linkedParent) {
+      const along = target.position.subtract(attacker.position); along.y = 0;
+      const dir = along.lengthSquared() > 1e-6 ? along.normalize() : new Vector3(0, 0, 1);
+      const at = Vector3.Lerp(attacker.position, target.position, GIANT_SLASH.between); at.y = target.position.y + GIANT_SLASH.up;
+      this.visualEffects.spawnSlashArc(at, dir, GIANT_SLASH);
     }
     // [S] 436 the Reaper's scythe bursts a dark magic shockwave where it lands (card Characteristics; visualEffects REAPER_BURST), out to its splash
     // [S] 444 (CONFIRM 443 c.1: "every scythe swing bursts a dark magic shockwave"): the impaling blow bursts too, the ring and dome at the ground
