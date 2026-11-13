@@ -1239,7 +1239,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "secret_skeleton_giant":
       // [S] 527 (b.1) the Giant Stiffy Sword in his main hand (propBuilder buildGiantStiffySword)
       // [S] 528 (b.2) the Stiffy Shield on his off arm: a round team board, dark rim and dark studs (propBuilder STIFFY_SHIELD, STIFFY_UPRIGHT)
-      return vis({ scale: 2.35, bulk: 1.7, headSize: 1.15, armLength: 1.12, legLength: 0.92 }, "sword", "none", "stiffy", "giant_bones", "#e5ddd0", undefined, {
+      // [P] 533 (a.3) scale 2.35 -> 3.0 toward TABS Size 3x
+      return vis({ scale: 3.0, bulk: 1.7, headSize: 1.15, armLength: 1.12, legLength: 0.92 }, "sword", "none", "stiffy", "giant_bones", "#e5ddd0", undefined, {
         weaponVariant: "giant_stiffy_sword", posePreset: "giant", materialPreset: "secret_bone", attachmentPreset: "giant_aura", fxPreset: "spectral",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
