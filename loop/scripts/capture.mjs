@@ -193,6 +193,7 @@ ABILITY_PREF["secret.present_elf"] = "present_open";
 ABILITY_PREF["secret.banshee"] = "scream"; // [evidence 530] her ability shots frame the scream, not her swoop
 ABILITY_PREF["secret.cavalry"] = "shockwave"; // [evidence 530] a hoof shockwave, not the pull-back at spawn
 ABILITY_PREF["secret.skeleton_giant"] = "giant_fear"; // [531] his ability shots frame the Giant Fear burst
+ABILITY_PREF["secret.necromancer"] = "raise_dead"; // [evidence 535] his ability shots frame a skull-cursed corpse rising, not the curse landing
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
 // swatches between a squire of each team (the skin reference): the left wall "cloth" with emissive = colour x PALETTE_GLOW (the dress
