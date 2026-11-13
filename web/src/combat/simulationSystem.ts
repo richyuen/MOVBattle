@@ -145,6 +145,8 @@ const BLUNDERBUSS_BLAST = { units: new Set(["pirate.blunderbuss"]), fling: 6, li
 // for .after s more. Each bomb bursts .splash m wide for .damage of a blow. Logged "bombspin" at the drop.
 const BOMB_SPIN = { units: new Set(["pirate.pirate_queen"]), within: 3, crowd: 3, cooldown: 8, rate: 16, drop: 0.3, after: 0.7, count: 7, out: 2.6, flight: 0.55, splash: 3.5, damage: 0.67, rise: 9 };
 const DRAGON_BREATH = { burn: 3, seconds: 0.7, ahead: 0.4, down: 0.3, chest: 0.9 };
+// [S] 530 the Wheelbarrow Dragon's breath (spec at the fire_dot status): jet held .seconds from .ahead m before the jaw to .chest m up the man
+const BARROW_BREATH = { burn: 2.5, seconds: 0.9, ahead: 0.08, chest: 0.8 };
 /*
  * [S] 493 the Mad Mechanic's claw fire (audit 489 c.1: "a lobbed black bomb that explodes in a white blast - TABS: a light-blue flame jet sprayed from
  * the claws at short range (4.5)"; card Weapons "Mad Mechanic Fire": range 4.5, explosion radius 1.25; Characteristics "two claws that spews out
@@ -5089,6 +5091,27 @@ export class SimulationSystem {
         target.applyBurn(statusDuration, now);
       }
       if (this.visualEffects) this.visualEffects.spawnFireBurst(target.position);
+      // [S] 530 (c.1; card "a little mechanical dragon attached that breathes fire") the barrow dragon breathes it: a held flame jet out of its open
+      // jaw (propBuilder BARROW_DRAGON "barrowDragonMouth" on the cart actor) onto the man, his body catching fire, not a lone puff on him
+      if (preset === "secret_dragon_cart" && this.visualEffects) {
+        const lead = attacker.linkedParent ?? attacker;
+        const cart = lead.linkedChildren.find((c) => c.visualConfig.special === "dragon_barrow");
+        const jaw = cart?.body.root.getChildMeshes(false).find((m) => m.name === "barrowDragonMouth");
+        if (jaw) {
+          const mouth = (): Vector3 | null => {
+            if (lead.isDead || jaw.isDisposed()) return null;
+            worldMatrixChain(jaw);
+            const fwd = Vector3.TransformNormal(new Vector3(0, 0, 1), cart!.body.root.getWorldMatrix());
+            fwd.y = 0;
+            if (fwd.lengthSquared() > 1e-6) fwd.normalize();
+            return jaw.getAbsolutePosition().add(fwd.scale(BARROW_BREATH.ahead));
+          };
+          const man = (): Vector3 | null => (target.isDead ? null : target.position.add(new Vector3(0, BARROW_BREATH.chest, 0)));
+          this.visualEffects.spawnFlameJet(mouth, man, BARROW_BREATH.seconds);
+          const burning = target;
+          this.visualEffects.spawnBodyFlames(() => (burning.isDead && !burning.body.root.isEnabled() ? null : burning.position.clone()), BARROW_BREATH.burn);
+        }
+      }
       this._logAbility(attacker, "status:fire", now, target.position);
     }
     // [S] 435 Stiffy Fear (RuntimeUnit.applyFear): every STIFFY_FEAR.every-th blow of a skeleton warrior's, the first included, frightens the man it lands on
