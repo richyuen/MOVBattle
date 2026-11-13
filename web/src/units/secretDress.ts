@@ -4212,6 +4212,53 @@ export function bansheeGown(scene: Scene, body: ArticulatedBody, team: Color3): 
 }
 
 /*
+ * [S] 534 (a.1) the Banshee's chains in place of legs (audit 527, re-audit 531: "full team legs, two legs and boots standing below the hem";
+ * secret.banshee.red.png; card Appearance: no legs at all, three dark iron chains hang out from under the zigzag hem side by side, the middle one
+ * longest, nearly to the ground, the outer two a little shorter and splayed). BANSHEE_CHAINS: every mesh on both legs (hips down, any dress on
+ * them too) hidden; she hovers .lift of her height up (proceduralAnimation REAPER_HOVER via a "reaperHover" mark on the hip, as the Tempest
+ * Lich), the chains reaching down into the gap; .strands chains from .rise m up inside the gown's hem, .apart of the trunk's half-width apart, each .reach (middle first) of the
+ * hem-to-ground drop long, splayed .splay rad; links tori .link m across, .thick thick, .step m apart, each turned a quarter to the last, dark iron
+ * lit cloth. On the torso joint, out of the glow.
+ */
+const BANSHEE_CHAINS = { lift: 0.16, strands: 3, rise: 0.04, apart: 0.9, reach: [0.85, 0.97, 0.8], splay: 0.12, link: 0.09, thick: 0.024, step: 0.068,
+  iron: new Color3(0.13, 0.13, 0.15) };
+export function bansheeChainLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = BANSHEE_CHAINS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const iron = mf.get("cloth", C.iron, { emissive: C.iron.scale(0.4), roughness: 1 });
+  // the ground: the lowest point of the legs she no longer shows, read into the torso frame before they are hidden
+  const toTorso = body.torso.computeWorldMatrix(true).clone().invert();
+  let ground = Infinity;
+  for (const hip of [body.leftHip, body.rightHip]) for (const m of hip.getChildMeshes(false)) {
+    m.computeWorldMatrix(true);
+    for (const v of m.getBoundingInfo().boundingBox.vectorsWorld) ground = Math.min(ground, Vector3.TransformCoordinates(v, toTorso).y);
+    m.isVisible = false;
+  }
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const hem = kneeY - BANSHEE_GOWN.below;
+  // she floats .lift of her height up (the animator's hover, the "reaperHover" mark's own lift), the chains reaching down into the gap
+  const mark = new TransformNode("reaperHover", scene); mark.parent = body.hip; mark.position.y = C.lift;
+  const drop = Math.max(0.2, hem - (Number.isFinite(ground) ? ground : hem - 0.5)) + body.metrics.overallHeight * C.lift;
+  const out: Mesh[] = [];
+  for (let s = 0; s < C.strands; s++) {
+    const side = s - (C.strands - 1) / 2;
+    const strand = new TransformNode("bansheeChain", scene);
+    strand.parent = body.torso; strand.position.set(side * T.wide * C.apart, hem + C.rise, side === 0 ? 0.02 : -0.02);
+    strand.rotation.z = -side * C.splay;
+    const n = Math.max(3, Math.round((drop * C.reach[s] + C.rise) / C.step));
+    for (let k = 0; k < n; k++) {
+      const link = MeshBuilder.CreateTorus("bansheeChainLink", { diameter: C.link, thickness: C.thick, tessellation: 8 }, scene);
+      link.parent = strand; link.position.y = -k * C.step - C.link / 2;
+      // a link stands upright (its ring in a vertical plane), each turned a quarter about the chain's line to the one before
+      link.rotation.set(Math.PI / 2, (k % 2) * (Math.PI / 2), 0); link.scaling.x = 0.75;
+      link.material = iron; link.convertToFlatShadedMesh(); glow?.addExcludedMesh(link); out.push(link);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 529 (b.2) the Necromancer's lantern (secret.necromancer.red.png; card Off Hand "a magical, team-colored kerosene lantern, with a ghostly flame
  * inside ... the blue ghost-flame also is seen encircling the lantern": a team lantern hung from his off fist by a wire bail: a domed cap with a
  * chimney knob, a pale glass chimney between four thin team posts with a pale-blue ghost flame inside it, a round team fount under it; round its
