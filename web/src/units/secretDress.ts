@@ -4516,3 +4516,31 @@ export function bombCrewCap(scene: Scene, body: ArticulatedBody, team: Color3): 
   for (const m of out) { m.material = cloth; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/*
+ * [S] 533 (a.3) the Traveller's own afro on the Wheelbarrow Dragon (CONFIRM 532: "a big round brown puff rising well above and around the head";
+ * secret.wheelbarrow_dragon.blue.png: a round brown mass about half again the head's width, from just over the eyes to well over the head, coming
+ * down both temples to the ears and round the back to the nape; the shared dressAfro is a flat puff on top, kept for farmer.wheelbarrow).
+ * BARROW_AFRO in the head's box (W, H, D; e the eyes' top): a crown ball .crown (x W, y H, z D radii) centred .crownUp H over e and .crownBack D
+ * behind the middle, so its front foot stays over the eyes; a temple ball per side .temple radii at .templeX W out, .templeY H about e,
+ * .templeBack D back; a nape ball .nape radii .napeBack D back. Faceted icospheres, lit brown cloth self-lit .2, out of the glow.
+ */
+const BARROW_AFRO = { crown: [0.82, 0.62, 0.78], crownUp: 0.55, crownBack: 0.12, temple: [0.3, 0.42, 0.45], templeX: 0.46, templeY: -0.02, templeBack: 0.15,
+  nape: [0.6, 0.48, 0.38], napeBack: 0.42, brown: new Color3(0.28, 0.15, 0.09) };
+export function barrowDriverAfro(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const A = BARROW_AFRO, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const hair = mf.get("cloth", A.brown, { emissive: A.brown.scale(0.2), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const out: Mesh[] = [];
+  const ball = (name: string, r: readonly number[], x: number, y: number, z: number) => {
+    const m = MeshBuilder.CreateIcoSphere(name, { radius: 1, subdivisions: 2, flat: true }, scene);
+    m.parent = head; m.position.set(x, y, z); m.scaling.set(W * r[0], H * r[1], D * r[2]); out.push(m);
+  };
+  ball("barrowAfro", A.crown, c.x, e + H * A.crownUp, c.z - D * A.crownBack);
+  for (const s of [-1, 1]) ball("barrowAfroTemple", A.temple, c.x + s * W * A.templeX, e + H * A.templeY, c.z - D * A.templeBack);
+  ball("barrowAfroNape", A.nape, c.x, e + H * A.templeY, c.z - D * A.napeBack);
+  for (const m of out) { m.material = hair; glow?.addExcludedMesh(m); }
+  return out;
+}
