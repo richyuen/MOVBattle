@@ -20,7 +20,7 @@ interface TimedEffect {
 // Shed gear (see VisualEffects.spawnGearLitter): how far off it lands, how far a board leans back off upright, and how far a weapon's grip end stands off the ground.
 // A da Vinci ball's break-up (see spawnShatter): shards, size (m), outward and upward speed (m/s), seconds
 const SHATTER = { count: 7, size: 0.11, speed: 3.2, up: 3.0, last: 0.9 };
-const ICE_BURST = { spikes: 12, inner: 5, ring: 0.8, tall: 0.75, wide: 0.24, lean: 0.35, grow: 0.15, flash: 0.9, last: 1.6, sink: 0.4,
+const ICE_BURST = { spikes: 12, inner: 5, ring: 0.8, tall: 0.75, wide: 0.24, lean: 0.35, grow: 0.15, flash: 0.35, last: 1.6, sink: 0.4,
   ice: new Color3(0.55, 0.85, 1), frost: new Color3(0.82, 0.94, 1), white: new Color3(1, 1, 1) };
 // The Reaper's scythe shockwave (see spawnReaperBurst): ring start across and band (m), dome start and end across (m) and opacity, shards, their length,
 // out and up speed (m/s), seconds, share of it faded out; violet ring, dark dome
@@ -2267,7 +2267,7 @@ export class VisualEffects {
     const B = ICE_BURST;
     const root = new TransformNode("iceBurst", this._scene);
     root.position.set(position.x, 0.02, position.z);
-    const ice = this._fxMat(B.ice, B.ice), frost = this._fxMat(B.frost, B.frost, 0.7), white = this._fxMat(B.white, B.white, 0.85);
+    const ice = this._fxMat(B.ice, B.ice), frost = this._fxMat(B.frost, B.frost, 0.7), white = this._fxMat(B.white, B.white, 0.5);
     const disc = MeshBuilder.CreateCylinder("iceBurstFrost", { height: 0.03, diameter: 2 * radius, tessellation: 18 }, this._scene);
     disc.material = frost; disc.parent = root; disc.scaling.set(0.05, 1, 0.05);
     const spikes: Mesh[] = [];
@@ -2300,7 +2300,7 @@ export class VisualEffects {
         for (const s of spikes) s.scaling.y = Math.max(0.05, up);
         const f = Math.min(1, age / B.grow);
         flash.scaling.setAll(B.flash * radius * (0.3 + 0.7 * f));
-        white.alpha = Math.max(0, 0.85 * (1 - age / (B.grow * 3)));
+        white.alpha = Math.max(0, 0.5 * (1 - age / (B.grow * 2)));
         if (remaining < B.sink) root.position.y = 0.02 - (1 - remaining / B.sink) * B.tall * 1.4;
       },
     });
