@@ -4181,3 +4181,53 @@ export function bansheeGown(scene: Scene, body: ArticulatedBody, team: Color3): 
   }
   return out;
 }
+
+/*
+ * [S] 529 (b.2) the Necromancer's lantern (secret.necromancer.red.png; card Off Hand "a magical, team-colored kerosene lantern, with a ghostly flame
+ * inside ... the blue ghost-flame also is seen encircling the lantern": a team lantern hung from his off fist by a wire bail: a domed cap with a
+ * chimney knob, a pale glass chimney between four thin team posts with a pale-blue ghost flame inside it, a round team fount under it; round its
+ * middle a flat, glowing pale-blue ring, tilted). NECRO_LANTERN in the head's half-width R, on the off hand (its -y the knuckles' way, down when the
+ * arm hangs): the bail .bail R across from the fist; the lantern's top .top R under the hand, the cap .cap R tall, the glass .glass R tall and
+ * .glassW R across, the fount .fount R tall and .fountW across; the ring .ring R across, .ringT thick, tilted .tilt rad. Team lit cloth self-lit .12,
+ * glass and flame unlit; the ring unlit and glowing.
+ */
+const NECRO_LANTERN = { bail: 0.75, top: 0.85, cap: 0.5, glass: 0.8, glassW: 0.62, fount: 0.42, fountW: 0.85, ring: 3.4, ringT: 0.16, tilt: 0.32,
+  glassC: new Color3(0.55, 0.78, 0.82), flame: new Color3(0.6, 0.95, 1.1), ringC: new Color3(0.75, 0.95, 1.15) };
+export function necromancerLantern(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const L = NECRO_LANTERN, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const R = body.headMesh.getBoundingInfo().boundingBox.extendSize.x;
+  const teamM = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const glass = mf.get("unlit", L.glassC, { emissive: L.glassC });
+  const flame = mf.get("unlit", L.flame, { emissive: L.flame });
+  const ringM = mf.get("unlit", L.ringC, { emissive: L.ringC });
+  const hang = new TransformNode("necroLanternHang", scene);
+  hang.parent = body.leftHand; hang.position.set(0, -R * 0.35, R * 0.1);
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material, y: number, keepGlow = false): Mesh => {
+    m.parent = hang; m.material = mt; m.position.y = y; m.convertToFlatShadedMesh(); if (!keepGlow) glow?.addExcludedMesh(m); out.push(m); return m;
+  };
+  // the wire bail from the fist down to the cap's sides
+  const bail = put(MeshBuilder.CreateTorus("necroLanternBail", { diameter: R * L.bail, thickness: R * 0.07, tessellation: 10 }, scene), teamM, -R * L.top * 0.5);
+  bail.rotation.z = Math.PI / 2; bail.scaling.y = 1.3;
+  let y = -R * L.top;
+  const cap = put(MeshBuilder.CreateCylinder("necroLanternCap", { height: R * L.cap, diameterTop: R * 0.22, diameterBottom: R * L.glassW * 1.3, tessellation: 8 }, scene), teamM, y - R * L.cap / 2);
+  cap.rotation.y = Math.PI / 8;
+  put(MeshBuilder.CreateCylinder("necroLanternKnob", { height: R * 0.14, diameter: R * 0.3, tessellation: 6 }, scene), teamM, y + R * 0.05);
+  y -= R * L.cap;
+  const gH = R * L.glass;
+  put(MeshBuilder.CreateCylinder("necroLanternGlass", { height: gH, diameterTop: R * L.glassW * 0.8, diameterBottom: R * L.glassW, tessellation: 8 }, scene), glass, y - gH / 2);
+  const ghost = put(MeshBuilder.CreateIcoSphere("necroLanternFlame", { radius: R * L.glassW * 0.28, subdivisions: 1, flat: true }, scene), flame, y - gH * 0.55, true);
+  ghost.scaling.y = 1.5;
+  for (let k = 0; k < 4; k++) {
+    const a = (k / 4) * Math.PI * 2 + Math.PI / 4, r = R * L.glassW * 0.52;
+    const post = put(MeshBuilder.CreateCylinder("necroLanternPost", { height: gH, diameter: R * 0.07, tessellation: 4 }, scene), teamM, y - gH / 2);
+    post.position.x = Math.cos(a) * r; post.position.z = Math.sin(a) * r;
+  }
+  y -= gH;
+  const fH = R * L.fount;
+  put(MeshBuilder.CreateCylinder("necroLanternFount", { height: fH, diameterTop: R * L.fountW, diameterBottom: R * L.fountW * 0.8, tessellation: 8 }, scene), teamM, y - fH / 2);
+  // the glowing ghost ring round the lantern's middle
+  const ring = put(MeshBuilder.CreateTorus("necroLanternRing", { diameter: R * L.ring, thickness: R * L.ringT, tessellation: 8 }, scene), ringM, -R * L.top - R * L.cap - gH * 0.5, true);
+  ring.scaling.y = 0.35; ring.rotation.x = L.tilt; ring.rotation.z = L.tilt * 0.5;
+  return out;
+}
