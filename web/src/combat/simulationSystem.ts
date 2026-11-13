@@ -213,7 +213,8 @@ const SHROOM_TURN = { reach: 1.1, reachMax: 1.6, every: 1.0, damage: 12 };
 /** [S] 536 the Solar Architect's Solar Maelstrom (spec at SimulationSystem._trySolarMaelstrom) */
 const SOLAR_MAELSTROM = { near: 7, first: 0.5, cooldown: 12, radius: 3.5, damage: 20, push: 5, lift: 4, seconds: 3, tick: 0.5, heal: 0.04, pull: 7, inPush: 7, inLift: 3 };
 /** [S] 539 Blackbeard's Cannon Barrage (spec at SimulationSystem._tryCannonBarrage) */
-const CANNON_BARRAGE = { first: 0.5, cooldown: 8, balls: 8, every: 0.15, spread: 2.2, lean: 0.8, up: 14, drift: 2, damage: 45, splash: 1.4, push: 6 };
+// 539.7b first .5 -> 0 (look: the barrage came on his second swing, his man already flung 6 m off frame; the first comes down beside him)
+const CANNON_BARRAGE = { first: 0, cooldown: 8, balls: 8, every: 0.15, spread: 2.2, lean: 0.8, up: 14, drift: 2, damage: 45, splash: 1.4, push: 6 };
 const STIFFY_FEAR = { units: new Set(["spooky.skeleton_warrior"]), every: 2, seconds: 3.5, reach: 4 };
 // [S] 475 Pharaoh Kneel: the struck man and enemies within .radius (KNEEL_AURA's ring) kneel .seconds (RuntimeUnit.applyKneel)
 const PHARAOH_KNEEL = { radius: 2.4, seconds: 3 };
