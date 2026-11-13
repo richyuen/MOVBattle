@@ -4037,7 +4037,7 @@ function buildWizardStaff(scene: Scene, fit: BladeFit): Mesh {
  * its width under the dome's foot. Team cap self-lit cloth, pale stem lit cloth, wood self-lit. Root "staff" with the uprightPole marker (planted
  * carry, like the Wizard's); its hidden "orb" in the cap, where her spell leaves.
  */
-const WITCH_STAFF = { long: 1.32, thick: 0.04, foot: 0.75, wander: 0.014, knots: 4, knot: 0.05, wraps: 3, rope: 0.012, ropeAt: 0.06, stem: 0.17,
+const WITCH_STAFF = { long: 1.32, thick: 0.07, foot: 0.75, wander: 0.014, knots: 4, knot: 0.05, wraps: 3, rope: 0.012, ropeAt: 0.12, stem: 0.17,
   stemFoot: 0.05, stemTop: 0.085, cap: 0.36, capH: 0.11, lip: 0.18, grip: 0.42,
   wood: new Color3(0.36, 0.17, 0.08), pale: new Color3(0.86, 0.8, 0.66), ropeC: new Color3(0.5, 0.26, 0.12) };
 function buildWitchStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
