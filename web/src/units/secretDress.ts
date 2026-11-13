@@ -4938,7 +4938,7 @@ export function necromancerBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
-export const NECRO_SHORTS = { hem: 0.55, belt: 0.12, beltOut: 1.36, leather: new Color3(0.55, 0.2, 0.36) };
+export const NECRO_SHORTS = { hem: 0.4, belt: 0.12, beltOut: 1.36, leather: new Color3(0.55, 0.2, 0.36) };
 export function necromancerDark(team: Color3): Color3 { return new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(NECRO_VEST.dark); }
 const NECRO_VEST = { top: 0.08, below: 0.06, out: 1.16, flare: 1.24, deep: 0.88, rags: 8, rag: 0.16, seam: 0.035, laces: 5, lace: 0.2, laceTop: 0.18, laceLow: 0.85,
   strap: 0.2, dark: 0.42, cream: new Color3(0.86, 0.8, 0.66) };
