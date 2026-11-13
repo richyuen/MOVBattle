@@ -3205,7 +3205,7 @@ function buildLeafSword(scene: Scene, name: string, fit: BladeFit): { blade: Mes
  * as a sword, rising from the fist): the rod .long H, .wide H across, the grip .grip fists; .bands gold bands; the ring .ring H across, .ringT of it
  * thick; the diamond .gem H. White unlit (LESSONS 442), gold lit cloth self-lit .3, out of the glow. One in each fist (weapon and offhandVariant).
  */
-const SOLAR_WAND = { long: 0.3, wide: 0.024, grip: 1.3, bands: 3, ring: 0.1, ringT: 0.16, gem: 0.035, white: new Color3(0.94, 0.93, 0.88), gold: new Color3(0.95, 0.62, 0.12) };
+const SOLAR_WAND = { long: 0.3, wide: 0.024, grip: 1.3, bands: 3, ring: 0.1, ringT: 0.16, gem: 0.035, collar: 1.25, collarH: 0.9, white: new Color3(0.94, 0.93, 0.88), gold: new Color3(0.95, 0.62, 0.12) };
 function buildSolarWand(scene: Scene, fit: BladeFit, _s: number): Mesh {
   const W = SOLAR_WAND, H = fit.stand, glow = scene.getGlowLayerByName("glow");
   const white = getMaterialFactory().get("unlit", W.white, { emissive: W.white });
@@ -3213,11 +3213,17 @@ function buildSolarWand(scene: Scene, fit: BladeFit, _s: number): Mesh {
   const { blade, hilt } = buildSlabSword(scene, "solarWand", fit, W.gold, false, { long: W.long, wide: W.wide, grip: W.grip, point: 0.02 });
   blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
   blade.material = white;
+  // [S] 530 (b.3; secret.solar_architect.red.png: a narrow gold collar where the rod leaves the fist, no crossbar) the slab sword's guard is off;
+  // in its place a round gold collar .collar fists across and .collarH fists tall, a ring round the rod's foot
+  let guardY = 0;
   for (const m of blade.getChildMeshes(true)) {
     if (m.name === "fuller" || m.name === "solarWandPoint") m.setEnabled(false);
+    else if (m.name === "guard") { guardY = m.position.y; m.setEnabled(false); }
     else if (m.name === "grip") m.material = white;
     else m.material = gold;
   }
+  const collar = MeshBuilder.CreateCylinder("solarWandCollar", { height: fit.fist * W.collarH, diameter: fit.fist * W.collar, tessellation: 10 }, scene);
+  collar.parent = blade; collar.position.y = guardY; collar.material = gold;
   const flat = W.long * H * 0.98;
   for (let k = 0; k < W.bands; k++) {
     const band = MeshBuilder.CreateCylinder("solarWandBand", { height: W.wide * H * 0.8, diameter: W.wide * H * 1.5, tessellation: 6 }, scene);
