@@ -31,6 +31,7 @@ const PRESENT_HOLD = { out: 1.02, down: 0.1 };
 /** [S] 520 the Mace Spinner's fists at his hips (spec at RuntimeUnit._holdSpinnerFists). */
 // 520b out .2 -> .32: the fists met before his belly (probe), the maces crossing his chest; the render holds them at his flanks
 const SPINNER_FISTS = { out: 0.32, ahead: 0.08, up: 0.02 };
+const ULLR_HANG = { out: 0.22, fore: -0.1, bend: -0.2 };
 /*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
  * upward. Heavier units may require more balloons to float"; Appearance: the arrow's ball "expand[s] into balloons"). A man a balloon arrow strikes
@@ -2011,6 +2012,7 @@ export class RuntimeUnit {
     this._applyCurseCast(now);
     if (this.definition.id === "secret.solar_architect") this._laySolarWands();
     if (this.definition.id === "secret.vlad" && !isAttacking) this._carryVladLog();
+    if (this.definition.id === "secret.ullr" && !isAttacking && !this._isDead) this._hangUllrAxes();
     this._holdTeacherParry(now);
     this._updateRaptorBite(now);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
@@ -2099,6 +2101,21 @@ export class RuntimeUnit {
     const hand = this.body.rightHand;
     for (let n: TransformNode | null = hand; n; n = n.parent as TransformNode | null) n.computeWorldMatrix(true);
     return hand.getAbsolutePosition().add(toward.scale(0.24)).add(new Vector3(0, 0.19, 0));
+  }
+
+  /**
+   * [S] 542 (ullr b.1, b.2) out of a throw Ullr stands with both arms hanging a little out from his sides, an axe hanging head-down out of each
+   * fist (secret.ullr.red.png; propBuilder seatUllrAxe): the duelist idle raised the off fist by the face and laid the main axe up his back,
+   * edge-on. ULLR_HANG: shoulders .out rad off the sides (spread is left -z, right +z, as the caster overlay), elbows .bend, fists square.
+   */
+  private _hangUllrAxes(): void {
+    const H = ULLR_HANG, b = this.body;
+    b.leftShoulder.rotation.set(H.fore, 0, -H.out);
+    b.rightShoulder.rotation.set(H.fore, 0, H.out);
+    b.leftElbow.rotation.set(H.bend, 0, 0);
+    b.rightElbow.rotation.set(H.bend, 0, 0);
+    b.leftHand.rotation.setAll(0);
+    b.rightHand.rotation.setAll(0);
   }
 
   private _holdTeacherParry(now: number): void {

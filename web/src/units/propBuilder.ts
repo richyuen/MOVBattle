@@ -2156,6 +2156,7 @@ export function attachProps(
       weapon.position.copyFrom(palm?.position ?? Vector3.Zero());
       weapon.rotation.setAll(0);
     }
+    if (config.weaponVariant === "ullr_axe") seatUllrAxe(weapon, body.rightHand);
     props.push(weapon);
   }
 
@@ -2172,6 +2173,7 @@ export function attachProps(
       if (config.offhandWeapon === "bomb") seatInFist(offhand, body, scale);
       if (config.offhandWeapon === "potion") seatNeckInFist(offhand, body.leftHand);
       if (config.offhandVariant === "jester_dagger") seatJesterDagger(offhand, body.leftHand, body.leftLowerArm, -1);
+      if (config.offhandVariant === "ullr_axe") seatUllrAxe(offhand, body.leftHand);
       props.push(offhand);
     }
   }
@@ -3131,7 +3133,7 @@ function buildBlackbeardAnchor(scene: Scene, fit: BladeFit): Mesh {
  * the haft, its runs curling .curl rad outward, .wide across tapering to .tip and .flat thick, a pale point .point long past its end; the boss
  * .boss across. Dark lit cloth self-lit .2 ("metal" renders near black), the points pale.
  */
-const ULLR_AXE = { haft: 0.42, grip: 0.034, back: 0.06, long: 0.34, out: 0.05, segs: 4, curl: 0.42, wide: 0.13, tip: 0.065, flat: 0.03, point: 0.08, boss: 0.1,
+const ULLR_AXE = { haft: 0.18, grip: 0.03, back: 0.02, long: 0.18, out: 0.012, segs: 4, curl: 0.42, wide: 0.075, tip: 0.04, flat: 0.03, point: 0.08, boss: 0.1,
   blade: new Color3(0.36, 0.27, 0.25), wood: new Color3(0.2, 0.11, 0.055), steel: new Color3(0.62, 0.64, 0.68), bossC: new Color3(0.3, 0.13, 0.08) };
 function buildUllrAxe(scene: Scene, fit: BladeFit): Mesh {
   const A = ULLR_AXE, H = fit.stand;
@@ -3163,6 +3165,18 @@ function buildUllrAxe(scene: Scene, fit: BladeFit): Mesh {
   const boss = put(MeshBuilder.CreateCylinder("ullrAxeBoss", { height: H * A.flat * 1.8, diameter: H * A.boss, tessellation: 8 }, scene), bossM);
   boss.rotation.x = Math.PI / 2; boss.position.y = y0 + headL * 0.2;
   return haft;
+}
+
+/*
+ * [S] 542 (ullr b.1, b.2) each axe hangs out of its own fist, head down and face-on (critic 541: "head edge-on reads as a spear, off fist empty";
+ * secret.ullr.red.png: a short haft down out of each hanging fist, the head below it at the knee with its broad face and boss to the front). The
+ * grip is centred in the palm block and turned PI about the hand's z (hand frame +y runs up the forearm, LESSONS 492), so the haft runs on down
+ * past the knuckles and the head's flat (its x-y plane) keeps facing the hand's z, the front of a hanging arm (RuntimeUnit ULLR_HANG lays the arms).
+ */
+function seatUllrAxe(axe: Mesh, hand: TransformNode): void {
+  const palm = hand.getChildren().find((n): n is Mesh => n instanceof Mesh && /HandM$/.test(n.name));
+  axe.position.copyFrom(palm?.position ?? Vector3.Zero());
+  axe.rotation.set(0, 0, Math.PI);
 }
 
 /*
