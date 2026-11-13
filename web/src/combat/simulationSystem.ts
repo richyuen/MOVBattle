@@ -489,6 +489,8 @@ const VAMPIRE_LATCH = { round: 0.7, off: 0.75, up: 0.2, first: 0.3, every: 0.35,
  * him takes .damage and a push .push out from him. Logged "needles".
  */
 const CACTUS_EXPLOSION = { units: new Set(["wild_west.cactus"]), cooldown: 1.2, radius: 3, damage: 20, push: 3 };
+// [S] 529 Vlad Impale (spec at _tryVladImpale)
+const VLAD_IMPALE = { cooldown: 7, reach: 7, start: 1.1, step: 0.75, width: 0.85, damage: 1.2, lift: 9, push: 2.5 };
 const LASSO_DRAG = { units: new Set(["wild_west.lasso"]), low: 0.12, pull: 1.4, first: 0.3, every: 0.35, under: 0.6, most: 2.4, trample: 1.5, throwUp: 5, throwOut: 4 };
 /*
  * [S] 442 Reaper impale (audit 434 reaper c.2: "missing: tendrils impaling and hanging a weak unit"; card Characteristics: "Their tentacles will impale
@@ -809,6 +811,7 @@ export class SimulationSystem {
   // Lassoed men being hauled in (LASSO_DRAG): the rider, the rope, the next drag hit and its damage, when the horse runs him over at the latest
   // Cacti (CACTUS_EXPLOSION): their health at the last step and when they may burst again
   private _cactusHp = new Map<RuntimeUnit, { hp: number; ready: number }>();
+  private _vladImpaleReady = new Map<RuntimeUnit, number>();
   private _lassos = new Map<RuntimeUnit, { rider: RuntimeUnit; rope: Mesh; loop: Mesh; at: Vector3; last: number; next: number; hit: number; blow: number; end: number }>();
   // Men hung on a Reaper's tendril (REAPER_IMPALE): who holds him, when he drops (set once he is dead), his next stab, the tendril mesh
   private _impales = new Map<RuntimeUnit, { holder: RuntimeUnit; until: number; next: number; spear: Mesh; yaw: number; tall: number }>();
@@ -1046,6 +1049,7 @@ export class SimulationSystem {
     for (const l of this._lassos.values()) { l.rope.dispose(); l.loop.dispose(); }
     this._lassos.clear();
     this._cactusHp.clear();
+    this._vladImpaleReady.clear();
     this._pendingThrows = [];
     this._pendingLaunches = [];
     this._closingFrom.clear();
@@ -1919,6 +1923,39 @@ export class SimulationSystem {
       }
       this._logAbility(unit, "needles", now, mid);
     }
+  }
+
+  /**
+   * [S] 529 Vlad Impale (card ability: "the unit will raise its weapon and wooden spikes will appear from a certain direction", impaling those within
+   * their radius; secret.vlad.jpg: tall sharpened stakes standing out of the ground). When ready (VLAD_IMPALE.cooldown s) and on his feet, as he swings:
+   * a row of stakes bursts out of the ground from .start m ahead of him down the line to the man, every .step m to .reach m (visualEffects
+   * spawnStakeRow); every enemy within .width m of the row takes .damage of his blow and is thrown up .lift and on .push. Logged "impale".
+   */
+  private _tryVladImpale(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, now: number): void {
+    const V = VLAD_IMPALE;
+    if (attacker.definition.id !== "secret.vlad" || attacker.isDead || target.isDead || attacker.linkedParent) return;
+    if (attacker.isAirborne || attacker.isToppled || attacker.isDowned) return;
+    if (now < (this._vladImpaleReady.get(attacker) ?? 0)) return;
+    const line = target.position.subtract(attacker.position);
+    line.y = 0;
+    if (line.lengthSquared() < 1e-6) return;
+    line.normalize();
+    this._vladImpaleReady.set(attacker, now + V.cooldown);
+    const count = Math.max(4, Math.floor((V.reach - V.start) / V.step) + 1), end = V.start + (count - 1) * V.step;
+    const ground = new Vector3(attacker.position.x, 0, attacker.position.z);
+    this.visualEffects?.spawnStakeRow(ground, line, count, V.start, V.step);
+    for (const u of this._units) {
+      if (u.isDead || u.team === attacker.team || u.linkedParent) continue;
+      const to = u.position.subtract(attacker.position);
+      to.y = 0;
+      const d = Vector3.Dot(to, line);
+      if (d < V.start - V.width || d > end + V.width) continue;
+      const off = to.subtract(line.scale(d)).length();
+      if (off > V.width) continue;
+      u.applyDamage(damage * V.damage, Vector3.Zero());
+      if (!isVehicleUnit(u.definition.id)) u.applyBlastLaunch(line.clone(), V.push, V.lift);
+    }
+    this._logAbility(attacker, "impale", now, target.position);
   }
 
   /** A blow that lands now and goes into the hit log (the capture's plain events). */
@@ -3501,6 +3538,8 @@ export class SimulationSystem {
     if (this._tryLatch(attacker, target, damage, attackProfile.cooldown * cooldownMultiplier, now)) return;
     // [S] 445 the Lasso does not jab: he ropes the man and hauls him under the horse (LASSO_DRAG)
     if (this._tryLasso(attacker, target, damage, attackProfile.cooldown * cooldownMultiplier, now)) return;
+    // [S] 529 Vlad raises his log and a row of wooden stakes bursts from the ground toward the man; his blow still lands (VLAD_IMPALE)
+    this._tryVladImpale(attacker, target, damage, now);
     // [S] 502 the Shouter does not strike from range: he shouts a harmless shockwave down the line (SHOUT)
     if (this._tryShout(attacker, target, now)) return;
     // [S] 503 the Fan Bearer blows a gust of wind down the line, not a strike (FAN_BLOW)

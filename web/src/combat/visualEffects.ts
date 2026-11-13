@@ -158,6 +158,9 @@ const BONE_SPIKE_LEAN = 0.22;
 const BONE_SPIKE_MAX = 14;
 // ...and a spike's girth at the ground (m): the nearest spike's and how much more the farthest has (tribal.bone_mage.png: fat tusks, not needles)
 const BONE_SPIKE_GIRTH = { base: 0.32, grow: 0.22 };
+// [S] 529 Vlad Impale's wooden stakes (see VisualEffects.spawnStakeRow)
+export const VLAD_STAKES = { every: 0.05, rise: 0.12, stand: 1.6, sink: 0.4, side: 0.5, girth: 0.26, near: 1.3, far: 2.0, point: 0.3, lean: 0.3,
+  wood: new Color3(0.3, 0.16, 0.08), pale: new Color3(0.78, 0.62, 0.42) };
 
 /** Where the bone mage's row begins: the first spike's ground point, BONE_SPIKE_START ahead of the caster's feet toward his mark (nearer for a close one). */
 export function boneSpikeRowNear(from: Vector3, to: Vector3): Vector3 {
@@ -1473,6 +1476,54 @@ export class VisualEffects {
           k = r * (2 - r) * (1 + BONE_SPIKE_OVERSHOOT * Math.sin(r * Math.PI)); // out fast, a touch past full, settling
         } else if (elapsed < sinkFrom) k = 1;
         else k = Math.max(0.001, 1 - (elapsed - sinkFrom) / BONE_SPIKE_SINK);
+        pivots[i].scaling.y = k;
+      }
+    };
+    pose(0.016);
+    this._effects.push({ root, remaining: life, update: (_dt, remaining) => pose(life - remaining) });
+  }
+
+  // ══════════════════ WOODEN STAKES (Vlad Impale) ══════════════════
+  /**
+   * [S] 529 Vlad Impale (card ability "wooden spikes will appear from a certain direction"; secret.vlad.jpg: a row of tall sharpened brown wooden stakes
+   * standing out of the ground, leaning, pale pencil points): VLAD_STAKES.count stakes burst out of the turf one after another along `along` from
+   * `from`, .start m to .reach m out, .side m scatter; each a six-sided brown shaft .girth m across, .near to .far m tall, with a pale sharpened point
+   * .point of its height, leaning .lean rad on down the row; up over .rise s with an overshoot, standing .stand s, sinking over .sink s. Deterministic.
+   */
+  spawnStakeRow(from: Vector3, along: Vector3, count: number, start: number, step: number): void {
+    const S = VLAD_STAKES;
+    const ux = along.x, uz = along.z;
+    const root = new TransformNode("vladStakes", this._scene);
+    const mf = getMaterialFactory();
+    const wood = mf.get("cloth", S.wood, { emissive: S.wood.scale(0.14) });
+    const pale = mf.get("cloth", S.pale, { emissive: S.pale.scale(0.16) });
+    const hash = (i: number, salt: number): number => { const v = Math.sin(i * 12.9898 + salt * 78.233 + from.x * 0.37) * 43758.5453; return v - Math.floor(v); };
+    const pivots: TransformNode[] = [];
+    for (let i = 0; i < count; i++) {
+      const u = count > 1 ? i / (count - 1) : 1, d = start + i * step, across = (hash(i, 1) - 0.5) * S.side;
+      const h = S.near + (S.far - S.near) * u * (0.85 + hash(i, 2) * 0.3);
+      const pivot = new TransformNode(`vladStake${i}`, this._scene);
+      pivot.parent = root;
+      pivot.position.set(from.x + ux * d - uz * across, from.y, from.z + uz * d + ux * across);
+      pivot.rotation.set(S.lean + (hash(i, 3) - 0.5) * 0.25, Math.atan2(ux, uz), (hash(i, 4) - 0.5) * 0.35);
+      const shaftH = h * (1 - S.point);
+      const shaft = MeshBuilder.CreateCylinder("vladStake", { height: shaftH, diameter: S.girth, tessellation: 6 }, this._scene);
+      shaft.position.y = shaftH / 2; shaft.material = wood; shaft.convertToFlatShadedMesh(); shaft.parent = pivot;
+      const tip = MeshBuilder.CreateCylinder("vladStakeTip", { height: h * S.point, diameterTop: 0, diameterBottom: S.girth, tessellation: 6 }, this._scene);
+      tip.position.y = shaftH + (h * S.point) / 2; tip.material = pale; tip.convertToFlatShadedMesh(); tip.parent = pivot;
+      pivot.scaling.y = 0.001;
+      pivots.push(pivot);
+    }
+    const life = S.every * count + S.rise + S.stand + S.sink;
+    const pose = (elapsed: number): void => {
+      const sinkFrom = life - S.sink;
+      for (let i = 0; i < pivots.length; i++) {
+        const t = elapsed - i * S.every;
+        let k: number;
+        if (t <= 0) k = 0.001;
+        else if (t < S.rise) { const r = t / S.rise; k = r * (2 - r) * (1 + 0.15 * Math.sin(r * Math.PI)); }
+        else if (elapsed < sinkFrom) k = 1;
+        else k = Math.max(0.001, 1 - (elapsed - sinkFrom) / S.sink);
         pivots[i].scaling.y = k;
       }
     };
