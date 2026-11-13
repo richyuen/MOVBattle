@@ -5852,6 +5852,38 @@ export function senseiWaistBand(scene: Scene, body: ArticulatedBody, team: Color
 }
 
 /*
+ * [S] 541 (ice_giant a.1) the Ice Giant's ape build (audit 538: "man-shaped box body whose arms end at mid-thigh - TABS: ape build, huge long arms
+ * spanning far wider than the body, small waist"; card Appearance "a huge humanoid, ape-like creature ... a very muscular build with a small waist and
+ * giant long arms relative to size"; secret.ice_giant.red.png: the arms as long as the whole body from the shoulder, each about as thick as his neck at
+ * the upper arm and thicker still at the forearm, set out wide at the shoulders; the waist under the chest pinched to about two thirds of it).
+ * The rig itself is restretched, before anything is hung on it: ICE_APE: each upper arm bone .upper times as long (its mesh and the elbow joint),
+ * each forearm .lower times (its mesh and the wrist joint), the upper arm .girth and the forearm .foreGirth times as thick; the shoulder joints
+ * set .out times further out; the pelvis box .waist of its width across.
+ */
+const ICE_APE = { upper: 1.5, lower: 1.6, girth: 1.45, foreGirth: 1.7, out: 1.12, waist: 0.72 };
+export function iceGiantApeBuild(body: ArticulatedBody): void {
+  const K = ICE_APE;
+  const arms = [
+    { shoulder: body.leftShoulder, upper: body.leftUpperArm, elbow: body.leftElbow, lower: body.leftLowerArm, hand: body.leftHand },
+    { shoulder: body.rightShoulder, upper: body.rightUpperArm, elbow: body.rightElbow, lower: body.rightLowerArm, hand: body.rightHand },
+  ];
+  for (const a of arms) {
+    a.shoulder.position.x *= K.out;
+    a.upper.scaling.set(a.upper.scaling.x * K.girth, a.upper.scaling.y * K.upper, a.upper.scaling.z * K.girth);
+    a.upper.position.y *= K.upper;
+    a.elbow.position.y *= K.upper;
+    // the forearm and any stub hung off the elbow beside it
+    for (const m of a.elbow.getChildMeshes(true)) {
+      m.scaling.set(m.scaling.x * K.foreGirth, m.scaling.y * K.lower, m.scaling.z * K.foreGirth);
+      m.position.y *= K.lower;
+    }
+    a.hand.position.y *= K.lower;
+  }
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  if (pelvis) pelvis.scaling.x *= K.waist;
+}
+
+/*
  * [S] 539 (blackbeard a.1) Blackbeard's hat (audit 538: "black top hat with a yellow badge - TABS: black tricorne with lit fuse strings hanging from
  * the brim"; card Appearance "black hat with firelit strings protruding from it"; secret.blackbeard.red.png: a wide black tricorne pulled to the
  * brows, and from under its brim either side of the face hang dark slow-match cords, their ends burning white-orange). The hat is propBuilder's
