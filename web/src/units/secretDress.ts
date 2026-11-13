@@ -5632,6 +5632,51 @@ export function artemisBand(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 539 (sensei a.1) the Sensei's hood-helmet (audit 538: "grey wizard cone hat - TABS: team hood-helmet with flared neck flaps and a dark headband
+ * carrying a shuriken emblem"; secret.sensei.red.png: a team hood closing over the whole head, a little taller than it and rounded on top; a dark
+ * grey band round the brow just over the eyes; a dark four-point shuriken emblem on the hood's front over the band; under the chin a wide team
+ * flap flaring out over the shoulders like a shallow cone, the face a team mask between). SENSEI_HOOD in the head box (W, H, D, c) and the bead
+ * eyes: the dome a flat ico .dome W across and .domeH H tall over the band, .back D back; the band an 8-sided ring .band W across, .bandH H tall
+ * from .gap H over the eye tops; the emblem .star W across at .starUp of the dome over the band; the flare a 10-sided frustum from .flareTop W
+ * across at .chin H under c to .flareFoot W across .flareH H lower, .flareDeep of the head's depth ratio. Team saturated (c^2) self-lit .12 (LESSONS
+ * 517), band and emblem dark grey lit cloth self-lit .2; all out of the glow. The cone hat is off (unitVisuals hat none).
+ */
+const SENSEI_HOOD = { dome: 1.14, domeH: 0.78, back: 0.04, band: 1.16, bandH: 0.2, gap: 0.02, star: 0.34, starUp: 0.4, flareTop: 1.12, chin: 0.42,
+  flareFoot: 2.3, flareH: 0.42, flareDeep: 1.15, grey: new Color3(0.2, 0.2, 0.22) };
+export function senseiHood(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = SENSEI_HOOD, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const deep = sat.scale(peak / Math.max(sat.r, sat.g, sat.b, 1e-3));
+  const cloth = mf.get("cloth", deep, { emissive: deep.scale(0.12), roughness: 1 });
+  const grey = mf.get("cloth", K.grey, { emissive: K.grey.scale(0.2), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const eyes = eyeBoxInHead(body) ?? { lo: new Vector3(c.x, c.y, c.z + D * 0.45), hi: new Vector3(c.x, c.y + H * 0.15, c.z + D * 0.5) };
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material): Mesh => { m.parent = head; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const foot = eyes.hi.y + H * K.gap, bandTop = foot + H * K.bandH;
+  const band = put(MeshBuilder.CreateCylinder("senseiHoodBand", { height: H * K.bandH, diameter: W * K.band, tessellation: 8 }, scene), grey);
+  band.scaling.z = D / W; band.rotation.y = Math.PI / 8; band.position.set(c.x, (foot + bandTop) / 2, c.z);
+  // the dome: its foot just inside the band, rising .domeH H over it
+  // (an upper half sphere: a whole one reached under the band and covered the eyes)
+  const dome = put(MeshBuilder.CreateSphere("senseiHoodDome", { diameter: W * K.dome, segments: 5, slice: 0.5 }, scene), cloth);
+  const domeR = (W * K.dome) / 2, domeTall = H * K.domeH;
+  dome.scaling.set(1, domeTall / domeR, (D / W) * 1.02); dome.position.set(c.x, (foot + bandTop) / 2, c.z - D * K.back);
+  // the shuriken emblem on the front over the band: four flat diamond points round a boss
+  const S = W * K.star, sy = bandTop + domeTall * K.starUp * 0.6, sz = c.z + D * 0.52;
+  for (let k = 0; k < 4; k++) {
+    const ray = MeshBuilder.CreateCylinder("senseiHoodStar", { height: S / 2, diameterBottom: S * 0.28, diameterTop: 0, tessellation: 4 }, scene);
+    ray.setPivotPoint(new Vector3(0, -S / 4, 0)); ray.position.set(c.x, sy + S / 4, sz); ray.rotation.z = (Math.PI / 2) * k + Math.PI / 4; ray.scaling.z = 0.3;
+    put(ray, grey);
+  }
+  // the flared neck flap under the chin
+  const fTop = c.y - H * K.chin, fH = H * K.flareH;
+  const flare = put(MeshBuilder.CreateCylinder("senseiHoodFlare", { height: fH, diameterTop: W * K.flareTop, diameterBottom: W * K.flareFoot, tessellation: 10 }, scene), cloth);
+  flare.scaling.z = (D / W) * K.flareDeep; flare.position.set(c.x, fTop - fH / 2, c.z - D * 0.05);
+  return out;
+}
+
+/*
  * [S] 539 (blackbeard a.1) Blackbeard's hat (audit 538: "black top hat with a yellow badge - TABS: black tricorne with lit fuse strings hanging from
  * the brim"; card Appearance "black hat with firelit strings protruding from it"; secret.blackbeard.red.png: a wide black tricorne pulled to the
  * brows, and from under its brim either side of the face hang dark slow-match cords, their ends burning white-orange). The hat is propBuilder's

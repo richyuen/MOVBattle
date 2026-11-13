@@ -1296,7 +1296,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         bodyDetailLevel: "hero",
       });
     case "secret_sensei":
-      return vis({ scale: 1.32, bulk: 1.0, armLength: 1.1 }, "shuriken_hand", "conical_hat", "none", "monk_robe", "#f5e4b4", "shuriken_hand", {
+      // [S] 539 (a.1) no cone hat: the team hood-helmet is secretDress senseiHood
+      return vis({ scale: 1.32, bulk: 1.0, armLength: 1.1 }, "shuriken_hand", "none", "none", "monk_robe", "#f5e4b4", "shuriken_hand", {
         posePreset: "duelist", materialPreset: "secret_holy",
       });
     case "secret_shogun":
