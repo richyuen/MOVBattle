@@ -4628,7 +4628,7 @@ export function witchRobe(scene: Scene, body: ArticulatedBody, team: Color3): Me
   const zTop = cz + (dTop / 2) * R.deep, zBot = cz + (dBot / 2) * R.deep;
   for (const side of [-1, 1]) {
     const band = put(MeshBuilder.CreateBox("witchRobeBand", { width: W * R.band, height: Math.hypot(long, zBot - zTop), depth: W * 0.04 }, scene), light);
-    band.rotation.x = Math.atan2(zBot - zTop, long);
+    band.rotation.x = -Math.atan2(zBot - zTop, long); // 536.2b top in, foot out along the flare (+x tips +y toward +z)
     band.position.set(cx + side * W * R.bandX * (1 + (R.flare - R.out) * 0.25), (top + hem) / 2, (zTop + zBot) / 2 - W * 0.02);
   }
   // the sash knotted round the waist, its tail hanging at the front, and the brown belt under it
