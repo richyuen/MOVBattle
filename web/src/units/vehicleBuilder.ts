@@ -654,6 +654,46 @@ function buildCatapult(scene: Scene, color: Color3, options: { spooky?: boolean 
   );
 }
 
+/*
+ * [S] 534 (b.1) the barrel rider's cutlass (CONFIRM 533: "barrel rider empty-handed ... both hands rest on the barrel"; card Appearance "small pirate
+ * on top of the cannon that wields a cutlass"; secret.bomb_cannon.red.png, .jpg: his right arm up and forward, a curved grey cutlass in the fist
+ * with a brass knuckle-bow, pointed ahead over the muzzle). RIDER_CUTLASS: the right arm raised .raise rad forward and .out rad out, elbow .elbow;
+ * in the fist (hand frame: +y up the forearm, so the blade runs on along -y, the arm's line) a dark grip .grip long, a brass guard plate and a
+ * knuckle-bow arc, a blade .long long in .segs pieces .wide tapering to .tipW, each bent .bend rad further (the cutlass curve, edge down), grey
+ * steel lit cloth.
+ */
+const RIDER_CUTLASS = { raise: -2.0, out: 0.22, elbow: -0.25, grip: 0.11, long: 0.62, segs: 4, wide: 0.065, tipW: 0.025, thick: 0.014, bend: 0.13 };
+function buildRiderCutlass(scene: Scene, hand: TransformNode): Mesh[] {
+  const C = RIDER_CUTLASS, mf = getMaterialFactory(), out: Mesh[] = [];
+  const steelC = new Color3(0.62, 0.64, 0.68), brassC = new Color3(0.6, 0.42, 0.12), gripC = new Color3(0.18, 0.1, 0.05);
+  const steel = mf.get("cloth", steelC, { emissive: steelC.scale(0.22) });
+  const brass = mf.get("cloth", brassC, { emissive: brassC.scale(0.22) });
+  const gripM = mf.get("cloth", gripC, { emissive: gripC.scale(0.25) });
+  const grip = MeshBuilder.CreateCylinder("riderCutlassGrip", { height: C.grip, diameter: 0.035, tessellation: 6 }, scene);
+  grip.parent = hand; grip.position.y = -C.grip * 0.2; grip.material = gripM; out.push(grip);
+  const guardY = -C.grip * 0.7;
+  const guard = MeshBuilder.CreateBox("riderCutlassGuard", { width: 0.11, height: 0.018, depth: 0.05 }, scene);
+  guard.parent = hand; guard.position.y = guardY; guard.material = brass; out.push(guard);
+  const bow = MeshBuilder.CreateTorus("riderCutlassBow", { diameter: C.grip * 1.1, thickness: 0.012, tessellation: 12 }, scene);
+  bow.parent = hand; bow.rotation.x = Math.PI / 2; bow.rotation.z = Math.PI / 2; bow.position.set(0, guardY + C.grip * 0.5, 0.035); bow.scaling.z = 0.5;
+  bow.material = brass; out.push(bow);
+  // the blade: segments hinged end to end, each turned a little further toward the back edge, so it sweeps in a curve
+  let joint: TransformNode = new TransformNode("riderCutlassRoot", scene);
+  joint.parent = hand; joint.position.y = guardY;
+  const seg = C.long / C.segs;
+  for (let i = 0; i < C.segs; i++) {
+    const w0 = C.wide + (C.tipW - C.wide) * (i / C.segs), w1 = C.wide + (C.tipW - C.wide) * ((i + 1) / C.segs);
+    const piece = MeshBuilder.CreateCylinder("riderCutlassBlade", { height: seg, diameterTop: w0, diameterBottom: i === C.segs - 1 ? 0.004 : w1, tessellation: 4 }, scene);
+    piece.parent = joint; piece.position.y = -seg / 2; piece.scaling.x = C.thick / ((w0 + w1) / 2) * 1.4;
+    piece.material = steel; out.push(piece);
+    const next = new TransformNode("riderCutlassJoint", scene);
+    next.parent = joint; next.position.y = -seg; next.rotation.x = C.bend;
+    joint = next;
+  }
+  for (const m of out) m.convertToFlatShadedMesh();
+  return out;
+}
+
 function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?: boolean } = {}): ArticulatedBody {
   const body = buildCannon(scene, color, options);
   const root = body.root;
@@ -726,6 +766,11 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
     // [S] 534 (a.1) the big floppy team pirate cap on the rider too (secretDress bombCrewCap), in place of the bandanna
     // [S] 534 (a.2) a team-skinned pirate in an open team shirt and a green sash (secretDress bombRiderDress), not the crew's white shirt
     body.allMeshes.push(...bombCrewCap(scene, rider, color), ...bombRiderDress(scene, rider, color));
+    // [S] 534 (b.1) his cutlass raised forward in the right fist (spec at RIDER_CUTLASS)
+    const C = RIDER_CUTLASS;
+    rider.rightShoulder.rotation.set(C.raise, 0, C.out);
+    rider.rightElbow.rotation.set(C.elbow, 0, 0);
+    body.allMeshes.push(...buildRiderCutlass(scene, rider.rightHand));
   });
   body.vehicleSockets = {
     primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", onAxis(B.bell + B.lip + 0.04)),
