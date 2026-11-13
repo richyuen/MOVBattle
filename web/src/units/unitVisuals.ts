@@ -1294,7 +1294,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_ullr":
       // [S] 541 (b.1) a double-headed axe in each fist, no bow, no quiver, no drawn arrow (propBuilder ULLR_AXE); he throws them (weapon family throw)
-      return vis({ scale: 1.28, bulk: 1.05, armLength: 1.08 }, "axe", "viking_helmet", "none", "cape", "#9cd5ff", "axe", {
+      // [S] 543 (a.1) no viking helmet: his snow cap and mane are secretDress ULLR_CAP
+      return vis({ scale: 1.28, bulk: 1.05, armLength: 1.08 }, "axe", "none", "none", "cape", "#9cd5ff", "axe", {
         weaponVariant: "ullr_axe", offhandVariant: "ullr_axe", weaponPresentationFamily: "throw",
         posePreset: "duelist", materialPreset: "secret_ice", fxPreset: "frost",
       });

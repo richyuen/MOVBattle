@@ -5724,6 +5724,60 @@ export function ladyRedJadeHair(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 543 (ullr a.1) Ullr's snow cap and shaggy hair (audit 538: "grey-blue cap with two small horns - TABS: dark snow cap with mini axes, framed by
+ * shaggy brown hair round the face"; card Appearance "green beard and hair, a fur cape, and a snow cap with mini axes on it"; secret.ullr.red.png: a
+ * dark slate knit cap snug over the crown down to just over the eyes; standing up out of it either side of the crown a small brown axe, haft up,
+ * the little blade on its outer side; under the cap a mane of shaggy brown hair rings the face from the temples down past the cheeks to the jaw,
+ * jagged tufts sticking out). The viking helmet is off (unitVisuals). ULLR_CAP on the head (box W, H, D, c; the eyes' box e): the cap a dome .cap W
+ * across from .seat H over the eyes' top, .capH of its radius tall, its rim a band .rim H tall; each axe a haft .haft H long and .haftW W thick at
+ * .axeX W out on the cap, leaned .axeLean rad outward, a blade .blade W long and .bladeH H tall on the haft's top outside; the mane .tufts tufts
+ * .tuft W across on an arc round the face .maneX W out and from .maneTop H over c down to .maneLow H under it, at .maneZ D forward, each pushed out
+ * along the arc and turned at random. Slate cap lit cloth self-lit .3; brown hair self-lit .2; out of the glow.
+ */
+const ULLR_CAP = { cap: 1.12, seat: 0.0, capH: 0.82, rim: 0.12, haft: 0.42, haftW: 0.07, axeX: 0.3, axeLean: 0.32, blade: 0.2, bladeH: 0.2,
+  tufts: 13, tuft: 0.26, maneX: 0.54, maneTop: 0.2, maneLow: 0.46, maneZ: 0.12,
+  slate: new Color3(0.07, 0.085, 0.12), brown: new Color3(0.3, 0.14, 0.07), haftC: new Color3(0.22, 0.1, 0.05) };
+export function ullrSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = ULLR_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const slate = mf.get("cloth", K.slate, { emissive: K.slate.scale(0.3), roughness: 1 });
+  const hair = mf.get("cloth", K.brown, { emissive: K.brown.scale(0.2), roughness: 1 });
+  const wood = mf.get("cloth", K.haftC, { emissive: K.haftC.scale(0.2), roughness: 1 });
+  const out: Mesh[] = [];
+  const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
+  const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
+  const put = (m: Mesh, mt: Material, parent: TransformNode = head): Mesh => { m.parent = parent; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const eTop = eyeBoxInHead(body)?.hi.y ?? c.y + H * 0.15;
+  const seat = Math.max(eTop + H * K.seat, c.y), R = (W * K.cap) / 2;
+  // the cap: a knit dome down to just over the eyes, a turned-up rim round its foot
+  const dome = put(MeshBuilder.CreateSphere("ullrCap", { diameter: W * K.cap, segments: 7, slice: 0.5 }, scene), slate);
+  dome.scaling.set(1, K.capH, (D * K.cap * 1.04) / (W * K.cap)); dome.position.set(c.x, seat, c.z - D * 0.03);
+  const rim = put(MeshBuilder.CreateCylinder("ullrCapRim", { height: H * K.rim, diameter: W * K.cap * 1.04, tessellation: 12 }, scene), slate);
+  rim.scaling.z = (D * 1.06) / W; rim.position.set(c.x, seat + (H * K.rim) / 2, c.z - D * 0.03);
+  const capTop = seat + R * K.capH;
+  // the mini axes standing up out of the cap either side of the crown
+  for (const side of [-1, 1]) {
+    const foot = new TransformNode("ullrCapAxe", scene); foot.parent = head;
+    foot.position.set(c.x + side * W * K.axeX, capTop - R * K.capH * 0.35, c.z);
+    foot.rotation.z = -side * K.axeLean;
+    const haft = put(MeshBuilder.CreateBox("ullrCapAxeHaft", { width: W * K.haftW, height: H * K.haft, depth: W * K.haftW }, scene), wood, foot);
+    haft.position.y = (H * K.haft) / 2;
+    const blade = put(MeshBuilder.CreateBox("ullrCapAxeBlade", { width: W * K.blade, height: H * K.bladeH, depth: W * K.haftW * 0.6 }, scene), wood, foot);
+    blade.position.set(side * W * K.blade * 0.5, H * K.haft * 0.82, 0);
+  }
+  // the shaggy mane round the face, from the temples past the cheeks to the jaw
+  for (let i = 0; i < K.tufts; i++) {
+    const t = i / (K.tufts - 1), a = Math.PI * (1.25 - 1.5 * t); // from the right jaw up over the brow to the left jaw
+    const x = c.x + Math.cos(a) * W * K.maneX, yTop = c.y + H * K.maneTop, yLow = c.y - H * K.maneLow;
+    const s = Math.sin(a), y = s >= 0 ? Math.min(seat + H * 0.05, c.y + s * (yTop - c.y + H * 0.2)) : c.y + s * (c.y - yLow);
+    const tuft = put(MeshBuilder.CreateIcoSphere("ullrMane", { radius: (W * K.tuft) / 2, subdivisions: 1, flat: true }, scene), hair);
+    tuft.position.set(x, y, c.z + D * K.maneZ * (Math.abs(Math.cos(a)) < 0.5 ? 2.6 : 1));
+    tuft.scaling.set(1, 1.25, 0.7);
+    tuft.rotation.set(i * 1.3, i * 0.7, a);
+  }
+  return out;
+}
+
+/*
  * [S] 542 (artemis a.4) Artemis's long dress (audit 538: "dark blue trousers - TABS: long team dress to mid-shin"; card Appearance "a Greek light
  * dress"; secret.artemis.red.png: from the belt a darker team skirt falls straight and a little flared to the middle of the shins, wider than the
  * hips, with the bare team shins and sandals below it). ARTEMIS_DRESS on the torso (the hip box, pelvis or trunk foot, W across, D deep, in the
