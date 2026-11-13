@@ -808,16 +808,37 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
   axial("gatlingFrontPlate", G.ring * 2 + G.bore * 0.6, GATLING_BUNDLE.plate, 0, G.axis, G.front - 0.1, gunGrey, 12);
   for (const t of G.rings) axial("gatlingCollar", G.collar, G.collarL, 0, G.axis, G.back + gunLen * t, gunGrey, 12);
   axial("gatlingBreech", G.breech, G.breechL, 0, G.axis, G.back - G.breechL / 2 + 0.04, frameDark, 12);
+  /*
+   * [S] 534 (b.2) the open trough frame (CONFIRM 532: "a dark open trough frame along both sides of the barrel bundle with a wavy front edge";
+   * secret.gatling_gun.red.png: two tall dark side cheeks run from the breech to just past the muzzles, a little wider apart at the front, their
+   * tops near the bundle's top; a floor joins them under the barrels; across the front, under the muzzles, a band whose top edge rises and dips
+   * in round scallops). Replaces the thin rails and the yoke. GATLING_TROUGH: per side a cheek .thick thick from .lo under the axis to .hi over
+   * it, from the breech's back to .past beyond the muzzles, its inner face .inX off the axis at the back and splayed .splay rad out toward the
+   * front; a floor .floor thick at the cheeks' foot; the front band .bandH tall under the muzzles with .lobes round scallops .lobe across along
+   * its top edge. All frameDark.
+   */
+  const GT = { thick: 0.035, lo: 0.2, hi: 0.08, past: 0.07, inX: 0.17, splay: 0.05, floor: 0.03, bandH: 0.06, lobes: 3, lobe: 0.085 };
+  const troughL = G.front + GT.past - (G.back - G.breechL);
+  const troughMid = G.front + GT.past - troughL / 2;
+  const cheekH = GT.lo + GT.hi;
   for (const side of [-1, 1]) {
-    const railL = G.front - G.back + G.breechL;
-    const rail = MeshBuilder.CreateBox("gatlingRail", { width: G.railW, height: G.railH, depth: railL }, scene);
-    rail.position.set(side * G.railX, G.axis - 0.02, G.front - railL / 2 + 0.02); rail.parent = root; rail.material = frameDark; allMeshes.push(rail);
+    const cheek = MeshBuilder.CreateBox("gatlingTroughCheek", { width: GT.thick, height: cheekH, depth: troughL }, scene);
+    cheek.rotation.y = side * GT.splay;
+    cheek.position.set(side * (GT.inX + GT.thick / 2 + Math.sin(GT.splay) * (troughMid - (G.back - G.breechL))), G.axis - GT.lo + cheekH / 2, troughMid);
+    cheek.parent = root; cheek.material = frameDark; allMeshes.push(cheek);
   }
-  const yoke = MeshBuilder.CreateBox("gatlingYoke", { width: G.railX * 2 + G.railW, height: 0.05, depth: 0.08 }, scene);
-  yoke.position.set(0, G.axis - G.ring - 0.07, G.front - 0.02); yoke.parent = root; yoke.material = frameDark; allMeshes.push(yoke);
-  for (const side of [-1, 1]) {
-    const cheek = MeshBuilder.CreateBox("gatlingYokeCheek", { width: G.railW, height: G.ring + 0.1, depth: 0.08 }, scene);
-    cheek.position.set(side * G.railX, G.axis - (G.ring + 0.04) / 2 - 0.03, G.front - 0.02); cheek.parent = root; cheek.material = frameDark; allMeshes.push(cheek);
+  const frontX = GT.inX + Math.sin(GT.splay) * troughL;
+  const floor = MeshBuilder.CreateBox("gatlingTroughFloor", { width: (GT.inX + frontX), height: GT.floor, depth: troughL }, scene);
+  floor.position.set(0, G.axis - GT.lo + GT.floor / 2, troughMid); floor.parent = root; floor.material = frameDark; allMeshes.push(floor);
+  const bandY = G.axis - GT.lo + GT.bandH / 2, bandZ = G.front + GT.past - 0.02;
+  const band = MeshBuilder.CreateBox("gatlingTroughBand", { width: frontX * 2, height: GT.bandH, depth: 0.04 }, scene);
+  band.position.set(0, bandY, bandZ); band.parent = root; band.material = frameDark; allMeshes.push(band);
+  for (let i = 0; i < GT.lobes; i++) {
+    // the wavy edge: round scallops standing half out of the band's top, one under each lower gap between barrels
+    const lobe = MeshBuilder.CreateCylinder("gatlingTroughScallop", { height: 0.04, diameter: GT.lobe, tessellation: 12 }, scene);
+    lobe.rotation.x = Math.PI / 2;
+    lobe.position.set((i - (GT.lobes - 1) / 2) * frontX * 0.62, bandY + GT.bandH / 2, bandZ);
+    lobe.parent = root; lobe.material = frameDark; allMeshes.push(lobe);
   }
   // the carriage cradle under the gun, standing it on the axle ([S] 530: the chassis bed is gone)
   const cradleLo = hubY - WH.axle / 2, cradleH = G.axis - G.ring - 0.04 - cradleLo;
