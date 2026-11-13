@@ -721,21 +721,34 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
   const wood = makeMat(scene, new Color3(0.45, 0.32, 0.18));
   const metal = makeMat(scene, new Color3(0.32, 0.34, 0.38));
 
-  const chassis = MeshBuilder.CreateBox("gatlingChassis", { width: 0.9, height: 0.18, depth: 1.2 }, scene);
-  chassis.position.y = 0.45;
-  chassis.parent = root;
-  chassis.material = teamPrimary;
-  allMeshes.push(chassis);
-
-  for (const xOff of [-0.38, 0.38]) {
-    for (const zOff of [-0.32, 0.32]) {
-      const wheel = MeshBuilder.CreateCylinder("gatlingWheel", { height: 0.08, diameter: 0.44, tessellation: 12 }, scene);
-      wheel.position.set(xOff, 0.24, zOff);
-      wheel.rotation.z = Math.PI / 2;
-      wheel.parent = root;
-      wheel.material = wood;
-      allMeshes.push(wheel);
+  void wood; void metal;
+  /*
+   * [S] 530 (b.2) the Gatling's field carriage (secret.gatling_gun.red.png, .jpg: no cart bed; the gun rides on one wooden axle between two tall
+   * spoked wheels whose tops come up near the gun's axis, each a dark wooden felloe with a team-coloured iron tyre round it, 10 spokes and a hub).
+   * GATLING_WHEELS: wheels .dia m across, .x m out from the middle, the axle .axle m thick through their hubs at .dia/2; felloe .felloe thick, tyre
+   * .tyre thick on its outside; .spokes spokes .spoke m thick; hub .hub across and .hubL long. Wood dark lit cloth (makeMat greys a mid brown), the
+   * tyres team (teamPrimary: the body material wrapAsBody tints, so it is the main mesh). The gun's cradle stands on the axle.
+   */
+  const WH = { dia: 0.86, x: 0.5, axle: 0.07, felloe: 0.07, tyre: 0.035, spokes: 10, spoke: 0.028, hub: 0.12, hubL: 0.14, wood: new Color3(0.2, 0.11, 0.055) };
+  const woodLit = getMaterialFactory().get("cloth", WH.wood, { emissive: WH.wood.scale(0.25) });
+  const hubY = WH.dia / 2;
+  let chassis: Mesh | null = null;
+  const axle = MeshBuilder.CreateCylinder("gatlingAxle", { height: WH.x * 2 + WH.hubL, diameter: WH.axle, tessellation: 8 }, scene);
+  axle.rotation.z = Math.PI / 2; axle.position.set(0, hubY, 0.12); axle.parent = root; axle.material = woodLit; allMeshes.push(axle);
+  for (const side of [-1, 1]) {
+    const wheel = new TransformNode("gatlingWheel", scene); wheel.parent = root; wheel.position.set(side * WH.x, hubY, 0.12);
+    const felloe = MeshBuilder.CreateTorus("gatlingFelloe", { diameter: WH.dia - WH.felloe, thickness: WH.felloe, tessellation: 18 }, scene);
+    felloe.rotation.z = Math.PI / 2; felloe.parent = wheel; felloe.material = woodLit; allMeshes.push(felloe);
+    const tyre = MeshBuilder.CreateTorus("gatlingTyre", { diameter: WH.dia, thickness: WH.tyre, tessellation: 18 }, scene);
+    tyre.rotation.z = Math.PI / 2; tyre.position.x = side * WH.tyre * 0.3; tyre.parent = wheel; tyre.material = teamPrimary; allMeshes.push(tyre);
+    chassis ??= tyre;
+    for (let k = 0; k < WH.spokes; k++) {
+      const spoke = MeshBuilder.CreateBox("gatlingSpoke", { width: WH.spoke, height: WH.dia / 2 - WH.felloe * 0.6, depth: WH.spoke }, scene);
+      const pivot = new TransformNode("gatlingSpokePivot", scene); pivot.parent = wheel; pivot.rotation.x = (k / WH.spokes) * Math.PI * 2;
+      spoke.parent = pivot; spoke.position.y = (WH.dia / 2 - WH.felloe * 0.6) / 2; spoke.material = woodLit; allMeshes.push(spoke);
     }
+    const hub = MeshBuilder.CreateCylinder("gatlingHub", { height: WH.hubL, diameter: WH.hub, tessellation: 8 }, scene);
+    hub.rotation.z = Math.PI / 2; hub.parent = wheel; hub.material = woodLit; allMeshes.push(hub);
   }
 
   /*
@@ -777,9 +790,10 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
     const cheek = MeshBuilder.CreateBox("gatlingYokeCheek", { width: G.railW, height: G.ring + 0.1, depth: 0.08 }, scene);
     cheek.position.set(side * G.railX, G.axis - (G.ring + 0.04) / 2 - 0.03, G.front - 0.02); cheek.parent = root; cheek.material = frameDark; allMeshes.push(cheek);
   }
-  // the carriage cradle under the breech, standing the gun on the chassis
-  const carriage = MeshBuilder.CreateBox("gatlingCarriage", { width: G.railX * 2, height: G.axis - 0.54 - G.breech / 2, depth: 0.3 }, scene);
-  carriage.position.set(0, 0.54 + (G.axis - 0.54 - G.breech / 2) / 2, G.back + 0.1); carriage.parent = root; carriage.material = frameDark; allMeshes.push(carriage);
+  // the carriage cradle under the gun, standing it on the axle ([S] 530: the chassis bed is gone)
+  const cradleLo = hubY - WH.axle / 2, cradleH = G.axis - G.ring - 0.04 - cradleLo;
+  const carriage = MeshBuilder.CreateBox("gatlingCarriage", { width: G.railX * 2, height: cradleH, depth: 0.22 }, scene);
+  carriage.position.set(0, cradleLo + cradleH / 2, 0.12); carriage.parent = root; carriage.material = frameDark; allMeshes.push(carriage);
   // the crank: an arm off the breech's right side with a handle
   const crank = MeshBuilder.CreateBox("gatlingCrank", { width: 0.03, height: G.crank, depth: 0.035 }, scene);
   crank.position.set(G.breech / 2 + 0.03, G.axis - G.crank / 2, G.back - G.breechL / 2 + 0.06); crank.parent = root; crank.material = gunGrey; allMeshes.push(crank);
@@ -799,7 +813,7 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
   return wrapAsBody(
     scene,
     root,
-    chassis,
+    chassis!,
     allMeshes,
     operator?.headMesh,
     makeBodyMetrics(operator?.headTopY ?? 1.62, 0.8, 0.48, 0.84),
