@@ -74,6 +74,8 @@ const KNEEL_POSE = { hip: 0.1, knee: 1.55, drop: 0.9, bow: 0.35, arms: 0.25 };
 const CURSE_CAST = { fore: 1.45, inward: 0.18, hold: 0.55, ease: 0.3 };
 /** [S] 535 the Solar Architect's wand lay (spec at RuntimeUnit._laySolarWands): torso-frame direction of the rod, and its middle's share of a half-length out of the fist */
 const SOLAR_WAND_LAY = { out: 0.55, up: 0.75, fore: 0.35, seat: 0.6 };
+/** [S] 540 Vlad's low log carry (spec at RuntimeUnit._carryVladLog): arm pitches, the log's torso-frame direction (across, up, fore) */
+const VLAD_CARRY = { shoulder: -0.25, elbow: -0.95, offShoulder: -0.4, offElbow: -1.15, offIn: 0.35, across: -0.5, up: -0.42, fore: 0.75 };
 const CHEER = { hold: 1.4, up: 2.5, fore: 0.35, pump: 1.1, hz: 2.5, elbow: 0.15 };
 /*
  * [S] 524 the Ice Mage throws each icicle from an open hand (card secret.ice_mage: "shoot icicles out of their hands", Main and Off Hand "Icicle
@@ -2008,6 +2010,7 @@ export class RuntimeUnit {
     this._applyIceThrow(now);
     this._applyCurseCast(now);
     if (this.definition.id === "secret.solar_architect") this._laySolarWands();
+    if (this.definition.id === "secret.vlad" && !isAttacking) this._carryVladLog();
     this._holdTeacherParry(now);
     this._updateRaptorBite(now);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
@@ -2605,6 +2608,35 @@ export class RuntimeUnit {
       wand.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d, wand.rotationQuaternion ?? new Quaternion());
       wand.position.copyFrom(d.scale(half * L.seat));
     }
+  }
+
+  /**
+   * [S] 540 (vlad a.2) Vlad carries his log low (secret.vlad.red.png: both fists together at the belt, the log running from them across his body
+   * toward his off side, point down and forward to the ground ahead, his chest and its two gold rosettes clear above it). Out of a blow, both
+   * upper arms hang VLAD_CARRY.shoulder / .offShoulder forward with the forearms bent .elbow / .offElbow up to the belt, the off arm turned .offIn
+   * across to the log; the log (root "shaft" with its "vladLogUpper", in the main fist) is re-laid each step along the torso-frame direction
+   * (.across, .up, .fore), its grip kept in the fist. Full weight from spawn; a blow's own animation owns the arms.
+   */
+  private _carryVladLog(): void {
+    if (this._isDead || this.isToppled || this.isDowned) return;
+    const V = VLAD_CARRY, b = this.body;
+    b.rightShoulder.rotation.x = V.shoulder; b.rightShoulder.rotation.z = 0;
+    b.rightElbow.rotation.x = V.elbow;
+    b.leftShoulder.rotation.x = V.offShoulder; b.leftShoulder.rotation.z = -V.offIn * 0.4; b.leftShoulder.rotation.y = -V.offIn;
+    b.leftElbow.rotation.x = V.offElbow;
+    const hand = b.rightHand;
+    if (!hand) return;
+    const log = hand.getChildMeshes(false).find((m) => m.name === "shaft" && m.getChildMeshes(true).some((c) => c.name === "vladLogUpper"));
+    const holder = log?.parent as TransformNode | null;
+    if (!log || !holder) return;
+    b.torso.computeWorldMatrix(true);
+    const world = Vector3.TransformNormal(new Vector3(V.across, V.up, V.fore), b.torso.getWorldMatrix()).normalize();
+    holder.computeWorldMatrix(true);
+    const d = Vector3.TransformNormal(world, holder.getWorldMatrix().clone().invert()).normalize();
+    // the shaft mesh is the log's lower half (VLAD_LOG: its middle sits half a half-length minus .grip of the log above the fist)
+    const e = log.getBoundingInfo().boundingBox.extendSize.y, grip = e - 4 * e * 0.22;
+    log.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d, log.rotationQuaternion ?? new Quaternion());
+    log.position.copyFrom(d.scale(grip));
   }
 
   /**
