@@ -1229,7 +1229,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
       });
     case "secret_wheelbarrow_dragon":
-      return vis({ scale: 1.42, bulk: 1.35 }, "none", "straw_hat", "none", "dragon_cart", "#7f4c2c", undefined, {
+      // [S] 531 (a.3) no straw hat: the driver wears the Traveller's brown afro (tribalDress dressAfro, unitFactory)
+      return vis({ scale: 1.42, bulk: 1.35 }, "none", "none", "none", "dragon_cart", "#7f4c2c", undefined, {
         posePreset: "mounted", materialPreset: "secret_beast", attachmentPreset: "dragon_cart_fx", fxPreset: "ember",
         stateVariants: { attacking: ["dragon_glow"], "ability-active": ["dragon_glow"] },
       });

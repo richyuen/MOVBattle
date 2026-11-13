@@ -1160,6 +1160,9 @@ export class UnitFactory {
     if (definition.id === "secret.solar_architect" && !shouldUseVehicleBody) propMeshes.push(...solarArchitectHalo(this._scene, body));
     // [S] 528 (a.1): Vlad's dark iron crown with a gold star badge and a fan of iron spikes (secretDress vladCrown)
     if (definition.id === "secret.vlad" && !shouldUseVehicleBody) propMeshes.push(...vladCrown(this._scene, body));
+    // [S] 531 (a.3): the Wheelbarrow Dragon's driver wears the Traveller's big round brown afro, no hat (secret.wheelbarrow_dragon.red.png);
+    // the dragon-head actor shares the id and the "dragon_cart" special, so the driver is the "mounted" one
+    if (definition.id === "secret.wheelbarrow_dragon" && !shouldUseVehicleBody && visual.special === "dragon_cart" && visual.posePreset === "mounted") propMeshes.push(...dressAfro(this._scene, body));
     // [S] 527 (a.2): the Skeleton Giant's team Greek helmet in place of the grey crown ball (secretDress skeletonGiantHelm)
     if (definition.id === "secret.skeleton_giant" && !shouldUseVehicleBody) propMeshes.push(...skeletonGiantHelm(this._scene, body, teamColor));
     // [S] 527 (a.1): the Cavalry rider's grey knight helm with a bevor and team crest (secretDress cavalryHelm)
