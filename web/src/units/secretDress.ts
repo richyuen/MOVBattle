@@ -4499,7 +4499,8 @@ export function necromancerHornCap(scene: Scene, body: ArticulatedBody, team: Co
  * rim at each rib's end, .spike W long (the middle .top x that), .spikeW W across at the root. Team cloth saturated (c^2) x.shade self-lit .15;
  * gold lit .gold self-lit .3; out of the glow. The hood hat is off (unitVisuals).
  */
-const BANSHEE_CROWN = { r: 0.82, thick: 0.08, foot: 0.05, back: 0.42, lean: 0.18, ribs: 5, ribW: 0.07, spike: 0.26, top: 1.5, spikeW: 0.14, shade: 0.9,
+// 537.5b r .82 -> 1.3, foot .05 -> .2, back .42 -> .5 (look: the fan hid behind her head, only its spikes showing)
+const BANSHEE_CROWN = { r: 1.3, thick: 0.08, foot: 0.2, back: 0.5, lean: 0.18, ribs: 5, ribW: 0.07, spike: 0.26, top: 1.5, spikeW: 0.14, shade: 0.9,
   gold: new Color3(0.85, 0.6, 0.15) };
 export function bansheeCrown(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = BANSHEE_CROWN, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
