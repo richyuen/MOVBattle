@@ -5617,7 +5617,7 @@ export function blackbeardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  * and .thick W thick, splayed .splay rad out; a flame at each end, an orange-white unlit ico .flame W across, in the glow.
  */
 const BB_HAT = { cords: 2, x: 0.5, top: 0.32, spread: 0.36, long: 0.62, thick: 0.05, splay: 0.35, flame: 0.12,
-  black: new Color3(0.08, 0.06, 0.07), cord: new Color3(0.2, 0.12, 0.07), fire: new Color3(1.6, 0.75, 0.2) };
+  black: new Color3(0.035, 0.03, 0.035), cord: new Color3(0.2, 0.12, 0.07), fire: new Color3(1.6, 0.75, 0.2) }; // 539.8b black .08 -> .035 (look: felt read maroon-brown)
 export function blackbeardHat(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = BB_HAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const felt = mf.get("cloth", K.black, { emissive: K.black.scale(0.4), roughness: 1 });
