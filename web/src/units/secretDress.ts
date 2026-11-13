@@ -5416,7 +5416,8 @@ export function vladMustache(scene: Scene, body: ArticulatedBody): Mesh[] {
  * shinBoot in VLAD_BOOT: shaft .shaft of the shin tall (its top inside the coat, hem VLAD_COAT.hem under the knee), .round round; cuff .cuff round,
  * .cuffH of the shin tall, in the tan x .toe (worn darker). Tan lit cloth self-lit .2, out of the glow.
  */
-const VLAD_BOOT = { shaft: 0.72, round: 1.3, cuff: 1.46, cuffH: 0.12, toe: 0.7, tan: new Color3(0.8, 0.6, 0.35) };
+// 538.6b tan (.8,.6,.35) -> (.62,.36,.16) (look: the boots read pale grey under the hem)
+const VLAD_BOOT = { shaft: 0.72, round: 1.3, cuff: 1.46, cuffH: 0.12, toe: 0.7, tan: new Color3(0.62, 0.36, 0.16) };
 export function vladBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
   const B = VLAD_BOOT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const tan = mf.get("cloth", B.tan, { emissive: B.tan.scale(0.2), roughness: 1 });
