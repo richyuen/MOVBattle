@@ -4081,9 +4081,15 @@ function buildWizardStaff(scene: Scene, fit: BladeFit): Mesh {
  * its width under the dome's foot. Team cap self-lit cloth, pale stem lit cloth, wood self-lit. Root "staff" with the uprightPole marker (planted
  * carry, like the Wizard's); its hidden "orb" in the cap, where her spell leaves.
  */
-const WITCH_STAFF = { long: 1.32, thick: 0.07, foot: 0.75, wander: 0.014, knots: 4, knot: 0.05, wraps: 3, rope: 0.012, ropeAt: 0.12, stem: 0.17,
-  stemFoot: 0.05, stemTop: 0.085, cap: 0.36, capH: 0.11, lip: 0.18, grip: 0.42,
-  wood: new Color3(0.36, 0.17, 0.08), pale: new Color3(0.86, 0.8, 0.66), ropeC: new Color3(0.5, 0.26, 0.12) };
+/*
+ * [S] 535 (b.2; secret.witch.red.png: the branch is crooked, bending sharply two or three times along its length, and pale tan cord is lashed
+ * criss-cross round its upper third, below the stem, where it shows beside her hat) the gentle wander is replaced by straight runs between
+ * .bends kinks .kink H aside, alternating sides, at the .bendAt shares of the branch; the lashing is .wraps pale tan turns spread from .ropeAt to
+ * .ropeTo H under the top, tilted alternately so they cross, .rope H thick.
+ */
+const WITCH_STAFF = { long: 1.32, thick: 0.07, foot: 0.75, wander: 0.014, knots: 4, knot: 0.05, wraps: 5, rope: 0.016, ropeAt: 0.1, ropeTo: 0.34, stem: 0.17,
+  stemFoot: 0.05, stemTop: 0.085, cap: 0.36, capH: 0.11, lip: 0.18, grip: 0.42, bends: [0.28, 0.52, 0.76], kink: 0.04,
+  wood: new Color3(0.36, 0.17, 0.08), pale: new Color3(0.86, 0.8, 0.66), ropeC: new Color3(0.82, 0.64, 0.38) };
 function buildWitchStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const W = WITCH_STAFF, H = fit.stand, L = W.long * H;
   const wood = mat(scene, W.wood, 0.14, "cloth"), pale = mat(scene, W.pale, 0.2, "cloth"), rope = mat(scene, W.ropeC, 0.12, "cloth");
@@ -4091,9 +4097,15 @@ function buildWitchStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const top = L / 2 - W.stem * H;
   const path: Vector3[] = [];
   const n = 12;
+  // the crooked line: straight between kinks, each kink .kink H to alternate sides (x, a little z), ends on the axis
+  const kinks = [0, ...W.bends, 1], off = (j: number): number => (j === 0 || j === kinks.length - 1 ? 0 : (j % 2 ? 1 : -1) * W.kink * H);
   for (let i = 0; i <= n; i++) {
     const t = i / n;
-    path.push(new Vector3(Math.sin(t * Math.PI * 2.5) * W.wander * H, -L / 2 + t * (top + L / 2), Math.cos(t * Math.PI * 1.7) * W.wander * H * 0.6));
+    let j = 0;
+    while (j < kinks.length - 2 && t > kinks[j + 1]) j++;
+    const f = (t - kinks[j]) / (kinks[j + 1] - kinks[j]);
+    const x = off(j) + (off(j + 1) - off(j)) * f;
+    path.push(new Vector3(x, -L / 2 + t * (top + L / 2), x * 0.35));
   }
   const r0 = (W.thick * H) / 2;
   const shaft = MeshBuilder.CreateTube("staff", { path, radiusFunction: (i) => r0 * (W.foot + (1 - W.foot) * (i / n)), tessellation: 6, cap: Mesh.CAP_ALL }, scene);
@@ -4113,9 +4125,12 @@ function buildWitchStaff(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   // the rope lashed round the branch under the head, turns slanting across it
   const tp = path[n];
   for (let k = 0; k < W.wraps; k++) {
-    const band = MeshBuilder.CreateTorus("witchStaffRope", { diameter: r0 * 2.3, thickness: W.rope * H, tessellation: 10 }, scene);
-    band.position.set(tp.x, tp.y - W.ropeAt * H - k * W.rope * H * 1.6, tp.z);
-    band.rotation.z = (k % 2 ? -1 : 1) * 0.35;
+    // the turn sits on the branch where it passes that height (the branch is crooked under the head)
+    const y = tp.y - (W.ropeAt + ((W.ropeTo - W.ropeAt) * k) / (W.wraps - 1)) * H;
+    const i = Math.max(0, Math.min(n, Math.round(((y + L / 2) / (top + L / 2)) * n)));
+    const band = MeshBuilder.CreateTorus("witchStaffRope", { diameter: r0 * 2.4, thickness: W.rope * H, tessellation: 10 }, scene);
+    band.position.set(path[i].x, y, path[i].z);
+    band.rotation.z = (k % 2 ? -1 : 1) * 0.45;
     band.material = rope; band.parent = shaft;
   }
   // the pale stem flaring up from the branch's top into the cap
