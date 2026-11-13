@@ -4084,3 +4084,45 @@ export function vladCrown(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 529 (a.2) the Bank Robbers' gun belts (secret.bank_robbers.blue.png: a dark brown leather belt round the waist just under the vest's foot,
+ * a square buckle at the front, and on each hip a brown holster hanging down the thigh with a dark handgun grip standing out of it, butt back).
+ * ROBBER_BELT in the yoke's half-sizes (the vest's frame), on the torso joint: a band .h of the half-height tall at .at under the yoke's middle,
+ * .out of its half-width and depth round; a buckle .buckle wide at the front; per side a holster .hw of the half-width wide, .hd of the half-depth
+ * deep and .long of the half-height long, hung from the band at .side of the half-width out, splayed .splay rad; out of its top a grip .grip long
+ * tipped .tilt rad back, with a hammer block. Leather lit cloth self-lit .12 (the approved GUN_BELT browns), out of the glow. Both men, not the safe.
+ */
+const ROBBER_BELT = { at: 0.97, h: 0.16, out: 1.13, buckle: 0.26, side: 1.02, hw: 0.32, hd: 0.62, long: 0.78, splay: 0.14, grip: 0.42, tilt: 0.55,
+  leather: new Color3(0.15, 0.085, 0.05), holster: new Color3(0.24, 0.13, 0.07), gun: new Color3(0.07, 0.065, 0.065), brass: new Color3(0.62, 0.42, 0.14) };
+export function bankRobberBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = ROBBER_BELT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const lit = (c: Color3, e = 0.12): Material => mf.get("cloth", c, { emissive: c.scale(e), roughness: 1 });
+  const leather = lit(B.leather), holsterM = lit(B.holster), gunM = lit(B.gun, 0.4), brass = lit(B.brass, 0.3);
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const out: Mesh[] = [];
+  const box = (name: string, w: number, h: number, d: number, m: Material, parent: TransformNode = body.torso): Mesh => {
+    const b = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    b.parent = parent; b.material = m; b.convertToFlatShadedMesh(); glow?.addExcludedMesh(b); out.push(b);
+    return b;
+  };
+  const y = T.mid - T.half * B.at, bh = T.half * B.h, wx = T.wide * B.out, dz = T.deep * B.out;
+  box("robberBelt", wx * 2, bh, dz * 2, leather).position.set(0, y, 0);
+  box("robberBeltBuckle", T.wide * B.buckle * 2, bh * 1.25, T.deep * 0.12, brass).position.set(0, y, dz + T.deep * 0.04);
+  for (const side of [-1, 1]) {
+    // a hinge at the belt's side; the holster hangs from it down the thigh, its foot splayed out
+    const hinge = new TransformNode("robberHolsterHinge", scene);
+    hinge.parent = body.torso; hinge.position.set(side * T.wide * B.side, y, 0); hinge.rotation.z = side * B.splay;
+    const long = T.half * B.long, hw = T.wide * B.hw, hd = T.deep * B.hd;
+    box("robberHolster", hw, long, hd, holsterM, hinge).position.set(side * hw * 0.55, -long / 2 + bh * 0.2, 0);
+    box("robberHolsterLoop", hw * 1.15, bh * 1.1, hd * 1.08, leather, hinge).position.set(side * hw * 0.55, -bh * 0.2, 0);
+    // the grip: out of the holster's mouth, butt tipped back
+    const grip = new TransformNode("robberGunGrip", scene);
+    grip.parent = hinge; grip.position.set(side * hw * 0.55, bh * 0.4, -hd * 0.1); grip.rotation.x = -B.tilt;
+    const gl = T.half * B.grip;
+    box("robberGunButt", hw * 0.62, gl, hd * 0.42, gunM, grip).position.set(0, gl / 2, -gl * 0.12);
+    box("robberGunHammer", hw * 0.4, gl * 0.22, hd * 0.3, gunM, grip).position.set(0, gl * 0.1, hd * 0.28);
+  }
+  return out;
+}
