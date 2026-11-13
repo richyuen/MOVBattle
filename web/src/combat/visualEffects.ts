@@ -165,6 +165,9 @@ const BONE_SPIKE_GIRTH = { base: 0.32, grow: 0.22 };
 // [S] 529 Vlad Impale's wooden stakes (see VisualEffects.spawnStakeRow)
 export const VLAD_STAKES = { every: 0.05, rise: 0.12, stand: 1.6, sink: 0.4, side: 0.5, girth: 0.26, near: 1.3, far: 2.0, point: 0.3, lean: 0.3,
   wood: new Color3(0.3, 0.16, 0.08), pale: new Color3(0.78, 0.62, 0.42) };
+// [S] 537 the Necromancer's Gravestone Wall (see VisualEffects.spawnGravestones)
+export const GRAVESTONES = { count: 3, w: 0.62, h: 1.05, d: 0.18, every: 0.08, rise: 0.22, stand: 3, sink: 0.5,
+  stone: new Color3(0.36, 0.37, 0.4), carve: new Color3(0.1, 0.1, 0.12), earth: new Color3(0.2, 0.12, 0.06) };
 
 /** Where the bone mage's row begins: the first spike's ground point, BONE_SPIKE_START ahead of the caster's feet toward his mark (nearer for a close one). */
 export function boneSpikeRowNear(from: Vector3, to: Vector3): Vector3 {
@@ -1571,6 +1574,64 @@ export class VisualEffects {
         else if (elapsed < sinkFrom) k = 1;
         else k = Math.max(0.001, 1 - (elapsed - sinkFrom) / S.sink);
         pivots[i].scaling.y = k;
+      }
+    };
+    pose(0.016);
+    this._effects.push({ root, remaining: life, update: (_dt, remaining) => pose(life - remaining) });
+  }
+
+  // ══════════════════ GRAVESTONES (Necromancer Gravestone Wall) ══════════════════
+  /**
+   * [S] 537 Gravestone Wall (card "summon 3 graves from the ground, pushing anyone away"): GRAVESTONES.count grey headstones in a row across `along`
+   * through `center`, `apart` m between them, each a slab .w x .h x .d with a round top, a dark carved cross on its front (the face toward the foe,
+   * down `along`) and a brown earth mound at its foot; each tilted a little (deterministic hash), rising out of the
+   * ground over .rise s (the middle one first) with a small overshoot, standing .stand s, sinking over .sink s.
+   */
+  spawnGravestones(center: Vector3, along: Vector3, apart: number): void {
+    const G = GRAVESTONES;
+    const root = new TransformNode("gravestones", this._scene);
+    const mf = getMaterialFactory();
+    const stone = mf.get("cloth", G.stone, { emissive: G.stone.scale(0.14), roughness: 1 });
+    const carve = mf.get("cloth", G.carve, { emissive: G.carve.scale(0.1), roughness: 1 });
+    const earth = mf.get("cloth", G.earth, { emissive: G.earth.scale(0.12), roughness: 1 });
+    const hash = (i: number, salt: number): number => { const v = Math.sin(i * 12.9898 + salt * 78.233 + center.x * 0.37 + center.z * 0.11) * 43758.5453; return v - Math.floor(v); };
+    const yaw = Math.atan2(along.x, along.z), sx = along.z, sz = -along.x;
+    const stones: TransformNode[] = [];
+    for (let i = 0; i < G.count; i++) {
+      const k = i - (G.count - 1) / 2;
+      const h = G.h * (0.9 + hash(i, 1) * 0.2);
+      const base = new TransformNode(`gravestone${i}`, this._scene);
+      base.parent = root;
+      base.position.set(center.x + sx * k * apart, 0, center.z + sz * k * apart);
+      base.rotation.y = yaw;
+      const mound = MeshBuilder.CreateSphere("gravestoneMound", { diameter: 1, segments: 3, slice: 0.5 }, this._scene);
+      mound.parent = base; mound.scaling.set(G.w * 1.5, G.h * 0.22, G.d * 4); mound.material = earth; mound.convertToFlatShadedMesh();
+      const lift = new TransformNode(`gravestoneLift${i}`, this._scene);
+      lift.parent = base; lift.rotation.set((hash(i, 2) - 0.5) * 0.25, 0, (hash(i, 3) - 0.5) * 0.3);
+      const slabH = h - G.w / 2;
+      const slab = MeshBuilder.CreateBox("gravestone", { width: G.w, height: slabH, depth: G.d }, this._scene);
+      slab.parent = lift; slab.position.y = slabH / 2; slab.material = stone; slab.convertToFlatShadedMesh();
+      const cap = MeshBuilder.CreateCylinder("gravestoneTop", { height: G.d, diameter: G.w, tessellation: 10, arc: 0.5 }, this._scene);
+      cap.parent = lift; cap.rotation.set(Math.PI / 2, 0, Math.PI / 2); cap.position.y = slabH; cap.material = stone; cap.convertToFlatShadedMesh();
+      for (const [cw, ch, cy] of [[G.w * 0.12, slabH * 0.55, slabH * 0.62], [G.w * 0.5, G.w * 0.12, slabH * 0.72]]) {
+        const bar = MeshBuilder.CreateBox("gravestoneCross", { width: cw, height: ch, depth: G.d * 0.2 }, this._scene);
+        bar.parent = lift; bar.position.set(0, cy, G.d * 0.52); bar.material = carve;
+      }
+      lift.position.y = -h;
+      stones.push(lift);
+    }
+    const order = (i: number): number => Math.abs(i - (G.count - 1) / 2);
+    const life = G.every * G.count + G.rise + G.stand + G.sink;
+    const pose = (elapsed: number): void => {
+      const sinkFrom = life - G.sink;
+      for (let i = 0; i < stones.length; i++) {
+        const h = G.h * 1.1, t = elapsed - order(i) * G.every;
+        let k: number;
+        if (t <= 0) k = 0;
+        else if (t < G.rise) { const r = t / G.rise; k = r * (2 - r) * (1 + 0.1 * Math.sin(r * Math.PI)); }
+        else if (elapsed < sinkFrom) k = 1;
+        else k = Math.max(0, 1 - (elapsed - sinkFrom) / G.sink);
+        stones[i].position.y = -h * (1 - k);
       }
     };
     pose(0.016);

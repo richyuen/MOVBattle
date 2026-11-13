@@ -218,6 +218,8 @@ const PHARAOH_KNEEL = { radius: 2.4, seconds: 3 };
 const BURN_STATUS = { tick: 0.5, damage: 3, spread: 1.4, keep: 2 };
 // [S] 535 the Necromancer skull's rot (SimulationSystem._stepNecroCurse): share of full health per tick, and its puff colour
 const NECRO_CURSE = { tick: 0.5, rot: 0.1, smoke: new Color3(0.2, 0.42, 0.16) };
+// [S] 537 the Necromancer's Gravestone Wall (see SimulationSystem._gravestoneWalls)
+const NECRO_GRAVES = { first: 0.5, cooldown: 8, near: 4, ahead: 1.3, apart: 0.85, radius: 2.2, damage: 20, push: 6, lift: 4 };
 // [S] 390 engines that fly the bolt they have loaded: a copy of the named node leaves the muzzle and the loaded one is gone until half the reload is past (vehicleBuilder ballistaLoadedBolt)
 const LOADED_BOLTS: Record<string, string> = { "ancient.ballista": "ballistaLoadedBolt" };
 /*
@@ -1191,6 +1193,7 @@ export class SimulationSystem {
     this._monarchDodges(now);
     this._samuraiBlocks(now);
     this._cultistImplosions(now);
+    this._gravestoneWalls(now);
     this._sentinelCatches(now);
     this._aegisFields(now);
     if (this._hammers.length > 0) this._stepHammers(now);
@@ -4573,6 +4576,47 @@ export class SimulationSystem {
     }
   }
   private _implodeAt = new Map<RuntimeUnit, number>();
+
+  /*
+   * [S] 537 Gravestone Wall (necromancer c.3; card Abilities "Gravestone Wall", Characteristics "they also can summon 3 graves from the ground, pushing
+   * anyone away if they're starting to close the distance"). NECRO_GRAVES: when he stands on his feet, ready (.cooldown s, ready from .first s) and an
+   * enemy has come within .near m, three gravestones burst up across the line to that man .ahead m out in front of him, .apart m between stones
+   * (visualEffects spawnGravestones); every enemy within .radius m of the wall's middle is hurt .damage and thrown away from the Necromancer
+   * (.push, .lift). Logged "gravestone_wall".
+   */
+  private _graveReady = new Map<RuntimeUnit, number>();
+  private _gravestoneWalls(now: number): void {
+    const G = NECRO_GRAVES;
+    for (const unit of this._units) {
+      if (unit.definition.id !== "secret.necromancer" || unit.isDead || unit.isToppled || unit.isDowned || unit.linkedParent) continue;
+      const ready = this._graveReady.get(unit);
+      if (ready === undefined) { this._graveReady.set(unit, now + G.first); continue; }
+      if (now < ready) continue;
+      let foe: RuntimeUnit | null = null, best = G.near;
+      for (const u of this._units) {
+        if (u.isDead || u.team === unit.team || u.linkedParent || !u.isTargetable) continue;
+        const d = Math.hypot(u.position.x - unit.position.x, u.position.z - unit.position.z);
+        if (d < best) { best = d; foe = u; }
+      }
+      if (!foe) continue;
+      this._graveReady.set(unit, now + G.cooldown);
+      const along = foe.position.subtract(unit.position); along.y = 0;
+      if (along.lengthSquared() < 1e-6) along.set(1, 0, 0);
+      along.normalize();
+      const center = new Vector3(unit.position.x + along.x * Math.min(G.ahead, best * 0.6), 0, unit.position.z + along.z * Math.min(G.ahead, best * 0.6));
+      this.visualEffects?.spawnGravestones(center, along, G.apart);
+      for (const u of this._units) {
+        if (u.isDead || u.team === unit.team || u.linkedParent || !u.isTargetable) continue;
+        const to = u.position.subtract(center); to.y = 0;
+        if (to.length() > G.radius + u.collisionBodyRadius) continue;
+        const away = u.position.subtract(unit.position); away.y = 0;
+        if (away.lengthSquared() < 1e-6) away.copyFrom(along); else away.normalize();
+        u.applyDamage(G.damage, away.scale(G.push));
+        if (!isVehicleUnit(u.definition.id)) u.applyBlastLaunch(away, G.push, G.lift);
+      }
+      this._logAbility(unit, "gravestone_wall", now, center);
+    }
+  }
 
   private _sentinelCatches(now: number): void {
     const C = SENTINEL_CATCH;
