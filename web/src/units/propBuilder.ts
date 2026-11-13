@@ -4899,6 +4899,13 @@ const BARROW_DRAGON = { w: 0.5, h: 0.34, l: 0.42, at: 0.6, sit: 0.25, mouth: 0.1
  */
 const BARROW_JAWS = { hingeZ: 0.2, hingeY: 0.12, open: 0.78, snout: 0.5, upperW: 0.66, upperH: 0.3, tipW: 0.8, lowerL: 0.92, lowerW: 0.6, lowerH: 0.22,
   rimW: 0.07, rimH: 0.07, teeth: 6, fang: 0.2, fangW: 0.06, gullet: 0.45 };
+/*
+ * [S] 533 (a.2) the jaw plates (CONFIRM 532: "cream/bone tooth-lined jaw plates framing the mouth"; secret.wheelbarrow_dragon.jpg: a broad cream
+ * band runs along each jaw's edge on the outside of the snout and round its tip, the fangs standing off it). BARROW_RIMS: plates .thick of the
+ * skull's width thick, .tall of its height tall, over .long of the jaw's length, hanging .drop of the height past the jaw's inner face; a cross
+ * plate over the tip. Unlit cream (palette unlit tan x ~.95), out of the glow.
+ */
+const BARROW_RIMS = { thick: 0.05, tall: 0.16, long: 0.9, drop: 0.05, cream: new Color3(0.78, 0.62, 0.42) };
 function buildBarrowDragon(scene: Scene, root: Mesh, put: (m: Mesh, mt?: PBRMetallicRoughnessMaterial) => Mesh, H: number,
   z0: number, z1: number, y0: number, team: Color3): void {
   const D = BARROW_DRAGON;
@@ -4916,12 +4923,23 @@ function buildBarrowDragon(scene: Scene, root: Mesh, put: (m: Mesh, mt?: PBRMeta
     const p = new TransformNode(name, scene); p.parent = root; p.position.copyFrom(hinge); p.rotation.x = tilt; return p;
   };
   const onto = (m: Mesh, pivot: TransformNode, x: number, y: number, z: number): Mesh => { m.parent = pivot; m.position.set(x, y, z); return m; };
+  const rimCream = getMaterialFactory().get("unlit", BARROW_RIMS.cream, { emissive: BARROW_RIMS.cream }), rimGlow = scene.getGlowLayerByName("glow");
   for (const [pivot, dir] of [[jawPivot("barrowDragonUpperJaw", -half), 1], [jawPivot("barrowDragonLowerJaw", half), -1]] as const) {
     const up = dir > 0, wide = w * (up ? J.upperW : J.lowerW), tall = h * (up ? J.upperH : J.lowerH), long = S * (up ? 1 : J.lowerL);
     onto(put(MeshBuilder.CreateBox("barrowDragonSnout", { width: wide, height: tall, depth: long * 0.72 }, scene), skin), pivot, 0, dir * tall / 2, long * 0.36);
     onto(put(MeshBuilder.CreateBox("barrowDragonSnoutTip", { width: wide * J.tipW, height: tall * 0.85, depth: long * 0.3 }, scene), skin), pivot, 0, dir * tall * 0.85 / 2, long * 0.85);
+    // [S] 533 (a.2) cream bone plates frame the mouth (spec at BARROW_RIMS): a plate down each jaw's outer edge, standing proud of the snout,
+    // and a cross plate over the jaw's tip, so the gape reads as a U of bone round the dark mouth
+    const P = BARROW_RIMS;
     for (const side of [-1, 1]) {
-      onto(put(MeshBuilder.CreateBox("barrowDragonJawRim", { width: w * J.rimW, height: h * J.rimH, depth: long * 0.98 }, scene), bone), pivot, side * (wide / 2 - w * J.rimW * 0.3), dir * h * J.rimH * 0.3, long * 0.5);
+      const plate = onto(put(MeshBuilder.CreateBox("barrowDragonJawRim", { width: w * P.thick, height: h * P.tall, depth: long * P.long }, scene), rimCream), pivot,
+        side * (wide / 2 + w * P.thick * 0.2), dir * h * (P.tall / 2 - P.drop), long * (1 - P.long / 2 - 0.01));
+      rimGlow?.addExcludedMesh(plate);
+    }
+    const lipTip = onto(put(MeshBuilder.CreateBox("barrowDragonJawRimTip", { width: wide * J.tipW + w * P.thick * 1.4, height: h * P.tall, depth: w * P.thick * 1.6 }, scene), rimCream), pivot,
+      0, dir * h * (P.tall / 2 - P.drop), long * 0.995);
+    rimGlow?.addExcludedMesh(lipTip);
+    for (const side of [-1, 1]) {
       for (let k = 0; k < J.teeth; k++) {
         const t = (k + 0.5) / J.teeth, fangL = h * J.fang * (k % 2 ? 0.7 : 1);
         const fang = onto(put(MeshBuilder.CreateCylinder("barrowDragonFang", { height: fangL, diameterTop: 0, diameterBottom: w * J.fangW, tessellation: 4 }, scene), bone),
