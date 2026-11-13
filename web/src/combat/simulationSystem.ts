@@ -4739,6 +4739,8 @@ export class SimulationSystem {
     if (!this.spawnUnitById) return false;
     if (this.getLivingCount(attacker.team) >= this.summonLivingCap) return false;
     if (attacker.spawnRole === "summoned" && getBehaviorPreset(attacker) === "iconic_monkey_king") return false;
+    // [S] 529 (c.1) the Witch summons two clones of herself side by side that fade after 8 s (rosterManifest witch clone); a clone never clones
+    if (attacker.spawnRole === "summoned" && attacker.definition.id === "secret.witch") return false;
 
     const summonIds = attacker.definition.summonUnitIds
       ?? (hasAbility(attacker, "clone") ? [attacker.definition.id] : undefined)
@@ -4765,7 +4767,11 @@ export class SimulationSystem {
         : preset === "iconic_monkey_king"
           ? 2.1
           : 1.5;
-      const pos = attacker.position.add(new Vector3(Math.cos(angle) * spacing, 0, Math.sin(angle) * spacing));
+      // the Witch's clones stand one each side of her, square to her heading
+      const yaw = attacker.body.root.rotation.y, side = i % 2 ? -1 : 1;
+      const pos = attacker.definition.id === "secret.witch"
+        ? attacker.position.add(new Vector3(Math.cos(yaw) * side * spacing, 0, -Math.sin(yaw) * side * spacing))
+        : attacker.position.add(new Vector3(Math.cos(angle) * spacing, 0, Math.sin(angle) * spacing));
       const visualOverride = preset === "iconic_monkey_king"
         ? {
             ...attacker.visualConfig,
