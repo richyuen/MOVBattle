@@ -1212,7 +1212,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_banshee":
       // [S] 528 (b.1) no wings: TABS's Banshee has empty hands circled by spirit rings (secretDress bansheeSpiritRings)
-      return vis({ scale: 1.12, bulk: 0.88, armLength: 1.08 }, "none", "hood", "none", "none", "#e8ecff", undefined, {
+      // [S] 537 (a.2) no hood hat: her team fan crown is secretDress bansheeCrown
+      return vis({ scale: 1.12, bulk: 0.88, armLength: 1.08 }, "none", "none", "none", "none", "#e8ecff", undefined, {
         posePreset: "support", materialPreset: "secret_ghost", attachmentPreset: "ghost_trail", fxPreset: "spectral",
         stateVariants: { moving: ["ghost_stream"], "ability-active": ["ghost_stream"] },
       });

@@ -4490,6 +4490,50 @@ export function necromancerHornCap(scene: Scene, body: ArticulatedBody, team: Co
 }
 
 /*
+ * [S] 537 (banshee a.2) the Banshee's crown (audit 527 "a flat grey dish round the neck (the base hood) with no crown - TABS: a large team-coloured
+ * fan crown with gold spikes standing behind the head"; card Appearance "wears a crown"; secret.banshee.red.png: an upright half-disc fan of team
+ * plates behind the head, its foot at the eyes, its rim a head and a half across, rising about half a head over the crown; gold ribs run from its
+ * foot out to the rim, a gold spike stands out of the rim at the top and at each side, smaller ones between). BANSHEE_CROWN in the head box
+ * (W, H, D, c): the fan a half-disc .r W in radius, .thick D thick, its axis through the head front-to-back, its foot .foot H over c and .back D
+ * behind c, leaning back .lean rad; .ribs gold ribs .ribW W wide from the foot to the rim at even angles over the half; a gold spike out of the
+ * rim at each rib's end, .spike W long (the middle .top x that), .spikeW W across at the root. Team cloth saturated (c^2) x.shade self-lit .15;
+ * gold lit .gold self-lit .3; out of the glow. The hood hat is off (unitVisuals).
+ */
+const BANSHEE_CROWN = { r: 0.82, thick: 0.08, foot: 0.05, back: 0.42, lean: 0.18, ribs: 5, ribW: 0.07, spike: 0.26, top: 1.5, spikeW: 0.14, shade: 0.9,
+  gold: new Color3(0.85, 0.6, 0.15) };
+export function bansheeCrown(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = BANSHEE_CROWN, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const teamC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(K.shade);
+  const teamM = mf.get("cloth", teamC, { emissive: teamC.scale(0.15), roughness: 1 });
+  const gold = mf.get("cloth", K.gold, { emissive: K.gold.scale(0.3), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const out: Mesh[] = [];
+  const fan = new TransformNode("bansheeCrown", scene);
+  fan.parent = head; fan.position.set(c.x, c.y + H * K.foot, c.z - D * K.back); fan.rotation.x = -K.lean;
+  const put = (m: Mesh, mt: Material): Mesh => { m.parent = fan; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const R = W * K.r;
+  // the half-disc: a cylinder arc along local z (RotationX(+PI/2) stands its half up, as the gravestone tops)
+  const disc = put(MeshBuilder.CreateCylinder("bansheeCrownFan", { height: D * K.thick, diameter: R * 2, tessellation: 14, arc: 0.5 }, scene), teamM);
+  disc.rotation.x = Math.PI / 2;
+  for (let i = 0; i < K.ribs; i++) {
+    const a = -Math.PI / 2 + (Math.PI * (i + 0.5)) / K.ribs; // from the right side round over the top to the left
+    const dx = Math.sin(a), dy = Math.cos(a);
+    const rib = put(MeshBuilder.CreateBox("bansheeCrownRib", { width: W * K.ribW, height: R * 0.96, depth: D * K.thick * 1.3 }, scene), gold);
+    rib.rotation.z = -a; rib.position.set(dx * R * 0.48, dy * R * 0.48, D * K.thick * 0.2);
+    const len = W * K.spike * (i === (K.ribs - 1) / 2 ? K.top : 1);
+    const spike = put(MeshBuilder.CreateCylinder("bansheeCrownSpike", { height: len, diameterBottom: W * K.spikeW, diameterTop: 0, tessellation: 4 }, scene), gold);
+    spike.rotation.z = -a; spike.position.set(dx * (R + len * 0.45), dy * (R + len * 0.45), 0);
+  }
+  // the gold rim at the fan's two flat feet, so its sides end in gold as the render's
+  for (const sd of [-1, 1]) {
+    const foot = put(MeshBuilder.CreateCylinder("bansheeCrownSpike", { height: W * K.spike, diameterBottom: W * K.spikeW, diameterTop: 0, tessellation: 4 }, scene), gold);
+    foot.rotation.z = -sd * Math.PI / 2; foot.position.set(sd * (R + W * K.spike * 0.4), W * 0.03, 0);
+  }
+  return out;
+}
+
+/*
  * [S] 530 (a.2) the Witch's hood-hat (secret.witch.red.png: a tall team-coloured hat with no brim at all; its foot is a hood that comes down round
  * the face to the jaw, wider at the bottom, the face showing in its open front; over the head it narrows into a long crooked spire that bends back
  * and to one side, kinked twice). WITCH_HOOD in the head box (W, H, D, c): the hood a 9-sided frustum from .chin H under the head's foot to .crown

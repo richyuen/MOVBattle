@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1182,6 +1182,8 @@ export class UnitFactory {
     if (definition.id === "secret.banshee" && !shouldUseVehicleBody) propMeshes.push(...bansheeGown(this._scene, body, teamColor));
     // [S] 534 (a.1): no legs, three dark chains hang from under the hem in their place (secretDress bansheeChainLegs)
     if (definition.id === "secret.banshee" && !shouldUseVehicleBody) propMeshes.push(...bansheeChainLegs(this._scene, body));
+    // [S] 537 (a.2): a team fan crown behind her head, gold ribs and spikes (secretDress BANSHEE_CROWN)
+    if (definition.id === "secret.banshee" && !shouldUseVehicleBody) propMeshes.push(...bansheeCrown(this._scene, body, teamColor));
     // [S] 530 (a.2): the Witch's brimless team hood-hat with a crooked spire (secretDress witchHoodHat)
     if (definition.id === "secret.witch" && !shouldUseVehicleBody) propMeshes.push(...witchHoodHat(this._scene, body, teamColor));
     // [S] 536 (a.5): she rides a long floating broom, legs hanging either side (secretDress witchBroom)
