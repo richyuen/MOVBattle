@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+537 | a721ccd5 | secret.skeleton_giant.a | approved [S] (struck 3, a PASS; CONFIRM 536 copied, D)
+537 | b9583fd6 | secret.necromancer.a | approved [S] (struck 3)
+537 | bd4c21ff, 664a3f18 | secret.necromancer.c | approved [S] (no strike; graves rise, push unseen)
+537 | 2c49273b, e9a60e53 | secret.banshee.a | approved [S] (struck 2)
+537 | 56c897fc, 474c9e55 | secret.banshee.a | approved [S] (struck 3)
+537 | 716d07af, 4d0f26b8 | secret.banshee.a | approved [S] (struck 4)
+537 | 3eea93c7 | secret.vlad.a | approved [S] (struck 6)
+537 | 8740885b | secret.vlad.a | approved [S] (struck 3)
+537 | 71f3e6ad | secret.vlad.a | approved [S] (struck 2)
+
 536 | ee3c7d9d, 58bc88c9 | secret.witch.a | approved [S] (no strike; [P] WITCH_BROOM pitch/lift fallout)
 536 | 23df7426, 45c25948 | secret.witch.a | approved [S] (struck 4)
 536 | 7be05a62, 108b1557, 8af4aaa4 | secret.witch.c | approved [S] (no strike; turn on allies unseen, evidence first)
@@ -42,21 +52,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 533 | b9030560 | secret.vlad.a | approved [S] (struck 4; added 6 box chest)
 533 | e3841ea1 | secret.solar_architect.a | approved [S] (struck 1)
 
-532 | 6307e0d6 | secret.gatling_gun.a | approved [S] (struck 2)
-532 | 35fde574 | secret.skeleton_giant.c | approved [S] (struck 1, c PASS)
-532 | 44712ed1 | secret.wheelbarrow_dragon.a | approved [S] (struck 4, a PASS; CONFIRM failed a)
-532 | 32b21a31 | secret.cavalry.a | approved [S] (struck 3)
-532 | 31368387 | secret.cavalry.a | approved [S] (struck 4, a PASS; CONFIRM passed a, failed b)
-532 | 16b934a1 | secret.gatling_gun.a | approved [S] (struck 3, a PASS; CONFIRM failed a, b)
-532 | 4a2e4801 | secret.bomb_cannon.a | approved [S] (struck 2; 4 by lineup)
-532 | e01c074c | secret.skeleton_giant.a | approved [S] (struck 5; [P] giant scale toward 3x fallout)
-532 | f1fb5d6a | secret.wheelbarrow_dragon.b | approved [S] (struck 2, b PASS)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/UF/UV/SS/FX:537 | [P] WITCH_BROOM pitch .18 -> .9, lift .2 -> .3; GIANT_FEET wide .34 toe .55 tall .36 long .86 heel 1.05 peg .5 pegUp .6 (wedge); NECRO_VEST top .08 below .06 out 1.16 flare 1.24 rags 8 laces 5 dark .42; NECRO_GRAVES first .5 cd 8 near 4 ahead 1.3 apart .85 radius 2.2 dmg 20 push 6 lift 4, GRAVESTONES w .62 h 1.05; BANSHEE_CROWN r 1.3 foot .2 back .5 lean .18 ribs 5 spike .26 top 1.5, hood hat off; BANSHEE_FACE long 1.5 top .4 wide 1.0 ahead .32 eye .27; BANSHEE_HAIR x .58 seg .7/.6 w .22 tufts 7; VLAD_COAT fitTop .9 fitFoot 1.04 fitDeep 1.08 mantleFoot 1.38 -> 1.12 collarH .45 collarW .62, vampire_collar off; VLAD_HAIR lockX .55 lockW .3; VLAD_STACHE seg .26/.22/.16 thick .15 droop .25 curl 1.3 | 537 | approved | broom pitch .18 lift .2, box feet .48, no vest, no graves, hood dish, ball head, no hair, box coat shell + mantle 1.38, tuft, no mustache
 secretDress/UF/RU/PS/SS/FX/UV:536 | WITCH_BROOM lift .2 seat .01 ahead .78 behind .22 pitch .18 thin .045 thick .075 brush .28 brushW .18; WITCH_ROBE hem .45 out 1.2 flare 1.5 rags 9 bands .12 at .2 sash .13 dark .42 light .22, shorts hem .5; SHROOMS seconds 6 size .2 clear .9 shoulder .45 cap .62 (1,.22,.75); SHROOM_TURN reach 1.1 every 1 dmg 12; GIANT_HELM hood .62 hoodTop 1.24 hoodFoot 1.5 back .36 cheekW .3 under .32; GIANT_FEET wide .48 tall .5 long .8; SOLAR_MAELSTROM near 7 cd 12 radius 3.5 seconds 3 heal .04 pull 7, cast on the target, FX from .75; SOLAR_COAT out 1.16 flare 1.32 hem .5 white (.9,.9,.88) gold (.85,.6,.15); SOLAR_LEGS cuff .11; NECRO_CAP horns 3 segs out 1.05 bend .62 shade .42, hood hat off | 536 | approved | standing witch, no robe, pink head glow, bucket helm, block feet, pink dome, grey vest, dark trousers + boots, hood ball
 SS/PS/RU/LAP/secretDress/UF/RM/VB/PB/UV:535 | NECRO_CURSE tick .5 rot .1 smoke (.2,.42,.16), raise on RU.onDeath; BANSHEE_CURSE stream .55 s curse 5 s chest 1; GHOST_CURSE dye .85 glow .75 wisps 6 long 1.1 wide .24 ring 1; CURSE_CAST fore 1.45 inward .18 hold .55; SOLAR_WAND_LAY out .55 up .75 fore .35 seat .6; solar ray from solarWandRing alternating; bomb loader actor dropped, gunner offset (.22,0,-.62), BOMB_GUNNER_STRIPES 4 rows band .09 out 1.07 cream; GATLING_TROUGH hi .08 -> -.03, waves 4 wave .11; witch in SKELETON_UNITS; WITCH_STAFF bends .28/.52/.76 kink .04, wraps 3 -> 5 rope .012 -> .016 ropeAt .1-.34 ropeC tan (.82,.64,.38); [P] giant bulk 1.7 -> 1.2, GIANT_BUILD hem .42 -> .3 | 535 | approved | free skeleton summon, swing + fear, team humanoid witch, straight wander staff, wands along the forearm, loader at the trail, tall cheeks .08 over the axis
 PB/VB/secretDress/PS/SS/UF/UV/spookyDress:534 | CAV_SHIELD span .53 top .2 below .45 wide 1.6 out 1.6 ahead .32 turn .3 tip -.06 on body.hip; GATLING_TROUGH thick .035 lo .2 hi .08 past .07 inX .17 splay .05 band .06 lobes 3; bomb rider bombCrewCap + bombRiderDress skin .85 shirt 1.12 green (.06,.32,.1); RIDER_CUTLASS raise -2 out .22 elbow -.25 long .62; MUSHROOM_SPELL cap .42 speed 16 arc .12 cap (1,.22,.75) aura (.75,.3,1.2) a.32; necro knife hold unflipped, palm seat; BANSHEE_CHAINS lift .16 apart .9 reach .85/.97/.8 link .09; GIANT_BUILD pelvis .62x.7x.72 shorts hem .42 out 2.8, giant legLength .92->1.2 | 534 | approved | shield in the fist on the lap, rails+yoke, bandanna + white cannonShirt, empty hands, dark dart, reverse grip, team legs, skirt pelvis-to-knee + legLength .92

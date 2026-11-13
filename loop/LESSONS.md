@@ -17,7 +17,8 @@ Read whole at step 1; one fact a line, merge near cap.
 - stats.mjs rounds knobs to .01: under .005 prints 0 (NaN next run); set the exact ratio.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter).
 - A capture wipes iter-N (stats.json, a tail audit.md): back audit.md up, rerun `stats.mjs <id,id> --iter N` (comma list) after the last capture (527). Checkpoint replaces summary.json (483).
-- RotationX(+a) tips +y toward +z. A turn-on-friends status is unseen in a duel: evidence first (536).
+- RotationX(+a) tips +y toward +z; a cylinder arc .5 under RotationX(+PI/2) has its half up (537). A turn-on-friends status: a friend in the scene, his log counted (537).
+- A cast fired as a man closes in misses a duel whose man dies at range: a second man walks in, own pair (537).
 - Probes (loop/scripts/probes/, repo root, --build after source changes): probe_bbox (--unit --pat --frame=torso), probe_near/close/head/local/axes/impale/bowdraw; probe_close --aim=head|torso|y:<y> --dist --yaw --noglow; probe_eval --unit --expr=<file> runs a function body (u, game, scene), prints its JSON.
 - capture's PLAIN regex takes any ability kind starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475 wizard firework: no ability shot).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
@@ -30,8 +31,8 @@ Read whole at step 1; one fact a line, merge near cap.
 - `--units` takes comma-separated IDs and re-shoots lineup_<f> (498); a lethal blast freezes a duel: off-camera reserves (504).
 - A dress change aimed at the idle must clear the rest pose: probe what covers it first (442). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Frame prop openings at the landing spot (522), toppled targets at torso bounds (509).
-- An instant slam logs at swing start: use the pending blow (426). A special logged at let-go owns its missile (427). A cast status can put _struck before impact: use ABILITY_PREF for on-landing effects (435).
-- _ability/_release are on the log tick, before RuntimeUnit.update: pose explicitly for contact, and use the next frame for motion (437 bat, 505 parry). A latch reads on the pin before its damage ticks (444 vampire).
+- Instant slam logs at swing start: use the pending blow (426); a special logged at let-go owns its missile (427); a cast status can put _struck before impact: ABILITY_PREF for on-landing effects (435).
+- _ability/_release are on the log tick, before RuntimeUnit.update: pose for contact, next frame for motion (437, 505); a latch reads on the pin before its damage (444).
 - A neck-rooted piece must clear the head box: probe_bbox it (439). Probe yaw and pitch before flipping a pose's sign.
 - A world box refreshes only on render: computeWorldMatrix(true) before centerWorld in a per-tick pose (516). Gate an idle hold on the fire (451). Team garment shade: saturate (c^2), scale, self-lit .12; x k at self-lit .4 reads grey (517). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 - _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
@@ -56,9 +57,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - A leg-length change reads only if the dress over it scales with it (406).
 - Flat dress pieces are closed slabs (a one-sided disc can face away, 390; a plate on a ribbon needs 7+ cm stand-off, 398); arc cylinders are one-sided ribbons SSAO greys (421).
 - A faction tint plus the clothed recolour's warm hue shift turns red-team body cloth tan (449 wild_west): a garment the ref shows in team colour gets its own team cloth material, not body.bodyMaterial; check the red team on a --noglow swatch.
-
-- The hashed idle crouch (knee to .9 rad) pokes a knee through a knee-length hem: pair it with an upright stance (451 cactus).
-- A glove's blow is blade_slash: gate a fist layer on Attacking, not _attackMotion "strike" (463).
+- Hashed idle crouch pokes a knee through a knee hem: stand up (451). A glove's blow is blade_slash: gate on Attacking (463).
 - A torso-rooted shield detaches in windup (483, 489 pavise); dispose sim meshes in endSimulation (485).
 - _buildCarry turns only nodes in its name regex (marker child uprightHammerCarry: head-up carry, 493).
 - A ground-length skirt hides a hover lift: robe under the knee rides each shin (493).
