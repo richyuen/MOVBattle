@@ -22,7 +22,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
-- Idle/lineup are a front three-quarter on the weapon side; a face/chest/shield blocker judged side-on is mis-aimed (evidence commit, not dress); a prop over the chest: post-release shot at the idle angle (525); hips behind a shield: rear three-quarter (frame 13, 526). Faceless at .6 rad reads as a back: .25 (497).
+- Idle/lineup: front three-quarter, weapon side; a face/chest/shield blocker judged side-on is mis-aimed (evidence commit); prop over the chest: post-release idle-angle shot (525); hips behind a shield: rig 13 (526); off-side shield: rig 14 mirror (534). Faceless at .6 rad reads as a back: .25 (497).
 - Size a held prop off joint spreads (originIn), not limbBox, which reads half on slim rigs (526).
 - The idle is ~100 ms after spawn: ease nothing in from zero; full weight from spawn, kept in every re-solve (393).
 - A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).

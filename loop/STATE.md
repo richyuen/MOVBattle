@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 533   Batch: secret_3   Consecutive empty: 0   Done: 121/139   Parked: 0
+Iteration: 534   Batch: secret_3   Consecutive empty: 0   Done: 122/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -19,38 +19,37 @@ good: devout_gauntlet ++++ D | celestial_aegis ++++ D | radiant_glaive ++++ D | 
 evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void_cultist ++++ D | tempest_lich ++++ D | death_bringer ++++ D | void_monarch ++++ D
 secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer ++++ D | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo ++++ D | raptor_rider ++++ D | cheerleader ++++ D | cupid ++++ D | mace_spinner ++++ D | clams ++++ D | present_elf ++++ D | ice_mage ++++ D | infernal_whip ++++ D | bank_robbers ++++ D
-secret_3: witch ---+ o | banshee -+-+ o | necromancer ---+ o | solar_architect ---+ o | wheelbarrow_dragon ++++ D | skeleton_giant -+++ o | bomb_cannon --++ o | cavalry +-++ o | vlad -+++ o | gatling_gun +-++ o
+secret_3: witch ---+ o | banshee -+-+ o | necromancer -+-+ o | solar_architect ---+ o | wheelbarrow_dragon ++++ D | skeleton_giant -+++ o | bomb_cannon -+++ o | cavalry ++++ D | vlad -+++ o | gatling_gun +-++ o
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
-## Focus (iteration 533; BASE 3a018c20; secret_3)
-1. [S] secret.cavalry.b blocker 1 (e5417888) APPROVED, struck 1, b PASS (CONFIRM failed b: shield; plateau)
-2. [S] secret.bomb_cannon.a blocker 3 (d129e7ac) APPROVED, struck 3, a PASS (CONFIRM failed a, b: rider)
-3. [S] secret.gatling_gun.a blocker 1 (ee015aa3) APPROVED, struck 1, a PASS
-4. [S] secret.gatling_gun.b blocker 1 (4466da30) APPROVED, struck 1
-5. [S] secret.wheelbarrow_dragon.a blocker 1 (f84e1cdb, 22fcf910) APPROVED, struck 1
-6. [S] secret.wheelbarrow_dragon.a blocker 2 (b07fd710) APPROVED, struck 2
-7. [S] secret.wheelbarrow_dragon.a blocker 3 (073c5e92) APPROVED, struck 3, a PASS (CONFIRM passed, D)
-8. [S] secret.vlad.a blocker 4 (b9030560) APPROVED, struck 4; added 6
-9. [S] secret.solar_architect.a blocker 1 (e3841ea1) APPROVED, struck 1
-10. [P] secret.skeleton_giant.a blocker 3 (707b9ec2) APPROVED, struck 3, a PASS (CONFIRM failed a)
-- 10/10, 10 struck
+## Focus (iteration 534; BASE 1f7cc639; secret_3)
+0. evidence secret.cavalry shield-side shot unit_secret.cavalry_shield, rig 14 (cb0fe209)
+1. [R] secret.cavalry.b blocker 1 (48478b9e, 21b3bc3f) APPROVED, struck 1, b PASS (CONFIRM passed, D)
+2. [S] secret.gatling_gun.b blocker 2 (c9d9173d) APPROVED, struck 2; added 3 (CONFIRM passed b)
+3. [S] secret.bomb_cannon.a blocker 1 (08ff24b5) APPROVED, struck 1
+4. [S] secret.bomb_cannon.a blocker 2 (ede7b8a5) APPROVED, struck 2, a PASS (CONFIRM failed a: third man; plateau)
+5. [S] secret.bomb_cannon.b blocker 1 (0db15db3) APPROVED, struck 1, b PASS (CONFIRM passed b)
+6. [S] secret.witch.c blocker 2 (bb0b15da) APPROVED, struck 2
+7. [S] secret.necromancer.b blocker 3 (746fb2cd) APPROVED, struck 3, b PASS
+8. [S] secret.banshee.a blocker 1 (c60e101a) APPROVED, struck 1
+9. [S] secret.skeleton_giant.a blocker 1 (5144914b) APPROVED, no strike
+- 9/9, 8 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] secret.cavalry (e5417888) / VERDICT: APPROVE / CRITERION: secret.cavalry.b PASS   (previous: FAIL)
-- GAP: [S] secret.bomb_cannon (d129e7ac) / VERDICT: APPROVE / CRITERION: secret.bomb_cannon.a PASS   (previous: FAIL)
-- GAP: [P] secret.skeleton_giant (707b9ec2) / VERDICT: APPROVE / CRITERION: secret.skeleton_giant.a PASS   (previous: FAIL)
-- GAP: [S] secret.gatling_gun (ee015aa3) / VERDICT: APPROVE / CRITERION: secret.gatling_gun.a PASS   (previous: FAIL)
-- GAP: [S] secret.gatling_gun (4466da30) / VERDICT: APPROVE / CRITERION: secret.gatling_gun.b FAIL   (previous: FAIL)
-- GAP: [S] secret.wheelbarrow_dragon (f84e1cdb, 22fcf910) / VERDICT: APPROVE / CRITERION: secret.wheelbarrow_dragon.a FAIL   (previous: FAIL)
-- GAP: [S] secret.wheelbarrow_dragon (b07fd710) / VERDICT: APPROVE / CRITERION: secret.wheelbarrow_dragon.a FAIL   (previous: FAIL)
-- GAP: [S] secret.wheelbarrow_dragon (073c5e92) / VERDICT: APPROVE / CRITERION: secret.wheelbarrow_dragon.a PASS   (previous: FAIL)
-- GAP: [S] secret.vlad (b9030560) / VERDICT: APPROVE / CRITERION: secret.vlad.a FAIL   (previous: FAIL)
-- GAP: [S] secret.solar_architect (e3841ea1) / VERDICT: APPROVE / CRITERION: secret.solar_architect.a FAIL   (previous: FAIL)
+- GAP: [R] secret.cavalry (48478b9e, 21b3bc3f) / VERDICT: APPROVE / CRITERION: secret.cavalry.b PASS   (previous: FAIL plateau)
+- GAP: [S] secret.gatling_gun (c9d9173d) / VERDICT: APPROVE / CRITERION: secret.gatling_gun.b FAIL   (previous: FAIL)
+- GAP: [S] secret.bomb_cannon (08ff24b5) / VERDICT: APPROVE / CRITERION: secret.bomb_cannon.a PASS   (previous: FAIL)
+- GAP: [S] secret.bomb_cannon (ede7b8a5) / VERDICT: APPROVE / CRITERION: secret.bomb_cannon.a PASS   (previous: FAIL)
+- GAP: [S] secret.bomb_cannon (0db15db3) / VERDICT: APPROVE / CRITERION: secret.bomb_cannon.b PASS   (previous: FAIL)
+- GAP: [S] secret.witch (bb0b15da) / VERDICT: APPROVE / CRITERION: secret.witch.c FAIL   (previous: FAIL)
+- GAP: [S] secret.necromancer (746fb2cd) / VERDICT: APPROVE / CRITERION: secret.necromancer.b PASS   (previous: FAIL)
+- GAP: [S] secret.banshee (c60e101a) / VERDICT: APPROVE / CRITERION: secret.banshee.a FAIL   (previous: FAIL)
+- GAP: [S] secret.skeleton_giant (5144914b) / VERDICT: APPROVE / CRITERION: secret.skeleton_giant.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM secret.cavalry: a PASS b FAIL c PASS d PASS (3/4); secret.bomb_cannon: a FAIL b FAIL c PASS d PASS (2/4); secret.skeleton_giant: a FAIL b PASS c PASS d PASS (3/4); secret.wheelbarrow_dragon: a PASS b PASS c PASS d PASS (4/4)
+- CONFIRM secret.cavalry: a PASS b PASS c PASS d PASS (4/4); secret.gatling_gun: a PASS b PASS c PASS d PASS (4/4); secret.bomb_cannon: a FAIL b PASS c PASS d PASS (3/4)
 
 ## Notes for next iteration (max 5 lines)
-- wheelbarrow_dragon D at 533. Cavalry b is plateau (CONFIRM failed b twice): its next pick is one [R] on the mounted shield hold (takes the [R] slot at 534).
-- Starve at 534: witch.c, necromancer.b (last 529), banshee.a (529). Bomb cannon a/b and skeleton giant a now carry CONFIRM 533 lists.
+- cavalry D at 534. Bomb cannon a is plateau (CONFIRM failed a twice): its [R] (crew of two: drop the extra on-foot crewman) takes the [R] slot at 535.
+- Starve at 535: witch.b, necromancer.c, banshee.c (last 530); solar_architect.b (530) too. Gatling b.3 is one blocker: lower wavy-topped cheeks, then CONFIRM.
+- Eligible [P] fallout: bomb RIDER_CUTLASS out .22 -> ~.5 (0db15db3); giant bulk 1.7 -> ~1.2 and GIANT_BUILD hem .42 -> ~.3 (5144914b).
 - solar b.2 "off hand empty" looks stale (critics 530, 533): a CONFIRM or re-audit should strike it. solar c.1: aim spawnSolarRay from the right-hand wand tip.
-- Necromancer idle frames his back: evidence commit before a face/front pick. Witch clones copy her look; a Stiffy body for witch a.1 is one SKELETON_UNITS entry.
-- Bomb cannon rider is an addOperator in vehicleBuilder dressed with shared cannonBandanna/cannonShirt: gate any rider change on secret.bomb_cannon (pirate.cannon is done).
+- Necromancer idle frames his back: evidence commit before a face/front pick. Witch clones copy her look and missile. Autoloop was switched off by the user during 534.
