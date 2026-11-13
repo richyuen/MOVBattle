@@ -4527,6 +4527,34 @@ export function skeletonGiantGreaves(scene: Scene, body: ArticulatedBody, team: 
 }
 
 /*
+ * [R] 535 (bomb_cannon a.1) the Bomb Cannon's one crewman on foot (secret.bomb_cannon.jpg: behind the breech, beside the rider, a pirate in a striped
+ * shirt, cream bands round a team trunk). BOMB_GUNNER_STRIPES over the yoke box: .rows cream bands, each .band of the trunk's height, standing .out
+ * of its width and depth, from .low under the middle to .top over it; unlit cream (LESSONS 442), out of the glow. Four slabs a band (front, back,
+ * sides) so no ribbon faces in (LESSONS SSAO).
+ */
+const BOMB_GUNNER_STRIPES = { rows: 4, band: 0.09, out: 1.07, top: 0.8, low: 0.75, cream: new Color3(0.92, 0.88, 0.78) };
+export function bombGunnerStripes(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = BOMB_GUNNER_STRIPES, glow = scene.getGlowLayerByName("glow");
+  const cream = getMaterialFactory().get("unlit", S.cream, { emissive: S.cream });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const top = T.mid + T.half * S.top, low = T.mid - T.half * S.low, h = (T.half * 2) * S.band;
+  const wx = T.wide * S.out, dz = T.deep * S.out, th = T.deep * 0.08;
+  const out: Mesh[] = [];
+  for (let k = 0; k < S.rows; k++) {
+    const y = low + ((top - low) * (k + 0.5)) / S.rows;
+    const slab = (w: number, d: number, x: number, z: number): void => {
+      const b = MeshBuilder.CreateBox("bombGunnerStripe", { width: w, height: h, depth: d }, scene);
+      b.parent = body.torso; b.position.set(x, y, z); b.material = cream; glow?.addExcludedMesh(b); out.push(b);
+    };
+    slab(wx * 2 + th, th, 0, dz);
+    slab(wx * 2 + th, th, 0, -dz);
+    for (const s of [-1, 1]) slab(th, dz * 2 + th, s * wx, 0);
+  }
+  return out;
+}
+
+/*
  * [S] 533 (a.3) the Bomb Cannon crew's floppy pirate caps (secret.bomb_cannon.jpg: both pirates wear a big soft team cap, a rolled band low on the
  * brow just over the bead eyes and a puffed crown slouched back and to one side, a knot at the back with two short tails; no helmet, no beret).
  * BOMB_CREW_CAP in the head's box (W, H, D its sizes; e the eyes' top): band .bandH H tall, .bandOut of the head across and deep, its foot .bandLo

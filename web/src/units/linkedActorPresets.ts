@@ -270,7 +270,10 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         key: "gunner",
         label: "gunner",
         relation: "crew",
-        offset: new Vector3(0.45, 0, -0.5),
+        // [R] 535 (a.1; secret.bomb_cannon.jpg; card Appearance "the gunner ... and ... a small pirate on top of the cannon"): the crew is two, the
+        // rider astride the barrel (vehicleBuilder BOMB_RIDER) and this one striped pirate on foot right behind the breech, beside the rider; the
+        // loader actor that stood on foot at the trail is dropped (as the Gatling's at 533)
+        offset: new Vector3(0.22, 0, -0.62),
         syncFacing: true,
         semantics: {
           ...emittingCrew,
@@ -285,20 +288,6 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
           materialPreset: "secret_bandit",
           posePreset: "crew",
           accentColor: "#4a4a4a",
-        }),
-      },
-      {
-        key: "loader",
-        label: "loader",
-        relation: "crew",
-        offset: new Vector3(-0.45, 0, -0.85),
-        syncFacing: true,
-        semantics: { ...parentDamage, actionPreset: "reload" },
-        visual: visual("cutlass", "none", "none", "none", { // [S] 533 (a.3) hat off: secretDress bombCrewCap
-          proportions: { scale: 0.66, bulk: 0.78, headSize: 1.0 },
-          materialPreset: "secret_bandit",
-          posePreset: "crew",
-          accentColor: "#5b5b5b",
         }),
       },
     ],
