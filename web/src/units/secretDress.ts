@@ -4565,6 +4565,48 @@ export function bansheeFace(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 537 (banshee a.4) the Banshee's hair (audit 527 "no hair - TABS: long dark wild hair framing the face"; secret.banshee.red.png: near-black hair
+ * in loose wavy locks down both sides of the face to the shoulders, splaying out at the ends, a fringe of short spiky tufts over the top of the head
+ * under the crown, a dark mass behind). BANSHEE_HAIR in the head box (W, H, D, c): per side .locks locks from the head's side (.x W out, from .from D
+ * forward to the back), each two flat segments .seg H long, .w W wide, the upper splayed .splay rad out, the lower kinked .kink back in and out by
+ * turns (wild); .tufts tufts .tuft H tall over the top from side to side, leaning out; a back mass .backW W wide, .backH H tall behind the head.
+ * Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow.
+ */
+const BANSHEE_HAIR = { locks: 4, x: 0.44, from: 0.18, seg: [0.55, 0.5], w: 0.16, splay: 0.22, kink: 0.35, tufts: 7, tuft: 0.28, backW: 0.95, backH: 1.2,
+  dark: new Color3(0.08, 0.06, 0.07) };
+export function bansheeHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = BANSHEE_HAIR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const hairM = mf.get("cloth", K.dark, { emissive: K.dark.scale(0.4), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, parent: TransformNode): Mesh => { m.parent = parent; m.material = hairM; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const top = c.y + H * 0.42;
+  for (const sd of [-1, 1]) for (let i = 0; i < K.locks; i++) {
+    const t = i / (K.locks - 1);
+    let joint = new TransformNode("bansheeLock", scene); joint.parent = head;
+    joint.position.set(c.x + sd * W * (K.x + 0.04 * (i % 2)), top - H * 0.08 * i, c.z + D * K.from - D * 0.5 * t);
+    joint.rotation.set(0.12 * (i % 2 ? 1 : -1), 0, Math.PI - sd * (K.splay + 0.06 * i)); // hang down (+y turned to -y), splayed out
+    for (let k = 0; k < K.seg.length; k++) {
+      const len = H * K.seg[k] * (1 - 0.08 * i);
+      if (k > 0) joint.rotation.set(0.1, 0, sd * K.kink * (i % 2 ? 1 : -0.6));
+      const seg = MeshBuilder.CreateBox("bansheeHair", { width: W * K.w * (1 - 0.3 * k), height: len, depth: D * 0.1 }, scene);
+      seg.position.y = len / 2; put(seg, joint);
+      const next = new TransformNode("bansheeLock", scene); next.parent = joint; next.position.y = len; joint = next;
+    }
+  }
+  for (let i = 0; i < K.tufts; i++) {
+    const u = i / (K.tufts - 1) - 0.5;
+    const tuft = MeshBuilder.CreateCylinder("bansheeHairTuft", { height: H * K.tuft, diameterBottom: W * 0.16, diameterTop: 0, tessellation: 4 }, scene);
+    tuft.rotation.set(-0.25, 0, -u * 1.6); tuft.position.set(c.x + u * W * 0.85, top + H * 0.02 - Math.abs(u) * H * 0.2 + H * K.tuft * 0.3, c.z + D * 0.05);
+    put(tuft, head);
+  }
+  const back = MeshBuilder.CreateBox("bansheeHairBack", { width: W * K.backW, height: H * K.backH, depth: D * 0.3 }, scene);
+  back.position.set(c.x, top - H * K.backH / 2 + H * 0.1, c.z - D * 0.38); put(back, head);
+  return out;
+}
+
+/*
  * [S] 530 (a.2) the Witch's hood-hat (secret.witch.red.png: a tall team-coloured hat with no brim at all; its foot is a hood that comes down round
  * the face to the jaw, wider at the bottom, the face showing in its open front; over the head it narrows into a long crooked spire that bends back
  * and to one side, kinked twice). WITCH_HOOD in the head box (W, H, D, c): the hood a 9-sided frustum from .chin H under the head's foot to .crown
