@@ -1170,6 +1170,17 @@ export class UnitFactory {
     if (definition.id === "secret.wheelbarrow_dragon" && !shouldUseVehicleBody && visual.posePreset === "mounted" && visual.special !== "dragon_barrow") propMeshes.push(...dressAfro(this._scene, body));
     // [S] 531 (a.1): the Gatling crank gunner's bare head of short dark hair (secretDress gatlingGunnerHair); the loader keeps his bandana
     if (definition.id === "secret.gatling_gun" && !shouldUseVehicleBody && visual.hat === "none") propMeshes.push(...gatlingGunnerHair(this._scene, body));
+    // [S] 531 (b.2; secret.bomb_cannon.jpg: the crewman's cutlass blade stands up from his fist, held blade-up overhead at the reload): on the
+    // crew rig the cutlass's +Z (blade) runs down the fist, so it is re-seated under a pivot at the hand turned half round its x (LESSONS: flip a
+    // held blade at its grip, not by a rotation offset, which turns it about its middle). Blade and guard swap ends round the fist together.
+    if (definition.id === "secret.bomb_cannon" && !shouldUseVehicleBody && visual.weapon === "cutlass") {
+      const held = body.rightHand.getChildren().find((n) => n.name === "blade" && n.getChildren().some((c) => c.name === "cutlassJewel"));
+      if (held instanceof TransformNode) {
+        const pivot = new TransformNode("cutlassReseat", this._scene);
+        pivot.parent = body.rightHand; pivot.rotation.x = Math.PI;
+        held.parent = pivot;
+      }
+    }
     // [S] 527 (a.2): the Skeleton Giant's team Greek helmet in place of the grey crown ball (secretDress skeletonGiantHelm)
     if (definition.id === "secret.skeleton_giant" && !shouldUseVehicleBody) propMeshes.push(...skeletonGiantHelm(this._scene, body, teamColor));
     // [S] 527 (a.1): the Cavalry rider's grey knight helm with a bevor and team crest (secretDress cavalryHelm)
