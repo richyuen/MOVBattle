@@ -4392,6 +4392,82 @@ export function witchBroom(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 536 (a.4) the Witch's tattered robe (audit 527: "no robe - TABS: a tattered dark team robe/tunic with a lighter team sash and belt";
+ * secret.witch.red.png, .blue.png, card Appearance "a tattered robe with trousers that have been ripped to its femurs": a dark team tunic over the
+ * whole rib cage from just under the collarbone to mid-thigh, a little wider at the hem, its hem cut into rag points; two light team bands down its
+ * front edges from the shoulders to the hem; a light team sash knotted round the waist with its end hanging at the front, a brown belt under it;
+ * dark team short sleeves to the elbow; the collarbone and neck bone showing above). WITCH_ROBE in the rib cage's box (the ribs' and collarbone's
+ * bounds in the torso frame, W across, D deep): the tunic a 9-sided frustum from .top under the collarbone's top to .hem of the way from the hip
+ * joints to the knees, .out W across at the top and .flare W at the hem, .deep of its width deep; .rags rag points .rag of the hem's drop long; the
+ * bands .band W wide at .bandX W each side of the middle; the sash .sash W tall at .waist of the way from the hips up to the collar, .sashOut of the
+ * tunic there, its tail .tail W long; the belt .belt W tall under it; the sleeves limbShell .sleeve of the upper arm, .sleeveOut thick. Team cloth
+ * saturated (c^2): dark x.dark, light lerped .light to white; self-lit .12, out of the glow. Her shorts are spookyDress stiffyShorts in the dark cloth.
+ */
+const WITCH_ROBE = { top: 0.04, hem: 0.45, out: 1.2, flare: 1.5, deep: 0.85, rags: 9, rag: 0.35, band: 0.12, bandX: 0.2, sash: 0.13, waist: 0.12,
+  sashOut: 1.04, tail: 0.32, belt: 0.06, sleeve: 0.8, sleeveOut: 3.4, dark: 0.42, light: 0.22, leather: new Color3(0.28, 0.13, 0.06) };
+export function witchRobe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const R = WITCH_ROBE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const sq = new Color3(team.r * team.r, team.g * team.g, team.b * team.b);
+  const darkC = sq.scale(R.dark), lightC = Color3.Lerp(sq, Color3.White(), R.light);
+  const dark = mf.get("cloth", darkC, { emissive: darkC.scale(0.12), roughness: 1 });
+  const light = mf.get("cloth", lightC, { emissive: lightC.scale(0.12), roughness: 1 });
+  const leather = mf.get("cloth", R.leather, { emissive: R.leather.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material, parent: TransformNode = body.torso): Mesh => {
+    m.parent = parent; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m;
+  };
+  // the rib cage's box in the torso frame
+  let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity, yTop = -Infinity;
+  const toTorso = body.torso.computeWorldMatrix(true).clone().invert();
+  for (const m of body.torso.getChildMeshes(true)) {
+    if (!/_rib$|_collarbone$/.test(m.name)) continue;
+    m.computeWorldMatrix(true);
+    for (const v of m.getBoundingInfo().boundingBox.vectorsWorld) {
+      const p = Vector3.TransformCoordinates(v, toTorso);
+      x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); yTop = Math.max(yTop, p.y);
+    }
+  }
+  if (!Number.isFinite(x0)) return out;
+  const W = x1 - x0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const hipY = (originIn(body.leftHip, body.torso).y + originIn(body.rightHip, body.torso).y) / 2;
+  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const top = yTop - R.top * W, hem = hipY + (kneeY - hipY) * R.hem, long = top - hem;
+  const dTop = W * R.out, dBot = W * R.flare;
+  const tunic = put(MeshBuilder.CreateCylinder("witchRobe", { height: long, diameterTop: dTop, diameterBottom: dBot, tessellation: 9 }, scene), dark);
+  tunic.scaling.z = R.deep; tunic.position.set(cx, (top + hem) / 2, cz);
+  // rag points round the hem
+  for (let i = 0; i < R.rags; i++) {
+    const a = ((i + 0.5) / R.rags) * Math.PI * 2, drop = long * R.rag * (i % 3 === 1 ? 0.55 : 1);
+    const rag = put(MeshBuilder.CreateCylinder("witchRobeRag", { height: drop, diameterTop: dBot * 0.32, diameterBottom: 0, tessellation: 3 }, scene), dark);
+    rag.scaling.z = 0.35; rag.rotation.y = a;
+    rag.position.set(cx + Math.sin(a) * dBot * 0.44, hem - drop / 2 + long * 0.01, cz + Math.cos(a) * dBot * 0.44 * R.deep);
+  }
+  // the light bands down the front edges, laid on the frustum's sloping front
+  const zTop = cz + (dTop / 2) * R.deep, zBot = cz + (dBot / 2) * R.deep;
+  for (const side of [-1, 1]) {
+    const band = put(MeshBuilder.CreateBox("witchRobeBand", { width: W * R.band, height: Math.hypot(long, zBot - zTop), depth: W * 0.04 }, scene), light);
+    band.rotation.x = Math.atan2(zBot - zTop, long);
+    band.position.set(cx + side * W * R.bandX * (1 + (R.flare - R.out) * 0.25), (top + hem) / 2, (zTop + zBot) / 2 - W * 0.02);
+  }
+  // the sash knotted round the waist, its tail hanging at the front, and the brown belt under it
+  const waistY = hipY + (top - hipY) * R.waist, k = (top - waistY) / long, dWaist = dTop + (dBot - dTop) * k;
+  const sash = put(MeshBuilder.CreateCylinder("witchRobeSash", { height: W * R.sash, diameter: dWaist * R.sashOut, tessellation: 9 }, scene), light);
+  sash.scaling.z = R.deep; sash.position.set(cx, waistY, cz);
+  const tail = put(MeshBuilder.CreateBox("witchRobeSashTail", { width: W * R.sash * 0.9, height: W * R.tail, depth: W * 0.035 }, scene), light);
+  tail.rotation.z = 0.25; tail.position.set(cx - W * 0.22, waistY - W * R.tail * 0.45, cz + (dWaist / 2) * R.deep * R.sashOut + W * 0.02);
+  const belt = put(MeshBuilder.CreateCylinder("witchRobeBelt", { height: W * R.belt, diameter: (dWaist + (dBot - dTop) * (W * R.sash / long)) * R.sashOut * 1.01, tessellation: 9 }, scene), leather);
+  belt.scaling.z = R.deep; belt.position.set(cx, waistY - W * (R.sash + R.belt) / 2, cz);
+  // short dark sleeves to the elbow
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const s = limbShell(scene, "witchRobeSleeve", arm, 0, R.sleeve, R.sleeveOut, dark);
+    glow?.addExcludedMesh(s); out.push(s);
+  }
+  return out;
+}
+/** The dark team cloth of the Witch's robe, for her shorts (WITCH_ROBE.dark). */
+export function witchRobeDark(team: Color3): Color3 { return new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(WITCH_ROBE.dark); }
+
+/*
  * [S] 532 the Wheelbarrow Dragon's driver, the Traveller (secret.wheelbarrow_dragon.red.png, .jpg; card Appearance "that goofy Traveller Unit, with
  * their Afro and overalls"; audit a.4 "a hulking slab-torsoed giant - TABS: a lanky normal-sized Traveller in team overalls"): a bare team chest and
  * bare team arms (the trunk, yoke and pads in his skin), team overalls over it: a bib on the trunk's front from BARROW_OVERALLS.lo to .hi of the

@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -764,6 +764,11 @@ export class UnitFactory {
     if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyShorts(this._scene, body, teamColor));
     // [S] 534 the Skeleton Giant's are cut to mid-thigh (spec at GIANT_BUILD)
     if (definition.id === "secret.skeleton_giant" && !shouldUseVehicleBody) propMeshes.push(...stiffyShorts(this._scene, body, teamColor, { hem: GIANT_BUILD.hem, out: GIANT_BUILD.out }));
+    // [S] 536 (a.4) the Witch's tattered dark team robe with light bands, sash and belt, over shorts ripped to the femurs (secretDress WITCH_ROBE)
+    if (definition.id === "secret.witch" && !shouldUseVehicleBody) {
+      propMeshes.push(...stiffyShorts(this._scene, body, witchRobeDark(teamColor), { hem: 0.5 }));
+      propMeshes.push(...witchRobe(this._scene, body, teamColor));
+    }
     // [S] 440 ...and team greaves from the knee down the shin over slim bare bone feet (spookyDress STIFFY_GREAVES)
     if (definition.id === "spooky.skeleton_warrior" && !shouldUseVehicleBody) propMeshes.push(...stiffyGreaves(this._scene, body, teamColor));
     // [S] 437 the Skeleton Archer's team hood round the skull with a ragged shoulder capelet (spookyDress SKELETON_HOOD)
@@ -1597,7 +1602,7 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3, u
   // [S] 438 not on the Skeleton Archer: a bare bone pelvis under his belt and tassels (spookyDress SKELETON_BELT)
   if (pelvis && unitId === "spooky.skeleton_archer") pelvis.material = bone;
   // [S] 439 not on the Skeleton Warrior either: he wears two-legged shorts (spookyDress STIFFY_SHORTS)
-  else if (pelvis && unitId === "spooky.skeleton_warrior") pelvis.material = cloth;
+  else if (pelvis && (unitId === "spooky.skeleton_warrior" || unitId === "secret.witch")) pelvis.material = cloth; // [S] 536 the Witch: robe + shorts (secretDress WITCH_ROBE)
   // [S] 534 nor on the Skeleton Giant: short ragged shorts over a slim pelvis (spec at GIANT_BUILD)
   else if (pelvis && unitId === "secret.skeleton_giant") {
     pelvis.material = cloth;
