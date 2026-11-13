@@ -6084,7 +6084,7 @@ export function senseiWaistBand(scene: Scene, body: ArticulatedBody, team: Color
  * .long along the arm, its centre .drop of its radius on down the arm past the wrist (hand frame -y, LESSONS 492); a swelling .swell x F across
  * between wrist and fist. In the hand's own team material (the mitt hidden under it).
  */
-const ICE_FIST = { fist: 1.75, long: 1.25, drop: 0.85, swell: 1.35 };
+const ICE_FIST = { fist: 1.1, long: 1.25, drop: 0.85, swell: 1.2 }; // [P] 543 fist 1.75 -> 1.1, swell 1.35 -> 1.2 (critic 542 b.2: mace balls wider than the head)
 export function iceGiantFists(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = ICE_FIST, out: Mesh[] = [];
   for (const [hand, fore] of [[body.leftHand, body.leftLowerArm], [body.rightHand, body.rightLowerArm]] as const) {
