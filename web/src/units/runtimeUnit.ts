@@ -22,7 +22,8 @@ const SENTINEL_SWAP = { hold: 2.5 };
 /** [S] 520 the raptor mount's run (spec at RuntimeUnit._tendRaptorGait). */
 const RAPTOR_GAIT = { amp: 0.75, rate: 2.6, full: 3, ease: 8, bob: 0.06 };
 /** [S] 520 the Bank Robbers' overhead carry (spec at RuntimeUnit._tendSafeCarry). */
-const SAFE_CARRY = { inset: 0.15 };
+// [S] 530 (b.3) .reach: the safe's floor rides at that share of the shorter robber's straight arm over his shoulder, so both men lock their arms
+const SAFE_CARRY = { inset: 0.15, reach: 0.97 };
 // [S] 526 the Present Elf's fists on the box's side walls: .out of its half-width out from its centre, .down of its half-height below it
 const PRESENT_HOLD = { out: 1.02, down: 0.1 };
 /** [S] 520 the Mace Spinner's fists at his hips (spec at RuntimeUnit._holdSpinnerFists). */
@@ -2828,6 +2829,21 @@ export class RuntimeUnit {
     const chain: TransformNode[] = [];
     for (let n: TransformNode | null = safe; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
+    // [S] 530 (b.3; secret.bank_robbers.red.png, .blue.png: both men's arms locked straight overhead, mitts pressed under the safe's base) the lead
+    // sets the safe's floor each frame at SAFE_CARRY.reach of the shorter man's straight reach (shoulder + upper arm + forearm), so neither elbow folds
+    if (!this._linkedParent) {
+      const men = [this, ...[...this._linkedChildren].filter((m) => m.definition.id === this.definition.id && m.visualConfig.special !== "safe_bundle" && !m._isDead)];
+      let reach = Infinity;
+      for (const m of men) {
+        const mb = m.body;
+        for (const n of [mb.root, mb.hip, mb.torso, mb.rightShoulder]) n.computeWorldMatrix(true);
+        const arm = (mb.rightElbow.position.length() + mb.rightHand.position.length()) * mb.rightShoulder.absoluteScaling.y;
+        reach = Math.min(reach, mb.rightShoulder.getAbsolutePosition().y + arm * SAFE_CARRY.reach);
+      }
+      const lift = reach - safe.getBoundingInfo().boundingBox.minimumWorld.y;
+      const sy = (safe.parent as TransformNode | null)?.absoluteScaling.y || 1;
+      if (Number.isFinite(lift) && Math.abs(lift) > 1e-4) { safe.position.y += lift / sy; safe.computeWorldMatrix(true); }
+    }
     const box = safe.getBoundingInfo().boundingBox;
     const floor = box.minimumWorld.y;
     const b = this.body;
