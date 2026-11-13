@@ -2146,6 +2146,13 @@ export function attachProps(
       tagVisualState(weapon, "fan_closed");
     }
     if (config.weaponVariant === "jester_dagger") seatJesterDagger(weapon, body.rightHand, body.rightLowerArm, 1);
+    // [S] 534 (necromancer b.3; secret.necromancer.red.png: the team grip closed in the fist, the blade hanging point-down out of it): the knife's
+    // grip is centred in the palm block, square to the hand (the default grip preset's lift and tilt floated it beside the fist, parallel to it)
+    if (config.weaponVariant === "necro_knife") {
+      const palm = body.rightHand.getChildren().find((n): n is Mesh => n instanceof Mesh && /HandM$/.test(n.name));
+      weapon.position.copyFrom(palm?.position ?? Vector3.Zero());
+      weapon.rotation.setAll(0);
+    }
     props.push(weapon);
   }
 
@@ -4796,7 +4803,9 @@ const NECRO_KNIFE = { grip: 2.6, collar: 0.6, long: 0.21, segs: 5, wide: 0.13, t
 function buildNecroKnife(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   const K = NECRO_KNIFE, f = fit.fist, L = fit.stand * K.long;
   const root = new Mesh("necroKnife", scene);
-  const hold = new Mesh("necroKnifeHold", scene); hold.parent = root; hold.rotation.z = Math.PI;
+  // [S] 534 (b.3) no reverse-grip half turn: built down -y, the blade runs on out of the knuckle end of the fist along the forearm's line (hand
+  // frame: +y up the forearm; probe_axes 534), point-down from a hanging arm; from the half turn it ran back up the forearm toward his body
+  const hold = new Mesh("necroKnifeHold", scene); hold.parent = root;
   const steel = mat(scene, K.steel, 0.18, "cloth"), bone = mat(scene, K.bone, 0.25, "cloth"), grip = mat(scene, team, 0.14, "cloth");
   const G = f * K.grip;
   const handle = MeshBuilder.CreateCylinder("necroKnifeGrip", { height: G, diameter: f * 1.0, tessellation: 6 }, scene);
