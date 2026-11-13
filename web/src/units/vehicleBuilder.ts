@@ -778,8 +778,15 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
    * to .front, joined by a yoke under the muzzle; a crank arm .crank long off the breech's side with a handle. Barrels grey, frame and breech dark,
    * in lit cloth (makeMat greys; metal renders black).
    */
-  const G = { axis: 0.76, back: -0.05, front: 1.06, count: 8, bore: 0.055, ring: 0.075, collar: 0.25, collarL: 0.07, rings: [0.97, 0.55],
-    breech: 0.27, breechL: 0.34, railW: 0.04, railH: 0.12, railX: 0.17, crank: 0.16 };
+  /*
+   * [S] 533 (b.1) an open bundle (CONFIRM 532: the barrels read as one grooved tube; secret.gatling_gun.red.png: eight separate barrels with
+   * dark gaps between them round a dark core, each muzzle a pale rim ring, held by wide collars). GATLING_BUNDLE: barrels .bore on a .ring wide
+   * enough to part them, a dark core .core of the inner gap across, a pale torus lip .lipT thick on each muzzle, a front plate .plate behind
+   * the muzzles; collars and breech widened to wrap the ring.
+   */
+  const GATLING_BUNDLE = { bore: 0.05, ring: 0.1, core: 0.95, lipT: 0.012, plate: 0.03 };
+  const G = { axis: 0.76, back: -0.05, front: 1.06, count: 8, bore: GATLING_BUNDLE.bore, ring: GATLING_BUNDLE.ring, collar: 0.3, collarL: 0.07, rings: [0.9, 0.55],
+    breech: 0.31, breechL: 0.34, railW: 0.04, railH: 0.12, railX: 0.18, crank: 0.16 };
   const litM = (c: Color3, glow: number) => getMaterialFactory().get("cloth", c, { emissive: c.scale(glow) });
   const gunGrey = litM(new Color3(0.36, 0.37, 0.4), 0.18), frameDark = litM(new Color3(0.13, 0.13, 0.15), 0.3);
   const axial = (name: string, d: number, len: number, x: number, y: number, z: number, mat: PBRMetallicRoughnessMaterial | Material, tess = 10) => {
@@ -791,10 +798,14 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
   for (let i = 0; i < G.count; i++) {
     const a = (Math.PI * 2 * i) / G.count;
     axial("gatlingBarrel", G.bore, gunLen, Math.cos(a) * G.ring, G.axis + Math.sin(a) * G.ring, (G.front + G.back) / 2, gunGrey);
-    // a pale muzzle lip on each barrel's end
-    axial("gatlingMuzzleLip", G.bore * 1.25, 0.02, Math.cos(a) * G.ring, G.axis + Math.sin(a) * G.ring, G.front, litM(new Color3(0.7, 0.7, 0.72), 0.2), 8);
+    // a pale rim ring round each barrel's mouth
+    const lip = MeshBuilder.CreateTorus("gatlingMuzzleLip", { diameter: G.bore, thickness: GATLING_BUNDLE.lipT, tessellation: 10 }, scene);
+    lip.rotation.x = Math.PI / 2; lip.position.set(Math.cos(a) * G.ring, G.axis + Math.sin(a) * G.ring, G.front); lip.parent = root;
+    lip.material = litM(new Color3(0.7, 0.7, 0.72), 0.2); allMeshes.push(lip);
   }
-  axial("gatlingRod", G.bore * 1.1, gunLen + 0.06, 0, G.axis, (G.front + G.back) / 2 + 0.03, frameDark);
+  // the dark core the barrels stand round: it fills the middle so the gaps between barrels read dark
+  axial("gatlingRod", (G.ring * 2 - G.bore) * GATLING_BUNDLE.core, gunLen + 0.06, 0, G.axis, (G.front + G.back) / 2 + 0.03, frameDark, 12);
+  axial("gatlingFrontPlate", G.ring * 2 + G.bore * 0.6, GATLING_BUNDLE.plate, 0, G.axis, G.front - 0.1, gunGrey, 12);
   for (const t of G.rings) axial("gatlingCollar", G.collar, G.collarL, 0, G.axis, G.back + gunLen * t, gunGrey, 12);
   axial("gatlingBreech", G.breech, G.breechL, 0, G.axis, G.back - G.breechL / 2 + 0.04, frameDark, 12);
   for (const side of [-1, 1]) {
