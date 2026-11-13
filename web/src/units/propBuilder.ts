@@ -3077,34 +3077,58 @@ function buildVladLog(scene: Scene, s: number): Mesh {
  * (in shaft lengths), the first .flagAt below the blade's foot, .flagGap apart, hung out to the side and drooping .droop. Steel in pale lit cloth
  * ("metal" renders near black), team shaft and flags in self-lit cloth. Root named "lance" and tipped forward about the fist as the jousting lance is.
  */
-const CAVALRY_SPEAR = { long: 1.5, thick: 0.04, grip: 0.2, blade: 0.13, bladeW: 0.045, belly: 0.35, flat: 0.22, prong: 0.05, prongTilt: 0.9,
-  flags: 3, flagL: 0.2, flagW: 0.06, flagAt: 0.035, flagGap: 0.05, droop: 0.35, steel: new Color3(0.6, 0.61, 0.64) };
+/*
+ * [S] 533 (b.1) the head is a big leaf (secret.cavalry.blue.png: a pale silver blade about a quarter of the whole spear, narrow at a socket,
+ * swelling to its widest a third up, then a long taper to the point; at its foot two curved side blades swept out and back like hooks).
+ * CAVALRY_HEAD in standing heights: blade .long (taken out of the shaft, so the whole spear stays .long + .oldBlade), socket .socket long;
+ * the leaf's half-widths at its stations .rows (share up, share of .wide), .flat of its width deep; each side blade two links: .hookOut long
+ * leaving at .hookOutTilt off the shaft, then .hookBack long turned .hookBackTilt further toward the grip, .hookW across. Unlit pale steel
+ * (palette unlit white x .65), out of the glow, so the team light never tints it.
+ */
+const CAVALRY_HEAD = { long: 0.38, oldBlade: 0.13, wide: 0.11, socket: 0.05, flat: 0.2,
+  rows: [[0, 0.22], [0.12, 0.6], [0.32, 1], [0.55, 0.82], [0.8, 0.42], [1, 0]] as [number, number][],
+  hookOut: 0.06, hookOutTilt: 1.2, hookBack: 0.07, hookBackTilt: 0.85, hookW: 0.022, steel: new Color3(0.62, 0.63, 0.66) };
+const CAVALRY_SPEAR = { long: 1.5, thick: 0.04, grip: 0.2, flags: 3, flagL: 0.2, flagW: 0.06, flagAt: 0.035, flagGap: 0.05, droop: 0.35 };
 function buildCavalrySpear(scene: Scene, fit: BladeFit, team: Color3): Mesh {
-  const C = CAVALRY_SPEAR, L = fit.stand * C.long, r = (fit.stand * C.thick) / 2;
-  const back = C.grip * L, front = L - back, lift = (0.5 - C.grip) * L;
-  const shaftM = mat(scene, team, 0.12, "cloth"), steel = mat(scene, C.steel, 0.15, "cloth"), flagM = mat(scene, team, 0.14, "cloth");
+  const C = CAVALRY_SPEAR, H = CAVALRY_HEAD, Lall = fit.stand * C.long, r = (fit.stand * C.thick) / 2;
+  const B = fit.stand * H.long, cut = B - fit.stand * H.oldBlade;
+  const back = C.grip * Lall, front = Lall - back - cut, L = back + front, lift = (front - back) / 2;
+  const shaftM = mat(scene, team, 0.12, "cloth"), flagM = mat(scene, team, 0.14, "cloth");
+  const steel = getMaterialFactory().get("unlit", H.steel, { emissive: H.steel });
+  const glow = scene.getGlowLayerByName("glow");
+  const steelOn = (m: Mesh) => { m.material = steel; m.convertToFlatShadedMesh(); m.parent = shaft; glow?.addExcludedMesh(m); };
   const shaft = MeshBuilder.CreateCylinder("lance", { height: L, diameter: 2 * r, tessellation: 8 }, scene);
   shaft.position.y = lift; shaft.material = shaftM; shaft.convertToFlatShadedMesh();
   const at = (y: number) => y - lift; // shaft-local y from fist-local y
-  const B = fit.stand * C.blade, BW = fit.stand * C.bladeW, foot = front;
-  const lower = MeshBuilder.CreateCylinder("cavSpearBlade", { height: B * C.belly, diameterBottom: r * 2.4 * Math.SQRT2, diameterTop: BW * Math.SQRT2, tessellation: 4 }, scene);
-  lower.rotation.y = Math.PI / 4; lower.bakeCurrentTransformIntoVertices(); lower.scaling.z = C.flat;
-  lower.position.y = at(foot + (B * C.belly) / 2); lower.material = steel; lower.convertToFlatShadedMesh(); lower.parent = shaft;
-  const upper = MeshBuilder.CreateCylinder("cavSpearPoint", { height: B * (1 - C.belly), diameterBottom: BW * Math.SQRT2, diameterTop: 0, tessellation: 4 }, scene);
-  upper.rotation.y = Math.PI / 4; upper.bakeCurrentTransformIntoVertices(); upper.scaling.z = C.flat;
-  upper.position.y = at(foot + B * C.belly + (B * (1 - C.belly)) / 2); upper.material = steel; upper.convertToFlatShadedMesh(); upper.parent = shaft;
-  const P = fit.stand * C.prong;
-  for (const side of [-1, 1]) {
-    const prong = MeshBuilder.CreateCylinder("cavSpearProng", { height: P, diameterBottom: r * 1.6, diameterTop: 0, tessellation: 4 }, scene);
-    prong.setPivotPoint(new Vector3(0, -P / 2, 0));
-    prong.position.set(side * r, at(foot) + P / 2, 0); prong.rotation.z = -side * (Math.PI - C.prongTilt);
-    prong.material = steel; prong.convertToFlatShadedMesh(); prong.parent = shaft;
+  const W = fit.stand * H.wide, foot = front;
+  const socket = MeshBuilder.CreateCylinder("cavSpearSocket", { height: fit.stand * H.socket, diameterBottom: r * 2.6, diameterTop: r * 2.1, tessellation: 8 }, scene);
+  socket.position.y = at(foot - (fit.stand * H.socket) / 2); steelOn(socket);
+  // the leaf: one flattened four-sided frustum per pair of stations
+  for (let k = 0; k + 1 < H.rows.length; k++) {
+    const [y0, w0] = H.rows[k], [y1, w1] = H.rows[k + 1], h = (y1 - y0) * B;
+    const run = MeshBuilder.CreateCylinder("cavSpearBlade", { height: h * 1.01, diameterBottom: Math.max(W * w0, r * 2) * Math.SQRT2, diameterTop: W * w1 * Math.SQRT2, tessellation: 4 }, scene);
+    run.rotation.y = Math.PI / 4; run.bakeCurrentTransformIntoVertices(); run.scaling.z = H.flat;
+    run.position.y = at(foot + y0 * B + h / 2); steelOn(run);
   }
-  const FL = L * C.flagL, FW = L * C.flagW;
+  // two hooked side blades at the foot, swept out then back toward the grip
+  const HW = fit.stand * H.hookW, HO = fit.stand * H.hookOut, HB = fit.stand * H.hookBack;
+  for (const side of [-1, 1]) {
+    const hinge = new TransformNode("cavSpearHook", scene);
+    hinge.parent = shaft; hinge.position.set(side * r, at(foot + B * 0.02), 0); hinge.rotation.z = -side * H.hookOutTilt;
+    const out = MeshBuilder.CreateCylinder("cavSpearProng", { height: HO, diameterBottom: HW * 1.4, diameterTop: HW, tessellation: 4 }, scene);
+    out.rotation.y = Math.PI / 4; out.bakeCurrentTransformIntoVertices(); out.scaling.z = H.flat * 2;
+    out.position.y = HO / 2; steelOn(out); out.parent = hinge;
+    const elbow = new TransformNode("cavSpearHookElbow", scene);
+    elbow.parent = hinge; elbow.position.y = HO * 0.95; elbow.rotation.z = -side * H.hookBackTilt;
+    const tip = MeshBuilder.CreateCylinder("cavSpearProng", { height: HB, diameterBottom: HW, diameterTop: 0, tessellation: 4 }, scene);
+    tip.rotation.y = Math.PI / 4; tip.bakeCurrentTransformIntoVertices(); tip.scaling.z = H.flat * 2;
+    tip.position.y = HB / 2; steelOn(tip); tip.parent = elbow;
+  }
+  const FL = Lall * C.flagL, FW = Lall * C.flagW;
   for (let k = 0; k < C.flags; k++) {
     const flag = MeshBuilder.CreateBox("cavSpearFlag", { width: FW, height: FL, depth: r * 0.5 }, scene);
     flag.setPivotPoint(new Vector3(0, FL / 2, 0));
-    flag.position.set(r + FW * (0.6 + k * 1.15), at(foot - L * C.flagAt - k * L * C.flagGap) - FL / 2, 0);
+    flag.position.set(r + FW * (0.6 + k * 1.15), at(foot - Lall * C.flagAt - k * Lall * C.flagGap) - FL / 2, 0);
     flag.rotation.z = C.droop; flag.material = flagM; flag.convertToFlatShadedMesh(); flag.parent = shaft;
   }
   const grip = MeshBuilder.CreateCylinder("cavSpearButt", { height: r * 3, diameter: r * 2.4, tessellation: 6 }, scene);
