@@ -54,6 +54,8 @@ function hasAbility(unit: RuntimeUnit, ability: string): boolean {
 function resolveProjectileShape(unit: RuntimeUnit, profile: AttackProfile): ProjectileShape | null {
   // [S] 528 (c.1) the Gatling Gun fires bullets with tracer lines, not crossbow bolts (projectileSystem GATLING_BULLET)
   if (unit.definition.id === "secret.gatling_gun") return "gatling_bullet";
+  // [S] 534 (c.2) the Witch (and her clones) throw mushroom spells, not a dark dart (projectileSystem MUSHROOM_SPELL)
+  if (unit.definition.id === "secret.witch") return "mushroom_spell";
   switch (unit.definition.projectileHint) {
     case "arrow": return "arrow";
     case "small_arrow": return "small_arrow"; // [S] 465 the Poacher's Small Arrow (projectileSystem SMALL_ARROW)

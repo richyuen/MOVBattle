@@ -88,7 +88,7 @@ const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, flet
  * (audit 457 blowdarter c.2: the dart flew as a full arrow).
  */
 const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
-export type ProjectileShape = "time_bolt" | "radiant_glaive" | "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "gatling_bullet" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell" | "necro_skull";
+export type ProjectileShape = "time_bolt" | "radiant_glaive" | "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "gatling_bullet" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell" | "necro_skull" | "mushroom_spell";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -291,6 +291,9 @@ const WIZARD_FIREWORK = { up: 6.5, spin: 16, tip: 0.5, delay: 0.75, over: 0.9 };
 const SPIRIT_FIRE = { heart: new Color3(0.85, 1, 1), shell: new Color3(0.1, 0.85, 1), size: 1.15 };
 // [S] 530 the Necromancer Skull (spec at its build): .size m skull, .tail m flame, card speed 25
 const NECRO_SKULL = { size: 0.34, tail: 0.7, speed: 25, arc: 0.06, bone: new Color3(0.95, 0.9, 0.75), hole: new Color3(0.04, 0.03, 0.05), flame: new Color3(0.35, 0.75, 1.3) };
+// [S] 534 the Witch's mushroom spell (spec at its build): .cap m across, .speed m/s, .arc of the distance, colours
+const MUSHROOM_SPELL = { cap: 0.42, capH: 0.55, stem: 0.32, stemH: 0.5, spots: 6, aura: 1.9, tail: 0.9, speed: 16, arc: 0.12,
+  capC: new Color3(1.0, 0.22, 0.75), spotC: new Color3(1, 0.95, 0.85), stemC: new Color3(0.95, 0.88, 0.72), auraC: new Color3(0.75, 0.3, 1.2) };
 // A bone mage's leaf whirl (units/tribal.bone_mage): a loose spinning knot of long pointed autumn leaves, each about a forearm long, red, rust and crimson
 const LEAF_COUNT = 11;
 // ...and the loft of his spike row (card Characteristics: "sending fragile units who were caught in the attack into the air", force 800; tribal.bone_mage.png):
@@ -507,6 +510,7 @@ export class ProjectileSystem {
       case "wizard_spell": speed = 18; arcHeight = dist * 0.08; break;
       case "spirit_fire": speed = 20; arcHeight = dist * 0.1; break;
       case "necro_skull": speed = NECRO_SKULL.speed; arcHeight = dist * NECRO_SKULL.arc; break;
+      case "mushroom_spell": speed = MUSHROOM_SPELL.speed; arcHeight = dist * MUSHROOM_SPELL.arc; break;
       case "leaves": speed = 12; arcHeight = dist * 0.12; break;
       case "sword": speed = 16; arcHeight = dist * 0.04; break;
       case "harpoon": speed = 18; arcHeight = dist * 0.1; break;
@@ -563,6 +567,9 @@ export class ProjectileSystem {
           break;
         case "necro_skull":
           trailSystem = createTrail(this._scene, trailMesh, NECRO_SKULL.flame, 14);
+          break;
+        case "mushroom_spell":
+          trailSystem = createTrail(this._scene, trailMesh, MUSHROOM_SPELL.auraC, 14);
           break;
         case "wizard_spell":
           trailSystem = createTrail(this._scene, trailMesh, WIZARD_SPELL.shell, 10);
@@ -1942,6 +1949,36 @@ export class ProjectileSystem {
         const tail = MeshBuilder.CreateCylinder("necroSkullTail", { height: K.tail, diameterTop: s * 1.1, diameterBottom: 0, tessellation: 6 }, this._scene);
         tail.parent = root; tail.material = fire; tail.rotation.x = Math.PI / 2; tail.position.z = -K.tail / 2 - s * 0.3;
         for (const m of [skull, jaw, shell, tail]) glowLayer?.addExcludedMesh(m);
+        break;
+      }
+      case "mushroom_spell": {
+        // [S] 534 the Witch's mushroom spell (audit 527 witch c.2: "missing: a mushroom spell flying from the staff"; card Characteristics "They
+        // throw spells that make those who were hit grow mushrooms"; Appearance "mushrooms growing out of it"): a big toadstool flies at the man, a
+        // magenta dome cap .cap m across with .spots cream spots on a stout cream stem, cap up, wrapped in a translucent violet aura .aura of the cap
+        // across with a tapering tail behind on the line of flight and a violet sparkle trail. Cap, spots and stem unlit, out of the glow; the aura
+        // unlit and translucent.
+        const K = MUSHROOM_SPELL, mf = getMaterialFactory(), glowLayer = this._scene.getGlowLayerByName("glow");
+        const capM = mf.get("unlit", K.capC, { emissive: K.capC }), spotM = mf.get("unlit", K.spotC, { emissive: K.spotC });
+        const stemM = mf.get("unlit", K.stemC, { emissive: K.stemC.scale(0.85) }), auraM = mf.get("unlit", K.auraC, { emissive: K.auraC, alpha: 0.32 });
+        const cap = MeshBuilder.CreateSphere("mushroomSpellCap", { diameter: K.cap, segments: 6, slice: 0.55 }, this._scene);
+        cap.parent = root; cap.material = capM; cap.scaling.y = K.capH * 2; cap.position.y = K.cap * 0.05;
+        const under = MeshBuilder.CreateDisc("mushroomSpellGills", { radius: K.cap * 0.47, tessellation: 12 }, this._scene);
+        under.parent = root; under.material = stemM; under.rotation.x = -Math.PI / 2; under.position.y = K.cap * 0.04;
+        const stem = MeshBuilder.CreateCylinder("mushroomSpellStem", { height: K.cap * K.stemH, diameterTop: K.cap * K.stem, diameterBottom: K.cap * K.stem * 1.3, tessellation: 8 }, this._scene);
+        stem.parent = root; stem.material = stemM; stem.position.y = -K.cap * K.stemH / 2;
+        const parts: Mesh[] = [cap, under, stem];
+        for (let i = 0; i < K.spots; i++) {
+          const a = (i / K.spots) * Math.PI * 2, up = i % 2 ? 0.55 : 0.3;
+          const spot = MeshBuilder.CreateSphere("mushroomSpellSpot", { diameter: K.cap * 0.16, segments: 3 }, this._scene);
+          spot.parent = root; spot.material = spotM; spot.scaling.y = 0.45;
+          const r = K.cap * 0.5 * Math.cos(up), h = K.cap * K.capH * Math.sin(up) + K.cap * 0.05;
+          spot.position.set(Math.cos(a) * r, h, Math.sin(a) * r); parts.push(spot);
+        }
+        const aura = MeshBuilder.CreateIcoSphere("mushroomSpellAura", { radius: K.cap * K.aura * 0.5, subdivisions: 1, flat: true }, this._scene);
+        aura.parent = root; aura.material = auraM;
+        const tail = MeshBuilder.CreateCylinder("mushroomSpellTail", { height: K.tail, diameterTop: K.cap * 1.2, diameterBottom: 0, tessellation: 6 }, this._scene);
+        tail.parent = root; tail.material = auraM; tail.rotation.x = Math.PI / 2; tail.position.z = -K.tail / 2 - K.cap * 0.4;
+        for (const m of [...parts, aura, tail]) glowLayer?.addExcludedMesh(m);
         break;
       }
       case "spirit_fire":
