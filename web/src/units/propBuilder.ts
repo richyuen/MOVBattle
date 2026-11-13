@@ -55,7 +55,8 @@ const KASA_GOLD = new Color3(0.86, 0.62, 0.18);
 /** [S] 413 the Firework Archer's bow (variant firework_bow): the stave .long of her height, orange tip caps .cap of its length. */
 const FIREWORK_BOW = { long: 1.15, cap: 0.12, capColor: new Color3(0.92, 0.5, 0.12) };
 /** [S] 540 Artemis's tall wrapped longbow (spec in buildWeapon's longbow branch) */
-const ARTEMIS_BOW = { long: 1.6, wrapAt: [0.3, 0.55, 0.8], wrap: 0.035, dark: new Color3(0.13, 0.07, 0.04), grip: new Color3(0.72, 0.5, 0.28) };
+// 540.9b thick .065 (the longbow's share of a stave length) -> .036 (look: the 1.6 stave read as a thick pole)
+const ARTEMIS_BOW = { long: 1.6, thick: 0.036, wrapAt: [0.3, 0.55, 0.8], wrap: 0.035, dark: new Color3(0.13, 0.07, 0.04), grip: new Color3(0.72, 0.5, 0.28) };
 /** [S] 418 the Firework Arrow nocked across the firework bow's grip: in stave lengths, the tube .long, .wide, set .side off the stave and reaching .back
  * behind the string; .bands green rings, a dark head .head long. */
 const FIREWORK_NOCK = { long: 0.3, wide: 0.08, side: 0.05, back: 0.02, bands: 3, ring: 1.3, head: 0.1, shaft: 0.012, nock: 0.12, wood: new Color3(0.45, 0.3, 0.16), band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14) };
@@ -6097,7 +6098,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         // The balloon archer's longbow, built to the spec at LONGBOW: one faceted light-grey stave along +y, thick at the grip and tapering to the tips, bowed a
         // little off its string; tan wraps near each tip and the team colour round the grip. Laid and seated as the plain bow (named "bow", string child).
         const Lb = fit.stand * (artemis ? ARTEMIS_BOW.long : firework ? FIREWORK_BOW.long : brown ? BROWN_LONGBOW.long : LONGBOW.long);
-        const r0 = LONGBOW.thick * Lb * 0.5;
+        const r0 = (artemis ? ARTEMIS_BOW.thick : LONGBOW.thick) * Lb * 0.5;
         const zs = 0.04 * s;
         const radius = (t: number): number => r0 * (1 - (1 - LONGBOW.taper) * Math.abs(t));
         const ts: number[] = [];
