@@ -311,7 +311,9 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         key: "crank_gunner",
         label: "crank gunner",
         relation: "crew",
-        offset: new Vector3(-0.22, 0, -0.18),
+        // [S] 532 (a.2) he stands full height square behind the breech, hands on it (secret.gatling_gun.jpg, .red.png), not low between
+        // the wheels beside it: GATLING_STAND in runtimeUnit poses the arms onto the breech
+        offset: new Vector3(0, 0, -0.78),
         syncFacing: true,
         semantics: {
           ...emittingCrew,
@@ -322,7 +324,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         },
         // [S] 531 (a.1) bare head: no captain_hat; his short dark hair is secretDress gatlingGunnerHair (unitFactory)
         visual: visual("none", "none", "none", "none", {
-          proportions: { scale: 0.7, bulk: 0.82, headSize: 1.02 },
+          proportions: { scale: 0.92, bulk: 0.82, headSize: 1.02 },
           materialPreset: "secret_pirate",
           posePreset: "vehicle",
           accentColor: "#6f5f48",
@@ -332,7 +334,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         key: "loader",
         label: "loader",
         relation: "crew",
-        offset: new Vector3(0.22, 0, -0.18),
+        offset: new Vector3(0.62, 0, -0.62),
         syncFacing: true,
         semantics: { ...parentDamage, actionPreset: "reload" },
         visual: visual("none", "bandana", "none", "none", {

@@ -11,6 +11,8 @@ import { ChainWhip, SpinnerMaces } from "./secretDress";
  * spinUp and lost at spinDown per second, and keeps turning through the wait for the next volley and DRUM_SPIN.linger s past it.
  */
 const DRUM_SPIN = { rate: 3.5, spinUp: 12, spinDown: 1.5, linger: 1.0 };
+// [S] 532 the Gatling crank gunner's stand behind the breech: trunk lean, both arms reached forward and down onto it, a little splay, elbows soft
+const GATLING_STAND = { lean: 0.14, reach: 0.95, splay: 0.12, elbow: 0.25 };
 /*
  * [S] catapult throw (351; medieval.catapult.jpg). On a shot the arm (CATAPULT_ARM in vehicleBuilder) whips from cocked to upright in CATAPULT_THROW.swing s,
  * easing out, stands there .hold s, then is hauled back down to cocked over .lower of the time left before the next shot. The shot in the bucket is
@@ -2155,6 +2157,20 @@ export class RuntimeUnit {
         body.rightElbow.rotation.x -= 0.3;
         break;
       }
+      case "vehicle":
+        // [S] 532 GATLING_STAND: the Gatling's crank gunner stands upright behind the breech, leaning a little into it with both hands
+        // down on its top (secret.gatling_gun.jpg, .red.png); the loader and every other vehicle crewman keep their own pose
+        if (this.definition.id === "secret.gatling_gun" && this._linkedRoleLabel === "crank gunner") {
+          body.torso.rotation.x += GATLING_STAND.lean;
+          body.neck.rotation.x -= GATLING_STAND.lean * 0.8;
+          body.leftShoulder.rotation.x -= GATLING_STAND.reach;
+          body.rightShoulder.rotation.x -= GATLING_STAND.reach;
+          body.leftShoulder.rotation.z -= GATLING_STAND.splay;
+          body.rightShoulder.rotation.z += GATLING_STAND.splay;
+          body.leftElbow.rotation.x -= GATLING_STAND.elbow;
+          body.rightElbow.rotation.x -= GATLING_STAND.elbow;
+        }
+        break;
       case "support":
         if (this.animator.holdingBearerPole) break; // [S] 464 the bearer's two-hand pole hold (BEARER_HOLD) solved the arms onto the pole
         body.leftShoulder.rotation.z -= 0.18;
