@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1202,6 +1202,8 @@ export class UnitFactory {
     if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...necromancerHornCap(this._scene, body, teamColor));
     // [S] 537 (a.3): a tattered dark team vest over the ribs, a front seam crossed by pale laces (secretDress NECRO_VEST)
     if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...necromancerVest(this._scene, body, teamColor));
+    // [S] 538 (a.4): ragged dark shorts to mid-thigh with a pink rope belt, in place of the rag skirt (secretDress NECRO_SHORTS)
+    if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...stiffyShorts(this._scene, body, necromancerDark(teamColor), NECRO_SHORTS));
     // [S] 528 (a.2): the Solar Architect's gold sun halo of rings and spikes behind the head (secretDress solarArchitectHalo)
     if (definition.id === "secret.solar_architect" && !shouldUseVehicleBody) propMeshes.push(...solarArchitectHalo(this._scene, body));
     // [S] 536 (a.3): a long open white coat edged gold, high collar, wide gold-cuffed sleeves, over a team front (secretDress SOLAR_COAT)
@@ -1624,7 +1626,7 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3, u
   // [S] 438 not on the Skeleton Archer: a bare bone pelvis under his belt and tassels (spookyDress SKELETON_BELT)
   if (pelvis && unitId === "spooky.skeleton_archer") pelvis.material = bone;
   // [S] 439 not on the Skeleton Warrior either: he wears two-legged shorts (spookyDress STIFFY_SHORTS)
-  else if (pelvis && (unitId === "spooky.skeleton_warrior" || unitId === "secret.witch")) pelvis.material = cloth; // [S] 536 the Witch: robe + shorts (secretDress WITCH_ROBE)
+  else if (pelvis && (unitId === "spooky.skeleton_warrior" || unitId === "secret.witch" || unitId === "secret.necromancer")) pelvis.material = cloth; // [S] 536 the Witch: robe + shorts (secretDress WITCH_ROBE); [S] 538 the Necromancer's shorts (NECRO_SHORTS)
   // [S] 534 nor on the Skeleton Giant: short ragged shorts over a slim pelvis (spec at GIANT_BUILD)
   else if (pelvis && unitId === "secret.skeleton_giant") {
     pelvis.material = cloth;

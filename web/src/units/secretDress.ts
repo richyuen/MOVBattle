@@ -4877,6 +4877,14 @@ export function witchRobeDark(team: Color3): Color3 { return new Color3(team.r *
  * .rag W long; the seam .seam W wide; .laces laces .lace W long from .laceTop to .laceLow of the vest's height; straps .strap W wide. Dark team
  * cloth (c^2 x .dark), self-lit .12; pale laces unlit (LESSONS 442); all out of the glow.
  */
+/*
+ * [S] 538 (necromancer a.4) his shorts (audit 527 "no shorts - TABS: ragged dark shorts with a pink rope belt over bare bone thighs";
+ * secret.necromancer.red.png: the vest's dark team cloth in two short baggy legs to mid-thigh, rag-cut hems, a thin pink rope tied round the
+ * pelvis; no rag skirt). spookyDress stiffyShorts in NECRO_SHORTS: hem .hem of the knee drop, the belt in .rope pink; dressSkeleton builds no
+ * skirt for him (unitFactory).
+ */
+export const NECRO_SHORTS = { hem: 0.55, belt: 0.12, beltOut: 1.36, leather: new Color3(0.55, 0.2, 0.36) };
+export function necromancerDark(team: Color3): Color3 { return new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(NECRO_VEST.dark); }
 const NECRO_VEST = { top: 0.08, below: 0.06, out: 1.16, flare: 1.24, deep: 0.88, rags: 8, rag: 0.16, seam: 0.035, laces: 5, lace: 0.2, laceTop: 0.18, laceLow: 0.85,
   strap: 0.2, dark: 0.42, cream: new Color3(0.86, 0.8, 0.66) };
 export function necromancerVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
