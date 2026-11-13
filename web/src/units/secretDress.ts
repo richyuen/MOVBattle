@@ -5852,7 +5852,7 @@ export function samuraiGiantKabuto(scene: Scene, body: ArticulatedBody, team: Co
  * the pole's side; the mon a ring .mon of the banner width across on its back face and front face. Pole near-black lit cloth; banner team cloth saturated (c^2), self-lit .12;
  * mon a darker shade; out of the glow.
  */
-const SASHIMONO = { pole: 0.07, back: 1.25, foot: 0.4, over: 0.55, wide: 0.62, thick: 0.05, long: 1.15, gap: 0.04, mon: 0.6, monDark: 0.55,
+const SASHIMONO = { pole: 0.07, back: 1.25, foot: 0.4, over: 1.9, wide: 0.62, thick: 0.05, long: 0.72, gap: 0.04, mon: 0.6, monDark: 0.55, // 543.10b over .55 -> 1.9, long 1.15 -> .72 (look: hidden behind the tall helmet)
   black: new Color3(0.08, 0.06, 0.05) };
 export function shogunSashimono(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = SASHIMONO, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
