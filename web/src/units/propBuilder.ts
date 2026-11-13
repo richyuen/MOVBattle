@@ -2161,7 +2161,8 @@ export function attachProps(
     if (offhand) {
       offhand.parent = body.leftHand;
       offhand.scaling.scaleInPlace(PROP_OVERSIZE);
-      applyWeaponGripPreset(offhand, inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
+      // [S] 539 (blackbeard b.2): the off-hand anchor sits in the fist as the main one does (default grip), not on the cutlass family's grip
+      applyWeaponGripPreset(offhand, config.offhandVariant === "blackbeard_anchor" ? "default" : inferWeaponGripPreset(inferWeaponPresentationFamily(config.offhandWeapon)), scale);
       if (config.offhandVariant === "glow_glove") seatGlowGlove(offhand, body.leftHand);
       if (config.offhandVariant === "devout_gauntlet" || config.offhandVariant === "mechanic_claw") seatDevoutGauntlet(offhand, body.leftHand);
       if (config.offhandVariant === "time_gauntlet" || config.offhandVariant === "warglaive") { offhand.position.setAll(0); offhand.rotation.setAll(0); }
