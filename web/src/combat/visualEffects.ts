@@ -1612,7 +1612,8 @@ export class VisualEffects {
       const slab = MeshBuilder.CreateBox("gravestone", { width: G.w, height: slabH, depth: G.d }, this._scene);
       slab.parent = lift; slab.position.y = slabH / 2; slab.material = stone; slab.convertToFlatShadedMesh();
       const cap = MeshBuilder.CreateCylinder("gravestoneTop", { height: G.d, diameter: G.w, tessellation: 10, arc: 0.5 }, this._scene);
-      cap.parent = lift; cap.rotation.set(Math.PI / 2, 0, Math.PI / 2); cap.position.y = slabH; cap.material = stone; cap.convertToFlatShadedMesh();
+      // the half-disc's axis through the slab (local z), its round half up: RotationX(+PI/2), probed: -PI/2 sank the half into the slab
+      cap.parent = lift; cap.rotation.x = Math.PI / 2; cap.position.y = slabH; cap.material = stone; cap.convertToFlatShadedMesh();
       for (const [cw, ch, cy] of [[G.w * 0.12, slabH * 0.55, slabH * 0.62], [G.w * 0.5, G.w * 0.12, slabH * 0.72]]) {
         const bar = MeshBuilder.CreateBox("gravestoneCross", { width: cw, height: ch, depth: G.d * 0.2 }, this._scene);
         bar.parent = lift; bar.position.set(0, cy, G.d * 0.52); bar.material = carve;
