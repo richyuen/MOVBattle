@@ -4506,17 +4506,27 @@ export function necromancerArmbands(scene: Scene, body: ArticulatedBody): Mesh[]
  * .glassW R across, the fount .fount R tall and .fountW across; the ring .ring R across, .ringT thick, tilted .tilt rad. Team lit cloth self-lit .12,
  * glass and flame unlit; the ring unlit and glowing.
  */
-const NECRO_LANTERN = { bail: 0.75, top: 0.85, cap: 0.5, glass: 0.8, glassW: 0.62, fount: 0.42, fountW: 0.85, ring: 3.4, ringT: 0.16, tilt: 0.32,
+/*
+ * [S] 540 (necromancer b.1) the lantern at forearm size (CONFIRM 539: "a tiny lantern, about a third of the head's height, hanging inside the glow
+ * ring - TABS: a large team-colored kerosene lantern, about forearm-length and taller than the head, held out at the hip"). The lantern is now sized
+ * off his forearm (elbow joint to hand joint, F), not the skull: its unit R is F x .size over the summed cap + glass + fount heights, so the body
+ * from the cap's foot to the fount's foot is .size F; a team frame band rings the glass's top and foot (.bandH R), a foot plate under the fount;
+ * the ring is .ring of the new R across, round the glass. Hung .drop R under the fist and .ahead R out in front of the hip.
+ */
+const NECRO_LANTERN = { size: 1.0, bail: 0.75, top: 0.85, cap: 0.5, glass: 0.8, glassW: 0.62, fount: 0.42, fountW: 0.85, ring: 2.1, ringT: 0.1, tilt: 0.32,
+  bandH: 0.08, drop: 0.2, ahead: 0.15,
   glassC: new Color3(0.55, 0.78, 0.82), flame: new Color3(0.6, 0.95, 1.1), ringC: new Color3(0.75, 0.95, 1.15) };
 export function necromancerLantern(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const L = NECRO_LANTERN, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
-  const R = body.headMesh.getBoundingInfo().boundingBox.extendSize.x;
+  const skull = body.headMesh.getBoundingInfo().boundingBox.extendSize.x;
+  const F = body.leftHand ? originIn(body.leftHand, body.leftElbow).length() : skull * 4;
+  const R = Math.max(skull, (F * L.size) / (L.cap + L.glass + L.fount));
   const teamM = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
   const glass = mf.get("unlit", L.glassC, { emissive: L.glassC });
   const flame = mf.get("unlit", L.flame, { emissive: L.flame });
   const ringM = mf.get("unlit", L.ringC, { emissive: L.ringC });
   const hang = new TransformNode("necroLanternHang", scene);
-  hang.parent = body.leftHand; hang.position.set(0, -R * 0.35, R * 0.1);
+  hang.parent = body.leftHand; hang.position.set(0, -R * L.drop, R * L.ahead);
   const out: Mesh[] = [];
   const put = (m: Mesh, mt: Material, y: number, keepGlow = false): Mesh => {
     m.parent = hang; m.material = mt; m.position.y = y; m.convertToFlatShadedMesh(); if (!keepGlow) glow?.addExcludedMesh(m); out.push(m); return m;
@@ -4538,9 +4548,14 @@ export function necromancerLantern(scene: Scene, body: ArticulatedBody, team: Co
     const post = put(MeshBuilder.CreateCylinder("necroLanternPost", { height: gH, diameter: R * 0.07, tessellation: 4 }, scene), teamM, y - gH / 2);
     post.position.x = Math.cos(a) * r; post.position.z = Math.sin(a) * r;
   }
+  // team frame bands round the glass's top and foot
+  for (const by of [y - R * L.bandH / 2, y - gH + R * L.bandH / 2]) {
+    put(MeshBuilder.CreateCylinder("necroLanternBand", { height: R * L.bandH, diameter: R * L.glassW * 1.12, tessellation: 8 }, scene), teamM, by);
+  }
   y -= gH;
   const fH = R * L.fount;
   put(MeshBuilder.CreateCylinder("necroLanternFount", { height: fH, diameterTop: R * L.fountW, diameterBottom: R * L.fountW * 0.8, tessellation: 8 }, scene), teamM, y - fH / 2);
+  put(MeshBuilder.CreateCylinder("necroLanternFoot", { height: R * L.bandH, diameter: R * L.fountW * 0.95, tessellation: 8 }, scene), teamM, y - fH - R * L.bandH / 2);
   // the glowing ghost ring round the lantern's middle
   const ring = put(MeshBuilder.CreateTorus("necroLanternRing", { diameter: R * L.ring, thickness: R * L.ringT, tessellation: 8 }, scene), ringM, -R * L.top - R * L.cap - gH * 0.5, true);
   ring.scaling.y = 0.35; ring.rotation.x = L.tilt; ring.rotation.z = L.tilt * 0.5;
