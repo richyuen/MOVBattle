@@ -5747,13 +5747,20 @@ export function blackbeardPegLeg(scene: Scene, body: ArticulatedBody): Mesh[] {
  * .spikes 3-sided spikes along its outer side (away from the body) from .spikeFrom to .spikeTo, each .long of the shell's radius long and .wide
  * across at the root, leaned .lean rad back toward the elbow. Team cloth (c^2 x .shade) self-lit .12; spikes unlit pale steel; out of the glow.
  */
-const SENSEI_BRACER = { from: 0.12, to: 0.95, out: 1.75, taper: 0.9, shade: 0.8, spikes: 4, spikeFrom: 0.2, spikeTo: 0.85, long: 2.2, wide: 0.55, lean: 0.55,
-  steel: new Color3(0.62, 0.63, 0.66) };
+const SENSEI_BRACER = { from: 0.12, to: 0.95, out: 1.75, taper: 0.9, shade: 0.8, spikes: 4, spikeFrom: 0.2, spikeTo: 0.85 };
+/*
+ * [S] 542 (sensei a.1) the bracer spikes are curved horns (CONFIRM 541: "a short row of small white sawteeth flat along the forearm - TABS: four
+ * large curved bone-white spikes standing out from each forearm guard, a main silhouette element"; secret.sensei.red.png, .blue.png: each spike as
+ * long as the guard is wide twice over, leaving the guard straight out sideways and curling up toward the elbow, pale bone). SENSEI_HORN: .segs
+ * runs, .long of the guard's radius in all, .root of it across at the root to a point; the first leaves .start rad above level and the whole horn
+ * turns .curl rad up. Unlit bone (LESSONS 442), out of the glow.
+ */
+const SENSEI_HORN = { segs: 4, long: 3.6, root: 0.75, start: 0.1, curl: 1.0, bone: new Color3(0.94, 0.9, 0.8) };
 export function senseiBracers(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const G = SENSEI_BRACER, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const teamC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(G.shade);
   const cloth = mf.get("cloth", teamC, { emissive: teamC.scale(0.12), roughness: 1 });
-  const steel = mf.get("unlit", G.steel, { emissive: G.steel });
+  const bone = mf.get("unlit", SENSEI_HORN.bone, { emissive: SENSEI_HORN.bone });
   const out: Mesh[] = [];
   for (const [fore, side] of [[body.leftLowerArm, -1], [body.rightLowerArm, 1]] as const) {
     const L = limbBox(fore), r = Math.max(L.wide, L.deep), top = L.mid + L.half;
@@ -5764,13 +5771,20 @@ export function senseiBracers(scene: Scene, body: ArticulatedBody, team: Color3)
     for (let i = 0; i < G.spikes; i++) {
       const t = G.spikeFrom + ((G.spikeTo - G.spikeFrom) * i) / Math.max(1, G.spikes - 1);
       const rr = r * G.out * (1 - (1 - G.taper) * ((t - G.from) / (G.to - G.from)));
-      const len = r * G.out * G.long;
-      const spike = MeshBuilder.CreateCylinder("senseiBracerSpike", { height: len, diameterBottom: r * G.wide * 2, diameterTop: 0, tessellation: 3 }, scene);
-      // out of the outer side (x away from the body), leaned back up toward the elbow (+y)
-      const ang = -side * (Math.PI / 2 - G.lean);
-      spike.parent = fore.parent; spike.rotation.z = ang;
-      spike.position.set(side * (rr * 0.9 + (len / 2) * Math.sin(Math.PI / 2 - G.lean)), at(t) + (len / 2) * Math.cos(Math.PI / 2 - G.lean), 0);
-      spike.material = steel; spike.convertToFlatShadedMesh(); glow?.addExcludedMesh(spike); out.push(spike);
+      // [S] 542 (a.1) a curved horn (SENSEI_HORN): .segs tapering 4-sided runs, the first straight out of the outer side (x away from the body),
+      // each next one turned .curl/.segs further up toward the elbow (+y), .long of the shell's radius long in all, .root of it across at the root
+      const total = r * G.out * SENSEI_HORN.long, seg = total / SENSEI_HORN.segs;
+      let p = new Vector3(side * rr * 0.92, at(t), 0), ang = SENSEI_HORN.start;
+      for (let k = 0; k < SENSEI_HORN.segs; k++) {
+        const w0 = r * G.out * SENSEI_HORN.root * (1 - k / SENSEI_HORN.segs), w1 = r * G.out * SENSEI_HORN.root * (1 - (k + 1) / SENSEI_HORN.segs);
+        const dir = new Vector3(side * Math.cos(ang), Math.sin(ang), 0);
+        const run = MeshBuilder.CreateCylinder("senseiBracerSpike", { height: seg * 1.06, diameterBottom: w0, diameterTop: Math.max(w1, 0.001), tessellation: 4 }, scene);
+        run.parent = fore.parent; run.rotation.z = -Math.atan2(dir.x, dir.y);
+        run.position.copyFrom(p.add(dir.scale(seg / 2)));
+        run.material = bone; run.convertToFlatShadedMesh(); glow?.addExcludedMesh(run); out.push(run);
+        p = p.add(dir.scale(seg));
+        ang += SENSEI_HORN.curl / SENSEI_HORN.segs;
+      }
     }
   }
   return out;
