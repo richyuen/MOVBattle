@@ -5527,7 +5527,8 @@ export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mes
   // standing .stand of the coat thickness proud of its front, so no fur or hair covers them. Gold unlit (the 533 five-ray stars were too small).
   const R = VLAD_ROSETTE, S = T.wide * 2 * R.size;
   for (const at of R.at) {
-    const y = top - h * at, z = zFront + th * R.stand;
+    // 539.4b: the shell widens to its foot, so each rosette stands off the shell's front at its own height (the lower one was buried)
+    const y = top - h * at, z = T.deep * V.fitDeep * (V.fitTop + (V.fitFoot - V.fitTop) * at) * 0.95 + th * R.stand;
     const boss = add(MeshBuilder.CreateIcoSphere("vladStarBoss", { radius: S * 0.17, subdivisions: 1, flat: true }, scene), gold, 0, y, z + th * 0.3);
     boss.scaling.z = 0.6;
     for (let r = 0; r < R.points * 2; r++) {
