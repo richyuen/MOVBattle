@@ -317,6 +317,12 @@ const FAN_BLOW = { reach: 10, half: 0.32, push: 10 };
 const BOMB_SMACK = { radius: 3.5, scale: 0.7, push: 1.6, chest: 1 };
 
 /** Where a HAND_LAUNCH shooter's missile leaves: his bow fist or his mouth, in world space; null when he has neither. */
+/** [S] 542 The Sensei's star in the fist that throws shot i (right, left, right...): the "shuriken" prop under that hand, or null. */
+function senseiStar(unit: RuntimeUnit, i: number): TransformNode | null {
+  const hand = i % 2 === 0 ? unit.body.rightHand : unit.body.leftHand;
+  return hand.getChildMeshes(false).find((m) => m.name === "shuriken" && m.isEnabled()) ?? null;
+}
+
 function handLaunchPoint(unit: RuntimeUnit): Vector3 | null {
   const how = HAND_LAUNCH[unit.definition.id];
   if (!how) return null;
@@ -5238,18 +5244,22 @@ export class SimulationSystem {
           );
         }
         const offset = new Vector3((Math.random() - 0.5) * 0.25, Math.random() * 0.2, (Math.random() - 0.5) * 0.15);
+        // [S] 542 (sensei c.2) each star the Sensei throws is a copy of the many-bladed one in his fists (propBuilder SENSEI_SHURIKEN), thrown from
+        // the fists in turn and spinning (projectileSystem SENSEI_STAR); the star stays in the fist
+        const star = attacker.definition.id === "secret.sensei" ? senseiStar(attacker, i) : null;
+        if (star) worldMatrixChain(star);
         this.projectileSystem.spawnProjectile(
           projectileShape,
-          launchAt ?? attackOrigin,
+          star ? star.getAbsolutePosition().clone() : launchAt ?? attackOrigin,
           target,
           perShotDamage,
           knockback.scale(0.4),
           splashRadius > 0 ? splashRadius * 0.5 : 0,
           attacker.team,
           this._units,
-          offset,
+          star ? undefined : offset,
           i * 0.04,
-          { originLift: launchAt ? 0 : originLiftForSource(attackOriginInfo.source) },
+          { originLift: launchAt || star ? 0 : originLiftForSource(attackOriginInfo.source), ...(star ? { heldProp: star } : {}) },
         );
       } else {
         if (this.projectileSystem && isFirearmUnit(attacker)) {

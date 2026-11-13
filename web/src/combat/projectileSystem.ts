@@ -58,6 +58,8 @@ const FIREWORK_BLAST = { radius: 2.5, share: 1 };
 const FIREWORK_ROCKET = { long: 0.5, wide: 0.13, bands: 3, head: 0.14, flame: 0.32, arc: 0.1, band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14), fire: new Color3(1, 0.62, 0.15) };
 /** [S] 412 the thrown shuriken (projectile "shuriken"): span, waist, thickness, hub across (m), tilt of its face off level toward the side camera. */
 const SHURIKEN_FLIGHT = { span: 0.36, waist: 0.1, thick: 0.02, hub: 0.07, tilt: 0.7, steel: new Color3(0.2, 0.21, 0.24), hub_color: new Color3(0.5, 0.5, 0.54) };
+/** [S] 542 the Sensei's thrown star, a copy of the one in his fist: its face tipped .tilt rad off level, spinning .spin rad/s about it. */
+const SENSEI_STAR = { tilt: 0.9, spin: 25 };
 /** [S] 416 the hwacha's rocket arrow ("rocket_arrow" shape): .long shaft .shaft across, a .tube x .wide paper tube with .bands green bands behind a dark
  * .head-long point, a .flame-long unlit flame (orange .fire round a pale .core) out of the tube's back, a smoke puff behind that. */
 const HWACHA_ROCKET = {
@@ -865,8 +867,10 @@ export class ProjectileSystem {
         const copy = p.mesh.getChildren().find((c): c is TransformNode => c.name.endsWith("_thrown"));
         if (copy) copy.rotation.x += dt * p.tumble;
       }
-      // Shuriken spin
-      if (p.shape === "shuriken") {
+      // Shuriken spin; [S] 542 a held star's copy (the Sensei's) spins about its own face (SENSEI_STAR.spin)
+      const heldStar = p.shape === "shuriken" ? p.mesh.getChildren().find((c): c is TransformNode => c.name.endsWith("_thrown")) : undefined;
+      if (heldStar) heldStar.addRotation(0, dt * SENSEI_STAR.spin, 0);
+      else if (p.shape === "shuriken") {
         const spin = p.mesh.getChildren().find((c): c is TransformNode => c.name === "shurikenSpin");
         if (spin) spin.rotation.y += dt * 25;
         else p.mesh.rotation.z += dt * 25;
@@ -2097,6 +2101,9 @@ export class ProjectileSystem {
       }
     }
     if (shape === "spear") this._addStreak(root, half, 1.4);
+    // [S] 542 (sensei c.2) a held star flies flat-on to the side, its face (the prop's local y) tipped SENSEI_STAR.tilt off level toward the side
+    // camera, not face-first along its flight as the rod-like copies are laid
+    if (shape === "shuriken" && copy) copy.rotation.set(0, 0, SENSEI_STAR.tilt);
     return { root, half };
   }
 
