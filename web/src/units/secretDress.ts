@@ -4542,7 +4542,8 @@ export function bansheeCrown(scene: Scene, body: ArticulatedBody, team: Color3):
  * two white eyes .eye W across, .eyeX W each side of the middle, .eyeY H over c, set into the wedge's front. The wedge in the head's own material
  * (the team ghost skin); the eyes unlit white over 1 (LESSONS 442), left in the glow so they shine.
  */
-const BANSHEE_FACE = { long: 1.25, top: 0.32, wide: 0.82, deep: 0.62, ahead: 0.16, eye: 0.27, eyeX: 0.19, eyeY: 0.12, white: new Color3(1.3, 1.3, 1.4) };
+// 537.6b wide .82 -> 1.0, ahead .16 -> .32, top .32 -> .4, long 1.25 -> 1.5 (look: the wedge sank inside the head ball, no point showing)
+const BANSHEE_FACE = { long: 1.5, top: 0.4, wide: 1.0, deep: 0.62, ahead: 0.32, eye: 0.27, eyeX: 0.19, eyeY: 0.12, white: new Color3(1.3, 1.3, 1.4) };
 export function bansheeFace(scene: Scene, body: ArticulatedBody): Mesh[] {
   const F = BANSHEE_FACE, mf = getMaterialFactory();
   const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
