@@ -130,6 +130,8 @@ const TABARD_DEPTH = 1.18;
 // Under the tabard the arms are sleeves of pale grey mail, not bare team-coloured skin.
 const MAIL_COLOR = new Color3(0.78, 0.8, 0.84);
 // [S] the knight's steel fauld (357; medieval.knight.png): a short steel skirt over the hips under his cuirass, .long thighs long, .flare pelvises wide at the hem
+// [S] 531 the Cavalry rider's seat on his horse actor (spec at its use in createUnit)
+const CAVALRY_SEAT = { lift: 0.5 };
 const KNIGHT_FAULD = { long: 0.42, flare: 1.4, steel: new Color3(0.6, 0.6, 0.65) };
 const BELT_COLOR = new Color3(0.2, 0.14, 0.1);
 // Zeus wears a plain off-white tunic with a red sash from one shoulder to the other hip, not a breastplate.
@@ -463,6 +465,9 @@ export class UnitFactory {
       propMeshes = attachProps(this._scene, body, visual, visual.proportions.scale ?? 1.0, teamColor);
       // [S] 518 (a.1): the Raptor Rider sits on his raptor's back: his hip lifts as the mount's does (propBuilder buildRaptorMount)
       if (definition.id === "secret.raptor_rider" && visual.special !== "raptor_mount") body.hip.position.y *= 1 + RAPTOR_MOUNT.lift;
+      // [S] 531 (a.2; secret.cavalry.png: the knight sits high in the saddle, his head well over the horse's): the horse is its own actor (scale 1.3,
+      // legLength .78, back at its hip x (1 + HORSE_LIFT .9)), so the rider's hip lifts CAVALRY_SEAT.lift of its own height onto that back
+      if (definition.id === "secret.cavalry" && visual.special !== "mount_horse") body.hip.position.y *= 1 + CAVALRY_SEAT.lift;
       // Arms are bare team-coloured skin (TABS); the torso and thighs keep the cloth or armour colour as a
       // tunic and trousers down to the ankle, and the feet are boots a shade darker than the trousers. Whole-body presets (ghost, bone, void...)
       // stay one material.
