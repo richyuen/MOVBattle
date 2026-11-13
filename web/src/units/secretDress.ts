@@ -5584,6 +5584,33 @@ export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mes
 const BEARD_BB = { top: 0.56, gap: 0.04, cheekZ: 0.42, chin: 0.42, chinY: 0.62, chinZ: 0.62, thick: 0.4, chestTop: 1.02, chestW: 0.62, tip: 0.55,
   stand: 0.08, chestThick: 0.32, braids: 2, braidW: 0.07, braidX: 0.16, ties: 2, stache: 0.3,
   black: new Color3(0.08, 0.06, 0.07), red: new Color3(0.75, 0.08, 0.06) };
+/*
+ * [S] 542 (blackbeard a.2) Blackbeard's leather gloves (CONFIRM 541: "bare light-blue team mitts - TABS: oversized tan leather gloves gripping each
+ * anchor"; secret.blackbeard.red.png: each fist inside a big tan glove about half again the hand's size, a wide flared gauntlet cuff over the wrist).
+ * BB_GLOVE on each hand node, in the palm block's box (P): a faceted mitt .mitt x P round the palm block, and a cuff from the palm's top up the
+ * forearm (+y in the hand frame) .cuff of P's height tall, .cuffFoot x P's width across at the palm flaring to .cuffTop at its top. Tan lit cloth
+ * self-lit .15, out of the glow; the team mitt under it hidden.
+ */
+const BB_GLOVE = { mitt: new Vector3(1.55, 1.35, 1.6), cuff: 0.95, cuffFoot: 1.5, cuffTop: 2.0, tan: new Color3(0.64, 0.42, 0.2) };
+export function blackbeardGloves(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const G = BB_GLOVE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const tan = mf.get("cloth", G.tan, { emissive: G.tan.scale(0.15), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const hand of [body.leftHand, body.rightHand]) {
+    const palm = hand.getChildren().find((n): n is Mesh => n instanceof Mesh && /HandM$/.test(n.name));
+    if (!palm) continue;
+    const pb = palm.getBoundingInfo().boundingBox, ext = pb.extendSize.multiply(palm.scaling), c = palm.position.add(pb.center.multiply(palm.scaling));
+    const mitt = MeshBuilder.CreatePolyhedron("blackbeardGlove", { type: 1, size: 1 }, scene);
+    mitt.scaling.set(ext.x * G.mitt.x, ext.y * G.mitt.y, ext.z * G.mitt.z);
+    mitt.parent = hand; mitt.position.copyFrom(c); mitt.material = tan; mitt.convertToFlatShadedMesh(); glow?.addExcludedMesh(mitt); out.push(mitt);
+    const h = ext.y * 2 * G.cuff;
+    const cuff = MeshBuilder.CreateCylinder("blackbeardGloveCuff", { height: h, diameterBottom: ext.x * 2 * G.cuffFoot, diameterTop: ext.x * 2 * G.cuffTop, tessellation: 7 }, scene);
+    cuff.parent = hand; cuff.position.set(c.x, c.y + ext.y + h / 2, c.z); cuff.material = tan; cuff.convertToFlatShadedMesh(); glow?.addExcludedMesh(cuff); out.push(cuff);
+    palm.isVisible = false;
+  }
+  return out;
+}
+
 const BEARD_FULL = { outline: [[0, 1.28], [0.5, 1.22], [0.82, 0.85], [0.86, 0.42], [0.66, -0.08], [0.4, -0.55], [0, -0.98]] as const, stand: 0.14,
   bulge: 0.5, ridgeY: 0.35, braidX: [-0.36, -0.12, 0.12, 0.36], outerTo: -0.3 };
 export function blackbeardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {

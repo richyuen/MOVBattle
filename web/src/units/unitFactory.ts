@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, necromancerArmbands, blackbeardHat, artemisBand, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1228,6 +1228,8 @@ export class UnitFactory {
     if (definition.id === "secret.vlad" && !shouldUseVehicleBody) propMeshes.push(...vladBoots(this._scene, body));
     // [S] 538 (a.2): Blackbeard's huge black beard from under the eyes to the belly, two red-tied braids (secretDress BEARD_BB)
     if (definition.id === "secret.blackbeard" && !shouldUseVehicleBody) propMeshes.push(...blackbeardBeard(this._scene, body));
+    // [S] 542 (a.2): oversized tan leather gloves with flared cuffs over both fists (secretDress BB_GLOVE)
+    if (definition.id === "secret.blackbeard" && !shouldUseVehicleBody) propMeshes.push(...blackbeardGloves(this._scene, body));
     // [S] 539 (a.1): the plain tricorn in black felt, burning fuse cords hanging from under its brim (secretDress BB_HAT)
     if (definition.id === "secret.blackbeard" && !shouldUseVehicleBody) propMeshes.push(...blackbeardHat(this._scene, body));
     // [S] 540 (a.4): the left shin and foot off, a dark wooden peg from the knee to the ground (secretDress BB_PEG)
