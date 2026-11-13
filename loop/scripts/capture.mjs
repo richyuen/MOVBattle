@@ -620,7 +620,8 @@ async function main() {
           // [evidence 497] the Shadow Walker's and Tempest Lich's idles read as back three-quarters to the critic (496: helm bars "face up-left",
           // collar seen from behind; probe: both face the camera side, the eye flip swinging them a further 1.2 rad round): they swing .25 rad,
           // near the front-on angle of their wiki renders
-          const nearFront = a.definition.id === "evil.shadow_walker" || a.definition.id === "evil.tempest_lich";
+          // [evidence 530] the Banshee's too: her bead eyes are lost on the faceless head and the 529 critic read her idle as her back
+          const nearFront = a.definition.id === "evil.shadow_walker" || a.definition.id === "evil.tempest_lich" || a.definition.id === "secret.banshee";
           const swing = a.definition.id === "tribal.protector" ? 1.35 : a.definition.id === "farmer.halfling" ? 0.2 : a.definition.id === "legacy.blowdarter" ? 0.4 : a.definition.id === "dynasty.monk" || a.definition.id === "dynasty.samurai" ? 0.3 : a.definition.id === "pirate.cannon" || nearFront ? 0.25 : 0.6;
           if (on === 1) {
             // the idle look-around can turn the face to the far side (the painter, the spear thrower): when the face points more than .9 rad off
