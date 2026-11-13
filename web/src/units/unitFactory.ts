@@ -170,7 +170,9 @@ const SKELETON_UNITS = new Set(["spooky.skeleton_warrior", "spooky.skeleton_arch
   // [S] 531 (a.1) the Skeleton Giant is a Stiffy too (card Appearance "unsurprisingly, is a Stiffy"): cream bone limbs, spine and ribs
   "secret.skeleton_giant",
   // [S] 531 (a.1) and so is the Necromancer (secret.necromancer.red.png; card Appearance): cream bone under his dress
-  "secret.necromancer"]);
+  "secret.necromancer",
+  // [S] 535 (a.1) and the Witch (card Appearance "looks like a Stiffy"; secret.witch.red.png: cream bone arms, legs and skull under her hat and robe)
+  "secret.witch"]);
 /*
  * [S] 534 (secret.skeleton_giant a.1; CONFIRM 533: "squat build: a wide team cloth block runs from mid-chest to the knees over short legs";
  * secret.skeleton_giant.jpg, .blue.png: a lanky Stiffy, a thin rib cage, long thin bone legs, ragged team shorts only from the hips to mid-thigh,
