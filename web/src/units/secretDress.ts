@@ -5681,6 +5681,37 @@ export function blackbeardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  * cap's box (W, H, D, c): a 10-sided band .round W across at its foot narrowing to .top of that, .tall H tall, its middle .up H over c, tipped .tip
  * rad (front up, back down) so it runs from the brow over the crown, .deep of the cap's depth ratio. Gold lit cloth self-lit .25, out of the glow.
  */
+/*
+ * [S] 542 (artemis a.4) Artemis's long dress (audit 538: "dark blue trousers - TABS: long team dress to mid-shin"; card Appearance "a Greek light
+ * dress"; secret.artemis.red.png: from the belt a darker team skirt falls straight and a little flared to the middle of the shins, wider than the
+ * hips, with the bare team shins and sandals below it). ARTEMIS_DRESS on the torso (the hip box, pelvis or trunk foot, W across, D deep, in the
+ * torso frame): an 10-sided frustum from .top W over the hip joints to .hem of the shin's length under the knees, .out W across at the top and .flare
+ * W at the hem, .deep of its width deep; a ring .belt W tall at its top. Team cloth saturated (c^2) x .dark, self-lit .12; the belt brown; out of
+ * the glow. The legs stride under it (a ground-length skirt hides only a hover lift, LESSONS 493: this one stops at the mid shin).
+ */
+const ARTEMIS_DRESS = { top: 0.32, hem: 0.32, out: 1.12, flare: 1.42, deep: 0.82, belt: 0.09, dark: 0.62, brown: new Color3(0.3, 0.15, 0.07) };
+export function artemisDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = ARTEMIS_DRESS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const dressC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(K.dark);
+  const cloth = mf.get("cloth", dressC, { emissive: dressC.scale(0.12), roughness: 1 });
+  const brown = mf.get("cloth", K.brown, { emissive: K.brown.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  const hipY = (originIn(body.leftHip, body.torso).y + originIn(body.rightHip, body.torso).y) / 2;
+  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const shin = limbBox(body.leftLowerLeg), footY = kneeY - Math.abs(shin.mid) - shin.half;
+  const hx = Math.abs(originIn(body.leftHip, body.torso).x - originIn(body.rightHip, body.torso).x);
+  const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
+  const W = Math.max(hx * 1.9, pelvis ? limbBox(pelvis).wide * 2 : 0);
+  const top = hipY + W * K.top, hem = kneeY - (kneeY - footY) * K.hem, long = top - hem;
+  const skirt = MeshBuilder.CreateCylinder("artemisDress", { height: long, diameterTop: W * K.out, diameterBottom: W * K.flare, tessellation: 10 }, scene);
+  skirt.parent = body.torso; skirt.scaling.z = K.deep; skirt.position.set(0, (top + hem) / 2, 0);
+  skirt.material = cloth; skirt.convertToFlatShadedMesh(); glow?.addExcludedMesh(skirt); out.push(skirt);
+  const belt = MeshBuilder.CreateCylinder("artemisDressBelt", { height: W * K.belt, diameter: W * K.out * 1.04, tessellation: 10 }, scene);
+  belt.parent = body.torso; belt.scaling.z = K.deep; belt.position.set(0, top - W * K.belt / 2, 0);
+  belt.material = brown; belt.convertToFlatShadedMesh(); glow?.addExcludedMesh(belt); out.push(belt);
+  return out;
+}
+
 const ARTEMIS_BAND = { round: 1.08, top: 0.84, tall: 0.42, up: 0.18, tip: -0.42, deep: 1.0, gold: new Color3(1, 0.62, 0.14) };
 export function artemisBand(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = ARTEMIS_BAND, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
