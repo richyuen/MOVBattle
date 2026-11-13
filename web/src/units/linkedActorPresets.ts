@@ -330,20 +330,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
           accentColor: "#6f5f48",
         }),
       },
-      {
-        key: "loader",
-        label: "loader",
-        relation: "crew",
-        offset: new Vector3(0.62, 0, -0.62),
-        syncFacing: true,
-        semantics: { ...parentDamage, actionPreset: "reload" },
-        visual: visual("none", "bandana", "none", "none", {
-          proportions: { scale: 0.66, bulk: 0.78, headSize: 1.0 },
-          materialPreset: "secret_pirate",
-          posePreset: "vehicle",
-          accentColor: "#6f5f48",
-        }),
-      },
+      // [S] 533 (a.1) no loader: TABS has one Gatling Gun Operator behind the gun (secret.gatling_gun.jpg; card "operated by a Gatling Gun Operator")
     ],
   },
   "secret.bank_robbers": {
