@@ -5457,6 +5457,7 @@ const VLAD_COAT = { out: 1.1, top: 0.98, thick: 0.1, skirtTop: 0.82, flareTop: 1
   fitTop: 0.9, fitFoot: 1.04, fitDeep: 1.08, collarH: 0.45, collarW: 0.62,
   mantleTop: 0.8, mantleFoot: 1.12, mantleDrop: 0.5, stoleW: 0.3, stoleX: 0.42, stars: 2, star: 0.26, starAt: [0.4, 0.7], shade: 0.7,
   fur: new Color3(0.3, 0.17, 0.09), beltC: new Color3(0.2, 0.11, 0.06), gold: new Color3(0.85, 0.55, 0.1) };
+const VLAD_ROSETTE = { size: 0.36, points: 8, long: 1, short: 0.62, at: [0.42, 0.66], stand: 0.9 };
 const VLAD_MANTLE = { top: 0.72, foot: 1.6, drop: 0.62, deep: 1.3, tufts: 14, tuft: 0.13, hang: 0.3, fur: new Color3(0.8, 0.5, 0.2) };
 export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const V = VLAD_COAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
@@ -5511,14 +5512,19 @@ export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mes
       Math.sin(a) * T.wide * M.foot * 0.96, mFoot - T.half * M.hang * 0.4, Math.cos(a) * T.wide * M.foot * 0.96 * (T.deep / T.wide) * M.deep);
     tuft.scaling.set(1, 1.5, 0.7); tuft.rotation.y = a;
   }
-  // gold star buttons down the middle
-  const S = T.wide * 2 * V.star;
-  for (let k = 0; k < V.stars; k++) {
-    const y = top - h * V.starAt[k], z = zFront + th * 0.3;
-    add(MeshBuilder.CreateCylinder("vladStarBoss", { height: th, diameter: S * 0.4, tessellation: 5 }, scene), gold, 0, y, z).rotation.x = Math.PI / 2;
-    for (let r = 0; r < 5; r++) {
-      const ray = add(MeshBuilder.CreateCylinder("vladStarRay", { height: S / 2, diameterBottom: S * 0.22, diameterTop: 0, tessellation: 4 }, scene), gold, 0, y, z);
-      ray.setPivotPoint(new Vector3(0, -S / 4, 0)); ray.position.y = y + S / 4; ray.rotation.z = (Math.PI * 2 * r) / 5; ray.scaling.z = 0.35;
+  // [S] 539 (a.2; CONFIRM 538: "TABS: two large gold star rosettes stacked down the centre of the chest"; secret.vlad.red.png: two gold rosettes,
+  // each a ring of eight long points with eight short ones between, round a raised boss, about a third of the chest wide, under the mantle):
+  // VLAD_ROSETTE: .size of the trunk's width across, .long and .short points (point length shares of the radius), at .at of the coat's height down,
+  // standing .stand of the coat thickness proud of its front, so no fur or hair covers them. Gold unlit (the 533 five-ray stars were too small).
+  const R = VLAD_ROSETTE, S = T.wide * 2 * R.size;
+  for (const at of R.at) {
+    const y = top - h * at, z = zFront + th * R.stand;
+    const boss = add(MeshBuilder.CreateIcoSphere("vladStarBoss", { radius: S * 0.17, subdivisions: 1, flat: true }, scene), gold, 0, y, z + th * 0.3);
+    boss.scaling.z = 0.6;
+    for (let r = 0; r < R.points * 2; r++) {
+      const len = (S / 2) * (r % 2 === 0 ? R.long : R.short);
+      const ray = add(MeshBuilder.CreateCylinder("vladStarRay", { height: len, diameterBottom: S * (r % 2 === 0 ? 0.2 : 0.15), diameterTop: 0, tessellation: 4 }, scene), gold, 0, y, z);
+      ray.setPivotPoint(new Vector3(0, -len / 2, 0)); ray.position.y = y + len / 2; ray.rotation.z = (Math.PI * r) / R.points; ray.scaling.z = 0.4;
     }
   }
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
