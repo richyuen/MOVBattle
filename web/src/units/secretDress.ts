@@ -4355,6 +4355,43 @@ export function witchHoodHat(scene: Scene, body: ArticulatedBody, team: Color3):
 }
 
 /*
+ * [S] 536 (a.5) the Witch's broom (audit 527: "she stands on her feet - TABS: she rides a long floating broom that hangs below her between the
+ * legs"; secret.witch.red.png, .blue.png, card Appearance "a Stiffy riding a floating broom": a long dark red-brown pole under her crotch, the same on
+ * both teams, running out ahead of her and sloping down to the front, a little thicker toward its far end; she sits on it, her bone legs hanging
+ * either side of it, her feet clear of the ground). WITCH_BROOM in her standing height H: she floats .lift H up (proceduralAnimation REAPER_HOVER via
+ * a "reaperHover" mark on the hip: legs hang loose); the pole on the hip under the pelvis's foot (.seat H below it), .ahead H out in front and .behind
+ * H back, pitched .pitch rad nose-down, .thin H across at the seat swelling to .thick H at the front; behind the seat a short bristle bundle .brush H
+ * long, .brushW H across at its foot, tied on with a band. Dark red-brown lit cloth (.wood), self-lit .3, out of the glow.
+ */
+const WITCH_BROOM = { lift: 0.12, seat: 0.01, ahead: 0.78, behind: 0.22, pitch: 0.32, thin: 0.045, thick: 0.075, brush: 0.2, brushW: 0.12,
+  wood: new Color3(0.17, 0.06, 0.045), straw: new Color3(0.13, 0.055, 0.04) };
+export function witchBroom(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = WITCH_BROOM, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const H = body.metrics.overallHeight;
+  const wood = mf.get("cloth", B.wood, { emissive: B.wood.scale(0.3), roughness: 1 });
+  const straw = mf.get("cloth", B.straw, { emissive: B.straw.scale(0.3), roughness: 1 });
+  const mark = new TransformNode("reaperHover", scene); mark.parent = body.hip; mark.position.y = B.lift;
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  const pFoot = pelvis ? pelvis.position.y - pelvis.getBoundingInfo().boundingBox.extendSize.y * pelvis.scaling.y : 0;
+  // the pole's frame: its origin at the seat, +z out ahead along the pole, tipped nose-down
+  const pole = new TransformNode("witchBroom", scene);
+  pole.parent = body.hip; pole.position.set(0, pFoot - B.seat * H, 0); pole.rotation.x = B.pitch;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material): Mesh => { m.parent = pole; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const len = (B.ahead + B.behind) * H;
+  const shaft = put(MeshBuilder.CreateCylinder("witchBroomPole", { height: len, diameterBottom: B.thin * H, diameterTop: B.thick * H, tessellation: 7 }, scene), wood);
+  shaft.rotation.x = Math.PI / 2; shaft.position.z = (B.ahead - B.behind) * H / 2;
+  const cap = put(MeshBuilder.CreateCylinder("witchBroomTip", { height: B.thick * H * 0.5, diameterBottom: B.thick * H, diameterTop: B.thick * H * 0.6, tessellation: 7 }, scene), wood);
+  cap.rotation.x = Math.PI / 2; cap.position.z = B.ahead * H + B.thick * H * 0.25;
+  // the bristles behind her, flaring back from a tied band
+  const brush = put(MeshBuilder.CreateCylinder("witchBroomBrush", { height: B.brush * H, diameterTop: B.thin * H * 1.6, diameterBottom: B.brushW * H, tessellation: 8 }, scene), straw);
+  brush.rotation.x = -Math.PI / 2; brush.position.z = -B.behind * H - B.brush * H / 2;
+  const band = put(MeshBuilder.CreateTorus("witchBroomBand", { diameter: B.thin * H * 1.7, thickness: B.thin * H * 0.45, tessellation: 10 }, scene), wood);
+  band.rotation.x = Math.PI / 2; band.position.z = -B.behind * H - B.brush * H * 0.08;
+  return out;
+}
+
+/*
  * [S] 532 the Wheelbarrow Dragon's driver, the Traveller (secret.wheelbarrow_dragon.red.png, .jpg; card Appearance "that goofy Traveller Unit, with
  * their Afro and overalls"; audit a.4 "a hulking slab-torsoed giant - TABS: a lanky normal-sized Traveller in team overalls"): a bare team chest and
  * bare team arms (the trunk, yoke and pads in his skin), team overalls over it: a bib on the trunk's front from BARROW_OVERALLS.lo to .hi of the

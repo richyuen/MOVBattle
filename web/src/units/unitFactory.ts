@@ -40,6 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
+import { witchBroom } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1178,6 +1179,8 @@ export class UnitFactory {
     if (definition.id === "secret.banshee" && !shouldUseVehicleBody) propMeshes.push(...bansheeChainLegs(this._scene, body));
     // [S] 530 (a.2): the Witch's brimless team hood-hat with a crooked spire (secretDress witchHoodHat)
     if (definition.id === "secret.witch" && !shouldUseVehicleBody) propMeshes.push(...witchHoodHat(this._scene, body, teamColor));
+    // [S] 536 (a.5): she rides a long floating broom, legs hanging either side (secretDress witchBroom)
+    if (definition.id === "secret.witch" && !shouldUseVehicleBody) propMeshes.push(...witchBroom(this._scene, body));
     // [S] 529 (b.2): the Necromancer's team kerosene lantern in the off hand, a ghost flame inside and a glowing ring round it (secretDress necromancerLantern)
     if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...necromancerLantern(this._scene, body, teamColor));
     // [S] 528 (a.2): the Solar Architect's gold sun halo of rings and spikes behind the head (secretDress solarArchitectHalo)
