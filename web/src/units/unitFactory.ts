@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ullrSnowCap,senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ullrSnowCap,senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1240,6 +1240,8 @@ export class UnitFactory {
     if (definition.id === "secret.artemis" && !shouldUseVehicleBody) propMeshes.push(...artemisBand(this._scene, body));
     // [S] 542 (b.1): the Ice Giant's arms end in huge club fists (secretDress ICE_FIST)
     if (definition.id === "secret.ice_giant" && !shouldUseVehicleBody) propMeshes.push(...iceGiantFists(this._scene, body));
+    // [S] 543 (a.3): a white faceted snow mantle over the chest and shoulders, a V down the front, on team skin (secretDress ICE_SNOW)
+    if (definition.id === "secret.ice_giant" && !shouldUseVehicleBody) propMeshes.push(...iceGiantSnowMantle(this._scene, body));
     // [S] 542 (a.1): Lady Red Jade's black hair, bun and red bead ring in place of the crown (secretDress JADE_HAIR)
     if (definition.id === "secret.lady_red_jade" && !shouldUseVehicleBody) propMeshes.push(...ladyRedJadeHair(this._scene, body));
     // [S] 543 (a.1): Ullr's dark snow cap with two mini axes, shaggy brown hair round the face (secretDress ULLR_CAP)

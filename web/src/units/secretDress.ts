@@ -6102,6 +6102,46 @@ export function iceGiantFists(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 543 (ice_giant a.3) the Ice Giant's snow mantle (audit 538: "uniform pale grey-blue, no snow - TABS: white snow mantle over the chest and
+ * shoulders on team skin"; secret.ice_giant.red.png: the body in plain team colour; a thick faceted white snow chunk caps both shoulders and the tops
+ * of the upper arms, covers the chest and runs down the front in a broad V whose point stops just over the belt; snow on the head's crown). The pale
+ * ice body preset is off (unitVisuals), the propBuilder giant_ice shoulder slab and pauldrons are hidden. ICE_SNOW on the torso (the yoke box T): a
+ * 9-sided shell from .top of T's half height over its middle down .down of the half height, .round of T's width round and .deep deep; the V a
+ * downward 3-sided prism .vW of the width across at its top and .vL of the half height long, its top at the shell's foot, .vOut of the depth
+ * forward; on each shoulder joint a flat faceted cap .cap of T's width across, .capH of it tall, spilling .spill of it over the upper arm. Lit
+ * white cloth self-lit .35, out of the glow.
+ */
+const ICE_SNOW = { top: 1.08, down: 0.95, round: 1.18, deep: 1.24, vW: 1.5, vL: 1.05, vOut: 0.86, cap: 0.95, capH: 0.55, spill: 0.25,
+  white: new Color3(0.92, 0.94, 0.97) };
+export function iceGiantSnowMantle(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = ICE_SNOW, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const snow = mf.get("cloth", K.white, { emissive: K.white.scale(0.35), roughness: 1 });
+  for (const m of body.root.getChildMeshes(false)) if (m.name === "giantShoulder" || m.name === "giantPauldron") m.setEnabled(false);
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const out: Mesh[] = [];
+  const add = (m: Mesh, x: number, y: number, z: number): Mesh => { m.parent = body.torso; m.position.set(x, y, z); m.material = snow; out.push(m); return m; };
+  const top = T.mid + T.half * K.top, low = top - T.half * K.down;
+  const shell = add(MeshBuilder.CreateCylinder("iceSnowMantle", { height: top - low, diameterTop: T.wide * 2 * K.round * 0.92, diameterBottom: T.wide * 2 * K.round, tessellation: 9 }, scene), 0, (top + low) / 2, 0);
+  shell.scaling.z = (T.deep / T.wide) * K.deep;
+  // the V down the chest: a slab turned 45 degrees (a diamond) under a node stretched tall, its middle at the shell's foot, so its lower half hangs as
+  // a V whose point is vL under the foot and its upper half is lost in the shell
+  const vL = T.half * K.vL, vW = T.wide * K.vW, side = vW / Math.SQRT2;
+  const vNode = new TransformNode("iceSnowVNode", scene); vNode.parent = body.torso;
+  vNode.position.set(0, low, T.deep * K.vOut); vNode.scaling.set(1, (2 * vL) / vW, 1);
+  const v = add(MeshBuilder.CreateBox("iceSnowV", { width: side, height: side, depth: T.deep * 0.35 }, scene), 0, 0, 0);
+  v.parent = vNode; v.rotation.z = Math.PI / 4;
+  // the shoulder caps spilling over the tops of the upper arms
+  for (const sh of [body.leftShoulder, body.rightShoulder]) {
+    const p = originIn(sh, body.torso), r = (T.wide * K.cap) / 2;
+    const cap = add(MeshBuilder.CreateIcoSphere("iceSnowCap", { radius: r, subdivisions: 1, flat: true }, scene), p.x * (1 + K.spill * 0.4), p.y + r * K.capH * 0.6, p.z);
+    cap.scaling.set(1.15, K.capH, 1.05);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 const ICE_APE = { upper: 1.5, lower: 1.6, girth: 1.45, foreGirth: 1.7, out: 1.12, waist: 0.72 };
 export function iceGiantApeBuild(body: ArticulatedBody): void {
   const K = ICE_APE;

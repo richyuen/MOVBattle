@@ -1334,7 +1334,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_ice_giant":
       return vis({ scale: 2.48, bulk: 1.88, headSize: 1.12, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_ice", "#9fe9ff", undefined, {
-        posePreset: "giant", materialPreset: "secret_ice", attachmentPreset: "giant_aura", fxPreset: "frost",
+        // [S] 543 (a.3) team skin under the snow mantle (secretDress ICE_SNOW): the pale ice preset off
+        posePreset: "giant", materialPreset: "default", attachmentPreset: "giant_aura", fxPreset: "frost",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
       });
