@@ -4450,3 +4450,31 @@ export function gatlingGunnerShirt(scene: Scene, body: ArticulatedBody, team: Co
   }
   return out;
 }
+
+/*
+ * [S] 532 (a.5) the Skeleton Giant's greaves (secret.skeleton_giant.red.png: big team-coloured greaves over the bare bone shins, from just under
+ * the knee to above the ankle, wide and squarish, flaring a little at the top, the bone foot below; card Appearance "a Greek-style helmet and
+ * greaves"). GIANT_GREAVE on each shin (limbBox: its length 2*half in the knee joint's frame, 0 its top, 1 the ankle): an 8-sided shell from .from
+ * to .to of the way down, .top of the shin's length across at the top tapering to .foot at the bottom, deeper .deep than wide; a rim ring .rim
+ * of the length tall round its top, .rimOut wider. GIANT_HELM's team shade (deepTeam .shade), lit cloth self-lit .12, out of the glow; the rim a
+ * shade darker so the top edge reads.
+ */
+const GIANT_GREAVE = { from: 0.06, to: 0.86, top: 0.36, foot: 0.27, deep: 1.12, rim: 0.07, rimOut: 1.1, shade: 0.85 };
+export function skeletonGiantGreaves(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const G = GIANT_GREAVE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const col = deepTeam(team, G.shade), dark = col.scale(0.72);
+  const cloth = mf.get("cloth", col, { emissive: col.scale(0.12), roughness: 1 });
+  const rimM = mf.get("cloth", dark, { emissive: dark.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const L = limbBox(shin), len = L.half * 2, top = L.mid + L.half, joint = shin.parent as TransformNode;
+    const yTop = top - G.from * len, yBot = top - G.to * len;
+    const shell = MeshBuilder.CreateCylinder("giantGreave", { height: yTop - yBot, diameterTop: len * G.top, diameterBottom: len * G.foot, tessellation: 8 }, scene);
+    shell.parent = joint; shell.position.set(shin.position.x, (yTop + yBot) / 2, shin.position.z); shell.scaling.z = G.deep; shell.material = cloth;
+    const rim = MeshBuilder.CreateCylinder("giantGreaveRim", { height: len * G.rim, diameter: len * G.top * G.rimOut, tessellation: 8 }, scene);
+    rim.parent = joint; rim.position.set(shin.position.x, yTop - (len * G.rim) / 2, shin.position.z); rim.scaling.z = G.deep; rim.material = rimM;
+    out.push(shell, rim);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
