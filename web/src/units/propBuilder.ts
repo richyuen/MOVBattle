@@ -4904,6 +4904,7 @@ function buildBarrowDragon(scene: Scene, root: Mesh, put: (m: Mesh, mt?: PBRMeta
   const D = BARROW_DRAGON;
   const skin = mat(scene, team, 0.12, "cloth"), bone = mat(scene, D.bone, 0.16, "cloth"), dark = mat(scene, D.mouthDark, 0.05, "cloth");
   const white = mat(scene, new Color3(0.92, 0.92, 0.9), 0.3, "cloth"), black = mat(scene, new Color3(0.03, 0.03, 0.03), 0, "cloth");
+  const hornBone = getMaterialFactory().get("unlit", BARROW_HORNS.cream, { emissive: BARROW_HORNS.cream }), glowLayer = scene.getGlowLayerByName("glow");
   const w = D.w * H, h = D.h * H, l = D.l * H;
   const c = new Vector3(0, y0 + D.sit * H + h * 0.3, z0 + (z1 - z0) * D.at);
   const skull = put(MeshBuilder.CreateIcoSphere("barrowDragonSkull", { radius: 0.5, subdivisions: 2 }, scene), skin);
@@ -4943,18 +4944,33 @@ function buildBarrowDragon(scene: Scene, root: Mesh, put: (m: Mesh, mt?: PBRMeta
     eye.position.set(side * w * 0.47, c.y + h * 0.1, c.z + l * 0.14);
     const pupil = put(MeshBuilder.CreateIcoSphere("barrowDragonPupil", { radius: w * 0.035, subdivisions: 1, flat: true }, scene), black);
     pupil.position.set(side * w * 0.52, c.y + h * 0.1, c.z + l * 0.16);
-    // horns: a big pair out and up from the back of the skull, a small pair under them
-    for (const [len, base, at, dir] of [
-      [D.horn * w, h * 0.3, new Vector3(side * w * 0.36, c.y + h * 0.22, c.z - l * 0.12), new Vector3(side, 0.55, -0.35)],
-      [D.hornLo * w, h * 0.2, new Vector3(side * w * 0.44, c.y - h * 0.08, c.z - l * 0.26), new Vector3(side, 0.15, -0.45)],
+    // [S] 533 (a.1) ram horns (spec at BARROW_HORNS): a big curved pair swept back from the skull's top, a small pair curling down under them
+    const R = BARROW_HORNS;
+    for (const [len, base, at, d0, curl] of [
+      [R.big * w, R.bigBase * h, new Vector3(side * w * 0.3, c.y + h * 0.3, c.z - l * 0.02), new Vector3(side * R.bigOut, R.bigUp, -1), new Vector3(side * R.bigCurl[0], R.bigCurl[1], R.bigCurl[2])],
+      [R.small * w, R.smallBase * h, new Vector3(side * w * 0.42, c.y - h * 0.02, c.z - l * 0.16), new Vector3(side * R.smallOut, R.smallUp, -1), new Vector3(side * R.smallCurl[0], R.smallCurl[1], R.smallCurl[2])],
     ] as const) {
-      const horn = put(MeshBuilder.CreateCylinder("barrowDragonHorn", { height: len, diameterTop: 0, diameterBottom: base, tessellation: 6 }, scene), bone);
-      const d = dir.normalizeToNew();
-      horn.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d, new Quaternion());
-      horn.position.copyFrom(at.add(d.scale(len * 0.42)));
+      const seg = len / R.segs, p = at.clone();
+      for (let k = 0; k < R.segs; k++) {
+        const d = d0.add(curl.scale(k / (R.segs - 1))).normalize();
+        const horn = put(MeshBuilder.CreateCylinder("barrowDragonHorn", { height: seg * 1.12, diameterBottom: base * (1 - k / R.segs), diameterTop: base * Math.max(0, 1 - (k + 1) / R.segs), tessellation: 6 }, scene), hornBone);
+        horn.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d, new Quaternion());
+        horn.position.copyFrom(p.add(d.scale(seg / 2)));
+        glowLayer?.addExcludedMesh(horn);
+        p.addInPlace(d.scale(seg));
+      }
     }
   }
 }
+/*
+ * [S] 533 (a.1) the barrow dragon's ram horns (CONFIRM 532: "two large cream ram-like horns curving out sideways from the back of the head, with
+ * smaller cream horns below"; secret.wheelbarrow_dragon.jpg: a long thick cream horn from the top of the skull sweeping back along the head and out,
+ * its tip turning up; a shorter one under it curling down and forward). BARROW_HORNS in the skull's width (length) and height (base): each horn
+ * .segs tapering links, its direction starting at (side .Out, .Up, back 1) and bent by .Curl (side, up, fore) over its length. Unlit cream
+ * (palette unlit tan x ~.95), out of the glow.
+ */
+const BARROW_HORNS = { segs: 5, big: 1.05, bigBase: 0.34, bigOut: 0.75, bigUp: 0.15, bigCurl: [0.3, 1.5, 0.4], small: 0.55, smallBase: 0.22,
+  smallOut: 0.9, smallUp: -0.1, smallCurl: [-0.2, -1.4, 1.2], cream: new Color3(0.78, 0.62, 0.42) };
 
 function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
   hand.computeWorldMatrix(true);
