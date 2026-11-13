@@ -4864,6 +4864,17 @@ function buildDragonBarrow(scene: Scene, body: ArticulatedBody, team?: Color3): 
  */
 const BARROW_DRAGON = { w: 0.5, h: 0.34, l: 0.42, at: 0.6, sit: 0.25, mouth: 0.18, gape: 0.24, teeth: 7, fang: 0.55, horn: 0.62, hornLo: 0.36,
   bone: new Color3(0.82, 0.66, 0.48), mouthDark: new Color3(0.12, 0.03, 0.04) };
+/*
+ * [S] 532 (b.2) the barrow dragon's open jaws (secret.wheelbarrow_dragon.jpg: a long crocodile snout out of the skull's front, the upper jaw raised
+ * and the lower dropped in a wide gape, tan bone rims along both jaws' edges lined with long spike teeth pointing into the mouth, nostril studs
+ * on the snout's tip; audit b.2 "no dragon head with a toothed jaw"). BARROW_JAWS in the barrow's H: both jaws hinge at .hingeZ of the skull's
+ * length ahead of its middle and .hingeY of its height under it, opened .open rad between them; the upper jaw .snout H long, .upperW of the
+ * skull's width wide and .upperH of its height deep, a tip block .tipW as wide; the lower .lowerL as long, .lowerW wide, .lowerH deep; per jaw
+ * side a bone rim .rimW x .rimH and .teeth fangs .fang of the skull's height long, .fangW across; a dark gullet .gullet of the snout deep from the
+ * hinge, which the flame jet leaves from.
+ */
+const BARROW_JAWS = { hingeZ: 0.2, hingeY: 0.12, open: 0.78, snout: 0.5, upperW: 0.66, upperH: 0.3, tipW: 0.8, lowerL: 0.92, lowerW: 0.6, lowerH: 0.22,
+  rimW: 0.07, rimH: 0.07, teeth: 6, fang: 0.2, fangW: 0.06, gullet: 0.45 };
 function buildBarrowDragon(scene: Scene, root: Mesh, put: (m: Mesh, mt?: PBRMetallicRoughnessMaterial) => Mesh, H: number,
   z0: number, z1: number, y0: number, team: Color3): void {
   const D = BARROW_DRAGON;
@@ -4873,35 +4884,41 @@ function buildBarrowDragon(scene: Scene, root: Mesh, put: (m: Mesh, mt?: PBRMeta
   const c = new Vector3(0, y0 + D.sit * H + h * 0.3, z0 + (z1 - z0) * D.at);
   const skull = put(MeshBuilder.CreateIcoSphere("barrowDragonSkull", { radius: 0.5, subdivisions: 2 }, scene), skin);
   skull.scaling.set(w, h, l); skull.position.copyFrom(c);
-  // the lower jaw: a team block under the mouth, sitting down in the tray
-  const mouthY = c.y - h * D.mouth, gap = h * D.gape, front = c.z + l * 0.44;
-  const jaw = put(MeshBuilder.CreateBox("barrowDragonJaw", { width: w * 0.86, height: h * 0.3, depth: l * 0.8 }, scene), skin);
-  jaw.position.set(0, mouthY - gap / 2 - h * 0.15, c.z + l * 0.04);
-  const inside = put(MeshBuilder.CreateBox("barrowDragonMouth", { width: w * 0.86, height: gap, depth: l * 0.1 }, scene), dark);
-  inside.position.set(0, mouthY, front - l * 0.02);
-  for (const [y, dir] of [[mouthY + gap / 2, -1], [mouthY - gap / 2, 1]] as const) {
-    const rim = put(MeshBuilder.CreateBox("barrowDragonJawRim", { width: w * 0.98, height: h * 0.08, depth: l * 0.14 }, scene), bone);
-    rim.position.set(0, y - dir * h * 0.03, front + l * 0.02);
+  // [S] 532 (b.2) the open crocodile jaws (spec at BARROW_JAWS) in place of the boxed grin across the skull's front
+  const J = BARROW_JAWS, S = J.snout * H, half = J.open / 2;
+  const hinge = new Vector3(0, c.y - h * J.hingeY, c.z + l * J.hingeZ);
+  const jawPivot = (name: string, tilt: number): TransformNode => {
+    const p = new TransformNode(name, scene); p.parent = root; p.position.copyFrom(hinge); p.rotation.x = tilt; return p;
+  };
+  const onto = (m: Mesh, pivot: TransformNode, x: number, y: number, z: number): Mesh => { m.parent = pivot; m.position.set(x, y, z); return m; };
+  for (const [pivot, dir] of [[jawPivot("barrowDragonUpperJaw", -half), 1], [jawPivot("barrowDragonLowerJaw", half), -1]] as const) {
+    const up = dir > 0, wide = w * (up ? J.upperW : J.lowerW), tall = h * (up ? J.upperH : J.lowerH), long = S * (up ? 1 : J.lowerL);
+    onto(put(MeshBuilder.CreateBox("barrowDragonSnout", { width: wide, height: tall, depth: long * 0.72 }, scene), skin), pivot, 0, dir * tall / 2, long * 0.36);
+    onto(put(MeshBuilder.CreateBox("barrowDragonSnoutTip", { width: wide * J.tipW, height: tall * 0.85, depth: long * 0.3 }, scene), skin), pivot, 0, dir * tall * 0.85 / 2, long * 0.85);
     for (const side of [-1, 1]) {
-      const cheek = put(MeshBuilder.CreateBox("barrowDragonJawSide", { width: w * 0.06, height: h * 0.08, depth: l * 0.42 }, scene), bone);
-      cheek.position.set(side * w * 0.47, y - dir * h * 0.03, front - l * 0.2);
+      onto(put(MeshBuilder.CreateBox("barrowDragonJawRim", { width: w * J.rimW, height: h * J.rimH, depth: long * 0.98 }, scene), bone), pivot, side * (wide / 2 - w * J.rimW * 0.3), dir * h * J.rimH * 0.3, long * 0.5);
+      for (let k = 0; k < J.teeth; k++) {
+        const t = (k + 0.5) / J.teeth, fangL = h * J.fang * (k % 2 ? 0.7 : 1);
+        const fang = onto(put(MeshBuilder.CreateCylinder("barrowDragonFang", { height: fangL, diameterTop: 0, diameterBottom: w * J.fangW, tessellation: 4 }, scene), bone),
+          pivot, side * (wide / 2 - w * J.rimW * 0.6), -dir * fangL / 2, long * (0.12 + 0.86 * t));
+        fang.rotation.x = up ? Math.PI : 0;
+      }
     }
-    for (let k = 0; k < D.teeth; k++) {
-      const t = D.teeth > 1 ? k / (D.teeth - 1) - 0.5 : 0, long = gap * D.fang * (k % 2 ? 0.7 : 1);
-      const fang = put(MeshBuilder.CreateCylinder("barrowDragonFang", { height: long, diameterTop: 0, diameterBottom: w * 0.07, tessellation: 4 }, scene), bone);
-      fang.rotation.x = dir < 0 ? Math.PI : 0;
-      fang.position.set(t * w * 0.84, y + dir * long / 2, front + l * 0.05);
+    if (up) for (const side of [-1, 1]) {
+      const nose = onto(put(MeshBuilder.CreateCylinder("barrowDragonNostril", { height: h * 0.06, diameter: w * 0.09, tessellation: 4 }, scene), bone), pivot, side * wide * J.tipW * 0.28, tall * 0.88, long * 0.9);
+      nose.rotation.x = 0.4;
     }
   }
+  // the dark gullet between the jaws behind the teeth: the flame jet leaves from it (simulationSystem BARROW_BREATH reads "barrowDragonMouth")
+  const deep = S * J.gullet;
+  const inside = put(MeshBuilder.CreateBox("barrowDragonMouth", { width: w * J.lowerW * 0.86, height: 2 * Math.tan(half) * deep * 0.55, depth: deep }, scene), dark);
+  inside.position.set(0, hinge.y, hinge.z + deep / 2);
   // eyes on the skull's sides
   for (const side of [-1, 1]) {
     const eye = put(MeshBuilder.CreateIcoSphere("barrowDragonEye", { radius: w * 0.07, subdivisions: 1, flat: true }, scene), white);
     eye.position.set(side * w * 0.47, c.y + h * 0.1, c.z + l * 0.14);
     const pupil = put(MeshBuilder.CreateIcoSphere("barrowDragonPupil", { radius: w * 0.035, subdivisions: 1, flat: true }, scene), black);
     pupil.position.set(side * w * 0.52, c.y + h * 0.1, c.z + l * 0.16);
-    // nostril studs on the snout's top
-    const nose = put(MeshBuilder.CreateCylinder("barrowDragonNostril", { height: h * 0.05, diameter: w * 0.08, tessellation: 4 }, scene), bone);
-    nose.position.set(side * w * 0.12, c.y + h * 0.3, c.z + l * 0.38); nose.rotation.x = 0.6;
     // horns: a big pair out and up from the back of the skull, a small pair under them
     for (const [len, base, at, dir] of [
       [D.horn * w, h * 0.3, new Vector3(side * w * 0.36, c.y + h * 0.22, c.z - l * 0.12), new Vector3(side, 0.55, -0.35)],
