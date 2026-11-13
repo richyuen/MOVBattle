@@ -1271,7 +1271,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "vehicle", materialPreset: "secret_pirate",
       });
     case "secret_blackbeard":
-      return vis({ scale: 1.95, bulk: 1.28, headSize: 1.08 }, "cutlass", "tricorn", "none", "cape", "#5d3a1f", "cutlass", {
+      return vis({ scale: 2.55, bulk: 1.28, headSize: 1.08 }, "cutlass", "tricorn", "none", "cape", "#5d3a1f", "cutlass", {
         // [S] 538 (b.1) a giant dark grey anchor in the main fist in place of the cutlass (propBuilder BB_ANCHOR)
         // [S] 539 (b.2) the same anchor in the off fist in place of the chest flintlock (card Off Hand "Blackbeard's Anchor")
         weaponVariant: "blackbeard_anchor", offhandVariant: "blackbeard_anchor",
