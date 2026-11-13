@@ -2273,6 +2273,19 @@ export function attachProps(
       shield.parent = body.torso;
       shield.position.set(-body.metrics.shoulderWidth * 0.58, body.neck.position.y * 0.35, body.torsoMesh.getBoundingInfo().boundingBox.maximum.z + scale * 0.23);
       shield.rotation.y = -0.2;
+    } else if (config.weaponVariant === "cavalry_spear" && config.shield === "kite") {
+      // [R] 534 the Cavalry Shield stood upright beside the horse's neck (spec at CAV_SHIELD)
+      const C = CAV_SHIELD;
+      const toHip = body.hip.computeWorldMatrix(true).clone().invert();
+      body.leftShoulder.computeWorldMatrix(true); body.torsoMesh.computeWorldMatrix(true);
+      const shoulderAt = Vector3.TransformCoordinates(body.leftShoulder.getAbsolutePosition(), toHip);
+      const chest = body.torsoMesh.getBoundingInfo().boundingBox.vectorsWorld.reduce((m, v) => Math.max(m, Vector3.TransformCoordinates(v, toHip).z), -Infinity);
+      const tall = Math.max(0.2, shoulderAt.y) * (1 + C.top + C.below);
+      const k = tall / (C.span * scale);
+      shield.parent = body.hip;
+      shield.scaling.set(k * C.wide, k, k);
+      shield.position.set(shoulderAt.x * C.out, shoulderAt.y * (1 + C.top) - C.topAt * scale * k, chest + tall * C.ahead);
+      shield.rotation.set(C.tip, C.turn, 0);
     } else if (config.shield === "plank") {
       // [S] 519 (raptor_rider b.2) the plank shield stands upright on his off side, its face out and a little forward (secret.raptor_rider.red.png): on
       // the forearm it lay flat over the mount's neck, the riding arm being level. Stood on the trunk like the paladin's board.
@@ -8085,6 +8098,18 @@ const PAVISE = { tall: 0.58, wide: 0.18, shoulder: 0.86, top: 0.8, foot: 0.74, t
 /** [S] 496 the pavises' stand on the root: inner edge .gap of a board's width off the middle, top .lift of its height over the shoulder line,
  * face .ahead of its height before the chest, top splayed out .splay rad (the render's slight V) */
 const PAVISE_STAND = { gap: 0.12, lift: 0.07, ahead: 0.21, splay: 0.06 };
+/*
+ * [R] 534 (secret.cavalry b.1, plateau after CONFIRM 532 and 533) the Cavalry Shield's hold. Spec read off secret.cavalry.red.png and .blue.png:
+ * a big team kite board with the cream cross and pale rim stands bolt upright on the rider's LEFT, beside and just ahead of the horse's neck,
+ * its face to the front (a touch turned in, so the cross shows to the front three-quarter), its top at his shoulder and its point at his hip
+ * (about his trunk's height), about 0.6 as wide as tall, and it stays so through the idle, the windup and the charge. Held in the fist it lay
+ * flat across his lap (the riding arm is level) and went edge-on in the windup (527-533), so it is stood on body.hip instead: the seat lift
+ * (CAVALRY_SEAT) carries it, the trunk's lean and the windup twist do not. CAVALRY's kite in hip-frame units: the board's own span (rim top to
+ * point) is .span of its build scale with its top .topAt over its middle; scaled so the span runs from .below of the shoulder height under the
+ * hip to .top over the shoulder, .wide again across; its middle .out of the shoulder's spread to his left, .ahead of that height past the chest
+ * front, turned .turn rad in toward his front, tipped .tip back at the top.
+ */
+const CAV_SHIELD = { span: 0.53, topAt: 0.186, top: 0.06, below: 0.04, wide: 1.4, out: 1.3, ahead: 0.18, turn: 0.22, tip: -0.06 };
 function coffinPlate(scene: Scene, name: string, w: number, h: number, d: number): Mesh {
   const P = PAVISE, outline = [[-w * P.foot / 2, -h / 2], [w * P.foot / 2, -h / 2], [w / 2, h * (P.shoulder - 0.5)], [w * P.top / 2, h / 2], [-w * P.top / 2, h / 2], [-w / 2, h * (P.shoulder - 0.5)]];
   const pos: number[] = [], idx: number[] = [], n = outline.length;
