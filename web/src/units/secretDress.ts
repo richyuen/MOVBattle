@@ -5706,6 +5706,43 @@ export function senseiHood(scene: Scene, body: ArticulatedBody, team: Color3): M
 }
 
 /*
+ * [S] 540 (sensei a.4) the Sensei's spiked bracers (audit 538: "plain team forearms - TABS: armoured forearm guards with a row of silver spikes";
+ * card Appearance "It wears spiked armor on their forearms"; secret.sensei.red.png: a thick team guard over each forearm from under the elbow to the
+ * wrist, wider than the arm, and out of its outer side a row of four long pale steel spikes, swept back toward the elbow). SENSEI_BRACER on each
+ * lower arm (limbBox: 0 its top, 1 the wrist): an 8-sided shell from .from to .to, .out of the half-width round at the top tapering to .taper;
+ * .spikes 3-sided spikes along its outer side (away from the body) from .spikeFrom to .spikeTo, each .long of the shell's radius long and .wide
+ * across at the root, leaned .lean rad back toward the elbow. Team cloth (c^2 x .shade) self-lit .12; spikes unlit pale steel; out of the glow.
+ */
+const SENSEI_BRACER = { from: 0.12, to: 0.95, out: 1.75, taper: 0.9, shade: 0.8, spikes: 4, spikeFrom: 0.2, spikeTo: 0.85, long: 2.2, wide: 0.55, lean: 0.55,
+  steel: new Color3(0.62, 0.63, 0.66) };
+export function senseiBracers(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const G = SENSEI_BRACER, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const teamC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(G.shade);
+  const cloth = mf.get("cloth", teamC, { emissive: teamC.scale(0.12), roughness: 1 });
+  const steel = mf.get("unlit", G.steel, { emissive: G.steel });
+  const out: Mesh[] = [];
+  for (const [fore, side] of [[body.leftLowerArm, -1], [body.rightLowerArm, 1]] as const) {
+    const L = limbBox(fore), r = Math.max(L.wide, L.deep), top = L.mid + L.half;
+    const at = (t: number) => top - t * L.half * 2;
+    const shell = MeshBuilder.CreateCylinder("senseiBracer", { height: at(G.from) - at(G.to), diameterTop: r * G.out * 2, diameterBottom: r * G.out * G.taper * 2, tessellation: 8 }, scene);
+    shell.parent = fore.parent; shell.position.y = (at(G.from) + at(G.to)) / 2; shell.rotation.y = Math.PI / 8;
+    shell.material = cloth; shell.convertToFlatShadedMesh(); glow?.addExcludedMesh(shell); out.push(shell);
+    for (let i = 0; i < G.spikes; i++) {
+      const t = G.spikeFrom + ((G.spikeTo - G.spikeFrom) * i) / Math.max(1, G.spikes - 1);
+      const rr = r * G.out * (1 - (1 - G.taper) * ((t - G.from) / (G.to - G.from)));
+      const len = r * G.out * G.long;
+      const spike = MeshBuilder.CreateCylinder("senseiBracerSpike", { height: len, diameterBottom: r * G.wide * 2, diameterTop: 0, tessellation: 3 }, scene);
+      // out of the outer side (x away from the body), leaned back up toward the elbow (+y)
+      const ang = -side * (Math.PI / 2 - G.lean);
+      spike.parent = fore.parent; spike.rotation.z = ang;
+      spike.position.set(side * (rr * 0.9 + (len / 2) * Math.sin(Math.PI / 2 - G.lean)), at(t) + (len / 2) * Math.cos(Math.PI / 2 - G.lean), 0);
+      spike.material = steel; spike.convertToFlatShadedMesh(); glow?.addExcludedMesh(spike); out.push(spike);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 539 (blackbeard a.1) Blackbeard's hat (audit 538: "black top hat with a yellow badge - TABS: black tricorne with lit fuse strings hanging from
  * the brim"; card Appearance "black hat with firelit strings protruding from it"; secret.blackbeard.red.png: a wide black tricorne pulled to the
  * brows, and from under its brim either side of the face hang dark slow-match cords, their ends burning white-orange). The hat is propBuilder's
