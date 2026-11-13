@@ -4648,6 +4648,33 @@ export function skeletonGiantGreaves(scene: Scene, body: ArticulatedBody, team: 
     out.push(shell, rim);
   }
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  out.push(...giantBoneFeet(scene, body));
+  return out;
+}
+
+/*
+ * [S] 536 (a.3; CONFIRM 533 "oversized cream block feet - TABS: small thin bone feet below the greaves"; secret.skeleton_giant.blue.png: under each
+ * greave a slim bone foot, about as wide as the greave's foot, low, reaching a little forward). GIANT_FEET: the body's foot box (cuff + toe) hidden;
+ * in its place, in the knee frame, a bone foot .wide of the old box's width, .tall of its height, .long of its length, sole on the old sole, its back
+ * at the old heel; an ankle knob .knob of the new width across on its top at the back. The foot's own bone material.
+ */
+const GIANT_FEET = { wide: 0.48, tall: 0.5, long: 0.8, knob: 0.9 };
+function giantBoneFeet(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const F = GIANT_FEET, out: Mesh[] = [];
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    const old = knee.getChildMeshes(true).find((m) => /_[lr]FootM$/.test(m.name));
+    if (!old) continue;
+    const bb = old.getBoundingInfo().boundingBox, s = old.scaling, p = old.position;
+    const lo = new Vector3(p.x + bb.minimum.x * s.x, p.y + bb.minimum.y * s.y, p.z + bb.minimum.z * s.z);
+    const hi = new Vector3(p.x + bb.maximum.x * s.x, p.y + bb.maximum.y * s.y, p.z + bb.maximum.z * s.z);
+    const w = (hi.x - lo.x) * F.wide, h = (hi.y - lo.y) * F.tall, d = (hi.z - lo.z) * F.long;
+    old.isVisible = false;
+    const foot = MeshBuilder.CreateBox("giantBoneFoot", { width: w, height: h, depth: d }, scene);
+    foot.parent = knee; foot.position.set((lo.x + hi.x) / 2, lo.y + h / 2, lo.z + d / 2); foot.material = old.material;
+    const knob = MeshBuilder.CreateIcoSphere("giantBoneAnkle", { radius: (w * F.knob) / 2, subdivisions: 1 }, scene);
+    knob.parent = knee; knob.position.set((lo.x + hi.x) / 2, lo.y + h, lo.z + w * 0.5); knob.material = old.material;
+    for (const m of [foot, knob]) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); out.push(m); }
+  }
   return out;
 }
 
