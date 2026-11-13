@@ -1587,9 +1587,14 @@ export class RuntimeUnit {
     this._updateHealthBar();
   }
 
+  /** [S] 535 called once as he dies, whatever killed him (SimulationSystem NECRO_CURSE raises a skull-cursed man on the spot); cleared after */
+  onDeath: ((unit: RuntimeUnit) => void) | null = null;
   private _die(impulse: Vector3): void {
     this._isDead = true;
     this._currentHealth = 0;
+    const onDeath = this.onDeath;
+    this.onDeath = null;
+    onDeath?.(this);
     this._moveTarget = null;
     this._isMoving = false;
     this._deathTime = RuntimeUnit.timeNowSeconds();
@@ -2780,6 +2785,7 @@ export class RuntimeUnit {
     this._drunkUntil = 0;
     this._loveUntil = 0;
     this._ghostUntil = 0;
+    this.onDeath = null;
     this._poisonUntil = 0;
     this._gildUntil = 0;
     this._auraUntil = 0;

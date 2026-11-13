@@ -5357,6 +5357,8 @@ export class SimulationSystem {
   private _necroCurse = (target: RuntimeUnit, team: number): void => {
     if (target.team === team || this._necroCursed.has(target)) return;
     this._necroCursed.set(target, team);
+    // raised the moment he dies, by rot, skull or knife: the last enemy's death ends the battle before another step runs
+    target.onDeath = (dead) => { if (this._necroCursed.has(dead)) this._raiseCursed(dead, team); };
     this._logMissileAbility("secret.necromancer", "status:curse", target.position);
   };
   private _stepNecroCurse(now: number): void {
