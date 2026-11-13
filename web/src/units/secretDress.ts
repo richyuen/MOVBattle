@@ -5984,6 +5984,31 @@ export function senseiWaistBand(scene: Scene, body: ArticulatedBody, team: Color
  * each forearm .lower times (its mesh and the wrist joint), the upper arm .girth and the forearm .foreGirth times as thick; the shoulder joints
  * set .out times further out; the pelvis box .waist of its width across.
  */
+/*
+ * [S] 542 (ice_giant b.1) the Ice Giant's club fists (audit 538 B: "normal-size hands on short arms - TABS: huge club-like fists at the ends of long
+ * arms"; secret.ice_giant.jpg: each arm ends in a blunt rounded club far thicker than the wrist, the forearm swelling into it). ICE_FIST on each hand
+ * node, sized off the forearm's box (F: its half width and depth after ICE_APE): a faceted ico fist .fist x F's larger half-size in radius, stretched
+ * .long along the arm, its centre .drop of its radius on down the arm past the wrist (hand frame -y, LESSONS 492); a swelling .swell x F across
+ * between wrist and fist. In the hand's own team material (the mitt hidden under it).
+ */
+const ICE_FIST = { fist: 1.75, long: 1.25, drop: 0.85, swell: 1.35 };
+export function iceGiantFists(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = ICE_FIST, out: Mesh[] = [];
+  for (const [hand, fore] of [[body.leftHand, body.leftLowerArm], [body.rightHand, body.rightLowerArm]] as const) {
+    const palm = hand.getChildren().find((n): n is Mesh => n instanceof Mesh && /HandM$/.test(n.name));
+    if (!palm) continue;
+    const F = limbBox(fore), r = Math.max(F.wide, F.deep) * K.fist;
+    const fist = MeshBuilder.CreateIcoSphere("iceGiantFist", { radius: r, subdivisions: 1 }, scene);
+    fist.parent = hand; fist.scaling.set(1, K.long, 1); fist.position.set(0, -r * K.drop, 0);
+    fist.material = palm.material; fist.convertToFlatShadedMesh(); out.push(fist);
+    const swell = MeshBuilder.CreateCylinder("iceGiantFistWrist", { height: r * 1.1, diameterTop: Math.max(F.wide, F.deep) * 2 * 1.05, diameterBottom: Math.max(F.wide, F.deep) * 2 * K.swell, tessellation: 7 }, scene);
+    swell.parent = hand; swell.position.set(0, -r * 0.1, 0);
+    swell.material = palm.material; swell.convertToFlatShadedMesh(); out.push(swell);
+    palm.isVisible = false;
+  }
+  return out;
+}
+
 const ICE_APE = { upper: 1.5, lower: 1.6, girth: 1.45, foreGirth: 1.7, out: 1.12, waist: 0.72 };
 export function iceGiantApeBuild(body: ArticulatedBody): void {
   const K = ICE_APE;
