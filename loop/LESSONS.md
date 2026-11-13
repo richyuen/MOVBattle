@@ -6,11 +6,11 @@ Read whole at step 1; one fact a line, merge near cap.
 - PBR colours are linear: an sRGB target c needs ~c^2.2 as the code. Pick values off `output/loop/palette.png`.
 - SSAO greys a DOUBLESIDE ribbon's inward faces: build dress shells one-sided facing out (check flipFaces).
 - Flat colour that survives ACES: an "unlit" material's colour comes from its EMISSIVE only (baseColor alone renders black), excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
-- ACES lifts a mid code value toward pale, so an unlit plate keeps a deep value (zeus's gold emblem is (0.62,0.26,0.03), 400); the same for timber: an IBL-lit mid albedo reads beige, so a brown hull wants (.2,.11,.055) with a small self-light (400).
+- ACES lifts mid code values toward pale: an unlit plate keeps a deep value (zeus gold (.62,.26,.03)); lit timber wants (.2,.11,.055), small self-light (400).
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey: cream wants unlit, out of the glow (442).
 - wrapAsBody team-tints the main mesh's material on every mesh sharing it (a vehicle's `bodyMaterial` IS the team colour: timber, iron, leather need their own; 392), and the head's as skin: a bone crewman needs a hidden anchor head (440 pumpkin operator).
 - vehicleBuilder makeMat (getWood) greys a mid colour (472): paint with cloth lit(), check a --noglow swatch.
-- holdInFist aims a prop by its local +Z: build up +Y under a child rotated +PI/2 on x (395 oars).
+- holdInFist aims a prop by its local +Z: build up +Y under a child turned +PI/2 on x (395).
 
 ## Capture and probes
 - A volley unit fires through SS._fireVolley: per-unit arrow options (heartArrow, iceArrow) go there too (519).
@@ -67,3 +67,4 @@ Read whole at step 1; one fact a line, merge near cap.
 - Fist prop hand frame: +y up the forearm, knuckles -y (492). bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
 - Torso board tips with the lean: body.root (496).
+- execSync runs cmd.exe, which eats a caret: write sha~1, not sha^ (530).
