@@ -5712,7 +5712,8 @@ export function senseiHood(scene: Scene, body: ArticulatedBody, team: Color3): M
  * (the lowest point of what was hidden, read in the knee's frame): a socket cup .cup of the shin's half-width round and .cupH of the length tall at
  * the top, then the peg .top round tapering to .foot, ending in a flat round tip .tipH tall. Dark lit timber (LESSONS: wood (.2,.11,.055) self-lit).
  */
-const BB_PEG = { cup: 2.2, cupH: 0.14, top: 1.5, foot: 0.8, tipH: 0.05, wood: new Color3(0.16, 0.09, 0.05), cupC: new Color3(0.09, 0.05, 0.03) };
+// 540.7b cup 2.2 -> 1.25, top 1.5 -> .8, foot .8 -> .42 (look: the peg read as a thick cone twice the leg's width)
+const BB_PEG = { cup: 1.25, cupH: 0.14, top: 0.8, foot: 0.42, tipH: 0.05, wood: new Color3(0.16, 0.09, 0.05), cupC: new Color3(0.09, 0.05, 0.03) };
 export function blackbeardPegLeg(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = BB_PEG, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const knee = body.leftKnee, shin = body.leftLowerLeg;
