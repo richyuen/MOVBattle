@@ -280,7 +280,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
           healthOverride: 240,
         },
         // [S] 527 (b.1) both pirates carry cutlasses (secret.bomb_cannon.jpg, card Appearance); the loader raises his as he readies the shot (PA "reload")
-        visual: visual("cutlass", "hood", "none", "none", {
+        visual: visual("cutlass", "none", "none", "none", { // [S] 533 (a.3) hat off: secretDress bombCrewCap
           proportions: { scale: 0.7, bulk: 0.82, headSize: 1.02 },
           materialPreset: "secret_bandit",
           posePreset: "crew",
@@ -294,7 +294,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         offset: new Vector3(-0.45, 0, -0.85),
         syncFacing: true,
         semantics: { ...parentDamage, actionPreset: "reload" },
-        visual: visual("cutlass", "bandana", "none", "none", {
+        visual: visual("cutlass", "none", "none", "none", { // [S] 533 (a.3) hat off: secretDress bombCrewCap
           proportions: { scale: 0.66, bulk: 0.78, headSize: 1.0 },
           materialPreset: "secret_bandit",
           posePreset: "crew",

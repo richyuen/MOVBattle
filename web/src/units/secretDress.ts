@@ -4478,3 +4478,41 @@ export function skeletonGiantGreaves(scene: Scene, body: ArticulatedBody, team: 
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/*
+ * [S] 533 (a.3) the Bomb Cannon crew's floppy pirate caps (secret.bomb_cannon.jpg: both pirates wear a big soft team cap, a rolled band low on the
+ * brow just over the bead eyes and a puffed crown slouched back and to one side, a knot at the back with two short tails; no helmet, no beret).
+ * BOMB_CREW_CAP in the head's box (W, H, D its sizes; e the eyes' top): band .bandH H tall, .bandOut of the head across and deep, its foot .bandLo
+ * H over e; crown an ellipsoid .crownW W x .crownH H x .crownD D centred .crownUp H over e, slouched .slouch D back and .side W aside, tipped
+ * .droop rad back and .lean rad aside; a knot .knot W across at the back of the band, two tails .tailL H long, .tailW W wide, splayed .splay.
+ * Team saturated (c^2, renormalised) x .shade, self-lit .12; out of the glow. Both crewmen (gunner and loader, hat "none").
+ */
+const BOMB_CREW_CAP = { bandH: 0.16, bandOut: 1.12, bandLo: 0.02, crownW: 1.3, crownH: 0.5, crownD: 1.35, crownUp: 0.36, slouch: 0.12, side: 0.08,
+  droop: -0.3, lean: 0.22, knot: 0.22, tailL: 0.42, tailW: 0.14, splay: 0.35, shade: 0.8 };
+export function bombCrewCap(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = BOMB_CREW_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const deep = sat.scale((peak / Math.max(sat.r, sat.g, sat.b, 1e-3)) * C.shade);
+  const cloth = mf.get("cloth", deep, { emissive: deep.scale(0.12), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const out: Mesh[] = [];
+  const bandY = e + H * (C.bandLo + C.bandH / 2);
+  const band = MeshBuilder.CreateCylinder("bombCrewCapBand", { height: H * C.bandH, diameter: 1, tessellation: 8 }, scene);
+  band.parent = head; band.position.set(c.x, bandY, c.z); band.scaling.set(W * C.bandOut, 1, D * C.bandOut); out.push(band);
+  const crown = MeshBuilder.CreateSphere("bombCrewCap", { diameter: 1, segments: 5 }, scene);
+  crown.parent = head; crown.position.set(c.x + W * C.side, e + H * C.crownUp, c.z - D * C.slouch);
+  crown.scaling.set(W * C.crownW, H * C.crownH, D * C.crownD); crown.rotation.set(C.droop, 0, C.lean); out.push(crown);
+  const backZ = c.z - (D * C.bandOut) / 2;
+  const knot = MeshBuilder.CreateBox("bombCrewCapKnot", { width: W * C.knot, height: W * C.knot * 0.8, depth: W * C.knot * 0.7 }, scene);
+  knot.parent = head; knot.position.set(c.x - W * 0.1, bandY, backZ - W * C.knot * 0.2); out.push(knot);
+  for (const s of [-1, 1]) {
+    const tail = MeshBuilder.CreateBox("bombCrewCapTail", { width: W * C.tailW, height: H * C.tailL, depth: W * 0.05 }, scene);
+    tail.setPivotPoint(new Vector3(0, (H * C.tailL) / 2, 0));
+    tail.parent = head; tail.position.set(c.x - W * 0.1 + s * W * C.tailW * 0.5, bandY - (H * C.tailL) / 2, backZ - W * C.knot * 0.3);
+    tail.rotation.set(-0.35, 0, s * C.splay); out.push(tail);
+  }
+  for (const m of out) { m.material = cloth; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
