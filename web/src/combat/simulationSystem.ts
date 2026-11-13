@@ -212,6 +212,8 @@ const LOVE_KISS = { reach: 0.9, every: 0.5, drain: 4 };
 const SHROOM_TURN = { reach: 1.1, reachMax: 1.6, every: 1.0, damage: 12 };
 /** [S] 536 the Solar Architect's Solar Maelstrom (spec at SimulationSystem._trySolarMaelstrom) */
 const SOLAR_MAELSTROM = { near: 7, first: 0.5, cooldown: 12, radius: 3.5, damage: 20, push: 5, lift: 4, seconds: 3, tick: 0.5, heal: 0.04, pull: 7, inPush: 7, inLift: 3 };
+/** [S] 539 Blackbeard's Cannon Barrage (spec at SimulationSystem._tryCannonBarrage) */
+const CANNON_BARRAGE = { first: 0.5, cooldown: 8, balls: 8, every: 0.15, spread: 2.2, lean: 0.8, up: 14, drift: 2, damage: 45, splash: 1.4, push: 6 };
 const STIFFY_FEAR = { units: new Set(["spooky.skeleton_warrior"]), every: 2, seconds: 3.5, reach: 4 };
 // [S] 475 Pharaoh Kneel: the struck man and enemies within .radius (KNEEL_AURA's ring) kneel .seconds (RuntimeUnit.applyKneel)
 const PHARAOH_KNEEL = { radius: 2.4, seconds: 3 };
@@ -2005,6 +2007,33 @@ export class SimulationSystem {
   }
 
   /**
+   * [S] 539 (blackbeard c.1) Blackbeard's Cannon Barrage (card ability "summons a storm of cannonballs (8 cannonballs) coming from the sky toward
+   * the enemy"; Characteristics "they can call heavy cannon barrages every few seconds, devastating groups and giant units alike"). CANNON_BARRAGE:
+   * when ready (.first s in, then every .cooldown s) and on his feet, as he swings: .balls black cannonballs, one every .every s, each dropping from
+   * .up m over a spot within .spread m of his man (the spot leaned .lean m back toward Blackbeard, so the fall shows beside him), splash .splash m,
+   * .damage each, a .push blast. Logged "cannon_barrage" (not a plain kind: the ability shot); his anchor blow still lands.
+   */
+  private _barrageReady = new Map<RuntimeUnit, number>();
+  private _tryCannonBarrage(attacker: RuntimeUnit, target: RuntimeUnit, knockback: Vector3, now: number): void {
+    const C = CANNON_BARRAGE;
+    if (attacker.definition.id !== "secret.blackbeard" || attacker.isDead || target.isDead || attacker.linkedParent) return;
+    if (attacker.isAirborne || attacker.isToppled || attacker.isDowned) return;
+    if (!this._barrageReady.has(attacker)) this._barrageReady.set(attacker, now + C.first);
+    if (now < this._barrageReady.get(attacker)!) return;
+    this._barrageReady.set(attacker, now + C.cooldown);
+    const back = attacker.position.subtract(target.position); back.y = 0;
+    if (back.lengthSquared() > 1e-6) back.normalize();
+    const push = knockback.lengthSquared() > 1e-6 ? knockback.normalizeToNew().scale(C.push) : back.scale(-C.push);
+    for (let i = 0; i < C.balls; i++) {
+      const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * C.spread;
+      const spot = new Vector3(target.position.x + Math.cos(a) * r + back.x * C.lean, 0, target.position.z + Math.sin(a) * r + back.z * C.lean);
+      const sky = spot.add(new Vector3(-back.x * C.drift, C.up, -back.z * C.drift));
+      this.projectileSystem?.spawnProjectile("cannonball", sky, target, C.damage, push, C.splash, attacker.team, this._units, undefined, i * C.every, { at: spot, arc: 0 });
+    }
+    this._logAbility(attacker, "cannon_barrage", now, target.position);
+  }
+
+  /**
    * [S] 530 Banshee Scream (audit 527 c.1; card ability "The Banshee will 'scream,' creating a large blue aoe that launches enemy units up and flings
    * them, dealing damage rapidly. It has a considerably long cooldown"; Characteristics "will push every Unit in its radius away"; secret.banshee.png
    * white-blue streamers). When ready (BANSHEE_SCREAM.cooldown s, ready from the start) as she casts: a pale-blue burst dome .radius m round her on the
@@ -3775,6 +3804,8 @@ export class SimulationSystem {
     if (this._tryLasso(attacker, target, damage, attackProfile.cooldown * cooldownMultiplier, now)) return;
     // [S] 529 Vlad raises his log and a row of wooden stakes bursts from the ground toward the man; his blow still lands (VLAD_IMPALE)
     this._tryVladImpale(attacker, target, damage, now);
+    // [S] 539 Blackbeard calls a Cannon Barrage down round the man; his anchor blow still lands (CANNON_BARRAGE)
+    this._tryCannonBarrage(attacker, target, knockback, now);
     // [S] 530 the Banshee screams: a blue blast round her launches and flings every enemy near her; her curse still lands (BANSHEE_SCREAM)
     this._tryBansheeScream(attacker, now);
     // [S] 535 her blow is no swing: she curses the man from both open hands (BANSHEE_CURSE)
