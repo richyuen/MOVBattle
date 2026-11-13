@@ -2342,7 +2342,7 @@ export function attachProps(
   }
 
   // The western rider sits a bare paint horse, not the barded charger
-  const special = buildSpecial(scene, config.special, scale, accent, body, teamColor, config.materialPreset === "wildwest_leather" ? "pinto" : "barded", config.wingStyle);
+  const special = buildSpecial(scene, config.special, scale, accent, body, teamColor, config.materialPreset === "wildwest_leather" ? "pinto" : config.materialPreset === "secret_royal" ? "cavalry" : "barded", config.wingStyle);
   if (special) {
     props.push(special);
   }
@@ -8879,6 +8879,14 @@ const HORSE_CAP_BULGE = 1.22;
  *   .tuckLong of the half-length; breast strap .strap of H deep, .strapAt of the back's height below the middle, round .strapArc of the chest (radians
  *   each side of ahead).
  */
+/*
+ * [S] 532 (a.4) the Cavalry horse's barding forward (secret.cavalry.red.png, .png: the team cloth also wraps the arched neck up to the grey head and
+ * hangs as a skirt round the chest, ahead of the saddle drape, down to the knees, a cream band at its foot; audit a.4 "covers only the rump").
+ * CAV_CHEST on the barrel (W wide, L long, back at backY): the neck segments in the drape's team cloth; a chest skirt round the front, .arc rad
+ * either side of straight ahead, .ahead L forward of the barrel's own surface, from .top of backY down to .drop H under the drape's hem, standing
+ * .out of the barrel's girth at the top and flaring to .flare at its foot; a cream band .band H deep along its foot (the drape's hem cream).
+ */
+const CAV_CHEST = { arc: 1.25, ahead: 0.01, top: 0.55, drop: 0.12, out: 1.06, flare: 1.16, band: 0.07 };
 const HORSE_CAPARISON = { fore: 0.55, aft: 1.12, plan: 2.6, tuck: 0.1, tuckLong: 0.06, strap: 0.07, strapAt: 0.1, strapArc: 1.15 };
 // The domed drape and its crenellated hem (334, see the caparison): rings in the quarter round, the swell of its sides, the barrel's middle (share of the
 // back's height) where the panels turn plumb, the ridge's length (share); the hem band's depth, merlon count and depth (of H), and the cream's self-light.
@@ -8938,7 +8946,7 @@ const PINTO_BEAD = { disc: 0.3, thick: 0.07, proud: 0.03, pupil: 0.48, look: 0.1
  * the cannon from .foot down to .cannon; fetlock .fetlock across; hoof .hoof across at its sole, .hoofTall tall.
  */
 const PINTO_LEGS = { fore: 0.22, hind: 0.27, sides: 6, deep: 1.15, foot: 0.12, cannon: 0.085, fetlock: 0.065, hoof: 0.15, hoofTall: 0.09 };
-type HorseStyle = "barded" | "pinto";
+type HorseStyle = "barded" | "pinto" | "cavalry";
 /*
  * [S] chanfron (336; renaissance.jouster.red.png: the horse's face is cased in a grey faceted plate from the poll to above the nostrils, the brown muzzle
  * showing below it; a round eye hole on each side with a white eye and black pupil looking out; brown ears standing up through it with team insides; a
@@ -9504,6 +9512,25 @@ function buildHorse(scene: Scene, body: ArticulatedBody, cloth: Color3, style: H
     return pts;
   };
   part(MeshBuilder.CreateRibbon("hpeytral", { pathArray: [strapPath(strapY + H * C.strap / 2), strapPath(strapY - H * C.strap / 2)], sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
+  if (style === "cavalry") {
+    // [S] 532 (a.4) the Cavalry horse's neck and chest cloth (spec at CAV_CHEST): the arched neck in the team cloth, and a skirt hung round the
+    // bare chest ahead of the drape, from over the breast strap down past the drape's hem to the knees, flaring out, a cream band at its foot
+    const K = CAV_CHEST;
+    for (const m of frame.getChildMeshes(true)) if (m.name === "hneck" || m.name === "hneckJoin") m.material = clothMat;
+    const chestPath = (y: number, out: number): Vector3[] => {
+      const pts: Vector3[] = [];
+      const k = (y > 0 ? Math.sqrt(Math.max(0.2, 1 - (Math.min(y, backY * 0.98) / backY) ** 2)) : 1) * out;
+      for (let i = 0; i <= 16; i++) {
+        const phi = -K.arc + (i / 16) * 2 * K.arc;
+        pts.push(new Vector3((W / 2) * k * Math.sin(phi), y, (L / 2) * k * Math.cos(phi) + L * K.ahead));
+      }
+      return pts;
+    };
+    const topY = backY * K.top, footY = hemY - H * K.drop;
+    const rows = [0, 0.5, 1].map((t) => chestPath(topY + (footY - topY) * t, K.out + (K.flare - K.out) * t));
+    part(MeshBuilder.CreateRibbon("hcavChest", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene), clothMat);
+    part(MeshBuilder.CreateRibbon("hcavChestHem", { pathArray: [chestPath(footY + H * K.band, K.flare * 1.01), chestPath(footY, K.flare * 1.01)], sideOrientation: Mesh.DOUBLESIDE }, scene), hemMat);
+  }
   if (pinto && PINTO_NOGLOW) {
     // [S] 453 the paint's coat and patches out of the glow layer, so its bloom does not wash the orange to yellow (PINTO_COAT)
     const glow = scene.getGlowLayerByName("glow");
