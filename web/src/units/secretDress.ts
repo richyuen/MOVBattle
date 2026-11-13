@@ -4430,6 +4430,66 @@ export function necromancerLantern(scene: Scene, body: ArticulatedBody, team: Co
 }
 
 /*
+ * [S] 536 (a.2) the Necromancer's horned cap (audit 527: "headgear is a dark round hood with a flat collar brim - TABS: a dark team leather cap with
+ * two long curved horns and lank dark hair"; secret.necromancer.red.png: a close dark team cap over the skull from the brow up, the bone face and its
+ * bead eyes bare under it; from each side of the crown a long dark horn sweeps out, then up, curling in a little at its pale tip, two pale bands round
+ * it; under the cap's sides lank dark hair hangs straight past the jaw to the collarbones). NECRO_CAP in the head box (W, H, D, c) and the bead eyes:
+ * the cap a half-sphere .cap W across and .capD deep from .brow H over the eyes' tops to .crown H over c, set back .back D; per side a horn of
+ * .seg H segments, .w W across at the root tapering to a point, rooted .hornX W out and .hornY H under the crown, the first segment leaned .out rad
+ * outward, each next kinked .bend rad back up and .curl in; .bands pale bands; the hair .strands slabs a side from the cap's foot down .hair H,
+ * .strandW W wide, behind the eyes. The cap dark team (deepTeam .shade), lit cloth self-lit .12; horns dark .horn, tips and bands pale .bone; hair
+ * .hairC; out of the glow. The hood hat is off (unitVisuals).
+ */
+const NECRO_CAP = { cap: 1.14, capD: 1.08, brow: 0.04, crown: 0.62, back: 0.06, seg: [0.5, 0.42, 0.34], w: 0.24, hornX: 0.4, hornY: 0.22, out: 1.05,
+  bend: 0.62, curl: 0.18, bands: 2, strands: 3, hair: 1.0, strandW: 0.13, shade: 0.42,
+  horn: new Color3(0.16, 0.05, 0.05), bone: new Color3(0.86, 0.78, 0.62), hairC: new Color3(0.09, 0.05, 0.05) };
+export function necromancerHornCap(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = NECRO_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const capC = deepTeam(team, K.shade);
+  const capM = mf.get("cloth", capC, { emissive: capC.scale(0.12), roughness: 1 });
+  const hornM = mf.get("cloth", K.horn, { emissive: K.horn.scale(0.3), roughness: 1 });
+  const boneM = mf.get("cloth", K.bone, { emissive: K.bone.scale(0.3), roughness: 1 });
+  const hairM = mf.get("cloth", K.hairC, { emissive: K.hairC.scale(0.4), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const eyes = eyeBoxInHead(body) ?? { lo: new Vector3(c.x - W * 0.3, c.y, c.z + D * 0.4), hi: new Vector3(c.x + W * 0.3, c.y + H * 0.15, c.z + D * 0.55) };
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material, parent: TransformNode = head): Mesh => { m.parent = parent; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const foot = eyes.hi.y + H * K.brow, crown = c.y + H * K.crown;
+  const cap = put(MeshBuilder.CreateSphere("necroCap", { diameter: 1, segments: 5, slice: 0.5 }, scene), capM);
+  cap.scaling.set(W * K.cap, (crown - foot) * 2, D * K.capD); cap.position.set(c.x, foot, c.z - D * K.back);
+  // the horns from the crown's sides, out, then up, curling in at the pale tip
+  for (const sd of [-1, 1]) {
+    let joint = new Mesh("necroHornJoint", scene); joint.parent = head; out.push(joint);
+    joint.position.set(c.x + sd * W * K.hornX, crown - H * K.hornY, c.z - D * K.back);
+    joint.rotation.z = -sd * K.out;
+    for (let k = 0; k < K.seg.length; k++) {
+      if (k > 0) joint.rotation.set(-0.12, 0, sd * (k === 1 ? K.bend : K.curl));
+      const len = H * K.seg[k], w0 = W * K.w * (1 - k / K.seg.length), w1 = W * K.w * (1 - (k + 1) / K.seg.length);
+      const seg = MeshBuilder.CreateCylinder("necroHorn", { height: len, diameterBottom: w0, diameterTop: Math.max(w1, W * 0.01), tessellation: 7 }, scene);
+      seg.position.y = len / 2;
+      put(seg, k === K.seg.length - 1 ? boneM : hornM, joint);
+      if (k < K.bands) {
+        const band = MeshBuilder.CreateCylinder("necroHornBand", { height: len * 0.14, diameter: w1 * 1.22 + w0 * 0.08, tessellation: 7 }, scene);
+        band.position.y = len * 0.85; put(band, boneM, joint);
+      }
+      const next = new Mesh("necroHornJoint", scene); next.parent = joint; next.position.y = len; out.push(next);
+      joint = next;
+    }
+  }
+  // lank hair hanging from under the cap's sides, behind the eyes
+  for (const sd of [-1, 1]) for (let s = 0; s < K.strands; s++) {
+    const x = c.x + sd * (W * K.cap * 0.5 - W * K.strandW * (0.5 + s * 0.6));
+    const z = c.z - D * 0.05 - s * D * 0.22;
+    const len = H * K.hair * (1 - s * 0.12);
+    const strand = MeshBuilder.CreateBox("necroHair", { width: W * K.strandW, height: len, depth: D * 0.16 }, scene);
+    strand.position.set(x + sd * W * 0.06, foot - len / 2 + H * 0.12, z); strand.rotation.z = sd * 0.06;
+    put(strand, hairM);
+  }
+  return out;
+}
+
+/*
  * [S] 530 (a.2) the Witch's hood-hat (secret.witch.red.png: a tall team-coloured hat with no brim at all; its foot is a hood that comes down round
  * the face to the jaw, wider at the bottom, the face showing in its open front; over the head it narrows into a long crooked spire that bends back
  * and to one side, kinked twice). WITCH_HOOD in the head box (W, H, D, c): the hood a 9-sided frustum from .chin H under the head's foot to .crown

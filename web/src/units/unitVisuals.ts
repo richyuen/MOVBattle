@@ -1218,7 +1218,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_necromancer":
       // [S] 528 (b.1) the Necromancer Knife, a hooked sickle blade on a team grip, not the bone mage's skull staff (propBuilder buildNecroKnife)
-      return vis({ scale: 1.12, bulk: 0.95, headSize: 1.08 }, "dagger", "hood", "none", "cape", "#ddd4bf", undefined, {
+      // [S] 536 (a.2) no hood hat: his horned team cap and lank hair are secretDress necromancerHornCap
+      return vis({ scale: 1.12, bulk: 0.95, headSize: 1.08 }, "dagger", "none", "none", "cape", "#ddd4bf", undefined, {
         weaponVariant: "necro_knife", posePreset: "caster", materialPreset: "secret_bone", attachmentPreset: "summoner", fxPreset: "spectral",
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });

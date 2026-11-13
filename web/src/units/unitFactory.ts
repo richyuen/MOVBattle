@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1188,6 +1188,8 @@ export class UnitFactory {
     if (definition.id === "secret.witch" && !shouldUseVehicleBody) propMeshes.push(...witchBroom(this._scene, body));
     // [S] 529 (b.2): the Necromancer's team kerosene lantern in the off hand, a ghost flame inside and a glowing ring round it (secretDress necromancerLantern)
     if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...necromancerLantern(this._scene, body, teamColor));
+    // [S] 536 (a.2): a dark team leather cap with two long curved horns and lank dark hair (secretDress NECRO_CAP)
+    if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...necromancerHornCap(this._scene, body, teamColor));
     // [S] 528 (a.2): the Solar Architect's gold sun halo of rings and spikes behind the head (secretDress solarArchitectHalo)
     if (definition.id === "secret.solar_architect" && !shouldUseVehicleBody) propMeshes.push(...solarArchitectHalo(this._scene, body));
     // [S] 536 (a.3): a long open white coat edged gold, high collar, wide gold-cuffed sleeves, over a team front (secretDress SOLAR_COAT)
