@@ -4581,7 +4581,7 @@ export class SimulationSystem {
    * [S] 537 Gravestone Wall (necromancer c.3; card Abilities "Gravestone Wall", Characteristics "they also can summon 3 graves from the ground, pushing
    * anyone away if they're starting to close the distance"). NECRO_GRAVES: when he stands on his feet, ready (.cooldown s, ready from .first s) and an
    * enemy has come within .near m, three gravestones burst up across the line to that man .ahead m out in front of him, .apart m between stones
-   * (visualEffects spawnGravestones); every enemy within .radius m of the wall's middle is hurt .damage and thrown away from the Necromancer
+   * (visualEffects spawnGravestones); that man, and every enemy within .radius m of him or of the wall's middle, is hurt .damage and thrown away from the Necromancer
    * (.push, .lift). Logged "gravestone_wall".
    */
   private _graveReady = new Map<RuntimeUnit, number>();
@@ -4605,10 +4605,14 @@ export class SimulationSystem {
       along.normalize();
       const center = new Vector3(unit.position.x + along.x * Math.min(G.ahead, best * 0.6), 0, unit.position.z + along.z * Math.min(G.ahead, best * 0.6));
       this.visualEffects?.spawnGravestones(center, along, G.apart);
+      // [S] 538 (c.3, critic 537: "the man who triggers it at ~3.5 m is outside the 2.2 m push round a wall 1.3 m out: no throw seen") the push
+      // reaches the man who set the wall off, wherever he stands within .near, and anyone within .radius of him or of the wall's middle
       for (const u of this._units) {
         if (u.isDead || u.team === unit.team || u.linkedParent || !u.isTargetable) continue;
         const to = u.position.subtract(center); to.y = 0;
-        if (to.length() > G.radius + u.collisionBodyRadius) continue;
+        const toFoe = u.position.subtract(foe.position); toFoe.y = 0;
+        const reach = G.radius + u.collisionBodyRadius;
+        if (u !== foe && to.length() > reach && toFoe.length() > reach) continue;
         const away = u.position.subtract(unit.position); away.y = 0;
         if (away.lengthSquared() < 1e-6) away.copyFrom(along); else away.normalize();
         u.applyDamage(G.damage, away.scale(G.push));
