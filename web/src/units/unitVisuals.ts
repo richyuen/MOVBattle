@@ -1225,7 +1225,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
     case "secret_solar_architect":
       // [S] 528 (a.2) the sun halo is secretDress solarArchitectHalo; the small torus halo special retired
       // [S] 529 (b.1, b.2) a short white-and-gold wand with a gold end ring in each fist (propBuilder SOLAR_WAND), not the long orb staff
-      return vis({ scale: 1.18, bulk: 0.98 }, "sword", "laurel", "none", "none", "#f7dd6f", "sword", {
+      // [S] 533 (a.1) bald: no laurel hat, so no brown hair cap and no green wreath (card Appearance "The Solar Architect is bald")
+      return vis({ scale: 1.18, bulk: 0.98 }, "sword", "none", "none", "none", "#f7dd6f", "sword", {
         weaponVariant: "solar_wand", offhandVariant: "solar_wand", posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "hero_halo", fxPreset: "solar",
         stateVariants: { attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
       });
