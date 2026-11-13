@@ -4409,3 +4409,44 @@ export function cavalryArmour(scene: Scene, body: ArticulatedBody, team: Color3)
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/*
+ * [S] 532 (a.3) the Gatling Gun operator's shirt and vest (secret.gatling_gun.red.png, .jpg; card Appearance "a nice beige shirt and a vest in blue
+ * or red"; audit a.3 "plain team"): a long-sleeved beige shirt (the trunk, yoke, pads and both arms in it) under a fitted team vest closed from the
+ * belt to a V at the chest, the beige showing in the V. GATLING_VEST in the yoke's half-sizes on the torso joint (BANK_VEST's cut): back and side
+ * panels .out off the yoke from .top to .low of its height; the front closed below the V's point (.vee of the height down) and above it in .rows
+ * strips opening to .open of the half-width at the top. Beige unlit (cream reads grey lit in shade, LESSONS), vest the team colour saturated
+ * (c^2, renormalised) x .shade, self-lit .12; out of the glow. Crank gunner only (the loader keeps his bandana and plain dress).
+ */
+const GATLING_VEST = { out: 1.1, thick: 0.08, top: 0.98, low: 0.95, vee: 0.5, open: 0.6, rows: 5, shade: 0.72, beige: new Color3(0.86, 0.76, 0.52) };
+export function gatlingGunnerShirt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const V = GATLING_VEST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const beige = mf.get("unlit", V.beige, { emissive: V.beige });
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const deep = sat.scale((peak / Math.max(sat.r, sat.g, sat.b, 1e-3)) * V.shade);
+  const vestM = mf.get("cloth", deep, { emissive: deep.scale(0.12), roughness: 1 });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  for (const m of [body.torsoMesh, body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, ...body.allMeshes.filter((x) => /_yoke$|_[lr]Pad$/.test(x.name))]) {
+    m.material = beige; glow?.addExcludedMesh(m);
+  }
+  const T = limbBox(yoke);
+  const top = T.mid + T.half * V.top, low = T.mid - T.half * V.low, h = top - low, cy = (top + low) / 2;
+  const wx = T.wide * V.out, dz = T.deep * V.out, th = T.deep * V.thick;
+  const out: Mesh[] = [];
+  const box = (name: string, w: number, hh: number, d: number, x: number, y: number, z: number): Mesh => {
+    const b = MeshBuilder.CreateBox(name, { width: w, height: hh, depth: d }, scene);
+    b.parent = body.torso; b.position.set(x, y, z); b.material = vestM; glow?.addExcludedMesh(b); out.push(b);
+    return b;
+  };
+  box("gatlingVestBack", wx * 2 + th, h, th, 0, cy, -dz);
+  for (const side of [-1, 1]) box("gatlingVestSide", th, h, dz * 2 + th, side * wx, cy, 0);
+  const point = top - h * V.vee;
+  box("gatlingVestFront", wx * 2 + th, point - low, th, 0, (point + low) / 2, dz);
+  const rowH = (top - point) / V.rows;
+  for (let k = 0; k < V.rows; k++) {
+    const t = (k + 0.5) / V.rows, gap = wx * V.open * (1 - t);
+    const y = top - rowH * (k + 0.5), w = wx + th / 2 - gap;
+    for (const side of [-1, 1]) box("gatlingVestLapel", w, rowH * 1.04, th, side * (gap + w / 2), y, dz);
+  }
+  return out;
+}
