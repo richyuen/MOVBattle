@@ -3847,10 +3847,13 @@ export class SimulationSystem {
     }
 
     if (abilities.has("lightning_strike")) {
-      this._logAbility(attacker, "lightning", now, target.position);
+      this._logAbility(attacker, attacker.definition.id === "secret.solar_architect" ? "missile_solar_orb" : "lightning", now, target.position);
       if (this.visualEffects && attacker.definition.id === "evil.tempest_lich") {
         // [S] 491 (c.1, evil.tempest_lich.jpg): a storm cloud over the enemies drops its bolts straight down, no bolt from the staff
         this.visualEffects.spawnStormCloud(target.position.clone(), splashRadius > 0 ? splashRadius : 2.2);
+      } else if (this.visualEffects && attacker.definition.id === "secret.solar_architect") {
+        // [S] 531 (c.1, secret.solar_architect.png): a white-gold Solar Orb ray from the wand bursting on the man (radius 1.5 per card), no bolt or dome
+        this.visualEffects.spawnSolarRay(attackOrigin, target.position.add(new Vector3(0, 0.8, 0)), 1.5);
       } else if (this.visualEffects) {
         this.visualEffects.spawnLightning(attackOrigin, target.position);
         // The strike's area as one solid shape over the men it hits

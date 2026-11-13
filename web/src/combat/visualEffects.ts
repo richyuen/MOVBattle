@@ -126,6 +126,8 @@ const FLAME_JET = {
   white: new Color3(1, 0.97, 0.85), yellow: new Color3(1, 0.78, 0.04),
 };
 const BLOOD_DRAIN = { every: 0.07, drop: 0.07, spurt: 0.9, up: 1.6, life: 0.7, stain: 0.16, red: new Color3(1.1, 0.03, 0.02), dark: new Color3(0.6, 0.02, 0.02) };
+// [S] 531 the Solar Architect's ray and burst (spec at spawnSolarRay)
+const SOLAR_RAY = { core: 0.16, halo: 0.34, haloAlpha: 0.45, life: 0.45, orb: 0.55, burst: 0.7, white: new Color3(1.4, 1.3, 1.05), gold: new Color3(1.3, 0.75, 0.15) };
 const HEAL_BEAM = { core: 0.12, halo: 0.17, haloAlpha: 0.35, fade: 0.2, gold: new Color3(1, 0.82, 0.25), glow: new Color3(1, 0.7, 0.15) };
 /*
  * [S] banjo music notes (354; medieval.bard.blue.png, card Appearance "Notes will appear above the Bard's head"): orange eighth notes over his head while he
@@ -1317,6 +1319,48 @@ export class VisualEffects {
    * hits, unlit and see-through, so the bodies inside show through it. It swells from the ground to its full radius in DOME_RISE, holds, and fades over its
    * last DOME_FADE share of DOME_LIFE, so it is caught whole in frame for most of a second.
    */
+  /**
+   * [S] 531 the Solar Architect's Solar Orb (secret.solar_architect.png: a thick white-hot ray with a gold rim streaks from the wand to the man and
+   * bursts in a white-gold flare; card Weapons "projectile Solar Orb ... explosion radius 1.5"): a white core cylinder SOLAR_RAY.core m across inside
+   * a gold halo .halo m across from `from` to `to`, fading over .life s; at `to` a white orb .orb m across swelling to the blast `radius` in a gold
+   * shell, both fading over .burst s. Unlit and in the glow so the ray blooms gold.
+   */
+  spawnSolarRay(from: Vector3, to: Vector3, radius: number): void {
+    const S = SOLAR_RAY, d = to.subtract(from), len = d.length();
+    const root = new TransformNode("solarRay", this._scene);
+    const coreMat = this._fxMat(S.white, S.white), haloMat = this._fxMat(S.gold, S.gold, S.haloAlpha);
+    if (len > 0.05) {
+      const core = MeshBuilder.CreateCylinder("solarRayCore", { height: 1, diameter: S.core, tessellation: 8 }, this._scene);
+      const halo = MeshBuilder.CreateCylinder("solarRayHalo", { height: 1, diameter: S.halo, tessellation: 10 }, this._scene);
+      const beam = new TransformNode("solarRayBeam", this._scene);
+      beam.parent = root; core.parent = beam; halo.parent = beam; core.material = coreMat; halo.material = haloMat;
+      for (const m of [core, halo]) m.isPickable = false;
+      beam.position.copyFrom(from.add(to).scale(0.5)); beam.scaling.set(1, len, 1);
+      const up = Vector3.Up(), axis = Vector3.Cross(up, d.normalize()), angle = Math.acos(Math.max(-1, Math.min(1, Vector3.Dot(up, d.normalize()))));
+      beam.rotationQuaternion = axis.lengthSquared() < 1e-8 ? Quaternion.Identity() : Quaternion.RotationAxis(axis.normalize(), angle);
+    }
+    const orbMat = this._fxMat(S.white, S.white), shellMat = this._fxMat(S.gold, S.gold, S.haloAlpha);
+    const orb = MeshBuilder.CreateIcoSphere("solarOrb", { radius: S.orb / 2, subdivisions: 2 }, this._scene);
+    const shell = MeshBuilder.CreateIcoSphere("solarOrbShell", { radius: 1, subdivisions: 2 }, this._scene);
+    orb.parent = root; shell.parent = root; orb.material = orbMat; shell.material = shellMat; orb.position.copyFrom(to); shell.position.copyFrom(to);
+    for (const m of [orb, shell]) m.isPickable = false;
+    const life = Math.max(S.life, S.burst);
+    const shape = (u: number): void => {
+      const t = u * life, k = Math.max(0, 1 - t / S.life), g = Math.min(1, t / S.burst);
+      coreMat.alpha = k; haloMat.alpha = S.haloAlpha * k; coreMat.transparencyMode = 2; haloMat.transparencyMode = 2;
+      shell.scaling.setAll(Math.max(0.05, radius * (0.3 + 0.7 * Math.sqrt(g))));
+      orb.scaling.setAll(1 + g);
+      shellMat.alpha = S.haloAlpha * (1 - g); orbMat.alpha = 1 - g * g; shellMat.transparencyMode = 2; orbMat.transparencyMode = 2;
+    };
+    shape(0);
+    this._effects.push({
+      root,
+      remaining: life,
+      update: (_dt, remaining) => shape(Math.min(1, 1 - remaining / life)),
+      dispose: () => { for (const m of [coreMat, haloMat, orbMat, shellMat]) m.dispose(); },
+    });
+  }
+
   spawnSpellDome(position: Vector3, radius: number, color = new Color3(0.93, 0.42, 0.62)): void {
     const root = new TransformNode("spellDome", this._scene);
     root.position.set(position.x, 0, position.z);
