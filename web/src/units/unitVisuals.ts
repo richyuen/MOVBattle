@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff" | "necro_knife" | "blackbeard_anchor"
+  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff" | "necro_knife" | "blackbeard_anchor" | "sensei_shuriken"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
   | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear" | "solar_wand";
 
@@ -1299,6 +1299,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       // [S] 539 (a.1) no cone hat: the team hood-helmet is secretDress senseiHood
       return vis({ scale: 1.32, bulk: 1.0, armLength: 1.1 }, "shuriken_hand", "none", "none", "monk_robe", "#f5e4b4", "shuriken_hand", {
         posePreset: "duelist", materialPreset: "secret_holy",
+        // [S] 540 (b.1) a many-pointed star in each fist (propBuilder SENSEI_SHURIKEN)
+        weaponVariant: "sensei_shuriken", offhandVariant: "sensei_shuriken",
       });
     case "secret_shogun":
       return vis({ scale: 1.58, bulk: 1.3, headSize: 1.08 }, "katana", "samurai_helmet", "none", "banner_back", "#a42323", undefined, {

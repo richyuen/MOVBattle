@@ -3119,6 +3119,40 @@ function buildBlackbeardAnchor(scene: Scene, fit: BladeFit): Mesh {
   return shank;
 }
 
+/*
+ * [S] 540 (sensei b.1) the Sensei's shuriken (audit 538: "4-point plain star - TABS: many-pointed shuriken, far more points than a ninja's"; card
+ * Appearance "holds one shuriken per hand that are significantly different from a normal Ninja's ... having far more points"; secret.sensei.red.png:
+ * a dark steel star in each fist, a ring of long thin curved blades round a pale hub, about two hands across). SENSEI_SHURIKEN in s: .points blades
+ * round a hub, each a flat 3-sided spike .long out from .ring and .wide at its root, swept .sweep rad round (a pinwheel); a hub disc .hub across with
+ * a pale centre ring; held .drop below the fist, its flat facing out to the side as the ninja's. Dark steel lit .06, pale hub.
+ */
+const SENSEI_SHURIKEN = { points: 10, long: 0.13, ring: 0.045, wide: 0.032, sweep: 0.35, thick: 0.012, hub: 0.1, drop: 0.09 };
+function buildSenseiShuriken(scene: Scene, s: number): Mesh {
+  const K = SENSEI_SHURIKEN;
+  const steel = mat(scene, new Color3(0.2, 0.21, 0.24), 0.06);
+  const pale = mat(scene, new Color3(0.55, 0.56, 0.6), 0.1);
+  const star = new Mesh("shuriken", scene);
+  star.position.y = -K.drop * s;
+  star.rotation.z = Math.PI / 2;
+  const hub = MeshBuilder.CreateCylinder("shurikenHub", { height: K.thick * s * 1.4, diameter: K.hub * s, tessellation: K.points }, scene);
+  hub.parent = star; hub.material = steel; hub.convertToFlatShadedMesh();
+  const eye = MeshBuilder.CreateTorus("shurikenEye", { diameter: K.hub * s * 0.5, thickness: K.thick * s * 1.2, tessellation: 10 }, scene);
+  eye.parent = star; eye.material = pale; eye.position.y = K.thick * s * 0.5;
+  for (let i = 0; i < K.points; i++) {
+    const a = (i / K.points) * Math.PI * 2;
+    const arm = new Mesh("shurikenArm", scene);
+    arm.parent = star; arm.rotation.y = a;
+    // a flat spike lying in the star's plane (local xz), pointing out along +x, swept round
+    const blade = MeshBuilder.CreateCylinder("shurikenPoint", { height: K.long * s, diameterBottom: K.wide * s, diameterTop: 0, tessellation: 3 }, scene);
+    // roll lays +y along +x (its local x then runs along -y: thinned to the star's thickness), yaw sweeps it round in the plane
+    blade.scaling.x = K.thick / K.wide;
+    blade.rotation.z = -Math.PI / 2; blade.rotation.y = K.sweep;
+    blade.position.set(K.ring * s + (K.long * s * Math.cos(K.sweep)) / 2, 0, -(K.long * s * Math.sin(K.sweep)) / 2);
+    blade.parent = arm; blade.material = steel; blade.convertToFlatShadedMesh();
+  }
+  return star;
+}
+
 const VLAD_LOG = { long: 0.78, thick: 0.1, neck: 0.115, kink: 0.08, point: 0.4, grip: 0.22, bark: new Color3(0.4, 0.22, 0.12), pale: new Color3(0.86, 0.66, 0.42) };
 function buildVladLog(scene: Scene, s: number): Mesh {
   const V = VLAD_LOG, L = V.long * s, half = L / 2;
@@ -6498,6 +6532,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       }
       // The other dagger callers share the legacy shuriken geometry.
     case "shuriken_hand": {
+      if (variant === "sensei_shuriken") return buildSenseiShuriken(scene, s);
       // [S] 411 a dark steel four-point shuriken (audit 411 b.1: "a thin grey blade - TABS: a dark steel four-point shuriken"; dynasty.ninja.red.png: a
       // flat dark star about a hand and a half across in each fist, one point down past the fingers): two flat rhombi SHURIKEN.span of the hand scale
       // long and .waist wide crossed square, .thick deep, a hub ring at the middle, held .drop below the fist, its flat facing out to the side
