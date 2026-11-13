@@ -1275,6 +1275,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         // [S] 538 (b.1) a giant dark grey anchor in the main fist in place of the cutlass (propBuilder BB_ANCHOR)
         // [S] 539 (b.2) the same anchor in the off fist in place of the chest flintlock (card Off Hand "Blackbeard's Anchor")
         weaponVariant: "blackbeard_anchor", offhandVariant: "blackbeard_anchor",
+        // [S] 540 (c.2) the anchors are swung, not thrust (audit 538: "one-handed rapier thrust - TABS: heavy anchor swing"; secret.blackbeard.jpg):
+        // the heavy-weapon family, its big overhead-to-ground swing and its weighted carry, in place of the cutlass's
+        weaponPresentationFamily: "heavy_swing",
         posePreset: "duelist", materialPreset: "secret_pirate", attachmentPreset: "quickdraw_smoke",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["quickdraw_smoke"] },
