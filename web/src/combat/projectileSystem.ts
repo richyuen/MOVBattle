@@ -88,7 +88,7 @@ const SMALL_ARROW = { long: 0.46, thick: 0.03, head: 0.07, headWide: 0.045, flet
  * (audit 457 blowdarter c.2: the dart flew as a full arrow).
  */
 const BLOW_DART = { long: 0.2, thick: 0.014, needle: 0.07, tuft: 0.06, tuftLong: 0.07, steel: new Color3(0.55, 0.55, 0.58) };
-export type ProjectileShape = "time_bolt" | "radiant_glaive" | "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "gatling_bullet" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell";
+export type ProjectileShape = "time_bolt" | "radiant_glaive" | "arbiter_light" | "aegis_orb" | "small_arrow" | "blowdart" | "arrow" | "bolt" | "gatling_bullet" | "spear" | "harpoon" | "bomb" | "stone" | "firework" | "shuriken" | "rocket_arrow" | "crow" | "fireball" | "leaves" | "sword" | "shell" | "cannonball" | "davinci_ball" | "pumpkin" | "spirit_fire" | "barrel" | "wizard_spell" | "necro_skull";
 
 interface ActiveProjectile {
   mesh: TransformNode;
@@ -289,6 +289,8 @@ const WIZARD_SPELL = { heart: new Color3(0.95, 0.97, 1), shell: new Color3(0.42,
 // [S] 475 the Wizard's firework (spec at ProjectileSystem._fireworkLaunch): launch m/s, spin rad/s, tip rad, burst after s, burst m over his root
 const WIZARD_FIREWORK = { up: 6.5, spin: 16, tip: 0.5, delay: 0.75, over: 0.9 };
 const SPIRIT_FIRE = { heart: new Color3(0.85, 1, 1), shell: new Color3(0.1, 0.85, 1), size: 1.15 };
+// [S] 530 the Necromancer Skull (spec at its build): .size m skull, .tail m flame, card speed 25
+const NECRO_SKULL = { size: 0.34, tail: 0.7, speed: 25, arc: 0.06, bone: new Color3(0.95, 0.9, 0.75), hole: new Color3(0.04, 0.03, 0.05), flame: new Color3(0.35, 0.75, 1.3) };
 // A bone mage's leaf whirl (units/tribal.bone_mage): a loose spinning knot of long pointed autumn leaves, each about a forearm long, red, rust and crimson
 const LEAF_COUNT = 11;
 // ...and the loft of his spike row (card Characteristics: "sending fragile units who were caught in the attack into the air", force 800; tribal.bone_mage.png):
@@ -504,6 +506,7 @@ export class ProjectileSystem {
       case "fireball": speed = 20; arcHeight = dist * 0.1; break;
       case "wizard_spell": speed = 18; arcHeight = dist * 0.08; break;
       case "spirit_fire": speed = 20; arcHeight = dist * 0.1; break;
+      case "necro_skull": speed = NECRO_SKULL.speed; arcHeight = dist * NECRO_SKULL.arc; break;
       case "leaves": speed = 12; arcHeight = dist * 0.12; break;
       case "sword": speed = 16; arcHeight = dist * 0.04; break;
       case "harpoon": speed = 18; arcHeight = dist * 0.1; break;
@@ -557,6 +560,9 @@ export class ProjectileSystem {
           break;
         case "spirit_fire":
           trailSystem = createTrail(this._scene, trailMesh, SPIRIT_FIRE.shell, 10);
+          break;
+        case "necro_skull":
+          trailSystem = createTrail(this._scene, trailMesh, NECRO_SKULL.flame, 14);
           break;
         case "wizard_spell":
           trailSystem = createTrail(this._scene, trailMesh, WIZARD_SPELL.shell, 10);
@@ -1911,6 +1917,31 @@ export class ProjectileSystem {
       case "aegis_orb": {
         const orb=MeshBuilder.CreateIcoSphere("aegisThrownOrb",{radius:.21,subdivisions:2},this._scene);
         orb.parent=root;orb.material=getMaterialFactory().get("unlit",palette.primary,{emissive:palette.primary.scale(1.6)});
+        break;
+      }
+      case "necro_skull": {
+        // [S] 530 the Necromancer Skull (card Weapons: off-hand Magic Lantern, projectile Necromancer Skulls, speed 25; Characteristics "throw a skull
+        // projectile from their ghoulish lantern"): a pale bone skull .size m across facing its line of flight, two dark eye sockets and a nose hole
+        // in its face, a jaw block under it, wrapped in a pale-blue ghost flame (a translucent shell and a tapering flame tail behind it, its trail
+        // sparks the same blue). Unlit bone, out of the glow; the flame unlit and translucent.
+        const K = NECRO_SKULL, s = K.size, mf = getMaterialFactory(), glowLayer = this._scene.getGlowLayerByName("glow");
+        const bone = mf.get("unlit", K.bone, { emissive: K.bone }), hole = mf.get("unlit", K.hole, { emissive: K.hole });
+        const fire = mf.get("unlit", K.flame, { emissive: K.flame, alpha: 0.4 });
+        const skull = MeshBuilder.CreateIcoSphere("necroSkull", { radius: s * 0.5, subdivisions: 1, flat: true }, this._scene);
+        skull.parent = root; skull.material = bone; skull.scaling.set(0.9, 0.85, 1);
+        const jaw = MeshBuilder.CreateBox("necroSkullJaw", { width: s * 0.6, height: s * 0.28, depth: s * 0.5 }, this._scene);
+        jaw.parent = root; jaw.material = bone; jaw.position.set(0, -s * 0.4, s * 0.12);
+        for (const side of [-1, 1]) {
+          const eye = MeshBuilder.CreateBox("necroSkullEye", { width: s * 0.2, height: s * 0.18, depth: s * 0.1 }, this._scene);
+          eye.parent = root; eye.material = hole; eye.position.set(side * s * 0.18, s * 0.02, s * 0.44);
+        }
+        const nose = MeshBuilder.CreateBox("necroSkullNose", { width: s * 0.08, height: s * 0.12, depth: s * 0.1 }, this._scene);
+        nose.parent = root; nose.material = hole; nose.position.set(0, -s * 0.16, s * 0.45);
+        const shell = MeshBuilder.CreateIcoSphere("necroSkullFlame", { radius: s * 0.72, subdivisions: 1, flat: true }, this._scene);
+        shell.parent = root; shell.material = fire; shell.position.z = -s * 0.1;
+        const tail = MeshBuilder.CreateCylinder("necroSkullTail", { height: K.tail, diameterTop: s * 1.1, diameterBottom: 0, tessellation: 6 }, this._scene);
+        tail.parent = root; tail.material = fire; tail.rotation.x = Math.PI / 2; tail.position.z = -K.tail / 2 - s * 0.3;
+        for (const m of [skull, jaw, shell, tail]) glowLayer?.addExcludedMesh(m);
         break;
       }
       case "spirit_fire":

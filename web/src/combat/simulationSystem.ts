@@ -3790,6 +3790,15 @@ export class SimulationSystem {
     // [S] 524 CLAMS throws his clams from his hands at the man (CLAM_THROW): they become his clams where they land
     if (attacker.definition.id === "secret.clams" && this._throwClams(attacker, target, now)) return;
 
+    // [S] 530 (c.1; card Weapons: off-hand Magic Lantern, projectile Necromancer Skulls, range 15) the Necromancer throws a ghost skull from his
+    // lantern (secretDress NECRO_LANTERN "necroLanternGlass" in the off hand) at the man; it strikes him alone. Logged "missile_skull" (his plain shot)
+    if (attacker.definition.id === "secret.necromancer" && this.projectileSystem) {
+      const glass = attacker.body.leftHand.getChildMeshes(false).find((m) => m.name === "necroLanternGlass");
+      const from = glass ?? attacker.body.leftHand;
+      worldMatrixChain(from);
+      this.projectileSystem.spawnProjectile("necro_skull", from.getAbsolutePosition().clone(), target, damage, knockback.scale(0.4), 0, attacker.team, this._units, undefined, 0, { originLift: 0, targetLift: 1 });
+      this._logAbility(attacker, "missile_skull", now, target.position);
+    }
     if ((abilities.has("summon") || abilities.has("clone") || abilities.has("revive")) && this._summonUnits(attacker)) {
       if (attacker.definition.archetype === "summoner" || attacker.definition.archetype === "support_buff") {
         return;
