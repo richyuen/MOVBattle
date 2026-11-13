@@ -649,6 +649,8 @@ export class ProjectileSystem {
    */
   /** Set by the simulation: records a mechanic a missile set off (a balloon arrow's float) in its ability log, under the shooter's unit id. */
   abilityHook: ((unitId: string, kind: string, at: Vector3) => void) | null = null;
+  /** [S] 535 a Necromancer skull struck this man (SimulationSystem._necroCurse) */
+  necroCurseHook: ((target: RuntimeUnit, team: number) => void) | null = null;
   /** Set by the simulation: a snake archer's snake has come down at `at` (on its man or the ground), flown from `from`; it goes on as a live snake there. */
   snakeLand: ((at: Vector3, from: Vector3, team: number) => void) | null = null;
   /** Set by the simulation: a harpoon on its rope has struck `target`; the shooter (the gun whose muzzle is `tether`) reels him in. Returns how long the
@@ -1166,6 +1168,8 @@ export class ProjectileSystem {
           p.target.applyLove(HEART_ARROW_FLY.love);
           this.abilityHook?.("secret.cupid", "status:love", p.target.position); // the only love-arrow shooter (SimulationSystem HEART_ARROWS)
         }
+        // [S] 535 a Necromancer skull curses the man it strikes: he rots to death and rises a skeleton of the shooter's side (SimulationSystem NECRO_CURSE)
+        if (p.shape === "necro_skull" && !p.target.isDead) this.necroCurseHook?.(p.target, p.attackerTeam);
         if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
         if (p.shape === "spirit_fire") this._knockUpFromSpiritFire(p, p.target);
         if (p.shape === "firework") this._fireworkBurst(p);

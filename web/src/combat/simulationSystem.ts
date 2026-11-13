@@ -212,6 +212,8 @@ const STIFFY_FEAR = { units: new Set(["spooky.skeleton_warrior"]), every: 2, sec
 // [S] 475 Pharaoh Kneel: the struck man and enemies within .radius (KNEEL_AURA's ring) kneel .seconds (RuntimeUnit.applyKneel)
 const PHARAOH_KNEEL = { radius: 2.4, seconds: 3 };
 const BURN_STATUS = { tick: 0.5, damage: 3, spread: 1.4, keep: 2 };
+// [S] 535 the Necromancer skull's rot (SimulationSystem._stepNecroCurse): share of full health per tick, and its puff colour
+const NECRO_CURSE = { tick: 0.5, rot: 0.1, smoke: new Color3(0.2, 0.42, 0.16) };
 // [S] 390 engines that fly the bolt they have loaded: a copy of the named node leaves the muzzle and the loaded one is gone until half the reload is past (vehicleBuilder ballistaLoadedBolt)
 const LOADED_BOLTS: Record<string, string> = { "ancient.ballista": "ballistaLoadedBolt" };
 /*
@@ -1052,6 +1054,7 @@ export class SimulationSystem {
     this._boxerDashes.clear(); this._boxerDashReady.clear();
     this._burnTickAt = 0;
     this._fearHits.clear();
+    this._necroCursed.clear(); this._necroTickAt = 0;
     this._pendingBlows = [];
     this._lashes = [];
     for (const h of this._safeHurls) h.mesh.dispose(false, false);
@@ -1143,6 +1146,7 @@ export class SimulationSystem {
     if (this.projectileSystem) this.projectileSystem.abilityHook ??= this._logMissileAbility;
     if (this.projectileSystem) this.projectileSystem.snakeLand ??= this._landSnake;
     if (this.projectileSystem) this.projectileSystem.reelIn ??= this._reelIn;
+    if (this.projectileSystem) this.projectileSystem.necroCurseHook ??= this._necroCurse;
     if (this._tossed.length > 0) this._stepTossedGuns(dt);
 
     for (const unit of this._units) {
@@ -1159,6 +1163,7 @@ export class SimulationSystem {
     if (this._pendingLaunches.length > 0) this._fireDwelledLaunches(now);
     if (this._pendingThrows.length > 0) this._launchPendingThrows(now);
     this._stepBurning(now);
+    if (this._necroCursed.size > 0) this._stepNecroCurse(now);
 
     if (this.hazards.length > 0) {
       for (const unit of this._units) {
@@ -3836,6 +3841,7 @@ export class SimulationSystem {
       worldMatrixChain(from);
       this.projectileSystem.spawnProjectile("necro_skull", from.getAbsolutePosition().clone(), target, damage, knockback.scale(0.4), 0, attacker.team, this._units, undefined, 0, { originLift: 0, targetLift: 1 });
       this._logAbility(attacker, "missile_skull", now, target.position);
+      return; // [S] 535 no free summon: skeletons rise only from the skull's dead (NECRO_CURSE)
     }
     if ((abilities.has("summon") || abilities.has("clone") || abilities.has("revive")) && this._summonUnits(attacker)) {
       if (attacker.definition.archetype === "summoner" || attacker.definition.archetype === "support_buff") {
@@ -5297,6 +5303,41 @@ export class SimulationSystem {
         if (Vector3.DistanceSquared(other.position, unit.position) > BURN_STATUS.spread * BURN_STATUS.spread) continue;
         other.applyBurn(left * 0.8, now);
       }
+    }
+  }
+
+  /*
+   * [S] 535 (necromancer c.2; card Characteristics: "if a unit is hit, they will slowly perish, rotting away until their ultimate demise, in which they
+   * will be resurrected as a Skeleton of the Necromancer's team") NECRO_CURSE: a man his skull strikes rots, .rot of his full health every .tick s
+   * with a sickly green-black puff off him, till he dies; where he falls a skeleton warrior of the Necromancer's side rises (logged "raise_dead" at
+   * the corpse). The Necromancer summons nothing else: no free skeletons beside him.
+   */
+  private _necroCursed = new Map<RuntimeUnit, number>();
+  private _necroTickAt = 0;
+  private _necroCurse = (target: RuntimeUnit, team: number): void => {
+    if (target.team === team || this._necroCursed.has(target)) return;
+    this._necroCursed.set(target, team);
+    this._logMissileAbility("secret.necromancer", "status:curse", target.position);
+  };
+  private _stepNecroCurse(now: number): void {
+    const tickNow = now >= this._necroTickAt;
+    if (tickNow) this._necroTickAt = now + NECRO_CURSE.tick;
+    for (const [unit, team] of [...this._necroCursed]) {
+      if (unit.isDead) {
+        this._necroCursed.delete(unit);
+        const at = unit.position.clone(); at.y = 0;
+        let parent: RuntimeUnit | undefined;
+        for (const u of this._units) if (!u.isDead && u.team === team && u.definition.id === "secret.necromancer" && (!parent || Vector3.DistanceSquared(u.position, at) < Vector3.DistanceSquared(parent.position, at))) parent = u;
+        if (!this.spawnUnitById || this.getLivingCount(team) >= this.summonLivingCap) continue;
+        const risen = this.spawnUnitById("spooky.skeleton_warrior", team, at, { role: "summoned", linkedParent: parent, linkedRelation: parent ? "spawned-child" : undefined });
+        if (!risen) continue;
+        this.visualEffects?.spawnSmokePuff(at.add(new Vector3(0, 0.3, 0)), NECRO_CURSE.smoke);
+        this._logMissileAbility("secret.necromancer", "raise_dead", at);
+        continue;
+      }
+      if (!tickNow) continue;
+      unit.applyDamage(unit.maxHealth * NECRO_CURSE.rot, Vector3.Zero());
+      this.visualEffects?.spawnSmokePuff(unit.position.add(new Vector3(0, 1.1, 0)), NECRO_CURSE.smoke);
     }
   }
 
