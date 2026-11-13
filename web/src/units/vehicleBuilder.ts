@@ -683,6 +683,29 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
   bomb.parent = root;
   bomb.material = makeMat(scene, new Color3(0.12, 0.12, 0.12));
   body.allMeshes.push(bomb);
+  /*
+   * [S] 529 (a.1) the pirate astride the barrel (secret.bomb_cannon.red.png, .jpg; card Appearance "a small pirate on top of the cannon"): a small
+   * crewman sits on the barrel's top behind its middle, facing the muzzle, thighs out over each side and forward, shins hanging down the barrel's
+   * flanks, hands down on the barrel ahead of him; a team bandanna cap and the cannon crew's shirt. BOMB_RIDER on the cannon root: seated .z along
+   * the ground line, his hips .seat over the barrel's top there; thighs .thigh rad forward, .splay rad out; knees .knee rad; arms .arm rad forward
+   * and .armOut out, elbows .elbow; .scale of a crewman.
+   */
+  const R = { z: 0.3, seat: 0.03, thigh: -1.25, splay: 0.62, knee: 1.35, arm: -0.75, armOut: 0.18, elbow: -0.5, scale: 0.86 };
+  const along = (R.z - 0.55) / Math.cos(0.18), axisY = 0.52 + along * Math.sin(0.18);
+  const radius = (0.38 - 0.08 * ((along + 0.35) / 0.7)) / 2;
+  addOperator(scene, root, body.allMeshes, 0, 0, R.z, color, (rider) => {
+    rider.root.scaling.setAll(R.scale);
+    rider.root.position.y = axisY + radius + R.seat - rider.hip.position.y * R.scale;
+    for (const [hip, knee, side] of [[rider.leftHip, rider.leftKnee, -1], [rider.rightHip, rider.rightKnee, 1]] as const) {
+      hip.rotation.set(R.thigh, 0, side * R.splay);
+      knee.rotation.set(R.knee, 0, 0);
+    }
+    for (const [shoulder, elbow, side] of [[rider.leftShoulder, rider.leftElbow, -1], [rider.rightShoulder, rider.rightElbow, 1]] as const) {
+      shoulder.rotation.set(R.arm, 0, side * R.armOut);
+      elbow.rotation.set(R.elbow, 0, 0);
+    }
+    body.allMeshes.push(...cannonBandanna(scene, rider, color), ...cannonShirt(scene, rider, color));
+  });
   body.vehicleSockets = {
     primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", new Vector3(0, 0.61, 0.96)),
     smokeSocket: makeSocket(scene, root, "bomb_cannon_smoke_socket", new Vector3(0, 0.59, 0.9)),
