@@ -9092,6 +9092,9 @@ function buildRaptorMount(scene: Scene, body: ArticulatedBody): Mesh {
 // [S] 527.1b over .2 -> .3: the robbers now stand upright on long legs (ROBBER_STANCE), so the floor moves up to their straight-armed reach
 const OVERHEAD_SAFE = { pairX: -0.46, wide: 0.72, tall: 0.92, deep: 0.38, over: 0.3, trim: 0.035, dial: 0.11, plinth: 0.1,
   gold: new Color3(0.78, 0.55, 0.14), dark: new Color3(0.12, 0.1, 0.1) };
+// [S] 530 the safe door's hardware (spec at buildOverheadSafe): dial .dial dw across at .dialY of the door height over its middle, cross bar .bar dw
+// at .handleY, plate .plate dw at .plateY, hinge studs .stud trims across
+const SAFE_DOOR = { dial: 0.34, dialY: 0.22, bar: 0.36, handleY: -0.06, plate: 0.16, plateY: -0.2, stud: 1.3, orange: new Color3(1, 0.42, 0.1) };
 function buildOverheadSafe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh {
   const S = OVERHEAD_SAFE, Hh = body.metrics.overallHeight, hipY = body.hip.position.y;
   const glow = scene.getGlowLayerByName("glow");
@@ -9122,11 +9125,30 @@ function buildOverheadSafe(scene: Scene, body: ArticulatedBody, team: Color3): M
     box("safeDoorBead", t * 0.55, doorHeight, t, (side - 1) * doorWidth / 2, 0, t * 0.4, gold, door);
     box("safeDoorHinge", t * 2.1, t * 2.6, t * 1.25, doorWidth / 2, doorY + side * doorHeight * 0.28, fz + t * 0.4, dark);
   }
-  const dial = MeshBuilder.CreateCylinder("safeDial", { height: t, diameter: Hh * S.dial, tessellation: 10 }, scene);
-  dial.parent = door; dial.material = gold; dial.rotation.x = Math.PI / 2;
-  dial.position.set(-W * 0.12 - door.position.x, T * 0.08 - doorY, t * 0.3); parts.push(dial);
-  box("safeDialKnob", Hh * S.dial * 0.25, Hh * S.dial * 0.25, t * 1.6, dial.position.x, dial.position.y, t, dark, door);
-  box("safeHandle", W * 0.2, t * 0.9, t * 1.4, W * 0.2 - door.position.x, dial.position.y, t * 0.5, gold, door);
+  // [S] 530 (b.2; secret.bank_robbers.blue.png: centred high on the framed door panel a big orange round dial, a third of the door's width, with a
+  // raised boss; under it a cross handle, a bar with round knobs at both ends on a short stem down to a second round plate; dark hinge blocks down
+  // the door's hinge edge, each with orange diamond studs over and under it). SAFE_DOOR spec in door widths (dw); orange lit cloth (palette row 3).
+  const SD = SAFE_DOOR, dw = doorWidth, brass = mat(scene, SD.orange, 0.15, "cloth"), dx = -dw / 2;
+  const disc = (name: string, dia: number, h: number, x: number, y: number, z: number): Mesh => {
+    const m = MeshBuilder.CreateCylinder(name, { height: h, diameter: dia, tessellation: 14 }, scene);
+    m.parent = door; m.material = brass; m.rotation.x = Math.PI / 2; m.position.set(x, y, z); parts.push(m); return m;
+  };
+  const dialY = doorHeight * SD.dialY, handleY = doorHeight * SD.handleY;
+  disc("safeDial", dw * SD.dial, t * 0.9, dx, dialY, t * 0.7);
+  disc("safeDialBoss", dw * SD.dial * 0.62, t * 0.9, dx, dialY, t * 1.4);
+  disc("safeDialKnob", dw * SD.dial * 0.22, t * 1.2, dx, dialY, t * 2.1);
+  box("safeHandle", dw * SD.bar, t * 0.9, t * 0.9, dx, handleY, t * 1.6, brass, door);
+  for (const s of [-1, 1]) disc("safeHandleKnob", t * 2.2, t * 1.4, dx + s * dw * SD.bar / 2, handleY, t * 1.6);
+  box("safeHandleStem", t * 0.9, handleY - doorHeight * SD.plateY, t * 0.9, dx, (handleY + doorHeight * SD.plateY) / 2, t * 1.4, brass, door);
+  disc("safeHandlePlate", dw * SD.plate, t * 0.9, dx, doorHeight * SD.plateY, t * 0.9);
+  const hx = -Math.sign(S.pairX) * (W / 2 - t * 1.6);
+  for (const y of [0.3, -0.05]) {
+    box("safeHinge", t * 1.8, T * 0.15, t * 2, hx, T * y, fz + t * 0.6, dark);
+    for (const s of [-1, 1]) {
+      const stud = box("safeHingeStud", t * SD.stud, t * SD.stud, t * 1.2, hx, T * y + s * T * 0.12, fz + t * 0.5, brass);
+      stud.rotation.z = Math.PI / 4; stud.scaling.y = 1.6;
+    }
+  }
   for (const y of [0.28, -0.12]) box("safeHinge", t * 1.6, T * 0.16, t * 1.6, -Math.sign(S.pairX) * (W / 2 + t * 0.2), T * y, D / 2 - t, gold);
   for (const x of [-1, 1]) for (const z of [-1, 1]) box("safeFoot", W * 0.1, T * 0.08, D * 0.12, x * W * 0.42, -T / 2 - T * 0.04, z * D * 0.38, dark);
   for (const m of parts) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
