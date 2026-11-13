@@ -4363,7 +4363,8 @@ export function witchHoodHat(scene: Scene, body: ArticulatedBody, team: Color3):
  * H back, pitched .pitch rad nose-down, .thin H across at the seat swelling to .thick H at the front; behind the seat a short bristle bundle .brush H
  * long, .brushW H across at its foot, tied on with a band. Dark red-brown lit cloth (.wood), self-lit .3, out of the glow.
  */
-const WITCH_BROOM = { lift: 0.12, seat: 0.01, ahead: 0.78, behind: 0.22, pitch: 0.32, thin: 0.045, thick: 0.075, brush: 0.2, brushW: 0.12,
+// 536.1b lift .12 -> .2, pitch .32 -> .18, brush .2 -> .28, brushW .12 -> .18 (look: feet read on the ground, pole stabbing down, brush lost)
+const WITCH_BROOM = { lift: 0.2, seat: 0.01, ahead: 0.78, behind: 0.22, pitch: 0.18, thin: 0.045, thick: 0.075, brush: 0.28, brushW: 0.18,
   wood: new Color3(0.17, 0.06, 0.045), straw: new Color3(0.13, 0.055, 0.04) };
 export function witchBroom(scene: Scene, body: ArticulatedBody): Mesh[] {
   const B = WITCH_BROOM, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
