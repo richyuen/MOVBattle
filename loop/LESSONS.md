@@ -31,7 +31,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - Frame prop openings at the landing spot (522), toppled targets at torso bounds (509).
 - An instant slam logs at swing start: use the pending blow (426). A special logged at let-go owns its missile (427). A cast status can put _struck before impact: use ABILITY_PREF for on-landing effects (435).
 - _ability/_release are on the log tick, before RuntimeUnit.update: pose explicitly for contact, and use the next frame for motion (437 bat, 505 parry). A latch reads on the pin before its damage ticks (444 vampire).
-- A neck-rooted piece must clear the head box: probe_bbox it (439). Before flipping a pose's sign, probe yaw and world pitch at the frame (439).
+- A neck-rooted piece must clear the head box: probe_bbox it (439). Probe yaw and pitch before flipping a pose's sign.
 - A mesh's world box refreshes only on render: computeWorldMatrix(true) it before reading centerWorld in a per-tick pose (516).
 
 - Gate an idle hold on the fire (451). Team garment shade: saturate (c^2), scale, self-lit .12; x k at self-lit .4 reads grey (517). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
@@ -45,7 +45,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - A chain or rope off a moving fist: a world-space rope pinned to the hand in RU.update, laid out at spawn (secretDress ChainWhip, 519).
 - A pole butt in the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target (509). A tall crown tips with the head pitch: stand it on the torso joint (500).
 - A prop placed before movement can lag a turn: parent to the fist and convert world aim to hand space (521). IK: carryOverheadAt (520).
-- Linked actors (mount, safe, shell) share the parent's definition id. Gate dress on visual.special and shared pose presets on the unit id (518, 523); a horse actor holds mount_horse (527).
+- Linked actors (mount, safe, shell) share the parent's definition id. Gate dress on visual.special and shared pose presets on the unit id (518, 523); a horse actor holds mount_horse (527); suppressParentSpecial blanks the parent's: gate on posePreset.
 - Retire old skirts (482); a belt hides in the tunicSkirt's flare: build it off its top ring after hangSkirt (517). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450). Shin limbShell 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
@@ -67,4 +67,4 @@ Read whole at step 1; one fact a line, merge near cap.
 - Fist prop hand frame: +y up the forearm, knuckles -y (492). bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
 - Torso board tips with the lean: body.root (496).
-- execSync runs cmd.exe, which eats a caret: write sha~1, not sha^ (530).
+- execSync runs cmd.exe, which eats a caret: write sha~1 (530).
