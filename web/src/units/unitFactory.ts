@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, necromancerArmbands } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, necromancerArmbands, blackbeardHat } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1226,6 +1226,8 @@ export class UnitFactory {
     if (definition.id === "secret.vlad" && !shouldUseVehicleBody) propMeshes.push(...vladBoots(this._scene, body));
     // [S] 538 (a.2): Blackbeard's huge black beard from under the eyes to the belly, two red-tied braids (secretDress BEARD_BB)
     if (definition.id === "secret.blackbeard" && !shouldUseVehicleBody) propMeshes.push(...blackbeardBeard(this._scene, body));
+    // [S] 539 (a.1): the plain tricorn in black felt, burning fuse cords hanging from under its brim (secretDress BB_HAT)
+    if (definition.id === "secret.blackbeard" && !shouldUseVehicleBody) propMeshes.push(...blackbeardHat(this._scene, body));
     // [S] 531 (a.3): the Wheelbarrow Dragon's driver wears the Traveller's big round brown afro, no hat (secret.wheelbarrow_dragon.red.png);
     // the actors share the id: the dragon head poses "beast", the barrow carries "dragon_barrow"; the driver's own special is suppressed (531.2b)
     if (definition.id === "secret.wheelbarrow_dragon" && !shouldUseVehicleBody && visual.posePreset === "mounted" && visual.special !== "dragon_barrow") propMeshes.push(...barrowDriverAfro(this._scene, body)); // [S] 533 (a.3) his own round afro (secretDress)

@@ -5607,3 +5607,37 @@ export function blackbeardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 539 (blackbeard a.1) Blackbeard's hat (audit 538: "black top hat with a yellow badge - TABS: black tricorne with lit fuse strings hanging from
+ * the brim"; card Appearance "black hat with firelit strings protruding from it"; secret.blackbeard.red.png: a wide black tricorne pulled to the
+ * brows, and from under its brim either side of the face hang dark slow-match cords, their ends burning white-orange). The hat is propBuilder's
+ * plain tricorn (unitVisuals hat "tricorn"), its brown felt swapped here for BB_HAT near-black (the shared felt material is left alone). BB_HAT on
+ * the head (box W, H, D, c): per side .cords cords from under the brim (.x W out, .top H over c, spread .spread D front to back), each .long H long
+ * and .thick W thick, splayed .splay rad out; a flame at each end, an orange-white unlit ico .flame W across, in the glow.
+ */
+const BB_HAT = { cords: 2, x: 0.5, top: 0.32, spread: 0.36, long: 0.62, thick: 0.05, splay: 0.35, flame: 0.12,
+  black: new Color3(0.08, 0.06, 0.07), cord: new Color3(0.2, 0.12, 0.07), fire: new Color3(1.6, 0.75, 0.2) };
+export function blackbeardHat(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = BB_HAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const felt = mf.get("cloth", K.black, { emissive: K.black.scale(0.4), roughness: 1 });
+  for (const m of body.root.getChildMeshes(false)) if (/^tricorn/.test(m.name)) { m.material = felt; glow?.addExcludedMesh(m as Mesh); }
+  const cord = mf.get("cloth", K.cord, { emissive: K.cord.scale(0.3), roughness: 1 });
+  const fire = mf.get("unlit", K.fire, { emissive: K.fire });
+  const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
+  const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
+  const out: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < K.cords; k++) {
+      const z = c.z + D * K.spread * (k / Math.max(1, K.cords - 1) - 0.5);
+      const pivot = new TransformNode("blackbeardFuseRoot", scene); pivot.parent = head;
+      pivot.position.set(c.x + side * W * K.x, c.y + H * K.top, z); pivot.rotation.z = side * K.splay;
+      const len = H * K.long;
+      const rope = MeshBuilder.CreateCylinder("blackbeardFuse", { height: len, diameter: W * K.thick, tessellation: 5 }, scene);
+      rope.parent = pivot; rope.position.y = -len / 2; rope.material = cord; rope.convertToFlatShadedMesh(); glow?.addExcludedMesh(rope); out.push(rope);
+      const flame = MeshBuilder.CreateIcoSphere("blackbeardFuseFlame", { radius: (W * K.flame) / 2, subdivisions: 1, flat: true }, scene);
+      flame.parent = pivot; flame.position.y = -len; flame.scaling.y = 1.5; flame.material = fire; out.push(flame);
+    }
+  }
+  return out;
+}
