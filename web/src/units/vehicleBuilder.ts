@@ -865,7 +865,12 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
    * front; a floor .floor thick at the cheeks' foot; the front band .bandH tall under the muzzles with .lobes round scallops .lobe across along
    * its top edge. All frameDark.
    */
-  const GT = { thick: 0.035, lo: 0.2, hi: 0.08, past: 0.07, inX: 0.17, splay: 0.05, floor: 0.03, bandH: 0.06, lobes: 3, lobe: 0.085 };
+  /*
+   * [S] 535 (b.3; secret.gatling_gun.jpg: the side frame is low, its top edge running under the bundle's middle and rising and dipping in round
+   * waves along its length, so the upper barrels show over it from the side) each cheek's flat top now stands .hi UNDER the axis, and along it
+   * .waves round scallops .wave across stand half out of its top edge, evenly from breech to muzzle, in the cheek's own plane.
+   */
+  const GT = { thick: 0.035, lo: 0.2, hi: -0.03, past: 0.07, inX: 0.17, splay: 0.05, floor: 0.03, bandH: 0.06, lobes: 3, lobe: 0.085, waves: 4, wave: 0.11 };
   const troughL = G.front + GT.past - (G.back - G.breechL);
   const troughMid = G.front + GT.past - troughL / 2;
   const cheekH = GT.lo + GT.hi;
@@ -874,6 +879,13 @@ function buildGatlingGun(scene: Scene, color: Color3, options: { showOperators?:
     cheek.rotation.y = side * GT.splay;
     cheek.position.set(side * (GT.inX + GT.thick / 2 + Math.sin(GT.splay) * (troughMid - (G.back - G.breechL))), G.axis - GT.lo + cheekH / 2, troughMid);
     cheek.parent = root; cheek.material = frameDark; allMeshes.push(cheek);
+    for (let i = 0; i < GT.waves; i++) {
+      // a disc standing in the cheek's plane (its axis across the gun), its middle on the cheek's top edge
+      const wave = MeshBuilder.CreateCylinder("gatlingTroughWave", { height: GT.thick, diameter: GT.wave, tessellation: 12 }, scene);
+      wave.parent = cheek; wave.rotation.z = Math.PI / 2;
+      wave.position.set(0, cheekH / 2, -troughL / 2 + (troughL * (i + 0.5)) / GT.waves);
+      wave.material = frameDark; allMeshes.push(wave);
+    }
   }
   const frontX = GT.inX + Math.sin(GT.splay) * troughL;
   const floor = MeshBuilder.CreateBox("gatlingTroughFloor", { width: (GT.inX + frontX), height: GT.floor, depth: troughL }, scene);
