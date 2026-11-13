@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, necromancerArmbands } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1206,6 +1206,8 @@ export class UnitFactory {
     if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...stiffyShorts(this._scene, body, necromancerDark(teamColor), NECRO_SHORTS));
     // [S] 538 (a.5): tall worn brown boots to the knee, pale laces crossed up the front (secretDress NECRO_BOOT)
     if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...necromancerBoots(this._scene, body));
+    // [S] 539 (a.6): two broad grey metal armbands round each upper arm bone, a dark ring between (secretDress NECRO_ARMBAND)
+    if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...necromancerArmbands(this._scene, body));
     // [S] 528 (a.2): the Solar Architect's gold sun halo of rings and spikes behind the head (secretDress solarArchitectHalo)
     if (definition.id === "secret.solar_architect" && !shouldUseVehicleBody) propMeshes.push(...solarArchitectHalo(this._scene, body));
     // [S] 536 (a.3): a long open white coat edged gold, high collar, wide gold-cuffed sleeves, over a team front (secretDress SOLAR_COAT)

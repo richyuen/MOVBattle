@@ -4463,6 +4463,32 @@ export function bansheeArmbands(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 539 (necromancer a.6) the Necromancer's armbands (audit 527: "no armbands - TABS: grey metal bands on both upper arms"; card Appearance "two
+ * metallic armbands on each Humerus"; secret.necromancer.red.png: two broad pale grey metal bands round each upper arm bone, far wider than the bone,
+ * one under the shoulder and one at mid-arm, a thin dark purple ring between them). NECRO_ARMBAND in each upper arm bone's box (shoulder end +y): rings
+ * .round of its half-width round (a Stiffy bone is thin), .tall of its length tall, middles at .at of the way down; between them a ring .gapRound
+ * round, .gapTall tall in .purple. Pale grey lit cloth self-lit .12 (palette: white x .7 reads pale grey), out of the glow.
+ */
+const NECRO_ARMBAND = { at: [0.3, 0.62], round: 2.7, tall: 0.2, gapRound: 2.3, gapTall: 0.1, grey: new Color3(0.62, 0.62, 0.64), purple: new Color3(0.2, 0.08, 0.2) };
+export function necromancerArmbands(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const A = NECRO_ARMBAND, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const grey = mf.get("cloth", A.grey, { emissive: A.grey.scale(0.12), roughness: 0.8 });
+  const purple = mf.get("cloth", A.purple, { emissive: A.purple.scale(0.12), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const { center: c, extendSize: s } = arm.getBoundingInfo().boundingBox;
+    const ring = (at: number, round: number, tall: number, mat: Material) => {
+      const band = MeshBuilder.CreateCylinder("necromancerArmband", { height: s.y * 2 * tall, diameter: s.x * 2 * round, tessellation: 8 }, scene);
+      band.parent = arm; band.position.set(c.x, c.y + s.y - s.y * 2 * at, c.z); band.scaling.z = s.z / s.x; band.rotation.y = Math.PI / 8;
+      band.material = mat; band.convertToFlatShadedMesh(); glow?.addExcludedMesh(band); out.push(band);
+    };
+    for (const at of A.at) ring(at, A.round, A.tall, grey);
+    ring((A.at[0] + A.at[1]) / 2, A.gapRound, A.gapTall, purple);
+  }
+  return out;
+}
+
+/*
  * [S] 529 (b.2) the Necromancer's lantern (secret.necromancer.red.png; card Off Hand "a magical, team-colored kerosene lantern, with a ghostly flame
  * inside ... the blue ghost-flame also is seen encircling the lantern": a team lantern hung from his off fist by a wire bail: a domed cap with a
  * chimney knob, a pale glass chimney between four thin team posts with a pale-blue ghost flame inside it, a round team fount under it; round its
