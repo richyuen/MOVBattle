@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1184,6 +1184,8 @@ export class UnitFactory {
     if (definition.id === "secret.banshee" && !shouldUseVehicleBody) propMeshes.push(...bansheeChainLegs(this._scene, body));
     // [S] 538 (a.5): a dark chain round her waist, iron manacles on the forearms with short chains hanging (secretDress BANSHEE_WAIST)
     if (definition.id === "secret.banshee" && !shouldUseVehicleBody) propMeshes.push(...bansheeBodyChains(this._scene, body));
+    // [S] 538 (a.6): two gold armbands round each upper arm (secretDress BANSHEE_ARMBAND)
+    if (definition.id === "secret.banshee" && !shouldUseVehicleBody) propMeshes.push(...bansheeArmbands(this._scene, body));
     // [S] 537 (a.2): a team fan crown behind her head, gold ribs and spikes (secretDress BANSHEE_CROWN)
     if (definition.id === "secret.banshee" && !shouldUseVehicleBody) propMeshes.push(...bansheeCrown(this._scene, body, teamColor));
     // [S] 537 (a.3): a long pointed team face with two glowing white eyes (secretDress BANSHEE_FACE)

@@ -4441,6 +4441,28 @@ export function bansheeBodyChains(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 538 (a.6) the Banshee's armbands (audit 527: "bare team upper arms - TABS: two gold armbands on each upper arm"; secret.banshee.red.png: two
+ * broad gold bands round each upper arm, one under the shoulder and one above the elbow, a band's width of team skin between them). BANSHEE_ARMBAND
+ * in each upper arm's box (shoulder end +y): rings .round of its half-width round, .tall of its length tall, their middles at .at of the way
+ * down. BANSHEE_CROWN gold, out of the glow.
+ */
+const BANSHEE_ARMBAND = { at: [0.34, 0.66], round: 1.42, tall: 0.17 };
+export function bansheeArmbands(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const A = BANSHEE_ARMBAND, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const gold = mf.get("cloth", BANSHEE_CROWN.gold, { emissive: BANSHEE_CROWN.gold.scale(0.3), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const { center: c, extendSize: s } = arm.getBoundingInfo().boundingBox;
+    for (const at of A.at) {
+      const band = MeshBuilder.CreateCylinder("bansheeArmband", { height: s.y * 2 * A.tall, diameter: s.x * 2 * A.round, tessellation: 8 }, scene);
+      band.parent = arm; band.position.set(c.x, c.y + s.y - s.y * 2 * at, c.z); band.scaling.z = s.z / s.x; band.rotation.y = Math.PI / 8;
+      band.material = gold; band.convertToFlatShadedMesh(); glow?.addExcludedMesh(band); out.push(band);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 529 (b.2) the Necromancer's lantern (secret.necromancer.red.png; card Off Hand "a magical, team-colored kerosene lantern, with a ghostly flame
  * inside ... the blue ghost-flame also is seen encircling the lantern": a team lantern hung from his off fist by a wire bail: a domed cap with a
  * chimney knob, a pale glass chimney between four thin team posts with a pale-blue ghost flame inside it, a round team fount under it; round its
