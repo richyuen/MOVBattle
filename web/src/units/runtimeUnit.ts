@@ -87,7 +87,7 @@ const ICE_THROW = { fore: 1.5, inward: 0.12, back: 0.45, hold: 0.22, ease: 0.25 
 export const GHOST_CURSE = { blue: new Color3(0.28, 0.55, 1.25), dye: 0.85, glow: 0.75, wisps: 6, long: 1.1, wide: 0.24, ring: 1.0, orbit: 4.2, wisp: new Color3(0.75, 0.92, 1.3) };
 /** [S] 519 Lovestruck hearts (spec at RuntimeUnit.applyLove), in head widths: big heart, small hearts and their size, height over the head, circle radius, orbit rad/s. */
 /** [S] 536 the Witch's toadstools on a struck man (spec at RuntimeUnit.applyMushrooms), in head widths. */
-const SHROOMS = { seconds: 6, size: 1.6, clear: 1.25, cap: 0.62, capH: 0.62, stem: 0.2, stemH: 0.5, tilt: 0.7, capC: new Color3(1, 0.22, 0.75), stemC: new Color3(0.95, 0.88, 0.74) };
+const SHROOMS = { seconds: 6, size: 0.2, clear: 0.9, shoulder: 0.45, cap: 0.62, capH: 0.62, stem: 0.2, stemH: 0.5, tilt: 0.7, capC: new Color3(1, 0.22, 0.75), stemC: new Color3(0.95, 0.88, 0.74) };
 const LOVE_HEARTS = { big: 0.95, small: 2, smallSize: 0.45, over: 0.85, ring: 0.75, orbit: 2.4, pink: new Color3(1, 0.18, 0.6) };
 const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
 const BURN = { tongues: 6, long: 2.6, wide: 0.55, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), glow: 0.9 };
@@ -2729,9 +2729,17 @@ export class RuntimeUnit {
     const S = SHROOMS, scene = head.getScene(), mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
     const capM = mf.get("unlit", S.capC, { emissive: S.capC });
     const stemM = mf.get("unlit", S.stemC, { emissive: S.stemC });
-    const hb = head.getBoundingInfo().boundingBox, e = hb.extendSize, c = hb.center;
-    // 536.3b sized .size of the head's width and stood .clear of it (look: a helmet swallowed head-sized toadstools)
-    const w = Math.max(e.x, e.z) * 2 * S.size;
+    // 536.3c the head's box with all it wears (helmet, hood, hat) read into its own frame, the toadstools .size of his height (look: a helmet
+    // swallowed head-sized ones)
+    const toHead = head.computeWorldMatrix(true).clone().invert();
+    const lo = new Vector3(Infinity, Infinity, Infinity), hi = new Vector3(-Infinity, -Infinity, -Infinity);
+    for (const m of [head, ...head.getChildMeshes(false)]) {
+      if (!m.isEnabled() || !m.isVisible) continue;
+      m.computeWorldMatrix(true);
+      for (const v of m.getBoundingInfo().boundingBox.vectorsWorld) { const p = Vector3.TransformCoordinates(v, toHead); lo.minimizeInPlace(p); hi.maximizeInPlace(p); }
+    }
+    const c = lo.add(hi).scale(0.5), e = hi.subtract(lo).scale(0.5);
+    const w = (this.body.metrics.overallHeight * S.size) / Math.max(1e-3, head.absoluteScaling.y);
     const grow =(parent: TransformNode, at: Vector3, tiltX: number, tiltZ: number, size: number): void => {
       const node = new TransformNode("witchShroom", scene);
       node.parent = parent; node.position.copyFrom(at); node.rotation.set(tiltX, 0, tiltZ);
@@ -2747,9 +2755,12 @@ export class RuntimeUnit {
     grow(head, new Vector3(c.x - e.x * 0.2, top, c.z), 0, 0.25, w);
     grow(head, new Vector3(c.x + side, c.y + e.y * 0.35, c.z - e.z * 0.2), 0, -S.tilt, w * 0.8);
     grow(head, new Vector3(c.x - side, c.y + e.y * 0.1, c.z + e.z * 0.2), 0.2, S.tilt, w * 0.7);
-    // one on each shoulder, standing over the pauldron or the cloth there
+    // one on each shoulder, standing over the pauldron or the cloth there (in the torso's frame, a share of his height over the joint)
+    const torso = this.body.torso, toTorso = torso.computeWorldMatrix(true).clone().invert(), tw = (this.body.metrics.overallHeight * S.size) / Math.max(1e-3, torso.absoluteScaling.y);
     for (const [joint, sd] of [[this.body.leftShoulder, -1], [this.body.rightShoulder, 1]] as const) {
-      if (joint) grow(joint, new Vector3(0, w * 0.35, 0), 0, -sd * S.tilt * 0.6, w * 0.8);
+      if (!joint) continue;
+      const at = Vector3.TransformCoordinates(joint.getAbsolutePosition(), toTorso);
+      grow(torso, at.add(new Vector3(sd * tw * 0.15, tw * S.shoulder, 0)), 0, -sd * S.tilt * 0.6, tw * 0.8);
     }
   }
   get fearFrom(): Vector3 { return this._fearFrom; }
