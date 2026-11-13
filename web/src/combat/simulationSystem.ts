@@ -507,6 +507,8 @@ const VLAD_IMPALE = { cooldown: 7, reach: 7, start: 1.1, step: 0.75, width: 0.85
 // [S] 530 Banshee Scream (spec at _tryBansheeScream)
 // [S] 531 Giant Fear (spec at _tryGiantFear)
 const GIANT_FEAR = { cooldown: 8, radius: 6, seconds: 4, dome: 3, ring: new Color3(0.7, 1.3, 0.85), dark: new Color3(0.06, 0.22, 0.12) };
+// [S] 535 the Banshee's hand curse (spec at SimulationSystem._tryBansheeCurse): stream s, curse s, aim height on the man, stream colours
+const BANSHEE_CURSE = { stream: 0.55, seconds: 5, chest: 1.0, look: { white: new Color3(0.8, 0.95, 1.4), yellow: new Color3(0.25, 0.55, 1.3), near: 0.14, far: 0.4, farPer: 0.06 } };
 const BANSHEE_SCREAM = { cooldown: 10, radius: 4, damage: 45, lift: 7, push: 6, dome: 4, ring: new Color3(0.55, 0.9, 1.4), dark: new Color3(0.05, 0.16, 0.42) };
 const LASSO_DRAG = { units: new Set(["wild_west.lasso"]), low: 0.12, pull: 1.4, first: 0.3, every: 0.35, under: 0.6, most: 2.4, trample: 1.5, throwUp: 5, throwOut: 4 };
 /*
@@ -2044,6 +2046,33 @@ export class SimulationSystem {
       if (!isVehicleUnit(u.definition.id)) u.applyBlastLaunch(away, B.push, B.lift);
     }
     this._logAbility(attacker, "scream", now, ground);
+  }
+
+  /**
+   * [S] 535 Banshee Hands (audit 527 c.2; card Weapons, main and off: "a ghastly weapon that casts a spell on units. Units that are cursed will have
+   * ghostly effects twirling around them, turning them blue"). Her plain attack is a curse, not a swing: both arms thrust out open-handed
+   * (RuntimeUnit.startCurseCast) and a pale-blue ghost stream runs from each palm to the man for .stream s (visualEffects spawnFlameJet in the .look
+   * colours); he takes the blow's damage and is cursed .seconds (RuntimeUnit.applyGhostCurse: dyed blue, ghost wisps circling his trunk). Logged
+   * "cast_curse" (a cast: the capture's release) and "status:curse" on him.
+   */
+  private _tryBansheeCurse(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, now: number): boolean {
+    const B = BANSHEE_CURSE;
+    if (attacker.definition.id !== "secret.banshee" || attacker.linkedParent || target.isDead) return false;
+    const palms = attacker.startCurseCast();
+    if (this.visualEffects) {
+      for (const palm of palms) {
+        const from = (): Vector3 | null => (attacker.isDead || palm.isDisposed() ? null : (worldMatrixChain(palm), palm.getAbsolutePosition().clone()));
+        const to = (): Vector3 | null => (target.isDead ? null : target.position.add(new Vector3(0, B.chest, 0)));
+        this.visualEffects.spawnFlameJet(from, to, B.stream, B.look);
+      }
+    }
+    this._logAbility(attacker, "cast_curse", now, target.position);
+    this._strikeLogged(attacker, target, damage, knockback.scale(0.3), now);
+    if (!target.isDead) {
+      target.applyGhostCurse(B.seconds);
+      this._logAbility(attacker, "status:curse", now, target.position);
+    }
+    return true;
   }
 
   /** A blow that lands now and goes into the hit log (the capture's plain events). */
@@ -3659,6 +3688,8 @@ export class SimulationSystem {
     this._tryVladImpale(attacker, target, damage, now);
     // [S] 530 the Banshee screams: a blue blast round her launches and flings every enemy near her; her curse still lands (BANSHEE_SCREAM)
     this._tryBansheeScream(attacker, now);
+    // [S] 535 her blow is no swing: she curses the man from both open hands (BANSHEE_CURSE)
+    if (this._tryBansheeCurse(attacker, target, damage, knockback, now)) return;
     // [S] 531 the Skeleton Giant's Giant Fear aura frightens every enemy round him; his blow still lands (GIANT_FEAR)
     this._tryGiantFear(attacker, now);
     // [S] 502 the Shouter does not strike from range: he shouts a harmless shockwave down the line (SHOUT)

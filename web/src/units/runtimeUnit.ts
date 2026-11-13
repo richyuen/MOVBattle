@@ -70,6 +70,8 @@ const FROST = { shards: 4, wide: 0.42, color: new Color3(0.5, 0.82, 1.0), glow: 
 // [S] 475 a man kneeling before the Pharaoh (spec at RuntimeUnit._kneelUntil)
 const KNEEL_POSE = { hip: 0.1, knee: 1.55, drop: 0.9, bow: 0.35, arms: 0.25 };
 /** [S] 519 the Cheerleader's cheer (spec at RuntimeUnit.startCheer): s held after a buff, raised-V arm angle, forward tip, pump drop, beats per s, elbow. */
+/** [S] 535 the Banshee's two-handed curse cast (spec at RuntimeUnit.startCurseCast) */
+const CURSE_CAST = { fore: 1.45, inward: 0.18, hold: 0.55, ease: 0.3 };
 const CHEER = { hold: 1.4, up: 2.5, fore: 0.35, pump: 1.1, hz: 2.5, elbow: 0.15 };
 /*
  * [S] 524 the Ice Mage throws each icicle from an open hand (card secret.ice_mage: "shoot icicles out of their hands", Main and Off Hand "Icicle
@@ -78,6 +80,8 @@ const CHEER = { hold: 1.4, up: 2.5, fore: 0.35, pump: 1.1, hz: 2.5, elbow: 0.15 
  * (simulationSystem HAND_LAUNCH "palm", startIceThrow).
  */
 const ICE_THROW = { fore: 1.5, inward: 0.12, back: 0.45, hold: 0.22, ease: 0.25 };
+/** [S] 535 Banshee curse (spec at RuntimeUnit.applyGhostCurse): dye colour, dye share and self-light; wisps: count, length and width (torso widths), ring radius, orbit rad/s, colour. */
+export const GHOST_CURSE = { blue: new Color3(0.28, 0.55, 1.25), dye: 0.75, glow: 0.4, wisps: 4, long: 0.7, wide: 0.16, ring: 0.95, orbit: 4.2, wisp: new Color3(0.75, 0.92, 1.3) };
 /** [S] 519 Lovestruck hearts (spec at RuntimeUnit.applyLove), in head widths: big heart, small hearts and their size, height over the head, circle radius, orbit rad/s. */
 const LOVE_HEARTS = { big: 0.95, small: 2, smallSize: 0.45, over: 0.85, ring: 0.75, orbit: 2.4, pink: new Color3(1, 0.18, 0.6) };
 const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
@@ -1218,6 +1222,53 @@ export class RuntimeUnit {
     return !this._isDead && RuntimeUnit.timeNowSeconds() < this._poisonUntil;
   }
 
+  /*
+   * [S] 535 Banshee curse (card Weapons Banshee Hands: "Units that are cursed will have ghostly effects twirling around them, turning them blue"). For
+   * `seconds` the man is dyed GHOST_CURSE.blue (skin and body lit blue, as POISON dyes green) and .wisps pale ghost wisps, long thin unlit spindles,
+   * circle his trunk at .ring torso widths, rising and falling as they go.
+   */
+  private _ghostUntil = 0;
+  private _ghostWisps: TransformNode | null = null;
+  applyGhostCurse(seconds: number): void {
+    if (this._isDead || this._isAnchoredActor) return;
+    this._ghostUntil = Math.max(this._ghostUntil, RuntimeUnit.timeNowSeconds() + Math.max(0.1, seconds));
+  }
+  get isGhostCursed(): boolean { return !this._isDead && RuntimeUnit.timeNowSeconds() < this._ghostUntil; }
+  private _applyGhostWisps(now: number): void {
+    if (!this.isGhostCursed) {
+      if (this._ghostWisps) { this._ghostWisps.dispose(false, false); this._ghostWisps = null; }
+      return;
+    }
+    const torso = this.body.torso;
+    const G = GHOST_CURSE;
+    if (!this._ghostWisps) {
+      const scene = torso.getScene();
+      const box = this.body.headMesh?.getBoundingInfo().boundingBox.extendSize;
+      const w = Math.max(0.3, (box ? Math.max(box.x, box.z) * 2 : 0.25) * 1.6);
+      const mat = getMaterialFactory().get("unlit", G.wisp, { emissive: G.wisp });
+      const root = new TransformNode("ghostWisps", scene);
+      for (let i = 0; i < G.wisps; i++) {
+        const wisp = MeshBuilder.CreateIcoSphere("ghostWisp", { radius: 0.5, subdivisions: 1 }, scene);
+        wisp.parent = root; wisp.material = mat; wisp.isPickable = false;
+        wisp.scaling.set(w * G.wide, w * G.wide, w * G.long);
+      }
+      root.metadata = { w };
+      this._ghostWisps = root;
+    }
+    const w = this._ghostWisps.metadata.w as number;
+    torso.computeWorldMatrix(true);
+    const at = torso.getAbsolutePosition();
+    this._ghostWisps.position.set(at.x, at.y, at.z);
+    let i = 0;
+    for (const child of this._ghostWisps.getChildMeshes(true)) {
+      const a = now * G.orbit + (i / G.wisps) * Math.PI * 2;
+      // each wisp runs along its circle (its long axis on the tangent), at its own height, bobbing
+      child.position.set(Math.cos(a) * w * G.ring, (i % 2 ? 0.25 : -0.2) * w + Math.sin(now * 3 + i) * w * 0.15, Math.sin(a) * w * G.ring);
+      child.rotation.set(0.35 * Math.sin(a * 2), -a, 0);
+      i++;
+    }
+  }
+
   /** Under a healer's beam (GILD): gold for `seconds`. */
   gild(seconds: number): void {
     if (this._isDead) return;
@@ -1945,6 +1996,7 @@ export class RuntimeUnit {
     if (this._maceWhirling(now)) this._applyMaceWhirl(now);
     this._applyCheer(now);
     this._applyIceThrow(now);
+    this._applyCurseCast(now);
     this._holdTeacherParry(now);
     this._updateRaptorBite(now);
     this._applyFxPreset(this.visualConfig.fxPreset ?? "none", isAttacking, now);
@@ -1952,6 +2004,7 @@ export class RuntimeUnit {
     this._applyBurnFlames(now);
     this._applyFearSkull(now);
     this._applyLoveHearts(now);
+    this._applyGhostWisps(now);
     this._applyKneelPose(now);
     this._applyFireworkSpin(now);
     this._holdSteadfastUpright();
@@ -2194,13 +2247,15 @@ export class RuntimeUnit {
     // A healer's beam gilds him (GILD) the same way, gold and lit, without the totter; drunk wins when both hold
     // a blow dart's poison dyes him green the same way (POISON), without the totter; drunk wins, then poison, then gild
     const poisoned = !drunk && this.isPoisoned;
-    const gilded = !drunk && !poisoned && this.isGilded;
+    // [S] 535 a Banshee's curse dyes him blue the same way (GHOST_CURSE), after poison
+    const ghosted = !drunk && !poisoned && this.isGhostCursed;
+    const gilded = !drunk && !poisoned && !ghosted && this.isGilded;
     this._gildMeshes(gilded);
-    const tint = drunk ? DRUNK.green : poisoned ? POISON.tint : GILD.gold;
-    const dye = drunk ? DRUNK.dye : poisoned ? POISON.dye : GILD.dye;
-    const glow = drunk ? DRUNK.glow : poisoned ? POISON.glow : GILD.glow;
+    const tint = drunk ? DRUNK.green : poisoned ? POISON.tint : ghosted ? GHOST_CURSE.blue : GILD.gold;
+    const dye = drunk ? DRUNK.dye : poisoned ? POISON.dye : ghosted ? GHOST_CURSE.dye : GILD.dye;
+    const glow = drunk ? DRUNK.glow : poisoned ? POISON.glow : ghosted ? GHOST_CURSE.glow : GILD.glow;
     const skin = this.body.skinMaterial;
-    const dyed = drunk || poisoned || gilded;
+    const dyed = drunk || poisoned || gilded || ghosted;
     if (dyed && (!this._drunkDyed || this._dyedWith !== tint)) {
       if (!this._drunkDyed) this._skinBase = skin.baseColor.clone();
       skin.baseColor = Color3.Lerp(this._skinBase ?? skin.baseColor, tint, dye);
@@ -2214,7 +2269,7 @@ export class RuntimeUnit {
     if (!dyed) return false;
     skin.emissiveColor = this._skinGlow.add(tint.scale(glow));
     this.body.bodyMaterial.emissiveColor = tint.scale(glow * 0.6);
-    if (gilded || poisoned) return true;
+    if (gilded || poisoned || ghosted) return true;
     const b = this.body;
     b.torso.rotation.z += Math.sin(now * DRUNK.rate) * DRUNK.roll;
     b.neck.rotation.z -= Math.sin(now * DRUNK.rate + 0.8) * DRUNK.roll * 1.4;
@@ -2515,6 +2570,32 @@ export class RuntimeUnit {
     throwE.rotation.x += (0 - throwE.rotation.x) * k;
     restS.rotation.x += C.back * k;
   }
+  /**
+   * [S] 535 the Banshee casts her curse from both open hands (card Weapons Banshee Hands, main and off): both arms thrust straight out at the man,
+   * shoulders pitched CURSE_CAST.fore forward and .inward toward the midline, elbows straight, held .hold s, eased back over .ease s. Applied at once,
+   * so the casting frame already has the hands out. Returns both palms (where her streams leave).
+   */
+  private _curseCastAt = -1;
+  startCurseCast(): TransformNode[] {
+    const b = this.body;
+    if (!b.leftHand || !b.rightHand) return [];
+    this._curseCastAt = RuntimeUnit.timeNowSeconds();
+    this._applyCurseCast(this._curseCastAt);
+    return [b.leftHand, b.rightHand];
+  }
+  private _applyCurseCast(now: number): void {
+    if (this._curseCastAt < 0 || this._isDead || this.isToppled || this.isDowned) return;
+    const C = CURSE_CAST, t = now - this._curseCastAt;
+    if (t > C.hold + C.ease) { this._curseCastAt = -1; return; }
+    const k = t <= C.hold ? 1 : 1 - (t - C.hold) / C.ease;
+    const b = this.body;
+    for (const [s, e, side] of [[b.leftShoulder, b.leftElbow, 1], [b.rightShoulder, b.rightElbow, -1]] as const) {
+      s.rotation.x += (-C.fore - s.rotation.x) * k;
+      s.rotation.y += (0 - s.rotation.y) * k;
+      s.rotation.z += (side * C.inward - s.rotation.z) * k;
+      e.rotation.x += (0 - e.rotation.x) * k;
+    }
+  }
   private _applyCheer(now: number): void {
     if (now >= this._cheerUntil || this._isDead || this.isToppled || this.isDowned) return;
     const C = CHEER, b = this.body;
@@ -2669,6 +2750,7 @@ export class RuntimeUnit {
     this._isDead = false;
     this._drunkUntil = 0;
     this._loveUntil = 0;
+    this._ghostUntil = 0;
     this._poisonUntil = 0;
     this._gildUntil = 0;
     this._auraUntil = 0;
