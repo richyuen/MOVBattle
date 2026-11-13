@@ -320,7 +320,8 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
           targetable: true,
           healthOverride: 240,
         },
-        visual: visual("none", "captain_hat", "none", "none", {
+        // [S] 531 (a.1) bare head: no captain_hat; his short dark hair is secretDress gatlingGunnerHair (unitFactory)
+        visual: visual("none", "none", "none", "none", {
           proportions: { scale: 0.7, bulk: 0.82, headSize: 1.02 },
           materialPreset: "secret_pirate",
           posePreset: "vehicle",

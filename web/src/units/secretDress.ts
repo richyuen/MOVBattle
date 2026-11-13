@@ -2578,6 +2578,35 @@ export function taekwondoHair(scene: Scene, body: ArticulatedBody, team: Color3)
 }
 
 /**
+ * [S] 531 the Gatling Gun operator's hair (secret.gatling_gun.red.png, .jpg: bare head, short dark brown-black hair close over the crown and down to
+ * the ears and nape, swept up into a low quiff over the forehead; audit 527 a.1 "a giant black top hat"). Spec in head widths W, heights H, depths D
+ * (head box, centre c; e the eyes' top): a half ellipsoid .capW W x .capH H x .capD D on a base .capLo H over e, set .capBack D back; a back fall box
+ * .backW W wide from the cap's foot down to .backLo H under e at the nape; a quiff, a flattened ellipsoid .quiffW W x .quiffH H x .quiffD D at the
+ * cap's front .quiffUp H over e, tipped .tilt rad up. Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow. captain_hat off (linkedActorPresets).
+ */
+const GATLING_HAIR = { capW: 1.1, capH: 0.5, capD: 1.12, capLo: 0.02, capBack: 0.05, backW: 1.0, backLo: -0.3, quiffW: 0.8, quiffH: 0.26, quiffD: 0.4, quiffUp: 0.22, tilt: -0.35,
+  dark: new Color3(0.11, 0.08, 0.07) };
+export function gatlingGunnerHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = GATLING_HAIR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const e = eyeTopInHead(body) ?? c.y + H * 0.1;
+  const hair = mf.get("cloth", C.dark, { emissive: C.dark.scale(0.4), roughness: 1 });
+  const out: Mesh[] = [];
+  const base = e + H * C.capLo;
+  const cap = MeshBuilder.CreateSphere("gatlingHair", { diameter: 1, segments: 5, slice: 0.5 }, scene);
+  cap.parent = head; cap.material = hair; cap.position.set(c.x, base, c.z - D * C.capBack); cap.scaling.set(W * C.capW, H * C.capH * 2, D * C.capD); out.push(cap);
+  const backH = base - (e + H * C.backLo);
+  const fall = MeshBuilder.CreateBox("gatlingHairBack", { width: W * C.backW, height: backH, depth: D * 0.18 }, scene);
+  fall.parent = head; fall.material = hair; fall.position.set(c.x, base - backH / 2, c.z - D * C.capD * 0.5 + D * 0.06); out.push(fall);
+  const quiff = MeshBuilder.CreateSphere("gatlingHairQuiff", { diameter: 1, segments: 4 }, scene);
+  quiff.parent = head; quiff.material = hair; quiff.position.set(c.x, e + H * C.quiffUp, c.z + D * C.capD * 0.32);
+  quiff.scaling.set(W * C.quiffW, H * C.quiffH, D * C.quiffD); quiff.rotation.x = C.tilt; out.push(quiff);
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/**
  * [S] 518 the Cheerleader's short hair (secret.cheerleader.blue.png: a short team-colour hair cap, a shade deeper than the skin, close over the crown
  * and down to the ears and nape, its front edge a short fringe just over the bead eyes; audit 515 a.5 "a grey cap"). Spec in head widths W, heights
  * H, depths D (head box, centre c; e the eyes' top): a half ellipsoid .capW W x .capH H x .capD D on a base .capLo H over e, set .capBack D back;
