@@ -179,7 +179,7 @@ export interface UnitVisualConfig {
 export type WeaponVariant =
   | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff" | "necro_knife"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
-  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear";
+  | "longbow" | "brown_longbow" | "firework_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear" | "solar_wand";
 
 function vis(
   proportions: Partial<BodyProportions>,
@@ -1222,8 +1222,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_solar_architect":
       // [S] 528 (a.2) the sun halo is secretDress solarArchitectHalo; the small torus halo special retired
-      return vis({ scale: 1.18, bulk: 0.98 }, "staff", "laurel", "none", "none", "#f7dd6f", undefined, {
-        posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "hero_halo", fxPreset: "solar",
+      // [S] 529 (b.1, b.2) a short white-and-gold wand with a gold end ring in each fist (propBuilder SOLAR_WAND), not the long orb staff
+      return vis({ scale: 1.18, bulk: 0.98 }, "sword", "laurel", "none", "none", "#f7dd6f", "sword", {
+        weaponVariant: "solar_wand", offhandVariant: "solar_wand", posePreset: "caster", materialPreset: "secret_holy", attachmentPreset: "hero_halo", fxPreset: "solar",
         stateVariants: { attacking: ["halo_flare"], "ability-active": ["halo_flare"] },
       });
     case "secret_wheelbarrow_dragon":

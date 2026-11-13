@@ -3198,6 +3198,40 @@ function buildLeafSword(scene: Scene, name: string, fit: BladeFit): { blade: Mes
   return { blade, hilt };
 }
 
+/*
+ * [S] 529 (b.1, b.2) the Solar Architect's wands (secret.solar_architect.red.png, card Main/Off Hand "two rods, each with a golden ring on the main
+ * end": in each fist a short white rod about a forearm long, wound with gold bands, a gold knob at its butt and a gold collar over the fist; at its
+ * tip an open gold ring standing in the rod's plane round a small gold diamond). SOLAR_WAND in his standing height H, on the slab sword's mount (held
+ * as a sword, rising from the fist): the rod .long H, .wide H across, the grip .grip fists; .bands gold bands; the ring .ring H across, .ringT of it
+ * thick; the diamond .gem H. White unlit (LESSONS 442), gold lit cloth self-lit .3, out of the glow. One in each fist (weapon and offhandVariant).
+ */
+const SOLAR_WAND = { long: 0.3, wide: 0.024, grip: 1.3, bands: 3, ring: 0.1, ringT: 0.16, gem: 0.035, white: new Color3(0.94, 0.93, 0.88), gold: new Color3(0.95, 0.62, 0.12) };
+function buildSolarWand(scene: Scene, fit: BladeFit, _s: number): Mesh {
+  const W = SOLAR_WAND, H = fit.stand, glow = scene.getGlowLayerByName("glow");
+  const white = getMaterialFactory().get("unlit", W.white, { emissive: W.white });
+  const gold = mat(scene, W.gold, 0.3, "cloth");
+  const { blade, hilt } = buildSlabSword(scene, "solarWand", fit, W.gold, false, { long: W.long, wide: W.wide, grip: W.grip, point: 0.02 });
+  blade.position.y = hilt * PROP_OVERSIZE - 0.11 * _s;
+  blade.material = white;
+  for (const m of blade.getChildMeshes(true)) {
+    if (m.name === "fuller" || m.name === "solarWandPoint") m.setEnabled(false);
+    else if (m.name === "grip") m.material = white;
+    else m.material = gold;
+  }
+  const flat = W.long * H * 0.98;
+  for (let k = 0; k < W.bands; k++) {
+    const band = MeshBuilder.CreateCylinder("solarWandBand", { height: W.wide * H * 0.8, diameter: W.wide * H * 1.5, tessellation: 6 }, scene);
+    band.parent = blade; band.position.y = -flat / 2 + flat * (k + 1) / (W.bands + 1); band.material = gold;
+  }
+  const R = (W.ring * H) / 2, top = flat / 2;
+  const ring = MeshBuilder.CreateTorus("solarWandRing", { diameter: R * 2, thickness: R * 2 * W.ringT, tessellation: 12 }, scene);
+  ring.parent = blade; ring.rotation.x = Math.PI / 2; ring.position.y = top + R * 0.92; ring.material = gold;
+  const gem = MeshBuilder.CreateCylinder("solarWandGem", { height: W.gem * H, diameterBottom: 0, diameterTop: W.gem * H * 0.7, tessellation: 4 }, scene);
+  gem.parent = blade; gem.position.y = top + R * 0.92; gem.material = gold;
+  for (const m of [blade, ...blade.getChildMeshes(false)]) { (m as Mesh).convertToFlatShadedMesh?.(); glow?.addExcludedMesh(m as Mesh); }
+  return blade;
+}
+
 function buildSlabSword(scene: Scene, name: string, fit: BladeFit, accent: Color3, great: boolean, cut?: SlabCut): { blade: Mesh; hilt: number } {
   const length = fit.stand * (cut ? cut.long : great ? 0.68 : 0.46);
   const width = cut ? fit.stand * cut.wide : Math.min(length / (great ? 5 : 4), Math.max(length / (great ? 6.5 : 5), fit.fist * 2.8));
@@ -5171,6 +5205,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         new TransformNode("wizardSwordHold", scene).parent = blade;
         return blade;
       }
+      if (variant === "solar_wand") return buildSolarWand(scene, fit, _s);
       // [S] 470b the Pharaoh's flail held in the off fist as a sword is, rod up and forward where it reads (from the staff hold it pointed at the camera)
       if (type === "sword" && variant === "pharaoh_flail") return buildPharaohFlail(scene, fit, teamColor ?? accent);
       const cut = type === "sword" ? (variant === "longsword" ? LONGSWORD : variant === "valkyrie_sword" ? VALKYRIE_SWORD : undefined) : undefined;
