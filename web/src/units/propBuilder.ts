@@ -3527,6 +3527,8 @@ const TREE_CLUB_ROOT_FAN = [0.35, 0.6];
 const TREE_CLUB_CROWN = 0.25;
 const TREE_CLUB_CARRY = 1.2;
 const TREE_CLUB_LOBE = 0.85;
+// [S] 543 the Tree Giant's big tree (spec at the tree_club case): trunk thickness, bark ridges, the canopy's centre and ring lobes, in trunk lengths
+const GIANT_TREE = { thick: 1.5, strands: 3, turns: 1.25, ridge: 0.32, core: 0.42, ring: 6, lobe: 0.34, spread: 0.3, sink: 0.04 };
 // Lobes of the crown from the trunk's end, in crown radii: along the trunk, toward its bowed (upper) side, and across it; centred on the trunk's line
 const TREE_CLUB_LOBES: [number, number, number][] = [[0.35, 0.55, 0.25], [1.3, 0.3, -0.2], [0.8, -0.75, 0.1]];
 // Bomb (units/pirate.bomb_thrower): across, in fists of the man holding it; its iron neck and its fuse stub, in bomb widths
@@ -5474,10 +5476,47 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       knot.position.copyFrom(line[3].add(new Vector3(0.02 * T, 0, 0.025 * T)));
       knot.scaling.set(1, 1.6, 1);
       knot.material = bark;
-      // The crown: three separate round lobes one shade apart, so its silhouette reads as three bumps and not one merged blob
       const leaves = [mat(scene, new Color3(0.5, 0.57, 0.27)), mat(scene, new Color3(0.43, 0.5, 0.23))];
-      const R = T * TREE_CLUB_CROWN;
       const end = line[line.length - 1];
+      if (variant === "tree_giant") {
+        /*
+         * [S] 543 (tree_giant b.2) the Tree Giant's big tree (audit 538: "canopy about head-sized - TABS: canopy wider than the giant's shoulders on a
+         * thick twisted trunk"; secret.tree_giant.red.png, the giant H tall: the canopy a broad flat-bottomed cluster of round lobes about .45 H
+         * across and a quarter H tall, standing over his head; the trunk about .09 H thick, twisted, its bark in spiral ridges). GIANT_TREE in T
+         * (the trunk's length): the trunk itself thickened .thick, and .strands bark ridges wound round it .turns times, each .ridge of its radius
+         * thick; the canopy a centre lobe .core across and a ring of .ring lobes .lobe across at .spread out round the trunk's end, sunk .sink
+         * back along it, so the cap stands wider than it is tall (no three-lobe crown).
+         */
+        const G = GIANT_TREE;
+        trunk.scaling.set(G.thick, 1, G.thick);
+        const rAt = (u: number): number => T * (TREE_CLUB_THICK * (1 - 0.45 * u)) * G.thick;
+        for (let s = 0; s < G.strands; s++) {
+          const path: Vector3[] = [];
+          for (let k = 0; k <= 12; k++) {
+            const u = k / 12, a = (s / G.strands) * Math.PI * 2 + u * G.turns * Math.PI * 2;
+            const i = Math.min(along.length - 2, along.findIndex((v) => v >= u) - 1 < 0 ? 0 : along.findIndex((v) => v >= u) - 1);
+            const f = (u - along[i]) / (along[i + 1] - along[i]);
+            const p = Vector3.Lerp(line[i], line[i + 1], Math.max(0, Math.min(1, f)));
+            path.push(new Vector3(p.x * G.thick + Math.cos(a) * rAt(u) * 0.92, p.y, p.z * G.thick + Math.sin(a) * rAt(u) * 0.92));
+          }
+          const ridge = MeshBuilder.CreateTube("treeClubRidge", { path, radiusFunction: (k) => rAt(k / 12) * G.ridge, tessellation: 5, cap: Mesh.CAP_ALL }, scene);
+          ridge.parent = carry; ridge.material = bark; ridge.convertToFlatShadedMesh();
+        }
+        const tip = new Vector3(end.x * G.thick, end.y, end.z * G.thick);
+        const cap = (r: number, x: number, y: number, z: number, i: number): void => {
+          const lobe = MeshBuilder.CreateIcoSphere("treeClubCrown", { radius: r, subdivisions: 2 }, scene);
+          lobe.parent = carry; lobe.position.set(x, y, z); lobe.scaling.set(1, 0.8, 1); lobe.rotation.y = i * 2.1;
+          lobe.material = leaves[i % 2]; lobe.convertToFlatShadedMesh();
+        };
+        cap((T * G.core) / 2, tip.x, tip.y + T * G.core * 0.3, tip.z, 0);
+        for (let i = 0; i < G.ring; i++) {
+          const a = (i / G.ring) * Math.PI * 2 + 0.3;
+          cap((T * G.lobe) / 2 * (1 - 0.06 * (i % 2)), tip.x + Math.cos(a) * T * G.spread, tip.y - T * G.sink, tip.z + Math.sin(a) * T * G.spread, i + 1);
+        }
+        return carry;
+      }
+      // The crown: three separate round lobes one shade apart, so its silhouette reads as three bumps and not one merged blob
+      const R = T * TREE_CLUB_CROWN;
       TREE_CLUB_LOBES.forEach(([on, hang, across], i) => {
         const lobe = MeshBuilder.CreateIcoSphere("treeClubCrown", { radius: R * TREE_CLUB_LOBE * (1 - i * 0.05), subdivisions: 2 }, scene);
         lobe.parent = carry;

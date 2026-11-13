@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff" | "necro_knife" | "blackbeard_anchor" | "sensei_shuriken" | "ullr_axe" | "guandao"
+  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff" | "necro_knife" | "blackbeard_anchor" | "sensei_shuriken" | "ullr_axe" | "guandao" | "tree_giant"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
   | "longbow" | "brown_longbow" | "firework_bow" | "artemis_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear" | "solar_wand";
 
@@ -1319,6 +1319,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_tree_giant":
       return vis({ scale: 2.45, bulk: 1.85, headSize: 1.1, armLength: 1.12, legLength: 0.92 }, "tree_club", "none", "none", "giant_tree", "#6f8a42", undefined, {
+        // [S] 543 (b.2) the big tree: a thick twisted trunk and a canopy wider than his shoulders (propBuilder GIANT_TREE)
+        weaponVariant: "tree_giant",
         posePreset: "giant", materialPreset: "secret_nature", attachmentPreset: "giant_aura",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
