@@ -5484,3 +5484,70 @@ export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mes
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
+
+/*
+ * [S] 538 (blackbeard a.2) Blackbeard's beard (audit 538: "bare face under the hat, no beard - TABS: huge black braided beard from the eyes to the
+ * belly"; secret.blackbeard.red.png, card Appearance: a black beard filling the face from cheek to cheek just under the eyes, falling over the chest
+ * as a broad faceted wedge to a point at the belly, wider than the neck at the chin; two thin braids down its front tied with red bands; a thick
+ * black moustache across the top). BEARD_BB: the face part on the head (W, H, D its box, c the centre, e the eye box's bottom) a faceted slab from
+ * the cheeks (.top W half-wide, .gap H under e, .cheekZ D forward) to the chin (.chin W half-wide at .chinY H under c, .chinZ D forward), .thick D
+ * deep; the chest part on the torso joint (T its box, front +z): a wedge from .chestTop of the half height over the middle (.chestW of the width
+ * half-wide) to a tip .tip of the half height under it, .stand of the depth out of the chest front, .chestThick of the depth deep; .braids braids
+ * .braidW of the width across at .braidX either side, .ties red ties on each; the moustache two flat icos .stache W across under the eyes. Near-black
+ * lit cloth self-lit .4 (LESSONS 494); red ties lit; out of the glow.
+ */
+const BEARD_BB = { top: 0.56, gap: 0.04, cheekZ: 0.42, chin: 0.42, chinY: 0.62, chinZ: 0.62, thick: 0.4, chestTop: 1.02, chestW: 0.62, tip: 0.55,
+  stand: 0.08, chestThick: 0.32, braids: 2, braidW: 0.07, braidX: 0.16, ties: 2, stache: 0.3,
+  black: new Color3(0.08, 0.06, 0.07), red: new Color3(0.75, 0.08, 0.06) };
+export function blackbeardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = BEARD_BB, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const black = mf.get("cloth", B.black, { emissive: B.black.scale(0.4), roughness: 1 });
+  const red = mf.get("cloth", B.red, { emissive: B.red.scale(0.2), roughness: 1 });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, parent: TransformNode, mt: Material): Mesh => { m.parent = parent; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  // the face part, on the head
+  const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
+  const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
+  const e = eyeBoxInHead(body)?.lo.y ?? c.y - H * 0.1;
+  const at = (x: number, y: number, z: number) => new Vector3(c.x + x * W, y, c.z + z * D);
+  const top = e - H * B.gap, chin = c.y - H * B.chinY;
+  const front = [at(-B.top, top, B.cheekZ), at(B.top, top, B.cheekZ), at(B.chin, chin, B.chinZ), at(0, chin - H * 0.12, B.chinZ + 0.05), at(-B.chin, chin, B.chinZ)];
+  const back = front.map((p) => p.add(new Vector3(0, 0, -D * B.thick)));
+  const ridge = at(0, (top + chin) / 2, B.chinZ + 0.12), rear = at(0, (top + chin) / 2, B.cheekZ - B.thick * 1.4);
+  const tris: Vector3[][] = [];
+  for (let i = 0; i < 5; i++) {
+    const j = (i + 1) % 5;
+    tris.push([ridge, front[i], front[j]], [rear, back[j], back[i]], [front[i], back[i], back[j]], [front[i], back[j], front[j]]);
+  }
+  put(facetedSolid(scene, "blackbeardBeardFace", tris), head, black);
+  for (const side of [-1, 1]) {
+    const m = put(MeshBuilder.CreateIcoSphere("blackbeardMoustache", { radius: (W * B.stache) / 2, subdivisions: 1 }, scene), head, black);
+    m.position.set(c.x + side * W * 0.17, top - H * 0.05, c.z + D * (B.cheekZ + 0.06)); m.scaling.set(1.2, 0.42, 0.55); m.rotation.z = -side * 0.35;
+  }
+  // the chest part, on the torso: a faceted wedge from under the chin to a point at the belly
+  const torsoM = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(torsoM);
+  const zF = T.deep * (1 + B.stand), yTop = T.mid + T.half * B.chestTop, yTip = T.mid - T.half * B.tip, hw = T.wide * B.chestW;
+  const dz = T.deep * B.chestThick;
+  const cf = [new Vector3(-hw, yTop, zF), new Vector3(hw, yTop, zF), new Vector3(hw * 0.8, (yTop + yTip) / 2 + T.half * 0.2, zF + dz * 0.4), new Vector3(0, yTip, zF), new Vector3(-hw * 0.8, (yTop + yTip) / 2 + T.half * 0.2, zF + dz * 0.4)];
+  const cb = cf.map((p) => new Vector3(p.x * 0.9, p.y, T.deep * 0.6));
+  const cRidge = new Vector3(0, (yTop + yTip) / 2 + T.half * 0.15, zF + dz), cRear = new Vector3(0, (yTop + yTip) / 2, T.deep * 0.4);
+  const ct: Vector3[][] = [];
+  for (let i = 0; i < 5; i++) {
+    const j = (i + 1) % 5;
+    ct.push([cRidge, cf[i], cf[j]], [cRear, cb[j], cb[i]], [cf[i], cb[i], cb[j]], [cf[i], cb[j], cf[j]]);
+  }
+  put(facetedSolid(scene, "blackbeardBeardChest", ct), body.torso, black);
+  // two braids down its front, red ties on each
+  for (let b = 0; b < B.braids; b++) {
+    const x = (b ? 1 : -1) * T.wide * B.braidX, y0 = yTop - T.half * 0.15, y1 = yTip + T.half * 0.3, z = zF + dz * 0.75;
+    const braid = put(MeshBuilder.CreateCylinder("blackbeardBraid", { height: y0 - y1, diameterTop: T.wide * B.braidW * 2, diameterBottom: T.wide * B.braidW * 1.4, tessellation: 5 }, scene), body.torso, black);
+    braid.position.set(x, (y0 + y1) / 2, z);
+    for (let k = 0; k < B.ties; k++) {
+      const ty = y1 + (y0 - y1) * (0.12 + 0.3 * k);
+      const tie = put(MeshBuilder.CreateCylinder("blackbeardBraidTie", { height: T.half * 0.06, diameter: T.wide * B.braidW * 2.6, tessellation: 6 }, scene), body.torso, red);
+      tie.position.set(x, ty, z);
+    }
+  }
+  return out;
+}
