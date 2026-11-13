@@ -5233,6 +5233,40 @@ export function vladHair(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 537 (vlad a.2) Vlad's mustache (audit 527 "no mustache - TABS: a big brown mustache"; secret.vlad.red.png: a big dark brown handlebar under the
+ * eyes, wider than the face, each half running out from under the nose, drooping, its end curling back up). VLAD_STACHE in the head box (W, H, D,
+ * c) and the bead eyes: from .under H under the eyes' foot at the face's front (.front D forward of c), each half three tapering segments .seg W long,
+ * .thick H thick at the root: out and .droop rad down, then .bend more down, then curled .curl back up. Dark brown lit cloth self-lit .3, out of
+ * the glow.
+ */
+const VLAD_STACHE = { under: 0.06, front: 0.56, seg: [0.26, 0.22, 0.16], thick: 0.15, droop: 0.25, bend: 0.5, curl: 1.3, brown: new Color3(0.14, 0.08, 0.05) };
+export function vladMustache(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = VLAD_STACHE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const hair = mf.get("cloth", K.brown, { emissive: K.brown.scale(0.3), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const eyes = eyeBoxInHead(body);
+  const y = (eyes ? eyes.lo.y : c.y) - H * K.under, z = c.z + D * K.front;
+  const out: Mesh[] = [];
+  const root = MeshBuilder.CreateIcoSphere("vladStacheRoot", { radius: H * K.thick * 0.6, subdivisions: 1 }, scene);
+  root.parent = head; root.position.set(c.x, y, z); root.material = hair; out.push(root);
+  for (const sd of [-1, 1]) {
+    let joint = new TransformNode("vladStacheJoint", scene); joint.parent = head;
+    joint.position.set(c.x, y, z); joint.rotation.z = -sd * (Math.PI / 2 + K.droop); // +y laid out sideways and a little down
+    for (let k = 0; k < K.seg.length; k++) {
+      if (k === 1) joint.rotation.z = -sd * K.bend;
+      if (k === 2) joint.rotation.z = sd * K.curl;
+      const len = W * K.seg[k], w0 = H * K.thick * (1 - k * 0.28), w1 = H * K.thick * (1 - (k + 1) * 0.28);
+      const seg = MeshBuilder.CreateCylinder("vladStache", { height: len, diameterBottom: w0, diameterTop: Math.max(w1, H * 0.02), tessellation: 6 }, scene);
+      seg.parent = joint; seg.position.y = len / 2; seg.scaling.z = 0.7; seg.material = hair; out.push(seg);
+      const next = new TransformNode("vladStacheJoint", scene); next.parent = joint; next.position.y = len; joint = next;
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/*
  * [S] 533 (a.4) Vlad's long coat (secret.vlad.red.png, .jpg: a dark team coat closed over the chest and flaring to a skirt that falls past the knees
  * to mid-shin; a brown fur mantle round the shoulders whose two ends hang down the chest like a stole; two gold star buttons down the middle between
  * them; a brown belt at the waist). VLAD_COAT in the torso frame (T = the trunk's box): a closed shell .out of the trunk from .top of the half height
