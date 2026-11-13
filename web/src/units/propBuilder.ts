@@ -54,6 +54,8 @@ const TALL_HATS: (HatType | undefined)[] = ["conical_hat", "witch_hat", "straw_h
 const KASA_GOLD = new Color3(0.86, 0.62, 0.18);
 /** [S] 413 the Firework Archer's bow (variant firework_bow): the stave .long of her height, orange tip caps .cap of its length. */
 const FIREWORK_BOW = { long: 1.15, cap: 0.12, capColor: new Color3(0.92, 0.5, 0.12) };
+/** [S] 540 Artemis's tall wrapped longbow (spec in buildWeapon's longbow branch) */
+const ARTEMIS_BOW = { long: 1.6, wrapAt: [0.3, 0.55, 0.8], wrap: 0.035, dark: new Color3(0.13, 0.07, 0.04), grip: new Color3(0.72, 0.5, 0.28) };
 /** [S] 418 the Firework Arrow nocked across the firework bow's grip: in stave lengths, the tube .long, .wide, set .side off the stave and reaching .back
  * behind the string; .bands green rings, a dark head .head long. */
 const FIREWORK_NOCK = { long: 0.3, wide: 0.08, side: 0.05, back: 0.02, bands: 3, ring: 1.3, head: 0.1, shaft: 0.012, nock: 0.12, wood: new Color3(0.45, 0.3, 0.16), band: new Color3(0.3, 0.62, 0.22), dark: new Color3(0.16, 0.14, 0.14) };
@@ -6083,17 +6085,18 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (type === "bow" && variant === "ice_bow") return buildIceBow(scene, s, fit.stand);
       if (type === "bow" && variant === "bone_bow") return buildBoneBow(scene, s, fit.stand, teamColor ?? accent);
       if (type === "bow" && variant === "poacher_bow") return buildPoacherBow(scene, s, fit.stand);
-      if (type === "bow" && (variant === "longbow" || variant === "brown_longbow" || variant === "firework_bow")) {
+      if (type === "bow" && (variant === "longbow" || variant === "brown_longbow" || variant === "firework_bow" || variant === "artemis_bow")) {
         // The medieval archer's (352; medieval.archer.red.png: a plain brown longbow as tall as he is, a pale wrap at the grip) is the same stave in
         // BROWN_LONGBOW's colours: brown wood, no tip wraps, the grip wrapped pale and not in the team colour
         // [S] 413 the Firework Archer's (audit 411 b.1: "a small dark curved stick held low and horizontal - TABS: a large upright brown recurve with
         // orange tip caps, taller than the torso"; dynasty.firework_archer.jpg, .red.png): the brown longbow's stave FIREWORK_BOW.long of her height,
         // its grip wrapped dark, each tip capped by an orange cone .cap of the stave long
         const firework = variant === "firework_bow";
-        const brown = variant === "brown_longbow" || firework;
+        const artemis = variant === "artemis_bow";
+        const brown = variant === "brown_longbow" || firework || artemis;
         // The balloon archer's longbow, built to the spec at LONGBOW: one faceted light-grey stave along +y, thick at the grip and tapering to the tips, bowed a
         // little off its string; tan wraps near each tip and the team colour round the grip. Laid and seated as the plain bow (named "bow", string child).
-        const Lb = fit.stand * (firework ? FIREWORK_BOW.long : brown ? BROWN_LONGBOW.long : LONGBOW.long);
+        const Lb = fit.stand * (artemis ? ARTEMIS_BOW.long : firework ? FIREWORK_BOW.long : brown ? BROWN_LONGBOW.long : LONGBOW.long);
         const r0 = LONGBOW.thick * Lb * 0.5;
         const zs = 0.04 * s;
         const radius = (t: number): number => r0 * (1 - (1 - LONGBOW.taper) * Math.abs(t));
@@ -6112,7 +6115,16 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         };
         const tan = mat(scene, LONGBOW_WRAP, 0.12, "cloth");
         if (!brown) for (const t of LONGBOW.wrapAt) for (const side of [1, -1]) band("bowWrap", t * side, LONGBOW.wrap, 1.3, tan);
-        band("bowGrip", 0, LONGBOW.grip, 1.25, brown ? mat(scene, BROWN_LONGBOW.wrap, 0.12, "cloth") : mat(scene, teamColor ?? accent, 0.12, "cloth"));
+        band("bowGrip", 0, LONGBOW.grip, 1.25, brown ? mat(scene, artemis ? ARTEMIS_BOW.grip : BROWN_LONGBOW.wrap, 0.12, "cloth") : mat(scene, teamColor ?? accent, 0.12, "cloth"));
+        if (artemis) {
+          // [S] 540 (artemis b.1) her longbow (audit 538: "short recurve bow, about half the arm span - TABS: tall brown wrapped longbow, from the feet
+          // to above the head"; secret.artemis.red.png: a brown stave from her shins to a hand over her head, held upright before her, a tan wrap at
+          // the grip and dark leather wraps spaced along both limbs). The brown longbow's stave ARTEMIS_BOW.long of her standing height, the grip
+          // wrapped tan, dark wraps .wrap long at .wrapAt each side; carried upright across her front at rest (ICE_UPRIGHT, by its mark)
+          const dark = mat(scene, ARTEMIS_BOW.dark, 0.1, "cloth");
+          for (const t of ARTEMIS_BOW.wrapAt) for (const side of [1, -1]) band("bowWrap", t * side, ARTEMIS_BOW.wrap, 1.3, dark);
+          new TransformNode("iceBowCarry", scene).parent = stave;
+        }
         if (firework) {
           const capMat = mat(scene, FIREWORK_BOW.capColor, 0.14, "cloth");
           for (const side of [1, -1]) {
