@@ -3123,6 +3123,49 @@ function buildBlackbeardAnchor(scene: Scene, fit: BladeFit): Mesh {
 }
 
 /*
+ * [S] 541 (ullr b.1) Ullr's double-headed axe, one in each fist (audit 538: "dark recurve bow in the main hand - TABS: double-headed axe in each hand";
+ * card Main/Off Hand "Ullr Axe Throw"; secret.ullr.red.png: a short dark haft out of each fist, and on its end a big head of two long dark
+ * grey-brown blades, one either side of the haft, each running along it like a bearded bit and curling out to a pale steel point at its far end;
+ * a round brown boss at the head's middle; the head is about as long as the forearm). ULLR_AXE in his standing height (fit.stand): haft .haft
+ * long, .grip across, from .back behind the fist out along +y; the head at the haft's end: per side a blade of .segs runs .long long, .out off
+ * the haft, its runs curling .curl rad outward, .wide across tapering to .tip and .flat thick, a pale point .point long past its end; the boss
+ * .boss across. Dark lit cloth self-lit .2 ("metal" renders near black), the points pale.
+ */
+const ULLR_AXE = { haft: 0.42, grip: 0.034, back: 0.06, long: 0.34, out: 0.05, segs: 4, curl: 0.42, wide: 0.13, tip: 0.065, flat: 0.03, point: 0.08, boss: 0.1,
+  blade: new Color3(0.36, 0.27, 0.25), wood: new Color3(0.2, 0.11, 0.055), steel: new Color3(0.62, 0.64, 0.68), bossC: new Color3(0.3, 0.13, 0.08) };
+function buildUllrAxe(scene: Scene, fit: BladeFit): Mesh {
+  const A = ULLR_AXE, H = fit.stand;
+  const haftL = H * A.haft, back = H * A.back;
+  const haft = MeshBuilder.CreateCylinder("ullrAxeHaft", { height: haftL, diameter: H * A.grip, tessellation: 6 }, scene);
+  haft.bakeTransformIntoVertices(Matrix.Translation(0, haftL / 2 - back, 0));
+  haft.material = mat(scene, A.wood, 0.2, "cloth"); haft.convertToFlatShadedMesh();
+  const blade = mat(scene, A.blade, 0.2, "cloth"), steel = mat(scene, A.steel, 0.4, "cloth"), bossM = mat(scene, A.bossC, 0.2, "cloth");
+  const put = (m: Mesh, mt: Mesh["material"]): Mesh => { m.parent = haft; m.material = mt; m.convertToFlatShadedMesh(); return m; };
+  const top = haftL - back, headL = H * A.long, y0 = top - headL * 0.35;
+  for (const side of [-1, 1]) {
+    // each blade starts beside the haft near its end and runs on past it, away from the fist, curling out
+    let p = new Vector3(side * H * A.out, y0, 0), ang = 0;
+    for (let k = 0; k < A.segs; k++) {
+      const len = headL / A.segs, w = H * (A.wide + (A.tip - A.wide) * ((k + 0.5) / A.segs));
+      ang += A.curl / A.segs;
+      const dir = new Vector3(side * Math.sin(ang), Math.cos(ang), 0);
+      const run = put(MeshBuilder.CreateBox("ullrAxeBlade", { width: w, height: len * 1.08, depth: H * A.flat }, scene), blade);
+      run.position.copyFrom(p.add(dir.scale(len / 2)).add(new Vector3(side * w / 2, 0, 0)));
+      run.rotation.z = -Math.atan2(dir.x, dir.y);
+      p = p.add(dir.scale(len));
+      if (k === A.segs - 1) {
+        const pt = put(MeshBuilder.CreateCylinder("ullrAxePoint", { height: H * A.point, diameterTop: 0, diameterBottom: w * 1.4, tessellation: 4 }, scene), steel);
+        pt.scaling.z = A.flat / A.wide; pt.rotation.z = run.rotation.z;
+        pt.position.copyFrom(p.add(dir.scale(H * A.point / 2)).add(new Vector3(side * w / 2, 0, 0)));
+      }
+    }
+  }
+  const boss = put(MeshBuilder.CreateCylinder("ullrAxeBoss", { height: H * A.flat * 1.8, diameter: H * A.boss, tessellation: 8 }, scene), bossM);
+  boss.rotation.x = Math.PI / 2; boss.position.y = y0 + headL * 0.2;
+  return haft;
+}
+
+/*
  * [S] 540 (sensei b.1) the Sensei's shuriken (audit 538: "4-point plain star - TABS: many-pointed shuriken, far more points than a ninja's"; card
  * Appearance "holds one shuriken per hand that are significantly different from a normal Ninja's ... having far more points"; secret.sensei.red.png:
  * a dark steel star in each fist, a ring of long thin curved blades round a pale hub, about two hands across). SENSEI_SHURIKEN in s: .points blades
@@ -5690,6 +5733,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return shaft;
     }
     case "axe": {
+      if (variant === "ullr_axe") return buildUllrAxe(scene, fit);
       if (variant === "bearded_axe") return buildBeardedAxe(scene, s * BRAWLER_HATCHET.scale, BRAWLER_HATCHET.steel, BRAWLER_HATCHET.haft);
       if (variant === "berserker_axe") return buildBeardedAxe(scene, s * BERSERKER_AXE.scale);
       const handle = MeshBuilder.CreateCylinder("handle", { height: 0.5 * s, diameter: 0.03 * s }, scene);
