@@ -4969,7 +4969,7 @@ function buildBarrowDragon(scene: Scene, root: Mesh, put: (m: Mesh, mt?: PBRMeta
  * .segs tapering links, its direction starting at (side .Out, .Up, back 1) and bent by .Curl (side, up, fore) over its length. Unlit cream
  * (palette unlit tan x ~.95), out of the glow.
  */
-const BARROW_HORNS = { segs: 5, big: 1.05, bigBase: 0.34, bigOut: 0.75, bigUp: 0.15, bigCurl: [0.3, 1.5, 0.4], small: 0.55, smallBase: 0.22,
+const BARROW_HORNS = { segs: 5, big: 0.9, bigBase: 0.34, bigOut: 0.75, bigUp: 0.1, bigCurl: [0.2, 0.7, 0.2], small: 0.55, smallBase: 0.22,
   smallOut: 0.9, smallUp: -0.1, smallCurl: [-0.2, -1.4, 1.2], cream: new Color3(0.78, 0.62, 0.42) };
 
 function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
