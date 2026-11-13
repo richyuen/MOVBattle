@@ -5609,6 +5609,29 @@ export function blackbeardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 539 (artemis a.1) Artemis's gold band (audit 538: "gold halo ring floating above the head - TABS: no halo; gold band over the hair";
+ * secret.artemis.red.png: no halo; a broad orange-gold band laid over the top of her head from the brow back over the crown, on the hair). The
+ * halo special is off (unitVisuals); the laurel hat's green wreath is hidden and its brown hair cap ("laurelHair") kept. ARTEMIS_BAND in the hair
+ * cap's box (W, H, D, c): a 10-sided band .round W across at its foot narrowing to .top of that, .tall H tall, its middle .up H over c, tipped .tip
+ * rad (front up, back down) so it runs from the brow over the crown, .deep of the cap's depth ratio. Gold lit cloth self-lit .25, out of the glow.
+ */
+const ARTEMIS_BAND = { round: 1.08, top: 0.84, tall: 0.42, up: 0.18, tip: -0.42, deep: 1.0, gold: new Color3(1, 0.62, 0.14) };
+export function artemisBand(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = ARTEMIS_BAND, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const kids = body.root.getChildMeshes(false);
+  for (const m of kids) if (m.name === "laurel") m.setEnabled(false);
+  const hair = kids.find((m) => m.name === "laurelHair") as Mesh | undefined;
+  if (!hair) return [];
+  const gold = mf.get("cloth", K.gold, { emissive: K.gold.scale(0.25), roughness: 0.9 });
+  const b = hair.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const band = MeshBuilder.CreateCylinder("artemisBand", { height: H * K.tall, diameterBottom: W * K.round, diameterTop: W * K.round * K.top, tessellation: 10 }, scene);
+  band.parent = hair; band.position.set(c.x, c.y + H * K.up, c.z); band.rotation.x = K.tip; band.scaling.z = (D / W) * K.deep;
+  band.material = gold; band.convertToFlatShadedMesh(); glow?.addExcludedMesh(band);
+  return [band];
+}
+
+/*
  * [S] 539 (blackbeard a.1) Blackbeard's hat (audit 538: "black top hat with a yellow badge - TABS: black tricorne with lit fuse strings hanging from
  * the brim"; card Appearance "black hat with firelit strings protruding from it"; secret.blackbeard.red.png: a wide black tricorne pulled to the
  * brows, and from under its brim either side of the face hang dark slow-match cords, their ends burning white-orange). The hat is propBuilder's

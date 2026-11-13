@@ -1311,10 +1311,11 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
       });
     case "secret_artemis":
-      return vis({ scale: 1.45, bulk: 1.02, armLength: 1.12 }, "bow", "laurel", "none", "halo", "#f5d566", undefined, {
-        posePreset: "archer", materialPreset: "secret_hero", attachmentPreset: "hero_halo", fxPreset: "solar",
+      // [S] 539 (a.1) no halo over her head (special and the hero_halo flare off): a gold band over her hair instead (secretDress ARTEMIS_BAND)
+      return vis({ scale: 1.45, bulk: 1.02, armLength: 1.12 }, "bow", "laurel", "none", "none", "#f5d566", undefined, {
+        posePreset: "archer", materialPreset: "secret_hero", fxPreset: "solar",
         bodyDetailLevel: "hero",
-        stateVariants: { attacking: ["drawn_arrow", "halo_flare"], "ability-active": ["drawn_arrow", "halo_flare"] },
+        stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
       });
     case "secret_ice_giant":
       return vis({ scale: 2.48, bulk: 1.88, headSize: 1.12, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "giant_ice", "#9fe9ff", undefined, {
