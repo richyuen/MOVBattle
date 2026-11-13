@@ -5809,3 +5809,55 @@ export function blackbeardHat(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 541 (blackbeard a.3) Blackbeard's long coat (audit 538: "navy vest slab with a brown strap - TABS: team long coat with cloth wrapped round the
+ * chest and a hanging sash tail"; card Appearance "a long coat and pants ... cloth wrapped around its chest"; secret.blackbeard.red.png: the whole
+ * trunk in bright team cloth like the sleeves; under the beard's point a broad band of team cloth wound twice round the waist, the turns a little
+ * askew; from the knot on his left hip a sash end hangs to mid-thigh; the coat's skirt flares from the waist to just under the knees, over the
+ * trousers). The brown "cape" strap and the navy tunic skirt are switched off. BB_COAT in the yoke's box T: an 8-sided shell .fitTop to .fitFoot of
+ * the width round, .fitDeep deep; the skirt a frustum from .skirtTop of the half height under the middle, .flareTop to .flareFoot round, its hem
+ * .hem of the hip-to-knee length under the knees; .wraps turns .wrapH of the half height tall from .wrapAt up, each .wrapOut round, tilted
+ * .tilt rad alternately; the sash tail .tailW of the width across and .tailL of the half height long, off the knot at .tailX of the width out.
+ * Team cloth (saturated, c^2, to the peak) x .shade self-lit .12, wraps and tail x .wrapShade; out of the glow.
+ */
+const BB_COAT = { fitTop: 0.92, fitFoot: 1.06, fitDeep: 1.1, top: 0.96, skirtTop: 0.82, flareTop: 1.14, flareFoot: 1.6, hem: 0.1, skirtDeep: 1.25,
+  wraps: 2, wrapAt: 0.08, wrapH: 0.2, wrapOut: 1.2, tilt: 0.09, tailW: 0.2, tailL: 1.1, tailX: 0.62, shade: 0.95, wrapShade: 0.72 };
+export function blackbeardCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = BB_COAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  for (const m of body.root.getChildMeshes(false)) if (m.name === "cape" || m.name === "tunicSkirt") m.setEnabled(false);
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const deep = sat.scale(peak / Math.max(sat.r, sat.g, sat.b, 1e-3));
+  const coatC = deep.scale(K.shade), wrapC = deep.scale(K.wrapShade);
+  const coat = mf.get("cloth", coatC, { emissive: coatC.scale(0.12), roughness: 1 });
+  const wrap = mf.get("cloth", wrapC, { emissive: wrapC.scale(0.12), roughness: 1 });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const top = T.mid + T.half * K.top, low = T.mid - T.half, h = top - low;
+  const out: Mesh[] = [];
+  const add = (m: Mesh, mt: Material, x: number, y: number, z: number): Mesh => { m.parent = body.torso; m.position.set(x, y, z); m.material = mt; out.push(m); return m; };
+  const shell = add(MeshBuilder.CreateCylinder("bbCoatShell", { height: h, diameterTop: T.wide * 2 * K.fitTop, diameterBottom: T.wide * 2 * K.fitFoot, tessellation: 8 }, scene), coat, 0, (top + low) / 2, 0);
+  shell.scaling.z = (T.deep / T.wide) * K.fitDeep; shell.rotation.y = Math.PI / 8;
+  // the skirt, from the waist to just under the knees (hem anchored to the knees, LESSONS 512)
+  const hipToKnee = Math.abs(body.leftKnee.position.y);
+  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const sTop = T.mid - T.half * K.skirtTop, hem = kneeY - hipToKnee * K.hem, sH = sTop - hem;
+  const skirt = add(MeshBuilder.CreateCylinder("bbCoatSkirt", { height: sH, diameterTop: T.wide * 2 * K.flareTop, diameterBottom: T.wide * 2 * K.flareFoot, tessellation: 8 }, scene), coat, 0, sTop - sH / 2, 0);
+  skirt.scaling.z = (T.deep / T.wide) * K.skirtDeep; skirt.rotation.y = Math.PI / 8;
+  // the cloth wound round the waist: turns a little askew, one over the other
+  const wH = T.half * K.wrapH;
+  for (let k = 0; k < K.wraps; k++) {
+    const y = low + T.half * K.wrapAt + wH * (k + 0.5) * 0.9;
+    const band = add(MeshBuilder.CreateCylinder("bbCoatWrap", { height: wH, diameter: T.wide * 2 * (K.wrapOut + 0.04 * k), tessellation: 10 }, scene), wrap, 0, y, 0);
+    band.scaling.z = (T.deep / T.wide) * K.fitDeep * 1.05; band.rotation.z = (k % 2 ? -1 : 1) * K.tilt;
+  }
+  // the knot on his left hip and the sash end hanging from it
+  const kx = T.wide * K.tailX * (Math.sign(body.leftShoulder.position.x) || -1), ky = low + T.half * K.wrapAt + wH, kz = T.deep * 0.55;
+  const knot = add(MeshBuilder.CreateIcoSphere("bbCoatKnot", { radius: T.wide * K.tailW * 0.7, subdivisions: 1, flat: true }, scene), wrap, kx, ky, kz);
+  knot.scaling.set(1, 0.8, 0.6);
+  const tL = T.half * K.tailL;
+  const tail = add(MeshBuilder.CreateBox("bbCoatTail", { width: T.wide * K.tailW, height: tL, depth: T.deep * 0.12 }, scene), wrap, kx * 1.04, ky - tL / 2, kz + T.deep * 0.08);
+  tail.rotation.z = (kx > 0 ? 1 : -1) * 0.12;
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
