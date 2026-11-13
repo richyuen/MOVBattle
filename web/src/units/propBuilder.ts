@@ -9101,10 +9101,18 @@ const OVERHEAD_SAFE = { pairX: -0.46, wide: 0.72, tall: 0.92, deep: 0.38, over: 
 // [S] 530 the safe door's hardware (spec at buildOverheadSafe): dial .dial dw across at .dialY of the door height over its middle, cross bar .bar dw
 // at .handleY, plate .plate dw at .plateY, hinge studs .stud trims across
 const SAFE_DOOR = { dial: 0.34, dialY: 0.22, bar: 0.36, handleY: -0.06, plate: 0.16, plateY: -0.2, stud: 1.3, orange: new Color3(1, 0.42, 0.1) };
+// [S] 531 (b.1; secret.bank_robbers.blue.png / .red.png: a deep navy or dark maroon safe body, its frame trim the door's orange). SAFE_STEEL: the
+// team colour saturated (c^2) and scaled so its brightest channel is .peak (palette cloth column x.25: navy, maroon), lit cloth self-lit .12;
+// the trim, beads and side hinges take SAFE_DOOR.orange instead of gold.
+const SAFE_STEEL = { peak: 0.25 };
+function safeSteel(team: Color3): Color3 {
+  const s = new Color3(team.r * team.r, team.g * team.g, team.b * team.b);
+  return s.scale(SAFE_STEEL.peak / Math.max(s.r, s.g, s.b, 1e-3));
+}
 function buildOverheadSafe(scene: Scene, body: ArticulatedBody, team: Color3): Mesh {
   const S = OVERHEAD_SAFE, Hh = body.metrics.overallHeight, hipY = body.hip.position.y;
   const glow = scene.getGlowLayerByName("glow");
-  const steel = mat(scene, team, 0.12, "cloth"), gold = mat(scene, S.gold, 0.15, "cloth"), dark = mat(scene, S.dark, 0.3, "cloth");
+  const steel = mat(scene, safeSteel(team), 0.12, "cloth"), gold = mat(scene, SAFE_DOOR.orange, 0.15, "cloth"), dark = mat(scene, S.dark, 0.3, "cloth");
   const W = Hh * S.wide, T = Hh * S.tall, D = Hh * S.deep;
   const safe = MeshBuilder.CreateBox("safe", { width: W, height: T, depth: D }, scene);
   safe.parent = body.hip; safe.material = steel;
