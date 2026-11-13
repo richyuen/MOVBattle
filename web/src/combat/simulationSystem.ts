@@ -5363,22 +5363,24 @@ export class SimulationSystem {
     const tickNow = now >= this._necroTickAt;
     if (tickNow) this._necroTickAt = now + NECRO_CURSE.tick;
     for (const [unit, team] of [...this._necroCursed]) {
-      if (unit.isDead) {
-        this._necroCursed.delete(unit);
-        const at = unit.position.clone(); at.y = 0;
-        let parent: RuntimeUnit | undefined;
-        for (const u of this._units) if (!u.isDead && u.team === team && u.definition.id === "secret.necromancer" && (!parent || Vector3.DistanceSquared(u.position, at) < Vector3.DistanceSquared(parent.position, at))) parent = u;
-        if (!this.spawnUnitById || this.getLivingCount(team) >= this.summonLivingCap) continue;
-        const risen = this.spawnUnitById("spooky.skeleton_warrior", team, at, { role: "summoned", linkedParent: parent, linkedRelation: parent ? "spawned-child" : undefined });
-        if (!risen) continue;
-        this.visualEffects?.spawnSmokePuff(at.add(new Vector3(0, 0.3, 0)), NECRO_CURSE.smoke);
-        this._logMissileAbility("secret.necromancer", "raise_dead", at);
-        continue;
+      if (!unit.isDead && tickNow) {
+        unit.applyDamage(unit.maxHealth * NECRO_CURSE.rot, Vector3.Zero());
+        this.visualEffects?.spawnSmokePuff(unit.position.add(new Vector3(0, 1.1, 0)), NECRO_CURSE.smoke);
       }
-      if (!tickNow) continue;
-      unit.applyDamage(unit.maxHealth * NECRO_CURSE.rot, Vector3.Zero());
-      this.visualEffects?.spawnSmokePuff(unit.position.add(new Vector3(0, 1.1, 0)), NECRO_CURSE.smoke);
+      // raised on the tick he dies: the last enemy's death ends the battle before another step runs
+      if (unit.isDead) this._raiseCursed(unit, team);
     }
+  }
+  private _raiseCursed(unit: RuntimeUnit, team: number): void {
+    this._necroCursed.delete(unit);
+    const at = unit.position.clone(); at.y = 0;
+    let parent: RuntimeUnit | undefined;
+    for (const u of this._units) if (!u.isDead && u.team === team && u.definition.id === "secret.necromancer" && (!parent || Vector3.DistanceSquared(u.position, at) < Vector3.DistanceSquared(parent.position, at))) parent = u;
+    if (!this.spawnUnitById || this.getLivingCount(team) >= this.summonLivingCap) return;
+    const risen = this.spawnUnitById("spooky.skeleton_warrior", team, at, { role: "summoned", linkedParent: parent, linkedRelation: parent ? "spawned-child" : undefined });
+    if (!risen) return;
+    this.visualEffects?.spawnSmokePuff(at.add(new Vector3(0, 0.3, 0)), NECRO_CURSE.smoke);
+    this._logMissileAbility("secret.necromancer", "raise_dead", at);
   }
 
   /** One ability-log entry; the same kind on the same man within 0.5 s is folded into the last one (a spin or a volley fires every frame or shot). */
