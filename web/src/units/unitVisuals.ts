@@ -1271,7 +1271,11 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "vehicle", materialPreset: "secret_pirate",
       });
     case "secret_blackbeard":
-      return vis({ scale: 1.95, bulk: 1.28, headSize: 1.08 }, "cutlass", "tricorn", "none", "cape", "#5d3a1f", "cutlass", {
+      // [S] 543 (a.5) BB_STRETCH: the card's "stretched version of the normal wobbler ... about twice the size of the average unit" (audit 538 a.5: "man-sized
+      // at lineup distance"). The uniform scale stays (its row is closed); the rig itself is drawn out before anything hangs on it: the trunk 1.32 long,
+      // the legs 1.18 (from the .92 default) and the arms 1.18, the chest slimmer (bulk 1.28 -> 1.12), so his head stands about 2.2 men up and he reads
+      // long and lean, not a man blown up. The coat, beard, gloves, peg and anchors are all hung on this rig after it is built.
+      return vis({ scale: 1.95, bulk: 1.12, headSize: 1.08, torsoLength: 1.32, legLength: 1.18, armLength: 1.18 }, "cutlass", "tricorn", "none", "cape", "#5d3a1f", "cutlass", {
         // [S] 538 (b.1) a giant dark grey anchor in the main fist in place of the cutlass (propBuilder BB_ANCHOR)
         // [S] 539 (b.2) the same anchor in the off fist in place of the chest flintlock (card Off Hand "Blackbeard's Anchor")
         weaponVariant: "blackbeard_anchor", offhandVariant: "blackbeard_anchor",
