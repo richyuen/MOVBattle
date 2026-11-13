@@ -193,6 +193,7 @@ ABILITY_PREF["secret.present_elf"] = "present_open";
 ABILITY_PREF["secret.banshee"] = "scream"; // [evidence 530] her ability shots frame the scream, not her swoop
 ABILITY_PREF["secret.cavalry"] = "shockwave"; // [evidence 530] a hoof shockwave, not the pull-back at spawn
 ABILITY_PREF["secret.skeleton_giant"] = "giant_fear"; // [531] his ability shots frame the Giant Fear burst
+ABILITY_PREF["secret.sensei"] = "shuriken_tempest"; // [evidence 543] his stars knock the man back: the capture waits for him to close and the wind ring to rise
 ABILITY_PREF["secret.necromancer"] = "raise_dead"; // [evidence 535] his ability shots frame a skull-cursed corpse rising, not the curse landing
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
@@ -510,6 +511,9 @@ async function main() {
           // [evidence 537] the Witch's mushroomed man turns on his friends (card Characteristics; c.3): a friend of his stands 1.5 m behind him
           // on the duel line, so the side-on camera shows the two apart
           if (id === "secret.witch") game.spawnUnit("medieval.squire", 0, { x: -d - 1.5, z: 0 });
+          // [evidence 543] the Sensei's Shuriken Tempest rises when a man gets close (card Abilities): his stars knock the squire back and kill him at
+          // range (look 543: no tempest in 9 s), so a knight starts 7 m behind him (farther than the squire, which stays his first target) and walks in
+          if (id === "secret.sensei") game.spawnUnit("medieval.knight", 0, { x: d + 7, z: 1 });
           // [evidence 537] the Necromancer's graves rise when a man closes in (c.3); his skull rots the first squire dead on the way: a second walks on in
           window.__ufoe2 = id === "secret.necromancer" ? game.spawnUnit("medieval.squire", 0, { x: -d - 1.5, z: 1.5 }) : null;
           let ally = null;
