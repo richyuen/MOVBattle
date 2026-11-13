@@ -373,7 +373,7 @@ export const LINKED_ACTOR_PRESETS: Record<string, LinkedActorPreset> = {
         // beside the lead's (secret.bank_robbers.png: two near-equal men under it; card "the taller one" is a slight gap)
         // [S] 530 (b.3) he takes the lead's long legs and nearly his height (.95 -> 1.06, legLength 1.22), so both straight-armed reaches meet the floor
         visual: visual("flintlock", "cowboy_hat", "none", "none", {
-          proportions: { scale: 1.06, bulk: 0.82, headSize: 1.0, legLength: 1.22 },
+          proportions: { scale: 1.06, bulk: 0.82, headSize: 1.0, legLength: 1.22, armLength: 1.3 },
           materialPreset: "secret_bandit",
           posePreset: "duelist",
           accentColor: "#5b5b5b",

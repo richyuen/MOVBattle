@@ -1198,7 +1198,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_bank_robbers":
       // [S] 527 (a.5) long-legged Wobblers under the safe (secret.bank_robbers.png): legLength 1.22, the straight stance in ProceduralAnimator ROBBER_STANCE
-      return vis({ scale: 1.08, bulk: 1.08, legLength: 1.22 }, "flintlock", "cowboy_hat", "none", "safe_bundle", "#5b5b5b", "flintlock", {
+      // [P] 531 (b.4) armLength 1 -> 1.3 (both robbers): the straight-armed reach lifts the safe a forearm clear of the hats
+      return vis({ scale: 1.08, bulk: 1.08, legLength: 1.22, armLength: 1.3 }, "flintlock", "cowboy_hat", "none", "safe_bundle", "#5b5b5b", "flintlock", {
         posePreset: "support", materialPreset: "secret_bandit", attachmentPreset: "bank_robbers",
         stateVariants: { attacking: ["loot_flash"] },
       });
