@@ -4029,6 +4029,29 @@ const SUN_HALO = { up: 0.95, back: 0.55, inner: 1.25, outer: 2.1, bar: 0.07, spi
  */
 const SOLAR_COAT = { top: 0.92, hem: 0.5, out: 1.16, flare: 1.32, th: 0.1, gap: 0.16, gapHem: 0.34, edge: 0.11, hemBand: 0.12, collar: 0.9, collarH: 0.32,
   clasp: 0.3, sleeveOut: 1.5, bell: 0.5, bellOut: 2.3, cuff: 0.14, white: new Color3(0.9, 0.9, 0.88), gold: new Color3(0.85, 0.6, 0.15) };
+/*
+ * [S] 536 (a.4) the Solar Architect's legs (audit 527: "dark blue trousers with dark boots - TABS: team ankle pants with gold cuffs and white shoes";
+ * secret.solar_architect.red.png: slim pants in the team colour down to the ankle, a gold band round each ankle, small white shoes). SOLAR_LEGS: the
+ * pelvis, thighs and shins in the team skin; round each shin's foot a gold cuff .cuff of the shin long, .cuffOut of its width across, its foot at
+ * .low of the shin's length above the ankle; the foot boxes white. Unlit white and gold as SOLAR_COAT's, out of the glow.
+ */
+const SOLAR_LEGS = { cuff: 0.11, cuffOut: 1.3, low: 0.0 };
+export function solarArchitectLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = SOLAR_LEGS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const white = mf.get("unlit", SOLAR_COAT.white, { emissive: SOLAR_COAT.white });
+  const gold = mf.get("unlit", SOLAR_COAT.gold, { emissive: SOLAR_COAT.gold });
+  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
+  for (const m of [pelvis, body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) if (m && body.skinMaterial) m.material = body.skinMaterial;
+  const out: Mesh[] = [];
+  for (const [shin, knee] of [[body.leftLowerLeg, body.leftKnee], [body.rightLowerLeg, body.rightKnee]] as const) {
+    for (const m of knee.getChildMeshes(true)) if (/_[lr]FootM$/.test(m.name)) { m.material = white; glow?.addExcludedMesh(m as Mesh); }
+    const L = limbBox(shin), len = L.half * 2, foot = L.mid - L.half + len * S.low, r = Math.max(L.wide, L.deep);
+    const cuff = MeshBuilder.CreateCylinder("solarLegCuff", { height: len * S.cuff, diameter: r * 2 * S.cuffOut, tessellation: 8 }, scene);
+    cuff.parent = knee; cuff.position.set(shin.position.x, foot + (len * S.cuff) / 2, shin.position.z); cuff.scaling.z = L.deep / r;
+    cuff.material = gold; cuff.convertToFlatShadedMesh(); glow?.addExcludedMesh(cuff); out.push(cuff);
+  }
+  return out;
+}
 export function solarArchitectCoat(scene: Scene, body: ArticulatedBody): Mesh[] {
   const S = SOLAR_COAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const white = mf.get("unlit", S.white, { emissive: S.white });
