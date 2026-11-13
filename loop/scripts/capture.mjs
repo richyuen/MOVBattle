@@ -507,6 +507,9 @@ async function main() {
           if (id === "evil.void_monarch") for (const dz of [-1.5, -0.8, 0.8, 1.5]) game.spawnUnit("medieval.knight", 0, { x: -d - 0.6, z: dz });
           // [evidence 499] ...and he dodges in both forms (card Abilities, Void Monarch Dodge): three archers 8 m behind the knights loose at him over them
           if (id === "evil.void_monarch") for (const dz of [-2.5, 0, 2.5]) game.spawnUnit("medieval.archer", 0, { x: -d - 8, z: dz });
+          // [evidence 537] the Witch's mushroomed man turns on his friends (card Characteristics; c.3): a friend of his stands 1.5 m behind him
+          // on the duel line, so the side-on camera shows the two apart
+          if (id === "secret.witch") game.spawnUnit("medieval.squire", 0, { x: -d - 1.5, z: 0 });
           let ally = null;
           // [evidence 465] a bearer fights (polearm_melee, his pole's blow) and his ring's aura pulses beside it: he spars with his squire and has the
           // hurt ally beside him too, inside the ring, so the blow is the release and the aura the ability pair
@@ -741,7 +744,8 @@ async function main() {
             const h = game.getHitLog().filter((e) => e.attackerUnit === id);
             if (h.length > hits && !seen.has("melee hit")) { events.push({ kind: "melee hit", tick: tickOf(h[hits].t) }); seen.add("melee hit"); }
             hits = h.length;
-            const ab = game.getAbilityLog().filter((e) => e.unit === id);
+            // [evidence 537] the man the Witch poisons logs "turncoat" under his own id: it counts as hers
+            const ab = game.getAbilityLog().filter((e) => e.unit === id || (id === "secret.witch" && e.kind === "turncoat"));
             for (const e of ab.slice(logged)) if (!seen.has(e.kind)) { events.push({ kind: e.kind, tick: tickOf(e.t) }); seen.add(e.kind); }
             logged = ab.length;
             const now = missiles();
@@ -754,6 +758,7 @@ async function main() {
             // [evidence 499] a second ability (SECOND_ABILITY) is waited for too: the monarch's first dodge comes after his transformation (probe 499:
             // the knights' charge has him down when the first arrow lands)
             if (second && !seen.has(second)) continue;
+            if (id === "secret.witch" && !seen.has("turncoat")) continue;
             if (events.some((e) => plain(e.kind)) && events.some((e) => special(e.kind)) && seen.has("impact")) break;
             if (events.length && tick >= Math.min(...events.map((e) => e.tick)) + 180) break;
           }
@@ -905,6 +910,13 @@ async function main() {
           await take(`unit_${id}_dodge`, second.tick, 5, { hold: second.tick });
           await take(`unit_${id}_dodge_after`, second.tick + 9, 5, { hold: second.tick });
         } else if (SECOND_ABILITY[id]) summary.notes.push(`unit_${id}: shot may miss: no ${SECOND_ABILITY[id]} within the window`);
+        // [evidence 537] the poisoned man's first blow on his friend: framed on him (2), the friend 1.5 m off in frame, and 9 ticks on
+        const turn = id === "secret.witch" ? det.events.find((e) => e.kind === "turncoat") : null;
+        if (turn) {
+          summary.notes.push(`unit_${id}: turncoat at ${ms(turn)} ms`);
+          await take(`unit_${id}_turn`, turn.tick, 2);
+          await take(`unit_${id}_turn_after`, turn.tick + 9, 2);
+        } else if (id === "secret.witch") summary.notes.push(`unit_${id}: shot may miss: no turncoat within the window`);
         const faction = id.split(".")[0];
         // [evidence 516] a sliced faction gets one lineup per slice touched (lineup_secret_1, lineup_secret_2): one lineup_secret framed only
         // the first unit's slice, so a secret_2 man's look had no lineup (515)
