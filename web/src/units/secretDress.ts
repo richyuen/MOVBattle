@@ -4666,31 +4666,45 @@ export function witchHoodHat(scene: Scene, body: ArticulatedBody, team: Color3):
  */
 // 536.1b lift .12 -> .2, pitch .32 -> .18, brush .2 -> .28, brushW .12 -> .18 (look: feet read on the ground, pole stabbing down, brush lost)
 // 537 [P] lift .2 -> .3, pitch .18 -> .9 (critic 536: a level stick at the waist; the ref's pole hangs steeply down between her legs to the ground)
-const WITCH_BROOM = { lift: 0.3, seat: 0.01, ahead: 0.78, behind: 0.22, pitch: 0.9, thin: 0.045, thick: 0.075, brush: 0.28, brushW: 0.18,
-  wood: new Color3(0.17, 0.06, 0.045), straw: new Color3(0.13, 0.055, 0.04) };
+/*
+ * [S] 538 (a.5) the broom rebuilt as the render's club (critic 537: "inverted, thin end on the grass, brush up behind, feet grounded"; secret.witch.red.png:
+ * no bristles anywhere; one dark red-brown pole from her crotch hanging almost straight down between the dangling legs, leaning a little out toward the
+ * front, thin at the seat and swelling over its lower third into a fat club end ~2.5x the seat's width, that end a hand clear of the ground, lower than
+ * her feet). WITCH_BROOM (H her standing height): she floats .lift H up (REAPER_HOVER, legs hang); the pole's top .seat H under the pelvis's foot,
+ * pitched .lean rad off straight down toward her front; its length runs from the seat to .clear H over the ground (the ground read off her feet in the
+ * hip frame, plus the lift); upper shaft .thin H across to .mid H at .neck of the length, then the club .mid H to .thick H, closed by a blunt cap.
+ */
+const WITCH_BROOM = { lift: 0.38, seat: 0.0, lean: 0.24, clear: 0.1, thin: 0.045, mid: 0.065, thick: 0.115, neck: 0.55,
+  wood: new Color3(0.17, 0.06, 0.045) };
 export function witchBroom(scene: Scene, body: ArticulatedBody): Mesh[] {
   const B = WITCH_BROOM, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const H = body.metrics.overallHeight;
   const wood = mf.get("cloth", B.wood, { emissive: B.wood.scale(0.3), roughness: 1 });
-  const straw = mf.get("cloth", B.straw, { emissive: B.straw.scale(0.3), roughness: 1 });
   const mark = new TransformNode("reaperHover", scene); mark.parent = body.hip; mark.position.y = B.lift;
   const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
   const pFoot = pelvis ? pelvis.position.y - pelvis.getBoundingInfo().boundingBox.extendSize.y * pelvis.scaling.y : 0;
-  // the pole's frame: its origin at the seat, +z out ahead along the pole, tipped nose-down
+  // the ground in the hip frame: the lowest point of the feet as built (standing), before the hover lifts her
+  const toHip = body.hip.computeWorldMatrix(true).clone().invert();
+  let ground = Infinity;
+  for (const m of body.allMeshes.filter((x) => /_[lr]FootM$/.test(x.name))) {
+    m.computeWorldMatrix(true);
+    for (const v of m.getBoundingInfo().boundingBox.vectorsWorld) ground = Math.min(ground, Vector3.TransformCoordinates(v, toHip).y);
+  }
+  if (!Number.isFinite(ground)) ground = pFoot - 0.5 * H;
+  const seatY = pFoot - B.seat * H;
+  const len = Math.max(0.2 * H, (seatY - ground + (B.lift - B.clear) * H) / Math.cos(B.lean));
+  // the pole's frame: origin at the seat, -y down along the pole, leaned toward her front (+z)
   const pole = new TransformNode("witchBroom", scene);
-  pole.parent = body.hip; pole.position.set(0, pFoot - B.seat * H, 0); pole.rotation.x = B.pitch;
+  pole.parent = body.hip; pole.position.set(0, seatY, 0.02 * H); pole.rotation.x = -B.lean;
   const out: Mesh[] = [];
-  const put = (m: Mesh, mt: Material): Mesh => { m.parent = pole; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
-  const len = (B.ahead + B.behind) * H;
-  const shaft = put(MeshBuilder.CreateCylinder("witchBroomPole", { height: len, diameterBottom: B.thin * H, diameterTop: B.thick * H, tessellation: 7 }, scene), wood);
-  shaft.rotation.x = Math.PI / 2; shaft.position.z = (B.ahead - B.behind) * H / 2;
-  const cap = put(MeshBuilder.CreateCylinder("witchBroomTip", { height: B.thick * H * 0.5, diameterBottom: B.thick * H, diameterTop: B.thick * H * 0.6, tessellation: 7 }, scene), wood);
-  cap.rotation.x = Math.PI / 2; cap.position.z = B.ahead * H + B.thick * H * 0.25;
-  // the bristles behind her, flaring back from a tied band
-  const brush = put(MeshBuilder.CreateCylinder("witchBroomBrush", { height: B.brush * H, diameterTop: B.thin * H * 1.6, diameterBottom: B.brushW * H, tessellation: 8 }, scene), straw);
-  brush.rotation.x = -Math.PI / 2; brush.position.z = -B.behind * H - B.brush * H / 2;
-  const band = put(MeshBuilder.CreateTorus("witchBroomBand", { diameter: B.thin * H * 1.7, thickness: B.thin * H * 0.45, tessellation: 10 }, scene), wood);
-  band.rotation.x = Math.PI / 2; band.position.z = -B.behind * H - B.brush * H * 0.08;
+  const put = (m: Mesh): Mesh => { m.parent = pole; m.material = wood; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const upper = len * B.neck, lower = len - upper;
+  const shaft = put(MeshBuilder.CreateCylinder("witchBroomPole", { height: upper, diameterTop: B.thin * H, diameterBottom: B.mid * H, tessellation: 7 }, scene));
+  shaft.position.y = -upper / 2;
+  const club = put(MeshBuilder.CreateCylinder("witchBroomClub", { height: lower, diameterTop: B.mid * H, diameterBottom: B.thick * H, tessellation: 7 }, scene));
+  club.position.y = -upper - lower / 2;
+  const cap = put(MeshBuilder.CreateCylinder("witchBroomTip", { height: B.thick * H * 0.35, diameterTop: B.thick * H, diameterBottom: B.thick * H * 0.7, tessellation: 7 }, scene));
+  cap.position.y = -len - B.thick * H * 0.17;
   return out;
 }
 
