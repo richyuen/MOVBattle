@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, necromancerArmbands, blackbeardHat, artemisBand, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, necromancerArmbands, blackbeardHat, artemisBand, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1240,6 +1240,8 @@ export class UnitFactory {
     if (definition.id === "secret.sensei" && !shouldUseVehicleBody) propMeshes.push(...senseiBracers(this._scene, body, teamColor));
     // [S] 541 (a.2): a team vest open down the front, orange strips down its edges, the gold robe board off (secretDress SENSEI_VEST)
     if (definition.id === "secret.sensei" && !shouldUseVehicleBody) propMeshes.push(...senseiVest(this._scene, body, teamColor));
+    // [S] 541 (a.3): two stacked team bands round the waist, each edged orange top and bottom (secretDress SENSEI_BAND)
+    if (definition.id === "secret.sensei" && !shouldUseVehicleBody) propMeshes.push(...senseiWaistBand(this._scene, body, teamColor));
     // [S] 531 (a.3): the Wheelbarrow Dragon's driver wears the Traveller's big round brown afro, no hat (secret.wheelbarrow_dragon.red.png);
     // the actors share the id: the dragon head poses "beast", the barrow carries "dragon_barrow"; the driver's own special is suppressed (531.2b)
     if (definition.id === "secret.wheelbarrow_dragon" && !shouldUseVehicleBody && visual.posePreset === "mounted" && visual.special !== "dragon_barrow") propMeshes.push(...barrowDriverAfro(this._scene, body)); // [S] 533 (a.3) his own round afro (secretDress)

@@ -5821,6 +5821,37 @@ export function senseiVest(scene: Scene, body: ArticulatedBody, team: Color3): M
 }
 
 /*
+ * [S] 541 (sensei a.3) the Sensei's waist band (audit 538: "no waist band - TABS: orange-trimmed double waist band"; secret.sensei.red.png,
+ * secret.sensei.jpg: round the waist under the vest two broad team bands stacked one over the other, the upper a little narrower, each edged top
+ * and bottom by a thin orange ring, the whole about a fifth of the trunk tall). SENSEI_BAND in the yoke's box T: .bands bands each .bandH of the
+ * half height tall, the lowest centred .at of the half height under the trunk's foot, .out of the width round (the upper x .step), depth in the
+ * trunk's ratio x .deep; orange rings .rimH of a band tall, .rim of the band round, at each band's top and bottom. Team cloth (c^2 to the peak)
+ * x .shade self-lit .12; orange lit cloth self-lit .3; out of the glow.
+ */
+const SENSEI_BAND = { bands: 2, bandH: 0.2, at: 0.02, out: 1.08, step: 0.96, deep: 1.25, rimH: 0.16, rim: 1.04, shade: 0.9 };
+export function senseiWaistBand(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = SENSEI_BAND, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const bandC = senseiTeam(team, K.shade);
+  const band = mf.get("cloth", bandC, { emissive: bandC.scale(0.12), roughness: 1 });
+  const orange = mf.get("cloth", SENSEI_VEST.orange, { emissive: SENSEI_VEST.orange.scale(0.3), roughness: 1 });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const low = T.mid - T.half, bH = T.half * K.bandH;
+  const out: Mesh[] = [];
+  const ring = (name: string, d: number, hh: number, y: number, mt: Material): void => {
+    const m = MeshBuilder.CreateCylinder(name, { height: hh, diameter: d, tessellation: 10 }, scene);
+    m.parent = body.torso; m.position.y = y; m.scaling.z = (T.deep / T.wide) * K.deep; m.material = mt;
+    m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m);
+  };
+  for (let k = 0; k < K.bands; k++) {
+    const d = T.wide * 2 * K.out * K.step ** k, y = low - T.half * K.at + bH * k;
+    ring("senseiBand", d, bH, y, band);
+    for (const e of [-1, 1]) ring("senseiBandRim", d * K.rim, bH * K.rimH, y + e * (bH / 2 - (bH * K.rimH) / 2), orange);
+  }
+  return out;
+}
+
+/*
  * [S] 539 (blackbeard a.1) Blackbeard's hat (audit 538: "black top hat with a yellow badge - TABS: black tricorne with lit fuse strings hanging from
  * the brim"; card Appearance "black hat with firelit strings protruding from it"; secret.blackbeard.red.png: a wide black tricorne pulled to the
  * brows, and from under its brim either side of the face hang dark slow-match cords, their ends burning white-orange). The hat is propBuilder's
