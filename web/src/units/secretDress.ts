@@ -5706,6 +5706,39 @@ export function senseiHood(scene: Scene, body: ArticulatedBody, team: Color3): M
 }
 
 /*
+ * [S] 540 (blackbeard a.4) Blackbeard's peg leg (audit 538: "two matching team boots - TABS: peg leg in place of the left leg"; secret.blackbeard.red.png:
+ * his left leg ends at the knee under the coat; from there a plain dark wooden peg, thick at the top, tapering to a blunt round foot on the ground).
+ * Everything hung off the left knee (shin, foot, boot) is switched off; BB_PEG on the left knee joint, its length from the knee to the old sole
+ * (the lowest point of what was hidden, read in the knee's frame): a socket cup .cup of the shin's half-width round and .cupH of the length tall at
+ * the top, then the peg .top round tapering to .foot, ending in a flat round tip .tipH tall. Dark lit timber (LESSONS: wood (.2,.11,.055) self-lit).
+ */
+const BB_PEG = { cup: 2.2, cupH: 0.14, top: 1.5, foot: 0.8, tipH: 0.05, wood: new Color3(0.16, 0.09, 0.05), cupC: new Color3(0.09, 0.05, 0.03) };
+export function blackbeardPegLeg(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = BB_PEG, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const knee = body.leftKnee, shin = body.leftLowerLeg;
+  const wood = mf.get("cloth", K.wood, { emissive: K.wood.scale(0.3), roughness: 1 });
+  const cupM = mf.get("cloth", K.cupC, { emissive: K.cupC.scale(0.3), roughness: 1 });
+  knee.computeWorldMatrix(true);
+  const toKnee = knee.getWorldMatrix().clone().invert();
+  let sole = Infinity;
+  const hidden = knee.getChildMeshes(false);
+  for (const m of hidden) {
+    m.computeWorldMatrix(true);
+    for (const v of m.getBoundingInfo().boundingBox.vectorsWorld) sole = Math.min(sole, Vector3.TransformCoordinates(v, toKnee).y);
+  }
+  if (!Number.isFinite(sole) || sole >= 0) return [];
+  const r = limbBox(shin).wide, long = -sole;
+  for (const m of hidden) m.setEnabled(false);
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material, y: number): Mesh => { m.parent = knee; m.position.y = y; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const cupH = long * K.cupH, tipH = long * K.tipH, pegH = long - cupH - tipH;
+  put(MeshBuilder.CreateCylinder("bbPegCup", { height: cupH, diameterTop: r * K.cup * 2, diameterBottom: r * K.cup * 1.6, tessellation: 8 }, scene), cupM, -cupH / 2);
+  put(MeshBuilder.CreateCylinder("bbPeg", { height: pegH, diameterTop: r * K.top * 2, diameterBottom: r * K.foot * 2, tessellation: 7 }, scene), wood, -cupH - pegH / 2);
+  put(MeshBuilder.CreateCylinder("bbPegTip", { height: tipH, diameter: r * K.foot * 2.3, tessellation: 7 }, scene), cupM, -long + tipH / 2);
+  return out;
+}
+
+/*
  * [S] 540 (sensei a.4) the Sensei's spiked bracers (audit 538: "plain team forearms - TABS: armoured forearm guards with a row of silver spikes";
  * card Appearance "It wears spiked armor on their forearms"; secret.sensei.red.png: a thick team guard over each forearm from under the elbow to the
  * wrist, wider than the arm, and out of its outer side a row of four long pale steel spikes, swept back toward the elbow). SENSEI_BRACER on each
