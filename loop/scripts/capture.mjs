@@ -510,6 +510,8 @@ async function main() {
           // [evidence 537] the Witch's mushroomed man turns on his friends (card Characteristics; c.3): a friend of his stands 1.5 m behind him
           // on the duel line, so the side-on camera shows the two apart
           if (id === "secret.witch") game.spawnUnit("medieval.squire", 0, { x: -d - 1.5, z: 0 });
+          // [evidence 537] the Necromancer's graves rise when a man closes in (c.3); his skull rots the first squire dead on the way: a second walks on in
+          window.__ufoe2 = id === "secret.necromancer" ? game.spawnUnit("medieval.squire", 0, { x: -d - 1.5, z: 1.5 }) : null;
           let ally = null;
           // [evidence 465] a bearer fights (polearm_melee, his pole's blow) and his ring's aura pulses beside it: he spars with his squire and has the
           // hurt ally beside him too, inside the ring, so the blow is the release and the aura the ability pair
@@ -577,7 +579,10 @@ async function main() {
           // [evidence 488] 10: the idle's angle pulled back to show a field round the unit (the Aegis bubble is 6 m across; the idle sits inside it)
           const fieldShot = on === 10;
           if (on === 10) on = 1;
-          const a = window.__ua, t = allyShot && window.__ually ? window.__ually : window.__ut;
+          // [evidence 537] 15: the Necromancer and the second squire his graves throw back, side-on as 0
+          const graveShot = on === 15 && window.__ufoe2;
+          if (on === 15) on = 0;
+          const a = window.__ua, t = graveShot ? window.__ufoe2 : allyShot && window.__ually ? window.__ually : window.__ut;
           // [evidence 479] a Wizard's firework victim is aloft: include his current height,
           // rather than aiming at the ground below the chest burst.
           if (on === 2 && a.definition.id === "legacy.wizard") on = 4;
@@ -759,6 +764,7 @@ async function main() {
             // the knights' charge has him down when the first arrow lands)
             if (second && !seen.has(second)) continue;
             if (id === "secret.witch" && !seen.has("turncoat")) continue;
+            if (id === "secret.necromancer" && !seen.has("gravestone_wall")) continue;
             if (events.some((e) => plain(e.kind)) && events.some((e) => special(e.kind)) && seen.has("impact")) break;
             if (events.length && tick >= Math.min(...events.map((e) => e.tick)) + 180) break;
           }
@@ -917,6 +923,14 @@ async function main() {
           await take(`unit_${id}_turn`, turn.tick, 2);
           await take(`unit_${id}_turn_after`, turn.tick + 9, 2);
         } else if (id === "secret.witch") summary.notes.push(`unit_${id}: shot may miss: no turncoat within the window`);
+        // [evidence 537] the Necromancer's Gravestone Wall (c.3) beside his raise_dead pair: framed side-on across him and the second squire (15), the stones
+        // rising before him toward the man, and 9 ticks on
+        const graves = id === "secret.necromancer" ? det.events.find((e) => e.kind === "gravestone_wall") : null;
+        if (graves) {
+          summary.notes.push(`unit_${id}: gravestone_wall at ${ms(graves)} ms`);
+          await take(`unit_${id}_graves`, graves.tick + 6, 15, { hold: graves.tick });
+          await take(`unit_${id}_graves_after`, graves.tick + 15, 15, { hold: graves.tick });
+        } else if (id === "secret.necromancer") summary.notes.push(`unit_${id}: shot may miss: no gravestone_wall within the window`);
         const faction = id.split(".")[0];
         // [evidence 516] a sliced faction gets one lineup per slice touched (lineup_secret_1, lineup_secret_2): one lineup_secret framed only
         // the first unit's slice, so a secret_2 man's look had no lineup (515)
