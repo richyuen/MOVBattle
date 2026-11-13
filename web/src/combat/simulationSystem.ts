@@ -208,8 +208,8 @@ const FIRE_ARROWS = new Set(["spooky.skeleton_archer"]);
 const HEART_ARROWS = new Set(["secret.cupid"]);
 /** [S] 541 Artemis's sheaf: five arrows on one tick, nocks .nock m apart sideways and .lift m staggered, landing .land m apart across the man (_fireVolley). */
 const ARTEMIS_FAN = { count: 5, nock: 0.28, lift: 0.12, land: 0.18 };
-/** [S] 541 Ullr's thrown axe: its end-over-end turn (rad/s) and the seconds until a new axe is back in his fist. */
-const ULLR_THROW = { tumble: 16, rearm: 0.8 };
+/** [S] 541 Ullr's thrown axe: its end-over-end turn (rad/s), the seconds until a new axe is back in his fist, its speed (m/s; card "projectile speed 25"). */
+const ULLR_THROW = { tumble: 16, rearm: 0.8, speed: 25 };
 /** [S] 519 a lovestruck man's kiss (card secret.cupid: "kiss them relentlessly, draining their hitpoints"): m to his friend, s between kisses, hp per s. */
 const LOVE_KISS = { reach: 0.9, every: 0.5, drain: 4 };
 /** [S] 536 a mushroomed man's turn on his friends: he closes to .reach m (his own reach up to .reachMax), a blow of .damage every .every s */
@@ -5063,7 +5063,7 @@ export class SimulationSystem {
       this.projectileSystem.spawnProjectile(
         t.shape, from, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0,
         { originLift: 0, heldProp: prop ?? undefined, drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined,
-          tumble: attacker.definition.id === "secret.ullr" ? ULLR_THROW.tumble : undefined },
+          ...(attacker.definition.id === "secret.ullr" ? { tumble: ULLR_THROW.tumble, flight: Vector3.Distance(from, target.position) / ULLR_THROW.speed } : {}) },
       );
       // [S] 541 Ullr's throw is logged as the axe leaves his fist (LESSONS 427: a special logged at let-go owns its missile)
       if (attacker.definition.id === "secret.ullr") this._logAbility(attacker, "throw", now, target.position);
