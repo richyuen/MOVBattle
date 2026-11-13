@@ -662,22 +662,40 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
       if (body.allMeshes[i].name === name) body.allMeshes.splice(i, 1)[0].dispose();
     }
   }
-  // Short and stubby, 0.7 long with the muzzle where it was, and hooped by two raised bands
+  /*
+   * [S] 532 (a.2) the long gun (secret.bomb_cannon.red.png: a long grey eight-sided barrel running well out past the wheels, a raised ring at the
+   * breech and one before the middle, a flared bell muzzle with a thick lip round a dark bore, an eight-sided sight ring standing on its top
+   * toward the muzzle; audit a.2 "a short plain cylinder"). BOMB_BARREL along the gun's axis (tilted .tilt up toward the muzzle, through
+   * (0, .y, .z) at along 0): body from .back to .front, .dBack across at the breech tapering to .dFront; a bell from .front to .bell flaring to
+   * .dBell, a lip .lip long and .dLip across at its mouth, a dark bore .dBore across; rings .rings ([along, across]) .ring long; a breech knob
+   * .knob across; the sight ring .sight across, .sightT thick, at along .sightAt standing .sightUp over the barrel's top, square to the axis.
+   */
+  const B = { tilt: 0.18, y: 0.52, z: 0.55, back: -0.3, front: 0.7, dBack: 0.36, dFront: 0.3, bell: 0.82, dBell: 0.46, lip: 0.06, dLip: 0.5, dBore: 0.24,
+    rings: [[-0.27, 0.43], [0.2, 0.38]] as const, ring: 0.07, knob: 0.17, sight: 0.17, sightT: 0.04, sightAt: 0.5, sightUp: 0.07 };
   const barrelMat = makeMat(scene, new Color3(0.45, 0.41, 0.375));
-  const barrel = MeshBuilder.CreateCylinder("bombBarrel", { height: 0.7, diameterTop: 0.3, diameterBottom: 0.38, tessellation: 8 }, scene);
-  barrel.position.set(0, 0.52, 0.55); // at 0.69 the barrel sat at its crew's head height, and at 0.60 it still rode above the wheel rims
-  barrel.rotation.x = Math.PI / 2 - 0.18;
-  barrel.parent = root;
-  barrel.material = barrelMat;
-  body.allMeshes.push(barrel);
-  for (const [along, d] of [[-0.2, 0.43], [0.16, 0.39]]) {
-    const band = MeshBuilder.CreateCylinder("bombBand", { height: 0.08, diameter: d, tessellation: 8 }, scene);
-    band.position.set(0, 0.52 + Math.sin(0.18) * along, 0.55 + Math.cos(0.18) * along);
-    band.rotation.x = Math.PI / 2 - 0.18;
-    band.parent = root;
-    band.material = barrelMat;
-    body.allMeshes.push(band);
-  }
+  const boreMat = makeMat(scene, new Color3(0.1, 0.1, 0.11));
+  const onAxis = (along: number, up = 0) => new Vector3(0, B.y + Math.sin(B.tilt) * along + Math.cos(B.tilt) * up, B.z + Math.cos(B.tilt) * along - Math.sin(B.tilt) * up);
+  const tube = (name: string, from: number, to: number, dFrom: number, dTo: number, mat = barrelMat) => {
+    const m = MeshBuilder.CreateCylinder(name, { height: to - from, diameterBottom: dFrom, diameterTop: dTo, tessellation: 8 }, scene);
+    m.position.copyFrom(onAxis((from + to) / 2));
+    m.rotation.x = Math.PI / 2 - B.tilt;
+    m.parent = root; m.material = mat; body.allMeshes.push(m);
+    return m;
+  };
+  tube("bombBarrel", B.back, B.front, B.dBack, B.dFront);
+  tube("bombBell", B.front, B.bell, B.dFront, B.dBell);
+  tube("bombMuzzleLip", B.bell, B.bell + B.lip, B.dLip, B.dLip);
+  tube("bombBore", B.bell + B.lip - 0.005, B.bell + B.lip + 0.012, B.dBore, B.dBore, boreMat);
+  for (const [along, d] of B.rings) tube("bombBand", along - B.ring / 2, along + B.ring / 2, d, d);
+  const knob = MeshBuilder.CreateSphere("bombBreechKnob", { diameter: B.knob, segments: 6 }, scene);
+  knob.position.copyFrom(onAxis(B.back - B.knob * 0.3)); knob.parent = root; knob.material = barrelMat; body.allMeshes.push(knob);
+  const rAt = (along: number) => (B.dBack + (B.dFront - B.dBack) * ((along - B.back) / (B.front - B.back))) / 2;
+  const sight = MeshBuilder.CreateTorus("bombSight", { diameter: B.sight, thickness: B.sightT, tessellation: 8 }, scene);
+  sight.position.copyFrom(onAxis(B.sightAt, rAt(B.sightAt) + B.sightUp)); sight.rotation.x = Math.PI / 2 - B.tilt;
+  sight.parent = root; sight.material = barrelMat; body.allMeshes.push(sight);
+  const post = MeshBuilder.CreateBox("bombSightPost", { width: 0.04, height: B.sightUp + 0.02, depth: 0.04 }, scene);
+  post.position.copyFrom(onAxis(B.sightAt, rAt(B.sightAt) + (B.sightUp - B.sight / 2) / 2 + 0.01)); post.rotation.x = -B.tilt;
+  post.parent = root; post.material = barrelMat; body.allMeshes.push(post);
   const bomb = MeshBuilder.CreateSphere("bombRound", { diameter: 0.22, segments: 8 }, scene);
   bomb.position.set(0, 0.55, 0.75);
   bomb.parent = root;
@@ -691,8 +709,8 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
    * and .armOut out, elbows .elbow; .scale of a crewman.
    */
   const R = { z: 0.3, seat: 0.03, thigh: -1.25, splay: 0.62, knee: 1.35, arm: -0.75, armOut: 0.18, elbow: -0.5, scale: 0.86 };
-  const along = (R.z - 0.55) / Math.cos(0.18), axisY = 0.52 + along * Math.sin(0.18);
-  const radius = (0.38 - 0.08 * ((along + 0.35) / 0.7)) / 2;
+  const along = (R.z - B.z) / Math.cos(B.tilt), axisY = B.y + along * Math.sin(B.tilt);
+  const radius = rAt(along);
   addOperator(scene, root, body.allMeshes, 0, 0, R.z, color, (rider) => {
     rider.root.scaling.setAll(R.scale);
     rider.root.position.y = axisY + radius + R.seat - rider.hip.position.y * R.scale;
@@ -707,8 +725,8 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
     body.allMeshes.push(...cannonBandanna(scene, rider, color), ...cannonShirt(scene, rider, color));
   });
   body.vehicleSockets = {
-    primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", new Vector3(0, 0.61, 0.96)),
-    smokeSocket: makeSocket(scene, root, "bomb_cannon_smoke_socket", new Vector3(0, 0.59, 0.9)),
+    primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", onAxis(B.bell + B.lip + 0.04)),
+    smokeSocket: makeSocket(scene, root, "bomb_cannon_smoke_socket", onAxis(B.bell)),
     impactOrigin: makeSocket(scene, root, "bomb_cannon_impact_socket", new Vector3(0, 0.55, 0.78)),
   };
   return body;
