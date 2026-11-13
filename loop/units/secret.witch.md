@@ -1,25 +1,23 @@
 # secret.witch
-Status: open   Audited: 527 (AUDIT x2)   Done: -
+Status: open   Audited: 527 (AUDIT x2), 536 (CONFIRM: passed a, b, c, d)   Done: -
 ## Verdicts
-a FAIL (2 since 527, 4 struck)
- 4. No robe in unit_secret.witch_idle — TABS: a tattered dark team robe/tunic with a lighter team sash and belt (ref: secret.witch.red.png)
+a FAIL (4 since 527, 5 struck)
  5. She stands on her feet in unit_secret.witch_idle — TABS: she rides a long floating broom that hangs below her between the legs (ref: secret.witch.red.png, secret.witch.png; card Appearance)
 b PASS (535: struck 2, crooked lashed branch)
-c FAIL (2 since 527, 2 struck)
+c FAIL (3 since 527, 2 struck)
  3. The struck target in unit_secret.witch_struck only gets a pink head glow — TABS: mushrooms grow on the victim, which turns on its allies while poisoned (ref: card Characteristics)
-d PASS (535 stats)
+d PASS (536 stats)
 ## Ranked gaps
-1. [S] secret.witch.a broom — blocker 5: a long dark floating broom under her between the legs, bristle end hanging behind, her seated on it and lifted off the ground (witchBroom in secretDress) — ref: secret.witch.red.png — ours: unit_secret.witch_idle
-2. [S] secret.witch.a robe — blocker 4: tattered dark team robe over the ribs with a lighter sash and belt — ref: secret.witch.red.png — ours: unit_secret.witch_idle
-3. [S] secret.witch.c mushrooms on the victim — blocker 3: on a mushroom_spell hit, small magenta toadstools on his head and shoulders for the poison's length, his targeting flipped to his allies — ref: card Characteristics — ours: unit_secret.witch_struck
+1. [P] secret.witch.a broom hang — blocker 5: WITCH_BROOM pitch .18 -> ~.9, lift .2 -> ~.3 so the pole drops below her feet between the legs (fallout of approved [S] ee3c7d9d/58bc88c9) — ref: secret.witch.red.png — ours: unit_secret.witch_idle, lineup_secret_3
+2. evidence first for c.3: capture.mjs witch scene puts a friend of the struck man within ~2 m so "turncoat" (SHROOM_TURN) is logged and a shot shows him striking his ally — ours: unit_secret.witch_struck / _ability_after
 ## Attempts (iter | gap | criterion | verdict)
-535 | Stiffy body, SKELETON_UNITS (a156627c) | a | approved (struck 1, 6)
-535 | crooked staff, three kinks, pale tan cord criss-cross over the upper third, WITCH_STAFF (cbb156f0) | b | approved (struck 2, b PASS)
-534 | mushroom spell missile, MUSHROOM_SPELL (bb0b15da) | c | approved (struck 2)
-530 | brimless team hood-hat, crooked spire, WITCH_HOOD (69d439c2, 03b0aab4) | a | approved (struck 2; 3 by lineup)
-528-530 | two clones; Witch Staff WITCH_STAFF; [P] staff thick/ropeAt | b, c | approved
+536 | broom WITCH_BROOM, hover lift .2, legs hang (ee3c7d9d, 58bc88c9) | a | approved (no strike; pole too level)
+536 | robe WITCH_ROBE, bands, sash, belt, sleeves, stiffyShorts hem .5 (23df7426, 45c25948) | a | approved (struck 4)
+536 | toadstools on the struck man SHROOMS, poison, SHROOM_TURN on friends (7be05a62, 108b1557, 8af4aaa4) | c | approved (mushroom clause cleared, turn unseen)
+535 | Stiffy body; crooked lashed staff (a156627c, cbb156f0) | a, b | approved (struck 1, 6; b PASS)
+528-534 | clones; staff; hood-hat WITCH_HOOD; mushroom spell MUSHROOM_SPELL | a, b, c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 529: the clones copy her look and her missile, so every a and c fix reaches them too.
-- 535 critic: dressSkeleton gives her a ragged team piece hip to knee and a team flap behind; ribs bare. Staff kinks mild at idle distance.
-- 530 critic: the hood is a straight-sided drum and the spire's kinks do not show (TABS soft tapering hood). c starves after 539.
+- 536 CONFIRM passed all four; gap critic held a.5 (broom reads as a level stick at the waist, feet planted at lineup) and c.3 (turn on allies not seen).
+- 536 critic: robe a stiff barrel hiding the arms (minor). 529: the clones copy her look and missile.
+- 530 critic: hood a straight drum, spire kinks faint (not blocking).

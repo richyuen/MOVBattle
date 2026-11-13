@@ -16,7 +16,8 @@ Read whole at step 1; one fact a line, merge near cap.
 - A volley unit fires through SS._fireVolley: per-unit arrow options (heartArrow, iceArrow) go there too (519).
 - stats.mjs rounds knobs to .01: under .005 prints 0 (NaN next run); set the exact ratio.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter).
-- stats.json is stats.mjs's; every non-regression capture wipes iter-N (stats.json, a tail batch's audit.md): back audit.md up before step 5, rerun `stats.mjs <id,id,...> --iter N` (comma list; spaces take only the first) once after the final capture (422, 527). Checkpoint replaces summary.json: back up first (483).
+- A capture wipes iter-N (stats.json, a tail audit.md): back audit.md up, rerun `stats.mjs <id,id> --iter N` (comma list) after the last capture (527). Checkpoint replaces summary.json (483).
+- RotationX(+a) tips +y toward +z. A turn-on-friends status is unseen in a duel: evidence first (536).
 - Probes (loop/scripts/probes/, repo root, --build after source changes): probe_bbox (--unit --pat --frame=torso), probe_near/close/head/local/axes/impale/bowdraw; probe_close --aim=head|torso|y:<y> --dist --yaw --noglow; probe_eval --unit --expr=<file> runs a function body (u, game, scene), prints its JSON.
 - capture's PLAIN regex takes any ability kind starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475 wizard firework: no ability shot).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
@@ -32,7 +33,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - An instant slam logs at swing start: use the pending blow (426). A special logged at let-go owns its missile (427). A cast status can put _struck before impact: use ABILITY_PREF for on-landing effects (435).
 - _ability/_release are on the log tick, before RuntimeUnit.update: pose explicitly for contact, and use the next frame for motion (437 bat, 505 parry). A latch reads on the pin before its damage ticks (444 vampire).
 - A neck-rooted piece must clear the head box: probe_bbox it (439). Probe yaw and pitch before flipping a pose's sign.
-- A world box refreshes only on render: computeWorldMatrix(true) before centerWorld in a per-tick pose (516).- Gate an idle hold on the fire (451). Team garment shade: saturate (c^2), scale, self-lit .12; x k at self-lit .4 reads grey (517). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
+- A world box refreshes only on render: computeWorldMatrix(true) before centerWorld in a per-tick pose (516). Gate an idle hold on the fire (451). Team garment shade: saturate (c^2), scale, self-lit .12; x k at self-lit .4 reads grey (517). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 - _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
 - Gate ability starts on his feet (512). An offset-0 linked actor stands on its driver: build forward off body.root (528).
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
