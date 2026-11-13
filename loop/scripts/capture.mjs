@@ -700,6 +700,8 @@ async function main() {
           }
           // 4: the struck man where he is now, up in the air too (a float), wider so his balloons stay in frame
           if (on === 4) { window.game.frameCamera({ x: pt.x, y: pt.y + 0.55 * s + 0.85, z: pt.z }, 5.2 * s, Math.atan2(fx, -fz), Math.PI / 2.1); return; }
+          // [evidence 540] 16: a sky drop on the struck man, pulled back and aimed ~3 m up so ~6 m of sky over him is in frame (Cannon Barrage)
+          if (on === 16) { window.game.frameCamera({ x: pt.x, y: 3, z: pt.z }, 10, Math.atan2(fx, -fz), Math.PI / 2.05); return; }
           // [evidence 446] 5: a sidestep off a missile's line runs across that line, toward a side-on camera: the unit from .9 rad behind his side,
           // so the step reads across the frame (critic 445 quick_draw c.1)
           if (on === 5) { window.game.frameCamera({ x: pa.x, y: 0.55 * s + 0.45, z: pa.z }, 4.6 * s, Math.atan2(fx, -fz) + 0.9, Math.PI / 2.2); return; }
@@ -874,7 +876,7 @@ async function main() {
           const presentOpen = ability.kind === "present_open";
           const safeLand = ability.kind === "safe_land";
           // [evidence 535] the Necromancer's skeleton rises where the skull-cursed man fell, 7 m off: framed on that man
-          // [evidence 539] Blackbeard's Cannon Barrage falls round his man for ~1.3 s: framed on the man, the after shot 40 ticks on as the balls land
+          // [evidence 539] Blackbeard's Cannon Barrage falls round his man for ~1.3 s: framed on the man (540: rig 16, sky over him), the after shot 20 ticks on as the balls fall
           const barrage = ability.kind === "cannon_barrage";
           const onMan = snake || burnOnMan || love || barrage || ability.kind === "raise_dead" || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
@@ -884,9 +886,9 @@ async function main() {
           const pair = dodge || darkGrab || presentOpen || safeLand ? { hold: ability.tick, clean: dodge } : {};
           // [evidence 494] arrows caught in the Sentinel's pavise faces: framed as the idle (front three-quarter), the boards toward the camera
           const catchShot = ability.kind === "pavise_block";
-          const abilityFrame = safeLand ? 12 : presentOpen ? 11 : catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far;
+          const abilityFrame = safeLand ? 12 : presentOpen ? 11 : catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : barrage ? 16 : onMan ? 2 : far;
           await take(`unit_${id}_ability`, ability.tick, abilityFrame, pair);
-          await take(`unit_${id}_ability_after`, ability.tick + (slow || love ? 60 : barrage ? 40 : snake ? 30 : 9), abilityFrame, pair);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow || love ? 60 : barrage ? 20 : snake ? 30 : 9), abilityFrame, pair);
           if (darkGrab) await take(`unit_${id}_grab_blast`, ability.tick + 36, 2, pair);
           // [evidence 524] the landed safe stays as a barrier, then sinks (card Characteristics; c.3): the same landing camera 3 s on (lying,
           // SAFE_HURL.lie 6 s) and 7.5 s on (half way down its 3 s sink)
