@@ -210,6 +210,8 @@ const HEART_ARROWS = new Set(["secret.cupid"]);
 const LOVE_KISS = { reach: 0.9, every: 0.5, drain: 4 };
 /** [S] 536 a mushroomed man's turn on his friends: he closes to .reach m (his own reach up to .reachMax), a blow of .damage every .every s */
 const SHROOM_TURN = { reach: 1.1, reachMax: 1.6, every: 1.0, damage: 12 };
+/** [S] 536 the Solar Architect's Solar Maelstrom (spec at SimulationSystem._trySolarMaelstrom) */
+const SOLAR_MAELSTROM = { near: 7, first: 0.5, cooldown: 12, radius: 3.5, damage: 20, push: 5, lift: 4, seconds: 3, tick: 0.5, heal: 0.04, pull: 7, inPush: 7, inLift: 3 };
 const STIFFY_FEAR = { units: new Set(["spooky.skeleton_warrior"]), every: 2, seconds: 3.5, reach: 4 };
 // [S] 475 Pharaoh Kneel: the struck man and enemies within .radius (KNEEL_AURA's ring) kneel .seconds (RuntimeUnit.applyKneel)
 const PHARAOH_KNEEL = { radius: 2.4, seconds: 3 };
@@ -1058,7 +1060,7 @@ export class SimulationSystem {
     this._boxerDashes.clear(); this._boxerDashReady.clear();
     this._burnTickAt = 0;
     this._fearHits.clear();
-    this._necroCursed.clear(); this._necroTickAt = 0; this._solarShots.clear();
+    this._necroCursed.clear(); this._necroTickAt = 0; this._solarShots.clear(); this._maelstromReady.clear(); this._maelstroms = [];
     this._pendingBlows = [];
     this._lashes = [];
     for (const h of this._safeHurls) h.mesh.dispose(false, false);
@@ -1168,6 +1170,7 @@ export class SimulationSystem {
     if (this._pendingThrows.length > 0) this._launchPendingThrows(now);
     this._stepBurning(now);
     if (this._necroCursed.size > 0) this._stepNecroCurse(now);
+    if (this._maelstroms.length > 0) this._stepMaelstroms(now);
 
     if (this.hazards.length > 0) {
       for (const unit of this._units) {
@@ -2026,6 +2029,62 @@ export class SimulationSystem {
       u.applyFear(G.seconds, attacker.position, now);
     }
     this._logAbility(attacker, "giant_fear", now, ground);
+  }
+
+  /*
+   * [S] 536 Solar Maelstrom (solar_architect c.2; card Characteristics: "When close to a unit, they will cast a golden spinning maelstrom that blasts
+   * enemy units away from an area and heals all ally units within it, before imploding and sucking any nearby enemy units in"; Abilities "in this
+   * circle Units ... in the team of a unit with this ability, is healing"). SOLAR_MAELSTROM: when his target is within .near m and it is ready
+   * (.cooldown s, the first .first s in), a golden vortex .radius m round where he stands (visualEffects spawnSolarMaelstrom) blasts every enemy in
+   * it away (.push, .lift, .damage; logged "maelstrom"); for .seconds it spins, every .tick s healing each friend in it .heal of his full health;
+   * then it implodes, every enemy within .pull m of its middle flung in toward it (.inPush, .inLift; logged "maelstrom_implode").
+   */
+  private _maelstromReady = new Map<RuntimeUnit, number>();
+  private _maelstroms: { unit: RuntimeUnit; at: Vector3; until: number; tickAt: number }[] = [];
+  private _trySolarMaelstrom(attacker: RuntimeUnit, target: RuntimeUnit, now: number): void {
+    const M = SOLAR_MAELSTROM;
+    if (attacker.definition.id !== "secret.solar_architect" || attacker.isDead || attacker.linkedParent) return;
+    if (!this._maelstromReady.has(attacker)) this._maelstromReady.set(attacker, now + M.first);
+    if (now < this._maelstromReady.get(attacker)!) return;
+    if (Vector3.Distance(target.position, attacker.position) > M.near) return;
+    this._maelstromReady.set(attacker, now + M.cooldown);
+    const at = new Vector3(attacker.position.x, 0, attacker.position.z);
+    this.visualEffects?.spawnSolarMaelstrom(at, M.radius, M.seconds);
+    for (const u of this._units) {
+      if (u.isDead || u.team === attacker.team || u.linkedParent || !u.isTargetable) continue;
+      const away = u.position.subtract(at); away.y = 0;
+      const d = away.length();
+      if (d > M.radius + u.collisionBodyRadius) continue;
+      if (d > 1e-3) away.scaleInPlace(1 / d); else away.set(1, 0, 0);
+      u.applyDamage(M.damage, away.scale(M.push));
+      if (!isVehicleUnit(u.definition.id)) u.applyBlastLaunch(away, M.push, M.lift);
+    }
+    this._maelstroms.push({ unit: attacker, at, until: now + M.seconds, tickAt: now });
+    this._logAbility(attacker, "maelstrom", now, at);
+  }
+  private _stepMaelstroms(now: number): void {
+    const M = SOLAR_MAELSTROM;
+    for (const m of [...this._maelstroms]) {
+      if (now >= m.tickAt && now < m.until) {
+        m.tickAt = now + M.tick;
+        for (const u of this._units) {
+          if (u.isDead || u.team !== m.unit.team || u.currentHealth >= u.maxHealth) continue;
+          if (Vector3.DistanceSquared(new Vector3(u.position.x, 0, u.position.z), m.at) > M.radius * M.radius) continue;
+          u.heal(u.maxHealth * M.heal);
+        }
+      }
+      if (now < m.until) continue;
+      this._maelstroms.splice(this._maelstroms.indexOf(m), 1);
+      for (const u of this._units) {
+        if (u.isDead || u.team === m.unit.team || u.linkedParent || !u.isTargetable) continue;
+        const toward = m.at.subtract(u.position); toward.y = 0;
+        const d = toward.length();
+        if (d > M.pull || d < 0.3) continue;
+        toward.scaleInPlace(1 / d);
+        if (!isVehicleUnit(u.definition.id)) u.applyBlastLaunch(toward, Math.min(M.inPush, d * 2.2), M.inLift);
+      }
+      this._logMissileAbility(m.unit.definition.id, "maelstrom_implode", m.at);
+    }
   }
 
   private _tryBansheeScream(attacker: RuntimeUnit, now: number): void {
@@ -3717,6 +3776,8 @@ export class SimulationSystem {
     if (this._tryBansheeCurse(attacker, target, damage, knockback, now)) return;
     // [S] 531 the Skeleton Giant's Giant Fear aura frightens every enemy round him; his blow still lands (GIANT_FEAR)
     this._tryGiantFear(attacker, now);
+    // [S] 536 the Solar Architect casts his Solar Maelstrom round him when a man comes close; his ray still fires (SOLAR_MAELSTROM)
+    this._trySolarMaelstrom(attacker, target, now);
     // [S] 502 the Shouter does not strike from range: he shouts a harmless shockwave down the line (SHOUT)
     if (this._tryShout(attacker, target, now)) return;
     // [S] 503 the Fan Bearer blows a gust of wind down the line, not a strike (FAN_BLOW)

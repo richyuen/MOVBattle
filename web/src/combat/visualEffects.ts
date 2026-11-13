@@ -68,6 +68,8 @@ const KICK_DUST = { count: 5, spread: 0.35, lift: 0.25, born: 0.5, grown: 1.5, o
  * .disc alpha; .rays thin gold beams .rayTall m tall, .rayWide m across, standing round him at .rayAt of the radius, rising from the ground over .grow of
  * the life and wheeling round him at .spin rad/s; the whole fades in fast and out over its .life s. Self-lit, in the glow layer so the gold blooms.
  */
+const SOLAR_MAELSTROM_FX = { ring: 0.16, disc: 0.3, arms: 6, segs: 7, twist: 2.6, tall: 2.4, wide: 0.22, spin: 4.5, grow: 0.12, implode: 0.18, flash: 2.2,
+  gold: new Color3(1, 0.72, 0.15), pale: new Color3(1, 0.88, 0.45), white: new Color3(1, 0.97, 0.8) };
 const KNEEL_AURA = { radius: 2.4, ring: 0.14, disc: 0.28, rays: 12, rayTall: 2.6, rayWide: 0.09, rayAt: 0.62, grow: 0.25, spin: 1.4, life: 2.2, gold: new Color3(1, 0.78, 0.2), pale: new Color3(1, 0.9, 0.5) };
 /*
  * [S] 473 the Super Boxer's punch burst (audit 468 super_boxer c.3: "hit burst missing - TABS: a burst of light at contact"; legacy.super_boxer.jpg, card
@@ -1625,6 +1627,63 @@ export class VisualEffects {
           sp.mat.dispose();
         }
       },
+    });
+  }
+
+  /*
+   * [S] 536 the Solar Architect's Solar Maelstrom round `center` (card: "a golden spinning maelstrom"), `radius` m, `seconds` long. SOLAR_MAELSTROM_FX:
+   * a pale-gold disc and a gold ring on the ground; .arms swirling gold blades rising in a funnel, each .segs flat segments laid along a spiral from the
+   * rim in toward the middle, climbing .tall m, each .wide m wide; the whole wheel spins .spin rad/s; it swells in over .grow of its life, and in the
+   * last .implode of it the vortex pulls in to its middle and a white-gold flash .flash m across bursts there.
+   */
+  spawnSolarMaelstrom(center: Vector3, radius: number, seconds: number): void {
+    const K = SOLAR_MAELSTROM_FX;
+    const root = new TransformNode("solarMaelstrom", this._scene);
+    root.position.set(center.x, center.y + 0.04, center.z);
+    const mat = (c: Color3, alpha: number): StandardMaterial => {
+      const m = new StandardMaterial("solarMaelstromMat", this._scene);
+      m.diffuseColor = c; m.emissiveColor = c; m.disableLighting = true; m.alpha = alpha; m.backFaceCulling = false;
+      return m;
+    };
+    const ringMat = mat(K.gold, 1), discMat = mat(K.pale, K.disc), armMat = mat(K.gold, 0.85), flashMat = mat(K.white, 0);
+    const ring = MeshBuilder.CreateTorus("solarMaelstromRing", { diameter: radius * 2, thickness: K.ring, tessellation: 40 }, this._scene);
+    ring.scaling.y = 0.3; ring.material = ringMat; ring.parent = root; ring.isPickable = false;
+    const disc = MeshBuilder.CreateDisc("solarMaelstromDisc", { radius, tessellation: 40 }, this._scene);
+    disc.rotation.x = Math.PI / 2; disc.position.y = 0.01; disc.material = discMat; disc.parent = root; disc.isPickable = false;
+    const wheel = new TransformNode("solarMaelstromWheel", this._scene);
+    wheel.parent = root;
+    for (let a = 0; a < K.arms; a++) {
+      const a0 = (a / K.arms) * Math.PI * 2;
+      for (let s = 0; s < K.segs; s++) {
+        const t = s / K.segs, r = radius * (1 - 0.8 * t), ang = a0 + t * K.twist;
+        const seg = MeshBuilder.CreateBox("solarMaelstromArm", { width: K.wide, height: K.wide * 0.35, depth: (radius * 1.1) / K.segs + K.wide }, this._scene);
+        seg.position.set(Math.cos(ang) * r, 0.15 + t * K.tall, Math.sin(ang) * r);
+        seg.rotation.set(-0.35, -ang, 0.5); // laid along the swirl, tipped up into the funnel
+        seg.material = armMat; seg.parent = wheel; seg.isPickable = false;
+      }
+    }
+    const flash = MeshBuilder.CreateIcoSphere("solarMaelstromFlash", { radius: K.flash / 2, subdivisions: 2 }, this._scene);
+    flash.position.y = K.tall * 0.5; flash.material = flashMat; flash.parent = root; flash.isPickable = false;
+    let age = 0;
+    const pose = (): void => {
+      const u = Math.min(1, age / seconds);
+      const swell = Math.min(1, u / K.grow);
+      const pull = u > 1 - K.implode ? (u - (1 - K.implode)) / K.implode : 0;
+      const k = Math.max(0.05, swell * (1 - pull * 0.95));
+      wheel.scaling.set(k, 0.4 + 0.6 * swell, k);
+      wheel.rotation.y = age * K.spin * (1 + pull * 2);
+      ring.scaling.x = ring.scaling.z = k;
+      disc.scaling.x = disc.scaling.y = k;
+      ringMat.alpha = swell; discMat.alpha = K.disc * swell; armMat.alpha = 0.85 * swell;
+      flashMat.alpha = pull > 0 ? Math.sin(pull * Math.PI) : 0;
+      flash.scaling.setAll(0.3 + pull * 1.2);
+    };
+    pose();
+    this._effects.push({
+      root,
+      remaining: seconds + 0.15,
+      update: (dt) => { age += dt; pose(); },
+      dispose: () => { ringMat.dispose(); discMat.dispose(); armMat.dispose(); flashMat.dispose(); },
     });
   }
 
