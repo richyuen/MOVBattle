@@ -168,7 +168,9 @@ const HIDE_CAPE_COLOR = new Color3(0.38, 0.23, 0.14);
  */
 const SKELETON_UNITS = new Set(["spooky.skeleton_warrior", "spooky.skeleton_archer",
   // [S] 531 (a.1) the Skeleton Giant is a Stiffy too (card Appearance "unsurprisingly, is a Stiffy"): cream bone limbs, spine and ribs
-  "secret.skeleton_giant"]);
+  "secret.skeleton_giant",
+  // [S] 531 (a.1) and so is the Necromancer (secret.necromancer.red.png; card Appearance): cream bone under his dress
+  "secret.necromancer"]);
 // Bone: spookyDress SKELETON_BONE (441: shared, self-lit)
 const SKELETON_LIMB = 0.42;
 const SKELETON_SPINE = 0.16;
