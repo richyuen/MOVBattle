@@ -5196,6 +5196,43 @@ export function barrowDriverAfro(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 537 (vlad a.3) Vlad's long hair (audit 527 "a small dark tuft behind the head - TABS: long dark hair down over both shoulders in front"; card
+ * Appearance "somewhat long hair over its shoulders in front of them"; secret.vlad.red.png: dark brown hair from under the crown down each side of
+ * the face, past the jaw, falling forward over the shoulders onto the chest to about the armpits, a dark mass behind the head). VLAD_HAIR: on the
+ * head (head box W, H, D, c) a side curtain each side .sideW W wide, .sideD D deep, from .from H over c down past the jaw to .to H under it, .out W
+ * out of the middle; a back mass .backW W wide behind; on the torso (LESSONS 401: a head-hung piece is buried in the chest box), in the trunk's box
+ * T, a lock each side .lockW of the width wide and .lockD of the depth thick, .lockX of the width out, laid on the coat's front from .lockTop of
+ * the half height over the top to .lockLow of it under the top, tipped .tilt rad out at the foot. Dark brown lit cloth self-lit .3, out of the glow.
+ */
+const VLAD_HAIR = { sideW: 0.2, sideD: 0.6, from: 0.3, to: 0.62, out: 0.56, backW: 0.95, lockW: 0.3, lockD: 0.2, lockX: 0.55, lockTop: 0.25, lockLow: 0.7, tilt: 0.1,
+  brown: new Color3(0.14, 0.08, 0.05) };
+export function vladHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = VLAD_HAIR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const hair = mf.get("cloth", K.brown, { emissive: K.brown.scale(0.3), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, parent: TransformNode): Mesh => { m.parent = parent; m.material = hair; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const sideH = H * (K.from + K.to);
+  for (const sd of [-1, 1]) {
+    const side = put(MeshBuilder.CreateBox("vladHairSide", { width: W * K.sideW, height: sideH, depth: D * K.sideD }, scene), head);
+    side.position.set(c.x + sd * W * K.out, c.y + H * K.from - sideH / 2, c.z - D * 0.05);
+  }
+  const back = put(MeshBuilder.CreateBox("vladHairBack", { width: W * K.backW, height: sideH, depth: D * 0.3 }, scene), head);
+  back.position.set(c.x, c.y + H * K.from - sideH / 2, c.z - D * 0.45);
+  // the locks over the shoulders onto the chest, on the torso
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const yTop = T.mid + T.half * (1 + K.lockTop), yLow = T.mid + T.half * (1 - K.lockLow), lH = yTop - yLow;
+  for (const sd of [-1, 1]) {
+    const lock = put(MeshBuilder.CreateBox("vladHairLock", { width: T.wide * 2 * K.lockW, height: lH, depth: T.deep * 2 * K.lockD }, scene), body.torso);
+    lock.rotation.z = sd * K.tilt; lock.rotation.x = -0.12;
+    lock.position.set(sd * T.wide * K.lockX, (yTop + yLow) / 2, T.deep * 1.05);
+  }
+  return out;
+}
+
+/*
  * [S] 533 (a.4) Vlad's long coat (secret.vlad.red.png, .jpg: a dark team coat closed over the chest and flaring to a skirt that falls past the knees
  * to mid-shin; a brown fur mantle round the shoulders whose two ends hang down the chest like a stole; two gold star buttons down the middle between
  * them; a brown belt at the waist). VLAD_COAT in the torso frame (T = the trunk's box): a closed shell .out of the trunk from .top of the half height
