@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1190,6 +1190,8 @@ export class UnitFactory {
     if (definition.id === "secret.necromancer" && !shouldUseVehicleBody) propMeshes.push(...necromancerLantern(this._scene, body, teamColor));
     // [S] 528 (a.2): the Solar Architect's gold sun halo of rings and spikes behind the head (secretDress solarArchitectHalo)
     if (definition.id === "secret.solar_architect" && !shouldUseVehicleBody) propMeshes.push(...solarArchitectHalo(this._scene, body));
+    // [S] 536 (a.3): a long open white coat edged gold, high collar, wide gold-cuffed sleeves, over a team front (secretDress SOLAR_COAT)
+    if (definition.id === "secret.solar_architect" && !shouldUseVehicleBody) propMeshes.push(...solarArchitectCoat(this._scene, body));
     // [S] 528 (a.1): Vlad's dark iron crown with a gold star badge and a fan of iron spikes (secretDress vladCrown)
     if (definition.id === "secret.vlad" && !shouldUseVehicleBody) propMeshes.push(...vladCrown(this._scene, body));
     // [S] 533 (a.4): his long team coat with a fur mantle, stole ends and gold star buttons (secretDress vladCoat)

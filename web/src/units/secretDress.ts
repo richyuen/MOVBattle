@@ -4013,6 +4013,93 @@ export function bansheeSpiritRings(scene: Scene, body: ArticulatedBody): Mesh[] 
  * at the root. Unlit gold (palette right wall gold x1), out of the glow, parented to the head.
  */
 const SUN_HALO = { up: 0.95, back: 0.55, inner: 1.25, outer: 2.1, bar: 0.07, spikes: 12, long: 2.55, short: 1.75, spikeW: 0.11, gold: new Color3(1, 0.7, 0.18) };
+
+/*
+ * [S] 536 (a.3) the Solar Architect's white coat (audit 527: "torso is a grey vest/shirt - TABS: a long white coat with gold trim, a high collar and
+ * wide cuffs, open over a team front"; secret.solar_architect.red.png, card Appearance "wears white garments, with golden outlines": a white coat from
+ * the shoulders to mid-thigh, flaring a little, open down the front over a team chest, its front edges and hem edged in gold; a stand-up collar lined
+ * gold; a gold frog clasp across the opening high on the chest; wide white sleeves to mid-forearm with broad gold cuffs, the bare team forearm and
+ * hand below). SOLAR_COAT in the yoke's box (T: wide, deep, mid, half, torso frame) and the hip and knee joints: the coat slabs (back, two sides, two
+ * fronts) from .top of the yoke's half over its middle down to .hem of the way from the hips to the knees, .out T across and deep at the top flaring
+ * .flare at the hem, .th T.deep thick; the front opening .gap T.wide each side of the middle at the top, .gapHem at the hem; gold edge strips .edge
+ * T.wide wide down the opening and a band .hemBand T.half tall round the hem; the collar .collar T.wide across, .collarH T.half tall round the neck, a
+ * gold ring on its top; the clasp .clasp T.half under the top; the sleeves a limbShell .sleeveOut thick over the upper arm and a bell on the forearm to
+ * .bell of its length, .bellOut wide at its mouth, ending in a gold cuff .cuff of the forearm long. The trunk under it in the team skin. Unlit white and
+ * gold (palette right wall: white x.9, gold x.85), out of the glow.
+ */
+const SOLAR_COAT = { top: 0.92, hem: 0.5, out: 1.16, flare: 1.32, th: 0.1, gap: 0.16, gapHem: 0.34, edge: 0.11, hemBand: 0.12, collar: 0.9, collarH: 0.32,
+  clasp: 0.3, sleeveOut: 1.5, bell: 0.5, bellOut: 2.3, cuff: 0.14, white: new Color3(0.9, 0.9, 0.88), gold: new Color3(0.85, 0.6, 0.15) };
+export function solarArchitectCoat(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const S = SOLAR_COAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const white = mf.get("unlit", S.white, { emissive: S.white });
+  const gold = mf.get("unlit", S.gold, { emissive: S.gold });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  // the open front shows the trunk in the team skin, not the grey vest
+  for (const m of [yoke, body.torsoMesh]) if (body.skinMaterial) m.material = body.skinMaterial;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material, parent: TransformNode = body.torso): Mesh => {
+    m.parent = parent; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m;
+  };
+  const hipY = (originIn(body.leftHip, body.torso).y + originIn(body.rightHip, body.torso).y) / 2;
+  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const top = T.mid + T.half * S.top, hem = hipY + (kneeY - hipY) * S.hem;
+  const wx0 = T.wide * S.out, wx1 = wx0 * S.flare, dz0 = T.deep * S.out, dz1 = dz0 * S.flare, th = T.deep * S.th;
+  // a slab hanging from p0 (top) to p1 (hem): its +y laid along p1 -> p0 (front/back tip about x, sides about z)
+  const hang = (name: string, w: number, d: number, p0: Vector3, p1: Vector3, aboutX: boolean, mt: Material): Mesh => {
+    const L = Vector3.Distance(p0, p1);
+    const m = MeshBuilder.CreateBox(name, { width: w, height: L, depth: d }, scene);
+    m.position.copyFrom(p0.add(p1).scale(0.5));
+    if (aboutX) m.rotation.x = Math.atan2(p0.z - p1.z, p0.y - p1.y); else m.rotation.z = Math.atan2(p1.x - p0.x, p0.y - p1.y);
+    return put(m, mt);
+  };
+  hang("solarCoatBack", (wx0 + wx1), th, new Vector3(0, top, -dz0), new Vector3(0, hem, -dz1), true, white);
+  for (const sd of [-1, 1]) {
+    hang("solarCoatSide", th, (dz0 + dz1) * 1.02, new Vector3(sd * wx0, top, 0), new Vector3(sd * wx1, hem, 0), false, white);
+    // the front panel from the side round to the opening, the opening widening toward the hem
+    const g0 = T.wide * S.gap, g1 = T.wide * S.gapHem;
+    const x0 = sd * (g0 + wx0) / 2, x1 = sd * (g1 + wx1) / 2;
+    hang("solarCoatFront", ((wx0 - g0) + (wx1 - g1)) / 2 * 1.04, th, new Vector3(x0, top, dz0), new Vector3(x1, hem, dz1), true, white);
+    // gold down the opening's edge, standing a little proud of the panel
+    const e = T.wide * S.edge;
+    hang("solarCoatEdge", e, th * 1.2, new Vector3(sd * (g0 + e / 2), top, dz0 + th * 0.4), new Vector3(sd * (g1 + e / 2), hem, dz1 + th * 0.4), true, gold);
+  }
+  // the gold band round the hem: front, back and sides
+  const hb = T.half * 2 * S.hemBand, hy = hem + hb / 2 - T.half * 0.02;
+  const band = (name: string, w: number, d: number, x: number, z: number): void => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: hb, depth: d }, scene); m.position.set(x, hy, z); put(m, gold);
+  };
+  band("solarCoatHemBack", wx1 * 2 + th, th * 1.3, 0, -dz1 - th * 0.15);
+  for (const sd of [-1, 1]) {
+    band("solarCoatHemSide", th * 1.3, dz1 * 2 + th, sd * (wx1 + th * 0.15), 0);
+    const g1 = T.wide * S.gapHem;
+    band("solarCoatHemFront", wx1 - g1 + th, th * 1.3, sd * (g1 + wx1) / 2, dz1 + th * 0.15);
+  }
+  // the shoulders: a lid over the top
+  const lid = MeshBuilder.CreateBox("solarCoatShoulders", { width: wx0 * 2 + th, height: th, depth: dz0 * 2 + th }, scene);
+  lid.position.set(0, top, 0); put(lid, white);
+  // the high collar round the neck, lined gold at its top, and the clasp across the opening
+  const neck = originIn(body.neck, body.torso);
+  const cH = T.half * S.collarH, cD = T.wide * S.collar;
+  const collar = MeshBuilder.CreateCylinder("solarCoatCollar", { height: cH, diameterTop: cD * 1.08, diameterBottom: cD, tessellation: 10 }, scene);
+  collar.position.set(neck.x, Math.max(top, neck.y - cH * 0.3) + cH / 2, neck.z); collar.scaling.z = T.deep / T.wide; put(collar, white);
+  const lip = MeshBuilder.CreateTorus("solarCoatCollarLip", { diameter: cD * 1.08, thickness: T.wide * 0.06, tessellation: 14 }, scene);
+  lip.position.set(neck.x, collar.position.y + cH / 2, neck.z); lip.scaling.z = T.deep / T.wide; put(lip, gold);
+  const clasp = MeshBuilder.CreateBox("solarCoatClasp", { width: T.wide * S.gap * 2.6, height: T.half * 0.06, depth: th }, scene);
+  clasp.position.set(0, top - T.half * S.clasp, dz0 + th * 0.6); put(clasp, gold);
+  // wide white sleeves: over the upper arm, then a bell on the forearm ending in a broad gold cuff
+  for (const [upper, lower] of [[body.leftUpperArm, body.leftLowerArm], [body.rightUpperArm, body.rightLowerArm]] as const) {
+    const s = limbShell(scene, "solarCoatSleeve", upper, 0, 1.05, S.sleeveOut, white);
+    glow?.addExcludedMesh(s); out.push(s);
+    const F = limbBox(lower), len = F.half * 2, ftop = F.mid + F.half, r = Math.max(F.wide, F.deep);
+    const bellH = len * S.bell;
+    const bell = MeshBuilder.CreateCylinder("solarCoatBell", { height: bellH, diameterTop: r * 2 * S.sleeveOut, diameterBottom: r * 2 * S.bellOut, tessellation: 8 }, scene);
+    bell.position.set(lower.position.x, ftop - bellH / 2, lower.position.z); put(bell, white, lower.parent as TransformNode);
+    const cuff = MeshBuilder.CreateCylinder("solarCoatCuff", { height: len * S.cuff, diameter: r * 2 * S.bellOut * 1.04, tessellation: 8 }, scene);
+    cuff.position.set(lower.position.x, ftop - bellH + (len * S.cuff) / 2 - len * 0.02, lower.position.z); put(cuff, gold, lower.parent as TransformNode);
+  }
+  return out;
+}
 export function solarArchitectHalo(scene: Scene, body: ArticulatedBody): Mesh[] {
   const S = SUN_HALO, glow = scene.getGlowLayerByName("glow");
   const gold = getMaterialFactory().get("unlit", S.gold, { emissive: S.gold });
