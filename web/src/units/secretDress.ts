@@ -3226,7 +3226,17 @@ export function bankRobberVest(scene: Scene, body: ArticulatedBody): Mesh[] {
  * rim down .side H, .sideX W out; and a cheek guard .cheekW W wide in front of the face just outside the eyes, from the rim to .under H under the
  * eye bottoms. Team in a deep shade (deepTeam .shade), lit cloth self-lit .12, out of the glow. The grey crown ball and its horns are hidden.
  */
-const GIANT_HELM = { bowl: 1.26, rim: 0.03, crown: 0.66, backW: 1.18, back: 0.62, sideD: 0.95, side: 0.6, sideX: 0.6, cheekW: 0.26, under: 0.2, shade: 0.85 };
+/*
+ * [S] 536 (a.2; CONFIRM 533 "rounded bucket helmet with boxy ear flaps and a front brim - TABS: a Corinthian-style team helmet that falls like a hood
+ * to the shoulders, with long cheek guards framing the bone face"; secret.skeleton_giant.jpg, .blue.png: the helmet is one hood over the skull, its
+ * sides and back running down past the jaw to the shoulders and flaring a little there; in front only a narrow open slot down the middle shows the
+ * eyes and the bone nose and jaw, framed by two long cheek guards that come down from the brow past the jaw). The back and side plates gave way to
+ * the hood: a 9-sided frustum from the bowl's foot down .hood H under the head's foot, .hoodTop W across at the top flaring to .hoodFoot W, .hoodD
+ * of that deep, set back .hoodBack D so the face stands out of its open front; the cheek guards .cheekW W wide from the rim down to .under H under
+ * the head's foot, turned in .cheekTurn rad, and a nasal-less open slot between them.
+ */
+const GIANT_HELM = { bowl: 1.26, rim: 0.03, crown: 0.66, hood: 0.62, hoodTop: 1.24, hoodFoot: 1.5, hoodD: 0.95, hoodBack: 0.36, cheekW: 0.3, under: 0.32,
+  cheekTurn: 0.4, shade: 0.85 };
 export function skeletonGiantHelm(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const C = GIANT_HELM, glow = scene.getGlowLayerByName("glow");
   for (const m of body.headTop.getChildMeshes(false)) if (/^(giantCrown|boneHorn)$/.test(m.name)) m.setEnabled(false);
@@ -3244,14 +3254,15 @@ export function skeletonGiantHelm(scene: Scene, body: ArticulatedBody, team: Col
   const foot = eyes.hi.y + H * C.rim, crown = c.y + H * C.crown;
   const bowl = put(MeshBuilder.CreateSphere("giantHelmBowl", { diameter: 1, segments: 5, slice: 0.5 }, scene));
   bowl.scaling.set(W * C.bowl, (crown - foot) * 2, D * C.bowl); bowl.position.set(c.x, foot, c.z);
-  box("giantHelmBack", W * C.backW, H * C.back, D * 0.12, c.x, foot - (H * C.back) / 2, c.z - D * 0.56);
+  // [S] 536 the hood falling from the bowl's foot to the shoulders, set back so the face stands out of its open front
+  const hoodBot = c.y - H / 2 - H * C.hood, hoodH = foot - hoodBot;
+  const hood = put(MeshBuilder.CreateCylinder("giantHelmHood", { height: hoodH, diameterTop: W * C.hoodTop, diameterBottom: W * C.hoodFoot, tessellation: 9 }, scene));
+  hood.scaling.z = C.hoodD; hood.position.set(c.x, (foot + hoodBot) / 2, c.z - D * C.hoodBack);
   for (const side of [-1, 1]) {
-    const plate = box("giantHelmSide", W * 0.12, H * C.side, D * C.sideD, c.x + side * W * C.sideX, foot - (H * C.side) / 2, c.z - D * 0.02);
-    plate.rotation.z = side * 0.06;
     const ex = side < 0 ? eyes.lo.x : eyes.hi.x;
-    const cheekBot = eyes.lo.y - H * C.under, front = Math.max(eyes.lo.z, c.z + D / 2) + D * 0.02;
-    const cheek = box("giantHelmCheek", W * C.cheekW, foot - cheekBot, D * 0.12, ex + side * (W * C.cheekW) / 2, (foot + cheekBot) / 2, front - D * 0.04);
-    cheek.rotation.y = -side * 0.35;
+    const cheekBot = c.y - H / 2 - H * C.under, front = Math.max(eyes.lo.z, c.z + D / 2) + D * 0.02;
+    const cheek = box("giantHelmCheek", W * C.cheekW, foot - cheekBot, D * 0.14, ex + side * (W * C.cheekW) / 2, (foot + cheekBot) / 2, front - D * 0.06);
+    cheek.rotation.y = -side * C.cheekTurn;
   }
   return out;
 }
