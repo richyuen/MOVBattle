@@ -5457,6 +5457,7 @@ const VLAD_COAT = { out: 1.1, top: 0.98, thick: 0.1, skirtTop: 0.82, flareTop: 1
   fitTop: 0.9, fitFoot: 1.04, fitDeep: 1.08, collarH: 0.45, collarW: 0.62,
   mantleTop: 0.8, mantleFoot: 1.12, mantleDrop: 0.5, stoleW: 0.3, stoleX: 0.42, stars: 2, star: 0.26, starAt: [0.4, 0.7], shade: 0.7,
   fur: new Color3(0.3, 0.17, 0.09), beltC: new Color3(0.2, 0.11, 0.06), gold: new Color3(0.85, 0.55, 0.1) };
+const VLAD_MANTLE = { top: 0.72, foot: 1.6, drop: 0.62, deep: 1.3, tufts: 14, tuft: 0.13, hang: 0.3, fur: new Color3(0.8, 0.5, 0.2) };
 export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const V = VLAD_COAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
@@ -5480,9 +5481,11 @@ export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mes
   const shell = add(MeshBuilder.CreateCylinder("vladCoatShell", { height: h, diameterTop: T.wide * 2 * V.fitTop, diameterBottom: T.wide * 2 * V.fitFoot, tessellation: 8 }, scene), coat, 0, cy, 0);
   shell.scaling.z = (T.deep / T.wide) * V.fitDeep; shell.rotation.y = Math.PI / 8;
   const zFront = T.deep * V.fitDeep * V.fitTop * 0.95;
+  // [S] 539 (a.1; CONFIRM 538 "a dull grey-brown chunk on the left shoulder and a dark slab behind the right one"): the open half-ring
+  // collar (a one-sided arc, its inside face SSAO-dark) is now a closed fur ring round the neck, standing up out of the mantle
   const collarH = T.half * V.collarH;
-  const collar = add(MeshBuilder.CreateCylinder("vladFurCollar", { height: collarH, diameterTop: T.wide * 2 * V.collarW * 1.12, diameterBottom: T.wide * 2 * V.collarW, tessellation: 12, arc: 0.6 }, scene), fur, 0, top + T.half * V.mantleUp + collarH / 2, -T.deep * 0.1);
-  collar.rotation.y = Math.PI / 2 - Math.PI * 0.6; collar.scaling.z = (T.deep / T.wide) * 1.3;
+  const collar = add(MeshBuilder.CreateCylinder("vladFurCollar", { height: collarH, diameterTop: T.wide * 2 * V.collarW * 1.12, diameterBottom: T.wide * 2 * V.collarW, tessellation: 10 }, scene), fur, 0, top + T.half * V.mantleUp + collarH / 2, -T.deep * 0.05);
+  collar.scaling.z = (T.deep / T.wide) * 1.2;
   // the flared skirt to mid-shin (hem anchored to the knees, LESSONS 512)
   const hipToKnee = Math.abs(body.leftKnee.position.y);
   const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
@@ -5491,12 +5494,23 @@ export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mes
   skirt.scaling.z = (T.deep / T.wide) * 1.2; skirt.rotation.y = Math.PI / 8;
   const belt = add(MeshBuilder.CreateCylinder("vladCoatBelt", { height: T.half * 2 * V.belt, diameter: T.wide * 2 * (V.out + 0.12), tessellation: 8 }, scene), beltM, 0, low + T.half * V.belt, 0);
   belt.scaling.z = (T.deep / T.wide) * 1.05; belt.rotation.y = Math.PI / 8;
-  // the fur mantle over the shoulders, its ends hanging down the chest
-  const mTop = top + T.half * V.mantleUp, mH = T.half * V.mantleDrop;
-  const mantle = add(MeshBuilder.CreateCylinder("vladMantle", { height: mH, diameterTop: T.wide * 2 * V.mantleTop, diameterBottom: T.wide * 2 * V.mantleFoot, tessellation: 8 }, scene), fur, 0, mTop - mH / 2, 0);
-  mantle.scaling.z = (T.deep / T.wide) * 1.25; mantle.rotation.y = Math.PI / 8;
-  const stoleH = mTop - (low + T.half * V.belt * 2);
-  for (const s of [-1, 1]) add(MeshBuilder.CreateBox("vladStole", { width: T.wide * 2 * V.stoleW, height: stoleH, depth: th * 1.6 }, scene), fur, s * T.wide * V.stoleX, mTop - stoleH / 2, zFront + th * 0.6);
+  // [S] 539 (a.1; CONFIRM 538: "TABS: a broad tan-gold fur mantle across both shoulders and the upper chest, the brightest area of the figure";
+  // secret.vlad.red.png: a fur cape round the neck spreading out over both shoulders past the upper arms' tops, down the chest to about the armpits,
+  // its lower edge ragged with fur tufts; the coat and its stars below it). VLAD_MANTLE: a 10-sided frustum from .top of the trunk's width across at
+  // the neck to .foot across over the shoulders, .drop of the half height long, .deep of the width's depth ratio; round its foot .tufts faceted
+  // tufts .tuft of the width across hanging .hang of the half height under the edge. Bright tan-gold lit cloth self-lit .3, out of the glow. The
+  // two brown stole slabs down the chest (533) are gone: they hid the stars, and the long hair locks lie there in the render.
+  const M = VLAD_MANTLE, furM = mf.get("cloth", M.fur, { emissive: M.fur.scale(0.3), roughness: 1 });
+  const mTop = top + T.half * V.mantleUp, mH = T.half * M.drop, mFoot = mTop - mH;
+  const mantle = add(MeshBuilder.CreateCylinder("vladMantle", { height: mH, diameterTop: T.wide * 2 * M.top, diameterBottom: T.wide * 2 * M.foot, tessellation: 10 }, scene), furM, 0, mTop - mH / 2, 0);
+  mantle.scaling.z = (T.deep / T.wide) * M.deep;
+  collar.material = furM;
+  for (let k = 0; k < M.tufts; k++) {
+    const a = (k / M.tufts) * Math.PI * 2;
+    const tuft = add(MeshBuilder.CreateIcoSphere("vladMantleTuft", { radius: T.wide * M.tuft, subdivisions: 1, flat: true }, scene), furM,
+      Math.sin(a) * T.wide * M.foot * 0.96, mFoot - T.half * M.hang * 0.4, Math.cos(a) * T.wide * M.foot * 0.96 * (T.deep / T.wide) * M.deep);
+    tuft.scaling.set(1, 1.5, 0.7); tuft.rotation.y = a;
+  }
   // gold star buttons down the middle
   const S = T.wide * 2 * V.star;
   for (let k = 0; k < V.stars; k++) {
