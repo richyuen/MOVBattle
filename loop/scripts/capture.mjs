@@ -874,7 +874,9 @@ async function main() {
           const presentOpen = ability.kind === "present_open";
           const safeLand = ability.kind === "safe_land";
           // [evidence 535] the Necromancer's skeleton rises where the skull-cursed man fell, 7 m off: framed on that man
-          const onMan = snake || burnOnMan || love || ability.kind === "raise_dead" || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
+          // [evidence 539] Blackbeard's Cannon Barrage falls round his man for ~1.3 s: framed on the man, the after shot 40 ticks on as the balls land
+          const barrage = ability.kind === "cannon_barrage";
+          const onMan = snake || burnOnMan || love || barrage || ability.kind === "raise_dead" || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
           // blanketed him and the re-framed camera hid the step)
           const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
@@ -884,7 +886,7 @@ async function main() {
           const catchShot = ability.kind === "pavise_block";
           const abilityFrame = safeLand ? 12 : presentOpen ? 11 : catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : onMan ? 2 : far;
           await take(`unit_${id}_ability`, ability.tick, abilityFrame, pair);
-          await take(`unit_${id}_ability_after`, ability.tick + (slow || love ? 60 : snake ? 30 : 9), abilityFrame, pair);
+          await take(`unit_${id}_ability_after`, ability.tick + (slow || love ? 60 : barrage ? 40 : snake ? 30 : 9), abilityFrame, pair);
           if (darkGrab) await take(`unit_${id}_grab_blast`, ability.tick + 36, 2, pair);
           // [evidence 524] the landed safe stays as a barrier, then sinks (card Characteristics; c.3): the same landing camera 3 s on (lying,
           // SAFE_HURL.lie 6 s) and 7.5 s on (half way down its 3 s sink)
