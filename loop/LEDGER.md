@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+542 | 46c168cd | secret.ullr.b | approved [S] (struck 1, 2, b PASS)
+542 | 5546cf34, b8ecf0a6 | secret.ullr.c | approved [S] (struck 2, c PASS)
+542 | 402a1f03 | secret.sensei.c | approved [S] (struck 2)
+542 | 182907e4 | secret.sensei.a | approved [S] (struck 1, 2 lineup, a PASS)
+542 | e4c3d69f | secret.blackbeard.a | approved [S] (struck 1, 3 lineup)
+542 | 1843e6c5 | secret.blackbeard.a | approved [S] (struck 2)
+542 | b18dd78e | secret.artemis.a | approved [S] (struck 4)
+542 | f0dcbe20 | secret.lady_red_jade.a | approved [S] (struck 1)
+542 | 9cac10ab | secret.ice_giant.b | approved [S] (struck 1; added 2 fist overshoot)
+
 541 | 4896725f | secret.blackbeard.a | approved [S] (no strike; tan slab over the red coat)
 541 | 2ccc5709 | secret.sensei.a | approved [S] (struck 2)
 541 | 4b07f4b5 | secret.sensei.a | approved [S] (struck 3, a PASS; CONFIRM failed a, c)
@@ -43,21 +53,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 538 | 40db92f3 | secret.blackbeard.a | approved [S] (struck 2)
 538 | afbccbda, dffef02c | secret.blackbeard.b | approved [S] (struck 1)
 
-537 | a721ccd5 | secret.skeleton_giant.a | approved [S] (struck 3, a PASS; CONFIRM 536 copied, D)
-537 | b9583fd6 | secret.necromancer.a | approved [S] (struck 3)
-537 | bd4c21ff, 664a3f18 | secret.necromancer.c | approved [S] (no strike; graves rise, push unseen)
-537 | 2c49273b, e9a60e53 | secret.banshee.a | approved [S] (struck 2)
-537 | 56c897fc, 474c9e55 | secret.banshee.a | approved [S] (struck 3)
-537 | 716d07af, 4d0f26b8 | secret.banshee.a | approved [S] (struck 4)
-537 | 3eea93c7 | secret.vlad.a | approved [S] (struck 6)
-537 | 8740885b | secret.vlad.a | approved [S] (struck 3)
-537 | 71f3e6ad | secret.vlad.a | approved [S] (struck 2)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/UF/UV/PB/SS/PS/FX/RU:542 | ULLR_AXE haft .18 back .02 long .18 out .012 wide .075 tip .04, seatUllrAxe palm + rot z PI; ULLR_HANG out .22 fore -.1 bend -.2; ULLR_THROW burst 2.25, freeze at impact; ICE_BURST spikes 12 inner 5 ring .8 tall .75 wide .24 lean .35 grow .15 flash .35 alpha .5 last 1.6 sink .4; SENSEI_STAR tilt .9 spin 25 (held copy); SENSEI_HORN segs 4 long 3.6 root .75 start .1 curl 1 bone (.94,.9,.8); BEARD_FULL outline to .86 W, -.98 H, stand .14 bulge .5, 4 braids; BB_GLOVE mitt 1.55/1.35/1.6 cuff .95 foot 1.5 top 2 tan (.64,.42,.2); [P] blackbeard scale 1.95 -> 2.55 REJECTED (reverted; row closed to [P]: ledger reversal); ARTEMIS_DRESS top .32 hem .32 out 1.12 flare 1.42 dark .62; JADE_HAIR dome 1.1 bun .42 ring 1.05 ringT .075 beads 10, crown off; ICE_FIST fist 1.75 long 1.25 drop .85 swell 1.35 | 542 | approved (ICE_FIST pending [P] 1.1) | ULLR_AXE haft .42 long .34 wide .13, duelist idle arms, freeze at queue, ninja 4-point flight star, straight steel spikes long 2.2 lean .55, chest wedge chestW .62 tip .55, bare mitts, trousers, crown, normal hands
 secretDress/UF/UV/PB/SS/PS/PA:541 | BB_COAT fitTop .92 fitFoot 1.06 skirt to knee hem .1 flare 1.14-1.6 wraps 2 at .08 h .2 out 1.2 tilt .09 tail .2x1.1 at .62, cape + tunicSkirt off; [P] blackbeard scale 1.58 -> 1.95 (pending: root of a.5, toward a ~3.5 m rig); SENSEI_VEST shade .78 open .38 strips .07 orange (.95,.42,.06), robe/drape off; SENSEI_BAND 2 bands h .2 out 1.08 step .96 rims .16; ARTEMIS_FAN 5 arrows nock .28 lift .12 land .18; ULLR_AXE haft .42 long .34 wide .13 curl .42, ullr axe pair duelist throw family; ULLR_THROW tumble 16 rearm .8 speed 25, freeze at queue; GUANDAO pole .78 grip .4 guard .17 blade .82 curl .22 + bombStickGrip wrap; TREE_HUG_ARM raise -1 out -.85 elbow -1.2, TIP (.12,1,.22), tree two-handed; ICE_APE upper 1.5 lower 1.6 girth 1.45/1.7 out 1.12 waist .72 | 541 | approved | navy vest + brown strap, scale 1.58, gold robe board, no band, one arrow per shot, bow + quiver, arrow volley, two swords, TREE_HIP_ARM (-.9,.15,-.4) tip (.9,.02,.35), arms to mid-thigh
 RU/secretDress/UF/PB/UV/capture:540 | VLAD_CARRY shoulder -.25 elbow -.95 off -.4/-1.15 in .35 dir (-.5,-.42,.75); NECRO_VEST top .08 crop .3 out 1.0 taper .8 deep .78 rag .1 laces 4 strapH .035; NECRO_LANTERN size 1.0 forearm R ring 2.1 ringT .1 bandH .08 drop .2 ahead .15; NECRO_CAP horns 6 segs .3-.2 w .34 out .95 kinks .3/.28/.22/.12/.18 bands at 1, 2; SENSEI_SHURIKEN 10 blades long .13 ring .045 wide .032 sweep .35 hub .1 drop .09; SENSEI_BRACER .12-.95 out 1.75 taper .9 4 spikes long 2.2 lean .55 steel; BB_PEG cup 1.25 top .8 foot .42 (540.7b from 2.2/1.5/.8); blackbeard weaponPresentationFamily heavy_swing; ARTEMIS_BOW long 1.6 thick .036 (540.9b from .065) 3 dark wraps, iceBowCarry; capture rig 16 barrage after +20 | 540 | approved | raised log over the chest, box vest to the belt + pads, skull-sized lantern, 3-seg thin horns, ninja 4-point star, bare forearms, two boots, cutlass thrust, short recurve, barrage frame 2 +40
 secretDress/UF/UV/PB/SS/capture:539 | NECRO_ARMBAND at .3/.62 round 2.7 tall .2 grey (.62,.62,.64) gap ring purple; [P] NECRO_SHORTS hem .55 -> .4 (spent); VLAD_MANTLE top .72 foot 1.6 drop .62 deep 1.3 tufts 14 fur (.8,.5,.2), closed collar, stoles off; VLAD_ROSETTE size .36 8+8 points at .42/.66 stand .9 (per-height shell front); VLAD_CAP round 1.1 crown .06 dome .12 badgeAt .42; blackbeard offhand cutlass+blackbeard_anchor default grip; CANNON_BARRAGE first 0 cd 8 balls 8 every .15 spread 2.2 lean .8 up 14 dmg 45 splash 1.4 push 6; BB_HAT black (.035,.03,.035) cords 2/side long .62 flame unlit, hat tricorn; ARTEMIS_BAND round 1.08 top .84 tall .42 tip -.42 gold (1,.62,.14), halo off; SENSEI_HOOD dome 1.14 domeH .78 band 1.16 star .34 flare 1.12->2.3, hat none; capture barrage onMan after +40 | 539 | approved | no armbands, hem .55, grey chunk mantle + stoles, 5-ray stars .26, thin band, flintlock off hand, no barrage, captain_hat, halo + laurel, cone hat

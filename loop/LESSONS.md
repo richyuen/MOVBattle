@@ -1,6 +1,6 @@
 # Lessons (loop v3): facts about the pipeline, the capture and the rig that outlive one unit
 
-Read whole at step 1; one fact a line, merge near cap.
+Read at step 1; one fact a line, merge near cap.
 
 ## Rendering (swiftshader + PBR + SSAO + ACES + glow)
 - PBR colours are linear: an sRGB target c needs ~c^2.2 as the code. Pick values off `output/loop/palette.png`.
@@ -18,7 +18,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter).
 - A capture wipes iter-N (stats.json, a tail audit.md): back audit.md up, rerun `stats.mjs <id,id> --iter N` (comma list) after the last capture (527). Checkpoint replaces summary.json (483).
 - RotationX(+a) tips +y toward +z; a cylinder arc .5 under RotationX(+PI/2) has its half up (537). A turn-on-friends status: a friend in the scene, his log counted (537).
-- A cast fired as a man closes in misses a duel whose man dies at range: a second man walks in, own pair (537).
+- A cast fired as a man closes misses a duel whose man dies at range: second man walks in (537).
 - Probes (loop/scripts/probes/, repo root, --build after source changes): probe_bbox (--unit --pat --frame=torso), probe_near/close/head/local/axes/impale/bowdraw; probe_close --aim=head|torso|y:<y> --dist --yaw --noglow; probe_eval --unit --expr=<file> runs a function body (u, game, scene), prints its JSON.
 - capture's PLAIN regex takes any ability kind starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475 wizard firework: no ability shot).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
@@ -28,7 +28,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - Size a held prop off joint spreads (originIn), not limbBox (526); a stave thick by share of length: own girth when lengthened (540).
 - The idle is ~100 ms after spawn: full weight from spawn, in every re-solve (393).
 - A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).
-- `--units` takes comma-separated IDs and re-shoots lineup_<f> (498); a lethal blast freezes a duel: off-camera reserves (504).
+- `--units a,b` re-shoots lineup_<f> (498); a lethal blast freezes a duel: off-camera reserves (504).
 - A dress change aimed at the idle must clear the rest pose and the held weapon: probe what covers it first (442; 539 log over chest). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Frame prop openings at the landing spot (522), toppled targets at torso bounds (509), a sky drop on the man ~20 ticks on, sky in frame (539).
 - Instant slam logs at swing start: use the pending blow (426); a special logged at let-go owns its missile (427); a cast status can put _struck before impact: ABILITY_PREF for on-landing effects (435).
@@ -39,7 +39,7 @@ Read whole at step 1; one fact a line, merge near cap.
 - Gate ability starts on his feet (512). Offset-0 linked actor: build off body.root (528).
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
 - Flat ico faces sit ~20% inside: ray-cast dress on (512). Pinned pairs: RU.holdUpright (514).
-- Held-prop throw at arrow speed lands before the flight frame: options.flight at card speed (541).
+- Held-prop throw: options.flight at card speed (541); heldProp with no letGoOfThrow throws a copy, fist kept (542); landing area effect: iceBurstHook (542).
 - A vehicle rider is an addOperator in its builder, posed in the callback (529); flip a held blade at its grip, a rotation offset turns it about its middle.
 ## Rig and dress
 - A chain or rope off a moving fist: a world-space rope pinned to the hand in RU.update, laid out at spawn (secretDress ChainWhip, 519).
