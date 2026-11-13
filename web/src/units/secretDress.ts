@@ -5778,6 +5778,71 @@ export function ullrSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 543 (samurai_giant a.1) the Samurai Giant's kabuto (audit 538: "maroon bowl helmet with a box crest and yellow side flaps - TABS: team kabuto
+ * with a gold crescent maedate and a tiered neck guard"; secret.samurai_giant.red.png: a close team bowl over the crown, its brim just over the big
+ * eyes; from the brow a gold crescent rises in two horns curving up and out, the tips about one and a half heads apart and a head over the bowl; round
+ * the back and sides of the bowl three team lames step down and out over the ears and nape, each edged in gold). propBuilder's samurai helmet (the
+ * flipped bowl over the eyes and its yellow crest) is hidden. KABUTO on the head (box W, H, D, c; the eyes' box e): the bowl a half-sphere .bowl W
+ * across, .bowlH of its radius tall, from .seat H over the eyes' top; a peak .peak D out at the brow; .tiers lames, each .lameH H tall, .segs boxes
+ * round .arc rad of the back and sides, .out W further out and .step H lower per tier, leaned .lean rad out, with a gold edge under each; the crescent
+ * two tubes from the brow, rising .hornH H and spreading .hornW W each side, .hornT W thick tapering to a third, flat .flat deep. Team cloth
+ * saturated (c^2) to its peak, self-lit .12; gold unlit (LESSONS 9); out of the glow.
+ */
+const KABUTO = { bowl: 1.16, bowlH: 0.78, seat: 0.03, peak: 0.18, tiers: 3, lameH: 0.16, segs: 7, arc: 3.6, out: 0.09, step: 0.12, lean: 0.55,
+  hornH: 1.05, hornW: 0.78, hornT: 0.1, flat: 0.45, gold: new Color3(0.78, 0.34, 0.03) };
+export function samuraiGiantKabuto(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = KABUTO, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  for (const m of body.root.getChildMeshes(false)) if (m.name === "shelm") m.setEnabled(false);
+  const peakC = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const deep = sat.scale(peakC / Math.max(sat.r, sat.g, sat.b, 1e-3));
+  const cloth = mf.get("cloth", deep, { emissive: deep.scale(0.12), roughness: 1 });
+  const gold = mf.get("unlit", K.gold, { emissive: K.gold });
+  const out: Mesh[] = [];
+  const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
+  const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
+  const put = (m: Mesh, mt: Material, parent: TransformNode = head): Mesh => { m.parent = parent; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const eTop = eyeBoxInHead(body)?.hi.y ?? c.y + H * 0.15;
+  const seat = Math.max(eTop + H * K.seat, c.y), R = (W * K.bowl) / 2;
+  const bowl = put(MeshBuilder.CreateSphere("kabutoBowl", { diameter: W * K.bowl, segments: 8, slice: 0.5 }, scene), cloth);
+  bowl.scaling.set(1, K.bowlH, (D * 1.12) / W); bowl.position.set(c.x, seat, c.z - D * 0.04);
+  const band = put(MeshBuilder.CreateCylinder("kabutoBand", { height: H * 0.07, diameter: W * K.bowl * 1.02, tessellation: 14 }, scene), gold);
+  band.scaling.z = (D * 1.14) / W; band.position.set(c.x, seat + H * 0.035, c.z - D * 0.04);
+  // the peak over the brow, tipped down
+  const peak = put(MeshBuilder.CreateBox("kabutoPeak", { width: W * 0.9, height: H * 0.04, depth: D * K.peak }, scene), cloth);
+  peak.position.set(c.x, seat, c.z + D * 0.5 + (D * K.peak) / 2 - D * 0.04); peak.rotation.x = 0.3;
+  // the tiered neck guard round the back and sides
+  for (let t = 0; t < K.tiers; t++) {
+    const r = R + W * K.out * (t + 0.5), y = seat - H * K.step * t - (H * K.lameH) / 2;
+    for (let k = 0; k < K.segs; k++) {
+      const a = -Math.PI / 2 - K.arc / 2 + (k + 0.5) * (K.arc / K.segs); // round the back (-z), from one cheek to the other
+      const node = new TransformNode("kabutoLame", scene); node.parent = head;
+      node.position.set(c.x + Math.cos(a) * r, y + (H * K.lameH) / 2, c.z - D * 0.04 + Math.sin(a) * r * (D * 1.12) / W);
+      node.rotation.y = Math.PI / 2 - a; // local +z out
+      const lean = new TransformNode("kabutoLameLean", scene); lean.parent = node; lean.rotation.x = K.lean;
+      const segW = 2 * r * Math.sin(K.arc / K.segs / 2) * 1.12;
+      const lame = put(MeshBuilder.CreateBox("kabutoLamePlate", { width: segW, height: H * K.lameH, depth: W * 0.05 }, scene), cloth, lean);
+      lame.position.y = -(H * K.lameH) / 2;
+      const edge = put(MeshBuilder.CreateBox("kabutoLameEdge", { width: segW, height: H * 0.035, depth: W * 0.06 }, scene), gold, lean);
+      edge.position.y = -H * K.lameH;
+    }
+  }
+  // the gold crescent maedate rising from the brow
+  const foot = new Vector3(c.x, seat + H * 0.08, c.z + D * 0.52);
+  const disc = put(MeshBuilder.CreateCylinder("kabutoCrest", { height: D * 0.06, diameter: W * 0.22, tessellation: 8 }, scene), gold);
+  disc.rotation.x = Math.PI / 2; disc.position.copyFrom(foot);
+  for (const side of [-1, 1]) {
+    const path: Vector3[] = [];
+    for (let k = 0; k <= 8; k++) {
+      const u = k / 8;
+      path.push(new Vector3(foot.x + side * W * K.hornW * Math.sin(u * Math.PI * 0.5) ** 0.8, foot.y + H * K.hornH * (u * u * 0.55 + u * 0.45), foot.z + D * 0.05 * u));
+    }
+    const horn = put(MeshBuilder.CreateTube("kabutoHorn", { path, radiusFunction: (k) => W * K.hornT * 0.5 * (1 - 0.66 * (k / 8)), tessellation: 6, cap: Mesh.CAP_ALL }, scene), gold);
+    horn.scaling.z = K.flat; horn.position.z = foot.z * (1 - K.flat); // flattened front to back about the brow
+  }
+  return out;
+}
+
+/*
  * [S] 542 (artemis a.4) Artemis's long dress (audit 538: "dark blue trousers - TABS: long team dress to mid-shin"; card Appearance "a Greek light
  * dress"; secret.artemis.red.png: from the belt a darker team skirt falls straight and a little flared to the middle of the shins, wider than the
  * hips, with the bare team shins and sandals below it). ARTEMIS_DRESS on the torso (the hip box, pelvis or trunk foot, W across, D deep, in the
