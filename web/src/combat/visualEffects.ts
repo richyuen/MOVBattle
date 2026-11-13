@@ -68,7 +68,7 @@ const KICK_DUST = { count: 5, spread: 0.35, lift: 0.25, born: 0.5, grown: 1.5, o
  * .disc alpha; .rays thin gold beams .rayTall m tall, .rayWide m across, standing round him at .rayAt of the radius, rising from the ground over .grow of
  * the life and wheeling round him at .spin rad/s; the whole fades in fast and out over its .life s. Self-lit, in the glow layer so the gold blooms.
  */
-const SOLAR_MAELSTROM_FX = { ring: 0.16, disc: 0.3, arms: 6, segs: 7, twist: 2.6, tall: 2.4, wide: 0.22, spin: 4.5, grow: 0.12, implode: 0.18, flash: 2.2,
+const SOLAR_MAELSTROM_FX = { ring: 0.16, disc: 0.3, arms: 6, segs: 7, twist: 2.6, tall: 2.4, wide: 0.22, spin: 4.5, from: 0.75, grow: 0.12, implode: 0.18, flash: 2.2,
   gold: new Color3(1, 0.72, 0.15), pale: new Color3(1, 0.88, 0.45), white: new Color3(1, 0.97, 0.8) };
 const KNEEL_AURA = { radius: 2.4, ring: 0.14, disc: 0.28, rays: 12, rayTall: 2.6, rayWide: 0.09, rayAt: 0.62, grow: 0.25, spin: 1.4, life: 2.2, gold: new Color3(1, 0.78, 0.2), pale: new Color3(1, 0.9, 0.5) };
 /*
@@ -1667,7 +1667,7 @@ export class VisualEffects {
     let age = 0;
     const pose = (): void => {
       const u = Math.min(1, age / seconds);
-      const swell = Math.min(1, u / K.grow);
+      const swell = K.from + (1 - K.from) * Math.min(1, u / K.grow); // 536.6b full-ish from its first frame (the ability shot is the cast tick)
       const pull = u > 1 - K.implode ? (u - (1 - K.implode)) / K.implode : 0;
       const k = Math.max(0.05, swell * (1 - pull * 0.95));
       wheel.scaling.set(k, 0.4 + 0.6 * swell, k);

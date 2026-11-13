@@ -2048,14 +2048,16 @@ export class SimulationSystem {
     if (now < this._maelstromReady.get(attacker)!) return;
     if (Vector3.Distance(target.position, attacker.position) > M.near) return;
     this._maelstromReady.set(attacker, now + M.cooldown);
-    const at = new Vector3(attacker.position.x, 0, attacker.position.z);
+    // 536.6b cast on the man who came close, not round himself (look: the vortex spun empty 7 m from the man)
+    const at = new Vector3(target.position.x, 0, target.position.z);
     this.visualEffects?.spawnSolarMaelstrom(at, M.radius, M.seconds);
     for (const u of this._units) {
       if (u.isDead || u.team === attacker.team || u.linkedParent || !u.isTargetable) continue;
       const away = u.position.subtract(at); away.y = 0;
       const d = away.length();
       if (d > M.radius + u.collisionBodyRadius) continue;
-      if (d > 1e-3) away.scaleInPlace(1 / d); else away.set(1, 0, 0);
+      // the man at its middle is blown on away from the Architect
+      if (d > 0.5) away.scaleInPlace(1 / d); else { away.copyFrom(u.position.subtract(attacker.position)); away.y = 0; if (away.lengthSquared() > 1e-6) away.normalize(); else away.set(1, 0, 0); }
       u.applyDamage(M.damage, away.scale(M.push));
       if (!isVehicleUnit(u.definition.id)) u.applyBlastLaunch(away, M.push, M.lift);
     }
