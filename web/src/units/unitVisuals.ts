@@ -1296,7 +1296,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_lady_red_jade":
       // [S] 541 (b.1) one guandao upright in both fists on the halberd's two-handed grip, no second sword (propBuilder GUANDAO)
-      return vis({ scale: 1.52, bulk: 1.18, headSize: 1.05 }, "halberd", "crown", "none", "cape", "#cf2f2f", undefined, {
+      return vis({ scale: 1.52, bulk: 1.18, headSize: 1.05 }, "halberd", "none", "none", "cape", "#cf2f2f", undefined, {
         weaponVariant: "guandao", materialPreset: "secret_royal", fxPreset: "royal",
         bodyDetailLevel: "hero",
       });

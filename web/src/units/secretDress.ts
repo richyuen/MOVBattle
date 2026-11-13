@@ -5682,6 +5682,48 @@ export function blackbeardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  * rad (front up, back down) so it runs from the brow over the crown, .deep of the cap's depth ratio. Gold lit cloth self-lit .25, out of the glow.
  */
 /*
+ * [S] 542 (lady_red_jade a.1) Lady Red Jade's hairpiece (audit 538: "gold crown with red-ball spikes - TABS: dark hair bun with a red ornamental
+ * hairpiece ring"; card Appearance "a seeming hairpiece"; secret.lady_red_jade.red.png: black hair over the top and back of the head, a bun on the
+ * crown, and standing round the bun a big red ring of looped beads facing front, wider than the head, a small orange bead at its top). The crown
+ * hat is off (unitVisuals). JADE_HAIR on the head (box W, H, D, c; the eyes' box e): a dark dome .dome W across from .seat H over the eyes' top,
+ * .domeH of its radius tall, set .back D back; a back panel down to .nape H under c; a bun .bun W across on the dome's top; the ring a torus .ring W
+ * across, .ringT W thick, standing upright facing front round the bun, with .beads red beads .bead W across on it; the orange bead .top W on its
+ * top. Near-black lit hair self-lit .4 (LESSONS 494); red and orange unlit (LESSONS 8), all out of the glow.
+ */
+const JADE_HAIR = { dome: 1.1, seat: 0.02, domeH: 0.72, back: 0.06, nape: 0.3, bun: 0.42, ring: 1.05, ringT: 0.075, beads: 10, bead: 0.13, top: 0.16,
+  hair: new Color3(0.08, 0.06, 0.07), red: new Color3(1.25, 0.08, 0.03), orange: new Color3(1.1, 0.42, 0.04) };
+export function ladyRedJadeHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = JADE_HAIR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const hair = mf.get("cloth", K.hair, { emissive: K.hair.scale(0.4), roughness: 1 });
+  const red = mf.get("unlit", K.red, { emissive: K.red }), orange = mf.get("unlit", K.orange, { emissive: K.orange });
+  const out: Mesh[] = [];
+  const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
+  const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
+  const put = (m: Mesh, mt: Material): Mesh => { m.parent = head; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const eTop = eyeBoxInHead(body)?.hi.y ?? c.y + H * 0.15;
+  const seat = Math.max(eTop + H * K.seat, c.y), R = (W * K.dome) / 2;
+  const dome = put(MeshBuilder.CreateSphere("jadeHair", { diameter: W * K.dome, segments: 6, slice: 0.5 }, scene), hair);
+  dome.scaling.set(1, K.domeH, (D * K.dome * 1.05) / (W * K.dome)); dome.position.set(c.x, seat, c.z - D * K.back);
+  const domeTop = seat + R * K.domeH;
+  const nape = put(MeshBuilder.CreateBox("jadeHairBack", { width: W * 0.92, height: seat - (c.y - H * K.nape), depth: D * 0.2 }, scene), hair);
+  nape.position.set(c.x, (seat + c.y - H * K.nape) / 2, c.z - D * 0.45);
+  const bunR = (W * K.bun) / 2;
+  const bun = put(MeshBuilder.CreateIcoSphere("jadeHairBun", { radius: bunR, subdivisions: 1 }, scene), hair);
+  bun.position.set(c.x, domeTop + bunR * 0.6, c.z - D * K.back);
+  const ringY = domeTop + bunR * 0.4, ringR = (W * K.ring) / 2;
+  const ring = put(MeshBuilder.CreateTorus("jadeHairRing", { diameter: W * K.ring, thickness: W * K.ringT, tessellation: 18 }, scene), red);
+  ring.rotation.x = Math.PI / 2; ring.position.set(c.x, ringY, c.z - D * K.back);
+  for (let i = 0; i < K.beads; i++) {
+    const a = (i / K.beads) * Math.PI * 2;
+    const b = put(MeshBuilder.CreateIcoSphere("jadeHairBead", { radius: (W * K.bead) / 2, subdivisions: 1 }, scene), red);
+    b.position.set(c.x + Math.cos(a) * ringR, ringY + Math.sin(a) * ringR, c.z - D * K.back);
+  }
+  const knob = put(MeshBuilder.CreateIcoSphere("jadeHairTop", { radius: (W * K.top) / 2, subdivisions: 1 }, scene), orange);
+  knob.position.set(c.x, ringY + ringR + (W * K.top) / 2, c.z - D * K.back);
+  return out;
+}
+
+/*
  * [S] 542 (artemis a.4) Artemis's long dress (audit 538: "dark blue trousers - TABS: long team dress to mid-shin"; card Appearance "a Greek light
  * dress"; secret.artemis.red.png: from the belt a darker team skirt falls straight and a little flared to the middle of the shins, wider than the
  * hips, with the bare team shins and sandals below it). ARTEMIS_DRESS on the torso (the hip box, pelvis or trunk foot, W across, D deep, in the
