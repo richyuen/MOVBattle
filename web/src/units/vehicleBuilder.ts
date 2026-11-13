@@ -9,7 +9,7 @@ import { jitterVertices } from "./tribalDress";
 import { dressBallistaCrew } from "./ancientDress";
 import { longshipCarrierDress } from "./vikingDress";
 import { cannonBandanna, cannonShirt } from "./pirateDress";
-import { bombCrewCap } from "./secretDress";
+import { bombCrewCap, bombRiderDress } from "./secretDress";
 import { skeletonCrew } from "./spookyDress";
 import { elephantRiderDress, elephantBlanket } from "./goodDress";
 import { buildFacetedBoulder } from "./propBuilder";
@@ -724,7 +724,8 @@ function buildBombCannon(scene: Scene, color: Color3, options: { showOperators?:
       elbow.rotation.set(R.elbow, 0, 0);
     }
     // [S] 534 (a.1) the big floppy team pirate cap on the rider too (secretDress bombCrewCap), in place of the bandanna
-    body.allMeshes.push(...bombCrewCap(scene, rider, color), ...cannonShirt(scene, rider, color));
+    // [S] 534 (a.2) a team-skinned pirate in an open team shirt and a green sash (secretDress bombRiderDress), not the crew's white shirt
+    body.allMeshes.push(...bombCrewCap(scene, rider, color), ...bombRiderDress(scene, rider, color));
   });
   body.vehicleSockets = {
     primaryMuzzle: makeSocket(scene, root, "bomb_cannon_muzzle_socket", onAxis(B.bell + B.lip + 0.04)),

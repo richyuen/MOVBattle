@@ -2,7 +2,7 @@ import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, Scene, TransformNode, Ve
 import type { Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
-import { limbBox } from "./medievalDress";
+import { limbBox, limbShell } from "./medievalDress";
 
 /*
  * Secret faction cloth, hats and ornaments (loop: new per-unit dress goes here, not into unitFactory or propBuilder).
@@ -4514,6 +4514,63 @@ export function bombCrewCap(scene: Scene, body: ArticulatedBody, team: Color3): 
     tail.rotation.set(-0.35, 0, s * C.splay); out.push(tail);
   }
   for (const m of out) { m.material = cloth; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/*
+ * [S] 534 (a.2) the Bomb Cannon's barrel rider as a team pirate (CONFIRM 533: "pale grey-blue plated mannequin body ... reads as armour";
+ * secret.bomb_cannon.blue.png, .red.png, .jpg: a team-skinned pirate in an open team shirt, its collar laid open in a V on the chest and its
+ * loose sleeves to the elbow, a wide green sash knotted round his waist with two tails hanging down his left front, brown shoes). Replaces the
+ * crew's white cannonShirt on him. BOMB_RIDER_DRESS on the trunk's box (W, H, D): every body and skin mesh recoloured to the deep team skin (the
+ * cap's saturated team .skin, self-lit .12); the shirt a six-sided shell .shirtOut of the trunk round from the shoulders to .shirtTo of H under
+ * them, a touch lighter (.shirt); two collar flaps .lapel of W long laid open .lapelOpen rad either side of a V; sleeves .sleeveOut round the
+ * upper arms to .sleeveTo; the sash .sashH of H tall .sashOut round the waist, green, two tails .tailL of H long; shoes brown on the foot ends
+ * of the shins. Out of the glow.
+ */
+const BOMB_RIDER_DRESS = { skin: 0.85, shirt: 1.12, shirtOut: 1.1, shirtTo: 0.95, lapel: 0.34, lapelOpen: 0.5, sleeveOut: 1.35, sleeveTo: 0.85,
+  sashH: 0.17, sashOut: 1.16, sashAt: 0.92, tailL: 0.38, green: new Color3(0.06, 0.32, 0.1), shoe: new Color3(0.2, 0.1, 0.05), shoeTo: 0.78 };
+export function bombRiderDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const R = BOMB_RIDER_DRESS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const deep = sat.scale(peak / Math.max(sat.r, sat.g, sat.b, 1e-3));
+  const skinC = deep.scale(R.skin), shirtC = deep.scale(R.skin * R.shirt);
+  const skin = mf.get("cloth", skinC, { emissive: skinC.scale(0.12), roughness: 1 });
+  const shirt = mf.get("cloth", shirtC, { emissive: shirtC.scale(0.14), roughness: 1 });
+  const green = mf.get("cloth", R.green, { emissive: R.green.scale(0.2), roughness: 1 });
+  const shoe = mf.get("cloth", R.shoe, { emissive: R.shoe.scale(0.3), roughness: 1 });
+  // the team skin on the man himself (his bead eyes keep their own materials)
+  const own = new Set([body.torsoMesh.material, body.headMesh.material, body.leftUpperArm.material, body.leftUpperLeg.material].filter(Boolean));
+  for (const m of body.allMeshes) if (m.material && own.has(m.material)) m.material = skin;
+  const out: Mesh[] = [];
+  const tm = body.torsoMesh, tb = tm.getBoundingInfo().boundingBox, ts = tm.scaling;
+  const W = tb.extendSize.x * 2 * ts.x, H = tb.extendSize.y * 2 * ts.y, D = tb.extendSize.z * 2 * ts.z;
+  const cx = tm.position.x + tb.center.x * ts.x, cy = tm.position.y + tb.center.y * ts.y, cz = tm.position.z + tb.center.z * ts.z;
+  const top = cy + H / 2, put = (m: Mesh, mat: Material) => { m.parent = tm.parent; m.material = mat; out.push(m); return m; };
+  const shellH = H * R.shirtTo;
+  const shell = put(MeshBuilder.CreateCylinder("bombRiderShirt", { height: shellH, diameter: 1, tessellation: 6 }, scene), shirt);
+  shell.scaling.set(W * R.shirtOut, 1, D * R.shirtOut * 1.15); shell.position.set(cx, top - shellH / 2, cz);
+  // the open collar: two flaps laid back either side of a V on the chest, standing proud of the shirt's front
+  for (const s of [-1, 1]) {
+    const flap = put(MeshBuilder.CreateBox("bombRiderLapel", { width: W * 0.2, height: W * R.lapel, depth: D * 0.06 }, scene), shirt);
+    flap.position.set(cx + s * W * 0.14, top - W * R.lapel * 0.45, cz + (D * R.shirtOut * 1.15) / 2 + D * 0.04);
+    flap.rotation.set(-0.15, 0, s * R.lapelOpen);
+    // the V between them shows the team chest in the skin shade, a dark crease at its point
+  }
+  const vee = put(MeshBuilder.CreateCylinder("bombRiderVee", { height: D * 0.04, diameterTop: W * 0.3, diameterBottom: 0, tessellation: 3 }, scene), skin);
+  vee.rotation.x = Math.PI / 2; vee.rotation.y = Math.PI; vee.position.set(cx, top - W * 0.2, cz + (D * R.shirtOut * 1.15) / 2 + D * 0.02);
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) out.push(limbShell(scene, "bombRiderSleeve", arm, 0, R.sleeveTo, R.sleeveOut, shirt));
+  // the green sash round the waist, two tails down his left front
+  const sashY = top - H * R.sashAt;
+  const sash = put(MeshBuilder.CreateCylinder("bombRiderSash", { height: H * R.sashH, diameter: 1, tessellation: 8 }, scene), green);
+  sash.scaling.set(W * R.sashOut, 1, D * R.sashOut * 1.15); sash.position.set(cx, sashY, cz);
+  for (const s of [0, 1]) {
+    const tail = put(MeshBuilder.CreateBox("bombRiderSashTail", { width: W * 0.13, height: H * R.tailL, depth: D * 0.06 }, scene), green);
+    tail.position.set(cx - W * (0.22 + s * 0.12), sashY - (H * R.tailL) / 2, cz + (D * R.sashOut * 1.15) / 2 + D * 0.03);
+    tail.rotation.z = (s ? -0.25 : 0.12);
+  }
+  // brown shoes on the shins' foot ends
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) out.push(limbShell(scene, "bombRiderShoe", shin, R.shoeTo, 1.02, 1.25, shoe));
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
   return out;
 }
 
