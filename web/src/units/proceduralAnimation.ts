@@ -90,12 +90,13 @@ const WALL_BOARD_TURN = 0.38;
 const WALL_BOARD_LEAN = [-0.2, 0.3];
 // How far a pressing wall man's drive leg goes back (radians at the hip, at full shove); his lead knee and trunk follow it (see the brace).
 const PRESS_DRIVE = 0.4;
-// The tree giant's hip carry: the arm reached forward and down, the elbow nearly straight, so the fist rides at the hip ahead of the thigh (units/secret.tree_giant),
-// and where the trunk points in the body's frame (x out, y up, z ahead).
-const TREE_HIP_ARM = { raise: -0.9, out: 0.15, elbow: -0.4 };
-// 267 [R], 269 (units/secret.tree_giant): the trunk runs out near level from the fist to his flank and a little ahead, and its bow (built to the trunk's own
-// +x; see the spec over TREE_CLUB_LONG in propBuilder) is turned to face up, so the trunk rises a little into a crown centred on its end, hip-high at his side.
-const TREE_HIP_TIP = new Vector3(0.9, 0.02, 0.35);
+// [S] 541 (tree_giant b.1) the tree giant hugs his tree (audit 538: "tree held in one hand, low by the hip - TABS: tree hugged two-handed, upright
+// against the chest"; secret.tree_giant.red.png: both forearms across his belly, the fists together on the trunk before the middle of his chest, the
+// root ball at his belt, the trunk standing up past his face to the crown over his head). TREE_HUG_ARM: the weapon arm reached forward and in, the
+// elbow well bent, so the fist sits before the chest's middle; TREE_HUG_TIP where the trunk points in the body's frame (x out, y up, z ahead): up,
+// a touch out and forward, clear of the face. The off fist closes on the trunk beside it (the two-handed grip, _offhandToGrip).
+const TREE_HUG_ARM = { raise: -1.0, out: -0.85, elbow: -1.2 };
+const TREE_HUG_TIP = new Vector3(0.12, 1, 0.22);
 // The scythe's high carry (units/spooky.reaper): the fist up in front of the chest, the snath slanted up and out over his weapon shoulder so its head
 // rides above the hood, and the crescent turned flat to the front (SCYTHE_SPIN about the snath), sweeping back in over the hood and curling down.
 const SCYTHE_HIGH_ARM = { raise: -0.95, out: 0.22, elbow: -1.05 };
@@ -2700,10 +2701,10 @@ export class ProceduralAnimator {
     } : null;
     if (scythe) this._carryTurn = 1;
     // A club with nothing in the other hand is held in both (two-handed grip, see OFFHAND_GRIP_UP), and like the scythe it is in its carry from the first frame
-    this._twoHanded = node?.name === "club" && !this._shieldBoard() && this._body.leftHand.getChildren().every((n) => /HandM$/.test(n.name));
+    this._twoHanded = (node?.name === "club" || node?.name === "treeClubCarry") && !this._shieldBoard() && this._body.leftHand.getChildren().every((n) => /HandM$/.test(n.name));
     if (this._twoHanded) this._carryTurn = 1;
     // The tree's bowed side (its own +x) is turned about the trunk to face back against the way the trunk runs out, which the carry's turn then brings round to face up
-    if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HIP_TIP.z, TREE_HIP_TIP.x * side) + Math.PI, 0, 0);
+    if (node?.name === "treeClubCarry" && prop) prop.spin = Quaternion.RotationYawPitchRoll(Math.atan2(-TREE_HUG_TIP.z, TREE_HUG_TIP.x * side) + Math.PI, 0, 0);
     const lean = (x: number, y: number, z: number): Vector3 => new Vector3((x + (h(93) - 0.5) * 0.3) * side, y + (h(94) - 0.5) * 0.3, z + (h(95) - 0.5) * 0.3).normalize();
     // A pole held in both hands is carried upright before the chest (POLE_GRIP), the one attitude that keeps its shaft in the off hand's reach
     // The pitchfork (339) is carried low instead: the weapon arm hanging, the shaft out level before his hips (farmer.farmer.png), the last attitude below
@@ -2736,7 +2737,7 @@ export class ProceduralAnimator {
       : scythe
       ? { raise: SCYTHE_HIGH_ARM.raise, out: SCYTHE_HIGH_ARM.out, elbow: SCYTHE_HIGH_ARM.elbow, tip: new Vector3(SCYTHE_HIGH_TIP.x * side, SCYTHE_HIGH_TIP.y, SCYTHE_HIGH_TIP.z).normalize() }
       : tree
-      ? { raise: TREE_HIP_ARM.raise, out: TREE_HIP_ARM.out, elbow: TREE_HIP_ARM.elbow, tip: new Vector3(TREE_HIP_TIP.x * side, TREE_HIP_TIP.y, TREE_HIP_TIP.z).normalize() }
+      ? { raise: TREE_HUG_ARM.raise, out: TREE_HUG_ARM.out, elbow: TREE_HUG_ARM.elbow, tip: new Vector3(TREE_HUG_TIP.x * side, TREE_HUG_TIP.y, TREE_HUG_TIP.z).normalize() }
       : pick < 0.3
       ? { raise: -0.9 - h(81) * 0.3, out: 0.15 + h(82) * 0.2, elbow: -1.9 - h(83) * 0.3, tip: lean(0.25, 0.45, -0.85) }
       : pick < 0.55
