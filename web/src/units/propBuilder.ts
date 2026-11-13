@@ -3073,6 +3073,50 @@ function buildCutlass(scene: Scene, name: string, fit: BladeFit, cut: typeof CUT
  * unit scales (s): the log .long, .thick across at the butt tapering to .neck at the cut, 7-sided and flat-shaded, in two runs kinked .kink rad;
  * the point .point long from the cut to a tip, its pale whittled wood. The fist .grip of the log's length up from the butt. Lit cloth wood.
  */
+/*
+ * [S] 538 (blackbeard b.1) Blackbeard's anchor (audit 538: "thin rapier in the main hand - TABS: huge dark grey anchor in the fist";
+ * secret.blackbeard.red.png, card Main Hand: a ship's anchor nearly as long as his legs, held in the fist near its ring end, the shank running out
+ * from the fist to a crown, two thick arms curving out and back from the crown toward the fist, each ending in a broad flat spade fluke; a ring at
+ * the shank's head behind the fist; all one flat dark grey). BB_ANCHOR in his standing heights (fit.stand): shank .long from .back behind the fist,
+ * .thick across; ring .ring across; arms on a circle .arm in radius round a point .arm under the crown, swept from the crown through .sweep rad in
+ * .segs runs, .armThick across tapering to .armTip; flukes .fluke long, .flukeW wide, .flukeT thick, along each arm's last run. Dark grey lit
+ * cloth self-lit .2 ("metal" renders near black).
+ */
+const BB_ANCHOR = { long: 0.56, back: 0.08, thick: 0.05, ring: 0.1, arm: 0.2, sweep: 2.1, segs: 5, armThick: 0.05, armTip: 0.035, fluke: 0.12,
+  flukeW: 0.1, flukeT: 0.03, grey: new Color3(0.22, 0.22, 0.24) };
+function buildBlackbeardAnchor(scene: Scene, fit: BladeFit): Mesh {
+  const A = BB_ANCHOR, H = fit.stand, L = H * A.long, B = H * A.back;
+  const grey = mat(scene, A.grey, 0.2, "cloth");
+  // the root is the shank itself, its fist end at the hand's origin, running out along +y
+  const shank = MeshBuilder.CreateCylinder("anchorShank", { height: L + B, diameter: H * A.thick, tessellation: 6 }, scene);
+  shank.bakeTransformIntoVertices(Matrix.Translation(0, (L - B) / 2, 0));
+  shank.material = grey; shank.convertToFlatShadedMesh();
+  const put = (m: Mesh): Mesh => { m.parent = shank; m.material = grey; m.convertToFlatShadedMesh(); return m; };
+  const ring = put(MeshBuilder.CreateTorus("anchorRing", { diameter: H * A.ring, thickness: H * A.thick * 0.5, tessellation: 10 }, scene));
+  ring.rotation.z = Math.PI / 2; ring.position.y = -B - H * A.ring * 0.4;
+  const R = H * A.arm, crown = put(MeshBuilder.CreateIcoSphere("anchorCrown", { radius: H * A.armThick * 0.75, subdivisions: 1 }, scene));
+  crown.position.y = L;
+  for (const side of [-1, 1]) {
+    const at = (t: number) => new Vector3(side * R * Math.sin(t), L - R + R * Math.cos(t), 0);
+    for (let k = 0; k < A.segs; k++) {
+      const t0 = (A.sweep * k) / A.segs, t1 = (A.sweep * (k + 1)) / A.segs;
+      const a = at(t0), b = at(t1), seg = b.subtract(a), mid = a.add(b).scale(0.5);
+      const th = H * (A.armThick + (A.armTip - A.armThick) * ((k + 0.5) / A.segs));
+      const run = put(MeshBuilder.CreateCylinder("anchorArm", { height: seg.length() * 1.12, diameter: th, tessellation: 6 }, scene));
+      run.position.copyFrom(mid); run.rotation.z = -Math.atan2(seg.x, seg.y);
+      if (k === A.segs - 1) {
+        // the fluke: a broad flat spade laid along the arm's last run, its point past the arm's tip
+        const fluke = put(MeshBuilder.CreateCylinder("anchorFluke", { height: H * A.fluke, diameterBottom: H * A.flukeW, diameterTop: 0, tessellation: 4 }, scene));
+        fluke.scaling.z = A.flukeT / A.flukeW;
+        const dir = seg.normalize();
+        fluke.position.copyFrom(b.add(dir.scale(-H * A.fluke * 0.15)));
+        fluke.rotation.z = -Math.atan2(dir.x, dir.y);
+      }
+    }
+  }
+  return shank;
+}
+
 const VLAD_LOG = { long: 0.78, thick: 0.1, neck: 0.115, kink: 0.08, point: 0.4, grip: 0.22, bark: new Color3(0.4, 0.22, 0.12), pale: new Color3(0.86, 0.66, 0.42) };
 function buildVladLog(scene: Scene, s: number): Mesh {
   const V = VLAD_LOG, L = V.long * s, half = L / 2;
@@ -5324,6 +5368,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         return blade;
       }
       if (variant === "solar_wand") return buildSolarWand(scene, fit, _s);
+      if (variant === "blackbeard_anchor") return buildBlackbeardAnchor(scene, fit);
       // [S] 470b the Pharaoh's flail held in the off fist as a sword is, rod up and forward where it reads (from the staff hold it pointed at the camera)
       if (type === "sword" && variant === "pharaoh_flail") return buildPharaohFlail(scene, fit, teamColor ?? accent);
       const cut = type === "sword" ? (variant === "longsword" ? LONGSWORD : variant === "valkyrie_sword" ? VALKYRIE_SWORD : undefined) : undefined;
