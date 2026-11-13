@@ -70,6 +70,7 @@ const KICK_DUST = { count: 5, spread: 0.35, lift: 0.25, born: 0.5, grown: 1.5, o
  * .disc alpha; .rays thin gold beams .rayTall m tall, .rayWide m across, standing round him at .rayAt of the radius, rising from the ground over .grow of
  * the life and wheeling round him at .spin rad/s; the whole fades in fast and out over its .life s. Self-lit, in the glow layer so the gold blooms.
  */
+const WIND_RING = { rows: [0.35, 1.0, 1.65, 2.2], streaks: 4, segs: 6, arc: 1.1, thick: 0.09, wave: 0.12, spin: 7, from: 0.55, grow: 0.25, fade: 0.5, alpha: 0.9, ground: 0.45, white: new Color3(1, 1, 1) };
 const SOLAR_MAELSTROM_FX = { ring: 0.16, disc: 0.3, arms: 6, segs: 7, twist: 2.6, tall: 2.4, wide: 0.22, spin: 4.5, from: 0.75, grow: 0.12, implode: 0.18, flash: 2.2,
   gold: new Color3(1, 0.72, 0.15), pale: new Color3(1, 0.88, 0.45), white: new Color3(1, 0.97, 0.8) };
 const KNEEL_AURA = { radius: 2.4, ring: 0.14, disc: 0.28, rays: 12, rayTall: 2.6, rayWide: 0.09, rayAt: 0.62, grow: 0.25, spin: 1.4, life: 2.2, gold: new Color3(1, 0.78, 0.2), pale: new Color3(1, 0.9, 0.5) };
@@ -1748,6 +1749,58 @@ export class VisualEffects {
       remaining: seconds + 0.15,
       update: (dt) => { age += dt; pose(); },
       dispose: () => { ringMat.dispose(); discMat.dispose(); armMat.dispose(); flashMat.dispose(); },
+    });
+  }
+
+  /**
+   * [S] 543 the Sensei's Shuriken Tempest (simulationSystem SENSEI_TEMPEST; secret.sensei.jpg: white wind swirls round him): WIND_RING.rows rings of
+   * white streaks (.streaks each, arcs of .arc rad laid round the ring) at .rows heights from his shins to over his head, each row wheeling the
+   * other way, opening from .from of `radius` to full in .grow s and fading out over the last .fade s; a pale ground ring under them. Follows `at`.
+   */
+  spawnWindRing(at: () => Vector3 | null, radius: number, seconds: number): void {
+    const K = WIND_RING;
+    const root = new TransformNode("windRing", this._scene);
+    const mat = (alpha: number): StandardMaterial => {
+      const m = new StandardMaterial("windRingMat", this._scene);
+      m.diffuseColor = K.white; m.emissiveColor = K.white; m.disableLighting = true; m.alpha = alpha; m.backFaceCulling = false;
+      return m;
+    };
+    const streakMat = mat(K.alpha), groundMat = mat(K.ground);
+    const rows: TransformNode[] = [];
+    for (let r = 0; r < K.rows.length; r++) {
+      const row = new TransformNode("windRingRow", this._scene);
+      row.parent = root; row.position.y = K.rows[r];
+      const rr = radius * (1 - 0.12 * r);
+      for (let s = 0; s < K.streaks; s++) {
+        const a0 = (s / K.streaks) * Math.PI * 2 + r * 0.7;
+        for (let k = 0; k < K.segs; k++) {
+          const ang = a0 + (k / K.segs) * K.arc, w = K.thick * (1 - 0.6 * (k / K.segs));
+          const seg = MeshBuilder.CreateBox("windRingStreak", { width: w, height: w * 0.6, depth: (rr * K.arc) / K.segs * 1.15 }, this._scene);
+          seg.position.set(Math.cos(ang) * rr, Math.sin(ang * 3 + r) * K.wave, Math.sin(ang) * rr);
+          seg.rotation.y = -ang; // laid along the ring
+          seg.material = streakMat; seg.parent = row; seg.isPickable = false;
+        }
+      }
+      rows.push(row);
+    }
+    const ground = MeshBuilder.CreateTorus("windRingGround", { diameter: radius * 2, thickness: K.thick * 1.6, tessellation: 40 }, this._scene);
+    ground.scaling.y = 0.2; ground.position.y = 0.05; ground.material = groundMat; ground.parent = root; ground.isPickable = false;
+    let age = 0;
+    const pose = (): void => {
+      const p = at();
+      if (p) root.position.set(p.x, p.y, p.z);
+      const open = K.from + (1 - K.from) * Math.min(1, age / K.grow);
+      const fade = Math.min(1, Math.max(0, (seconds - age) / K.fade));
+      rows.forEach((row, i) => { row.rotation.y = (i % 2 ? -1 : 1) * age * K.spin; row.scaling.set(open, 1, open); });
+      ground.scaling.x = ground.scaling.z = open;
+      streakMat.alpha = K.alpha * fade; groundMat.alpha = K.ground * fade;
+    };
+    pose();
+    this._effects.push({
+      root,
+      remaining: seconds,
+      update: (dt) => { age += dt; pose(); },
+      dispose: () => { streakMat.dispose(); groundMat.dispose(); },
     });
   }
 

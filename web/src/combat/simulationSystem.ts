@@ -758,6 +758,15 @@ const CULTIST_IMPLOSION = { first: 1.2, every: 7, reach: 5, radius: 4.5, pull: 2
  */
 const SENTINEL_CATCH = { warn: 0.15, front: 0.4, kind: "pavise_block" };
 const SAMURAI_BLOCK = { warn: 0.5, reach: 1.3, ahead: 0.6, chest: 1.0, flick: 0.3, cooldown: 0.5, kind: "block" };
+/**
+ * [S] 543 the Sensei's Shuriken Tempest (card Abilities: "uses when units get too close. Wind will push units back and deflect some projectiles";
+ * secret.sensei.jpg: white wind swirls round him; audit 541 c.1). When a living enemy on foot comes within .near m of him (on his feet, .first s
+ * into the fight at the earliest, then every .every s), a ring of white wind streaks rises round him for .seconds s (visualEffects spawnWindRing,
+ * .radius m): every enemy within .radius m is blown out from him (applyBlastLaunch .speed, .lift; .large/.giant for big men), once at the start
+ * and again each .pulse s an enemy is still inside, and every missile entering the ring is turned back on his enemies (ProjectileSystem
+ * deflectField). Logged as .kind (not a plain-attack prefix, LESSONS), and .deflectKind per missile turned.
+ */
+const SENSEI_TEMPEST = { first: 0.3, every: 6, near: 3.2, seconds: 3, radius: 2.6, speed: 7, lift: 3.5, large: 0.6, giant: 0.3, pulse: 0.5, kind: "shuriken_tempest", deflectKind: "tempest_deflect" };
 const PAINTER_DODGE = { warn: 0.3, dist: 1.6, seconds: 0.2, cooldown: 1.2, kind: "dodge" };
 /*
  * [S] 498 the Death Bringer's Quick Dodge (card Characteristics: "the ability to dodge projectiles, moving to the side then back in almost an
@@ -1097,6 +1106,7 @@ export class SimulationSystem {
     for (const h of this._hammers) h.hinge.dispose(false, true);
     this._hammers = [];
     this._clearChrono();
+    this._tempest.clear();
     for (const imp of this._impales.values()) imp.spear.dispose();
     this._impales.clear();
     for (const l of this._lassos.values()) { l.rope.dispose(); l.loop.dispose(); }
@@ -1154,6 +1164,7 @@ export class SimulationSystem {
     for (const h of this._hammers) h.hinge.dispose(false, true);
     this._hammers = [];
     this._clearChrono();
+    this._tempest.clear();
     for (const unit of this._units) {
       unit.stopMoving();
       unit.setSpinning(false);
@@ -1206,6 +1217,7 @@ export class SimulationSystem {
     this._painterDodges(now);
     this._monarchDodges(now);
     this._samuraiBlocks(now);
+    this._senseiTempests(now);
     this._cultistImplosions(now);
     this._gravestoneWalls(now);
     this._sentinelCatches(now);
@@ -4602,6 +4614,39 @@ export class SimulationSystem {
     }
   }
   private _blockReadyAt = new Map<RuntimeUnit, number>();
+
+  /** Shuriken Tempest (SENSEI_TEMPEST): the wind ring rises round a Sensei an enemy closes on, blows men out and turns missiles back. */
+  private _tempest = new Map<RuntimeUnit, { ready: number; until: number; pulse: number }>();
+  private _senseiTempests(now: number): void {
+    const T = SENSEI_TEMPEST;
+    for (const unit of this._units) {
+      if (unit.definition.id !== "secret.sensei" || unit.isDead) continue;
+      let st = this._tempest.get(unit);
+      if (!st) { st = { ready: now + T.first, until: -1, pulse: 0 }; this._tempest.set(unit, st); }
+      const inside = (r: number): RuntimeUnit[] => this._units.filter((u) => !u.isDead && u.team !== unit.team && !u.linkedParent && !isVehicleUnit(u.definition.id)
+        && Math.hypot(u.position.x - unit.position.x, u.position.z - unit.position.z) <= r);
+      if (now >= st.until) {
+        if (now < st.ready || unit.isToppled || unit.isDowned || inside(T.near).length === 0) continue;
+        st.until = now + T.seconds; st.ready = now + T.every; st.pulse = 0;
+        this.visualEffects?.spawnWindRing(() => (unit.isDead ? null : unit.position), T.radius, T.seconds);
+        this._logAbility(unit, T.kind, now, unit.position);
+      }
+      if (now >= st.pulse) {
+        const men = inside(T.radius);
+        if (men.length > 0) st.pulse = now + T.pulse;
+        for (const u of men) {
+          const out = new Vector3(u.position.x - unit.position.x, 0, u.position.z - unit.position.z);
+          if (out.lengthSquared() < 1e-6) out.set(1, 0, 0);
+          out.normalize();
+          const size = u.definition.size;
+          const resist = size === "giant" || size === "colossal" ? T.giant : size === "large" ? T.large : 1;
+          u.applyBlastLaunch(out, T.speed * resist, T.lift * resist);
+        }
+      }
+      const turned = this.projectileSystem?.deflectField(unit.position.add(new Vector3(0, 1, 0)), T.radius, unit.team) ?? 0;
+      if (turned > 0) this._logAbility(unit, T.deflectKind, now, unit.position);
+    }
+  }
 
   private _cultistImplosions(now: number): void {
     const C = CULTIST_IMPLOSION;
