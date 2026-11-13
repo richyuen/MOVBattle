@@ -4827,8 +4827,12 @@ export function skeletonGiantGreaves(scene: Scene, body: ArticulatedBody, team: 
  * greave a slim bone foot, about as wide as the greave's foot, low, reaching a little forward). GIANT_FEET: the body's foot box (cuff + toe) hidden;
  * in its place, in the knee frame, a bone foot .wide of the old box's width, .tall of its height, .long of its length, sole on the old sole, its back
  * at the old heel; an ankle knob .knob of the new width across on its top at the back. The foot's own bone material.
+ * [S] 537 (a.3 again; critic 536 "still greave-wide boxes"): no box. Each foot is a thin bone: a six-sided wedge .wide of the old box's width at
+ * the heel narrowing to .toe of that at the toes, .long of its length forward from the old heel, .tall of its height, sole on the old sole; a
+ * round heel knob .heel of the wedge's heel width across at its back; a thin ankle peg .peg of the heel width across from the wedge's top up
+ * .pegUp of the old height into the greave's mouth, so a bone ankle shows between greave and foot.
  */
-const GIANT_FEET = { wide: 0.48, tall: 0.5, long: 0.8, knob: 0.9 };
+const GIANT_FEET = { wide: 0.34, toe: 0.55, tall: 0.36, long: 0.86, heel: 1.05, peg: 0.5, pegUp: 0.6 };
 function giantBoneFeet(scene: Scene, body: ArticulatedBody): Mesh[] {
   const F = GIANT_FEET, out: Mesh[] = [];
   for (const knee of [body.leftKnee, body.rightKnee]) {
@@ -4837,13 +4841,18 @@ function giantBoneFeet(scene: Scene, body: ArticulatedBody): Mesh[] {
     const bb = old.getBoundingInfo().boundingBox, s = old.scaling, p = old.position;
     const lo = new Vector3(p.x + bb.minimum.x * s.x, p.y + bb.minimum.y * s.y, p.z + bb.minimum.z * s.z);
     const hi = new Vector3(p.x + bb.maximum.x * s.x, p.y + bb.maximum.y * s.y, p.z + bb.maximum.z * s.z);
-    const w = (hi.x - lo.x) * F.wide, h = (hi.y - lo.y) * F.tall, d = (hi.z - lo.z) * F.long;
+    const H0 = hi.y - lo.y, w = (hi.x - lo.x) * F.wide, h = H0 * F.tall, d = (hi.z - lo.z) * F.long, cx = (lo.x + hi.x) / 2;
     old.isVisible = false;
-    const foot = MeshBuilder.CreateBox("giantBoneFoot", { width: w, height: h, depth: d }, scene);
-    foot.parent = knee; foot.position.set((lo.x + hi.x) / 2, lo.y + h / 2, lo.z + d / 2); foot.material = old.material;
-    const knob = MeshBuilder.CreateIcoSphere("giantBoneAnkle", { radius: (w * F.knob) / 2, subdivisions: 1 }, scene);
-    knob.parent = knee; knob.position.set((lo.x + hi.x) / 2, lo.y + h, lo.z + w * 0.5); knob.material = old.material;
-    for (const m of [foot, knob]) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); out.push(m); }
+    // the wedge: a cylinder along +y (heel at -y, toes at +y) laid forward (RotationX(+PI/2) tips +y to +z), squashed to .tall
+    const foot = MeshBuilder.CreateCylinder("giantBoneFoot", { height: d, diameterBottom: w, diameterTop: w * F.toe, tessellation: 6 }, scene);
+    foot.parent = knee; foot.rotation.x = Math.PI / 2; foot.scaling.z = h / w;
+    foot.position.set(cx, lo.y + h / 2, lo.z + d / 2); foot.material = old.material;
+    const knob = MeshBuilder.CreateIcoSphere("giantBoneAnkle", { radius: (w * F.heel) / 2, subdivisions: 1 }, scene);
+    knob.parent = knee; knob.position.set(cx, lo.y + h * 0.55, lo.z + w * 0.35); knob.material = old.material;
+    const pegH = H0 * F.pegUp;
+    const peg = MeshBuilder.CreateCylinder("giantBoneAnklePeg", { height: pegH, diameter: w * F.peg, tessellation: 6 }, scene);
+    peg.parent = knee; peg.position.set(cx, lo.y + h * 0.7 + pegH / 2, lo.z + w * 0.45); peg.material = old.material;
+    for (const m of [foot, knob, peg]) { m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); out.push(m); }
   }
   return out;
 }
