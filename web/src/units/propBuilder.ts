@@ -4767,7 +4767,7 @@ function buildNecroKnife(scene: Scene, fit: BladeFit, team: Color3): Mesh {
  */
 const DRAGON_BARROW = { gripZ: 0.2, gripY: 0.4, gripX: 0.17, trayZ0: 0.42, trayZ1: 1.12, trayW: 0.34, flare: 1.18, trayY: 0.22, trayH: 0.17, plank: 0.022, boards: 2,
   legs: 0.22, wheel: 0.27, wheelW: 0.09, axleZ: 1.2, wood: new Color3(0.3, 0.16, 0.085), face: new Color3(0.62, 0.42, 0.22) };
-function buildDragonBarrow(scene: Scene, body: ArticulatedBody): Mesh {
+function buildDragonBarrow(scene: Scene, body: ArticulatedBody, team?: Color3): Mesh {
   const B = DRAGON_BARROW, H = body.metrics.overallHeight;
   const wood = mat(scene, B.wood, 0.14, "cloth"), dark = mat(scene, B.wood.scale(0.75), 0.12, "cloth"), face = mat(scene, B.face, 0.16, "cloth");
   const root = new Mesh("dragonBarrow", scene);
@@ -4810,7 +4810,69 @@ function buildDragonBarrow(scene: Scene, body: ArticulatedBody): Mesh {
     const ring = put(MeshBuilder.CreateCylinder("dragonBarrowWheelFace", { height: P * 0.3, diameter: B.wheel * H * 0.8, tessellation: 10 }, scene), face);
     ring.rotation.z = Math.PI / 2; ring.position.set(side * (B.wheelW * H) / 2, axle.y, axle.z);
   }
+  if (team) buildBarrowDragon(scene, root, put, H, z0, z1, y0, team);
   return root;
+}
+
+/*
+ * [S] 529 (a.2, b.2) the little dragon in the barrow (secret.wheelbarrow_dragon.red.png: a big rounded team-coloured dragon head filling the front of
+ * the tray, a little wider than it; a pair of big tan horns curving out and up from the back of the skull and a smaller pair under them; bead eyes
+ * on the sides; two tan nostril studs on the snout; across the whole front a wide open grin, tan jaw rims above and below a dark mouth, long tan
+ * fangs down from the upper rim and up from the lower). BARROW_DRAGON in the barrow's H, on its root: a skull .w H wide, .h H tall, .l H long,
+ * its centre .at of the tray's length from the back and .sit H over the floor; the mouth .mouth of the skull's height under its centre, gaping
+ * .gape of it; .teeth fangs .fang of the gape long per rim; horns .horn and .hornLo of the width long. Team skin lit cloth self-lit .12, bone tan.
+ */
+const BARROW_DRAGON = { w: 0.44, h: 0.3, l: 0.4, at: 0.62, sit: 0.13, mouth: 0.18, gape: 0.24, teeth: 7, fang: 0.55, horn: 0.62, hornLo: 0.36,
+  bone: new Color3(0.82, 0.66, 0.48), mouthDark: new Color3(0.12, 0.03, 0.04) };
+function buildBarrowDragon(scene: Scene, root: Mesh, put: (m: Mesh, mt?: PBRMetallicRoughnessMaterial) => Mesh, H: number,
+  z0: number, z1: number, y0: number, team: Color3): void {
+  const D = BARROW_DRAGON;
+  const skin = mat(scene, team, 0.12, "cloth"), bone = mat(scene, D.bone, 0.16, "cloth"), dark = mat(scene, D.mouthDark, 0.05, "cloth");
+  const white = mat(scene, new Color3(0.92, 0.92, 0.9), 0.3, "cloth"), black = mat(scene, new Color3(0.03, 0.03, 0.03), 0, "cloth");
+  const w = D.w * H, h = D.h * H, l = D.l * H;
+  const c = new Vector3(0, y0 + D.sit * H + h * 0.3, z0 + (z1 - z0) * D.at);
+  const skull = put(MeshBuilder.CreateIcoSphere("barrowDragonSkull", { radius: 0.5, subdivisions: 2 }, scene), skin);
+  skull.scaling.set(w, h, l); skull.position.copyFrom(c);
+  // the lower jaw: a team block under the mouth, sitting down in the tray
+  const mouthY = c.y - h * D.mouth, gap = h * D.gape, front = c.z + l * 0.44;
+  const jaw = put(MeshBuilder.CreateBox("barrowDragonJaw", { width: w * 0.86, height: h * 0.3, depth: l * 0.8 }, scene), skin);
+  jaw.position.set(0, mouthY - gap / 2 - h * 0.15, c.z + l * 0.04);
+  const inside = put(MeshBuilder.CreateBox("barrowDragonMouth", { width: w * 0.86, height: gap, depth: l * 0.1 }, scene), dark);
+  inside.position.set(0, mouthY, front - l * 0.02);
+  for (const [y, dir] of [[mouthY + gap / 2, -1], [mouthY - gap / 2, 1]] as const) {
+    const rim = put(MeshBuilder.CreateBox("barrowDragonJawRim", { width: w * 0.98, height: h * 0.08, depth: l * 0.14 }, scene), bone);
+    rim.position.set(0, y - dir * h * 0.03, front + l * 0.02);
+    for (const side of [-1, 1]) {
+      const cheek = put(MeshBuilder.CreateBox("barrowDragonJawSide", { width: w * 0.06, height: h * 0.08, depth: l * 0.42 }, scene), bone);
+      cheek.position.set(side * w * 0.47, y - dir * h * 0.03, front - l * 0.2);
+    }
+    for (let k = 0; k < D.teeth; k++) {
+      const t = D.teeth > 1 ? k / (D.teeth - 1) - 0.5 : 0, long = gap * D.fang * (k % 2 ? 0.7 : 1);
+      const fang = put(MeshBuilder.CreateCylinder("barrowDragonFang", { height: long, diameterTop: 0, diameterBottom: w * 0.07, tessellation: 4 }, scene), bone);
+      fang.rotation.x = dir < 0 ? Math.PI : 0;
+      fang.position.set(t * w * 0.84, y + dir * long / 2, front + l * 0.05);
+    }
+  }
+  // eyes on the skull's sides
+  for (const side of [-1, 1]) {
+    const eye = put(MeshBuilder.CreateIcoSphere("barrowDragonEye", { radius: w * 0.07, subdivisions: 1, flat: true }, scene), white);
+    eye.position.set(side * w * 0.47, c.y + h * 0.1, c.z + l * 0.14);
+    const pupil = put(MeshBuilder.CreateIcoSphere("barrowDragonPupil", { radius: w * 0.035, subdivisions: 1, flat: true }, scene), black);
+    pupil.position.set(side * w * 0.52, c.y + h * 0.1, c.z + l * 0.16);
+    // nostril studs on the snout's top
+    const nose = put(MeshBuilder.CreateCylinder("barrowDragonNostril", { height: h * 0.05, diameter: w * 0.08, tessellation: 4 }, scene), bone);
+    nose.position.set(side * w * 0.12, c.y + h * 0.3, c.z + l * 0.38); nose.rotation.x = 0.6;
+    // horns: a big pair out and up from the back of the skull, a small pair under them
+    for (const [len, base, at, dir] of [
+      [D.horn * w, h * 0.3, new Vector3(side * w * 0.36, c.y + h * 0.22, c.z - l * 0.12), new Vector3(side, 0.55, -0.35)],
+      [D.hornLo * w, h * 0.2, new Vector3(side * w * 0.44, c.y - h * 0.08, c.z - l * 0.26), new Vector3(side, 0.15, -0.45)],
+    ] as const) {
+      const horn = put(MeshBuilder.CreateCylinder("barrowDragonHorn", { height: len, diameterTop: 0, diameterBottom: base, tessellation: 6 }, scene), bone);
+      const d = dir.normalizeToNew();
+      horn.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), d, new Quaternion());
+      horn.position.copyFrom(at.add(d.scale(len * 0.42)));
+    }
+  }
 }
 
 function seatDevoutGauntlet(glove: Mesh, hand: TransformNode): void {
@@ -9587,29 +9649,9 @@ function buildSpecial(scene: Scene, type: SpecialType, s: number, accent: Color3
     case "clam_shell": return null;
     case "safe_bundle":
       return buildOverheadSafe(scene, body, teamColor ?? accent);
-    case "dragon_cart": {
-      const cart = MeshBuilder.CreateBox("dragonCart", { width: 0.4 * s, height: 0.2 * s, depth: 0.55 * s }, scene);
-      cart.position.set(0, -0.18 * s, -0.08 * s);
-      cart.parent = body.hip;
-      cart.material = mat(scene, new Color3(0.5, 0.34, 0.2));
-      const head = MeshBuilder.CreateBox("dragonHead", { width: 0.18 * s, height: 0.16 * s, depth: 0.18 * s }, scene);
-      head.position.set(0, 0.08 * s, 0.34 * s);
-      head.parent = cart;
-      head.material = mat(scene, accent, 0.08);
-      for (const side of [-1, 1]) {
-        const wing = MeshBuilder.CreateBox("dragonWing", { width: 0.24 * s, height: 0.12 * s, depth: 0.01 * s }, scene);
-        wing.position.set(side * 0.24 * s, 0.1 * s, 0.05 * s);
-        wing.rotation.y = side * 0.55;
-        wing.parent = cart;
-        wing.material = mat(scene, accent.scale(0.9), 0.05);
-      }
-      const horn = MeshBuilder.CreateCylinder("dragonHorn", { height: 0.12 * s, diameterTop: 0, diameterBottom: 0.025 * s, tessellation: 6 }, scene);
-      horn.position.set(0, 0.17 * s, 0.4 * s);
-      horn.parent = cart;
-      horn.material = mat(scene, new Color3(0.92, 0.85, 0.68));
-      return cart;
-    }
-    case "dragon_barrow": return buildDragonBarrow(scene, body); // [S] 528 (DRAGON_BARROW)
+    // [S] 529: the dragon head actor builds nothing; the dragon sits in the barrow's tray (BARROW_DRAGON), not a hip box with a tiny head
+    case "dragon_cart": return null;
+    case "dragon_barrow": return buildDragonBarrow(scene, body, teamColor ?? accent); // [S] 528 (DRAGON_BARROW), [S] 529 the dragon in its tray (BARROW_DRAGON)
     case "elephant_shrine": {
       const platform = MeshBuilder.CreateBox("elephantShrinePlatform", { width: 0.48 * s, height: 0.1 * s, depth: 0.36 * s }, scene);
       platform.parent = body.torso;
