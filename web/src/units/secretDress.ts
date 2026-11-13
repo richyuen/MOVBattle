@@ -5785,6 +5785,45 @@ export function ullrSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
  * W at the hem, .deep of its width deep; a ring .belt W tall at its top. Team cloth saturated (c^2) x .dark, self-lit .12; the belt brown; out of
  * the glow. The legs stride under it (a ground-length skirt hides only a hover lift, LESSONS 493: this one stops at the mid shin).
  */
+/*
+ * [S] 543 (artemis a.3) Artemis's chiton top (audit 538: "grey tunic block - TABS: team sleeveless chiton top with a brown cross strap";
+ * secret.artemis.red.png: the trunk in plain team cloth, a little looser than the body, bare team arms out of it with no pads; its hem blouses out
+ * over the belt; a brown leather strap crosses from her left shoulder to her right hip, front and back). The grey yoke and the shoulder pads are
+ * off. ARTEMIS_CHITON on the torso (the yoke box T): an 8-sided shell from .top of T's half height over its middle to .low under its foot, .fit to
+ * .foot of T's width round, .deep deep; a blouse ring .blouseH tall and .blouse round at its foot; the strap .strapW of T's width wide and .strapT
+ * thick, laid from the shoulder's top (.strapX of the width out) to the far hip, standing .stand of the depth off the shell front and back. Team
+ * cloth saturated (c^2) x .shade, self-lit .12; strap brown; out of the glow.
+ */
+const ARTEMIS_CHITON = { top: 1.0, low: 0.12, fit: 1.08, foot: 1.12, deep: 1.12, blouseH: 0.16, blouse: 1.2, strapW: 0.16, strapT: 0.05, strapX: 0.62, stand: 1.16,
+  shade: 0.95, brown: new Color3(0.3, 0.15, 0.07) };
+export function artemisChiton(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = ARTEMIS_CHITON, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const c = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(K.shade);
+  const cloth = mf.get("cloth", c, { emissive: c.scale(0.12), roughness: 1 });
+  const brown = mf.get("cloth", K.brown, { emissive: K.brown.scale(0.12), roughness: 1 });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke"));
+  for (const m of body.allMeshes) if (m.name.endsWith("_lPad") || m.name.endsWith("_rPad") || m === yoke) m.setEnabled(false);
+  const T = limbBox(yoke ?? body.torsoMesh);
+  const out: Mesh[] = [];
+  const add = (m: Mesh, mt: Material, x: number, y: number, z: number): Mesh => { m.parent = body.torso; m.position.set(x, y, z); m.material = mt; out.push(m); return m; };
+  const top = T.mid + T.half * K.top, low = T.mid - T.half * (1 + K.low), h = top - low;
+  const shell = add(MeshBuilder.CreateCylinder("artemisChiton", { height: h, diameterTop: T.wide * 2 * K.fit, diameterBottom: T.wide * 2 * K.foot, tessellation: 8 }, scene), cloth, 0, (top + low) / 2, 0);
+  shell.scaling.z = (T.deep / T.wide) * K.deep; shell.rotation.y = Math.PI / 8;
+  const bH = T.half * K.blouseH;
+  const blouse = add(MeshBuilder.CreateCylinder("artemisChitonBlouse", { height: bH, diameterTop: T.wide * 2 * K.foot, diameterBottom: T.wide * 2 * K.blouse, tessellation: 8 }, scene), cloth, 0, low + bH / 2, 0);
+  blouse.scaling.z = (T.deep / T.wide) * K.deep; blouse.rotation.y = Math.PI / 8;
+  // the strap: from her left shoulder's top over the chest to the right hip, the same line across her back
+  const sx = (Math.sign(body.leftShoulder.position.x) || 1) * T.wide * K.strapX;
+  const y1 = top - T.half * 0.05, y2 = low + bH;
+  const dx = -2 * sx, dy = y2 - y1, len = Math.hypot(dx, dy);
+  for (const side of [1, -1]) {
+    const strap = add(MeshBuilder.CreateBox("artemisStrap", { width: T.wide * K.strapW * 2, height: len, depth: T.wide * K.strapT }, scene), brown, 0, (y1 + y2) / 2, side * T.deep * K.deep * K.stand);
+    strap.rotation.z = Math.atan2(dx, -dy); // the box's +y laid along the shoulder-to-hip line
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 const ARTEMIS_DRESS = { top: 0.32, hem: 0.32, out: 1.12, flare: 1.42, deep: 0.82, belt: 0.09, dark: 0.62, brown: new Color3(0.3, 0.15, 0.07) };
 export function artemisDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = ARTEMIS_DRESS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
