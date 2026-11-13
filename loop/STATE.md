@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 539   Batch: secret_3+secret_4   Consecutive empty: 0   Done: 128/139   Parked: 0
+Iteration: 540   Batch: secret_4   Consecutive empty: 0   Done: 130/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -19,39 +19,38 @@ good: devout_gauntlet ++++ D | celestial_aegis ++++ D | radiant_glaive ++++ D | 
 evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void_cultist ++++ D | tempest_lich ++++ D | death_bringer ++++ D | void_monarch ++++ D
 secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer ++++ D | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo ++++ D | raptor_rider ++++ D | cheerleader ++++ D | cupid ++++ D | mace_spinner ++++ D | clams ++++ D | present_elf ++++ D | ice_mage ++++ D | infernal_whip ++++ D | bank_robbers ++++ D
-secret_3: witch ++++ D | banshee ++++ D | necromancer --++ o | solar_architect ++++ D | wheelbarrow_dragon ++++ D | skeleton_giant ++++ D | bomb_cannon ++++ D | cavalry ++++ D | vlad -+++ o | gatling_gun ++++ D
-secret_4: blackbeard -+-+ o | samurai_giant ---+ o | ullr ---+ o | lady_red_jade ---+ o | sensei --++ o | shogun ---+ o | tree_giant ---+ o | artemis ---+ o | ice_giant ---+ o
-## Focus (iteration 539; BASE 90e7329e; secret_3+secret_4)
-0. evidence: barrage ability shots on the struck man, after +40 (7d6f2026)
-1. [S] secret.necromancer.a blocker 6 armbands (01f56fe3) APPROVED, struck 6, a PASS (CONFIRM failed a, b: 3 + 1 new blockers)
-2. [P] secret.necromancer.a NECRO_SHORTS hem .55 -> .4 (25ff6c1c) APPROVED
-3. [S] secret.vlad.a blocker 1 mantle (b948a7cf) APPROVED, struck 1
-4. [S] secret.vlad.a blocker 2 rosettes (7adefe06, 209ee003) APPROVED, no strike (log over the chest)
-5. [S] secret.vlad.a blocker 3 cap (2658848b) APPROVED, struck 3 (CONFIRM passed a, b, c, d)
-6. [S] secret.blackbeard.b blocker 2 second anchor (349ed27b) APPROVED, struck 2, b PASS
-7. [S] secret.blackbeard.c blocker 1 Cannon Barrage (58c71fd3, 8fdee906) APPROVED, no strike (balls unseen)
-8. [S] secret.blackbeard.a blocker 1 tricorne (2b444e72, 2206053a) APPROVED, struck 1
-9. [S] secret.artemis.a blocker 1 halo off, gold band (658d7e0f) APPROVED, struck 1
-10. [S] secret.sensei.a blocker 1 hood-helmet (896b1aac) APPROVED, struck 1, 5
-- 10/10, 8 struck
+secret_3: witch ++++ D | banshee ++++ D | necromancer ++++ D | solar_architect ++++ D | wheelbarrow_dragon ++++ D | skeleton_giant ++++ D | bomb_cannon ++++ D | cavalry ++++ D | vlad ++++ D | gatling_gun ++++ D
+secret_4: blackbeard -+++ o | samurai_giant ---+ o | ullr ---+ o | lady_red_jade ---+ o | sensei -+++ o | shogun ---+ o | tree_giant ---+ o | artemis -+-+ o | ice_giant ---+ o
+## Focus (iteration 540; BASE e96789e5; secret_3+secret_4)
+0. evidence: barrage after shot rig 16 (sky over the man), +20 (931a204a)
+1. [S] secret.vlad.a blocker 2 low log carry (82532e47) APPROVED, struck 2, a PASS (CONFIRM passed, D)
+2. [S] secret.necromancer.a blockers 1, 2 cropped fitted vest (a803a83d) APPROVED, struck 1, 2
+3. [S] secret.necromancer.b blocker 1 forearm lantern (8bb7f01c) APPROVED, struck 1, b PASS
+4. [S] secret.necromancer.a blocker 3 thick curved horns (93159c23) APPROVED, struck 3, a PASS (CONFIRM passed, D)
+5. [S] secret.sensei.b blocker 1 ten-bladed shuriken (ac64e6be) APPROVED, struck 1, b PASS
+6. [S] secret.sensei.a blocker 4 spiked bracers (956195e2) APPROVED, struck 4
+7. [S] secret.blackbeard.a blocker 4 peg leg (6e62a793, 4f98ec35) APPROVED, struck 4
+8. [S] secret.blackbeard.c blocker 2 heavy anchor swing (415e5613) APPROVED, struck 1, 2, c PASS
+9. [S] secret.artemis.b blocker 1 tall longbow (a1768aeb, 06717795) APPROVED, struck 1, b PASS
+- 9/9, 11 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] secret.necromancer (01f56fe3) / VERDICT: APPROVE / CRITERION: secret.necromancer.a PASS   (previous: FAIL)
-- GAP: [P] secret.necromancer (25ff6c1c) / VERDICT: APPROVE / CRITERION: secret.necromancer.a PASS   (previous: FAIL)
-- GAP: [S] secret.vlad (b948a7cf) / VERDICT: APPROVE / CRITERION: secret.vlad.a FAIL   (previous: FAIL)
-- GAP: [S] secret.vlad (7adefe06, 209ee003) / VERDICT: APPROVE / CRITERION: secret.vlad.a FAIL   (previous: FAIL)
-- GAP: [S] secret.vlad (2658848b) / VERDICT: APPROVE / CRITERION: secret.vlad.a FAIL   (previous: FAIL)
-- GAP: [S] secret.blackbeard (349ed27b) / VERDICT: APPROVE / CRITERION: secret.blackbeard.b PASS   (previous: FAIL)
-- GAP: [S] secret.blackbeard (58c71fd3, 8fdee906) / VERDICT: APPROVE / CRITERION: secret.blackbeard.c FAIL   (previous: FAIL)
-- GAP: [S] secret.blackbeard (2b444e72, 2206053a) / VERDICT: APPROVE / CRITERION: secret.blackbeard.a FAIL   (previous: FAIL)
-- GAP: [S] secret.artemis (658d7e0f) / VERDICT: APPROVE / CRITERION: secret.artemis.a FAIL   (previous: FAIL)
-- GAP: [S] secret.sensei (896b1aac) / VERDICT: APPROVE / CRITERION: secret.sensei.a FAIL   (previous: FAIL)
-- CONFIRM: secret.vlad 4/4 PASS; secret.necromancer a FAIL (vest box, no spine, horns), b FAIL (lantern small), c d PASS
+- GAP: [S] secret.vlad (82532e47) / VERDICT: APPROVE / CRITERION: secret.vlad.a PASS   (previous: FAIL)
+- GAP: [S] secret.necromancer (a803a83d) / VERDICT: APPROVE / CRITERION: secret.necromancer.a FAIL   (previous: FAIL)
+- GAP: [S] secret.necromancer (8bb7f01c) / VERDICT: APPROVE / CRITERION: secret.necromancer.b PASS   (previous: FAIL)
+- GAP: [S] secret.necromancer (93159c23) / VERDICT: APPROVE / CRITERION: secret.necromancer.a PASS   (previous: FAIL)
+- GAP: [S] secret.sensei (ac64e6be) / VERDICT: APPROVE / CRITERION: secret.sensei.b PASS   (previous: FAIL)
+- GAP: [S] secret.sensei (956195e2) / VERDICT: APPROVE / CRITERION: secret.sensei.a FAIL   (previous: FAIL)
+- GAP: [S] secret.blackbeard (6e62a793, 4f98ec35) / VERDICT: APPROVE / CRITERION: secret.blackbeard.a FAIL   (previous: FAIL)
+- GAP: [S] secret.blackbeard (415e5613) / VERDICT: APPROVE / CRITERION: secret.blackbeard.c PASS   (previous: FAIL)
+- GAP: [S] secret.artemis (a1768aeb, 06717795) / VERDICT: APPROVE / CRITERION: secret.artemis.b PASS   (previous: FAIL)
+- CONFIRM: secret.vlad 4/4 PASS; secret.necromancer 4/4 PASS
 - REGRESSIONS: none
+- Checkpoint secret_3 (540): 12/12 scenarios GREEN
 
 ## Notes for next iteration (max 5 lines)
-- vlad: only a.2 left (rosettes hidden by the raised log): hold VLAD_LOG low across the hips; once struck he is D (CONFIRM 539 passed all four).
-- necromancer: CONFIRM 539 lists (a.1-3 vest/spine/horns, b.1 lantern); a second CONFIRM fail on a or b makes it plateau.
-- blackbeard c.1: evidence commit first (barrage ability_after at +20 ticks, a taller frame with ~6 m of sky over the man), then judge the falling balls.
-- samurai_giant and shogun idles show them from behind (face hidden): evidence commit first before their face/helmet-front blockers.
+- samurai_giant and shogun idles show them from behind (face hidden): evidence commit first (scoped by unit id) before their face/helmet-front blockers.
 - Shogun shares the Samurai Giant's giant body and helmet (TABS 1.2x man): blocker a.4 scale.
+- Starvation: samurai_giant, ullr, lady_red_jade, tree_giant, ice_giant have had no attempt since their 538 audit; one slot each from 544 if still untouched.
+- artemis a.2: reshape ARTEMIS_BAND into a rounded band with auburn hair at the sides, nape and bun (539 critic).
+- blackbeard a: long coat next (blocker 3); [P] scale 1.58 toward 2x is eligible fallout of 6e62a793 until 543.

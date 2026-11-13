@@ -23,10 +23,10 @@ Read whole at step 1; one fact a line, merge near cap.
 - capture's PLAIN regex takes any ability kind starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475 wizard firework: no ability shot).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
-- materialPreset secret_ghost blends the team body 55% to lavender at alpha .94: a unit with a team garment wants the plain preset (443 vampire).
+- materialPreset secret_ghost tints the team body 55% lavender: team garments want the plain preset (443).
 - Idle/lineup: front 3/4, weapon side; a face/chest/shield blocker judged side-on is mis-aimed (evidence commit); prop over the chest: post-release idle-angle shot (525); hips behind a shield: rig 13 (526); off-side shield: rig 14 mirror (534). Faceless at .6 rad reads as a back: .25 (497).
-- Size a held prop off joint spreads (originIn), not limbBox (526).
-- The idle is ~100 ms after spawn: ease nothing in from zero; full weight from spawn, kept in every re-solve (393).
+- Size a held prop off joint spreads (originIn), not limbBox (526); a stave thick by share of length: own girth when lengthened (540).
+- The idle is ~100 ms after spawn: full weight from spawn, in every re-solve (393).
 - A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).
 - `--units` takes comma-separated IDs and re-shoots lineup_<f> (498); a lethal blast freezes a duel: off-camera reserves (504).
 - A dress change aimed at the idle must clear the rest pose and the held weapon: probe what covers it first (442; 539 log over chest). A giant's metrics.overallHeight is pre-hover: use headTop world y.
