@@ -177,7 +177,7 @@ export interface UnitVisualConfig {
 }
 
 export type WeaponVariant =
-  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff" | "necro_knife" | "blackbeard_anchor" | "sensei_shuriken" | "ullr_axe"
+  | "jester_dagger" | "giant_stiffy_sword" | "cavalry_spear" | "vlad_log" | "witch_staff" | "necro_knife" | "blackbeard_anchor" | "sensei_shuriken" | "ullr_axe" | "guandao"
   | "paladin_hammer" | "arbiter_book" | "radiant_glaive" | "time_gauntlet" | "bone_dagger"
   | "longbow" | "brown_longbow" | "firework_bow" | "artemis_bow" | "snake_bow" | "ice_bow" | "longsword" | "zweihander" | "priest_staff" | "arming_sword" | "bearded_axe" | "berserker_axe" | "jarl_axe" | "executioner_axe" | "giant_fan" | "bomb_stick" | "spadroon" | "repeating_crossbow" | "valkyrie_sword" | "dragon_pistol" | "revolver" | "revolver_pair" | "miner_pick" | "winchester" | "queen_cutlass" | "stiffy_sword" | "bone_bow" | "charge_flag" | "stay_banner" | "team_glove" | "long_pike" | "poacher_bow" | "heart_bow" | "pharaoh_crook" | "pharaoh_flail" | "glow_glove" | "mjolnir" | "wizard_staff" | "wizard_sword" | "devout_gauntlet" | "cultist_mace" | "mechanic_claw" | "warglaive" | "monarch_sword" | "raptor_spear" | "solar_wand";
 
@@ -1295,8 +1295,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         posePreset: "duelist", materialPreset: "secret_ice", fxPreset: "frost",
       });
     case "secret_lady_red_jade":
-      return vis({ scale: 1.52, bulk: 1.18, headSize: 1.05 }, "sword", "crown", "none", "cape", "#cf2f2f", "sword", {
-        posePreset: "duelist", materialPreset: "secret_royal", fxPreset: "royal",
+      // [S] 541 (b.1) one guandao upright in both fists on the halberd's two-handed grip, no second sword (propBuilder GUANDAO)
+      return vis({ scale: 1.52, bulk: 1.18, headSize: 1.05 }, "halberd", "crown", "none", "cape", "#cf2f2f", undefined, {
+        weaponVariant: "guandao", materialPreset: "secret_royal", fxPreset: "royal",
         bodyDetailLevel: "hero",
       });
     case "secret_sensei":

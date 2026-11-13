@@ -4610,6 +4610,50 @@ function buildGiantFan(scene: Scene, fit: BladeFit, team: Color3): Mesh {
   return shaft;
 }
 /*
+ * [S] 541 (lady_red_jade b.1) Lady Red Jade's guandao (audit 538: "broadsword in each hand - TABS: one two-handed guandao: long pole, curved blade,
+ * orange tassel guard"; card Main Hand "Guandao", Weapon Type Two-handed; secret.lady_red_jade.red.png: a near-black pole held upright before her in
+ * both fists at the waist, its butt at the hip, and on top, at the shoulder, a broad round orange guard disc; out of it a long slim dark steel
+ * blade, as long as she is from shoulder to toe, curving slightly back to a point far over her head). GUANDAO in her standing height (fit.stand):
+ * the pole .pole long, .thick across, the fist .grip of it up from the butt; the guard a disc .guard across and .guardT thick, flat in the
+ * blade's plane, a dark collar .collar under it; the blade .segs runs .blade long in all, .wide across at the root tapering to .tip, .flat
+ * thick, bending .curl rad back in all; a pale edge strip along its front. Pole near-black lit cloth self-lit .4 (LESSONS 494), blade dark
+ * steel grey, guard orange lit cloth self-lit .3.
+ */
+const GUANDAO = { pole: 0.78, thick: 0.03, grip: 0.4, guard: 0.17, guardT: 0.03, collar: 0.05, blade: 0.82, segs: 4, wide: 0.06, tip: 0.035, flat: 0.014, curl: 0.22, edge: 0.18,
+  black: new Color3(0.08, 0.06, 0.07), steel: new Color3(0.3, 0.3, 0.33), pale: new Color3(0.62, 0.64, 0.68), orange: new Color3(0.92, 0.45, 0.08) };
+function buildGuandao(scene: Scene, fit: BladeFit): Mesh {
+  const G = GUANDAO, H = fit.stand, P = H * G.pole;
+  const black = mat(scene, G.black, 0.4, "cloth"), steel = mat(scene, G.steel, 0.2, "cloth"), pale = mat(scene, G.pale, 0.4, "cloth"), orange = mat(scene, G.orange, 0.3, "cloth");
+  const shaft = MeshBuilder.CreateCylinder("shaft", { height: P, diameter: H * G.thick, tessellation: 7 }, scene);
+  shaft.material = black; shaft.convertToFlatShadedMesh();
+  shaft.position.y = (0.5 - G.grip) * P;
+  const add = (m: Mesh, material: Mesh["material"]): Mesh => { m.parent = shaft; m.material = material; m.convertToFlatShadedMesh(); return m; };
+  const top = P / 2;
+  add(MeshBuilder.CreateCylinder("guandaoCollar", { height: H * G.collar, diameter: H * G.thick * 1.7, tessellation: 7 }, scene), black).position.y = top - (H * G.collar) / 2;
+  const guard = add(MeshBuilder.CreateCylinder("guandaoGuard", { height: H * G.guardT, diameter: H * G.guard, tessellation: 12 }, scene), orange);
+  guard.rotation.x = Math.PI / 2; guard.scaling.set(1, 1, 1.15); guard.position.y = top + (H * G.guard) * 0.32;
+  // the blade, rising out of the guard and bending back (-z) a little along its length
+  let p = new Vector3(0, top + H * G.guard * 0.2, 0), ang = 0;
+  const run = (H * G.blade) / G.segs;
+  for (let k = 0; k < G.segs; k++) {
+    const w = H * (G.wide + (G.tip - G.wide) * ((k + 0.5) / G.segs));
+    const dir = new Vector3(0, Math.cos(ang), -Math.sin(ang));
+    const seg = add(MeshBuilder.CreateBox("guandaoBlade", { width: w, height: run * 1.04, depth: H * G.flat }, scene), steel);
+    seg.position.copyFrom(p.add(dir.scale(run / 2))); seg.rotation.x = -ang;
+    const edge = add(MeshBuilder.CreateBox("guandaoEdge", { width: w * G.edge, height: run * 1.04, depth: H * G.flat * 1.1 }, scene), pale);
+    edge.position.copyFrom(seg.position.add(new Vector3(w * (0.5 - G.edge / 2), 0, 0))); edge.rotation.x = -ang;
+    p = p.add(dir.scale(run)); ang += G.curl / G.segs;
+    if (k === G.segs - 1) {
+      const point = add(MeshBuilder.CreateCylinder("guandaoPoint", { height: run * 0.6, diameterBottom: w * 1.2, diameterTop: 0, tessellation: 4 }, scene), steel);
+      point.scaling.z = (H * G.flat) / w; point.rotation.x = -ang; point.position.copyFrom(p.add(new Vector3(0, Math.cos(ang), -Math.sin(ang)).scale(run * 0.3)));
+    }
+  }
+  // the butt cap
+  add(MeshBuilder.CreateCylinder("guandaoButt", { height: H * G.collar * 0.8, diameter: H * G.thick * 1.5, tessellation: 7 }, scene), steel).position.y = -top + (H * G.collar * 0.4);
+  return shaft;
+}
+
+/*
  * [S] 501 the Bomb on a Stick's weapon (card: Two-handed, "an always lit bomb strapped to a long stick"; secret.bomb_on_a_stick.red.png: a thin dark
  * pole held upright in both hands at the waist, its top over the head, carrying a big black bomb, about a head and a half across, bound by two
  * orange rope bands, a short neck and a lit fuse burning yellow-white on top; audit 500 b.1: "a fist-sized bomb on a short handle held one-handed").
@@ -5941,6 +5985,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       if (variant === "executioner_axe") return buildJarlAxe(scene, fit, EXECUTIONER_AXE, EXECUTIONER_CRESCENT);
       if (variant === "giant_fan") return buildGiantFan(scene, fit, teamColor ?? accent);
       if (variant === "bomb_stick") return buildBombStick(scene, fit); // [S] 501 (BOMB_STICK)
+      if (variant === "guandao") return buildGuandao(scene, fit); // [S] 541 (GUANDAO)
       // The halberd, built to the spec at HALBERD: +y up the shaft from the fist at the origin, HALBERD.grip of it below the fist
       const L = fit.stand * HALBERD.long;
       const shaft = MeshBuilder.CreateCylinder("shaft", { height: L, diameter: HALBERD.thick * L, tessellation: 7 }, scene);
