@@ -208,6 +208,8 @@ const FIRE_ARROWS = new Set(["spooky.skeleton_archer"]);
 const HEART_ARROWS = new Set(["secret.cupid"]);
 /** [S] 541 Artemis's sheaf: five arrows on one tick, nocks .nock m apart sideways and .lift m staggered, landing .land m apart across the man (_fireVolley). */
 const ARTEMIS_FAN = { count: 5, nock: 0.28, lift: 0.12, land: 0.18 };
+/** [S] 541 Ullr's thrown axe: its end-over-end turn (rad/s) and the seconds until a new axe is back in his fist. */
+const ULLR_THROW = { tumble: 16, rearm: 0.8 };
 /** [S] 519 a lovestruck man's kiss (card secret.cupid: "kiss them relentlessly, draining their hitpoints"): m to his friend, s between kisses, hp per s. */
 const LOVE_KISS = { reach: 0.9, every: 0.5, drain: 4 };
 /** [S] 536 a mushroomed man's turn on his friends: he closes to .reach m (his own reach up to .reachMax), a blow of .damage every .every s */
@@ -4179,6 +4181,17 @@ export class SimulationSystem {
       knockback = knockback.scale(1.2);
     }
 
+    // [S] 541 (ullr c.1) Ullr throws his axe (audit 538: "an arrow flies off the bow - TABS: a thrown, spinning double-headed axe"; card Weapons
+    // "Ullr Axe Throw ... projectile Ullr's Axe; count 1"): the throw windup runs (weapon family throw) and at its let-go the axe in his fist
+    // leaves it as the missile, tumbling end over end (ULLR_THROW.tumble rad/s, the pending-throw path below); the frost lands as before
+    if (preset === "secret_ullr" && this.projectileSystem && attacker.animator.throwReleasesIn() > 0) {
+      this._pendingThrows.push({
+        attacker, target, shape: "arrow", damage, splashRadius: 0, knockback: knockback.scale(0.35), leavesAt: now + attacker.animator.throwReleasesIn(),
+      });
+      this._applyOnHitStatuses(attacker, target, now, impactOrigin);
+      return;
+    }
+
     if (preset === "secret_artemis" || preset === "secret_ullr" || preset === "secret_flying_archer") {
       this._fireVolley(attacker, target, damage, knockback, Math.max(2, attacker.definition.volleyCount ?? 3));
       this._applyOnHitStatuses(attacker, target, now, impactOrigin);
@@ -5049,9 +5062,12 @@ export class SimulationSystem {
       const from = (prop ?? attacker.body.rightHand).getAbsolutePosition().clone();
       this.projectileSystem.spawnProjectile(
         t.shape, from, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0,
-        { originLift: 0, heldProp: prop ?? undefined, drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined },
+        { originLift: 0, heldProp: prop ?? undefined, drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined,
+          tumble: attacker.definition.id === "secret.ullr" ? ULLR_THROW.tumble : undefined },
       );
-      if (prop) attacker.animator.letGoOfThrow(prop);
+      // [S] 541 Ullr's throw is logged as the axe leaves his fist (LESSONS 427: a special logged at let-go owns its missile)
+      if (attacker.definition.id === "secret.ullr") this._logAbility(attacker, "throw", now, target.position);
+      if (prop) attacker.animator.letGoOfThrow(prop, attacker.definition.id === "secret.ullr" ? ULLR_THROW.rearm : 0);
     }
   }
 

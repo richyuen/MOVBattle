@@ -92,6 +92,8 @@ export type ProjectileShape = "time_bolt" | "radiant_glaive" | "arbiter_light" |
 
 interface ActiveProjectile {
   mesh: TransformNode;
+  /** [S] 541 The held copy's end-over-end turn (rad/s; ProjectileSpawnOptions.tumble). */
+  tumble?: number;
   /** A balloon arrow: its shooter's unit id (ProjectileSpawnOptions.balloons). */
   balloons?: string;
   /** A Fire Arrow: the man it strikes is set alight (RuntimeUnit.applyBurn). */
@@ -221,6 +223,8 @@ interface ProjectileSpawnOptions {
   targetLift?: number;
   /** The prop that was in the thrower's hand: what flies is a copy of it, at its size, not a missile from the catalogue below. */
   heldProp?: TransformNode;
+  /** [S] 541 The held copy turns end over end at this many rad/s as it flies (Ullr's axe). */
+  tumble?: number;
   /** A harpoon gun's muzzle: a dark rope runs from it to the missile for as long as it flies (units/pirate.harpooner). */
   tether?: TransformNode;
   /** Shown through the delay, hanging where it was spawned with its point on the man, instead of hidden until it flies. */
@@ -609,6 +613,7 @@ export class ProjectileSystem {
       riseFrom: options.hover && options.riseTo !== undefined ? mesh.position.y : undefined,
       riseTo: options.hover ? options.riseTo : undefined,
       loose: options.at ? true : undefined,
+      tumble: held ? options.tumble : undefined,
     });
     const spawned = this._active[this._active.length - 1];
     if (spawned.rope) this._layRope(spawned);
@@ -848,6 +853,11 @@ export class ProjectileSystem {
 
       if (p.shape === "time_bolt") { const face = p.mesh.getChildren().find((c) => c.name === "timeBoltFace") as TransformNode | undefined; if (face) face.rotation.z += dt * 14; }
       if (p.shape === "radiant_glaive") { const spin = p.mesh.getChildren().find((c) => c.name === "glaiveSpin") as TransformNode | undefined; if (spin) spin.rotation.y += dt * 22; }
+      // [S] 541 a thrown held prop that tumbles (Ullr's axe): the copy turns end over end about the root's sideways axis
+      if (p.tumble) {
+        const copy = p.mesh.getChildren().find((c): c is TransformNode => c.name.endsWith("_thrown"));
+        if (copy) copy.rotation.x += dt * p.tumble;
+      }
       // Shuriken spin
       if (p.shape === "shuriken") {
         const spin = p.mesh.getChildren().find((c): c is TransformNode => c.name === "shurikenSpin");
