@@ -4196,6 +4196,7 @@ export function bankRobberBandana(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const VLAD_CROWN = { band: 1.1, bandH: 0.2, gap: 0.0, star: 0.42, points: 8, spikes: 6, spread: 0.62, tall: 0.95, low: 0.7, splay: 0.16, spikeW: 0.08, bead: 0.14,
   iron: new Color3(0.26, 0.26, 0.29), gold: new Color3(0.85, 0.46, 0.08) };
+const VLAD_CAP = { round: 1.1, crown: 0.06, dome: 0.12, badgeAt: 0.42 };
 export function vladCrown(scene: Scene, body: ArticulatedBody): Mesh[] {
   const V = VLAD_CROWN, glow = scene.getGlowLayerByName("glow"), mf = getMaterialFactory();
   const iron = mf.get("cloth", V.iron, { emissive: V.iron.scale(0.3), roughness: 0.9 });
@@ -4205,21 +4206,29 @@ export function vladCrown(scene: Scene, body: ArticulatedBody): Mesh[] {
   const eyes = eyeBoxInHead(body) ?? { lo: new Vector3(c.x - W * 0.3, c.y, c.z + D * 0.4), hi: new Vector3(c.x + W * 0.3, c.y + H * 0.15, c.z + D * 0.55) };
   const out: Mesh[] = [];
   const put = (m: Mesh, mt: Material = iron): Mesh => { m.parent = head; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
-  const foot = eyes.hi.y + H * V.gap, bandTop = foot + H * V.bandH;
-  const band = put(MeshBuilder.CreateCylinder("vladCrownBand", { height: H * V.bandH, diameter: W * V.band, tessellation: 8 }, scene));
-  band.scaling.z = (D / W) * 1.02; band.position.set(c.x, (foot + bandTop) / 2, c.z);
-  const front = c.z + (D * V.band * 1.02) / 2;
+  // [S] 539 (a.3; CONFIRM 538: "TABS: a dark grey cap covering the head down to the brows, gold star and badge on its front, spikes rising from its
+  // crown; ours has bare blue head up to a thin band"; secret.vlad.jpg): the band is now a cap, VLAD_CAP: an 8-sided wall from .gap H over the eye
+  // tops (the brows) to .crown H over the head's top, .round W across, closed by a low faceted dome .dome H tall; the star badge on its front at
+  // .badgeAt of the wall's height, the spike fan standing out of the dome
+  const foot = eyes.hi.y + H * V.gap, capTop = c.y + H / 2 + H * VLAD_CAP.crown, wallH = capTop - foot;
+  const band = put(MeshBuilder.CreateCylinder("vladCrownBand", { height: wallH, diameterBottom: W * VLAD_CAP.round, diameterTop: W * VLAD_CAP.round * 0.94, tessellation: 8 }, scene));
+  band.scaling.z = (D / W) * 1.02; band.position.set(c.x, foot + wallH / 2, c.z);
+  const dome = put(MeshBuilder.CreateIcoSphere("vladCrownDome", { radius: (W * VLAD_CAP.round * 0.94) / 2, subdivisions: 1, flat: true }, scene));
+  dome.scaling.set(1, (H * VLAD_CAP.dome * 2) / (W * VLAD_CAP.round * 0.94), (D / W) * 1.02); dome.position.set(c.x, capTop, c.z);
+  const bandTop = capTop + H * VLAD_CAP.dome * 0.6;
+  const front = c.z + (D * VLAD_CAP.round * 1.02) / 2;
+  const badgeY = foot + wallH * VLAD_CAP.badgeAt;
   // the star: points as thin flat diamonds round a boss
   const S = W * V.star;
   for (let k = 0; k < V.points; k++) {
     const ray = MeshBuilder.CreateCylinder("vladCrownStarRay", { height: S / 2, diameterBottom: S * 0.2, diameterTop: 0, tessellation: 4 }, scene);
     ray.scaling.z = 0.3;
     const a = (k / V.points) * Math.PI * 2;
-    ray.rotation.z = a; ray.position.set(c.x - Math.sin(a) * S * 0.25, (foot + bandTop) / 2 + Math.cos(a) * S * 0.25, front + D * 0.03);
+    ray.rotation.z = a; ray.position.set(c.x - Math.sin(a) * S * 0.25, badgeY + Math.cos(a) * S * 0.25, front + D * 0.03);
     put(ray, gold);
   }
   const boss = put(MeshBuilder.CreateIcoSphere("vladCrownStarBoss", { radius: S * 0.16, subdivisions: 1, flat: true }, scene), gold);
-  boss.scaling.z = 0.6; boss.position.set(c.x, (foot + bandTop) / 2, front + D * 0.05);
+  boss.scaling.z = 0.6; boss.position.set(c.x, badgeY, front + D * 0.05);
   // the spike fan over the brow
   for (let k = 0; k < V.spikes; k++) {
     const t = V.spikes > 1 ? k / (V.spikes - 1) - 0.5 : 0;
