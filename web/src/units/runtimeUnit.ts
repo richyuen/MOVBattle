@@ -87,7 +87,7 @@ const ICE_THROW = { fore: 1.5, inward: 0.12, back: 0.45, hold: 0.22, ease: 0.25 
 export const GHOST_CURSE = { blue: new Color3(0.28, 0.55, 1.25), dye: 0.85, glow: 0.75, wisps: 6, long: 1.1, wide: 0.24, ring: 1.0, orbit: 4.2, wisp: new Color3(0.75, 0.92, 1.3) };
 /** [S] 519 Lovestruck hearts (spec at RuntimeUnit.applyLove), in head widths: big heart, small hearts and their size, height over the head, circle radius, orbit rad/s. */
 /** [S] 536 the Witch's toadstools on a struck man (spec at RuntimeUnit.applyMushrooms), in head widths. */
-const SHROOMS = { seconds: 6, cap: 0.62, capH: 0.62, stem: 0.2, stemH: 0.5, tilt: 0.7, capC: new Color3(1, 0.22, 0.75), stemC: new Color3(0.95, 0.88, 0.74) };
+const SHROOMS = { seconds: 6, size: 1.6, clear: 1.25, cap: 0.62, capH: 0.62, stem: 0.2, stemH: 0.5, tilt: 0.7, capC: new Color3(1, 0.22, 0.75), stemC: new Color3(0.95, 0.88, 0.74) };
 const LOVE_HEARTS = { big: 0.95, small: 2, smallSize: 0.45, over: 0.85, ring: 0.75, orbit: 2.4, pink: new Color3(1, 0.18, 0.6) };
 const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
 const BURN = { tongues: 6, long: 2.6, wide: 0.55, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), glow: 0.9 };
@@ -2730,8 +2730,9 @@ export class RuntimeUnit {
     const capM = mf.get("unlit", S.capC, { emissive: S.capC });
     const stemM = mf.get("unlit", S.stemC, { emissive: S.stemC });
     const hb = head.getBoundingInfo().boundingBox, e = hb.extendSize, c = hb.center;
-    const w = Math.max(e.x, e.z) * 2;
-    const grow = (parent: TransformNode, at: Vector3, tiltX: number, tiltZ: number, size: number): void => {
+    // 536.3b sized .size of the head's width and stood .clear of it (look: a helmet swallowed head-sized toadstools)
+    const w = Math.max(e.x, e.z) * 2 * S.size;
+    const grow =(parent: TransformNode, at: Vector3, tiltX: number, tiltZ: number, size: number): void => {
       const node = new TransformNode("witchShroom", scene);
       node.parent = parent; node.position.copyFrom(at); node.rotation.set(tiltX, 0, tiltZ);
       const stem = MeshBuilder.CreateCylinder("witchShroomStem", { height: size * S.stemH, diameterTop: size * S.stem * 0.8, diameterBottom: size * S.stem, tessellation: 6 }, scene);
@@ -2742,13 +2743,13 @@ export class RuntimeUnit {
       this._shrooms.push(node);
     };
     // on his head: one on the crown, the others on its sides, leaning out
-    const top = c.y + e.y;
-    grow(head, new Vector3(c.x - e.x * 0.2, top - e.y * 0.1, c.z), 0, 0.25, w);
-    grow(head, new Vector3(c.x + e.x * 0.85, c.y + e.y * 0.35, c.z - e.z * 0.2), 0, -S.tilt, w * 0.8);
-    grow(head, new Vector3(c.x - e.x * 0.85, c.y + e.y * 0.1, c.z + e.z * 0.2), 0.2, S.tilt, w * 0.7);
-    // one on each shoulder
-    for (const [joint, side] of [[this.body.leftShoulder, -1], [this.body.rightShoulder, 1]] as const) {
-      if (joint) grow(joint, new Vector3(0, w * 0.15, 0), 0, -side * S.tilt * 0.6, w * 0.8);
+    const top = c.y + e.y * S.clear, side = e.x * S.clear;
+    grow(head, new Vector3(c.x - e.x * 0.2, top, c.z), 0, 0.25, w);
+    grow(head, new Vector3(c.x + side, c.y + e.y * 0.35, c.z - e.z * 0.2), 0, -S.tilt, w * 0.8);
+    grow(head, new Vector3(c.x - side, c.y + e.y * 0.1, c.z + e.z * 0.2), 0.2, S.tilt, w * 0.7);
+    // one on each shoulder, standing over the pauldron or the cloth there
+    for (const [joint, sd] of [[this.body.leftShoulder, -1], [this.body.rightShoulder, 1]] as const) {
+      if (joint) grow(joint, new Vector3(0, w * 0.35, 0), 0, -sd * S.tilt * 0.6, w * 0.8);
     }
   }
   get fearFrom(): Vector3 { return this._fearFrom; }
