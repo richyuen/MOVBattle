@@ -209,7 +209,7 @@ const HEART_ARROWS = new Set(["secret.cupid"]);
 /** [S] 541 Artemis's sheaf: five arrows on one tick, nocks .nock m apart sideways and .lift m staggered, landing .land m apart across the man (_fireVolley). */
 const ARTEMIS_FAN = { count: 5, nock: 0.28, lift: 0.12, land: 0.18 };
 /** [S] 541 Ullr's thrown axe: its end-over-end turn (rad/s), the seconds until a new axe is back in his fist, its speed (m/s; card "projectile speed 25"). */
-const ULLR_THROW = { tumble: 16, rearm: 0.8, speed: 25 };
+const ULLR_THROW = { tumble: 16, rearm: 0.8, speed: 25, burst: 2.25 };
 /** [S] 519 a lovestruck man's kiss (card secret.cupid: "kiss them relentlessly, draining their hitpoints"): m to his friend, s between kisses, hp per s. */
 const LOVE_KISS = { reach: 0.9, every: 0.5, drain: 4 };
 /** [S] 536 a mushroomed man's turn on his friends: he closes to .reach m (his own reach up to .reachMax), a blow of .damage every .every s */
@@ -1162,6 +1162,7 @@ export class SimulationSystem {
     if (this.projectileSystem) this.projectileSystem.snakeLand ??= this._landSnake;
     if (this.projectileSystem) this.projectileSystem.reelIn ??= this._reelIn;
     if (this.projectileSystem) this.projectileSystem.necroCurseHook ??= this._necroCurse;
+    if (this.projectileSystem) this.projectileSystem.iceBurstHook ??= this._ullrIceBurst;
     if (this._tossed.length > 0) this._stepTossedGuns(dt);
 
     for (const unit of this._units) {
@@ -4188,7 +4189,7 @@ export class SimulationSystem {
       this._pendingThrows.push({
         attacker, target, shape: "arrow", damage, splashRadius: 0, knockback: knockback.scale(0.35), leavesAt: now + attacker.animator.throwReleasesIn(),
       });
-      this._applyOnHitStatuses(attacker, target, now, impactOrigin);
+      // [S] 542 (c.2) no freeze at the queueing: the axe freezes where it lands (ULLR_THROW.burst, _ullrIceBurst)
       return;
     }
 
@@ -5063,7 +5064,7 @@ export class SimulationSystem {
       this.projectileSystem.spawnProjectile(
         t.shape, from, target, t.damage, t.knockback, t.splashRadius, attacker.team, this._units, undefined, 0,
         { originLift: 0, heldProp: prop ?? undefined, drunk: DRUNK_POTIONS.has(attacker.definition.id) ? attacker.definition.id : undefined,
-          ...(attacker.definition.id === "secret.ullr" ? { tumble: ULLR_THROW.tumble, flight: Vector3.Distance(from, target.position) / ULLR_THROW.speed } : {}) },
+          ...(attacker.definition.id === "secret.ullr" ? { tumble: ULLR_THROW.tumble, flight: Vector3.Distance(from, target.position) / ULLR_THROW.speed, iceBurst: { radius: ULLR_THROW.burst, from: attacker } } : {}) },
       );
       // [S] 541 Ullr's throw is logged as the axe leaves his fist (LESSONS 427: a special logged at let-go owns its missile)
       if (attacker.definition.id === "secret.ullr") this._logAbility(attacker, "throw", now, target.position);
@@ -5560,6 +5561,22 @@ export class SimulationSystem {
   private _solarShots = new Map<RuntimeUnit, number>();
   private _necroCursed = new Map<RuntimeUnit, number>();
   private _necroTickAt = 0;
+  /*
+   * [S] 542 (ullr c.2) Ullr's axe bursts into ice where it lands (critic 541: "freeze logged at 200 ms, before the axe leaves"; card "Ullr's explosion
+   * and an additional AoE ice effect", explosion radius 2.25): every living enemy within the radius of the landing spot is frozen as the Ice Archer's
+   * man is (_applyOnHitStatuses), and the burst is drawn there (VisualEffects.spawnIceBurst); the burst is logged where it lands.
+   */
+  private _ullrIceBurst = (at: Vector3, radius: number, from: RuntimeUnit): void => {
+    const now = this._now;
+    for (const unit of this._units) {
+      if (unit.isDead || unit.team === from.team) continue;
+      if (Math.hypot(unit.position.x - at.x, unit.position.z - at.z) > radius) continue;
+      this._applyOnHitStatuses(from, unit, now, at);
+    }
+    this.visualEffects?.spawnIceBurst(at, radius);
+    this._logAbility(from, "ice_burst", now, at);
+  };
+
   private _necroCurse = (target: RuntimeUnit, team: number): void => {
     if (target.team === team || this._necroCursed.has(target)) return;
     this._necroCursed.set(target, team);

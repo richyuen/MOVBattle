@@ -1,5 +1,5 @@
 import {
-  Scene, Vector3, Quaternion, Mesh, MeshBuilder, Color3, TransformNode,
+  Scene, Vector3, Quaternion, Mesh, MeshBuilder, Color3, TransformNode, Matrix,
   PBRMetallicRoughnessMaterial, ParticleSystem, StandardMaterial, DynamicTexture, Material, VertexData,
 } from "@babylonjs/core";
 import { getMaterialFactory } from "../units/materialFactory";
@@ -20,6 +20,8 @@ interface TimedEffect {
 // Shed gear (see VisualEffects.spawnGearLitter): how far off it lands, how far a board leans back off upright, and how far a weapon's grip end stands off the ground.
 // A da Vinci ball's break-up (see spawnShatter): shards, size (m), outward and upward speed (m/s), seconds
 const SHATTER = { count: 7, size: 0.11, speed: 3.2, up: 3.0, last: 0.9 };
+const ICE_BURST = { spikes: 12, inner: 5, ring: 0.8, tall: 0.75, wide: 0.24, lean: 0.35, grow: 0.15, flash: 0.9, last: 1.6, sink: 0.4,
+  ice: new Color3(0.55, 0.85, 1), frost: new Color3(0.82, 0.94, 1), white: new Color3(1, 1, 1) };
 // The Reaper's scythe shockwave (see spawnReaperBurst): ring start across and band (m), dome start and end across (m) and opacity, shards, their length,
 // out and up speed (m/s), seconds, share of it faded out; violet ring, dark dome
 const REAPER_BURST = {
@@ -2253,6 +2255,56 @@ export class VisualEffects {
     });
   }
   private _shatterMat: ReturnType<ReturnType<typeof getMaterialFactory>["createUnique"]> | undefined;
+
+  /*
+   * [S] 542 (ullr c.2) Ullr's axe bursts into ice where it lands (card Weapons "Ullr Axe Throw ... explosion radius 2.25"; Characteristics "freezing
+   * them like the Ice Archer, except for Ullr's explosion and an additional AoE ice effect"): ICE_BURST over the given radius. A pale frost disc
+   * spreads on the ground to the radius in .grow s; .spikes ice crystals (4-sided spikes .tall high, .wide across, leaning .lean out) shoot up on a
+   * ring at .ring of the radius and .inner more round the middle; a white flash ball .flash across swells and fades. All of it stands .last s, then
+   * sinks into the ground over its last .sink s. Unlit pale blue and white (LESSONS: ACES lifts mid values, ice wants unlit).
+   */
+  spawnIceBurst(position: Vector3, radius: number): void {
+    const B = ICE_BURST;
+    const root = new TransformNode("iceBurst", this._scene);
+    root.position.set(position.x, 0.02, position.z);
+    const ice = this._fxMat(B.ice, B.ice), frost = this._fxMat(B.frost, B.frost, 0.7), white = this._fxMat(B.white, B.white, 0.85);
+    const disc = MeshBuilder.CreateCylinder("iceBurstFrost", { height: 0.03, diameter: 2 * radius, tessellation: 18 }, this._scene);
+    disc.material = frost; disc.parent = root; disc.scaling.set(0.05, 1, 0.05);
+    const spikes: Mesh[] = [];
+    const total = B.spikes + B.inner;
+    for (let i = 0; i < total; i++) {
+      const inner = i >= B.spikes;
+      const k = inner ? i - B.spikes : i;
+      const ang = (k / (inner ? B.inner : B.spikes)) * Math.PI * 2 + (inner ? 0.4 : 0) + Math.random() * 0.3;
+      const r = radius * (inner ? B.ring * 0.4 : B.ring) * (0.85 + Math.random() * 0.3);
+      const tall = B.tall * (inner ? 1.25 : 1) * (0.7 + Math.random() * 0.6);
+      const spike = MeshBuilder.CreateCylinder("iceBurstSpike", { height: tall, diameterTop: 0, diameterBottom: B.wide, tessellation: 4 }, this._scene);
+      spike.bakeTransformIntoVertices(Matrix.Translation(0, tall / 2, 0));
+      spike.material = ice; spike.parent = root; spike.convertToFlatShadedMesh();
+      spike.position.set(Math.cos(ang) * r, 0, Math.sin(ang) * r);
+      // lean out from the middle (RotationX(+a) tips +y toward +z, RotationZ(+a) toward -x)
+      spike.rotation.x = Math.sin(ang) * B.lean; spike.rotation.z = -Math.cos(ang) * B.lean;
+      spike.scaling.set(1, 0.05, 1);
+      spikes.push(spike);
+    }
+    const flash = MeshBuilder.CreateSphere("iceBurstFlash", { diameter: 1, segments: 6 }, this._scene);
+    flash.material = white; flash.parent = root; flash.position.y = 0.5; flash.scaling.setAll(0.1);
+    let age = 0;
+    this._effects.push({
+      root,
+      remaining: B.last,
+      update: (dt, remaining) => {
+        age += dt;
+        const up = Math.min(1, age / B.grow);
+        disc.scaling.set(Math.max(0.05, up), 1, Math.max(0.05, up));
+        for (const s of spikes) s.scaling.y = Math.max(0.05, up);
+        const f = Math.min(1, age / B.grow);
+        flash.scaling.setAll(B.flash * radius * (0.3 + 0.7 * f));
+        white.alpha = Math.max(0, 0.85 * (1 - age / (B.grow * 3)));
+        if (remaining < B.sink) root.position.y = 0.02 - (1 - remaining / B.sink) * B.tall * 1.4;
+      },
+    });
+  }
 
   /*
    * [S] 435 the Pumpkin Catapult's pumpkin landing (audit 434 spooky.pumpkin_catapult c.2: "impact throws dark rock chunks - TABS: bouncy jack o'

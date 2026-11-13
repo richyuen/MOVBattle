@@ -94,6 +94,8 @@ interface ActiveProjectile {
   mesh: TransformNode;
   /** [S] 541 The held copy's end-over-end turn (rad/s; ProjectileSpawnOptions.tumble). */
   tumble?: number;
+  /** [S] 542 An ice burst this wide (m) where it lands, and who threw it (ProjectileSpawnOptions.iceBurst; iceBurstHook). */
+  iceBurst?: { radius: number; from: RuntimeUnit };
   /** A balloon arrow: its shooter's unit id (ProjectileSpawnOptions.balloons). */
   balloons?: string;
   /** A Fire Arrow: the man it strikes is set alight (RuntimeUnit.applyBurn). */
@@ -225,6 +227,8 @@ interface ProjectileSpawnOptions {
   heldProp?: TransformNode;
   /** [S] 541 The held copy turns end over end at this many rad/s as it flies (Ullr's axe). */
   tumble?: number;
+  /** [S] 542 Where it lands an ice burst this wide freezes the shooter's enemies (Ullr's axe; SimulationSystem via iceBurstHook). */
+  iceBurst?: { radius: number; from: RuntimeUnit };
   /** A harpoon gun's muzzle: a dark rope runs from it to the missile for as long as it flies (units/pirate.harpooner). */
   tether?: TransformNode;
   /** Shown through the delay, hanging where it was spawned with its point on the man, instead of hidden until it flies. */
@@ -614,6 +618,7 @@ export class ProjectileSystem {
       riseTo: options.hover ? options.riseTo : undefined,
       loose: options.at ? true : undefined,
       tumble: held ? options.tumble : undefined,
+      iceBurst: options.iceBurst,
     });
     const spawned = this._active[this._active.length - 1];
     if (spawned.rope) this._layRope(spawned);
@@ -656,6 +661,8 @@ export class ProjectileSystem {
   abilityHook: ((unitId: string, kind: string, at: Vector3) => void) | null = null;
   /** [S] 535 a Necromancer skull struck this man (SimulationSystem._necroCurse) */
   necroCurseHook: ((target: RuntimeUnit, team: number) => void) | null = null;
+  /** [S] 542 An ice-burst missile landed (ActiveProjectile.iceBurst): the simulation freezes the enemies round it and draws the burst. */
+  iceBurstHook: ((at: Vector3, radius: number, from: RuntimeUnit) => void) | null = null;
   /** Set by the simulation: a snake archer's snake has come down at `at` (on its man or the ground), flown from `from`; it goes on as a live snake there. */
   snakeLand: ((at: Vector3, from: Vector3, team: number) => void) | null = null;
   /** Set by the simulation: a harpoon on its rope has struck `target`; the shooter (the gun whose muzzle is `tether`) reels him in. Returns how long the
@@ -1097,6 +1104,7 @@ export class ProjectileSystem {
   }
 
   private _onImpact(p: ActiveProjectile): void {
+    if (p.iceBurst) this.iceBurstHook?.((p.target.isDead ? p.targetPos : p.target.position).clone(), p.iceBurst.radius, p.iceBurst.from);
     if (p.shape === "radiant_glaive") { this._radiantBounce(p); return; }
     if (p.suck) this._spearSuck(p);
     if(p.shape==="arbiter_light") {
