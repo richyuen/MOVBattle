@@ -4883,6 +4883,35 @@ export function witchRobeDark(team: Color3): Color3 { return new Color3(team.r *
  * pelvis; no rag skirt). spookyDress stiffyShorts in NECRO_SHORTS: hem .hem of the knee drop, the belt in .rope pink; dressSkeleton builds no
  * skirt for him (unitFactory).
  */
+/*
+ * [S] 538 (necromancer a.5) his boots (audit 527 "no boots - TABS: tall laced worn brown boots to the knee"; secret.necromancer.red.png, card
+ * "his only foot protection are some worn out boots": a worn pinkish-brown boot round the whole shin from the foot to just under the knee, far wider
+ * than the bone, a little wider at the top; a row of pale crossed laces up its front). shinBoot in NECRO_BOOT: shaft .shaft of the shin tall, .round
+ * of its half-width round, a slightly wider top band; .laces pale bars .lace of the shaft's width long, crossed .cross rad each way, up the front from
+ * .laceLo to .laceHi of the shaft. Brown lit cloth self-lit .25, laces unlit cream (NECRO_VEST), out of the glow.
+ */
+const NECRO_BOOT = { shaft: 0.97, round: 2.5, cuff: 2.7, cuffH: 0.08, laces: 4, lace: 0.62, cross: 0.5, laceLo: 0.22, laceHi: 0.82,
+  brown: new Color3(0.36, 0.17, 0.13) };
+export function necromancerBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = NECRO_BOOT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const brown = mf.get("cloth", B.brown, { emissive: B.brown.scale(0.25), roughness: 1 });
+  const cream = mf.get("unlit", NECRO_VEST.cream, { emissive: NECRO_VEST.cream });
+  const out = shinBoot(scene, body, "necroBoot", brown, brown, B);
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const { center: c, extendSize: s } = shin.getBoundingInfo().boundingBox;
+    const foot = c.y - s.y, tall = s.y * 2 * B.shaft, w = s.x * 2 * B.round, front = c.z + s.z * B.round + 0.006;
+    for (let i = 0; i < B.laces; i++) {
+      const y = foot + tall * (B.laceLo + ((B.laceHi - B.laceLo) * i) / (B.laces - 1));
+      for (const sgn of [-1, 1]) {
+        const lace = MeshBuilder.CreateBox("necroBootLace", { width: w * B.lace, height: w * 0.09, depth: w * 0.08 }, scene);
+        lace.parent = shin; lace.position.set(c.x, y, front); lace.rotation.z = sgn * B.cross;
+        lace.material = cream; glow?.addExcludedMesh(lace); out.push(lace);
+      }
+    }
+  }
+  return out;
+}
+
 export const NECRO_SHORTS = { hem: 0.55, belt: 0.12, beltOut: 1.36, leather: new Color3(0.55, 0.2, 0.36) };
 export function necromancerDark(team: Color3): Color3 { return new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(NECRO_VEST.dark); }
 const NECRO_VEST = { top: 0.08, below: 0.06, out: 1.16, flare: 1.24, deep: 0.88, rags: 8, rag: 0.16, seam: 0.035, laces: 5, lace: 0.2, laceTop: 0.18, laceLow: 0.85,
