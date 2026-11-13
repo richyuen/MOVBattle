@@ -4534,6 +4534,37 @@ export function bansheeCrown(scene: Scene, body: ArticulatedBody, team: Color3):
 }
 
 /*
+ * [S] 537 (banshee a.3) the Banshee's face (audit 527 "the head is a plain round ball with no eyes - TABS: two glowing white eyes on a long, pointed
+ * team face"; secret.banshee.red.png: the face a long team wedge from the brow down past the jaw, narrowing to a point at the collar, two big round
+ * glowing white eyes side by side high on it). BANSHEE_FACE in the head box (W, H, D, c): a four-sided wedge .long H tall, its top .top H over c
+ * and .wide W across, narrowing to a point at its foot, .deep D deep, standing .ahead D forward of c; the body's bead eyes hidden; in their place
+ * two white eyes .eye W across, .eyeX W each side of the middle, .eyeY H over c, set into the wedge's front. The wedge in the head's own material
+ * (the team ghost skin); the eyes unlit white over 1 (LESSONS 442), left in the glow so they shine.
+ */
+const BANSHEE_FACE = { long: 1.25, top: 0.32, wide: 0.82, deep: 0.62, ahead: 0.16, eye: 0.27, eyeX: 0.19, eyeY: 0.12, white: new Color3(1.3, 1.3, 1.4) };
+export function bansheeFace(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const F = BANSHEE_FACE, mf = getMaterialFactory();
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  for (const m of body.allMeshes) if (/_[lr]Eye(Rim)?$/.test(m.name)) m.isVisible = false;
+  const out: Mesh[] = [];
+  const wedge = MeshBuilder.CreateCylinder("bansheeFace", { height: H * F.long, diameterTop: W * F.wide * Math.SQRT2, diameterBottom: 0, tessellation: 4 }, scene);
+  // turn the square's faces front and side and bake that (unparented: the bake takes the world matrix), then parent and squash in the head frame
+  wedge.rotation.y = Math.PI / 4; wedge.bakeCurrentTransformIntoVertices();
+  wedge.parent = head; wedge.scaling.z = (F.deep * D) / (W * F.wide);
+  wedge.position.set(c.x, c.y + H * F.top - (H * F.long) / 2, c.z + D * F.ahead);
+  wedge.material = head.material; wedge.convertToFlatShadedMesh(); out.push(wedge);
+  const white = mf.get("unlit", F.white, { emissive: F.white });
+  const front = c.z + D * F.ahead + (F.deep * D) / 2;
+  for (const sd of [-1, 1]) {
+    const eye = MeshBuilder.CreateIcoSphere("bansheeEye", { radius: (W * F.eye) / 2, subdivisions: 2 }, scene);
+    eye.parent = head; eye.scaling.z = 0.6; eye.position.set(c.x + sd * W * F.eyeX, c.y + H * F.eyeY, front - W * F.eye * 0.12);
+    eye.material = white; out.push(eye);
+  }
+  return out;
+}
+
+/*
  * [S] 530 (a.2) the Witch's hood-hat (secret.witch.red.png: a tall team-coloured hat with no brim at all; its foot is a hood that comes down round
  * the face to the jaw, wider at the bottom, the face showing in its open front; over the head it narrows into a long crooked spire that bends back
  * and to one side, kinked twice). WITCH_HOOD in the head box (W, H, D, c): the hood a 9-sided frustum from .chin H under the head's foot to .crown
