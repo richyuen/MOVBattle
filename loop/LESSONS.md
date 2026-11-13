@@ -14,7 +14,7 @@ Read whole at step 1; one fact a line, merge near cap.
 
 ## Capture and probes
 - A volley unit fires through SS._fireVolley: per-unit arrow options (heartArrow, iceArrow) go there too (519).
-- stats.mjs rounds knobs to .01: under .005 prints 0 (NaN next run); set the exact ratio.
+- stats.mjs rounds knobs to .01 (under .005 prints 0): set the exact ratio.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter).
 - A capture wipes iter-N (stats.json, a tail audit.md): back audit.md up, rerun `stats.mjs <id,id> --iter N` (comma list) after the last capture (527). Checkpoint replaces summary.json (483).
 - RotationX(+a) tips +y toward +z; a cylinder arc .5 under RotationX(+PI/2) has its half up (537). A turn-on-friends status: a friend in the scene, his log counted (537).
@@ -38,14 +38,14 @@ Read whole at step 1; one fact a line, merge near cap.
 - _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
 - Gate ability starts on his feet (512). Offset-0 linked actor: build off body.root (528).
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
-- A flat ico's faces sit ~20% inside its ellipsoid: ray-cast surface dress on (512).
-- Two pinned men topple apart: RU.holdUpright each step (514).
+- Flat ico faces sit ~20% inside: ray-cast dress on (512). Pinned pairs: RU.holdUpright (514).
+- Held-prop throw at arrow speed lands before the flight frame: options.flight at card speed (541).
 - A vehicle rider is an addOperator in its builder, posed in the callback (529); flip a held blade at its grip, a rotation offset turns it about its middle.
 ## Rig and dress
 - A chain or rope off a moving fist: a world-space rope pinned to the hand in RU.update, laid out at spawn (secretDress ChainWhip, 519).
 - A pole butt in the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target (509). A tall crown tips with the head pitch: stand it on the torso joint (500); a torso board on body.root (496).
 - A prop placed before movement can lag a turn: parent to the fist and convert world aim to hand space (521). IK: carryOverheadAt (520).
-- Linked actors (mount, safe, shell) share the parent's definition id. Gate dress on visual.special and shared pose presets on the unit id (518, 523); a horse actor holds mount_horse (527); suppressParentSpecial blanks the parent's: gate on posePreset.
+- Linked actors share the parent's definition id. Gate dress on visual.special and shared pose presets on the unit id (518, 523); a horse actor holds mount_horse (527); suppressParentSpecial blanks the parent's: gate on posePreset.
 - Retire old skirts (482); a belt hides in a tunicSkirt flare: build it off its top ring (517). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450). Shin limbShell 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
@@ -64,4 +64,4 @@ Read whole at step 1; one fact a line, merge near cap.
 - Replay probes as capture: mulberry32 0x4d4f5642 reseeded before resetBattle, resetClock, _nextRuntimeId 100000 (503, 512). hpoint without "haxe": shouldered carry (502).
 - Fist prop hand frame: +y up the forearm, knuckles -y (492). bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
-- execSync runs cmd.exe, which eats a caret: write sha~1 (530). On-death effects: RU.onDeath (the last death ends the duel first, 535).
+- execSync runs cmd.exe (eats a caret): write sha~1 (530). On-death effects: RU.onDeath (the last death ends the duel first, 535).

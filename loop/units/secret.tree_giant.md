@@ -9,16 +9,18 @@ a FAIL (0 since 538)
  5. shirt colour in unit_secret.tree_giant_idle: dark navy — TABS: dark green-teal shirt (ref: secret.tree_giant.jpg; card Appearance "green shirt")
  6. shorts in unit_secret.tree_giant_idle: grey kilt — TABS: brown ragged shorts with jagged hem (ref: secret.tree_giant.red.png)
  7. scale in lineup_secret_4: about 2x neighbours — TABS: 3.5x, tallest after Ice Giant (ref: card Size; reference/factions/secret.jpg)
-b FAIL (0 since 538)
- 1. tree held in one hand, low by the hip, in unit_secret.tree_giant_idle — TABS: tree hugged two-handed, upright against the chest (ref: secret.tree_giant.red.png, card Weapon Type)
+b FAIL (1 since 538, 1 struck)
  2. canopy about head-sized in unit_secret.tree_giant_windup — TABS: canopy wider than the giant's shoulders on a thick twisted trunk (ref: secret.tree_giant.red.png)
  3. bare trunk end in unit_secret.tree_giant_idle — TABS: root ball with an earth clump at the base (ref: secret.tree_giant.red.png)
 c FAIL (0 since 538)
  1. small one-handed upward poke in unit_secret.tree_giant_release, with the knight still on his knees in unit_secret.tree_giant_flight — TABS: two-handed sideways swat that throws men flying in a shower of leaves (ref: secret.tree_giant.jpg)
-d PASS (538 stats)
+d PASS (541 stats)
 ## Ranked gaps
-1. [S] secret.tree_giant.b two-handed big tree — blocker 1: upright two-handed hold against the chest (pose plus grip) — ref: secret.tree_giant.red.png — ours: unit_secret.tree_giant_idle
-2. [S] secret.tree_giant.b big tree — blocker 2: canopy wider than the torso, root ball — ref: secret.tree_giant.red.png — ours: unit_secret.tree_giant_release
+1. [S] secret.tree_giant.b big tree — blocker 2: thick twisted trunk, canopy cluster wider than the shoulders — ref: secret.tree_giant.red.png — ours: unit_secret.tree_giant_windup
+2. [S] secret.tree_giant.a lanky rig — blocker 1: legs restretched to half the height, slim trunk (as ICE_APE) — ref: secret.tree_giant.red.png — ours: unit_secret.tree_giant_idle
+3. [S] secret.tree_giant.b root ball — blocker 3: an earth clump at the trunk's base — ref: secret.tree_giant.red.png — ours: unit_secret.tree_giant_idle
 ## Attempts (iter | gap | criterion | verdict)
+541 | tree hugged upright in both fists TREE_HUG_ARM/TREE_HUG_TIP, two-handed grip (7e4100ff) | b | approved (struck 1)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
+- 541 critic: trunk thin as a broomstick; off fist rides up by the face.

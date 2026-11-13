@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 540   Batch: secret_4   Consecutive empty: 0   Done: 130/139   Parked: 0
+Iteration: 541   Batch: secret_4   Consecutive empty: 0   Done: 130/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -20,37 +20,37 @@ evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void
 secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer ++++ D | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo ++++ D | raptor_rider ++++ D | cheerleader ++++ D | cupid ++++ D | mace_spinner ++++ D | clams ++++ D | present_elf ++++ D | ice_mage ++++ D | infernal_whip ++++ D | bank_robbers ++++ D
 secret_3: witch ++++ D | banshee ++++ D | necromancer ++++ D | solar_architect ++++ D | wheelbarrow_dragon ++++ D | skeleton_giant ++++ D | bomb_cannon ++++ D | cavalry ++++ D | vlad ++++ D | gatling_gun ++++ D
-secret_4: blackbeard -+++ o | samurai_giant ---+ o | ullr ---+ o | lady_red_jade ---+ o | sensei -+++ o | shogun ---+ o | tree_giant ---+ o | artemis -+-+ o | ice_giant ---+ o
-## Focus (iteration 540; BASE e96789e5; secret_3+secret_4)
-0. evidence: barrage after shot rig 16 (sky over the man), +20 (931a204a)
-1. [S] secret.vlad.a blocker 2 low log carry (82532e47) APPROVED, struck 2, a PASS (CONFIRM passed, D)
-2. [S] secret.necromancer.a blockers 1, 2 cropped fitted vest (a803a83d) APPROVED, struck 1, 2
-3. [S] secret.necromancer.b blocker 1 forearm lantern (8bb7f01c) APPROVED, struck 1, b PASS
-4. [S] secret.necromancer.a blocker 3 thick curved horns (93159c23) APPROVED, struck 3, a PASS (CONFIRM passed, D)
-5. [S] secret.sensei.b blocker 1 ten-bladed shuriken (ac64e6be) APPROVED, struck 1, b PASS
-6. [S] secret.sensei.a blocker 4 spiked bracers (956195e2) APPROVED, struck 4
-7. [S] secret.blackbeard.a blocker 4 peg leg (6e62a793, 4f98ec35) APPROVED, struck 4
-8. [S] secret.blackbeard.c blocker 2 heavy anchor swing (415e5613) APPROVED, struck 1, 2, c PASS
-9. [S] secret.artemis.b blocker 1 tall longbow (a1768aeb, 06717795) APPROVED, struck 1, b PASS
-- 9/9, 11 struck
+secret_4: blackbeard -+++ o | samurai_giant ---+ o | ullr ---+ o | lady_red_jade -+-+ o | sensei -+-+ o | shogun ---+ o | tree_giant ---+ o | artemis -+-+ o | ice_giant ---+ o
+## Focus (iteration 541; BASE 4d1f2917; secret_4)
+1. [S] secret.blackbeard.a blocker 3 long coat (4896725f) APPROVED, no strike (tan slab over the red coat)
+2. [P] secret.blackbeard.a blocker 5 scale 1.95 (8e9d1836) APPROVED, no strike (CONFIRM failed a: beard, gloves, hat)
+3. [S] secret.sensei.a blocker 2 team vest (2ccc5709) APPROVED, struck 2
+4. [S] secret.sensei.a blocker 3 waist band (4b07f4b5) APPROVED, struck 3, a PASS (CONFIRM failed a, c)
+5. [S] secret.artemis.c blocker 1 five-arrow sheaf (fcfbebf5) APPROVED, struck 1
+6. [S] secret.ullr.b blocker 1 twin axes (e1c62c43) APPROVED, no strike
+7. [S] secret.ullr.c blocker 1 thrown tumbling axe (12a23e39, 0d7d192d) APPROVED, struck 1
+8. [S] secret.lady_red_jade.b blocker 1 guandao (b156bbab, f027b9a6) APPROVED, struck 1, b PASS
+9. [S] secret.tree_giant.b blocker 1 two-handed hug (7e4100ff) APPROVED, struck 1
+10. [S] secret.ice_giant.a blocker 1 ape rig (816231de) APPROVED, struck 1
+- 10/10, 7 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] secret.vlad (82532e47) / VERDICT: APPROVE / CRITERION: secret.vlad.a PASS   (previous: FAIL)
-- GAP: [S] secret.necromancer (a803a83d) / VERDICT: APPROVE / CRITERION: secret.necromancer.a FAIL   (previous: FAIL)
-- GAP: [S] secret.necromancer (8bb7f01c) / VERDICT: APPROVE / CRITERION: secret.necromancer.b PASS   (previous: FAIL)
-- GAP: [S] secret.necromancer (93159c23) / VERDICT: APPROVE / CRITERION: secret.necromancer.a PASS   (previous: FAIL)
-- GAP: [S] secret.sensei (ac64e6be) / VERDICT: APPROVE / CRITERION: secret.sensei.b PASS   (previous: FAIL)
-- GAP: [S] secret.sensei (956195e2) / VERDICT: APPROVE / CRITERION: secret.sensei.a FAIL   (previous: FAIL)
-- GAP: [S] secret.blackbeard (6e62a793, 4f98ec35) / VERDICT: APPROVE / CRITERION: secret.blackbeard.a FAIL   (previous: FAIL)
-- GAP: [S] secret.blackbeard (415e5613) / VERDICT: APPROVE / CRITERION: secret.blackbeard.c PASS   (previous: FAIL)
-- GAP: [S] secret.artemis (a1768aeb, 06717795) / VERDICT: APPROVE / CRITERION: secret.artemis.b PASS   (previous: FAIL)
-- CONFIRM: secret.vlad 4/4 PASS; secret.necromancer 4/4 PASS
+- GAP: [S] secret.blackbeard (4896725f) / VERDICT: APPROVE / CRITERION: secret.blackbeard.a FAIL   (previous: FAIL)
+- GAP: [P] secret.blackbeard (8e9d1836) / VERDICT: APPROVE / CRITERION: secret.blackbeard.a FAIL   (previous: FAIL)
+- GAP: [S] secret.sensei (2ccc5709) / VERDICT: APPROVE / CRITERION: secret.sensei.a FAIL   (previous: FAIL)
+- GAP: [S] secret.sensei (4b07f4b5) / VERDICT: APPROVE / CRITERION: secret.sensei.a PASS   (previous: FAIL)
+- GAP: [S] secret.artemis (fcfbebf5) / VERDICT: APPROVE / CRITERION: secret.artemis.c FAIL   (previous: FAIL)
+- GAP: [S] secret.ullr (e1c62c43) / VERDICT: APPROVE / CRITERION: secret.ullr.b FAIL   (previous: FAIL)
+- GAP: [S] secret.ullr (12a23e39, 0d7d192d) / VERDICT: APPROVE / CRITERION: secret.ullr.c FAIL   (previous: FAIL)
+- GAP: [S] secret.lady_red_jade (b156bbab, f027b9a6) / VERDICT: APPROVE / CRITERION: secret.lady_red_jade.b PASS   (previous: FAIL)
+- GAP: [S] secret.tree_giant (7e4100ff) / VERDICT: APPROVE / CRITERION: secret.tree_giant.b FAIL   (previous: FAIL)
+- GAP: [S] secret.ice_giant (816231de) / VERDICT: APPROVE / CRITERION: secret.ice_giant.a FAIL   (previous: FAIL)
+- CONFIRM: secret.blackbeard 3/4 (failed a); secret.sensei 2/4 (failed a, c)
 - REGRESSIONS: none
-- Checkpoint secret_3 (540): 12/12 scenarios GREEN
 
 ## Notes for next iteration (max 5 lines)
 - samurai_giant and shogun idles show them from behind (face hidden): evidence commit first (scoped by unit id) before their face/helmet-front blockers.
+- Starvation: samurai_giant and shogun have had no attempt since their 538 audit; one slot each from 544 if still untouched.
 - Shogun shares the Samurai Giant's giant body and helmet (TABS 1.2x man): blocker a.4 scale.
-- Starvation: samurai_giant, ullr, lady_red_jade, tree_giant, ice_giant have had no attempt since their 538 audit; one slot each from 544 if still untouched.
-- artemis a.2: reshape ARTEMIS_BAND into a rounded band with auburn hair at the sides, nape and bun (539 critic).
-- blackbeard a: long coat next (blocker 3); [P] scale 1.58 toward 2x is eligible fallout of 6e62a793 until 543.
+- blackbeard [P] scale 1.95 toward a ~3.5 m rig is eligible (critic 541 named the row the root of a.5).
+- ullr: _applyOnHitStatuses still runs at the throw's queueing (freeze 600 ms before the axe leaves): move it to impact with the c.2 ice burst.
