@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 527   Batch: secret_2+secret_3   Consecutive empty: 0   Done: 119/139   Parked: 0
+Iteration: 528   Batch: secret_2+secret_3   Consecutive empty: 0   Done: 119/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -19,35 +19,36 @@ good: devout_gauntlet ++++ D | celestial_aegis ++++ D | radiant_glaive ++++ D | 
 evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void_cultist ++++ D | tempest_lich ++++ D | death_bringer ++++ D | void_monarch ++++ D
 secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer ++++ D | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo ++++ D | raptor_rider ++++ D | cheerleader ++++ D | cupid ++++ D | mace_spinner ++++ D | clams ++++ D | present_elf ++++ D | ice_mage ++++ D | infernal_whip ++++ D | bank_robbers --++ o
-secret_3: witch ---+ o | banshee ---+ o | necromancer ---+ o | solar_architect ---+ o | wheelbarrow_dragon ---+ o | skeleton_giant ---+ o | bomb_cannon --++ o | cavalry ---+ o | vlad -+-+ o | gatling_gun ---+ o
+secret_3: witch ---+ o | banshee -+-+ o | necromancer ---+ o | solar_architect ---+ o | wheelbarrow_dragon ---+ o | skeleton_giant -+-+ o | bomb_cannon --++ o | cavalry ---+ o | vlad -+-+ o | gatling_gun --++ o
 secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
-## Focus (iteration 527; BASE f6e62ba3; secret_2+secret_3, secret_3 audited (stats f6e62ba3))
-1. [S] secret.bank_robbers.a blocker 5 (08766f4b, 0fe341bb) APPROVED, struck 5
-2. [S] secret.bank_robbers.a blocker 4 (361f605c) APPROVED, struck 4
-3. [S] secret.bank_robbers.a blocker 2 (1838836b) APPROVED, struck 2, a PASS; CONFIRM failed a, b (new lists)
-4. [S] secret.skeleton_giant.b blocker 1 (77116afd) APPROVED, struck 1
-5. [S] secret.skeleton_giant.a blocker 2 (deff238b) APPROVED, struck 2
-6. [S] secret.cavalry.b blocker 1 (1cd9657d) APPROVED, struck 1, 3
-7. [S] secret.cavalry.a blocker 1 (99708be7, 36fdeb97) APPROVED, struck 1
-8. [S] secret.vlad.b blocker 1 (1d6cb656) APPROVED, struck 1, b PASS
-9. [S] secret.bomb_cannon.b blocker 1 (7d5002bd) APPROVED, struck 1; added 2
-- 9/9, 10 struck
+## Focus (iteration 528; BASE 2ea44959; secret_2+secret_3)
+1. [S] secret.witch.b blocker 1 (69681de4) APPROVED, struck 1
+2. [S] secret.banshee.b blocker 1 (dd424eab) APPROVED, struck 1, 2, b PASS
+3. [S] secret.necromancer.b blocker 1 (88adc711) APPROVED, struck 1; added 3
+4. [S] secret.solar_architect.a blocker 2 (e00ede68) APPROVED, struck 2
+5. [S] secret.gatling_gun.c blocker 1 (9e007d5c) APPROVED, struck 1, c PASS
+6. [S] secret.bank_robbers.a blocker 1 (84812928) APPROVED, struck 1, 3 (lineup)
+7. [S] secret.skeleton_giant.b blocker 2 (53ccdaed) APPROVED, struck 2, b PASS
+8. [S] secret.vlad.a blocker 1 (d147ea1d) APPROVED, struck 1
+9. [S] secret.wheelbarrow_dragon.a blocker 1 (a6bcb527) APPROVED, struck a.1, b.1
+10. [P] secret.cavalry.b blocker 2 (c8877839) APPROVED, no strike (shot re-aimed to _windup)
+- 10/10, 12 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] secret.bank_robbers (08766f4b, follow-up 0fe341bb) / VERDICT: APPROVE / CRITERION: secret.bank_robbers.a PASS   (previous: FAIL)
-- GAP: [S] secret.bank_robbers (361f605c) / VERDICT: APPROVE / CRITERION: secret.bank_robbers.a PASS   (previous: FAIL)
-- GAP: [S] secret.bank_robbers (1838836b) / VERDICT: APPROVE / CRITERION: secret.bank_robbers.a PASS   (previous: FAIL)
-- GAP: [S] secret.skeleton_giant (77116afd) / VERDICT: APPROVE / CRITERION: secret.skeleton_giant.b FAIL   (previous: FAIL)
-- GAP: [S] secret.skeleton_giant (deff238b) / VERDICT: APPROVE / CRITERION: secret.skeleton_giant.a FAIL   (previous: FAIL)
-- GAP: [S] secret.cavalry (1cd9657d) / VERDICT: APPROVE / CRITERION: secret.cavalry.b FAIL   (previous: FAIL)
-- GAP: [S] secret.cavalry (99708be7, follow-up 36fdeb97) / VERDICT: APPROVE / CRITERION: secret.cavalry.a FAIL   (previous: FAIL)
-- GAP: [S] secret.vlad (1d6cb656) / VERDICT: APPROVE / CRITERION: secret.vlad.b PASS   (previous: FAIL)
-- GAP: [S] secret.bomb_cannon (7d5002bd) / VERDICT: APPROVE / CRITERION: secret.bomb_cannon.b FAIL   (previous: FAIL)
+- GAP: [S] secret.witch (69681de4) / VERDICT: APPROVE / CRITERION: secret.witch.b FAIL   (previous: FAIL)
+- GAP: [S] secret.banshee (dd424eab) / VERDICT: APPROVE / CRITERION: secret.banshee.b PASS   (previous: FAIL)
+- GAP: [S] secret.necromancer (88adc711) / VERDICT: APPROVE / CRITERION: secret.necromancer.b FAIL   (previous: FAIL)
+- GAP: [S] secret.solar_architect (e00ede68) / VERDICT: APPROVE / CRITERION: secret.solar_architect.a FAIL   (previous: FAIL)
+- GAP: [S] secret.gatling_gun (9e007d5c) / VERDICT: APPROVE / CRITERION: secret.gatling_gun.c PASS   (previous: FAIL)
+- GAP: [S] secret.bank_robbers (84812928) / VERDICT: APPROVE / CRITERION: secret.bank_robbers.a FAIL   (previous: FAIL)
+- GAP: [S] secret.skeleton_giant (53ccdaed) / VERDICT: APPROVE / CRITERION: secret.skeleton_giant.b PASS   (previous: FAIL)
+- GAP: [S] secret.vlad (d147ea1d) / VERDICT: APPROVE / CRITERION: secret.vlad.a FAIL   (previous: FAIL)
+- GAP: [S] secret.wheelbarrow_dragon (a6bcb527) / VERDICT: APPROVE / CRITERION: secret.wheelbarrow_dragon.a FAIL   (previous: FAIL)
+- GAP: [P] secret.cavalry (c8877839) / VERDICT: APPROVE / CRITERION: secret.cavalry.b FAIL   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM: bank_robbers 2/4 (passed c; failed a, b)
 
 ## Notes for next iteration (max 5 lines)
-- bank_robbers took CONFIRM's a, b lists (bandana, gun belt, sleeves; safe colour, door dial, straight-arm grip): a second CONFIRM fail on a or b makes it plateau.
-- Eligible [P] fallouts: cavalry CAVALRY_SPEAR flags wider/longer (1cd9657d); bomb_cannon crew cutlass blade-up flip (7d5002bd).
-- Unattempted secret_3 units (witch, banshee, necromancer, solar_architect, wheelbarrow_dragon, gatling_gun) starve at 532: spread picks over them.
-- stats.json in iter-527 holds only the five touched units; audit.md/audit2.md hold the secret_3 audits.
+- bank_robbers: a has 1 blocker left (gun belt); b keeps CONFIRM 527's list. A second CONFIRM fail on a or b makes it plateau.
+- Eligible [P] fallouts: witch WITCH_STAFF thick/ropeAt (69681de4); necromancer knife seat (88adc711); cavalry flagGap .03->.05 (c8877839); bomb_cannon cutlass flip (7d5002bd).
+- c criteria never attempted (witch, banshee, necromancer, solar, wheelbarrow_dragon, skeleton_giant, cavalry, vlad) starve at 532: spread c picks.
+- Solar halo lifted his rig to 2.57 m; shots still frame him. iter-528 holds only touched units' shots.

@@ -9,13 +9,13 @@ a FAIL (0 since 527)
 b FAIL (0 since 527)
  1. Gun in unit_secret.gatling_gun_idle is three separate thin pipes out of a box — TABS: one long cluster of ~8 barrels held by rings in a long dark frame (ref: secret.gatling_gun.red.png)
  2. Carriage in unit_secret.gatling_gun_idle is a flat blue slab on four small solid wheels — TABS: an axle with two tall spoked wheels with team rims (ref: secret.gatling_gun.red.png, .jpg)
-c FAIL (0 since 527)
- 1. Projectile in unit_secret.gatling_gun_release/_flight is a blue-tipped arrow-bolt that sticks in the target (unit_secret.gatling_gun_struck) — TABS: fast gatling bullets with a thin tracer line (ref: secret.gatling_gun.jpg; card Weapons Gatling Gun Bullet speed 150)
-d PASS (527 stats)
+c PASS (528: struck 1, bullets with tracer lines)
+d PASS (528 stats)
 ## Ranked gaps
-1. [S] secret.gatling_gun.c bullet tracers — blocker 1: small fast bullet with a thin white tracer line in place of the arrow bolt — ref: secret.gatling_gun.jpg — ours: unit_secret.gatling_gun_flight
-2. [S] secret.gatling_gun.b barrel cluster — blocker 1: one long cluster of ~8 barrels held by two collar rings, a side crank, a frame — ref: secret.gatling_gun.red.png — ours: unit_secret.gatling_gun_idle
+1. [S] secret.gatling_gun.b barrel cluster — blocker 1: one long cluster of ~8 barrels held by two collar rings, a side crank, a frame — ref: secret.gatling_gun.red.png — ours: unit_secret.gatling_gun_idle
+2. [S] secret.gatling_gun.a operator — blocker 1: bare head with short dark hair, no top hat — ref: secret.gatling_gun.red.png — ours: unit_secret.gatling_gun_idle
 ## Attempts (iter | gap | criterion | verdict)
+528 | gatling_bullet projectile: brass slug, white tracer line, speed 48, GATLING_BULLET (9e007d5c) | c | approved (struck 1, c PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- audit2 c adds an RPM ramp (starts slow, speeds up).
+- audit2 c adds an RPM ramp (starts slow, speeds up); 528 critic: not a blocker.

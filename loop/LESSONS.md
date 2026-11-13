@@ -36,7 +36,7 @@ Read whole at step 1; one fact a line, merge near cap.
 
 - Gate an idle hold on the fire, not Attacking+throw (451). Team garment shade: saturate (c^2), scale, self-lit .12; x k at self-lit .4 reads grey (517). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 - _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
-- Gate ability starts on his feet: a toppled/airborne start is wiped and burns the cooldown (512).
+- Gate ability starts on his feet (512). An offset-0 linked actor stands on its driver: build forward off body.root (528).
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
 - A flat ico's faces sit ~20% inside its ellipsoid: ray-cast surface dress on (512).
 - Two men pinned together topple apart under their crowd push: RU.holdUpright each step (514).
@@ -66,4 +66,4 @@ Read whole at step 1; one fact a line, merge near cap.
 - Fist prop hand frame: +y up the forearm, knuckles -y (492).
 - bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
-- A torso-rooted board tips with the idle lean: stand it on body.root (496).
+- Torso board tips with the lean: body.root (496).
