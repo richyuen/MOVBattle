@@ -166,7 +166,9 @@ const HIDE_CAPE_COLOR = new Color3(0.38, 0.23, 0.14);
  *   Limbs SKELETON_LIMB of their width; spine SKELETON_SPINE of the chest width; SKELETON_RIBS hoops from SKELETON_RIB_TOP down to SKELETON_RIB_LOW of the
  *   chest height, narrowing from the chest's width; skirt SKELETON_SKIRT of the thigh long, its hem SKELETON_HEM pelvis widths across, SKELETON_TATTERS tatters.
  */
-const SKELETON_UNITS = new Set(["spooky.skeleton_warrior", "spooky.skeleton_archer"]);
+const SKELETON_UNITS = new Set(["spooky.skeleton_warrior", "spooky.skeleton_archer",
+  // [S] 531 (a.1) the Skeleton Giant is a Stiffy too (card Appearance "unsurprisingly, is a Stiffy"): cream bone limbs, spine and ribs
+  "secret.skeleton_giant"]);
 // Bone: spookyDress SKELETON_BONE (441: shared, self-lit)
 const SKELETON_LIMB = 0.42;
 const SKELETON_SPINE = 0.16;
@@ -755,7 +757,7 @@ export class UnitFactory {
     // [S] 439 ...team bracers round his forearms and low brown boots with turned cuffs (spookyDress ARCHER_KIT)
     if (definition.id === "spooky.skeleton_archer" && !shouldUseVehicleBody) propMeshes.push(...skeletonArcherKit(this._scene, body, teamColor));
     // [S] 442 the shared bone is flat unlit cream: every bone mesh out of the glow layer (spookyDress SKELETON_BONE)
-    if (/^spooky\.(skeleton_warrior|skeleton_archer|reaper)$/.test(definition.id) && !shouldUseVehicleBody) unglowBone(this._scene, body.root);
+    if ((/^spooky\.(skeleton_warrior|skeleton_archer|reaper)$/.test(definition.id) || SKELETON_UNITS.has(definition.id)) && !shouldUseVehicleBody) unglowBone(this._scene, body.root);
     // [S] 437 the Pirate Queen's body cut narrow before her dress is fitted to it: trunk, yoke, shoulders, pelvis, hips (pirateDress QUEEN_FRAME)
     if (definition.id === "pirate.pirate_queen" && !shouldUseVehicleBody) queenFrame(body);
     // [S] 427 the Pirate Queen's team bandana, its flap down over her left eye (pirateDress QUEEN_BANDANA)
@@ -1547,12 +1549,15 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3, u
   // Skull and hood: the head goes bone; a team-coloured hood sits up and back over the crown, the face and its bead eyes clear in front
   body.headMesh.material = bone;
   const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
-  const hood = MeshBuilder.CreateSphere(`${body.headMesh.name}_hood`, { diameter: headSize * 1.32, segments: 4 }, scene);
-  hood.position.set(0, headSize * 0.12, -headSize * 0.26);
-  hood.material = cloth;
-  hood.convertToFlatShadedMesh();
-  hood.parent = body.headMesh;
-  added.push(hood);
+  // [S] 531 the secret Stiffies wear their own headgear (the giant's Greek helm): no hood
+  if (!unitId.startsWith("secret.")) {
+    const hood = MeshBuilder.CreateSphere(`${body.headMesh.name}_hood`, { diameter: headSize * 1.32, segments: 4 }, scene);
+    hood.position.set(0, headSize * 0.12, -headSize * 0.26);
+    hood.material = cloth;
+    hood.convertToFlatShadedMesh();
+    hood.parent = body.headMesh;
+    added.push(hood);
+  }
   // Ragged skirt from the pelvis to the knees, tatters hanging off the hem
   const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
   // [S] 438 not on the Skeleton Archer: a bare bone pelvis under his belt and tassels (spookyDress SKELETON_BELT)
