@@ -3082,10 +3082,11 @@ function buildCutlass(scene: Scene, name: string, fit: BladeFit, cut: typeof CUT
  * .segs runs, .armThick across tapering to .armTip; flukes .fluke long, .flukeW wide, .flukeT thick, along each arm's last run. Dark grey lit
  * cloth self-lit .2 ("metal" renders near black).
  */
-const BB_ANCHOR = { long: 0.56, back: 0.08, thick: 0.05, ring: 0.1, arm: 0.2, sweep: 2.1, segs: 5, armThick: 0.05, armTip: 0.035, fluke: 0.12,
+// 538.9b size 1 -> 1.8 (look: a hand-sized anchor hidden behind his arm)
+const BB_ANCHOR = { size: 1.8, long: 0.56, back: 0.08, thick: 0.05, ring: 0.1, arm: 0.2, sweep: 2.1, segs: 5, armThick: 0.05, armTip: 0.035, fluke: 0.12,
   flukeW: 0.1, flukeT: 0.03, grey: new Color3(0.22, 0.22, 0.24) };
 function buildBlackbeardAnchor(scene: Scene, fit: BladeFit): Mesh {
-  const A = BB_ANCHOR, H = fit.stand, L = H * A.long, B = H * A.back;
+  const A = BB_ANCHOR, H = fit.stand * A.size, L = H * A.long, B = H * A.back;
   const grey = mat(scene, A.grey, 0.2, "cloth");
   // the root is the shank itself, its fist end at the hand's origin, running out along +y
   const shank = MeshBuilder.CreateCylinder("anchorShank", { height: L + B, diameter: H * A.thick, tessellation: 6 }, scene);
