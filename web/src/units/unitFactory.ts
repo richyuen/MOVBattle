@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ullrSnowCap, samuraiGiantKabuto,senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ullrSnowCap, samuraiGiantKabuto, shogunSashimono,senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1246,6 +1246,8 @@ export class UnitFactory {
     if (definition.id === "secret.lady_red_jade" && !shouldUseVehicleBody) propMeshes.push(...ladyRedJadeHair(this._scene, body));
     // [S] 543 (a.1): the Samurai Giant's team kabuto, gold crescent maedate, tiered neck guard (secretDress KABUTO); the Shogun's helmet is left as it is
     if (definition.id === "secret.samurai_giant" && !shouldUseVehicleBody) propMeshes.push(...samuraiGiantKabuto(this._scene, body, teamColor));
+    // [S] 543 (a.3): the Shogun's sashimono, a dark pole up his back over the helmet, a tall team banner with a mon (secretDress SASHIMONO)
+    if (definition.id === "secret.shogun" && !shouldUseVehicleBody) propMeshes.push(...shogunSashimono(this._scene, body, teamColor));
     // [S] 543 (a.1): Ullr's dark snow cap with two mini axes, shaggy brown hair round the face (secretDress ULLR_CAP)
     if (definition.id === "secret.ullr" && !shouldUseVehicleBody) propMeshes.push(...ullrSnowCap(this._scene, body));
     // [S] 542 (a.4): a long darker team dress from the belt to mid-shin over the trousers (secretDress ARTEMIS_DRESS)

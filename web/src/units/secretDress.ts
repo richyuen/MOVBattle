@@ -5843,6 +5843,46 @@ export function samuraiGiantKabuto(scene: Scene, body: ArticulatedBody, team: Co
 }
 
 /*
+ * [S] 543 (shogun a.3) the Shogun's sashimono (audit 538: "nothing on the back - TABS: sashimono banner on a pole above the back";
+ * secret.shogun.png: a dark pole standing up his spine to over his helmet; from a short crossbar at its top a tall narrow team banner hangs beside it,
+ * about a head and a half wide and three heads long, a darker ring mon on it, its foot level with his shoulders). propBuilder's small banner_back
+ * flag is hidden. SASHIMONO in the torso frame (the yoke box T; the head top's height h over the torso origin): the pole .pole of T's width thick,
+ * .back of the depth behind the back, from .foot of T's half height under its middle to .over of the head's height over the head top; the banner a
+ * closed slab .wide of T's width across, .thick deep, hung from a crossbar at the pole's top down .long of the pole-top-to-neck drop, stood .gap off
+ * the pole's side; the mon a ring .mon of the banner width across on its back face and front face. Pole near-black lit cloth; banner team cloth saturated (c^2), self-lit .12;
+ * mon a darker shade; out of the glow.
+ */
+const SASHIMONO = { pole: 0.07, back: 1.25, foot: 0.4, over: 0.55, wide: 0.62, thick: 0.05, long: 1.15, gap: 0.04, mon: 0.6, monDark: 0.55,
+  black: new Color3(0.08, 0.06, 0.05) };
+export function shogunSashimono(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = SASHIMONO, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  for (const m of body.root.getChildMeshes(false)) if (m.name === "bannerPole") m.setEnabled(false);
+  const sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const cloth = mf.get("cloth", sat, { emissive: sat.scale(0.12), roughness: 1 });
+  const dark = sat.scale(K.monDark), mon = mf.get("cloth", dark, { emissive: dark.scale(0.12), roughness: 1 });
+  const wood = mf.get("cloth", K.black, { emissive: K.black.scale(0.4), roughness: 1 });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const headTop = originIn(body.headTop, body.torso).y, neck = T.mid + T.half;
+  const headH = Math.max(0.1, headTop - neck);
+  const z = -T.deep * K.back, y0 = T.mid - T.half * K.foot, y1 = headTop + headH * K.over;
+  const out: Mesh[] = [];
+  const add = (m: Mesh, mt: Material, x: number, y: number, zz: number): Mesh => { m.parent = body.torso; m.position.set(x, y, zz); m.material = mt; out.push(m); return m; };
+  const pw = T.wide * K.pole;
+  add(MeshBuilder.CreateBox("sashimonoPole", { width: pw, height: y1 - y0, depth: pw }, scene), wood, 0, (y0 + y1) / 2, z);
+  const bw = T.wide * K.wide, bl = (y1 - neck) * K.long;
+  add(MeshBuilder.CreateBox("sashimonoBar", { width: bw + pw, height: pw, depth: pw }, scene), wood, bw / 2, y1 - pw / 2, z);
+  const bx = pw / 2 + T.wide * K.gap + bw / 2;
+  add(MeshBuilder.CreateBox("sashimonoFlag", { width: bw, height: bl, depth: T.wide * K.thick }, scene), cloth, bx, y1 - pw - bl / 2, z);
+  for (const side of [1, -1]) {
+    const ring = add(MeshBuilder.CreateTorus("sashimonoMon", { diameter: bw * K.mon, thickness: bw * 0.09, tessellation: 12 }, scene), mon, bx, y1 - pw - bl * 0.38, z + side * T.wide * K.thick * 0.6);
+    ring.rotation.x = Math.PI / 2;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/*
  * [S] 542 (artemis a.4) Artemis's long dress (audit 538: "dark blue trousers - TABS: long team dress to mid-shin"; card Appearance "a Greek light
  * dress"; secret.artemis.red.png: from the belt a darker team skirt falls straight and a little flared to the middle of the shins, wider than the
  * hips, with the bare team shins and sandals below it). ARTEMIS_DRESS on the torso (the hip box, pelvis or trunk foot, W across, D deep, in the
