@@ -537,6 +537,16 @@ const KNIGHT_CHARGE = { from: 0.4, reach: 2.5, speed: 2.6, seconds: 1.0, overrun
  */
 const JOUSTER_CHARGE = { from: 1.5, reach: 16, speed: 1.5, seconds: 3.5, overrun: 4, contact: 1.0, damage: 20, fling: 4, lift: 2.5, cooldown: 3, through: true, log: true };
 /*
+ * [S] 530 the Cavalry's charge (audit 527 c.1; card Characteristics "Sharing the Jouster Horse's ability to create shockwaves wherever they canter
+ * ... When engaging, the Cavalry Horse will pull back and forcefully charge into enemy forces, disrupting their formation"). An enemy CAVALRY_CHARGE
+ * .from to .reach m past his reach first makes the horse pull back: CAVALRY_WAVE.pull s backing off him, facing him (logged "pull_back"); then the
+ * jouster's run at .speed on through him .overrun m, trampling (.contact, .damage, .fling/.lift) and spearing the man. While it runs, every
+ * CAVALRY_WAVE.every s a hoof shockwave goes out under the horse, .ahead of its radius before its middle: a dust ring (TRAMPLE_RING) .radius m
+ * across, every enemy inside it hurt .damage and flung .fling/.lift out from it, logged "shockwave". .cooldown s between runs.
+ */
+const CAVALRY_CHARGE = { from: 1.2, reach: 14, speed: 1.6, seconds: 3.2, overrun: 3.5, contact: 0.9, damage: 30, fling: 5, lift: 2.5, cooldown: 4, through: true, log: true };
+const CAVALRY_WAVE = { pull: 0.7, back: 1.0, every: 0.35, ahead: 0.6, radius: 2, damage: 12, fling: 3.5, lift: 2.2 };
+/*
  * [S] Minotaur Charge (378; card Characteristics "It attacks by charging at its opponents ... If hit with a projectile, it will charge sooner", ability
  * "charges, headbutting the enemy"; ancient.minotaur.png: head down, horns first, men flung off him). The mammoth's charge on two legs: an enemy
  * MINOTAUR_CHARGE.from to .reach m past his reach sets him sprinting at the man at .speed times his pace, head down (BULL_CHARGE pose); the man he
@@ -912,6 +922,8 @@ export class SimulationSystem {
   private _banjoNoteCount = 0;
   private _jumpReadyAt = new Map<RuntimeUnit, number>();
   private _foolishWindup = new Map<RuntimeUnit, number>();
+  /** [S] 530 the Cavalry horse's pull-back end time before its charge (CAVALRY_WAVE.pull) */
+  private _cavalryPull = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
   private _isRunning = false;
   private _battleStartedAt = 0;
@@ -2552,7 +2564,7 @@ export class SimulationSystem {
     const chargeSpec = preset === "iconic_mammoth" ? MAMMOTH_CHARGE : unit.definition.id === "farmer.wheelbarrow" ? WHEELBARROW_RAM
       : unit.definition.id === "medieval.knight" ? KNIGHT_CHARGE : unit.definition.id === "renaissance.jouster" ? JOUSTER_CHARGE
       : unit.definition.id === "ancient.minotaur" ? MINOTAUR_CHARGE : unit.definition.id === "evil.death_bringer" ? DEATH_CHARGE
-      : unit.definition.id === "secret.raptor_rider" ? RAPTOR_CHARGE : null;
+      : unit.definition.id === "secret.raptor_rider" ? RAPTOR_CHARGE : unit.definition.id === "secret.cavalry" ? CAVALRY_CHARGE : null;
     if (chargeSpec && canMove) {
       const run = this._charges.get(unit);
       if (run && (!unit.isCharging || (run.target.isDead && !run.end))) {
@@ -2561,6 +2573,18 @@ export class SimulationSystem {
       } else if (!run && distance > engageDistance + chargeSpec.from && distance < engageDistance + chargeSpec.reach && now >= (this._chargeReadyAt.get(unit) ?? 0)) {
         const dir = enemy.position.subtract(unit.position);
         dir.y = 0;
+        // [S] 530 the Cavalry horse pulls back before it charges (CAVALRY_WAVE.pull)
+        if (chargeSpec === CAVALRY_CHARGE) {
+          const until = this._cavalryPull.get(unit);
+          if (until === undefined) { this._cavalryPull.set(unit, now + CAVALRY_WAVE.pull); this._logAbility(unit, "pull_back", now, enemy.position); }
+          if (until === undefined || now < until) {
+            unit.moveTo(unit.position.subtract(dir.normalizeToNew().scale(CAVALRY_WAVE.back)));
+            this._clearPathState(unit);
+            unit.faceTarget(enemy.position);
+            return;
+          }
+          this._cavalryPull.delete(unit);
+        }
         unit.startCharge(chargeSpec.speed, now + chargeSpec.seconds);
         this._charges.set(unit, { target: enemy, dir: dir.normalize(), trampled: new Set(), spec: chargeSpec, end: null });
         this._chargeReadyAt.set(unit, now + chargeSpec.cooldown);
@@ -2968,6 +2992,23 @@ export class SimulationSystem {
         at.y = unit.position.y;
         this.visualEffects.spawnExplosionBurst(at, RAPTOR_STOMP.size);
       }
+      // [S] 530 the Cavalry horse's hoof shockwaves while it canters (CAVALRY_WAVE)
+      if (run.spec === CAVALRY_CHARGE && now >= (this._chargeDustAt.get(unit) ?? 0)) {
+        this._chargeDustAt.set(unit, now + CAVALRY_WAVE.every);
+        const at = unit.position.add(run.dir.scale(CAVALRY_WAVE.ahead * unit.collisionBodyRadius));
+        at.y = unit.position.y;
+        this.visualEffects?.spawnTrampleRing(at, CAVALRY_WAVE.radius);
+        for (const other of this._units) {
+          if (other.isDead || other.team === unit.team || !other.isTargetable) continue;
+          const off = other.position.subtract(at);
+          off.y = 0;
+          if (off.length() > CAVALRY_WAVE.radius + other.collisionBodyRadius) continue;
+          const out = off.lengthSquared() > 1e-4 ? off.normalize() : run.dir.clone();
+          other.applyDamage(CAVALRY_WAVE.damage, out.scale(CAVALRY_WAVE.fling));
+          other.applyBlastLaunch(out, CAVALRY_WAVE.fling, CAVALRY_WAVE.lift);
+        }
+        this._logAbility(unit, "shockwave", now, at);
+      }
       if (run.spec === MAMMOTH_CHARGE || run.spec === JOUSTER_CHARGE || run.spec === MINOTAUR_CHARGE) {
         unit.animator.setCharging(true, run.spec === MINOTAUR_CHARGE);
         this._chargePosed.add(unit);
@@ -2982,7 +3023,7 @@ export class SimulationSystem {
         run.trampled.add(other);
         if (C === DEATH_CHARGE) { this._chargeCut(unit, other, run.dir, now); continue; }
         // The jouster's lance goes into the man he rides at as the horse reaches him (JOUSTER_CHARGE)
-        if ((C === JOUSTER_CHARGE || C === RAPTOR_CHARGE) && other === run.target && unit.canAttack(now)) this._tryAttack(unit, other, getAttackProfile(unit.definition.attackProfileId), now);
+        if ((C === JOUSTER_CHARGE || C === RAPTOR_CHARGE || C === CAVALRY_CHARGE) && other === run.target && unit.canAttack(now)) this._tryAttack(unit, other, getAttackProfile(unit.definition.attackProfileId), now);
         // Aside off the charge's line, to whichever side of it he stood, and on ahead of it
         const across = new Vector3(run.dir.z, 0, -run.dir.x);
         const side = Vector3.Dot(off, across) >= 0 ? 1 : -1;
