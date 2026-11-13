@@ -4241,10 +4241,12 @@ export function necromancerLantern(scene: Scene, body: ArticulatedBody, team: Co
  * each kinked .bend rad back and .twist rad sideways on the one below. Team lit cloth self-lit .12, out of the glow. The hat is hers (and her
  * clones'); unitVisuals sets no witch_hat.
  */
-const WITCH_HOOD = { chin: 0.12, crown: 0.12, foot: 1.42, top: 1.05, back: 0.28, lip: 0.5, seg: [0.62, 0.62, 0.66], w: [0.82, 0.55, 0.3], bend: 0.22, twist: 0.12 };
+// 530.7b foot 1.42->1.7, top 1.05->1.25, back .28->.45, seg .62/.62/.66->.95/.95/1.0, w .82/.55/.3->.95/.62/.32, team squared x.9 (look: hood and spire read as a slim cap)
+const WITCH_HOOD = { chin: 0.12, crown: 0.12, foot: 1.7, top: 1.25, back: 0.45, lip: 0.5, seg: [0.95, 0.95, 1.0], w: [0.95, 0.62, 0.32], bend: 0.22, twist: 0.12, shade: 0.9 };
 export function witchHoodHat(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = WITCH_HOOD, glow = scene.getGlowLayerByName("glow");
-  const cloth = getMaterialFactory().get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const tc = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(K.shade);
+  const cloth = getMaterialFactory().get("cloth", tc, { emissive: tc.scale(0.12), roughness: 1 });
   const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
   const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
   const out: Mesh[] = [];
