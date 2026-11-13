@@ -1,19 +1,17 @@
 # secret.sensei
-Status: open   Audited: 538 (AUDIT x2), 541 (CONFIRM: passed b, d; failed a, c)   Done: -
+Status: done   Audited: 538 (AUDIT x2), 541 (CONFIRM: passed b, d; failed a, c), 543 (CONFIRM: passed a, b, c, d)   Done: 543
 ## Verdicts
-a PASS (542: struck 1, 2)
+a PASS (542: struck 1, 2; CONFIRM 543 passed)
 b PASS (540: struck 1; CONFIRM 541 passed)
-c FAIL (1 since 541, 1 struck; CONFIRM 541 list)
- 1. missing: Shuriken Tempest (the wind ring that pushes close enemies back and deflects projectiles; summary records only "burst at 383 ms" and no ability) — TABS: white wind swirls around the sensei (ref: secret.sensei.jpg; card Abilities, Characteristics)
-d PASS (542 stats)
+c PASS (543: struck 1; CONFIRM 543 passed)
+d PASS (543 stats)
 ## Ranked gaps
-1. [S] secret.sensei.c Shuriken Tempest — blocker 1: when an enemy closes within a few metres, a white wind-swirl ring round the sensei pushes enemies out and deflects missiles, logged as an ability (the pair must show it: ability shot) — ref: secret.sensei.jpg — ours: summary
 ## Attempts (iter | gap | criterion | verdict)
-542 | thrown star a spinning copy of the held many-bladed shuriken, from each fist in turn SENSEI_STAR (402a1f03) | c | approved (struck 2)
-542 | bracer spikes rebuilt as long curved bone-white horns SENSEI_HORN (182907e4) | a | approved (struck 1, 2 by lineup test, a PASS)
-541 | team vest SENSEI_VEST (2ccc5709); waist bands SENSEI_BAND (4b07f4b5) | a | approved (struck 2, 3)
-539-540 | hood SENSEI_HOOD, bracers SENSEI_BRACER, shuriken SENSEI_SHURIKEN | a, b | approved (struck a 1, 4, 5; b 1)
+543 | Shuriken Tempest: white wind ring rises when an enemy closes, blows men out, turns missiles back SENSEI_TEMPEST/spawnWindRing (9d99451a; evidence 223110c5) | c | approved (struck 1, c PASS)
+542 | thrown star a spinning copy of the held many-bladed shuriken SENSEI_STAR (402a1f03) | c | approved (struck 2)
+542 | bracer spikes as long curved bone-white horns SENSEI_HORN (182907e4) | a | approved (struck 1, 2 lineup, a PASS)
+539-541 | hood, bracers, shuriken, vest, waist bands | a, b | approved (struck a 1-5; b 1)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 542 critic: in the blue idle the arms read light team skin, not dark sleeves (close up only).
-- CONFIRM 541 failed a: next CONFIRM re-judges a (a.2 was struck by the lineup test, not cleared).
+- 543 critic: wind streaks thin boxes, not broad sheets; the push on the knight not shown (not blockers).
+- CONFIRM 543: spikes whiter than the ref, grey boots (lineup-invisible).

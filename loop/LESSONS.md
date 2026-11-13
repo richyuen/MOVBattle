@@ -16,7 +16,7 @@ Read at step 1; one fact a line, merge near cap.
 - A volley unit fires through SS._fireVolley: per-unit arrow options (heartArrow, iceArrow) go there too (519).
 - stats.mjs rounds knobs to .01 (under .005 prints 0): set the exact ratio.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter).
-- A capture wipes iter-N (stats.json, a tail audit.md): back audit.md up, rerun `stats.mjs <id,id> --iter N` (comma list) after the last capture (527). Checkpoint replaces summary.json (483).
+- A capture wipes iter-N (stats.json, audit.md): back up, rerun `stats.mjs --iter N` after the last capture (527). Checkpoint replaces summary.json (483). Detection stops 3 s after the first event: a late trigger needs ABILITY_PREF (543).
 - RotationX(+a) tips +y toward +z; a cylinder arc .5 under RotationX(+PI/2) has its half up (537). A turn-on-friends status: a friend in the scene, his log counted (537).
 - A cast fired as a man closes misses a duel whose man dies at range: second man walks in (537).
 - Probes (loop/scripts/probes/, repo root, --build after source changes): probe_bbox (--unit --pat --frame=torso), probe_near/close/head/local/axes/impale/bowdraw; probe_close --aim=head|torso|y:<y> --dist --yaw --noglow; probe_eval --unit --expr=<file> runs a function body (u, game, scene), prints its JSON.
@@ -46,7 +46,7 @@ Read at step 1; one fact a line, merge near cap.
 - A pole butt in the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target (509). A tall crown tips with the head pitch: stand it on the torso joint (500); a torso board on body.root (496).
 - A prop placed before movement can lag a turn: parent to the fist and convert world aim to hand space (521). IK: carryOverheadAt (520).
 - Linked actors share the parent's definition id. Gate dress on visual.special and shared pose presets on the unit id (518, 523); a horse actor holds mount_horse (527); suppressParentSpecial blanks the parent's: gate on posePreset.
-- Retire old skirts (482); a belt hides in a tunicSkirt flare: build it off its top ring (517). Use the `_yoke` for trunk backing or shell sizing (487). Check for later dress passes that repaint it (508).
+- Retire old skirts (482); a belt hides in a tunicSkirt flare: build off its top ring (517). Size shells off the `_yoke` (487); check later repaint passes (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450). Shin limbShell 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
 - unitFactory overwrites mesh metadata: mark a prop for the animator with a named child node (427).
