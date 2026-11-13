@@ -1,0 +1,24 @@
+# secret.tree_giant
+Status: open   Audited: 538 (AUDIT x2)   Done: -
+## Verdicts
+a FAIL (0 since 538)
+ 1. squat build: slab torso wider than tall, legs well short of half the height, in unit_secret.tree_giant_idle — TABS: lanky, long thin legs about half the height (ref: secret.tree_giant.red.png)
+ 2. maroon skullcap ending at the ears in unit_secret.tree_giant_idle — TABS: long brown hair down to the shoulders (ref: secret.tree_giant.red.png)
+ 3. dark wedge on the chin in unit_secret.tree_giant_idle — TABS: long brown beard tied off with a band on the chest (ref: secret.tree_giant.red.png, card Appearance)
+ 4. dark box boots in unit_secret.tree_giant_idle — TABS: bare team shins with brown sandals (ref: secret.tree_giant.red.png)
+ 5. shirt colour in unit_secret.tree_giant_idle: dark navy — TABS: dark green-teal shirt (ref: secret.tree_giant.jpg; card Appearance "green shirt")
+ 6. shorts in unit_secret.tree_giant_idle: grey kilt — TABS: brown ragged shorts with jagged hem (ref: secret.tree_giant.red.png)
+ 7. scale in lineup_secret_4: about 2x neighbours — TABS: 3.5x, tallest after Ice Giant (ref: card Size; reference/factions/secret.jpg)
+b FAIL (0 since 538)
+ 1. tree held in one hand, low by the hip, in unit_secret.tree_giant_idle — TABS: tree hugged two-handed, upright against the chest (ref: secret.tree_giant.red.png, card Weapon Type)
+ 2. canopy about head-sized in unit_secret.tree_giant_windup — TABS: canopy wider than the giant's shoulders on a thick twisted trunk (ref: secret.tree_giant.red.png)
+ 3. bare trunk end in unit_secret.tree_giant_idle — TABS: root ball with an earth clump at the base (ref: secret.tree_giant.red.png)
+c FAIL (0 since 538)
+ 1. small one-handed upward poke in unit_secret.tree_giant_release, with the knight still on his knees in unit_secret.tree_giant_flight — TABS: two-handed sideways swat that throws men flying in a shower of leaves (ref: secret.tree_giant.jpg)
+d PASS (538 stats)
+## Ranked gaps
+1. [S] secret.tree_giant.b two-handed big tree — blocker 1: upright two-handed hold against the chest (pose plus grip) — ref: secret.tree_giant.red.png — ours: unit_secret.tree_giant_idle
+2. [S] secret.tree_giant.b big tree — blocker 2: canopy wider than the torso, root ball — ref: secret.tree_giant.red.png — ours: unit_secret.tree_giant_release
+## Attempts (iter | gap | criterion | verdict)
+## Rejected (last 4)
+## Notes (max 3 lines)

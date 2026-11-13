@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 537   Batch: secret_3   Consecutive empty: 0   Done: 126/139   Parked: 0
+Iteration: 538   Batch: secret_3+secret_4   Consecutive empty: 0   Done: 128/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -19,39 +19,37 @@ good: devout_gauntlet ++++ D | celestial_aegis ++++ D | radiant_glaive ++++ D | 
 evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void_cultist ++++ D | tempest_lich ++++ D | death_bringer ++++ D | void_monarch ++++ D
 secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer ++++ D | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo ++++ D | raptor_rider ++++ D | cheerleader ++++ D | cupid ++++ D | mace_spinner ++++ D | clams ++++ D | present_elf ++++ D | ice_mage ++++ D | infernal_whip ++++ D | bank_robbers ++++ D
-secret_3: witch -+++ o | banshee -+++ o | necromancer -+-+ o | solar_architect ++++ D | wheelbarrow_dragon ++++ D | skeleton_giant ++++ D | bomb_cannon ++++ D | cavalry ++++ D | vlad -+++ o | gatling_gun ++++ D
-secret_4: blackbeard ???? q | samurai_giant ???? q | ullr ???? q | lady_red_jade ???? q | sensei ???? q | shogun ???? q | tree_giant ???? q | artemis ???? q | ice_giant ???? q
-## Focus (iteration 537; BASE e78718a4; secret_3)
-0. evidence witch turn scene (39807892); necromancer graves scene (60668e73)
-1. [S] secret.skeleton_giant.a blocker 3 feet (a721ccd5) APPROVED, struck 3, a PASS (CONFIRM 536 copied, D)
-2. [P] secret.witch.a blocker 5 broom pitch/lift (474204f4) APPROVED, no strike
-3. [S] secret.necromancer.a blocker 3 vest (b9583fd6) APPROVED, struck 3
-4. [S] secret.necromancer.c blocker 3 Gravestone Wall (bd4c21ff, 664a3f18) APPROVED, no strike (push unseen)
-5. [S] secret.banshee.a blocker 2 crown (2c49273b, e9a60e53) APPROVED, struck 2
-6. [S] secret.banshee.a blocker 3 face (56c897fc, 474c9e55) APPROVED, struck 3
-7. [S] secret.banshee.a blocker 4 hair (716d07af, 4d0f26b8) APPROVED, struck 4
-8. [S] secret.vlad.a blocker 6 coat (3eea93c7) APPROVED, struck 6
-9. [S] secret.vlad.a blocker 3 hair (8740885b) APPROVED, struck 3
-10. [S] secret.vlad.a blocker 2 mustache (71f3e6ad) APPROVED, struck 2
-- 10/10, 8 struck (+ witch c.3 struck by re-audit, c PASS)
+secret_3: witch ++++ D | banshee ++++ D | necromancer -+++ o | solar_architect ++++ D | wheelbarrow_dragon ++++ D | skeleton_giant ++++ D | bomb_cannon ++++ D | cavalry ++++ D | vlad -+++ o | gatling_gun ++++ D
+secret_4: blackbeard ---+ o | samurai_giant ---+ o | ullr ---+ o | lady_red_jade ---+ o | sensei --++ o | shogun ---+ o | tree_giant ---+ o | artemis ---+ o | ice_giant ---+ o
+## Focus (iteration 538; BASE 9e9ae3a0; secret_3+secret_4)
+0. [P] secret_4 stats (9e9ae3a0); audit secret_4 x2 (tail overlap)
+1. [S] secret.witch.a blocker 5 broom club (9c9fe16d) APPROVED, struck 5, a PASS (CONFIRM 536 copied, D)
+2. [S] secret.banshee.a blocker 5 waist chain + manacles (5c8ac1db) APPROVED, struck 5
+3. [S] secret.banshee.a blocker 6 armbands (966b784f) APPROVED, struck 6, a PASS (CONFIRM passed, D)
+4. [S] secret.necromancer.a blocker 4 shorts (3997814f) APPROVED, struck 4
+5. [S] secret.necromancer.a blocker 5 boots (ed76fae6) APPROVED, struck 5
+6. [S] secret.necromancer.c blocker 3 wall push (96aeee6b) APPROVED, struck 3, c PASS
+7. [S] secret.vlad.a blocker 5 boots (2982232e, c9c7afbb) APPROVED, struck 5 (CONFIRM failed a: 3 new blockers)
+8. [S] secret.blackbeard.a blocker 2 beard (40db92f3) APPROVED, struck 2
+9. [S] secret.blackbeard.b blocker 1 anchor (afbccbda, dffef02c) APPROVED, struck 1
+- 9/9, 9 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] secret.skeleton_giant (a721ccd5) / VERDICT: APPROVE / CRITERION: secret.skeleton_giant.a PASS   (previous: FAIL)
-- GAP: [P] secret.witch (474204f4) / VERDICT: APPROVE / CRITERION: secret.witch.a FAIL   (previous: FAIL)
-- GAP: [S] secret.necromancer (b9583fd6) / VERDICT: APPROVE / CRITERION: secret.necromancer.a FAIL   (previous: FAIL)
-- GAP: [S] secret.necromancer (bd4c21ff, 664a3f18) / VERDICT: APPROVE / CRITERION: secret.necromancer.c FAIL   (previous: FAIL)
-- GAP: [S] secret.banshee (2c49273b, e9a60e53) / VERDICT: APPROVE / CRITERION: secret.banshee.a FAIL   (previous: FAIL)
-- GAP: [S] secret.banshee (56c897fc, 474c9e55) / VERDICT: APPROVE / CRITERION: secret.banshee.a FAIL   (previous: FAIL)
-- GAP: [S] secret.banshee (716d07af, 4d0f26b8) / VERDICT: APPROVE / CRITERION: secret.banshee.a FAIL   (previous: FAIL)
-- GAP: [S] secret.vlad (3eea93c7) / VERDICT: APPROVE / CRITERION: secret.vlad.a FAIL   (previous: FAIL)
-- GAP: [S] secret.vlad (8740885b) / VERDICT: APPROVE / CRITERION: secret.vlad.a FAIL   (previous: FAIL)
-- GAP: [S] secret.vlad (71f3e6ad) / VERDICT: APPROVE / CRITERION: secret.vlad.a FAIL   (previous: FAIL)
-- RE-AUDIT secret.witch.c: PASS
+- GAP: [S] secret.witch (9c9fe16d) / VERDICT: APPROVE / CRITERION: secret.witch.a PASS   (previous: FAIL)
+- GAP: [S] secret.banshee (5c8ac1db) / VERDICT: APPROVE / CRITERION: secret.banshee.a FAIL   (previous: FAIL)
+- GAP: [S] secret.banshee (966b784f) / VERDICT: APPROVE / CRITERION: secret.banshee.a PASS   (previous: FAIL)
+- GAP: [S] secret.necromancer (3997814f) / VERDICT: APPROVE / CRITERION: secret.necromancer.a FAIL   (previous: FAIL)
+- GAP: [S] secret.necromancer (ed76fae6) / VERDICT: APPROVE / CRITERION: secret.necromancer.a FAIL   (previous: FAIL)
+- GAP: [S] secret.necromancer (96aeee6b) / VERDICT: APPROVE / CRITERION: secret.necromancer.c PASS   (previous: FAIL)
+- GAP: [S] secret.vlad (2982232e, c9c7afbb) / VERDICT: APPROVE / CRITERION: secret.vlad.a PASS   (previous: FAIL)
+- GAP: [S] secret.blackbeard (40db92f3) / VERDICT: APPROVE / CRITERION: secret.blackbeard.a FAIL   (previous: FAIL)
+- GAP: [S] secret.blackbeard (afbccbda, dffef02c) / VERDICT: APPROVE / CRITERION: secret.blackbeard.b FAIL   (previous: FAIL)
+- CONFIRM: secret.banshee 4/4 PASS; secret.vlad a FAIL (mantle, chest stars, cap), b c d PASS
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- skeleton_giant D at 537 (every criterion CONFIRM-passed at 536: no CONFIRM agent run). Open: witch (a.5 broom), banshee (a.5 chains, a.6 armbands), necromancer (a.4-6, c.3 push), vlad (a.5 boots).
-- Tail overlap: secret_3 has 7 pickable [S] (under 9): run step 2 for secret_4 in iteration 538 before step 4, Batch secret_3+secret_4.
-- Witch next is the [S] broom rebuild (critic 537: inverted, thin end on the ground, feet still grounded); a gap critic pass on a.5 makes her D (CONFIRM 536 copies).
-- Necromancer c.3: wall's push misses the man who triggers it at ~3.5 m; _graves pair (frame 15) is set up to show the throw.
-- Starve: banshee.a, vlad.a, necromancer a/c all attempted at 537.
+- secret_3 left: necromancer a.6 armbands (then CONFIRM all four; [P] NECRO_SHORTS hem .55 -> .4 eligible), vlad a.1-3 from CONFIRM 538 (no ranked gaps: take the first blocker; a second CONFIRM fail makes a plateau).
+- secret_4 audited 538 (audit.md, audit2.md in iter-538; the evidence capture replaced its batch shots, blackbeard's are current).
+- samurai_giant and shogun idles show them from behind (face hidden): evidence commit first before their face/helmet-front blockers.
+- Shogun shares the Samurai Giant's giant body and helmet (TABS 1.2x man): blocker a.4 scale.
+- Blackbeard next: second anchor (b.2), Cannon Barrage (c.1), tricorne (a.1).
