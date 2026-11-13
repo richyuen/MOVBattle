@@ -208,6 +208,8 @@ const FIRE_ARROWS = new Set(["spooky.skeleton_archer"]);
 const HEART_ARROWS = new Set(["secret.cupid"]);
 /** [S] 519 a lovestruck man's kiss (card secret.cupid: "kiss them relentlessly, draining their hitpoints"): m to his friend, s between kisses, hp per s. */
 const LOVE_KISS = { reach: 0.9, every: 0.5, drain: 4 };
+/** [S] 536 a mushroomed man's turn on his friends: he closes to .reach m (his own reach up to .reachMax), a blow of .damage every .every s */
+const SHROOM_TURN = { reach: 1.1, reachMax: 1.6, every: 1.0, damage: 12 };
 const STIFFY_FEAR = { units: new Set(["spooky.skeleton_warrior"]), every: 2, seconds: 3.5, reach: 4 };
 // [S] 475 Pharaoh Kneel: the struck man and enemies within .radius (KNEEL_AURA's ring) kneel .seconds (RuntimeUnit.applyKneel)
 const PHARAOH_KNEEL = { radius: 2.4, seconds: 3 };
@@ -2344,6 +2346,29 @@ export class SimulationSystem {
       const a = seed + now * DRUNK_WANDER.swing + Math.sin(now * 2.3 + seed) * 1.2;
       unit.moveTo(unit.position.add(new Vector3(Math.sin(a), 0, Math.cos(a)).scale(DRUNK_WANDER.reach)));
       this._clearPathState(unit);
+      return;
+    }
+
+    // [S] 536 Mushroomed (RuntimeUnit.applyMushrooms, the Witch's spell): he ignores his enemies and goes for his nearest friend, striking him (SHROOM_TURN)
+    if (unit.isShroomed(now)) {
+      let friend: RuntimeUnit | null = null, best = Infinity;
+      for (const man of this._units) {
+        if (man === unit || man.isDead || man.team !== unit.team || man.isAnchoredActor) continue;
+        const d = Vector3.Distance(man.position, unit.position);
+        if (d < best) { best = d; friend = man; }
+      }
+      this._clearPathState(unit);
+      if (!friend) { unit.stopMoving(); return; }
+      const reach = Math.max(SHROOM_TURN.reach, Math.min(unit.definition.engageRange, SHROOM_TURN.reachMax));
+      if (best > reach) { unit.moveTo(friend.position); return; }
+      unit.stopMoving();
+      unit.faceTarget(friend.position);
+      if (now >= (this._kissAt.get(unit) ?? 0)) {
+        this._kissAt.set(unit, now + SHROOM_TURN.every);
+        unit.triggerAttackVisual(SHROOM_TURN.every * 0.6);
+        friend.applyDamage(SHROOM_TURN.damage, friend.position.subtract(unit.position).normalize().scale(0.3));
+        this._logAbility(unit, "turncoat", now, friend.position);
+      }
       return;
     }
 

@@ -1170,6 +1170,11 @@ export class ProjectileSystem {
         }
         // [S] 535 a Necromancer skull curses the man it strikes: he rots to death and rises a skeleton of the shooter's side (SimulationSystem NECRO_CURSE)
         if (p.shape === "necro_skull" && !p.target.isDead) this.necroCurseHook?.(p.target, p.attackerTeam);
+        // [S] 536 a Witch's mushroom spell grows toadstools on the man it strikes and poisons him; he turns on his friends meanwhile (RuntimeUnit.applyMushrooms)
+        if (p.shape === "mushroom_spell" && !p.target.isDead) {
+          p.target.applyMushrooms();
+          this.abilityHook?.("secret.witch", "status:mushroom", p.target.position);
+        }
         if (p.shape === "leaves") this._loftFromSpikes(p, p.target);
         if (p.shape === "spirit_fire") this._knockUpFromSpiritFire(p, p.target);
         if (p.shape === "firework") this._fireworkBurst(p);

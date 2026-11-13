@@ -86,6 +86,8 @@ const ICE_THROW = { fore: 1.5, inward: 0.12, back: 0.45, hold: 0.22, ease: 0.25 
 // [535b] look 535: on an armoured knight the dye barely showed and four small wisps were lost: brighter self-light, six bigger wisps
 export const GHOST_CURSE = { blue: new Color3(0.28, 0.55, 1.25), dye: 0.85, glow: 0.75, wisps: 6, long: 1.1, wide: 0.24, ring: 1.0, orbit: 4.2, wisp: new Color3(0.75, 0.92, 1.3) };
 /** [S] 519 Lovestruck hearts (spec at RuntimeUnit.applyLove), in head widths: big heart, small hearts and their size, height over the head, circle radius, orbit rad/s. */
+/** [S] 536 the Witch's toadstools on a struck man (spec at RuntimeUnit.applyMushrooms), in head widths. */
+const SHROOMS = { seconds: 6, cap: 0.62, capH: 0.62, stem: 0.2, stemH: 0.5, tilt: 0.7, capC: new Color3(1, 0.22, 0.75), stemC: new Color3(0.95, 0.88, 0.74) };
 const LOVE_HEARTS = { big: 0.95, small: 2, smallSize: 0.45, over: 0.85, ring: 0.75, orbit: 2.4, pink: new Color3(1, 0.18, 0.6) };
 const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
 const BURN = { tongues: 6, long: 2.6, wide: 0.55, flame: new Color3(1, 0.42, 0.06), core: new Color3(1, 0.85, 0.3), glow: 0.9 };
@@ -2013,6 +2015,7 @@ export class RuntimeUnit {
     this._applyBurnFlames(now);
     this._applyFearSkull(now);
     this._applyLoveHearts(now);
+    this._applyShrooms(now);
     this._applyGhostWisps(now);
     this._applyKneelPose(now);
     this._applyFireworkSpin(now);
@@ -2697,6 +2700,57 @@ export class RuntimeUnit {
       child.position.set(Math.cos(a) * w * L.ring, Math.sin(a * 1.7) * w * 0.15 - w * 0.1, Math.sin(a) * w * L.ring * 0.4);
     }
   }
+  /*
+   * [S] 536 (witch c.3; card secret.witch Characteristics: "They throw spells that make those who were hit grow mushrooms, and making the units hit start
+   * attacking their allies whilst ignoring the real enemies, all while they are poisoned to death"; secret.witch.red.png: small magenta toadstools on
+   * her bones and hat). A man her mushroom spell strikes is poisoned (POISON) and for SHROOMS.seconds grows toadstools: .head on his head (on its top
+   * and sides), one on each shoulder; each a pale stem .stemH of the head's width tall under an unlit magenta cap .cap across, tilted outward .tilt
+   * rad. Built on the strike itself (the struck shot is that tick). SimulationSystem._processUnitDecision turns him on his nearest friend meanwhile.
+   */
+  private _shroomUntil = 0;
+  private _shrooms: TransformNode[] = [];
+  applyMushrooms(seconds = SHROOMS.seconds): void {
+    if (this._isDead || this._isAnchoredActor) return;
+    const now = RuntimeUnit.timeNowSeconds();
+    this._shroomUntil = Math.max(this._shroomUntil, now + seconds);
+    this.poison();
+    this._applyShrooms(now);
+  }
+  isShroomed(now: number): boolean { return !this._isDead && now < this._shroomUntil; }
+  private _applyShrooms(now: number): void {
+    if (!this.isShroomed(now)) {
+      for (const n of this._shrooms) n.dispose(false, false);
+      this._shrooms = [];
+      return;
+    }
+    if (this._shrooms.length) return;
+    const head = this.body.headMesh;
+    if (!head || head.isDisposed()) return;
+    const S = SHROOMS, scene = head.getScene(), mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+    const capM = mf.get("unlit", S.capC, { emissive: S.capC });
+    const stemM = mf.get("unlit", S.stemC, { emissive: S.stemC });
+    const hb = head.getBoundingInfo().boundingBox, e = hb.extendSize, c = hb.center;
+    const w = Math.max(e.x, e.z) * 2;
+    const grow = (parent: TransformNode, at: Vector3, tiltX: number, tiltZ: number, size: number): void => {
+      const node = new TransformNode("witchShroom", scene);
+      node.parent = parent; node.position.copyFrom(at); node.rotation.set(tiltX, 0, tiltZ);
+      const stem = MeshBuilder.CreateCylinder("witchShroomStem", { height: size * S.stemH, diameterTop: size * S.stem * 0.8, diameterBottom: size * S.stem, tessellation: 6 }, scene);
+      stem.parent = node; stem.position.y = size * S.stemH / 2; stem.material = stemM;
+      const cap = MeshBuilder.CreateSphere("witchShroomCap", { diameter: size * S.cap, segments: 4, slice: 0.5 }, scene);
+      cap.parent = node; cap.position.y = size * S.stemH * 0.92; cap.scaling.y = S.capH; cap.material = capM;
+      for (const m of [stem, cap]) { m.isPickable = false; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+      this._shrooms.push(node);
+    };
+    // on his head: one on the crown, the others on its sides, leaning out
+    const top = c.y + e.y;
+    grow(head, new Vector3(c.x - e.x * 0.2, top - e.y * 0.1, c.z), 0, 0.25, w);
+    grow(head, new Vector3(c.x + e.x * 0.85, c.y + e.y * 0.35, c.z - e.z * 0.2), 0, -S.tilt, w * 0.8);
+    grow(head, new Vector3(c.x - e.x * 0.85, c.y + e.y * 0.1, c.z + e.z * 0.2), 0.2, S.tilt, w * 0.7);
+    // one on each shoulder
+    for (const [joint, side] of [[this.body.leftShoulder, -1], [this.body.rightShoulder, 1]] as const) {
+      if (joint) grow(joint, new Vector3(0, w * 0.15, 0), 0, -side * S.tilt * 0.6, w * 0.8);
+    }
+  }
   get fearFrom(): Vector3 { return this._fearFrom; }
   private _applyFearSkull(now: number): void {
     const on = this.isAfraid(now);
@@ -2784,6 +2838,7 @@ export class RuntimeUnit {
     this._isDead = false;
     this._drunkUntil = 0;
     this._loveUntil = 0;
+    this._shroomUntil = 0;
     this._ghostUntil = 0;
     this.onDeath = null;
     this._poisonUntil = 0;
