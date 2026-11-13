@@ -4126,3 +4126,58 @@ export function bankRobberBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   }
   return out;
 }
+
+/*
+ * [S] 529 (a.2) the Banshee's gown (secret.banshee.red.png: a long ragged off-white shift hung from the shoulders, straight over the chest and
+ * flaring a little to a hem below the knees; the hem cut in a zigzag of points with a team-coloured border under it; torn holes in the cloth showing
+ * the team body behind, one on the chest's side, two on the skirt). BANSHEE_GOWN on the torso joint, in the yoke's half-sizes (T) and the knee read
+ * into the torso frame: a bodice .out of the yoke round from its top to the waist (.waist of the half-height under its middle); an eight-sided
+ * skirt from the waist, .top to .foot of the yoke's width across, to .below m under the knee; at the hem .teeth cream points .tooth m long over
+ * .teeth team points a little longer behind them (the zigzag border); .holes torn patches in team on the cloth. Cream unlit (LESSONS 442), team
+ * lit cloth self-lit .12, out of the glow.
+ */
+const BANSHEE_GOWN = { out: 1.12, waist: 0.95, top: 2.3, foot: 2.9, depth: 1.05, below: 0.1, teeth: 12, tooth: 0.11, teamDrop: 0.035,
+  cream: new Color3(0.9, 0.88, 0.8),
+  holes: [[0.62, 0.35, 0.55, 0.16], [-0.35, -0.45, 0.42, 0.13], [0.42, -0.7, 0.32, 0.1]] as [number, number, number, number][] };
+export function bansheeGown(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const G = BANSHEE_GOWN, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const cream = mf.get("unlit", G.cream, { emissive: G.cream });
+  const teamM = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material): Mesh => { m.parent = body.torso; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const top = T.mid + T.half, waist = T.mid - T.half * G.waist;
+  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const hem = kneeY - G.below;
+  const wx = T.wide * G.out, dz = T.deep * G.out;
+  const bodice = put(MeshBuilder.CreateBox("bansheeBodice", { width: wx * 2, height: top - waist, depth: dz * 2 }, scene), cream);
+  bodice.position.set(0, (top + waist) / 2, 0);
+  // the skirt: an eight-sided flared shell, its depth in the trunk's depth/width ratio
+  const ratio = (T.deep / T.wide) * G.depth, rTop = T.wide * G.top / 2, rFoot = T.wide * G.foot / 2;
+  const skirt = put(MeshBuilder.CreateCylinder("bansheeSkirt", { height: waist - hem, diameterTop: rTop * 2, diameterBottom: rFoot * 2, tessellation: 8 }, scene), cream);
+  skirt.rotation.y = Math.PI / 8; skirt.scaling.z = ratio; skirt.position.y = (waist + hem) / 2;
+  // the zigzag hem: cream points over a team border of longer points behind them
+  for (let k = 0; k < G.teeth; k++) {
+    const a = (k / G.teeth) * Math.PI * 2, along = (2 * Math.PI * rFoot) / G.teeth;
+    for (const [mt, drop, grow, inset] of [[cream, 0, 1, 0.99], [teamM, G.teamDrop, 1.05, 0.96]] as const) {
+      const len = G.tooth * (k % 2 ? 0.75 : 1) + drop;
+      const p = MeshBuilder.CreateCylinder("bansheeHemPoint", { height: len, diameterTop: along * grow, diameterBottom: 0, tessellation: 4 }, scene);
+      p.scaling.z = 0.12;
+      p.rotation.y = Math.PI / 2 - a;
+      p.position.set(Math.cos(a) * rFoot * inset, hem - len / 2, Math.sin(a) * rFoot * ratio * inset);
+      put(p, mt);
+    }
+  }
+  // torn holes: team patches a little proud of the front ([x of the half-width, y of the half-height from the waist or skirt, w, h])
+  for (const [hx, hy, hw, hh] of G.holes) {
+    const onSkirt = hy < 0, y = onSkirt ? waist + (waist - hem) * hy * 0.9 : T.mid + T.half * hy;
+    const r = onSkirt ? rTop + (rFoot - rTop) * Math.min(1, -hy) : wx;
+    const z = onSkirt ? r * ratio * 0.95 + 0.004 : dz + 0.004;
+    const hole = MeshBuilder.CreateCylinder("bansheeGownHole", { height: T.half * hh * 2, diameterTop: T.wide * hw * 0.6, diameterBottom: T.wide * hw, tessellation: 5 }, scene);
+    hole.rotation.x = Math.PI / 2; hole.scaling.y = 0.05; hole.rotation.z = hx;
+    hole.position.set(T.wide * hx * (onSkirt ? 1.4 : 1), y, z);
+    put(hole, teamM);
+  }
+  return out;
+}
