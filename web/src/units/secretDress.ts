@@ -5777,6 +5777,50 @@ export function senseiBracers(scene: Scene, body: ArticulatedBody, team: Color3)
 }
 
 /*
+ * [S] 541 (sensei a.2) the Sensei's vest (audit 538: "gold rectangular chest board - TABS: team vest with orange-trim edges"; secret.sensei.red.png:
+ * no gold anywhere on the trunk; a team vest over the chest and back, open down the front, each front edge a thin orange strip running from the
+ * shoulder top straight down to the waist band, a second orange strip down each armhole side; between the front edges the team undershirt).
+ * The monk_robe special's gold "robe" board and "drape" are switched off. SENSEI_VEST in the yoke's box T: an 8-sided shell .fitTop to
+ * .fitFoot of the width round, .fitDeep deep, from .top of the half height over the middle to the trunk's foot; on its front a centre panel
+ * .open of the width across standing .stand proud (the undershirt, in the shell's team x .shirt); orange strips .stripW of the width across,
+ * .stripD deep, at the panel's edges and at .armX of the width out. Team cloth (c^2 to the peak) x .shade self-lit .12; orange lit cloth
+ * self-lit .3; out of the glow.
+ */
+const SENSEI_VEST = { fitTop: 0.98, fitFoot: 0.94, fitDeep: 1.12, top: 0.98, open: 0.38, stand: 0.05, shirt: 1.18, stripW: 0.07, stripD: 0.1, armX: 0.86,
+  shade: 0.78, orange: new Color3(0.95, 0.42, 0.06) };
+function senseiTeam(team: Color3, shade: number): Color3 {
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  return sat.scale((peak / Math.max(sat.r, sat.g, sat.b, 1e-3)) * shade);
+}
+export function senseiVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = SENSEI_VEST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  for (const m of body.root.getChildMeshes(false)) if (m.name === "robe" || m.name === "drape") m.setEnabled(false);
+  const vestC = senseiTeam(team, K.shade), shirtC = senseiTeam(team, Math.min(1, K.shade * K.shirt));
+  const vest = mf.get("cloth", vestC, { emissive: vestC.scale(0.12), roughness: 1 });
+  const shirt = mf.get("cloth", shirtC, { emissive: shirtC.scale(0.12), roughness: 1 });
+  const orange = mf.get("cloth", K.orange, { emissive: K.orange.scale(0.3), roughness: 1 });
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const top = T.mid + T.half * K.top, low = T.mid - T.half, h = top - low, cy = (top + low) / 2;
+  const out: Mesh[] = [];
+  const add = (m: Mesh, mt: Material, x: number, y: number, z: number): Mesh => { m.parent = body.torso; m.position.set(x, y, z); m.material = mt; out.push(m); return m; };
+  const shell = add(MeshBuilder.CreateCylinder("senseiVest", { height: h, diameterTop: T.wide * 2 * K.fitTop, diameterBottom: T.wide * 2 * K.fitFoot, tessellation: 8 }, scene), vest, 0, cy, 0);
+  shell.scaling.z = (T.deep / T.wide) * K.fitDeep; shell.rotation.y = Math.PI / 8;
+  // the shell's front face (an 8-gon turned PI/8 has a flat face front): its distance from the axis
+  const front = T.deep * K.fitDeep * ((K.fitTop + K.fitFoot) / 2) * Math.cos(Math.PI / 8);
+  const pw = T.wide * 2 * K.open, sd = T.deep * K.stand;
+  add(MeshBuilder.CreateBox("senseiVestShirt", { width: pw, height: h * 0.98, depth: sd * 2 }, scene), shirt, 0, cy, front);
+  const sw = T.wide * 2 * K.stripW, sDeep = T.deep * K.stripD;
+  for (const side of [-1, 1]) {
+    add(MeshBuilder.CreateBox("senseiVestTrim", { width: sw, height: h, depth: sDeep }, scene), orange, side * (pw / 2 + sw / 2), cy, front + sd);
+    const arm = add(MeshBuilder.CreateBox("senseiVestTrim", { width: sw, height: h * 0.9, depth: sDeep }, scene), orange, side * T.wide * K.armX, cy + h * 0.05, front * 0.78 + sd);
+    arm.rotation.y = side * 0.45;
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/*
  * [S] 539 (blackbeard a.1) Blackbeard's hat (audit 538: "black top hat with a yellow badge - TABS: black tricorne with lit fuse strings hanging from
  * the brim"; card Appearance "black hat with firelit strings protruding from it"; secret.blackbeard.red.png: a wide black tricorne pulled to the
  * brows, and from under its brim either side of the face hang dark slow-match cords, their ends burning white-orange). The hat is propBuilder's
