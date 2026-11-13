@@ -494,6 +494,8 @@ const CACTUS_EXPLOSION = { units: new Set(["wild_west.cactus"]), cooldown: 1.2, 
 // [S] 529 Vlad Impale (spec at _tryVladImpale)
 const VLAD_IMPALE = { cooldown: 7, reach: 7, start: 1.1, step: 0.75, width: 0.85, damage: 1.2, lift: 9, push: 2.5 };
 // [S] 530 Banshee Scream (spec at _tryBansheeScream)
+// [S] 531 Giant Fear (spec at _tryGiantFear)
+const GIANT_FEAR = { cooldown: 8, radius: 6, seconds: 4, dome: 3, ring: new Color3(0.7, 1.3, 0.85), dark: new Color3(0.06, 0.22, 0.12) };
 const BANSHEE_SCREAM = { cooldown: 10, radius: 4, damage: 45, lift: 7, push: 6, dome: 4, ring: new Color3(0.55, 0.9, 1.4), dark: new Color3(0.05, 0.16, 0.42) };
 const LASSO_DRAG = { units: new Set(["wild_west.lasso"]), low: 0.12, pull: 1.4, first: 0.3, every: 0.35, under: 0.6, most: 2.4, trample: 1.5, throwUp: 5, throwOut: 4 };
 /*
@@ -826,6 +828,7 @@ export class SimulationSystem {
   // Cacti (CACTUS_EXPLOSION): their health at the last step and when they may burst again
   private _cactusHp = new Map<RuntimeUnit, { hp: number; ready: number }>();
   private _vladImpaleReady = new Map<RuntimeUnit, number>();
+  private _giantFearReady = new Map<RuntimeUnit, number>();
   private _screamReady = new Map<RuntimeUnit, number>();
   private _lassos = new Map<RuntimeUnit, { rider: RuntimeUnit; rope: Mesh; loop: Mesh; at: Vector3; last: number; next: number; hit: number; blow: number; end: number }>();
   // Men hung on a Reaper's tendril (REAPER_IMPALE): who holds him, when he drops (set once he is dead), his next stab, the tendril mesh
@@ -1068,6 +1071,7 @@ export class SimulationSystem {
     this._cactusHp.clear();
     this._vladImpaleReady.clear();
     this._screamReady.clear();
+    this._giantFearReady.clear();
     this._pendingThrows = [];
     this._pendingLaunches = [];
     this._closingFrom.clear();
@@ -1983,6 +1987,29 @@ export class SimulationSystem {
    * ground (visualEffects spawnReaperBurst in the .ring/.dark look), every enemy inside it hurt .damage and thrown up .lift and out from her .push, a
    * man at her middle straight out her front. Logged "scream".
    */
+  /**
+   * [S] 531 Giant Fear (audit 527 c.2; card ability "very similar to Stiffy Fear. It summons a aura around the unit, making all enemies in the radius
+   * afraid, causing them to flee"; secret.skeleton_giant.jpg: the men round his knees glow and scatter). When ready (GIANT_FEAR.cooldown s, ready from
+   * the start) as he swings: a pale ghost-green burst dome .radius m round him on the ground (visualEffects spawnReaperBurst in the .ring/.dark look),
+   * every enemy inside it frightened for .seconds (RuntimeUnit.applyFear: the purple skull over his head, he runs from the giant). Logged "giant_fear".
+   */
+  private _tryGiantFear(attacker: RuntimeUnit, now: number): void {
+    const G = GIANT_FEAR;
+    if (attacker.definition.id !== "secret.skeleton_giant" || attacker.isDead || attacker.linkedParent) return;
+    if (now < (this._giantFearReady.get(attacker) ?? 0)) return;
+    this._giantFearReady.set(attacker, now + G.cooldown);
+    const ground = new Vector3(attacker.position.x, 0, attacker.position.z);
+    this.visualEffects?.spawnReaperBurst(ground, G.radius, G);
+    for (const u of this._units) {
+      if (u.isDead || u.team === attacker.team || u.linkedParent || !u.isTargetable) continue;
+      const away = u.position.subtract(ground);
+      away.y = 0;
+      if (away.length() > G.radius + u.collisionBodyRadius) continue;
+      u.applyFear(G.seconds, attacker.position, now);
+    }
+    this._logAbility(attacker, "giant_fear", now, ground);
+  }
+
   private _tryBansheeScream(attacker: RuntimeUnit, now: number): void {
     const B = BANSHEE_SCREAM;
     if (attacker.definition.id !== "secret.banshee" || attacker.isDead || attacker.linkedParent) return;
@@ -3618,6 +3645,8 @@ export class SimulationSystem {
     this._tryVladImpale(attacker, target, damage, now);
     // [S] 530 the Banshee screams: a blue blast round her launches and flings every enemy near her; her curse still lands (BANSHEE_SCREAM)
     this._tryBansheeScream(attacker, now);
+    // [S] 531 the Skeleton Giant's Giant Fear aura frightens every enemy round him; his blow still lands (GIANT_FEAR)
+    this._tryGiantFear(attacker, now);
     // [S] 502 the Shouter does not strike from range: he shouts a harmless shockwave down the line (SHOUT)
     if (this._tryShout(attacker, target, now)) return;
     // [S] 503 the Fan Bearer blows a gust of wind down the line, not a strike (FAN_BLOW)
