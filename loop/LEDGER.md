@@ -2,6 +2,15 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+535 | f9e0b531, 9a078f73, 72094ba7 | secret.necromancer.c | approved [S] (struck 2)
+535 | 10c9405b, 109bd5be | secret.banshee.c | approved [S] (struck 2, c PASS)
+535 | 9e4c9ac8 | secret.solar_architect.b | approved [S] (struck 2, b PASS)
+535 | 0fbcddbe | secret.solar_architect.c | approved [S] (struck 1)
+535 | 918f1997 | secret.bomb_cannon.a | approved [R] (struck 1, a PASS; CONFIRM passed, D)
+535 | b70cdeaf | secret.gatling_gun.b | approved [S] (struck 3, b PASS; CONFIRM passed, D)
+535 | a156627c | secret.witch.a | approved [S] (struck 1, 6)
+535 | cbb156f0 | secret.witch.b | approved [S] (struck 2, b PASS)
+
 534 | 48478b9e, 21b3bc3f | secret.cavalry.b | approved [R] (struck 1, b PASS; CONFIRM passed, D)
 534 | c9d9173d | secret.gatling_gun.b | approved [S] (struck 2; added 3 tall cheeks; CONFIRM passed b)
 534 | 08ff24b5 | secret.bomb_cannon.a | approved [S] (struck 1)
@@ -43,21 +52,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 531 | aad23125 | secret.skeleton_giant.a | approved [S] (struck 1, 4)
 531 | c99eccde | secret.necromancer.a | approved [S] (struck 1)
 
-530 | f4eb62e2 | secret.bank_robbers.b | approved [S] (struck 2)
-530 | 865a5057 | secret.bank_robbers.b | approved [S] (struck 3; added 4; [P] robbers armLength ~1.3 fallout)
-530 | 7b82178a | secret.wheelbarrow_dragon.c | approved [S] (struck 1, c PASS)
-530 | 489d21ae | secret.cavalry.c | approved [S] (struck 1, c PASS)
-530 | ac9de35a | secret.banshee.c | approved [S] (struck 1)
-530 | 9efd3166 | secret.necromancer.c | approved [S] (struck 1)
-530 | 69d439c2, 03b0aab4 | secret.witch.a | approved [S] (struck 2; 3 by lineup)
-530 | a57ca606 | secret.gatling_gun.b | approved [S] (struck 2, b PASS)
-530 | 74451e1d | secret.solar_architect.b | approved [S] (struck 3)
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+SS/PS/RU/LAP/secretDress/UF/RM/VB/PB/UV:535 | NECRO_CURSE tick .5 rot .1 smoke (.2,.42,.16), raise on RU.onDeath; BANSHEE_CURSE stream .55 s curse 5 s chest 1; GHOST_CURSE dye .85 glow .75 wisps 6 long 1.1 wide .24 ring 1; CURSE_CAST fore 1.45 inward .18 hold .55; SOLAR_WAND_LAY out .55 up .75 fore .35 seat .6; solar ray from solarWandRing alternating; bomb loader actor dropped, gunner offset (.22,0,-.62), BOMB_GUNNER_STRIPES 4 rows band .09 out 1.07 cream; GATLING_TROUGH hi .08 -> -.03, waves 4 wave .11; witch in SKELETON_UNITS; WITCH_STAFF bends .28/.52/.76 kink .04, wraps 3 -> 5 rope .012 -> .016 ropeAt .1-.34 ropeC tan (.82,.64,.38); [P] giant bulk 1.7 -> 1.2, GIANT_BUILD hem .42 -> .3 | 535 | approved | free skeleton summon, swing + fear, team humanoid witch, straight wander staff, wands along the forearm, loader at the trail, tall cheeks .08 over the axis
 PB/VB/secretDress/PS/SS/UF/UV/spookyDress:534 | CAV_SHIELD span .53 top .2 below .45 wide 1.6 out 1.6 ahead .32 turn .3 tip -.06 on body.hip; GATLING_TROUGH thick .035 lo .2 hi .08 past .07 inX .17 splay .05 band .06 lobes 3; bomb rider bombCrewCap + bombRiderDress skin .85 shirt 1.12 green (.06,.32,.1); RIDER_CUTLASS raise -2 out .22 elbow -.25 long .62; MUSHROOM_SPELL cap .42 speed 16 arc .12 cap (1,.22,.75) aura (.75,.3,1.2) a.32; necro knife hold unflipped, palm seat; BANSHEE_CHAINS lift .16 apart .9 reach .85/.97/.8 link .09; GIANT_BUILD pelvis .62x.7x.72 shorts hem .42 out 2.8, giant legLength .92->1.2 | 534 | approved | shield in the fist on the lap, rails+yoke, bandanna + white cannonShirt, empty hands, dark dart, reverse grip, team legs, skirt pelvis-to-knee + legLength .92
 PB/secretDress/LAP/SS/RM/VB/UV/UF:533 | CAVALRY_HEAD long .38 (out of the shaft) wide .11 socket .05 flat .2, hooks out .06 at 1.2 back .07 at .85, unlit steel (.62,.63,.66); BOMB_CREW_CAP band .16 out 1.12 crown 1.3x.5x1.35 up .36 slouch .12 droop -.3 tails .42, crew hats off; skeleton giant scale 2.35->3.0 [P]; gatling loader actor dropped (crew=1); GATLING_BUNDLE bore .05 ring .1 core .95 lip torus .012 plate, collar .3 breech .31 railX .18; BARROW_HORNS 5 segs big .9 base .34 curl (.2,.7,.2) small .55 curl (-.2,-1.4,1.2) unlit cream (.78,.62,.42); BARROW_RIMS thick .05 tall .16 long .9 tip plate; BARROW_AFRO crown .82x.62x.78 up .55 temples nape (.28,.15,.09); VLAD_COAT out 1.1 skirt flare 1.12-1.75 hem .45 mantle .8-1.38 stoles .3 stars 2; solar_architect hat laurel->none | 533 | approved | needle blade .13, kettle helmet + beret, scale 2.35, loader beside the gun, touching barrels, grey cones, thin rims, dressAfro flat puff, bare tunic, brown hair + wreath
 RU/LAP/SS/secretDress/UF/UV/PB/VB:532 | GATLING_STAND lean .14 reach .95 splay .12 elbow .25, crank gunner offset (0,0,-.78) scale .92, loader (.62,0,-.62); GIANT_SLASH radius 1.7 band .38 tilt .55 between .45 up 1.5 bone (1.15,1.08,.95); BARROW_OVERALLS bib .66 hi .56 shade .62 sat 2, driver bulk 1.35->.78 arms 1.12 legs 1.14; CAV_ARMOUR tabW .72 paul 2.5 gorW .82 steel CAV_HELM; CAV_CHEST arc 1.25 top .55 drop .12 flare 1.16; GATLING_VEST vee .5 shade .72 beige unlit (.86,.76,.52); BOMB_BARREL back -.3 front .7 bell .82 dBell .46 sight .17; GIANT_GREAVE top .36 foot .27 shade .85; BARROW_JAWS open .78 snout .5 teeth 6 gullet .45 | 532 | approved | low gunner beside the breech, no arc, slab driver bulk 1.35, bare rider, rump-only drape, plain team gunner, short .7 mortar, bare shins, boxed grin

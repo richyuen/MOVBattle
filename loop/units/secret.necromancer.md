@@ -8,22 +8,21 @@ a FAIL (1 since 527, 1 struck)
  5. No boots in unit_secret.necromancer_idle — TABS: tall laced worn brown boots to the knee (ref: secret.necromancer.red.png)
  6. No armbands in unit_secret.necromancer_idle — TABS: grey metal bands on both upper arms (ref: secret.necromancer.red.png; card Appearance)
 b PASS (534: struck 3, knife seated in the fist)
-c FAIL (1 since 527, 1 struck)
- 2. The summon at 417 ms in unit_secret.necromancer_flight raises skeleton warriors beside him — TABS: skeletons rise only from enemies killed by the skull curse (ref: card Characteristics)
+c FAIL (2 since 527, 2 struck)
  3. missing: Gravestone Wall — three graves rising from the ground to push enemies away (ref: card Characteristics)
-d PASS (534 stats)
+d PASS (535 stats)
 ## Ranked gaps
-1. [S] secret.necromancer.a horned cap — blocker 2: dark team leather cap with long curved horns and lank hair (evidence commit first: idle frames his back) — ref: secret.necromancer.red.png — ours: unit_secret.necromancer_idle.png
-2. [S] secret.necromancer.c raise from kills — blocker 2: skeletons rise only from skull-cursed dead, no free summon beside him — ref: card Characteristics — ours: unit_secret.necromancer_flight
-3. [S] secret.necromancer.c Gravestone Wall — blocker 3: three graves rise from the ground and push enemies away — ref: card Characteristics — ours: unit_secret.necromancer_ability
+1. [S] secret.necromancer.c Gravestone Wall — blocker 3: three gravestones rise between him and close enemies and shove them back (log "gravestone_wall") — ref: card Characteristics — ours: unit_secret.necromancer_ability
+2. [S] secret.necromancer.a horned cap — blocker 2: dark team leather cap with two long curved horns and lank hair, replacing the dark hood ball over the face — ref: secret.necromancer.red.png — ours: unit_secret.necromancer_idle
+3. [S] secret.necromancer.a vest — blocker 3: tattered dark team vest stitched with pale laces — ref: secret.necromancer.red.png — ours: unit_secret.necromancer_idle
 ## Attempts (iter | gap | criterion | verdict)
-534 | knife re-seated: grip centred in the palm, blade on out of the fist along the arm, no reverse turn (746fb2cd) | b | approved (struck 3, b PASS)
+535 | skull curse: rot, rises a skeleton of his side where he dies (onDeath), no free summon, NECRO_CURSE (f9e0b531, 9a078f73, 72094ba7) | c | approved (struck 2)
+534 | knife re-seated: grip centred in the palm, blade on out of the fist (746fb2cd) | b | approved (struck 3, b PASS)
 531 | Stiffy bone body via dressSkeleton (SKELETON_UNITS), no hood added (c99eccde) | a | approved (struck 1)
 530 | ghost skull thrown from the lantern glass, NECRO_SKULL (PS, SS) (9efd3166) | c | approved (struck 1)
-529 | team kerosene lantern on the off hand, NECRO_LANTERN (8d4f93db) | b | approved (struck 2)
-528 | Necromancer Knife, NECRO_KNIFE, weapon dagger (88adc711) | b | approved (struck 1; added 3)
+528-529 | Necromancer Knife NECRO_KNIFE; team lantern NECRO_LANTERN | b | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 531 critic: unit_secret.necromancer_idle frames his back; a grey slab hangs on his back; dressSkeleton gives him a team rag skirt.
-- 534 critic: his knife arm is raised overhead in the idle (caster pose), so the blade points up (TABS hangs at his side; pose, not grip).
-- 530 critic: the skull reads as a white glow ball at release size. a starves after 536, c after 535.
+- 535: the idle is NOT his back (knife hand on screen-left): the dark round hood ball hides his face; the horned cap fixes that read. Ability pair frames raise_dead on the fallen man.
+- 535 critic: rot puff not seen on the cursed man; the risen skeleton overlaps the corpse. 534: knife arm raised overhead in the idle (pose).
+- 531 critic: a grey slab hangs on his back; dressSkeleton gives him a team rag skirt. a starves after 536.

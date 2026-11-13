@@ -8,19 +8,20 @@ a FAIL (1 since 531, 1 struck)
  5. No chains around the body in unit_secret.banshee_idle — TABS: dark chains wrapped round the waist and trailing off the arms (ref: secret.banshee.red.png; card Appearance)
  6. Bare team upper arms in unit_secret.banshee_idle — TABS: two gold armbands on each upper arm (ref: secret.banshee.red.png)
 b PASS (528: struck 1, 2, empty hands with spirit rings)
-c FAIL (1 since 527, 1 struck)
- 2. The release in unit_secret.banshee_release is a blade-pole swing that registers as fear — TABS: a ghostly curse cast from the hands that turns the target blue with spirits twirling round it (ref: card Weapons Banshee Hands)
-d PASS (534 stats)
+c PASS (535: struck 2, two-handed hand curse)
+d PASS (535 stats)
 ## Ranked gaps
 1. [S] secret.banshee.a fan crown — blocker 2: drop the "hood" hat, a tall team fan of plates behind the head with gold edge ribs and gold spikes — ref: secret.banshee.red.png — ours: unit_secret.banshee_idle.png
 2. [S] secret.banshee.a face — blocker 3: two large glowing white bead eyes high on the head plus a long, downward-pointed team face wedge — ref: secret.banshee.red.png — ours: unit_secret.banshee_idle.png
-3. [S] secret.banshee.c hand curse — blocker 2: curse cast from the open hands that tints the target blue with orbiting spirit wisps — ref: card Weapons Banshee Hands — ours: unit_secret.banshee_release
+3. [S] secret.banshee.a hair — blocker 4: long dark wild hair framing the face — ref: secret.banshee.red.png — ours: unit_secret.banshee_idle.png
 ## Attempts (iter | gap | criterion | verdict)
-534 | no legs, hover .16 (reaperHover mark), three dark chains under the hem, bansheeChainLegs (c60e101a) | a | approved (struck 1)
+535 | Banshee Hands curse: both palms out, ghost streams, target dyed blue with orbiting wisps, BANSHEE_CURSE, GHOST_CURSE, CURSE_CAST (10c9405b, 109bd5be) | c | approved (struck 2, c PASS)
+534 | no legs, hover .16, three dark chains under the hem, bansheeChainLegs (c60e101a) | a | approved (struck 1)
 530 | Banshee Scream: pale-blue burst dome 4 m round her, BANSHEE_SCREAM (SS) (ac9de35a) | c | approved (struck 1)
 529 | ragged cream gown to the knee, zigzag hem, BANSHEE_GOWN (f1ccaab5) | a | approved (struck 2)
 528 | empty hands, spirit ring per wrist, wing fans retired (dd424eab) | b | approved (struck 1, 2, b PASS)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 531 re-audit: the slate hood disc reads as a hat brim at lineup distance; skin lilac-pink (swatch if raised). 534 critic: chains end well above the ground (TABS nearly to the floor).
-- 530 evidence: idle swings .25 rad toward her front (capture nearFront); ability shots frame "scream" (ABILITY_PREF). c starves after 535.
+- 535 critic: the curse dye shows only on bare skin of an armoured man (tabard, plate stay their colour); not blocking.
+- 531 re-audit: the slate hood disc reads as a hat brim at lineup distance. 534 critic: chains end well above the ground.
+- 530 evidence: idle swings .25 rad toward her front (capture nearFront); ability shots frame "scream" (ABILITY_PREF).
