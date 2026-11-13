@@ -5205,8 +5205,10 @@ export function barrowDriverAfro(scene: Scene, body: ArticulatedBody): Mesh[] {
  * .stoleX out, down to the belt; .stars gold stars .star of the width across at .starAt of the way down the chest. Team saturated (c^2) x .shade,
  * self-lit .12; fur brown lit cloth self-lit .2; gold unlit; all out of the glow.
  */
+// 537 [S] box shell -> fitted shell fitTop .9 fitFoot 1.04 fitDeep 1.08; mantleFoot 1.38 -> 1.12; fur collar collarH .45 collarW .62
 const VLAD_COAT = { out: 1.1, top: 0.98, thick: 0.1, skirtTop: 0.82, flareTop: 1.12, flareFoot: 1.75, hem: 0.45, belt: 0.13, mantleUp: 0.04,
-  mantleTop: 0.8, mantleFoot: 1.38, mantleDrop: 0.5, stoleW: 0.3, stoleX: 0.42, stars: 2, star: 0.26, starAt: [0.4, 0.7], shade: 0.7,
+  fitTop: 0.9, fitFoot: 1.04, fitDeep: 1.08, collarH: 0.45, collarW: 0.62,
+  mantleTop: 0.8, mantleFoot: 1.12, mantleDrop: 0.5, stoleW: 0.3, stoleX: 0.42, stars: 2, star: 0.26, starAt: [0.4, 0.7], shade: 0.7,
   fur: new Color3(0.3, 0.17, 0.09), beltC: new Color3(0.2, 0.11, 0.06), gold: new Color3(0.85, 0.55, 0.1) };
 export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const V = VLAD_COAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
@@ -5219,15 +5221,21 @@ export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mes
   const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
   const T = limbBox(yoke);
   const top = T.mid + T.half * V.top, low = T.mid - T.half, h = top - low, cy = (top + low) / 2;
-  const wx = T.wide * V.out, dz = T.deep * V.out, th = T.deep * V.thick;
+  const th = T.deep * V.thick;
   const out: Mesh[] = [];
   const add = (m: Mesh, mt: Material, x: number, y: number, z: number): Mesh => {
     m.parent = body.torso; m.position.set(x, y, z); m.material = mt; out.push(m); return m;
   };
-  // the closed coat over the trunk
-  add(MeshBuilder.CreateBox("vladCoatBack", { width: wx * 2 + th, height: h, depth: th }, scene), coat, 0, cy, -dz);
-  add(MeshBuilder.CreateBox("vladCoatFront", { width: wx * 2 + th, height: h, depth: th }, scene), coat, 0, cy, dz);
-  for (const s of [-1, 1]) add(MeshBuilder.CreateBox("vladCoatSide", { width: th, height: h, depth: dz * 2 + th }, scene), coat, s * wx, cy, 0);
+  // [S] 537 (a.6; critic 533 "a flat-sided box standing out past both shoulders like a sandwich board"): the closed coat is an 8-sided shell fitted
+  // round the trunk, .fitTop of its width across at the shoulders (narrower than the trunk's box corners) to .fitFoot at the waist, its depth in
+  // the trunk's proportion; the brown fur mantle a rounded collar-cape over it (.mantleTop/.mantleFoot), and a fur collar standing up round the back
+  // of the neck (.collarH of the half height tall, .collarW of the width across, a half ring open at the front) in place of the dark vampire collar
+  const shell = add(MeshBuilder.CreateCylinder("vladCoatShell", { height: h, diameterTop: T.wide * 2 * V.fitTop, diameterBottom: T.wide * 2 * V.fitFoot, tessellation: 8 }, scene), coat, 0, cy, 0);
+  shell.scaling.z = (T.deep / T.wide) * V.fitDeep; shell.rotation.y = Math.PI / 8;
+  const zFront = T.deep * V.fitDeep * V.fitTop * 0.95;
+  const collarH = T.half * V.collarH;
+  const collar = add(MeshBuilder.CreateCylinder("vladFurCollar", { height: collarH, diameterTop: T.wide * 2 * V.collarW * 1.12, diameterBottom: T.wide * 2 * V.collarW, tessellation: 12, arc: 0.6 }, scene), fur, 0, top + T.half * V.mantleUp + collarH / 2, -T.deep * 0.1);
+  collar.rotation.y = Math.PI / 2 - Math.PI * 0.6; collar.scaling.z = (T.deep / T.wide) * 1.3;
   // the flared skirt to mid-shin (hem anchored to the knees, LESSONS 512)
   const hipToKnee = Math.abs(body.leftKnee.position.y);
   const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
@@ -5241,11 +5249,11 @@ export function vladCoat(scene: Scene, body: ArticulatedBody, team: Color3): Mes
   const mantle = add(MeshBuilder.CreateCylinder("vladMantle", { height: mH, diameterTop: T.wide * 2 * V.mantleTop, diameterBottom: T.wide * 2 * V.mantleFoot, tessellation: 8 }, scene), fur, 0, mTop - mH / 2, 0);
   mantle.scaling.z = (T.deep / T.wide) * 1.25; mantle.rotation.y = Math.PI / 8;
   const stoleH = mTop - (low + T.half * V.belt * 2);
-  for (const s of [-1, 1]) add(MeshBuilder.CreateBox("vladStole", { width: T.wide * 2 * V.stoleW, height: stoleH, depth: th * 1.6 }, scene), fur, s * T.wide * V.stoleX, mTop - stoleH / 2, dz + th * 1.2);
+  for (const s of [-1, 1]) add(MeshBuilder.CreateBox("vladStole", { width: T.wide * 2 * V.stoleW, height: stoleH, depth: th * 1.6 }, scene), fur, s * T.wide * V.stoleX, mTop - stoleH / 2, zFront + th * 0.6);
   // gold star buttons down the middle
   const S = T.wide * 2 * V.star;
   for (let k = 0; k < V.stars; k++) {
-    const y = top - h * V.starAt[k], z = dz + th;
+    const y = top - h * V.starAt[k], z = zFront + th * 0.3;
     add(MeshBuilder.CreateCylinder("vladStarBoss", { height: th, diameter: S * 0.4, tessellation: 5 }, scene), gold, 0, y, z).rotation.x = Math.PI / 2;
     for (let r = 0; r < 5; r++) {
       const ray = add(MeshBuilder.CreateCylinder("vladStarRay", { height: S / 2, diameterBottom: S * 0.22, diameterTop: 0, tessellation: 4 }, scene), gold, 0, y, z);
