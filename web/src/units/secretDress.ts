@@ -4368,3 +4368,44 @@ function barrowTrunkBand(body: ArticulatedBody, lo: number, hi: number) {
   if (!Number.isFinite(minX)) { const e = body.torsoMesh.getBoundingInfo().boundingBox.extendSize; minX = -e.x; maxX = e.x; minZ = -e.z; maxZ = e.z; }
   return { minX, maxX, minZ, maxZ };
 }
+
+/*
+ * [S] 532 (a.3) the Cavalry knight's armour (secret.cavalry.red.png, .png: a regular Knight in grey plate: rounded steel pauldrons on both shoulders,
+ * a steel gorget round the neck over the chest top, steel arms; a team tabard hung over the plate front and back, narrower than the trunk so the
+ * grey plate shows at its sides, from under the gorget to below the hips; audit a.3 "bare team with a dark collar"). CAV_ARMOUR in the trunk mesh's
+ * box as the torso joint sees it (c, half size e): the trunk, yoke and pads go steel; a tabard front and back .tabW e.x*2 wide from .tabTop e.y over
+ * c down to .tabLo e.y under it, standing .proud e.z off the plate; a gorget plate .gorW e.x*2 wide and .gorH e.y tall over the tabard's top, a
+ * steel collar ring .collar e.x*2 across round the neck; per upper arm the arm steel and a pauldron, a half dome .paul of the limb's radius round
+ * over its top and a lame ring under it. Steel = CAV_HELM's pale lit cloth; tabard team self-lit .12; all out of the glow.
+ */
+const CAV_ARMOUR = { tabW: 0.72, tabTop: 0.62, tabLo: 1.45, proud: 1.06, gorW: 0.82, gorH: 0.32, collar: 0.66, paul: 2.5, lame: 2.1 };
+export function cavalryArmour(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const C = CAV_ARMOUR, glow = scene.getGlowLayerByName("glow"), mf = getMaterialFactory();
+  const steel = mf.get("cloth", CAV_HELM.steel, { emissive: CAV_HELM.steel.scale(0.15), roughness: 0.9 });
+  const tabard = mf.get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  for (const m of [body.torsoMesh, body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, ...body.allMeshes.filter((x) => /_yoke$|_[lr]Pad$/.test(x.name))]) {
+    m.material = steel; glow?.addExcludedMesh(m);
+  }
+  const torso = body.torsoMesh, { center, extendSize } = torso.getBoundingInfo().boundingBox;
+  const c = torso.position.add(center.multiply(torso.scaling)), e = extendSize.multiply(torso.scaling);
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material, parent: TransformNode = body.torso): Mesh => { m.parent = parent; m.material = mt; out.push(m); return m; };
+  const tabH = e.y * (C.tabTop + C.tabLo), tabY = c.y + e.y * (C.tabTop - C.tabLo) / 2;
+  for (const side of [-1, 1]) {
+    const t = put(MeshBuilder.CreateBox("cavTabard", { width: e.x * 2 * C.tabW, height: tabH, depth: e.z * 0.1 }, scene), tabard);
+    t.position.set(c.x, tabY, c.z + side * e.z * C.proud);
+  }
+  const gor = put(MeshBuilder.CreateBox("cavGorget", { width: e.x * 2 * C.gorW, height: e.y * C.gorH, depth: e.z * 0.12 }, scene), steel);
+  gor.position.set(c.x, c.y + e.y * (C.tabTop + C.gorH / 2), c.z + e.z * (C.proud + 0.04));
+  const ring = put(MeshBuilder.CreateCylinder("cavGorgetCollar", { height: e.y * 0.2, diameterTop: e.x * 2 * C.collar * 0.82, diameterBottom: e.x * 2 * C.collar, tessellation: 8 }, scene), steel);
+  ring.scaling.z = Math.min(1.4, (e.z * 2.2) / (e.x * 2 * C.collar)); ring.position.set(c.x, c.y + e.y * 1.02, c.z);
+  for (const arm of [body.leftUpperArm, body.rightUpperArm]) {
+    const L = limbBox(arm), r = Math.max(L.wide, L.deep), top = L.mid + L.half, joint = arm.parent as TransformNode;
+    const dome = put(MeshBuilder.CreateSphere("cavPauldron", { diameter: 1, segments: 5, slice: 0.5 }, scene), steel, joint);
+    dome.scaling.set(r * C.paul, r * C.paul * 0.8, r * C.paul); dome.position.set(arm.position.x, top - r * 0.9, arm.position.z);
+    const lame = put(MeshBuilder.CreateCylinder("cavPauldronLame", { height: r * 0.7, diameter: r * C.lame, tessellation: 8 }, scene), steel, joint);
+    lame.position.set(arm.position.x, top - r * 1.25, arm.position.z);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
