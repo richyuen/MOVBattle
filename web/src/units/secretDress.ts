@@ -4380,6 +4380,67 @@ export function bansheeChainLegs(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /*
+ * [S] 538 (a.5) the Banshee's body chains (audit 527: "no chains around the body - TABS: dark chains wrapped round the waist and trailing off the arms";
+ * secret.banshee.red.png, card Appearance "several chains wrapping around their body": one dark iron chain of big links round the gown at the waist,
+ * sagging a little at the front; a dark iron manacle round each forearm a hand above the wrist, a short chain hanging off it). BANSHEE_WAIST on the
+ * torso joint, in the yoke's half-sizes (T): links round a rounded rectangle .out of the bodice (BANSHEE_GOWN.out) at .at of the half-height over the
+ * waist, the front sagging .sag m in the middle; links .link m across, .thick thick, .step m apart, alternate links turned a quarter about the run.
+ * Manacles in each forearm's box (the elbow end +y): a ring .cuff of its half-width round, .cuffH of its length tall, its middle .cuffAt down the
+ * forearm; off its outer side .dangle links hang along the forearm toward the hand, standing .proud of its skin. BANSHEE_CHAINS iron, out of the glow.
+ */
+const BANSHEE_WAIST = { at: 0.06, out: 1.06, sag: 0.05, link: 0.075, thick: 0.02, step: 0.056, cuff: 1.55, cuffH: 0.16, cuffAt: 0.72, dangle: 5, proud: 1.5 };
+export function bansheeBodyChains(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const C = BANSHEE_WAIST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const iron = mf.get("cloth", BANSHEE_CHAINS.iron, { emissive: BANSHEE_CHAINS.iron.scale(0.4), roughness: 1 });
+  const out: Mesh[] = [];
+  const link = (parent: TransformNode, p: Vector3, dir: Vector3, k: number): void => {
+    // a link's ring lies along the chain's run: its torus axis (local y) square to the run, every other one turned a quarter about it
+    const m = MeshBuilder.CreateTorus("bansheeBodyChainLink", { diameter: C.link, thickness: C.thick, tessellation: 8 }, scene);
+    m.parent = parent; m.position.copyFrom(p); m.scaling.x = 0.72;
+    const yaw = Math.atan2(dir.x, dir.z), pitch = -Math.asin(Math.max(-1, Math.min(1, dir.y)));
+    m.rotation.set(pitch, yaw - Math.PI / 2, k % 2 ? Math.PI / 2 : 0);
+    m.material = iron; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m);
+  };
+  // the waist chain round the bodice
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke")) ?? body.torsoMesh;
+  const T = limbBox(yoke);
+  const y0 = T.mid - T.half * BANSHEE_GOWN.waist + T.half * C.at;
+  const wx = T.wide * BANSHEE_GOWN.out * C.out + C.thick, dz = T.deep * BANSHEE_GOWN.out * C.out + C.thick, rr = Math.min(wx, dz) * 0.35;
+  const path: Vector3[] = [];
+  const corners: [number, number][] = [[wx - rr, dz - rr], [-(wx - rr), dz - rr], [-(wx - rr), -(dz - rr)], [wx - rr, -(dz - rr)]];
+  for (let c = 0; c < 4; c++) for (let k = 0; k <= 6; k++) {
+    const a = (c * Math.PI) / 2 + (k / 6) * (Math.PI / 2);
+    path.push(new Vector3(corners[c][0] + Math.cos(a) * rr, 0, corners[c][1] + Math.sin(a) * rr));
+  }
+  path.push(path[0].clone());
+  let carry = 0, k = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i], b = path[i + 1], seg = Vector3.Distance(a, b);
+    let s = carry;
+    while (s < seg) {
+      const p = Vector3.Lerp(a, b, s / seg);
+      // the front run sags in its middle
+      const sagY = p.z > 0 ? -C.sag * Math.max(0, 1 - (p.x / wx) ** 2) : 0;
+      link(body.torso, new Vector3(p.x, y0 + sagY, p.z), b.subtract(a).normalize(), k++);
+      s += C.step;
+    }
+    carry = s - seg;
+  }
+  // a manacle on each forearm, a short chain hanging off its outer side toward the hand
+  for (const [arm, side] of [[body.leftLowerArm, -1], [body.rightLowerArm, 1]] as const) {
+    const L = limbBox(arm), r = Math.max(L.wide, L.deep);
+    const cy = L.mid + L.half - L.half * 2 * C.cuffAt;
+    const cuff = MeshBuilder.CreateCylinder("bansheeManacle", { height: L.half * 2 * C.cuffH, diameter: r * 2 * C.cuff, tessellation: 8 }, scene);
+    cuff.parent = arm; cuff.position.set(0, cy, 0); cuff.rotation.y = Math.PI / 8;
+    cuff.material = iron; cuff.convertToFlatShadedMesh(); glow?.addExcludedMesh(cuff); out.push(cuff);
+    for (let j = 0; j < C.dangle; j++) {
+      link(arm, new Vector3(side * r * C.proud, cy - L.half * C.cuffH - C.link * 0.3 - j * C.step, 0), new Vector3(0, -1, 0), j);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 529 (b.2) the Necromancer's lantern (secret.necromancer.red.png; card Off Hand "a magical, team-colored kerosene lantern, with a ghostly flame
  * inside ... the blue ghost-flame also is seen encircling the lantern": a team lantern hung from his off fist by a wire bail: a domed cap with a
  * chimney knob, a pale glass chimney between four thin team posts with a pale-blue ghost flame inside it, a round team fount under it; round its
