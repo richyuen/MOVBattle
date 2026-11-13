@@ -4574,7 +4574,8 @@ export function bansheeFace(scene: Scene, body: ArticulatedBody): Mesh[] {
  * turns (wild); .tufts tufts .tuft H tall over the top from side to side, leaning out; a back mass .backW W wide, .backH H tall behind the head.
  * Near-black lit cloth self-lit .4 (LESSONS 494), out of the glow.
  */
-const BANSHEE_HAIR = { locks: 4, x: 0.44, from: 0.18, seg: [0.55, 0.5], w: 0.16, splay: 0.22, kink: 0.35, tufts: 7, tuft: 0.28, backW: 0.95, backH: 1.2,
+// 537.7b x .44 -> .58, w .16 -> .22, seg .55/.5 -> .7/.6 (look: the locks sat inside the head's sides)
+const BANSHEE_HAIR = { locks: 4, x: 0.58, from: 0.18, seg: [0.7, 0.6], w: 0.22, splay: 0.22, kink: 0.35, tufts: 7, tuft: 0.28, backW: 0.95, backH: 1.2,
   dark: new Color3(0.08, 0.06, 0.07) };
 export function bansheeHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = BANSHEE_HAIR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
