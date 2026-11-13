@@ -206,6 +206,8 @@ const ICE_ARROWS = new Set(["viking.ice_archer"]);
 const FIRE_ARROWS = new Set(["spooky.skeleton_archer"]);
 // [S] 519 Cupid's love arrows (projectileSystem _dressHeartArrow)
 const HEART_ARROWS = new Set(["secret.cupid"]);
+/** [S] 541 Artemis's sheaf: five arrows on one tick, nocks .nock m apart sideways and .lift m staggered, landing .land m apart across the man (_fireVolley). */
+const ARTEMIS_FAN = { count: 5, nock: 0.28, lift: 0.12, land: 0.18 };
 /** [S] 519 a lovestruck man's kiss (card secret.cupid: "kiss them relentlessly, draining their hitpoints"): m to his friend, s between kisses, hp per s. */
 const LOVE_KISS = { reach: 0.9, every: 0.5, drain: 4 };
 /** [S] 536 a mushroomed man's turn on his friends: he closes to .reach m (his own reach up to .reachMax), a blow of .damage every .every s */
@@ -5288,6 +5290,26 @@ export class SimulationSystem {
   private _fireVolley(attacker: RuntimeUnit, target: RuntimeUnit, damage: number, knockback: Vector3, count: number): void {
     this._logAbility(attacker, "volley", RuntimeUnit.timeNowSeconds());
     const projectileShape = resolveProjectileShape(attacker, getAttackProfile(attacker.definition.attackProfileId)) ?? "arrow";
+    // [S] 541 (artemis c.1) Artemis looses a fanned cluster of five arrows at once (audit 538: "one arrow per shot - TABS: a cluster of five
+    // arrows at once"; card Characteristics): ARTEMIS_FAN.count arrows on the same tick, their nocks spread .nock m across the shot's
+    // sideways line and .lift m up and down, each landing .land m apart across the man (the middle one follows him), so they fly as a
+    // side-by-side sheaf; the volley's damage is shared among them as before
+    if (attacker.definition.id === "secret.artemis" && this.projectileSystem) {
+      const F = ARTEMIS_FAN, from = attacker.getAttackOrigin();
+      const fwd = target.position.subtract(from.position); fwd.y = 0;
+      if (fwd.lengthSquared() < 1e-6) fwd.set(0, 0, 1);
+      fwd.normalize();
+      const side = new Vector3(-fwd.z, 0, fwd.x);
+      const each = Math.max(1, Math.ceil(damage / F.count));
+      for (let i = 0; i < F.count; i++) {
+        const k = i - (F.count - 1) / 2;
+        const nock = side.scale(k * F.nock).add(new Vector3(0, (k % 2 === 0 ? 1 : -1) * F.lift * Math.min(1, Math.abs(k)), 0));
+        const at = k === 0 ? undefined : target.position.add(side.scale(k * F.land));
+        this.projectileSystem.spawnProjectile(projectileShape, from.position, target, each, knockback.scale(0.35), 0, attacker.team, this._units, nock, 0,
+          { originLift: originLiftForSource(from.source), at });
+      }
+      return;
+    }
     const perProjectile = Math.max(1, Math.ceil(damage / count));
 
     if (!this.projectileSystem) {
