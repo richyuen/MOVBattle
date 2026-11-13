@@ -5410,6 +5410,21 @@ export function vladMustache(scene: Scene, body: ArticulatedBody): Mesh[] {
  * .stoleX out, down to the belt; .stars gold stars .star of the width across at .starAt of the way down the chest. Team saturated (c^2) x .shade,
  * self-lit .12; fur brown lit cloth self-lit .2; gold unlit; all out of the glow.
  */
+/*
+ * [S] 538 (vlad a.5) Vlad's boots (audit 527 "legs are team legs - TABS: tan boots under the coat hem"; secret.vlad.jpg, .red.png: worn tan leather
+ * boots from the foot up into the coat's skirt, a little wider than the shin, a turned-down band at the top, scuffed a darker tan at the toe).
+ * shinBoot in VLAD_BOOT: shaft .shaft of the shin tall (its top inside the coat, hem VLAD_COAT.hem under the knee), .round round; cuff .cuff round,
+ * .cuffH of the shin tall, in the tan x .toe (worn darker). Tan lit cloth self-lit .2, out of the glow.
+ */
+const VLAD_BOOT = { shaft: 0.72, round: 1.3, cuff: 1.46, cuffH: 0.12, toe: 0.7, tan: new Color3(0.8, 0.6, 0.35) };
+export function vladBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = VLAD_BOOT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const tan = mf.get("cloth", B.tan, { emissive: B.tan.scale(0.2), roughness: 1 });
+  const dark = B.tan.scale(B.toe), darkM = mf.get("cloth", dark, { emissive: dark.scale(0.2), roughness: 1 });
+  const out = shinBoot(scene, body, "vladBoot", tan, darkM, B);
+  return out;
+}
+
 // 537 [S] box shell -> fitted shell fitTop .9 fitFoot 1.04 fitDeep 1.08; mantleFoot 1.38 -> 1.12; fur collar collarH .45 collarW .62
 const VLAD_COAT = { out: 1.1, top: 0.98, thick: 0.1, skirtTop: 0.82, flareTop: 1.12, flareFoot: 1.75, hem: 0.45, belt: 0.13, mantleUp: 0.04,
   fitTop: 0.9, fitFoot: 1.04, fitDeep: 1.08, collarH: 0.45, collarW: 0.62,
