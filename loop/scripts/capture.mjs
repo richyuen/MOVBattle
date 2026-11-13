@@ -862,7 +862,8 @@ async function main() {
           // [evidence 475] the wizard's firework bursts on the man his spell spun up, 7.8 m off: framed on him
           const presentOpen = ability.kind === "present_open";
           const safeLand = ability.kind === "safe_land";
-          const onMan = snake || burnOnMan || love || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
+          // [evidence 535] the Necromancer's skeleton rises where the skull-cursed man fell, 7 m off: framed on that man
+          const onMan = snake || burnOnMan || love || ability.kind === "raise_dead" || ability.kind === "burst" || ability.kind === "reel" || ability.kind === "kick" || ability.kind === "knockup" || ability.kind === "spell_burst";
           // [evidence 446] the quick draw's dodge: one camera on him at the dodge tick for both shots, gun smoke out (critic 445 c.1: his smoke
           // blanketed him and the re-framed camera hid the step)
           const dodge = id === "wild_west.quick_draw" && ability.kind === "dodge";
