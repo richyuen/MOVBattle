@@ -4822,7 +4822,7 @@ function buildDragonBarrow(scene: Scene, body: ArticulatedBody, team?: Color3): 
  * its centre .at of the tray's length from the back and .sit H over the floor; the mouth .mouth of the skull's height under its centre, gaping
  * .gape of it; .teeth fangs .fang of the gape long per rim; horns .horn and .hornLo of the width long. Team skin lit cloth self-lit .12, bone tan.
  */
-const BARROW_DRAGON = { w: 0.44, h: 0.3, l: 0.4, at: 0.62, sit: 0.13, mouth: 0.18, gape: 0.24, teeth: 7, fang: 0.55, horn: 0.62, hornLo: 0.36,
+const BARROW_DRAGON = { w: 0.5, h: 0.34, l: 0.42, at: 0.6, sit: 0.25, mouth: 0.18, gape: 0.24, teeth: 7, fang: 0.55, horn: 0.62, hornLo: 0.36,
   bone: new Color3(0.82, 0.66, 0.48), mouthDark: new Color3(0.12, 0.03, 0.04) };
 function buildBarrowDragon(scene: Scene, root: Mesh, put: (m: Mesh, mt?: PBRMetallicRoughnessMaterial) => Mesh, H: number,
   z0: number, z1: number, y0: number, team: Color3): void {
