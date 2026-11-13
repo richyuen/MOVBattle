@@ -8,19 +8,20 @@ a FAIL (0 since 527)
  4. No shorts in unit_secret.necromancer_idle — TABS: ragged dark shorts with a pink rope belt over bare bone thighs (ref: secret.necromancer.red.png)
  5. No boots in unit_secret.necromancer_idle — TABS: tall laced worn brown boots to the knee (ref: secret.necromancer.red.png)
  6. No armbands in unit_secret.necromancer_idle — TABS: grey metal bands on both upper arms (ref: secret.necromancer.red.png; card Appearance)
-b FAIL (1 since 527, 1 struck)
- 2. Off hand in unit_secret.necromancer_idle is empty — TABS: a team-coloured kerosene lantern with a ghost flame and a glowing ring circling it (ref: secret.necromancer.red.png; card Off Hand)
+b FAIL (2 since 527, 2 struck)
  3. Knife grip in unit_secret.necromancer_windup floats beside the fist, parallel to it, with the blade running back toward his body — TABS: the team grip closed in the fist, the blade hanging point-down (ref: secret.necromancer.red.png) introduced by 88adc711 at propBuilder.ts:buildNecroKnife
 c FAIL (0 since 527)
  1. missing: skull projectile thrown from the lantern — nothing flies in unit_secret.necromancer_release/_flight (ref: card Weapons Necromancer Skulls)
  2. The summon at 417 ms in unit_secret.necromancer_flight raises skeleton warriors beside him — TABS: skeletons rise only from enemies killed by the skull curse (ref: card Characteristics)
  3. missing: Gravestone Wall — three graves rising from the ground to push enemies away (ref: card Characteristics)
-d PASS (528 stats)
+d PASS (529 stats)
 ## Ranked gaps
-1. [S] secret.necromancer.b lantern — blocker 2: a team kerosene lantern with a ghost flame and a glowing ring in the off hand — ref: secret.necromancer.red.png — ours: unit_secret.necromancer_idle
-2. [P] secret.necromancer.b knife seat — blocker 3: seat buildNecroKnife's hold in the fist (down one fist) with the blade point-down (fallout of [S] 88adc711) — ref: secret.necromancer.red.png — ours: unit_secret.necromancer_windup
+1. [S] secret.necromancer.c skull projectile — blocker 1: a ghost skull thrown from the lantern — ref: card Weapons Necromancer Skulls — ours: unit_secret.necromancer_release
+2. [S] secret.necromancer.b knife seat — blocker 3: team grip in the fist, blade point-down (fallout of [S] 88adc711) — ref: secret.necromancer.red.png — ours: unit_secret.necromancer_windup
 ## Attempts (iter | gap | criterion | verdict)
+529 | team kerosene lantern on the off hand, ghost flame, glowing ring, NECRO_LANTERN (8d4f93db) | b | approved (struck 2)
 528 | Necromancer Knife: team grip, bone collars, hooked notched blade, NECRO_KNIFE, weapon dagger (88adc711) | b | approved (struck 1; added 3)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
+- 529 critic: the lantern sticks out sideways from the fist and is small (TABS hangs straight down, head-sized).
 - 528: with the knife his summon logs at 817 ms (was 417).

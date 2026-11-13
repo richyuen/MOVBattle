@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+529 | e692516e | secret.bank_robbers.a | approved [S] (struck 2, a PASS)
+529 | 9115e65d | secret.gatling_gun.b | approved [S] (struck 1)
+529 | f0b2561d, a83f0825 | secret.wheelbarrow_dragon.a | approved [S] (struck 2)
+529 | ae04607c | secret.witch.c | approved [S] (struck 1)
+529 | f1ccaab5 | secret.banshee.a | approved [S] (struck 2)
+529 | 8471b2c3 | secret.solar_architect.b | approved [S] (struck 1; added 3 crossguard)
+529 | be2c0fc3 | secret.bomb_cannon.a | approved [S] (struck 1)
+529 | 022dce3e | secret.vlad.c | approved [S] (struck 1, c PASS)
+529 | 8d4f93db | secret.necromancer.b | approved [S] (struck 2)
+
 528 | 69681de4 | secret.witch.b | approved [S] (struck 1; [P] WITCH_STAFF thick/ropeAt fallout)
 528 | dd424eab | secret.banshee.b | approved [S] (struck 1, 2, b PASS)
 528 | 88adc711 | secret.necromancer.b | approved [S] (struck 1; added 3; [P] knife seat fallout)
@@ -42,23 +52,12 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 525 | adcd07d8 | secret.infernal_whip.a | approved [S] (struck 3)
 525 | 3df5c0a3 | secret.raptor_rider.c | approved [S] (struck 1, c PASS)
 
-524 | 0bf6073a | secret.ice_mage.c | approved [S] (struck 2, c PASS)
-524 | 19c243c3 | secret.clams.c | approved [S] (struck 2, c PASS)
-524 | 0662d3b5, 44a4985b | secret.clams.a | approved [S] (struck 3)
-524 | fb46a15f | secret.raptor_rider.b | approved [S] (struck 3, b PASS)
-524 | eff4e629 | secret.present_elf.b | approved [S] (struck 3, b PASS)
-524 | 68161f8e | secret.present_elf.a | dropped [S] (vest hidden behind the present; reverted 23b2afbd)
-524 | c2752b3e | secret.infernal_whip.a | approved [S] (struck 2)
-524 | 1410759b | secret.infernal_whip.b | approved [S] (no strike; [P] CHAIN_EMBER size fallout)
-524 | e976a1b4 | secret.bank_robbers.a | approved [S] (struck 3)
-524 | cd9ab43a | secret.ice_mage.a | approved [S] (struck 2)
-
-
 ## Spent (never retry as [P])
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/PB/VB/SS/FX/RM:529 | ROBBER_BELT at .97 h .16 out 1.13 holster .32x.78 grip .42 tilt .55 (.15,.085,.05); GATLING_CLUSTER 8 barrels bore .055 ring .075 collars .25 at .97/.55 breech .27 rails .17 out; BARROW_DRAGON w .5 h .34 l .42 at .6 sit .25 (.13 dropped) 7 fangs; witch clone x2 life 8 max 2 side by side; BANSHEE_GOWN out 1.12 top 2.3 foot 2.9 hem knee-.1 12 points .11; SOLAR_WAND long .3 wide .024 ring .1 on slab sword; BOMB_RIDER z .3 thigh -1.25 splay .62 knee 1.35 scale .86; VLAD_IMPALE cooldown 7 reach 7 step .75 width .85 dmg 1.2 lift 9, VLAD_STAKES 1.3-2.0 m girth .26; NECRO_LANTERN top .85 glass .8 ring 3.4 R; CAVALRY_SPEAR flagGap .03->.05 [P] | 529 | approved | open belt; 3 pipes on a box; hip cart box; 3 skeleton warriors; no dress; long orb staff; no rider; no impale; empty off hand; flagGap .03
 secretDress/PB/PS/SS/UV/LAP:528 | WITCH_STAFF long 1.32 thick .04 4 knots 3 wraps ropeAt .06 stem .17 cap .36 capH .11 team; SPIRIT_RING wide 1.15 thick .045 at .12 tilt .38 unlit (.72,.9,1.15), banshee no wings; NECRO_KNIFE grip 2.6 long .21 wide .13 curve .18 hook .16, weapon dagger; SUN_HALO up .95 back .55 rings 1.25/2.1 12 spikes long 2.55 short 1.75 unlit gold (1,.7,.18), halo special off; GATLING_BULLET speed 48 trail 1.4 thick .03; ROBBER_BANDANA wrap 1.1 point .55 tip .35 magenta (.58,.05,.3); giant shield stiffy; VLAD_CROWN band 1.1 bandH .2 6 spikes tall .95 iron (.26,.26,.29) star unlit (.85,.46,.08), crown hat off; DRAGON_BARROW tray .42-1.12 W .34 wheel .27 wood (.3,.16,.085); CAVALRY_SPEAR flagW .026->.06 flagL .15->.2 [P] | 528 | approved | orb staff; wing shard fans; deer-skull staff; torus halo; bolt; bare face; no shield; gold crown hat; hip box; flags .026x.15
 secretDress/PA/UV/PB/LAP:527 | ROBBER_STANCE square crouch 0 stride .14 lean .02, robbers legLength 1.22, OVERHEAD_SAFE over .2->.3; BANK_BOOT shaft .62 round 1.42 turn 1.52->1.82 h .17 (.1,.08,.075); BANK_VEST out 1.08 vee .46 open .62 6 rows 4 buttons, torso charcoal, no tunic skirt; GIANT_STIFFY_SWORD long .5 wide .075 7 jag runs bone (.66,.58,.45); GIANT_HELM bowl 1.26 side .6 cheek .26 deepTeam .85; CAVALRY_SPEAR long 1.5 thick .04 grip .2 blade .13 3 flags .15x.026; CAV_HELM steel (.5,.51,.54) bevor .42 crest .42; VLAD_LOG long .78 thick .1 point .4 grip .22; bomb crew cutlasses, reload raise shoulder -2.7 | 527 | approved | crouched hashed stance, legLength 1, over .2; low ankle boots; team torso + tunic skirt; empty fist; grey crown ball; striped jousting lance; plume cap; thin iron spear; bomb in loader's hand
 secretDress/SS/RU/PB/UV:526 | PRESENT span 2.0 x shoulder joints, floor at knee 0, deepW .82, PRESENT_HOLD out 1.02 down .1; SAFE_HURL fistReady .5, robbers disarmToFists at the throw; CLAM_HAND head-sized long 1.55 wide 1.25 thick .85 past .4 flat .35 point .45 eye .13; clam_shell special builds nothing; ICE_SLEEVE out 1.16 fore .8 cuff .16 flare 1.42 deep .72, ice mage default preset; MAGMA_LEG round 1.14 shin .5 boot 1.24 deep .38 knee 1.5 kneeH .26; RIDER_HAIR lockLo -.62 brown (.2,.1,.05); RIDER_FEATHERS 6 long .78 fan .42; RIDER_LOIN wrapH .7 flapL .55 fur (.07,.065,.05), bone mask off | 526 | approved | torso-box present 1.55W; pistols after the throw; hand-sized CLAM_HAND 3.2/2.6/1.3; blue thigh disc; secret_ice tint; demon-tinted legs; bone mask, tunic skirt
@@ -92,7 +91,6 @@ secretDress/PB/PS/SS/RU/PA:519 | FLY_KICK lead 1.55 knee .05 tuck 1.0/1.7 lean .
 secretDress/PB/FX:518 | TKD_TROUSER thigh 2.0 shin 2.15->2.4 cuff 2.55 .72->1.12 cream unlit, feet skin; TKD_HAIR cap 1.12W .6H (.11,.08,.07), bun .34W .4H, team band; CHEER_HAIR cap 1.14W .56H team x.72, fringe .9W; CUPID_FOOT skin slim .86 cuff .7; CONFETTI 36 chips .11 ring .55 1.6 s; RAPTOR_MOUNT lift .7 trunk .62x.62x1.45H, jaw gape .75, 9 spikes, legs .3H out; OVERHEAD_SAFE .6x.42x.38 Hh over .26 | 518 | approved | none (bandanas, boots, smoke, box mount, hip safe)
 secretDress:517 | ELF_CAP fur .2H at e+.02H W1.2, cone .42H 1.08->.52W, 5-pt tip, pom .22W, green (.04,.42,.17), fur unlit (.82,.76,.6), pom (.85,.28,.06); ICE_HAIR half-dome 1.16W to c+.6H, fringe .62W tilt .32, locks .34->.2W x.64 z.3 to c-.42H, unlit (.74,.68,.52); ROCK_HAIR ico 1.18W .5H, 7 spikes .3W to .62H, (.07,.045,.04) self-lit .4, 3 magma cracks; TKD_BELT off the tunic skirt: band .17h sink .04 out 1.1, knot, tails .62h splay .3; CUPID_DIAPER lathe waist 1.18 bulge 1.34 low .62 drop .9 unlit (.74,.64,.46), bare body; CHEER_SOCK shin .08-1 out 1.28, cuff, 8 stripes team x.85 | 517 | approved | none (hoods; belt inside the skirt; vest; plain legs)
 secretDress/PB/SS/UV:516 | BALLOONER_LEG hem +.03 m waist 1.08 bulge 1.22 low 1.1 cuff 2.3, UV legLength 1.2 upperLegWidth .9; TKD_GI lapels .17TW to .86TH, belt .1TH, sleeves 1.7/1.85 flare 1.3, body material; KICK_BY_UNIT taekwondo within .75 windup .22 cooldown 1.5 damage 3 fling 7 raise 2.05 plain; CUPID_HAIR 4 rings x9 curls .34W unlit gold (.7,.5,.15); HEART_BOW tall .62 belly .3 unlit orange (.8,.38,.1) hearts pink (.8,.12,.55); CHEER_SKIRT 14 pleats flare .38 hem .55 purple (.42,.14,.63); CLAM_HAT 9 ribs span 1.3 long 1.5 rim .8 | 516 | approved | 515 BALLOONER_LEG hem -.07 bulge 1.5 low 1.36
-Archived rows: secret_1 (all done) ledger@1cbd21bd; secret_1 raptor/jester @823dc1cf; evil death_bringer/void_monarch @8d2b01e3, walker/sentinel/cultist/mechanic/lich @87af4842 | specs in owning code | 519 | archived values | unchanged
+Archived rows: secret_1 (all done) ledger@1cbd21bd, 515 ballooner/konu/clam/pom/cupid row @5e4a4273; secret_1 raptor/jester @823dc1cf; evil death_bringer/void_monarch @8d2b01e3, walker/sentinel/cultist/mechanic/lich @87af4842 | specs in owning code | 519 | archived values | unchanged
 SS:KICK start gate | dodge flip drops a pending kick (ready again after the flip); no start while _recovers, toppled, downed or airborne | 512 | approved | start gated on _recovers only
 secret_2 stats cost/hm/dm/cm (10 units, 1890e47d) | d PASS 10/10;cheer hm .012 | 515 | stats | initial manifest
-secretDress/PB:515 | BALLOONER_LEG lathe top .98 hem -.07 m waist 1.2 bulge 1.5 low 1.36, roll 2.7, stocking unlit (.6,.44,.22), shoe unlit (1,.2,.05) .82 Hf; KONU_ROBE knee -.02 m (tiers knee-anchored); KONU_LEG shell 1.32 taper .86 team x.3, 3 orange (.7,.2,.05) bands 1.5; CLAM_HAND long 3.2 wide 2.6 thick 1.3 past 1.1, eyes .55; POM_POM core .17 26 spikes .1 root .15 team x.8; CUPID_WINGS span 2.5 raise .08 rows 2 white, magenta bar | 515 | approved | none (shoe (1,.42,.12) read tan)
