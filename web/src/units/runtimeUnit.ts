@@ -83,7 +83,8 @@ const CHEER = { hold: 1.4, up: 2.5, fore: 0.35, pump: 1.1, hz: 2.5, elbow: 0.15 
  */
 const ICE_THROW = { fore: 1.5, inward: 0.12, back: 0.45, hold: 0.22, ease: 0.25 };
 /** [S] 535 Banshee curse (spec at RuntimeUnit.applyGhostCurse): dye colour, dye share and self-light; wisps: count, length and width (torso widths), ring radius, orbit rad/s, colour. */
-export const GHOST_CURSE = { blue: new Color3(0.28, 0.55, 1.25), dye: 0.75, glow: 0.4, wisps: 4, long: 0.7, wide: 0.16, ring: 0.95, orbit: 4.2, wisp: new Color3(0.75, 0.92, 1.3) };
+// [535b] look 535: on an armoured knight the dye barely showed and four small wisps were lost: brighter self-light, six bigger wisps
+export const GHOST_CURSE = { blue: new Color3(0.28, 0.55, 1.25), dye: 0.85, glow: 0.75, wisps: 6, long: 1.1, wide: 0.24, ring: 1.0, orbit: 4.2, wisp: new Color3(0.75, 0.92, 1.3) };
 /** [S] 519 Lovestruck hearts (spec at RuntimeUnit.applyLove), in head widths: big heart, small hearts and their size, height over the head, circle radius, orbit rad/s. */
 const LOVE_HEARTS = { big: 0.95, small: 2, smallSize: 0.45, over: 0.85, ring: 0.75, orbit: 2.4, pink: new Color3(1, 0.18, 0.6) };
 const FEAR_SKULL = { skull: 1.1, over: 0.9, purple: new Color3(0.62, 0.12, 1), dark: new Color3(0.08, 0.02, 0.12), glow: 0.95 };
