@@ -4231,3 +4231,47 @@ export function necromancerLantern(scene: Scene, body: ArticulatedBody, team: Co
   ring.scaling.y = 0.35; ring.rotation.x = L.tilt; ring.rotation.z = L.tilt * 0.5;
   return out;
 }
+
+/*
+ * [S] 530 (a.2) the Witch's hood-hat (secret.witch.red.png: a tall team-coloured hat with no brim at all; its foot is a hood that comes down round
+ * the face to the jaw, wider at the bottom, the face showing in its open front; over the head it narrows into a long crooked spire that bends back
+ * and to one side, kinked twice). WITCH_HOOD in the head box (W, H, D, c): the hood a 9-sided frustum from .chin H under the head's foot to .crown
+ * H over its top, .foot W across at the bottom and .top W at the top, set back .back D so the face stands out of its open front; a brow lip, a
+ * flattened four-sided point over the forehead tipped down .lip rad; the spire three tapering segments of .seg H each, .w W across at the base,
+ * each kinked .bend rad back and .twist rad sideways on the one below. Team lit cloth self-lit .12, out of the glow. The hat is hers (and her
+ * clones'); unitVisuals sets no witch_hat.
+ */
+const WITCH_HOOD = { chin: 0.12, crown: 0.12, foot: 1.42, top: 1.05, back: 0.28, lip: 0.5, seg: [0.62, 0.62, 0.66], w: [0.82, 0.55, 0.3], bend: 0.22, twist: 0.12 };
+export function witchHoodHat(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = WITCH_HOOD, glow = scene.getGlowLayerByName("glow");
+  const cloth = getMaterialFactory().get("cloth", team, { emissive: team.scale(0.12), roughness: 1 });
+  const head = body.headMesh, b = head.getBoundingInfo().boundingBox, c = b.center;
+  const W = b.extendSize.x * 2, H = b.extendSize.y * 2, D = b.extendSize.z * 2;
+  const out: Mesh[] = [];
+  const put = (m: Mesh, parent: TransformNode = head): Mesh => { m.parent = parent; m.material = cloth; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const bot = c.y - H / 2 - H * K.chin, crown = c.y + H / 2 + H * K.crown, hh = crown - bot;
+  const hood = put(MeshBuilder.CreateCylinder("witchHood", { height: hh, diameterBottom: W * K.foot, diameterTop: W * K.top, tessellation: 9 }, scene));
+  hood.position.set(c.x, (bot + crown) / 2, c.z - D * K.back);
+  // the brow lip: the hood's front point over the forehead
+  const lipHinge = new Mesh("witchHoodLipHinge", scene); lipHinge.parent = head;
+  lipHinge.position.set(c.x, crown - H * 0.04, c.z - D * K.back + W * K.top * 0.5); lipHinge.rotation.x = K.lip;
+  const lip = MeshBuilder.CreateCylinder("witchHoodLip", { height: H * 0.42, diameterTop: W * 0.62, diameterBottom: 0, tessellation: 4 }, scene);
+  lip.rotation.y = Math.PI / 4; lip.bakeCurrentTransformIntoVertices(); lip.rotation.y = 0;
+  lip.scaling.z = 0.3; lip.position.set(0, -H * 0.21, 0);
+  put(lip, lipHinge);
+  out.push(lipHinge);
+  // the crooked spire
+  let joint: Mesh = new Mesh("witchSpireJoint", scene); joint.parent = head;
+  joint.position.set(c.x, crown - H * 0.02, c.z - D * K.back);
+  out.push(joint);
+  for (let k = 0; k < K.seg.length; k++) {
+    if (k > 0) joint.rotation.set(-K.bend, 0, (k % 2 ? 1 : -0.5) * K.twist);
+    const len = H * K.seg[k], w0 = W * K.w[k], w1 = k + 1 < K.w.length ? W * K.w[k + 1] : 0;
+    const seg = MeshBuilder.CreateCylinder("witchSpire", { height: len, diameterBottom: w0, diameterTop: w1, tessellation: 9 }, scene);
+    seg.position.y = len / 2;
+    put(seg, joint);
+    const next = new Mesh("witchSpireJoint", scene); next.parent = joint; next.position.y = len; out.push(next);
+    joint = next;
+  }
+  return out;
+}

@@ -1204,7 +1204,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_witch":
       // [S] 528 (b.1) the Witch Staff: a knobbly branch under a big team mushroom cap (propBuilder buildWitchStaff)
-      return vis({ scale: 1.05, bulk: 0.95, headSize: 1.08 }, "staff", "witch_hat", "none", "cape", "#7d5ba6", undefined, {
+      // [S] 530 (a.2) no witch_hat: her brimless team hood-hat is secretDress witchHoodHat
+      return vis({ scale: 1.05, bulk: 0.95, headSize: 1.08 }, "staff", "none", "none", "cape", "#7d5ba6", undefined, {
         weaponVariant: "witch_staff", posePreset: "caster", materialPreset: "secret_ghost", attachmentPreset: "summoner", fxPreset: "spectral",
         stateVariants: { attacking: ["summon_orbs"], "ability-active": ["summon_orbs"] },
       });
