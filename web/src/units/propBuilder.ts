@@ -4648,6 +4648,9 @@ function buildGuandao(scene: Scene, fit: BladeFit): Mesh {
       point.scaling.z = (H * G.flat) / w; point.rotation.x = -ang; point.position.copyFrom(p.add(new Vector3(0, Math.cos(ang), -Math.sin(ang)).scale(run * 0.3)));
     }
   }
+  // 541.8b the upper grip wrap: named as the Bomb on a Stick's, so the animator gives the pole the same upright two-handed carry (the weapon
+  // fist low at the belt, the off fist on this wrap above it, the pole leaned a little forward; proceduralAnimation _fanOrBombCarry)
+  add(MeshBuilder.CreateCylinder("bombStickGrip", { height: P * 0.1, diameter: H * G.thick * 1.6, tessellation: 7 }, scene), black).position.y = (G.grip + 0.14) * P - P / 2;
   // the butt cap
   add(MeshBuilder.CreateCylinder("guandaoButt", { height: H * G.collar * 0.8, diameter: H * G.thick * 1.5, tessellation: 7 }, scene), steel).position.y = -top + (H * G.collar * 0.4);
   return shaft;
