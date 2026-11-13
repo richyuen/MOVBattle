@@ -4949,8 +4949,16 @@ export function necromancerBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
 
 export const NECRO_SHORTS = { hem: 0.4, belt: 0.12, beltOut: 1.36, leather: new Color3(0.55, 0.2, 0.36) };
 export function necromancerDark(team: Color3): Color3 { return new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(NECRO_VEST.dark); }
-const NECRO_VEST = { top: 0.08, below: 0.06, out: 1.16, flare: 1.24, deep: 0.88, rags: 8, rag: 0.16, seam: 0.035, laces: 5, lace: 0.2, laceTop: 0.18, laceLow: 0.85,
-  strap: 0.2, dark: 0.42, cream: new Color3(0.86, 0.8, 0.66) };
+/*
+ * [S] 540 (necromancer a.1, a.2) the vest fitted and cropped (CONFIRM 539: "a deep square box with raised shoulder pads, as wide as the shoulders
+ * ... the vest runs down to the belt and no spine shows - TABS: a thin, fitted, open vest over a narrow ribcage ... the vest stops at mid-torso and
+ * a hand-span of bare vertebrae shows above the shorts"; secret.necromancer.red.png: the vest a little wider than the ribs at the top, narrowing
+ * with the cage, its ragged hem at the cage's lower third, the spine bare under it). The frustum now follows the rib hoops: .out W across at the
+ * top, .taper W at the hem (narrower, as the cage), .deep of its width deep; the hem cut .crop of the cage's height above its foot (not under it);
+ * rags .rag W; the straps lie flat on the shoulders (.strapH W thick, no pad).
+ */
+const NECRO_VEST = { top: 0.08, crop: 0.3, out: 1.0, taper: 0.8, deep: 0.78, rags: 8, rag: 0.1, seam: 0.035, laces: 4, lace: 0.2, laceTop: 0.18, laceLow: 0.85,
+  strap: 0.16, strapH: 0.035, dark: 0.42, cream: new Color3(0.86, 0.8, 0.66) };
 export function necromancerVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const V = NECRO_VEST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const darkC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(V.dark);
@@ -4972,8 +4980,8 @@ export function necromancerVest(scene: Scene, body: ArticulatedBody, team: Color
   }
   if (!Number.isFinite(x0) || !Number.isFinite(yLow)) return out;
   const W = x1 - x0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-  const top = yTop - V.top * W, hem = yLow - V.below * W, long = top - hem;
-  const dTop = W * V.out, dBot = W * V.flare;
+  const top = yTop - V.top * W, hem = yLow + V.crop * (yTop - yLow), long = top - hem;
+  const dTop = W * V.out, dBot = W * V.taper;
   const vest = put(MeshBuilder.CreateCylinder("necroVest", { height: long, diameterTop: dTop, diameterBottom: dBot, tessellation: 8 }, scene), dark);
   vest.scaling.z = V.deep; vest.position.set(cx, (top + hem) / 2, cz);
   // torn points round the hem, uneven
@@ -4995,11 +5003,11 @@ export function necromancerVest(scene: Scene, body: ArticulatedBody, team: Color
   // a strap over each shoulder, two pale stitches on it
   for (const side of [-1, 1]) {
     const sx = cx + side * dTop * 0.3;
-    const strap = put(MeshBuilder.CreateBox("necroVestStrap", { width: W * V.strap, height: W * 0.07, depth: dTop * V.deep * 0.9 }, scene), dark);
-    strap.position.set(sx, top + W * 0.03, cz);
+    const strap = put(MeshBuilder.CreateBox("necroVestStrap", { width: W * V.strap, height: W * V.strapH, depth: dTop * V.deep * 0.9 }, scene), dark);
+    strap.position.set(sx, top + W * V.strapH * 0.5, cz);
     for (const f of [-0.22, 0.22]) {
       const st = put(MeshBuilder.CreateBox("necroVestStitch", { width: W * 0.025, height: W * 0.02, depth: W * 0.09 }, scene), cream);
-      st.position.set(sx + W * f * V.strap, top + W * 0.07, cz + dTop * V.deep * 0.3);
+      st.position.set(sx + W * f * V.strap, top + W * V.strapH, cz + dTop * V.deep * 0.3);
     }
   }
   return out;
