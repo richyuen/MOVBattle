@@ -4651,6 +4651,72 @@ export function witchRobe(scene: Scene, body: ArticulatedBody, team: Color3): Me
 export function witchRobeDark(team: Color3): Color3 { return new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(WITCH_ROBE.dark); }
 
 /*
+ * [S] 537 (necromancer a.3) the Necromancer's vest (audit 527 "no vest - TABS: a tattered dark team vest stitched with pale laces"; card Appearance
+ * "two crudely stitched together pieces of cloth"; secret.necromancer.red.png: a dark team vest over the rib cage from the collarbone to just under
+ * the last rib, a little wider than the ribs, its hem torn into uneven points; a dark seam straight down the front middle, crossed by five short
+ * pale laces, tilted a little each way; a strap over each shoulder with two pale stitches; the neck and collarbone ends showing above, the spine
+ * bare below). NECRO_VEST in the rib cage's box (ribs + collarbone bounds in the torso frame, W across): an 8-sided frustum from .top W under the
+ * collarbone's top to .below W under the ribs' foot, .out W across at the top and .flare at the hem, .deep of its width deep; .rags rag points
+ * .rag W long; the seam .seam W wide; .laces laces .lace W long from .laceTop to .laceLow of the vest's height; straps .strap W wide. Dark team
+ * cloth (c^2 x .dark), self-lit .12; pale laces unlit (LESSONS 442); all out of the glow.
+ */
+const NECRO_VEST = { top: 0.08, below: 0.06, out: 1.16, flare: 1.24, deep: 0.88, rags: 8, rag: 0.16, seam: 0.035, laces: 5, lace: 0.2, laceTop: 0.18, laceLow: 0.85,
+  strap: 0.2, dark: 0.42, cream: new Color3(0.86, 0.8, 0.66) };
+export function necromancerVest(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const V = NECRO_VEST, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const darkC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(V.dark);
+  const dark = mf.get("cloth", darkC, { emissive: darkC.scale(0.12), roughness: 1 });
+  const seamC = darkC.scale(0.45), seamM = mf.get("cloth", seamC, { emissive: seamC.scale(0.12), roughness: 1 });
+  const cream = mf.get("unlit", V.cream, { emissive: V.cream });
+  const out: Mesh[] = [];
+  const put = (m: Mesh, mt: Material): Mesh => { m.parent = body.torso; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity, yTop = -Infinity, yLow = Infinity;
+  const toTorso = body.torso.computeWorldMatrix(true).clone().invert();
+  for (const m of body.torso.getChildMeshes(true)) {
+    if (!/_rib$|_collarbone$/.test(m.name)) continue;
+    m.computeWorldMatrix(true);
+    for (const v of m.getBoundingInfo().boundingBox.vectorsWorld) {
+      const p = Vector3.TransformCoordinates(v, toTorso);
+      x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); yTop = Math.max(yTop, p.y);
+      if (/_rib$/.test(m.name)) yLow = Math.min(yLow, p.y);
+    }
+  }
+  if (!Number.isFinite(x0) || !Number.isFinite(yLow)) return out;
+  const W = x1 - x0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const top = yTop - V.top * W, hem = yLow - V.below * W, long = top - hem;
+  const dTop = W * V.out, dBot = W * V.flare;
+  const vest = put(MeshBuilder.CreateCylinder("necroVest", { height: long, diameterTop: dTop, diameterBottom: dBot, tessellation: 8 }, scene), dark);
+  vest.scaling.z = V.deep; vest.position.set(cx, (top + hem) / 2, cz);
+  // torn points round the hem, uneven
+  for (let i = 0; i < V.rags; i++) {
+    const a = ((i + 0.5) / V.rags) * Math.PI * 2, drop = W * V.rag * (i % 3 === 0 ? 1 : i % 3 === 1 ? 0.55 : 0.8);
+    const rag = put(MeshBuilder.CreateCylinder("necroVestRag", { height: drop, diameterTop: dBot * 0.36, diameterBottom: 0, tessellation: 3 }, scene), dark);
+    rag.scaling.z = 0.35; rag.rotation.y = a;
+    rag.position.set(cx + Math.sin(a) * dBot * 0.44, hem - drop / 2 + W * 0.01, cz + Math.cos(a) * dBot * 0.44 * V.deep);
+  }
+  // the front seam laid on the frustum's sloping front, and the pale laces across it
+  const zTop = cz + (dTop / 2) * V.deep, zBot = cz + (dBot / 2) * V.deep, slope = Math.atan2(zBot - zTop, long);
+  const seam = put(MeshBuilder.CreateBox("necroVestSeam", { width: W * V.seam, height: Math.hypot(long, zBot - zTop), depth: W * 0.03 }, scene), seamM);
+  seam.rotation.x = -slope; seam.position.set(cx, (top + hem) / 2, (zTop + zBot) / 2 + W * 0.005);
+  for (let i = 0; i < V.laces; i++) {
+    const k = V.laceTop + ((V.laceLow - V.laceTop) * i) / (V.laces - 1), y = top - long * k, z = zTop + (zBot - zTop) * k;
+    const lace = put(MeshBuilder.CreateBox("necroVestLace", { width: W * V.lace, height: W * 0.035, depth: W * 0.03 }, scene), cream);
+    lace.rotation.x = -slope; lace.rotation.z = (i % 2 ? 1 : -1) * 0.22; lace.position.set(cx + (i % 2 ? 1 : -1) * W * 0.015, y, z + W * 0.02);
+  }
+  // a strap over each shoulder, two pale stitches on it
+  for (const side of [-1, 1]) {
+    const sx = cx + side * dTop * 0.3;
+    const strap = put(MeshBuilder.CreateBox("necroVestStrap", { width: W * V.strap, height: W * 0.07, depth: dTop * V.deep * 0.9 }, scene), dark);
+    strap.position.set(sx, top + W * 0.03, cz);
+    for (const f of [-0.22, 0.22]) {
+      const st = put(MeshBuilder.CreateBox("necroVestStitch", { width: W * 0.025, height: W * 0.02, depth: W * 0.09 }, scene), cream);
+      st.position.set(sx + W * f * V.strap, top + W * 0.07, cz + dTop * V.deep * 0.3);
+    }
+  }
+  return out;
+}
+
+/*
  * [S] 532 the Wheelbarrow Dragon's driver, the Traveller (secret.wheelbarrow_dragon.red.png, .jpg; card Appearance "that goofy Traveller Unit, with
  * their Afro and overalls"; audit a.4 "a hulking slab-torsoed giant - TABS: a lanky normal-sized Traveller in team overalls"): a bare team chest and
  * bare team arms (the trunk, yoke and pads in his skin), team overalls over it: a bib on the trunk's front from BARROW_OVERALLS.lo to .hi of the
