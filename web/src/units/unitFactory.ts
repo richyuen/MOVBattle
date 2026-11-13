@@ -180,7 +180,8 @@ const SKELETON_UNITS = new Set(["spooky.skeleton_warrior", "spooky.skeleton_arch
  * the Skeleton Warrior's ragged shorts (spookyDress STIFFY_SHORTS) cut to .hem of the thigh, .out of the bone's half-width round; his legs
  * lengthened in unitVisuals (legLength .legs).
  */
-const GIANT_BUILD = { pelvisW: 0.62, pelvisD: 0.72, pelvisH: 0.7, hem: 0.42, out: 2.8, legs: 1.2 };
+// [P] 535 hem .42 -> .3: the shorts ended just above the knee (TABS mid-thigh)
+const GIANT_BUILD = { pelvisW: 0.62, pelvisD: 0.72, pelvisH: 0.7, hem: 0.3, out: 2.8, legs: 1.2 };
 // Bone: spookyDress SKELETON_BONE (441: shared, self-lit)
 const SKELETON_LIMB = 0.42;
 const SKELETON_SPINE = 0.16;
