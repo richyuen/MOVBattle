@@ -6042,15 +6042,50 @@ export function iceGiantApeBuild(body: ArticulatedBody): void {
  */
 const BB_HAT = { cords: 2, x: 0.5, top: 0.32, spread: 0.36, long: 0.62, thick: 0.05, splay: 0.35, flame: 0.12,
   black: new Color3(0.035, 0.03, 0.035), cord: new Color3(0.2, 0.12, 0.07), fire: new Color3(1.6, 0.75, 0.2) }; // 539.8b black .08 -> .035 (look: felt read maroon-brown)
+/*
+ * [S] 543 (blackbeard a.4) the tricorn rebuilt (audit 541 CONFIRM: "a thin flat black slab barely taller than the eyes - TABS: a big, tall,
+ * three-cornered tricorn about twice the head's width and height"; secret.blackbeard.red.png: the hat as wide as his shoulders' inner edge, about
+ * 2.2 heads across and a head tall, pulled to just over the eyes; three brim walls turned steeply up and meeting in three corners, one point over the
+ * middle of the brow and two back over the ears; a low round crown shows only as a hump between the walls). propBuilder's plain tricorn is hidden.
+ * BB_TRICORN on the head (box W, H, c): the brim a flat triangle, corners .reach W out from the middle, its plate .plate H thick at .seat H over c;
+ * a wall along each side, .wall H tall and .thick W thick, standing from the plate's edge and leaned .lean rad outward; the crown a frustum .crownW W
+ * across, .crownH H tall on the plate. All BB_HAT near-black felt, out of the glow.
+ */
+const BB_TRICORN = { reach: 1.18, seat: 0.18, plate: 0.06, wall: 0.78, thick: 0.09, lean: 0.32, crownW: 1.02, crownH: 0.62 };
+function blackbeardTricorn(scene: Scene, head: Mesh, felt: Material, W: number, H: number, c: Vector3): Mesh[] {
+  const K = BB_TRICORN, out: Mesh[] = [];
+  const R = W * K.reach, y0 = c.y + H * K.seat;
+  const corners = [Math.PI / 2, Math.PI / 2 + (2 * Math.PI) / 3, Math.PI / 2 + (4 * Math.PI) / 3]; // the front point over the brow (+z), two back over the ears
+  // the brim plate: a round plate the size of the triangle's inner circle, its rim under the walls' feet
+  const plate = MeshBuilder.CreateCylinder("bbTricornBrim", { height: H * K.plate, diameter: R * 1.02, tessellation: 12 }, scene);
+  plate.parent = head; plate.position.set(c.x, y0, c.z);
+  out.push(plate);
+  for (let i = 0; i < 3; i++) {
+    const a = corners[i], b = corners[(i + 1) % 3], mid = (a + b) / 2 + (b < a ? Math.PI : 0);
+    const nx = Math.cos(mid), nz = Math.sin(mid), len = R * Math.sqrt(3);
+    const yaw = new TransformNode("bbTricornSide", scene); yaw.parent = head;
+    yaw.position.set(c.x + nx * R * 0.5, y0, c.z + nz * R * 0.5);
+    yaw.rotation.y = Math.PI / 2 - mid; // local +z faces out of the side
+    const tilt = new TransformNode("bbTricornLean", scene); tilt.parent = yaw; tilt.rotation.x = K.lean; // the top tips outward
+    const wall = MeshBuilder.CreateBox("bbTricornWall", { width: len * 1.04, height: H * K.wall, depth: W * K.thick }, scene);
+    wall.parent = tilt; wall.position.y = (H * K.wall) / 2;
+    out.push(wall);
+  }
+  const crown = MeshBuilder.CreateCylinder("bbTricornCrown", { height: H * K.crownH, diameterTop: W * K.crownW * 0.82, diameterBottom: W * K.crownW, tessellation: 8 }, scene);
+  crown.parent = head; crown.position.set(c.x, y0 + (H * K.crownH) / 2, c.z);
+  out.push(crown);
+  for (const m of out) { m.material = felt; m.convertToFlatShadedMesh(); scene.getGlowLayerByName("glow")?.addExcludedMesh(m); }
+  return out;
+}
 export function blackbeardHat(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = BB_HAT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const felt = mf.get("cloth", K.black, { emissive: K.black.scale(0.4), roughness: 1 });
-  for (const m of body.root.getChildMeshes(false)) if (/^tricorn/.test(m.name)) { m.material = felt; glow?.addExcludedMesh(m as Mesh); }
+  for (const m of body.root.getChildMeshes(false)) if (/^tricorn/.test(m.name)) m.setEnabled(false); // [S] 543: the plain tricorn gives way to BB_TRICORN
   const cord = mf.get("cloth", K.cord, { emissive: K.cord.scale(0.3), roughness: 1 });
   const fire = mf.get("unlit", K.fire, { emissive: K.fire });
   const head = body.headMesh, hb = head.getBoundingInfo().boundingBox, c = hb.center;
   const W = hb.extendSize.x * 2, H = hb.extendSize.y * 2, D = hb.extendSize.z * 2;
-  const out: Mesh[] = [];
+  const out: Mesh[] = blackbeardTricorn(scene, head, felt, W, H, c);
   for (const side of [-1, 1]) {
     for (let k = 0; k < K.cords; k++) {
       const z = c.z + D * K.spread * (k / Math.max(1, K.cords - 1) - 0.5);
