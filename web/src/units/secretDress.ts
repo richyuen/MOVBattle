@@ -4573,8 +4573,14 @@ export function necromancerLantern(scene: Scene, body: ArticulatedBody, team: Co
  * .strandW W wide, behind the eyes. The cap dark team (deepTeam .shade), lit cloth self-lit .12; horns dark .horn, tips and bands pale .bone; hair
  * .hairC; out of the glow. The hood hat is off (unitVisuals).
  */
-const NECRO_CAP = { cap: 1.14, capD: 1.08, brow: 0.04, crown: 0.62, back: 0.06, seg: [0.5, 0.42, 0.34], w: 0.24, hornX: 0.4, hornY: 0.22, out: 1.05,
-  bend: 0.62, curl: 0.18, bands: 2, strands: 3, hair: 1.0, strandW: 0.13, shade: 0.42,
+/*
+ * [S] 540 (necromancer a.3) the horns rebuilt thick and curved (CONFIRM 539: "thin, straight, short spikes on top of the head - TABS: thick curved
+ * horns with white bands that sweep out from the hood and rise about a head's height above it"). Each horn is now .seg.length segments (H each)
+ * on a chain of joints: rooted .hornX W out, leaned .out rad outward, each next joint turned .kink[k] rad back toward upright (the last one past
+ * it, curling the pale tip in); .w W across at the root tapering to a point; a pale band round the top of each segment in .bandAt.
+ */
+const NECRO_CAP = { cap: 1.14, capD: 1.08, brow: 0.04, crown: 0.62, back: 0.06, seg: [0.3, 0.3, 0.28, 0.26, 0.24, 0.2], w: 0.34, hornX: 0.36, hornY: 0.24, out: 0.95,
+  kink: [0.3, 0.28, 0.22, 0.12, 0.18], bandAt: [1, 2], strands: 3, hair: 1.0, strandW: 0.13, shade: 0.42,
   horn: new Color3(0.16, 0.05, 0.05), bone: new Color3(0.86, 0.78, 0.62), hairC: new Color3(0.09, 0.05, 0.05) };
 export function necromancerHornCap(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = NECRO_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
@@ -4597,12 +4603,12 @@ export function necromancerHornCap(scene: Scene, body: ArticulatedBody, team: Co
     joint.position.set(c.x + sd * W * K.hornX, crown - H * K.hornY, c.z - D * K.back);
     joint.rotation.z = -sd * K.out;
     for (let k = 0; k < K.seg.length; k++) {
-      if (k > 0) joint.rotation.set(-0.12, 0, sd * (k === 1 ? K.bend : K.curl));
+      if (k > 0) joint.rotation.set(-0.06, 0, sd * K.kink[k - 1]);
       const len = H * K.seg[k], w0 = W * K.w * (1 - k / K.seg.length), w1 = W * K.w * (1 - (k + 1) / K.seg.length);
-      const seg = MeshBuilder.CreateCylinder("necroHorn", { height: len, diameterBottom: w0, diameterTop: Math.max(w1, W * 0.01), tessellation: 7 }, scene);
+      const seg = MeshBuilder.CreateCylinder("necroHorn", { height: len * 1.04, diameterBottom: w0, diameterTop: Math.max(w1, W * 0.01), tessellation: 7 }, scene);
       seg.position.y = len / 2;
       put(seg, k === K.seg.length - 1 ? boneM : hornM, joint);
-      if (k < K.bands) {
+      if (K.bandAt.includes(k)) {
         const band = MeshBuilder.CreateCylinder("necroHornBand", { height: len * 0.14, diameter: w1 * 1.22 + w0 * 0.08, tessellation: 7 }, scene);
         band.position.y = len * 0.85; put(band, boneM, joint);
       }
