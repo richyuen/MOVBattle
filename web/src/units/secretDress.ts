@@ -4306,3 +4306,65 @@ export function witchHoodHat(scene: Scene, body: ArticulatedBody, team: Color3):
   }
   return out;
 }
+
+/*
+ * [S] 532 the Wheelbarrow Dragon's driver, the Traveller (secret.wheelbarrow_dragon.red.png, .jpg; card Appearance "that goofy Traveller Unit, with
+ * their Afro and overalls"; audit a.4 "a hulking slab-torsoed giant - TABS: a lanky normal-sized Traveller in team overalls"): a bare team chest and
+ * bare team arms (the trunk, yoke and pads in his skin), team overalls over it: a bib on the trunk's front from BARROW_OVERALLS.lo to .hi of the
+ * neck's height, .bib of the trunk across, standing .proud of it off the chest; two straps .strap across from the bib's top corners over the
+ * shoulders and down the back to .backLo; and the trousers, the pelvis, thighs and shins all in the overall cloth. The cloth is the team colour
+ * saturated (c^.sat, renormalised) and scaled .shade, self-lit .glow, out of the glow layer (LESSONS: team garment shade). His lanky build is
+ * unitVisuals secret_wheelbarrow_dragon's proportions.
+ */
+const BARROW_OVERALLS = { lo: 0.0, hi: 0.56, bib: 0.66, proud: 0.035, strap: 0.14, backLo: 0.3, sat: 2, shade: 0.62, glow: 0.12 };
+export function barrowDriverOveralls(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const O = BARROW_OVERALLS, glow = scene.getGlowLayerByName("glow");
+  const peak = Math.max(team.r, team.g, team.b), sat = new Color3(team.r ** O.sat, team.g ** O.sat, team.b ** O.sat);
+  const deep = sat.scale((peak / Math.max(sat.r, sat.g, sat.b, 1e-3)) * O.shade);
+  const cloth = getMaterialFactory().get("cloth", deep, { emissive: deep.scale(O.glow), roughness: 1 });
+  // bare team chest and arms; overall cloth trousers
+  for (const m of [body.torsoMesh, body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm, ...body.allMeshes.filter((x) => /_yoke$|_[lr]Pad$/.test(x.name))]) {
+    m.material = body.skinMaterial; glow?.addExcludedMesh(m);
+  }
+  for (const m of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg, ...body.allMeshes.filter((x) => /_pelvis$|_belt$/.test(x.name))]) {
+    m.material = cloth; glow?.addExcludedMesh(m);
+  }
+  const out: Mesh[] = [];
+  const put = (m: Mesh): Mesh => { m.material = cloth; m.parent = body.torso; out.push(m); return m; };
+  const band = barrowTrunkBand(body, O.lo, O.hi), top = barrowTrunkBand(body, O.hi, 1);
+  const across = band.maxX - band.minX, midX = (band.minX + band.maxX) / 2, thin = O.proud * across, trunk = body.neck.position.y;
+  const bib = put(MeshBuilder.CreateBox("barrowDriverBib", { width: across * O.bib, height: trunk * (O.hi - O.lo), depth: thin }, scene));
+  bib.position.set(midX, trunk * (O.lo + O.hi) * 0.5, band.maxZ + thin * 0.5);
+  for (const side of [-1, 1]) {
+    const x = midX + side * across * O.bib * 0.36;
+    const front = new Vector3(x, trunk * O.hi, top.maxZ + thin * 0.5);
+    const over = new Vector3(x, trunk * 1.02, (top.maxZ + top.minZ) * 0.5);
+    const back = new Vector3(x, trunk * O.backLo, top.minZ - thin * 0.5);
+    for (const [a, b] of [[front, over], [over, back]]) {
+      const span = b.subtract(a);
+      const strap = put(MeshBuilder.CreateBox("barrowDriverStrap", { width: across * O.strap, height: span.length(), depth: thin }, scene));
+      strap.position.copyFrom(a.add(b).scale(0.5));
+      strap.rotation.x = Math.atan2(span.z, span.y);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+// The trunk's x/z extent (torso frame) between lo and hi of the neck's height, from the torso mesh's and yoke's vertices
+function barrowTrunkBand(body: ArticulatedBody, lo: number, hi: number) {
+  const trunk = body.neck.position.y;
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  body.torso.computeWorldMatrix(true);
+  const toTorso = body.torso.getWorldMatrix().clone().invert();
+  for (const part of body.torso.getChildMeshes(true).filter((m) => m === body.torsoMesh || /_yoke$/.test(m.name))) {
+    const local = part.computeWorldMatrix(true).multiply(toTorso);
+    const at = part.getVerticesData("position") ?? [];
+    for (let v = 0; v < at.length; v += 3) {
+      const p = Vector3.TransformCoordinates(new Vector3(at[v], at[v + 1], at[v + 2]), local);
+      if (p.y < trunk * lo || p.y > trunk * hi) continue;
+      minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
+    }
+  }
+  if (!Number.isFinite(minX)) { const e = body.torsoMesh.getBoundingInfo().boundingBox.extendSize; minX = -e.x; maxX = e.x; minZ = -e.z; maxZ = e.z; }
+  return { minX, maxX, minZ, maxZ };
+}

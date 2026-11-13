@@ -1231,7 +1231,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_wheelbarrow_dragon":
       // [S] 531 (a.3) no straw hat: the driver wears the Traveller's brown afro (tribalDress dressAfro, unitFactory)
-      return vis({ scale: 1.42, bulk: 1.35 }, "none", "none", "none", "dragon_cart", "#7f4c2c", undefined, {
+      // [S] 532 (a.4) a lanky Traveller, not a slab-torsoed giant: slim (bulk 1.35 -> .78), long arms and legs (secretDress barrowDriverOveralls dresses him)
+      return vis({ scale: 1.42, bulk: 0.78, armLength: 1.12, legLength: 1.14 }, "none", "none", "none", "dragon_cart", "#7f4c2c", undefined, {
         posePreset: "mounted", materialPreset: "secret_beast", attachmentPreset: "dragon_cart_fx", fxPreset: "ember",
         stateVariants: { attacking: ["dragon_glow"], "ability-active": ["dragon_glow"] },
       });
