@@ -5848,7 +5848,7 @@ export function ladyRedJadeHair(scene: Scene, body: ArticulatedBody): Mesh[] {
 const ULLR_CAP = { cap: 1.12, seat: 0.0, capH: 0.82, rim: 0.12, haft: 0.42, haftW: 0.07, axeX: 0.3, axeLean: 0.32, blade: 0.2, bladeH: 0.2,
   tufts: 13, tuft: 0.26, maneX: 0.54, maneTop: 0.2, maneLow: 0.46, maneZ: 0.12,
   slate: new Color3(0.07, 0.085, 0.12), brown: new Color3(0.3, 0.14, 0.07), haftC: new Color3(0.22, 0.1, 0.05) };
-/** An open, two-panel coat over Ullr's team shirt. */
+/** Open coat fronts wrap into side and back panels. Sleeves follow the arms. */
 export function ullrJacket(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const torso = limbBox(body.allMeshes.find(mesh => mesh.name.endsWith("_yoke")) ?? body.torsoMesh);
   const color = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
@@ -5856,17 +5856,32 @@ export function ullrJacket(scene: Scene, body: ArticulatedBody, team: Color3): M
   const top = torso.mid + torso.half * 0.7;
   const hem = originIn(body.leftHip, body.torso).y - Math.abs(body.leftKnee.position.y) * 0.4;
   const height = top - hem;
-  return [-1, 1].map(side => {
-    const panel = MeshBuilder.CreateBox("ullrJacketPanel", {
-      width: torso.wide * 0.64, height, depth: torso.deep * 0.34,
+  const coat: Mesh[] = [];
+  const glow = scene.getGlowLayerByName("glow");
+  const add = (mesh: Mesh, parent: TransformNode) => {
+    mesh.parent = parent;
+    mesh.material = material;
+    glow?.addExcludedMesh(mesh);
+    coat.push(mesh);
+  };
+  const rings = [top, top - height * 0.55, hem].map((y, ring) =>
+    Array.from({ length: 11 }, (_, i) => {
+      const angle = 0.43 + (Math.PI * 2 - 0.86) * i / 10;
+      const flare = ring === 2 ? 1.33 : 1.14;
+      return new Vector3(Math.sin(angle) * torso.wide * flare, y, Math.cos(angle) * torso.deep * flare);
+    }),
+  );
+  add(MeshBuilder.CreateRibbon("ullrJacket", { pathArray: rings, sideOrientation: Mesh.DOUBLESIDE }, scene), body.torso);
+  for (const limb of [body.leftUpperArm, body.rightUpperArm, body.leftLowerArm, body.rightLowerArm]) {
+    const arm = limbBox(limb);
+    const sleeve = MeshBuilder.CreateCylinder("ullrJacketSleeve", {
+      height: arm.half * 1.85, diameterTop: arm.wide * 2.55, diameterBottom: arm.wide * 2.25, tessellation: 8,
     }, scene);
-    panel.parent = body.torso;
-    panel.position.set(side * torso.wide * 0.73, (top + hem) * 0.5, torso.deep * 0.98);
-    panel.rotation.set(0, side * 0.32, side * 0.065);
-    panel.material = material;
-    scene.getGlowLayerByName("glow")?.addExcludedMesh(panel);
-    return panel;
-  });
+    sleeve.scaling.z = arm.deep / arm.wide;
+    sleeve.position.y = arm.mid;
+    add(sleeve, limb.parent as TransformNode);
+  }
+  return coat;
 }
 
 export function ullrSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
