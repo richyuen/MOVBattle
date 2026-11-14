@@ -5612,7 +5612,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return blade;
     }
     case "katana": {
-      const blade = MeshBuilder.CreateBox("katana", { width: 0.025 * s, height: 0.6 * s, depth: 0.006 * s }, scene);
+      const twoHanded = variant === "two_hand_katana";
+      const blade = MeshBuilder.CreateBox(twoHanded ? "blade" : "katana", { width: 0.025 * s, height: 0.6 * s, depth: 0.006 * s }, scene);
       // [P] 416 light steel, not the "metal" preset (it rendered near-black; critic 415 on 44749436: TABS a pale grey blade, dynasty.samurai.red.png)
       blade.material = mat(scene, KATANA_STEEL, 0.12);
       // Tsuba (circular hand guard)
@@ -5622,14 +5623,19 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       tsuba.parent = blade;
       tsuba.material = mat(scene, new Color3(0.3, 0.25, 0.2), 0, "metal");
       // Grip wrap
-      const grip = MeshBuilder.CreateCylinder("kgrip", { height: 0.12 * s, diameter: 0.022 * s }, scene);
-      grip.position.y = -0.22 * s;
+      const gripLength = (twoHanded ? 0.25 : 0.12) * s;
+      const grip = MeshBuilder.CreateCylinder(twoHanded ? "grip" : "kgrip", { height: gripLength, diameter: 0.022 * s }, scene);
+      grip.position.y = -0.16 * s - gripLength / 2;
       grip.parent = blade;
+      if (twoHanded) {
+        const marker = new TransformNode("longswordFists", scene);
+        marker.parent = blade;
+      }
       grip.material = mat(scene, new Color3(0.15, 0.1, 0.08));
       addGripWraps(scene, grip, [-0.03 * s, 0, 0.03 * s], 0.026 * s);
       // Kashira (pommel cap)
       const kashira = MeshBuilder.CreateCylinder("kashira", { height: 0.015 * s, diameter: 0.028 * s, tessellation: 8 }, scene);
-      kashira.position.y = -0.29 * s;
+      kashira.position.y = -0.17 * s - gripLength;
       kashira.parent = blade;
       kashira.material = mat(scene, new Color3(0.3, 0.25, 0.2), 0, "metal");
       blade.position.y = 0.15 * s;
