@@ -5026,6 +5026,11 @@ export class SimulationSystem {
       if (forward.lengthSquared() > 1e-6) target.applyBlastLaunch(forward.normalize(), 15, 6, true);
       this.visualEffects?.spawnImpactDust(target.position, 1.8, new Color3(0.42, 0.58, 0.18));
     }
+    if (attacker.definition.id === "secret.samurai_giant") {
+      const contact = new Vector3(target.position.x, attacker.position.y, target.position.z);
+      this.visualEffects?.spawnTrampleRing(contact, splashRadius);
+      this.visualEffects?.spawnImpactDust(contact, 2.3, new Color3(0.64, 0.49, 0.28));
+    }
     // The punch sends a ring of ice across the ground from where it connected.
     if (attacker.definition.id === "secret.ice_giant") {
       this.visualEffects?.spawnIceBurst(
