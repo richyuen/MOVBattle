@@ -6035,6 +6035,10 @@ export class ProceduralAnimator {
   }
 
   private _animateHeavySwing(dt: number): void {
+    if (this._carry?.weapon.prop?.node.name === "treeClubCarry") {
+      this._animateTreeSwat(dt);
+      return;
+    }
     if (this._whacks()) {
       this._animateWhack(dt);
       return;
@@ -6092,6 +6096,23 @@ export class ProceduralAnimator {
     }
     this._clubHold = 1;
     b.rightKnee.rotation.x = 0.12;
+    if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  private _animateTreeSwat(dt: number): void {
+    this._attackTimer += dt;
+    const progress = Math.min(1, this._attackTimer / this._attackDuration);
+    const contact = this._resolveReleasePoint(0.45);
+    const across = Math.min(1, progress / contact);
+    const recovery = Math.max(0, (progress - contact) / (1 - contact));
+    const side = Math.sign(this._body.rightShoulder.position.x) || 1;
+    const angle = side * (1.2 - across * across * 1.6 - recovery * 1.3);
+    this._body.torso.rotation.y = angle * 0.65;
+    this._body.rightShoulder.rotation.x = -1.15;
+    this._body.rightShoulder.rotation.z = side * (0.65 - 0.8 * across);
+    this._body.rightElbow.rotation.x = -0.85;
+    this._sweepTip = new Vector3(Math.sin(angle), 0.12 + recovery * 0.4, Math.cos(angle)).normalize();
+    this._clubHold = 1;
     if (progress >= 1) this._state = AnimState.Idle;
   }
 

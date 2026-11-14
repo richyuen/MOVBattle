@@ -5020,6 +5020,12 @@ export class SimulationSystem {
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z, head: { x: head.x, y: head.y, z: head.z } });
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
+    if (attacker.definition.id === "secret.tree_giant") {
+      const forward = target.position.subtract(attacker.position);
+      forward.y = 0;
+      if (forward.lengthSquared() > 1e-6) target.applyBlastLaunch(forward.normalize(), 15, 6, true);
+      this.visualEffects?.spawnImpactDust(target.position, 1.8, new Color3(0.42, 0.58, 0.18));
+    }
     // The punch sends a ring of ice across the ground from where it connected.
     if (attacker.definition.id === "secret.ice_giant") {
       this.visualEffects?.spawnIceBurst(
