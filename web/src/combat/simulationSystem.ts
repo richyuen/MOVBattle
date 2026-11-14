@@ -2109,9 +2109,10 @@ export class SimulationSystem {
     if (now < (this._jadeTornadoReady.get(attacker) ?? 0)) return;
     const direction = target.position.subtract(attacker.position);
     direction.y = 0;
-    if (direction.lengthSquared() < 1e-6) return;
-    direction.normalize();
-    const at = attacker.position.add(direction.scale(1));
+    const distance = direction.length();
+    if (distance < 0.01) return;
+    direction.scaleInPlace(1 / distance);
+    const at = attacker.position.add(direction.scale(Math.min(2.1, distance * 0.65)));
     at.y = target.position.y;
     this._jadeTornadoes.push({ team: attacker.team, origin: at.clone(), at, direction, start: now, tickAt: now });
     this._jadeTornadoReady.set(attacker, now + 15);
@@ -2133,7 +2134,7 @@ export class SimulationSystem {
         if (distance > 1.65 + unit.collisionBodyRadius) continue;
         const pull = distance > 0.15 ? inward.scale(1 / distance) : tornado.direction;
         unit.applyDamage(7, Vector3.Zero());
-        if (!isVehicleUnit(unit.definition.id)) unit.applyBlastLaunch(pull, 3.4, 3.8);
+        if (!isVehicleUnit(unit.definition.id)) unit.applyBlastLaunch(pull, 3.4, 6);
       }
     }
   }
