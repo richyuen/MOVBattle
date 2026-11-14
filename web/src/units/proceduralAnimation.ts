@@ -6035,6 +6035,10 @@ export class ProceduralAnimator {
   }
 
   private _animateHeavySwing(dt: number): void {
+    if (this._body.rightHand.getChildren().some((node) => node.name === "treeClubCarry")) {
+      this._animateTreeSwat(dt);
+      return;
+    }
     if (this._whacks()) {
       this._animateWhack(dt);
       return;
@@ -6092,6 +6096,24 @@ export class ProceduralAnimator {
     }
     this._clubHold = 1;
     b.rightKnee.rotation.x = 0.12;
+    if (progress >= 1) this._state = AnimState.Idle;
+  }
+
+  private _animateTreeSwat(dt: number): void {
+    this._attackTimer += dt;
+    const progress = Math.min(1, this._attackTimer / this._attackDuration);
+    const contact = this._resolveReleasePoint(0.45);
+    const across = Math.max(0, Math.min(1, (progress - contact * 0.45) / (contact * 0.55)));
+    const recovery = Math.max(0, (progress - contact) / (1 - contact));
+    const swing = across * across * (3 - 2 * across);
+    const body = this._body;
+    const side = Math.sign(body.rightShoulder.position.x) || 1;
+    body.torso.rotation.y = side * (0.95 - swing * 1.85) * (1 - recovery);
+    body.rightShoulder.rotation.x = -1.35;
+    body.rightShoulder.rotation.z = side * (0.8 - swing * 1.5);
+    body.rightElbow.rotation.x = -0.75;
+    this._clubArc = -0.95;
+    this._clubHold = 1;
     if (progress >= 1) this._state = AnimState.Idle;
   }
 
