@@ -6007,7 +6007,29 @@ export function artemisBand(scene: Scene, body: ArticulatedBody): Mesh[] {
   const band = MeshBuilder.CreateCylinder("artemisBand", { height: H * K.tall, diameterBottom: W * K.round, diameterTop: W * K.round * K.top, tessellation: 10 }, scene);
   band.parent = hair; band.position.set(c.x, c.y + H * K.up, c.z); band.rotation.x = K.tip; band.scaling.z = (D / W) * K.deep;
   band.material = gold; band.convertToFlatShadedMesh(); glow?.addExcludedMesh(band);
-  return [band];
+  const auburn = new Color3(0.42, 0.155, 0.074);
+  const braidMaterial = mf.get("cloth", auburn, { emissive: auburn.scale(0.12), roughness: 1 });
+  hair.material = braidMaterial;
+  const bun = MeshBuilder.CreateIcoSphere("artemisBun", {
+    radiusX: W * 0.34, radiusY: H * 0.31, radiusZ: D * 0.32, subdivisions: 1, flat: true,
+  }, scene);
+  bun.parent = hair;
+  bun.position.set(c.x, c.y + H * 0.22, c.z - D * 0.46);
+  bun.material = braidMaterial;
+  const braid = [bun];
+  for (let i = 0; i < 8; i++) {
+    const taper = 1 - i * 0.065;
+    const link = MeshBuilder.CreateIcoSphere("artemisBraidLink", {
+      radiusX: W * 0.21 * taper, radiusY: H * 0.17, radiusZ: D * 0.18 * taper, subdivisions: 1, flat: true,
+    }, scene);
+    link.parent = hair;
+    link.position.set(c.x + W * (0.15 + i * 0.052 + (i % 2) * 0.09), c.y - H * i * 0.19, c.z - D * (0.6 - i * 0.035));
+    link.rotation.z = i % 2 ? 0.4 : -0.4;
+    link.material = braidMaterial;
+    braid.push(link);
+  }
+  for (const mesh of braid) glow?.addExcludedMesh(mesh);
+  return [band, ...braid];
 }
 
 /** A shallow snow cap leaves the Ice Giant's face and eyes exposed. */
