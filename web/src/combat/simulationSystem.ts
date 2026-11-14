@@ -969,6 +969,7 @@ export class SimulationSystem {
   private _banjoNoteCount = 0;
   private _jumpReadyAt = new Map<RuntimeUnit, number>();
   private _foolishWindup = new Map<RuntimeUnit, number>();
+  private _giantStomps = new Map<RuntimeUnit, number>();
   /** [S] 530 the Cavalry horse's pull-back end time before its charge (CAVALRY_WAVE.pull) */
   private _cavalryPull = new Map<RuntimeUnit, number>();
   private _pathStates = new Map<RuntimeUnit, UnitPathState>();
@@ -1078,6 +1079,7 @@ export class SimulationSystem {
     this._banjoNotes.delete(unit);
     this._jumpReadyAt.delete(unit);
     this._foolishWindup.delete(unit);
+    this._giantStomps.delete(unit);
   }
 
   beginSimulation(now: number): void {
@@ -1147,6 +1149,7 @@ export class SimulationSystem {
     this._banjoTurns = 0;
     this._jumpReadyAt.clear();
     this._foolishWindup.clear();
+    this._giantStomps.clear();
     this._isRunning = true;
     this._now = now;
     this._battleStartedAt = now;
@@ -2858,6 +2861,34 @@ export class SimulationSystem {
           unit.moveTo(charging.target.position.add(charging.dir.scale(chargeSpec.overrun)));
           this._clearPathState(unit);
           unit.faceTarget(charging.target.position);
+          return;
+        }
+      }
+    }
+
+    if (unit.definition.id === "secret.samurai_giant") {
+      const tookOff = this._giantStomps.get(unit);
+      if (tookOff !== undefined) {
+        if (unit.position.y > 0.05 || now - tookOff < 0.3) return;
+        this._giantStomps.delete(unit);
+        unit.body.root.rotation.x = 0;
+        const at = unit.position.clone();
+        const impulse = enemy.position.subtract(at).normalize().scale(6);
+        impulse.y = 2.5;
+        this._applyAreaControl(at, 4, unit.team, 20, impulse, now);
+        this.visualEffects?.spawnTrampleRing(at, 4);
+        this._logAbility(unit, "giant_stomp_landed", now, at);
+        return;
+      }
+      if (canMove && canAttack && distance <= 4 && now >= (this._jumpReadyAt.get(unit) ?? this._battleStartedAt + 0.4)) {
+        const direction = enemy.position.subtract(unit.position);
+        direction.y = 0;
+        if (unit.leap(direction.normalize(), Math.min(2, distance * 0.6), 6.8)) {
+          unit.faceTarget(enemy.position);
+          this._giantStomps.set(unit, now);
+          this._jumpReadyAt.set(unit, now + 3);
+          this._clearPathState(unit);
+          this._logAbility(unit, "giant_foot_stomp", now, enemy.position);
           return;
         }
       }

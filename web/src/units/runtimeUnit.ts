@@ -193,6 +193,7 @@ export class RuntimeUnit {
   landings = 0;
   // [S] 392 the last leap was a jump-charge (Super Jump): only that leap takes the live-air pose, not a hop back or a halfling's vault
   private _leapAir = false;
+  private _giantFlipElapsed = 0;
   // [S] 437 the Vampire's bat form (spookyDress VAMPIRE_BAT): set by his swoop, shown while he is off the ground, cleared on landing
   private _batForm = false;
   private _batOn = false;
@@ -831,6 +832,10 @@ export class RuntimeUnit {
     this._grounded = false;
     // [S] 513 the Ball 'n' Chain's Foolish Jump flies too: the animator takes his stone-first dive from it (STONE_POUND)
     this._leapAir = (this.definition.abilities ?? []).includes("jump_charge" as never) || this.definition.id === "secret.ball_n_chain";
+    if (this.definition.id === "secret.samurai_giant") {
+      this._leapAir = true;
+      this._giantFlipElapsed = 0;
+    }
     return true;
   }
 
@@ -1482,6 +1487,10 @@ export class RuntimeUnit {
       this._applyCrowdLean(dt);
       if (physicsState === "airborne" && this._leapAir && this.definition.id === "secret.lady_red_jade") {
         this.body.root.rotation.y += dt * 16;
+      }
+      if (physicsState === "airborne" && this._leapAir && this.definition.id === "secret.samurai_giant") {
+        this._giantFlipElapsed += dt;
+        this.body.root.rotation.x = -2 * Math.PI * Math.min(1, this._giantFlipElapsed / 0.52);
       }
       this._updateHealthBar();
       return;
