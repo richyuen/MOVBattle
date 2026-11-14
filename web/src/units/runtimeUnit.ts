@@ -1474,6 +1474,14 @@ export class RuntimeUnit {
       resolveObstacleCollisions(pos, this.collisionBodyRadius, RuntimeUnit.obstacles);
     }
 
+    // The stomp's somersault follows its own leap, including frames spent staggering.
+    // Turn at the hips so the head clears the ground at the top of the arc.
+    if (this._leapAir && this.definition.id === "secret.samurai_giant" && !this._grounded) {
+      this._giantFlipElapsed += dt;
+      const progress = Math.min(1, this._giantFlipElapsed / 0.52);
+      this.body.hip.rotation.x = -2 * Math.PI * progress;
+    }
+
     // ── Stagger: skip movement while staggered ──
     if (this._staggerTimer > 0) {
       this._staggerTimer -= dt;
@@ -1487,10 +1495,6 @@ export class RuntimeUnit {
       this._applyCrowdLean(dt);
       if (physicsState === "airborne" && this._leapAir && this.definition.id === "secret.lady_red_jade") {
         this.body.root.rotation.y += dt * 16;
-      }
-      if (physicsState === "airborne" && this._leapAir && this.definition.id === "secret.samurai_giant") {
-        this._giantFlipElapsed += dt;
-        this.body.root.rotation.x = -2 * Math.PI * Math.min(1, this._giantFlipElapsed / 0.52);
       }
       this._updateHealthBar();
       return;

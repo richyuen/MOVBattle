@@ -2871,7 +2871,7 @@ export class SimulationSystem {
       if (tookOff !== undefined) {
         if (unit.position.y > 0.05 || now - tookOff < 0.3) return;
         this._giantStomps.delete(unit);
-        unit.body.root.rotation.x = 0;
+        unit.body.hip.rotation.x = 0;
         const at = unit.position.clone();
         const impulse = enemy.position.subtract(at).normalize().scale(6);
         impulse.y = 2.5;
