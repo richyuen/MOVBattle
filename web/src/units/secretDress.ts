@@ -5734,6 +5734,45 @@ export function blackbeardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const JADE_HAIR = { dome: 1.1, seat: 0.02, domeH: 0.72, back: 0.06, nape: 0.3, bun: 0.42, ring: 1.05, ringT: 0.075, beads: 10, bead: 0.13, top: 0.16,
   hair: new Color3(0.08, 0.06, 0.07), red: new Color3(1.25, 0.08, 0.03), orange: new Color3(1.1, 0.42, 0.04) };
+/** The knee-length dress has two gold scrolls across its front panels. */
+export function ladyRedJadeSkirt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const hip = body.hip;
+  const width = Math.abs(body.leftHip.position.x - body.rightHip.position.x) * 1.7;
+  const top = body.leftHip.position.y + width * 0.14;
+  const hem = body.leftHip.position.y + body.leftKnee.position.y * 0.98;
+  const height = top - hem;
+  const color = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const gold = new Color3(1, 0.42, 0.1);
+  const factory = getMaterialFactory();
+  const skirt = MeshBuilder.CreateCylinder("jadeSkirt", {
+    height, diameterTop: width, diameterBottom: width * 1.45, tessellation: 12,
+  }, scene);
+  skirt.parent = hip;
+  skirt.position.y = (top + hem) * 0.5;
+  skirt.scaling.z = 0.8;
+  skirt.material = factory.get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
+  skirt.convertToFlatShadedMesh();
+  const trim = factory.get("unlit", gold, { emissive: gold });
+  const meshes = [skirt];
+  for (const side of [-1, 1]) {
+    const path: Vector3[] = [];
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24;
+      const phase = t * Math.PI * 2.1 - Math.PI / 2;
+      const angle = side * (0.54 + Math.cos(phase) * 0.38 * (1 - t));
+      const level = 0.52 + Math.sin(phase) * 0.38 * (1 - t);
+      const radius = width * (0.53 + level * 0.225);
+      path.push(new Vector3(Math.sin(angle) * radius, top - height * level, Math.cos(angle) * radius * 0.8));
+    }
+    const scroll = MeshBuilder.CreateTube("jadeSkirtScroll", { path, radius: width * 0.025, tessellation: 4 }, scene);
+    scroll.parent = hip;
+    scroll.material = trim;
+    meshes.push(scroll);
+  }
+  for (const mesh of meshes) scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+  return meshes;
+}
+
 export function ladyRedJadeHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = JADE_HAIR, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const hair = mf.get("cloth", K.hair, { emissive: K.hair.scale(0.4), roughness: 1 });
