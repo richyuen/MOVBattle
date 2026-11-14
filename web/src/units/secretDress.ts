@@ -34,6 +34,34 @@ export function treeGiantBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return parts;
 }
 
+/** A swept crown and layered locks reach Tree Giant's shoulders. */
+export function treeGiantHair(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const head = body.headMesh;
+  const { center, extendSize: size } = head.getBoundingInfo().boundingBox;
+  const color = new Color3(0.24, 0.11, 0.075);
+  const cloth = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
+  const crown = MeshBuilder.CreateSphere("treeGiantHairCrown", { diameter: 2, segments: 6, slice: 0.5 }, scene);
+  crown.scaling.set(size.x * 1.12, size.y * 0.91, size.z * 1.13);
+  crown.position.set(center.x, center.y + size.y * 0.23, center.z - size.z * 0.12);
+  const hair = [crown];
+  for (const side of [-1, 1]) {
+    for (const layer of [0, 1]) {
+      const lock = MeshBuilder.CreateIcoSphere("treeGiantShoulderLock", { radius: 1, subdivisions: 1, flat: true }, scene);
+      lock.scaling.set(size.x * (0.38 + layer * 0.12), size.y * (0.98 + layer * 0.18), size.z * 0.5);
+      lock.position.set(center.x + side * size.x * (0.85 + layer * 0.17), center.y - size.y * (0.54 + layer * 0.36), center.z - size.z * (0.51 + layer * 0.32));
+      lock.rotation.z = side * (0.13 + layer * 0.25);
+      hair.push(lock);
+    }
+  }
+  for (const mesh of hair) {
+    mesh.parent = head;
+    mesh.material = cloth;
+    mesh.convertToFlatShadedMesh();
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+  }
+  return hair;
+}
+
 /** Separate ragged shorts ride each thigh and leave the knees exposed. */
 export function treeGiantShorts(scene: Scene, body: ArticulatedBody): Mesh[] {
   const brown = new Color3(0.28, 0.135, 0.09);

@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, samuraiGiantKabuto, shogunSashimono, shogunMenpo, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, treeGiantBeard, treeGiantShorts } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, samuraiGiantKabuto, shogunSashimono, shogunMenpo, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, treeGiantBeard, treeGiantHair, treeGiantShorts } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -214,13 +214,8 @@ const REAPER_TEAM = 0.4;
  * The tree giant (253; units/secret.tree_giant): not a tree-man but a giant woodsman carrying a whole tree. Read off the reference: team-coloured bare skin on
  * the forearms, legs and face; a dark teal short-sleeved tunic over the chest and upper arms, a rope belt at the waist; a dark hood drawn over the crown, open on
  * the face so the bead eyes show, running into a long beard that hangs from the chin onto the chest; ragged shorts over each thigh.
- *   TREE_GIANT_HOOD heads across, TREE_GIANT_HOOD_OPEN of its round open at the face;
  */
-const TREE_GIANT_HOOD = 1.32;
-const TREE_GIANT_HOOD_OPEN = 0.42;
 const TREE_GIANT_TUNIC = new Color3(0.08, 0.18, 0.2);
-const TREE_GIANT_HAIR = new Color3(0.42, 0.15, 0.17);
-const TREE_GIANT_HAIR_TEAM = 0.1;
 /*
  * The painter (255; units/renaissance.painter): a two-tone man, not one team colour. A dark team doublet and sleeves, tan hose to the ankle, red-brown shoes, a
  * cream ruff in two stacked collars round the neck, a dark team beret; the palette rides in the off hand (propBuilder "palette").
@@ -1704,8 +1699,6 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3, u
 function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const added: Mesh[] = [];
   const tunic = getMaterialFactory().getCloth(Color3.Lerp(TREE_GIANT_TUNIC, teamColor.scale(0.3), 0.25));
-  // The hood and beard are one maroon-brown, barely tinted to the team, self-lit so they do not go navy in the lineup shade
-  const hair = getMaterialFactory().get("cloth", Color3.Lerp(TREE_GIANT_HAIR, teamColor.scale(0.45), TREE_GIANT_HAIR_TEAM), { emissiveIntensity: 0.18 });
   // The tunic is whatever the body wore; forearms and legs go bare team skin, feet dark leather
   for (const mesh of body.allMeshes) {
     if (mesh.material === body.bodyMaterial) mesh.material = tunic;
@@ -1725,23 +1718,7 @@ function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   belt.material = getMaterialFactory().getCloth(new Color3(0.56, 0.22, 0.18));
   belt.parent = body.torso;
   added.push(belt);
-  // Hood: a shell over the crown and back of the head, its arc gap on the face (+z, see dressReaper), a short peak at the back
-  const headSize = body.headMesh.getBoundingInfo().boundingBox.extendSize.y * 2;
-  const hood = MeshBuilder.CreateSphere(`${body.headMesh.name}_woodHood`, { diameter: 1, segments: 8, arc: 1 - TREE_GIANT_HOOD_OPEN, sideOrientation: Mesh.DOUBLESIDE }, scene);
-  hood.scaling.set(headSize * TREE_GIANT_HOOD, headSize * TREE_GIANT_HOOD * 1.1, headSize * TREE_GIANT_HOOD);
-  hood.rotation.y = -Math.PI / 2 + Math.PI * TREE_GIANT_HOOD_OPEN;
-  hood.position.set(0, headSize * 0.1, -headSize * 0.1);
-  hood.material = hair;
-  hood.convertToFlatShadedMesh();
-  hood.parent = body.headMesh;
-  added.push(hood);
-  const peak = MeshBuilder.CreateCylinder(`${body.headMesh.name}_woodHoodPeak`, { height: headSize * 0.45, diameterTop: 0, diameterBottom: headSize * 0.8, tessellation: 6 }, scene);
-  peak.position.set(0, headSize * 0.7, -headSize * 0.15);
-  peak.rotation.x = -0.45;
-  peak.material = hair;
-  peak.convertToFlatShadedMesh();
-  peak.parent = body.headMesh;
-  added.push(peak);
+  added.push(...treeGiantHair(scene, body));
   added.push(...treeGiantBeard(scene, body));
   added.push(...treeGiantShorts(scene, body));
   return added;
