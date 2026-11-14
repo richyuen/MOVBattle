@@ -4982,6 +4982,18 @@ export class SimulationSystem {
         splashRadius,
       );
     }
+    if (attacker.definition.id === "secret.shogun") {
+      const forward = target.position.subtract(attacker.position);
+      forward.y = 0;
+      if (forward.lengthSquared() < 1e-6) forward.z = 1;
+      forward.normalize();
+      const at = target.position.add(new Vector3(0, 0.9, 0));
+      const gold = { white: new Color3(1.4, 0.75, 0.12), radius: 1.35, band: 0.34, seconds: 0.48 };
+      for (const tilt of [-0.85, 0.05, 0.95]) {
+        this.visualEffects?.spawnSlashArc(at, forward, { ...gold, tilt });
+      }
+      this._logAbility(attacker, "hurricane_slash", now, at);
+    }
     // [S] 497 every Shadow Walker blow leaves one more green mark circling the struck man's chest (card; visualEffects WALKER_MARK)
     if (this.visualEffects && attacker.definition.id === "evil.shadow_walker" && !target.isDead) {
       const stacks = (this._walkerMarks.get(target) ?? 0) + 1;
