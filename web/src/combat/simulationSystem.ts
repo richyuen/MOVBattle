@@ -2917,6 +2917,25 @@ export class SimulationSystem {
       }
     }
 
+    // Shogun commits to a low forward dash, then swings from katana reach on landing.
+    if (unit.definition.id === "secret.shogun") {
+      if (unit.isAirborne) return;
+      const swordReach = unit.collisionBodyRadius + enemy.collisionBodyRadius + 0.8;
+      if (canMove && canAttack && unit.canAttack(now) && now >= (this._jumpReadyAt.get(unit) ?? 0)
+        && distance > swordReach + 0.6 && distance <= Math.min(engageDistance + 2, swordReach + 4.3)) {
+        const direction = enemy.position.subtract(unit.position);
+        direction.y = 0;
+        unit.faceTarget(enemy.position);
+        if (unit.leap(direction.normalize(), distance - swordReach, 2.65)) {
+          unit.triggerAttackVisual(0.29);
+          this._jumpReadyAt.set(unit, now + 2.4);
+          this._clearPathState(unit);
+          this._logAbility(unit, "hurricane_dash", now, enemy.position);
+          return;
+        }
+      }
+    }
+
     // The Executioner raises his axe on a short hop and starts the chop on landing.
     if (unit.definition.id === "secret.executioner") {
       if (unit.isAirborne) return;
