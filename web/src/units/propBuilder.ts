@@ -5655,7 +5655,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       blade.material = mat(scene, KATANA_STEEL, 0.12);
       // Tsuba (circular hand guard)
       const tsuba = shogun
-        ? MeshBuilder.CreateCylinder("tsuba", { diameter: 0.14 * s, height: 0.016 * s, tessellation: 10 }, scene)
+        ? MeshBuilder.CreateCylinder("tsuba", { diameter: 0.098 * s, height: 0.013 * s, tessellation: 10 }, scene)
         : MeshBuilder.CreateDisc("tsuba", { radius: 0.04 * s, tessellation: 12 }, scene);
       tsuba.position.y = -0.15 * s;
       if (!shogun) tsuba.rotation.x = Math.PI / 2;
