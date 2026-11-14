@@ -6266,9 +6266,14 @@ export function iceGiantBelt(scene: Scene, body: ArticulatedBody, team: Color3):
   const badge = put(MeshBuilder.CreateCylinder("iceGiantBadge", { height: hips.half * 0.2, diameter: hips.half * 1.3, tessellation: 6 }, scene),
     new Color3(0.10, 0.24, 0.35), new Vector3(0, y, depth * 1.03));
   badge.rotation.x = Math.PI / 2;
-  const emblem = put(MeshBuilder.CreatePolyhedron("iceGiantIcicle", { type: 0, size: hips.half * 0.43 }, scene),
-    new Color3(0.49, 0.86, 1), new Vector3(0, y, depth * 1.03 + hips.half * 0.12));
-  emblem.scaling.set(0.57, 1.18, 0.18);
+  const emblem = put(MeshBuilder.CreatePolyhedron("iceGiantIcicle", {
+    custom: {
+      vertex: [[0, 0.49, 0], [-0.26, -0.24, 0], [-0.09, -0.43, 0], [0, -0.29, 0],
+        [0.13, -0.44, 0], [0.25, -0.23, 0], [0, -0.1, 0.13]],
+      face: [[0, 6, 1], [1, 6, 2], [2, 6, 3], [3, 6, 4], [4, 6, 5], [5, 6, 0]],
+    }, size: hips.half, flat: true,
+  }, scene), new Color3(0.49, 0.86, 1), new Vector3(0, y, depth * 1.03 + hips.half * 0.12));
+  emblem.flipFaces(true);
   for (const side of [-1, 1]) {
     for (const inset of [false, true]) {
       const shield = put(MeshBuilder.CreateCylinder("iceGiantHipShield", {
@@ -6561,7 +6566,10 @@ export function iceGiantSnowMantle(scene: Scene, body: ArticulatedBody): Mesh[] 
   shell.scaling.z = (T.deep / T.wide) * K.deep;
   // the V down the chest: a slab turned 45 degrees (a diamond) under a node stretched tall, its middle at the shell's foot, so its lower half hangs as
   // a V whose point is vL under the foot and its upper half is lost in the shell
-  const vL = T.half * K.vL, vW = T.wide * K.vW, side = vW / Math.SQRT2;
+  const belt = body.hip.getChildMeshes(true).find(mesh => mesh.name.endsWith("_pelvis"));
+  const beltTop = belt instanceof Mesh ? originIn(body.hip, body.torso).y + limbBox(belt).mid + limbBox(belt).half * 1.36 : -Infinity;
+  const vL = Math.min(T.half * K.vL, Math.max(T.half * 0.2, low - beltTop));
+  const vW = T.wide * K.vW, side = vW / Math.SQRT2;
   const vNode = new TransformNode("iceSnowVNode", scene); vNode.parent = body.torso;
   vNode.position.set(0, low, T.deep * K.vOut); vNode.scaling.set(1, (2 * vL) / vW, 1);
   const v = add(MeshBuilder.CreateBox("iceSnowV", { width: side, height: side, depth: T.deep * 0.35 }, scene), 0, 0, 0);
