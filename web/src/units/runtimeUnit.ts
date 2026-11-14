@@ -1480,6 +1480,9 @@ export class RuntimeUnit {
     if (physicsState === "toppled" || physicsState === "airborne" || physicsState === "downed") {
       this.stopMoving();
       this._applyCrowdLean(dt);
+      if (physicsState === "airborne" && this._leapAir && this.definition.id === "secret.lady_red_jade") {
+        this.body.root.rotation.y += dt * 16;
+      }
       this._updateHealthBar();
       return;
     }
@@ -1536,9 +1539,6 @@ export class RuntimeUnit {
     }
 
     this._applyCrowdLean(dt);
-    if (this._leapAir && !this._grounded && this.definition.id === "secret.lady_red_jade" && !this.isToppled && !this.isDowned) {
-      this.body.root.rotation.y += dt * 16;
-    }
     this._updateHealthBar();
   }
 
