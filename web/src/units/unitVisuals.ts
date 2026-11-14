@@ -1321,7 +1321,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         bodyDetailLevel: "hero",
       });
     case "secret_tree_giant":
-      return vis({ scale: 2.45, bulk: 1.85, headSize: 1.1, armLength: 1.12, legLength: 0.92 }, "tree_club", "none", "none", "giant_tree", "#6f8a42", undefined, {
+      return vis({ scale: 2.45, bulk: 1.24, headSize: 1.1, armLength: 1.12, legLength: 1.35,
+        torsoWidth: 0.85, upperLegWidth: 0.82, lowerLegWidth: 0.76 }, "tree_club", "none", "none", "giant_tree", "#6f8a42", undefined, {
         // [S] 543 (b.2) the big tree: a thick twisted trunk and a canopy wider than his shoulders (propBuilder GIANT_TREE)
         weaponVariant: "tree_giant",
         posePreset: "giant", materialPreset: "secret_nature", attachmentPreset: "giant_aura",
