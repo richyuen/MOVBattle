@@ -1509,6 +1509,7 @@ export class UnitFactory {
           || definition.id === "secret.present_elf" // [S] 525 green trousers up to the vest (secretDress presentElfTrousers)
           || definition.id === "secret.raptor_rider" // [S] 526 a fur loincloth on bare hips (secretDress raptorRiderLoincloth)
           || definition.id === "secret.bank_robbers" // [S] 527 a straight vest to the belt, no flare (secretDress bankRobberVest)
+          || definition.id === "secret.ice_giant" // The hip belt and shields occupy the waist.
         ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
