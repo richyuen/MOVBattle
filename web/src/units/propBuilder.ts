@@ -5489,6 +5489,24 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
          */
         const G = GIANT_TREE;
         trunk.scaling.set(G.thick, 1, G.thick);
+        const earth = mat(scene, new Color3(0.28, 0.135, 0.09), 0.12);
+        const rootBall = MeshBuilder.CreateIcoSphere("treeClubRootBall", { radius: T * 0.15, subdivisions: 1 }, scene);
+        rootBall.parent = carry;
+        rootBall.position.copyFrom(butt);
+        rootBall.position.y -= T * 0.06;
+        rootBall.scaling.set(1.22, 0.8, 1);
+        rootBall.material = earth;
+        rootBall.convertToFlatShadedMesh();
+        for (let i = 0; i < 5; i++) {
+          const angle = i * 2 * Math.PI / 5;
+          const root = MeshBuilder.CreateIcoSphere("treeClubExposedRoot", { radius: T * 0.052, subdivisions: 1 }, scene);
+          root.parent = carry;
+          root.position.copyFrom(butt.add(new Vector3(Math.cos(angle) * T * 0.13, -T * 0.02, Math.sin(angle) * T * 0.13)));
+          root.scaling.set(1.7, 0.65, 0.72);
+          root.rotation.y = -angle;
+          root.material = bark;
+          root.convertToFlatShadedMesh();
+        }
         const rAt = (u: number): number => T * (TREE_CLUB_THICK * (1 - 0.45 * u)) * G.thick;
         for (let s = 0; s < G.strands; s++) {
           const path: Vector3[] = [];
