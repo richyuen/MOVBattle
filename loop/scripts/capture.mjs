@@ -195,6 +195,9 @@ ABILITY_PREF["secret.cavalry"] = "shockwave"; // [evidence 530] a hoof shockwave
 ABILITY_PREF["secret.skeleton_giant"] = "giant_fear"; // [531] his ability shots frame the Giant Fear burst
 ABILITY_PREF["secret.sensei"] = "shuriken_tempest"; // [evidence 543] his stars knock the man back: the capture waits for him to close and the wind ring to rise
 ABILITY_PREF["secret.samurai_giant"] = "giant_stomp_landed";
+ABILITY_PREF["secret.shogun"] = "hurricane_dash";
+ABILITY_PREF["secret.ice_giant"] = "ice_breath";
+ABILITY_PREF["secret.lady_red_jade"] = "tornado_swipe";
 ABILITY_PREF["secret.necromancer"] = "raise_dead"; // [evidence 535] his ability shots frame a skull-cursed corpse rising, not the curse landing
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
@@ -919,7 +922,8 @@ async function main() {
           // [evidence 494] arrows caught in the Sentinel's pavise faces: framed as the idle (front three-quarter), the boards toward the camera
           const catchShot = ability.kind === "pavise_block";
           const abilityFrame = safeLand ? 12 : presentOpen ? 11 : catchShot ? 1 : darkGrab ? 2 : aura ? 6 : dodge ? 5 : slow ? 4 : barrage ? 16 : onMan ? 2 : far;
-          await take(`unit_${id}_ability`, ability.tick, abilityFrame, pair);
+          const lead = ["hurricane_dash", "ice_breath", "tornado_swipe"].includes(ability.kind) ? 5 : 0;
+          await take(`unit_${id}_ability`, ability.tick + lead, abilityFrame, pair);
           await take(`unit_${id}_ability_after`, ability.tick + (slow || love ? 60 : barrage ? 20 : snake ? 30 : 9), abilityFrame, pair);
           if (darkGrab) await take(`unit_${id}_grab_blast`, ability.tick + 36, 2, pair);
           // [evidence 524] the landed safe stays as a barrier, then sinks (card Characteristics; c.3): the same landing camera 3 s on (lying,
