@@ -1,9 +1,8 @@
 # secret.ullr
 Status: open   Audited: 538 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (0 since 547, 2 struck)
+a FAIL (0 since 548, 1 struck)
  2. small brown wedge beard in unit_secret.ullr_idle — TABS: big green-tan beard with mustache to the collar (ref: secret.ullr.red.png, card Appearance)
- 4. nothing at the shoulders in unit_secret.ullr_idle — TABS: brown fur cape collar (ref: secret.ullr.red.png)
  5. no belt in unit_secret.ullr_idle — TABS: wide brown belt with two buckles (ref: secret.ullr.red.png)
  6. plain team shins in unit_secret.ullr_idle — TABS: brown lace-up boots with tan ties (ref: secret.ullr.red.png)
  7. body colour in unit_secret.ullr_idle: pale grey-blue frosted skin — TABS: full team colour (ref: secret.ullr.jpg)
@@ -11,10 +10,11 @@ b PASS (542: struck 1, 2)
 c PASS (542: struck 2)
 d PASS (543 stats)
 ## Ranked gaps
-1. [S] secret.ullr.a fur collar — blocker 4: faceted brown fur across both shoulders — ref: secret.ullr.red.png — ours: unit_secret.ullr_idle.png
+1. [S] secret.ullr.a beard — blocker 2: faceted green-tan beard and moustache — ref: secret.ullr.red.png — ours: unit_secret.ullr_idle.png
 2. [S] secret.ullr.a beard — blocker 2: wide green-tan beard with moustache — ref: secret.ullr.red.png — ours: unit_secret.ullr_idle.png
 3. [S] secret.ullr.a team skin — blocker 7: materialPreset secret_ice off to the default team material, frost kept on the FX only — ref: secret.ullr.jpg — ours: unit_secret.ullr_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+548 | faceted fur shoulder collar (ba15e809) | a | approved (struck 4)
 547 | wraparound open coat with sleeves (805f94ee, 5587d954) | a | approved (struck 3)
 546 | two-panel open team jacket (f9a9ab0b) | a | approved (no strike)
 543 | dark snow cap, two mini axes standing out of it, brown mane round the face, viking helmet off ULLR_CAP (beaf6617) | a | approved (struck 1)

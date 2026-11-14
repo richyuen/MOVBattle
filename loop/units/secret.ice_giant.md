@@ -1,18 +1,17 @@
 # secret.ice_giant
 Status: open   Audited: 538 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (0 since 547, 3 struck + hip-shield clause)
- 4. no belt in unit_secret.ice_giant_idle — TABS: team belt with an icicle emblem (ref: secret.ice_giant.red.png)
+a FAIL (0 since 548, 1 struck)
  5. no taller than the samurai and tree giants in lineup_secret_4 — TABS: the largest unit of the faction (ref: card Characteristics, secret.jpg far right)
 b PASS (543: struck 2)
-c FAIL (1 since 538, 1 struck)
- 2. missing: Ice Breath freezing cone (ref: card Abilities)
+c FAIL (0 since 548, 1 struck)
  3. punch in unit_secret.ice_giant_release: a short jab — TABS: long-arm slam (ref: secret.ice_giant.jpg)
 d PASS (544 stats)
 ## Ranked gaps
-1. [S] secret.ice_giant.c Ice Breath — blocker 2: emit freezing breath as a cone from the face — ref: card Abilities — ours: unit_secret.ice_giant_ability.png
-2. [S] secret.ice_giant.a belt — blocker 4: re-seat the badge below the mantle and form distinct pointed icicle silhouette — ref: secret.ice_giant.red.png — ours: unit_secret.ice_giant_idle.png
+1. [S] secret.ice_giant.c long-arm slam — blocker 3: extend shoulder and elbow through contact — ref: secret.ice_giant.jpg — ours: unit_secret.ice_giant_release.png
 ## Attempts (iter | gap | criterion | verdict)
+548 | mantle clearance and pointed icicle badge (c9d01196) | a | approved (struck 4)
+548 | face-origin cone that freezes enemies (0dc76c7c) | c | approved (struck 2)
 547 | belt, badge and paired hip shields (5858fc91, ad2a5e5c) | a | approved (struck hip-shield clause)
 546 | shallow faceted snow cap in place of horned helmet (36bb1488) | a | approved (struck 2)
 544 | punch ice shockwave (47fb02cc) | c | approved (struck 1)
@@ -24,4 +23,4 @@ d PASS (544 stats)
 ## Notes (max 3 lines)
 - 543 critic: a pale grey belly block shows under the V point above the legs (TABS team skin to the belt).
 - ICE_FIST row spent for [P].
-- 547 critic: The snow mantle overlaps the belt’s central emblem.
+- 548 critic: Ice Breath reads as a freezing cone. The punch still lands with the arm bent.

@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+548 | c9d01196 | secret.ice_giant.a | approve [S], struck 4
+548 | 5b7b006d | secret.samurai_giant.a | approve [S], struck 1
+548 | 544c1814 | secret.shogun.a | approve [S], struck 3
+548 | d8811ffd, a5ad1716 | secret.shogun.b | approve [S], struck 2
+548 | a69bb893, a463a587 | secret.shogun.c | approve [S]
+548 | 0dc76c7c | secret.ice_giant.c | approve [S], struck 2
+548 | 63f0cce9, 99a2a57f | secret.artemis.b | approve [S]
+548 | c4f05b7a, 8d35c79c | secret.lady_red_jade.c | approve [S], struck 2
+548 | ba15e809 | secret.ullr.a | approve [S], struck 4
+
 547 | 805f94ee, 5587d954 | secret.ullr.a | approved [S], struck 3
 547 | bc9175f3 | secret.shogun.a | approved [S], struck 2
 547 | 2ea4d7ed | secret.artemis.a | approved [S], struck 1
@@ -44,23 +54,13 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 543 | acb87a26 | secret.samurai_giant.a | approved [S] (struck 1, 5, 6)
 543 | 9b6a25ed, fe14a191 | secret.shogun.a | approved [S] (struck 3)
 
-542 | 46c168cd | secret.ullr.b | approved [S] (struck 1, 2, b PASS)
-542 | 5546cf34, b8ecf0a6 | secret.ullr.c | approved [S] (struck 2, c PASS)
-542 | 402a1f03 | secret.sensei.c | approved [S] (struck 2)
-542 | 182907e4 | secret.sensei.a | approved [S] (struck 1, 2 lineup, a PASS)
-542 | e4c3d69f | secret.blackbeard.a | approved [S] (struck 1, 3 lineup)
-542 | 1843e6c5 | secret.blackbeard.a | approved [S] (struck 2)
-542 | b18dd78e | secret.artemis.a | approved [S] (struck 4)
-542 | f0dcbe20 | secret.lady_red_jade.a | approved [S] (struck 1)
-542 | 9cac10ab | secret.ice_giant.b | approved [S] (struck 1; added 2 fist overshoot)
-
-
 ## Spent (never retry as [P])
 secretDress:ICE_FIST (543, moved once toward the reference by a DEFECTS root)
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/UF/PB/PA/RU/SS/capture:548 | 4-row secret samurai cuirass with gold lacing; Shogun 10-sided gold guard .098, dash rise 2.65 and cooldown 2.4 s; Ice Breath cone 7.5 m, half-angle PI/7, 2 s frost; Jade tornado 5 m/s, radius 1.65, lift 6, cooldown 15 s; Artemis split spans to draw hand; Ullr 12-sector fur collar; exposed ice emblem | 548 | approved | slab cuirass, thin dark guard, walking entry, punch-only frost, spin-only Jade, straight string, bare shoulders, covered badge
 secretDress/UF/UV/PB/SS:547 | Ullr 17-point open coat around torso plus 4 articulated sleeves; Shogun 3-row dark menpō; Artemis 10-facet fitted bodice and charged shot from draw-hand world origin; Tree Giant shoulder hair locks; Red Jade shaped pale panel and sash; Ice Giant team belt and two-layer shields; Samurai Giant 5-section broad katana and trample dust on sword contact | 547 | approved | flat coat fronts, blank jaw, box bodice, waist release, hood cap, tan plate, bare belt, straight blade, stomp dust only
 secretDress/UF/UV/RU/PA/SS/PS:546 | Ice Giant cap x1.05/y.32/z1.12 head radii, horned special off; Artemis charge .8 s, every 8 s, arrow size 2.8, corridor half-width 1.2 plus 8 m past the mark, launch 12/5; auburn bun and 8-link braid; Tree Giant sweep tip travels laterally and flings at 15/6, four-piece beard with tied tail; Samurai Giant flip around hip over .52 s; Shogun uses layered kabuto; Ullr two open coat fronts; Red Jade 12-sided flared skirt with two gold scrolls | 546 | approved | horned crown, regular fan only, cropped hair, upright tree poke, chin wedge, interrupted root flip, inverted helmet, bare torso, exposed trousers
 secretDress/UF:treeGiantShorts | brown (.28,.135,.09), 12 facets, thigh extents x1.12 to x1.18, alternating hems at .75/.94 of thigh length | 545 | approved | pelvis-mounted skirt and triangular flaps

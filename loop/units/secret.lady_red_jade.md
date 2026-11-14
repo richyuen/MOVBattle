@@ -4,13 +4,13 @@ Status: open   Audited: 538 (AUDIT x2)   Done: -
 a FAIL (0 since 547, 3 struck)
  4. build in lineup_secret_4: stocky — TABS: substantially tall, slim (ref: card Appearance)
 b PASS (541: struck 1, one two-handed guandao)
-c FAIL (1 since 538, 1 struck)
- 2. missing: Tornado Swipe tornado (ref: card Characteristics)
+c FAIL (0 since 548, 1 struck)
  3. short downward sword chop in unit_secret.lady_red_jade_release — TABS: wide arc and full-circle polearm sweeps (ref: card Characteristics)
 d PASS (544 stats)
 ## Ranked gaps
-1. [S] secret.lady_red_jade.c Tornado Swipe — blocker 2: moving pulling vortex — ref: card Characteristics — ours: unit_secret.lady_red_jade_ability.png
+1. [S] secret.lady_red_jade.c wide guandao arc — blocker 3: animate the two-handed sweep — ref: secret.lady_red_jade.jpg — ours: unit_secret.lady_red_jade_release.png
 ## Attempts (iter | gap | criterion | verdict)
+548 | travelling tornado that pulls and lifts targets (c4f05b7a, 8d35c79c) | c | approved (struck 2)
 547 | shaped dress top and dark sash (44fa534c) | a | approved (struck 2)
 546 | flared knee-length skirt with gold scrolls (92fbbe9e) | a | approved (struck 3)
 544 | spin during jump charge (9a1ef65e, 955af986) | c | approved (struck 1)

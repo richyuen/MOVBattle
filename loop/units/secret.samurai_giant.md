@@ -1,8 +1,7 @@
 # secret.samurai_giant
 Status: open   Audited: 538 (AUDIT x2), 544 (RE-AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (0 since 544)
- 1. broad grey box cuirass in unit_secret.samurai_giant_idle — TABS: fitted team cuirass edged by gold straps (ref: secret.samurai_giant.blue.png)
+a FAIL (0 since 548, 1 struck)
  2. bare blue forearms in unit_secret.samurai_giant_idle — TABS: flared angular vambraces with gold borders (ref: secret.samurai_giant.blue.png)
  3. narrow segmented thighs in unit_secret.samurai_giant_idle — TABS: flared knee-length hakama legs (ref: secret.samurai_giant.blue.png)
  4. bulky box boots in unit_secret.samurai_giant_idle — TABS: tall narrow shin guards over open strapped sandals (ref: secret.samurai_giant.blue.png)
@@ -12,8 +11,9 @@ b PASS (547)
 c PASS (547)
 d PASS (544 stats)
 ## Ranked gaps
-1. [S] secret.samurai_giant.a cuirass — blocker 1: fitted faceted shell and gold straps — ref: secret.samurai_giant.blue.png — ours: unit_secret.samurai_giant_idle.png
+1. [S] secret.samurai_giant.a forearm armor — blocker 2: flared gold-bordered vambraces — ref: secret.samurai_giant.blue.png — ours: unit_secret.samurai_giant_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+548 | fitted gold-laced lamellar cuirass (5b7b006d) | a | approved (struck 1)
 547 | ground burst at katana contact (ad2a7610) | c | approved (struck 2)
 547 | broad curved giant katana (7d42f44a) | b | approved (struck 1)
 546 | stomp flip at the hip driven by leap state (5f704998) | c | approved (struck 1)
