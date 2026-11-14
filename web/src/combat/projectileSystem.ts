@@ -142,6 +142,7 @@ interface ActiveProjectile {
   suck?: string;
   /** Dodged (Painter Dodge): it no longer follows its man and comes down where he stood; it strikes him only if he is still there. */
   loose?: boolean;
+  lineLaunch?: boolean;
 }
 
 // A sword lifted out of the swordcaster's ring stands point up; it is turned onto the man over this long of its hover
@@ -223,6 +224,8 @@ interface MuzzleFlash {
 }
 
 interface ProjectileSpawnOptions {
+  /** Artemis's charged arrow launches units lined up behind its first target. */
+  lineLaunch?: boolean;
   originLift?: number;
   targetLift?: number;
   /** The prop that was in the thrower's hand: what flies is a copy of it, at its size, not a missile from the catalogue below. */
@@ -621,6 +624,7 @@ export class ProjectileSystem {
       loose: options.at ? true : undefined,
       tumble: held ? options.tumble : undefined,
       iceBurst: options.iceBurst,
+      lineLaunch: options.lineLaunch,
     });
     const spawned = this._active[this._active.length - 1];
     if (spawned.rope) this._layRope(spawned);
@@ -1108,6 +1112,24 @@ export class ProjectileSystem {
   }
 
   private _onImpact(p: ActiveProjectile): void {
+    if (p.lineLaunch) {
+      const line = p.targetPos.subtract(p.origin);
+      line.y = 0;
+      const reach = Math.max(1, line.length()) + 8;
+      if (line.lengthSquared() < 1e-6) return;
+      line.normalize();
+      for (const unit of p.allUnits) {
+        if (unit.isDead || unit.team === p.attackerTeam || unit.linkedParent) continue;
+        const offset = unit.position.subtract(p.origin);
+        offset.y = 0;
+        const along = Vector3.Dot(offset, line);
+        if (along < 0 || along > reach || offset.subtract(line.scale(along)).lengthSquared() > 1.44) continue;
+        unit.applyDamage(p.damage, Vector3.Zero());
+        unit.applyBlastLaunch(line, 12, 5, true);
+      }
+      this.abilityHook?.("secret.artemis", "artemis_line_launch", p.targetPos);
+      return;
+    }
     if (p.iceBurst) this.iceBurstHook?.((p.target.isDead ? p.targetPos : p.target.position).clone(), p.iceBurst.radius, p.iceBurst.from);
     if (p.shape === "radiant_glaive") { this._radiantBounce(p); return; }
     if (p.suck) this._spearSuck(p);

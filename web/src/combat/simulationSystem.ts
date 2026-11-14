@@ -840,7 +840,7 @@ export class SimulationSystem {
   private _units: RuntimeUnit[] = [];
   // Heavy blows swung but not yet landed: a club is raised when the swing starts and comes down on the man a few tenths of a second later, and that is
   // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
-  private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number; fromStaff?: boolean; fromBow?: boolean }> = [];
+  private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number; fromStaff?: boolean; fromBow?: boolean; artemisKnockback?: boolean }> = [];
   private _pendingBlows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; damage: number; splashRadius: number; knockback: Vector3; landAt: number }> = [];
   // A landed heavy blow dwells on the man before it throws him (trailer_3_sheet_01 r2c3: the club head is on the red man, chest to chest, as he starts to go):
   // the damage, the striker's pinned aim and the flinch are the land step's, the push and the throw off his feet (staggerFromBlow) come BLOW_DWELL s later,
@@ -4242,6 +4242,20 @@ export class SimulationSystem {
       return;
     }
 
+    if (attacker.definition.id === "secret.artemis" && this.projectileSystem
+      && now >= (this._blastReadyAt.get(attacker) ?? this._battleStartedAt)) {
+      const draw = 0.8;
+      this._blastReadyAt.set(attacker, now + 8);
+      attacker.setAttackCooldown(now, Math.max(draw, attackProfile.cooldown * cooldownMultiplier));
+      attacker.triggerAttackVisual(draw);
+      this._pendingThrows.push({
+        attacker, target, shape: "arrow", damage, splashRadius: 0, knockback,
+        leavesAt: now + draw * 0.65, artemisKnockback: true,
+      });
+      this._logAbility(attacker, "artemis_charge", now, target.position);
+      return;
+    }
+
     if (preset === "secret_artemis" || preset === "secret_ullr" || preset === "secret_flying_archer") {
       this._fireVolley(attacker, target, damage, knockback, Math.max(2, attacker.definition.volleyCount ?? 3));
       this._applyOnHitStatuses(attacker, target, now, impactOrigin);
@@ -5116,6 +5130,15 @@ export class SimulationSystem {
       const { attacker, target } = t;
       if (!this.projectileSystem || attacker.isDead || attacker.isToppled || attacker.isDowned || !this._units.includes(attacker)) continue;
       this._logAbility(attacker, t.fromStaff ? "cast" : "throw", now);
+      if (t.artemisKnockback) {
+        const origin = attacker.getAttackOrigin();
+        this.projectileSystem.spawnProjectile(
+          "arrow", origin.position, target, t.damage, Vector3.Zero(), 0, attacker.team, this._units,
+          undefined, 0, { originLift: originLiftForSource(origin.source), size: 2.8, arc: 0.025, lineLaunch: true },
+        );
+        this._logAbility(attacker, "artemis_knockback_arrow", now, target.position);
+        continue;
+      }
       if (t.fromBow) {
         // Loosed off the drawn bow: from the bow, where the draw has put it
         const origin = attacker.getAttackOrigin();
