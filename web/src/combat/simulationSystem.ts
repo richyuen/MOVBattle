@@ -5137,10 +5137,12 @@ export class SimulationSystem {
       if (!this.projectileSystem || attacker.isDead || attacker.isToppled || attacker.isDowned || !this._units.includes(attacker)) continue;
       this._logAbility(attacker, t.fromStaff ? "cast" : "throw", now);
       if (t.artemisKnockback) {
-        const origin = attacker.getAttackOrigin();
+        const nockHand = attacker.body.leftHand;
+        nockHand.computeWorldMatrix(true);
+        const origin = nockHand.getAbsolutePosition();
         this.projectileSystem.spawnProjectile(
-          "arrow", origin.position, target, t.damage, Vector3.Zero(), 0, attacker.team, this._units,
-          undefined, 0, { originLift: originLiftForSource(origin.source), size: 2.8, arc: 0.025, lineLaunch: true },
+          "arrow", origin, target, t.damage, Vector3.Zero(), 0, attacker.team, this._units,
+          undefined, 0, { originLift: 0, size: 2.8, arc: 0.025, lineLaunch: true },
         );
         this._logAbility(attacker, "artemis_knockback_arrow", now, target.position);
         continue;
