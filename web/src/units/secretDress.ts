@@ -6083,10 +6083,20 @@ export function artemisChiton(scene: Scene, body: ArticulatedBody, team: Color3)
   const out: Mesh[] = [];
   const add = (m: Mesh, mt: Material, x: number, y: number, z: number): Mesh => { m.parent = body.torso; m.position.set(x, y, z); m.material = mt; out.push(m); return m; };
   const top = T.mid + T.half * K.top, low = T.mid - T.half * (1 + K.low), h = top - low;
-  const shell = add(MeshBuilder.CreateCylinder("artemisChiton", { height: h, diameterTop: T.wide * 2 * K.fit, diameterBottom: T.wide * 2 * K.foot, tessellation: 8 }, scene), cloth, 0, (top + low) / 2, 0);
-  shell.scaling.z = (T.deep / T.wide) * K.deep; shell.rotation.y = Math.PI / 8;
+  body.torsoMesh.setEnabled(false);
+  const bodice = [
+    { y: top, width: 0.69, depth: 0.69 },
+    { y: top - h * 0.19, width: 1.05, depth: 1.09 },
+    { y: top - h * 0.47, width: 1.01, depth: 1.12 },
+    { y: low + h * 0.1, width: 0.82, depth: 0.93 },
+    { y: low, width: 0.93, depth: 1.02 },
+  ].map(({ y, width, depth }) => Array.from({ length: 10 }, (_, i) => {
+    const angle = (i + 0.5) * 2 * Math.PI / 10;
+    return new Vector3(Math.sin(angle) * T.wide * width, y, Math.cos(angle) * T.deep * depth);
+  }));
+  add(MeshBuilder.CreateRibbon("artemisBodice", { pathArray: bodice, closePath: true, sideOrientation: Mesh.DOUBLESIDE }, scene), cloth, 0, 0, 0);
   const bH = T.half * K.blouseH;
-  const blouse = add(MeshBuilder.CreateCylinder("artemisChitonBlouse", { height: bH, diameterTop: T.wide * 2 * K.foot, diameterBottom: T.wide * 2 * K.blouse, tessellation: 8 }, scene), cloth, 0, low + bH / 2, 0);
+  const blouse = add(MeshBuilder.CreateCylinder("artemisChitonBlouse", { height: bH, diameterTop: T.wide * 1.68, diameterBottom: T.wide * 2.03, tessellation: 10 }, scene), cloth, 0, low + bH / 2, 0);
   blouse.scaling.z = (T.deep / T.wide) * K.deep; blouse.rotation.y = Math.PI / 8;
   // the strap: from her left shoulder's top over the chest to the right hip, the same line across her back
   const sx = (Math.sign(body.leftShoulder.position.x) || 1) * T.wide * K.strapX;
