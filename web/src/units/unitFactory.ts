@@ -1239,7 +1239,7 @@ export class UnitFactory {
     // [S] 543 (a.3): the Shogun's sashimono, a dark pole up his back over the helmet, a tall team banner with a mon (secretDress SASHIMONO)
     if (definition.id === "secret.samurai_giant" && !shouldUseVehicleBody) propMeshes.push(...secretSamuraiCuirass(this._scene, body, teamColor));
     if (definition.id === "secret.shogun" && !shouldUseVehicleBody) {
-      propMeshes.push(...shogunSashimono(this._scene, body, teamColor), ...shogunMenpo(this._scene, body));
+      propMeshes.push(...shogunSashimono(this._scene, body, teamColor), ...shogunMenpo(this._scene, body), ...secretSamuraiCuirass(this._scene, body, teamColor));
     }
     // [S] 543 (a.1): Ullr's dark snow cap with two mini axes, shaggy brown hair round the face (secretDress ULLR_CAP)
     if (definition.id === "secret.ullr" && !shouldUseVehicleBody) propMeshes.push(...ullrSnowCap(this._scene, body), ...ullrJacket(this._scene, body, teamColor));
