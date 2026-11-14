@@ -8,16 +8,14 @@ a FAIL (0 since 544)
  4. bulky box boots in unit_secret.samurai_giant_idle — TABS: tall narrow shin guards over open strapped sandals (ref: secret.samurai_giant.blue.png)
  5. gold brow ornament reads as two thin wires in unit_secret.samurai_giant_idle — TABS: broad flat gold crescent with a center disk (ref: secret.samurai_giant.blue.png)
  6. stands less than twice Shogun's body height in lineup_secret_4 — TABS: towering giant around 3x baseline, more than twice the 1.2x Shogun (ref: reference/factions/secret.jpg, card Infobox)
-b FAIL (1 since 544, 1 struck)
- 1. thin katana of ordinary width, about arm-length to the giant, in unit_secret.samurai_giant_windup — TABS: giant broad-bladed katana (ref: secret.samurai_giant.png)
-c FAIL (2 since 544, 1 struck)
- 2. swing in unit_secret.samurai_giant_release: a slow one-arm scoop at the ground — TABS: two-handed katana slash with a ground burst (ref: secret.samurai_giant.png)
+b PASS (547)
+c PASS (547)
 d PASS (544 stats)
 ## Ranked gaps
-6. [S] secret.samurai_giant.c sword slash — blocker 2: two-handed slash with identifiable contact burst — ref: secret.samurai_giant.png — ours: unit_secret.samurai_giant_release.png
-2. [S] secret.samurai_giant.a cuirass — blocker 1: fitted lamellar body shell and gold diagonal straps — ref: secret.samurai_giant.red.png — ours: unit_secret.samurai_giant_idle.png
-4. [S] secret.samurai_giant.a cuirass — blocker 1: fit a team lamellar shell with gold diagonal straps — ref: secret.samurai_giant.blue.png — ours: unit_secret.samurai_giant_idle.png
+1. [S] secret.samurai_giant.a cuirass — blocker 1: fitted faceted shell and gold straps — ref: secret.samurai_giant.blue.png — ours: unit_secret.samurai_giant_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+547 | ground burst at katana contact (ad2a7610) | c | approved (struck 2)
+547 | broad curved giant katana (7d42f44a) | b | approved (struck 1)
 546 | stomp flip at the hip driven by leap state (5f704998) | c | approved (struck 1)
 544 | two-handed katana grip (956424a6) | b | approved (struck 2)
 544 | Foot Stomp launch and landing burst (f022685c) | c | approved (no strike)

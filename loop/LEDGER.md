@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+547 | 805f94ee, 5587d954 | secret.ullr.a | approved [S], struck 3
+547 | bc9175f3 | secret.shogun.a | approved [S], struck 2
+547 | 2ea4d7ed | secret.artemis.a | approved [S], struck 1
+547 | 96c2e8b0 | secret.tree_giant.a | approved [S], struck 1
+547 | e32e2021 | secret.artemis.c | approved [S], no strike
+547 | 44fa534c | secret.lady_red_jade.a | approved [S], struck 2
+547 | 5858fc91, ad2a5e5c | secret.ice_giant.a | approved [S], struck hip-shield clause
+547 | 7d42f44a | secret.samurai_giant.b | approved [S], struck 1
+547 | ad2a7610 | secret.samurai_giant.c | approved [S], struck 2
+
 546 | 36bb1488 | secret.ice_giant.a | approved [S], struck 2
 546 | 8be46c23 | secret.artemis.c | approved [S], struck 2
 546 | 4a9ffed1 | secret.artemis.a | approved [S], struck 2
@@ -44,15 +54,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 542 | f0dcbe20 | secret.lady_red_jade.a | approved [S] (struck 1)
 542 | 9cac10ab | secret.ice_giant.b | approved [S] (struck 1; added 2 fist overshoot)
 
-541 | 4896725f | secret.blackbeard.a | approved [S] (no strike; tan slab over the red coat)
-541 | 2ccc5709 | secret.sensei.a | approved [S] (struck 2)
-541 | 4b07f4b5 | secret.sensei.a | approved [S] (struck 3, a PASS; CONFIRM failed a, c)
-541 | fcfbebf5 | secret.artemis.c | approved [S] (struck 1)
-541 | e1c62c43 | secret.ullr.b | approved [S] (no strike; axe head edge-on, off fist empty)
-541 | 12a23e39, 0d7d192d | secret.ullr.c | approved [S] (struck 1)
-541 | b156bbab, f027b9a6 | secret.lady_red_jade.b | approved [S] (struck 1, b PASS)
-541 | 7e4100ff | secret.tree_giant.b | approved [S] (struck 1)
-541 | 816231de | secret.ice_giant.a | approved [S] (struck 1)
 
 ## Spent (never retry as [P])
 secretDress:ICE_FIST (543, moved once toward the reference by a DEFECTS root)
@@ -60,6 +61,7 @@ secretDress:ICE_FIST (543, moved once toward the reference by a DEFECTS root)
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/UF/UV/PB/SS:547 | Ullr 17-point open coat around torso plus 4 articulated sleeves; Shogun 3-row dark menpō; Artemis 10-facet fitted bodice and charged shot from draw-hand world origin; Tree Giant shoulder hair locks; Red Jade shaped pale panel and sash; Ice Giant team belt and two-layer shields; Samurai Giant 5-section broad katana and trample dust on sword contact | 547 | approved | flat coat fronts, blank jaw, box bodice, waist release, hood cap, tan plate, bare belt, straight blade, stomp dust only
 secretDress/UF/UV/RU/PA/SS/PS:546 | Ice Giant cap x1.05/y.32/z1.12 head radii, horned special off; Artemis charge .8 s, every 8 s, arrow size 2.8, corridor half-width 1.2 plus 8 m past the mark, launch 12/5; auburn bun and 8-link braid; Tree Giant sweep tip travels laterally and flings at 15/6, four-piece beard with tied tail; Samurai Giant flip around hip over .52 s; Shogun uses layered kabuto; Ullr two open coat fronts; Red Jade 12-sided flared skirt with two gold scrolls | 546 | approved | horned crown, regular fan only, cropped hair, upright tree poke, chin wedge, interrupted root flip, inverted helmet, bare torso, exposed trousers
 secretDress/UF:treeGiantShorts | brown (.28,.135,.09), 12 facets, thigh extents x1.12 to x1.18, alternating hems at .75/.94 of thigh length | 545 | approved | pelvis-mounted skirt and triangular flaps
 UV/PB/RU/SS:544 | two_hand_katana grip .25s + longswordFists; Tree Giant bulk 1.24, legLength 1.35, torsoWidth .85, thigh .82 and shin width .76; tree root ball .15T with 5 stubs; Red Jade spin 16 rad/s; Ice Giant burst at punch contact; Shogun 3 gold arcs radius 1.35, band .34, life .48; Foot Stomp onset .4, range 4, rise 6.8, flip .52, cd 3, burst radius 4 | 544 | approved | single-handed .12s, bulk 1.85 and legLength .92, bare trunk, straight leap, freeze only, no arcs, no stomp

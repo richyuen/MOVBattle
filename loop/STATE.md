@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 546   Batch: secret_4   Consecutive empty: 0   Done: 132/139   Parked: 0
+Iteration: 547   Batch: secret_4   Consecutive empty: 0   Done: 132/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -20,34 +20,35 @@ evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void
 secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer ++++ D | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo ++++ D | raptor_rider ++++ D | cheerleader ++++ D | cupid ++++ D | mace_spinner ++++ D | clams ++++ D | present_elf ++++ D | ice_mage ++++ D | infernal_whip ++++ D | bank_robbers ++++ D
 secret_3: witch ++++ D | banshee ++++ D | necromancer ++++ D | solar_architect ++++ D | wheelbarrow_dragon ++++ D | skeleton_giant ++++ D | bomb_cannon ++++ D | cavalry ++++ D | vlad ++++ D | gatling_gun ++++ D
-secret_4: blackbeard ++++ D | samurai_giant ---+ o | ullr -+++ o | lady_red_jade -+-+ o | sensei ++++ D | shogun ---+ o | tree_giant -+-+ o | artemis ---+ o | ice_giant -+-+ o
-## Focus (iteration 546; BASE ec9041af; secret_4)
-1. [S] secret.ice_giant.a shallow faceted snow cap in place of horned helmet (36bb1488) APPROVE, struck 2
-2. [S] secret.artemis.c charged oversized arrow launches units in a line (8be46c23) APPROVE, struck 2
-3. [S] secret.artemis.a auburn bun and tapered braid (4a9ffed1) APPROVE, struck 2
-4. [S] secret.tree_giant.c horizontal swat and blast launch (1dea7118, 423084eb) APPROVE
-5. [S] secret.samurai_giant.c stomp flip at the hip driven by leap state (5f704998) APPROVE, struck 1
-6. [S] secret.shogun.a layered kabuto above the eyes (d457c95a) APPROVE, struck 1
-7. [S] secret.ullr.a two-panel open team jacket (f9a9ab0b) APPROVE
-8. [S] secret.lady_red_jade.a flared knee-length skirt with gold scrolls (92fbbe9e) APPROVE, struck 3
-9. [S] secret.tree_giant.a faceted tied beard with chest-length tail (3711af45) APPROVE, struck 2
-- 9/9, 7 struck
+secret_4: blackbeard ++++ D | samurai_giant -+++ o | ullr -+++ o | lady_red_jade -+-+ o | sensei ++++ D | shogun ---+ o | tree_giant -+-+ o | artemis ---+ o | ice_giant -+-+ o
+
+## Focus (iteration 547; BASE 49d71bb9; secret_4)
+- Evidence (93f4c16b, 2ed88116): both re-audits struck Artemis c.2 after separate regular-volley capture.
+1. [S] secret.ullr.a wraparound open coat with sleeves (805f94ee, 5587d954) APPROVE, struck 3
+2. [S] secret.shogun.a faceted menpō (bc9175f3) APPROVE, struck 2
+3. [S] secret.artemis.a fitted faceted bodice (2ea4d7ed) APPROVE, struck 1
+4. [S] secret.tree_giant.a swept shoulder-length locks (96c2e8b0) APPROVE, struck 1
+5. [S] secret.artemis.c charged arrow origin at draw hand (e32e2021) APPROVE
+6. [S] secret.lady_red_jade.a shaped dress top and dark sash (44fa534c) APPROVE, struck 2
+7. [S] secret.ice_giant.a belt, badge and paired hip shields (5858fc91, ad2a5e5c) APPROVE, struck hip-shield clause
+8. [S] secret.samurai_giant.b broad curved giant katana (7d42f44a) APPROVE, struck 1
+9. [S] secret.samurai_giant.c ground burst at katana contact (ad2a7610) APPROVE, struck 2
+- 9/9, 8 blockers and 1 clause struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] secret.ice_giant (36bb1488) / VERDICT: APPROVE / CRITERION: secret.ice_giant.a FAIL   (previous: FAIL)
-- GAP: [S] secret.artemis (8be46c23) / VERDICT: APPROVE / CRITERION: secret.artemis.c PASS   (previous: FAIL)
-- GAP: [S] secret.artemis (4a9ffed1) / VERDICT: APPROVE / CRITERION: secret.artemis.a PASS   (previous: FAIL)
-- GAP: [S] secret.tree_giant (1dea7118, 423084eb) / VERDICT: APPROVE / CRITERION: secret.tree_giant.c FAIL   (previous: FAIL)
-- GAP: [S] secret.samurai_giant (5f704998) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.c FAIL   (previous: FAIL)
-- GAP: [S] secret.shogun (d457c95a) / VERDICT: APPROVE / CRITERION: secret.shogun.a FAIL   (previous: FAIL)
-- GAP: [S] secret.ullr (f9a9ab0b) / VERDICT: APPROVE / CRITERION: secret.ullr.a FAIL   (previous: FAIL)
-- GAP: [S] secret.lady_red_jade (92fbbe9e) / VERDICT: APPROVE / CRITERION: secret.lady_red_jade.a FAIL   (previous: FAIL)
-- GAP: [S] secret.tree_giant (3711af45) / VERDICT: APPROVE / CRITERION: secret.tree_giant.a FAIL   (previous: FAIL)
+- GAP: [S] secret.ullr (805f94ee, 5587d954) / VERDICT: APPROVE / CRITERION: secret.ullr.a FAIL   (previous: FAIL)
+- GAP: [S] secret.shogun (bc9175f3) / VERDICT: APPROVE / CRITERION: secret.shogun.a FAIL   (previous: FAIL)
+- GAP: [S] secret.artemis (2ea4d7ed) / VERDICT: APPROVE / CRITERION: secret.artemis.a FAIL   (previous: FAIL)
+- GAP: [S] secret.tree_giant (96c2e8b0) / VERDICT: APPROVE / CRITERION: secret.tree_giant.a FAIL   (previous: FAIL)
+- GAP: [S] secret.artemis (e32e2021) / VERDICT: APPROVE / CRITERION: secret.artemis.c FAIL   (previous: FAIL)
+- GAP: [S] secret.lady_red_jade (44fa534c) / VERDICT: APPROVE / CRITERION: secret.lady_red_jade.a FAIL   (previous: FAIL)
+- GAP: [S] secret.ice_giant (5858fc91, ad2a5e5c) / VERDICT: APPROVE / CRITERION: secret.ice_giant.a FAIL   (previous: FAIL)
+- GAP: [S] secret.samurai_giant (7d42f44a) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.b PASS   (previous: FAIL)
+- GAP: [S] secret.samurai_giant (ad2a7610) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.c PASS   (previous: FAIL)
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Artemis CONFIRM failed a, b, c. Evidence first for c.2: retain the charged release and add a separate regular five-arrow volley pair.
-- Tree Giant swat launches the victim. The release still shows an upright trunk, the off hand slips during follow-through, and the debris reads red-brown.
-- Ullr’s new opening reads as coat fronts. Wrap the panels around the sides and give the coat sleeves.
-- Samurai Giant c.1 cleared. The two-handed katana slash and contact burst remain due.
-- Shogun’s eyes are clear. The menpō and fitted cuirass are the next ranked look gaps.
+- Artemis ordinary five-arrow flight now has separate evidence. The charged shaft aligns with the draw hand, but the string is still straight.
+- Ice Giant side shields are visible. The snow mantle still obscures the central badge; expose the icicle.
+- Samurai Giant b and c passed gap review. The fitted cuirass and other a blockers remain.
+- Continue the standing mechanical blockers, including the Tree Giant's trunk pose and the Ice Giant's Ice Breath.

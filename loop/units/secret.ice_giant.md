@@ -1,8 +1,8 @@
 # secret.ice_giant
 Status: open   Audited: 538 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (3 since 538, 3 struck)
- 4. no belt in unit_secret.ice_giant_idle — TABS: team belt with an icicle emblem and brawler shields at the hips (ref: secret.ice_giant.red.png)
+a FAIL (0 since 547, 3 struck + hip-shield clause)
+ 4. no belt in unit_secret.ice_giant_idle — TABS: team belt with an icicle emblem (ref: secret.ice_giant.red.png)
  5. no taller than the samurai and tree giants in lineup_secret_4 — TABS: the largest unit of the faction (ref: card Characteristics, secret.jpg far right)
 b PASS (543: struck 2)
 c FAIL (1 since 538, 1 struck)
@@ -10,9 +10,10 @@ c FAIL (1 since 538, 1 struck)
  3. punch in unit_secret.ice_giant_release: a short jab — TABS: long-arm slam (ref: secret.ice_giant.jpg)
 d PASS (544 stats)
 ## Ranked gaps
-1. [S] secret.ice_giant.a belt — blocker 4: badge on a team belt with paired side shields — ref: secret.ice_giant.red.png — ours: unit_secret.ice_giant_idle.png
-2. [S] secret.ice_giant.c Ice Breath — blocker 2: a freezing cone emitted in front of the face — ref: card Abilities — ours: unit_secret.ice_giant_ability.png
+1. [S] secret.ice_giant.c Ice Breath — blocker 2: emit freezing breath as a cone from the face — ref: card Abilities — ours: unit_secret.ice_giant_ability.png
+2. [S] secret.ice_giant.a belt — blocker 4: re-seat the badge below the mantle and form distinct pointed icicle silhouette — ref: secret.ice_giant.red.png — ours: unit_secret.ice_giant_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+547 | belt, badge and paired hip shields (5858fc91, ad2a5e5c) | a | approved (struck hip-shield clause)
 546 | shallow faceted snow cap in place of horned helmet (36bb1488) | a | approved (struck 2)
 544 | punch ice shockwave (47fb02cc) | c | approved (struck 1)
 543 | white faceted snow mantle, shoulder caps, V down the chest, team skin (preset default) ICE_SNOW (56dbea5a) | a | approved (struck 3)
@@ -23,3 +24,4 @@ d PASS (544 stats)
 ## Notes (max 3 lines)
 - 543 critic: a pale grey belly block shows under the V point above the legs (TABS team skin to the belt).
 - ICE_FIST row spent for [P].
+- 547 critic: The snow mantle overlaps the belt’s central emblem.
