@@ -1087,6 +1087,7 @@ export class SimulationSystem {
     this._burnTickAt = 0;
     this._fearHits.clear();
     this._necroCursed.clear(); this._necroTickAt = 0; this._solarShots.clear(); this._maelstromReady.clear(); this._maelstroms = [];
+    this._jadeTornadoReady.clear(); this._jadeTornadoes = [];
     this._pendingBlows = [];
     this._lashes = [];
     for (const h of this._safeHurls) h.mesh.dispose(false, false);
@@ -1201,6 +1202,7 @@ export class SimulationSystem {
     this._stepBurning(now);
     if (this._necroCursed.size > 0) this._stepNecroCurse(now);
     if (this._maelstroms.length > 0) this._stepMaelstroms(now);
+    if (this._jadeTornadoes.length > 0) this._stepJadeTornadoes(now);
 
     if (this.hazards.length > 0) {
       for (const unit of this._units) {
@@ -2100,6 +2102,41 @@ export class SimulationSystem {
    */
   private _maelstromReady = new Map<RuntimeUnit, number>();
   private _maelstroms: { unit: RuntimeUnit; at: Vector3; until: number; tickAt: number }[] = [];
+  private _jadeTornadoReady = new Map<RuntimeUnit, number>();
+  private _jadeTornadoes: { team: RuntimeUnit["team"]; origin: Vector3; at: Vector3; direction: Vector3; start: number; tickAt: number }[] = [];
+
+  private _tryJadeTornado(attacker: RuntimeUnit, target: RuntimeUnit, now: number): void {
+    if (now < (this._jadeTornadoReady.get(attacker) ?? 0)) return;
+    const direction = target.position.subtract(attacker.position);
+    direction.y = 0;
+    if (direction.lengthSquared() < 1e-6) return;
+    direction.normalize();
+    const at = attacker.position.add(direction.scale(1));
+    at.y = target.position.y;
+    this._jadeTornadoes.push({ team: attacker.team, origin: at.clone(), at, direction, start: now, tickAt: now });
+    this._jadeTornadoReady.set(attacker, now + 15);
+    this.visualEffects?.spawnWindRing(() => at, 1.65, 1.6);
+    this._logAbility(attacker, "tornado_swipe", now, at);
+  }
+
+  private _stepJadeTornadoes(now: number): void {
+    this._jadeTornadoes = this._jadeTornadoes.filter(tornado => now - tornado.start < 1.6);
+    for (const tornado of this._jadeTornadoes) {
+      tornado.at.copyFrom(tornado.origin).addInPlace(tornado.direction.scale((now - tornado.start) * 5));
+      if (now < tornado.tickAt) continue;
+      tornado.tickAt = now + 0.24;
+      for (const unit of this._units) {
+        if (unit.team === tornado.team || unit.isDead || unit.linkedParent || !unit.isTargetable) continue;
+        const inward = tornado.at.subtract(unit.position);
+        inward.y = 0;
+        const distance = inward.length();
+        if (distance > 1.65 + unit.collisionBodyRadius) continue;
+        const pull = distance > 0.15 ? inward.scale(1 / distance) : tornado.direction;
+        unit.applyDamage(7, Vector3.Zero());
+        if (!isVehicleUnit(unit.definition.id)) unit.applyBlastLaunch(pull, 3.4, 3.8);
+      }
+    }
+  }
   private _trySolarMaelstrom(attacker: RuntimeUnit, target: RuntimeUnit, now: number): void {
     const M = SOLAR_MAELSTROM;
     if (attacker.definition.id !== "secret.solar_architect" || attacker.isDead || attacker.linkedParent) return;
@@ -3834,6 +3871,7 @@ export class SimulationSystem {
     if (!attacker.canAttack(now)) return;
 
     if (attacker.definition.id === "secret.ice_giant" && this._tryIceBreath(attacker, target, now)) return;
+    if (attacker.definition.id === "secret.lady_red_jade") this._tryJadeTornado(attacker, target, now);
 
     const preset = getBehaviorPreset(attacker);
     const cooldownMultiplier = attacker.definition.cooldownMultiplier ?? 1;
