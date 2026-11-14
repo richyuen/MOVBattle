@@ -835,7 +835,9 @@ async function main() {
           // 9 ticks = 150 ms (the motion pair), 20 ticks = 336 ms (the top of a struck man's throw)
           if (release.tick > 9) await take(`unit_${id}_windup`, release.tick - 9, far);
           const shotPath = id === "legacy.wizard" ? 7 : far;
-          await take(`unit_${id}_release`, release.tick, shotPath);
+          // Frame the Tree Giant's actual contact and keep the camera wide enough for the victim's launch.
+          const treeContact = id === "secret.tree_giant" ? impact : null;
+          await take(`unit_${id}_release`, treeContact?.tick ?? release.tick, treeContact ? 0 : shotPath);
           if (id === "legacy.wizard") await take(`unit_${id}_cast_origin`, release.tick, far);
           // [evidence 525] the torso-sized present covers the Present Elf's chest in the idle (a.2 vest): the idle's front three-quarter again,
           // half a second after the present has left his hands
@@ -844,7 +846,7 @@ async function main() {
           // under half way to the hit instead, so the missile is still in the air and not yet its impact dust
           // [evidence 454] the Deadeye's bullet (speed 100) lands ~5 ticks after the shot: her flight frame is 3 ticks on, the bullet half way (CONFIRM 453 c.3)
           const flightAt = shortThrow ? Math.max(3, Math.floor((impact.tick - release.tick) * 0.45)) : id === "wild_west.deadeye" ? 3 : 9;
-          await take(`unit_${id}_flight`, release.tick + flightAt, shotPath);
+          await take(`unit_${id}_flight`, treeContact ? treeContact.tick + 12 : release.tick + flightAt, treeContact ? 0 : shotPath);
           if (id === "good.celestial_aegis" || id === "good.divine_arbiter") {
             await take(`unit_${id}_path`,release.tick,9,{hold:release.tick});
             await take(`unit_${id}_path_after`,release.tick+9,9,{hold:release.tick});
