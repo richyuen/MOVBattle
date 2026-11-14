@@ -6,16 +6,15 @@ a FAIL (1 since 538, 1 struck)
  3. dark blue trousers and no skirt in unit_secret.lady_red_jade_idle — TABS: knee-length team skirt with gold swirl pattern (ref: secret.lady_red_jade.red.png, card Appearance)
  4. build in lineup_secret_4: stocky — TABS: substantially tall, slim (ref: card Appearance)
 b PASS (541: struck 1, one two-handed guandao)
-c FAIL (0 since 538)
- 1. upright leap with no spin in unit_secret.lady_red_jade_ability_after — TABS: Red Jade Spin Slash, a jump with a spin and a dash (ref: card Abilities)
+c FAIL (1 since 538, 1 struck)
  2. missing: Tornado Swipe tornado (ref: card Characteristics)
  3. short downward sword chop in unit_secret.lady_red_jade_release — TABS: wide arc and full-circle polearm sweeps (ref: card Characteristics)
-d PASS (542 stats)
+d PASS (544 stats)
 ## Ranked gaps
+4. [S] secret.lady_red_jade.a skirt — blocker 3: layered team skirt with gold scrolls — ref: secret.lady_red_jade.red.png — ours: unit_secret.lady_red_jade_idle.png
 1. [S] secret.lady_red_jade.a swirl skirt — blocker 3: knee-length team skirt with gold swirl panels over the trousers — ref: secret.lady_red_jade.red.png — ours: unit_secret.lady_red_jade_idle
-2. [S] secret.lady_red_jade.c polearm sweep — blocker 3: wide arc / full-circle guandao sweep in place of the chop — ref: card Characteristics — ours: unit_secret.lady_red_jade_release
-3. [S] secret.lady_red_jade.c spin slash — blocker 1: Red Jade Spin Slash, a jump with a spin and a dash — ref: card Abilities — ours: unit_secret.lady_red_jade_ability_after
 ## Attempts (iter | gap | criterion | verdict)
+544 | spin during jump charge (9a1ef65e, 955af986) | c | approved (struck 1)
 542 | black hair, bun, red bead ring round it, orange bead, crown off JADE_HAIR (f0dcbe20) | a | approved (struck 1)
 541 | guandao GUANDAO, upright two-handed bomb-stick carry (b156bbab, f027b9a6) | b | approved (struck 1, b PASS)
 ## Rejected (last 4)

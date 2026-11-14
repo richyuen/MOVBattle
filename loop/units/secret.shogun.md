@@ -1,22 +1,25 @@
 # secret.shogun
-Status: open   Audited: 538 (AUDIT x2)   Done: -
+Status: open   Audited: 538 (AUDIT x2), 544 (RE-AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (1 since 538, 1 struck)
- 1. maroon bowl helmet with a box crest, the same as the samurai giant's, in unit_secret.shogun_idle — TABS: kabuto with gold crescent horns and a menpō mask (ref: secret.shogun.red.png)
- 2. grey slab vest in unit_secret.shogun_idle — TABS: team lamellar armour with gold trim and hanging tassets (ref: secret.shogun.red.png)
- 4. towers about 1.8x over the knight in unit_secret.shogun_windup — TABS: size 1.2x (ref: card Infobox)
- 5. no bead eyes visible under the helmet in unit_secret.shogun_idle — TABS: two eyes above the menpō (ref: secret.shogun.red.png)
- 6. yellow wedge in unit_secret.shogun_idle beside the head — TABS: none (ref: secret.shogun.red.png)
-b FAIL (0 since 538)
- 1. katana raised in one hand in unit_secret.shogun_windup — TABS: two-handed grip (ref: card Weapon Type, secret.shogun.red.png)
- 2. black tsuba with a dark grip in unit_secret.shogun_idle — TABS: gold disc tsuba with a white wrapped grip (ref: secret.shogun.red.png)
-c FAIL (0 since 538)
- 1. slow overhead chop while walking in unit_secret.shogun_release — TABS: dash at the target, then Hurricane Slash with gold slash trails (ref: secret.shogun.png, card Abilities)
-d PASS (538 stats)
+a FAIL (0 since 544)
+ 1. inverted maroon bowl with box tabs obscures the eyes in unit_secret.shogun_idle — TABS: downward-facing team kabuto with gold crescent, flared neck plates, and clear sightline to the eyes (ref: secret.shogun.blue.png)
+ 2. blank covered face in unit_secret.shogun_idle — TABS: a sculpted menpō below the eyes (ref: secret.shogun.blue.png)
+ 3. grey shoulder-width torso slab in unit_secret.shogun_idle — TABS: fitted team lamellar cuirass with gold straps (ref: secret.shogun.blue.png)
+ 4. bare forearms in unit_secret.shogun_idle — TABS: tapered gold-edged team vambraces (ref: secret.shogun.blue.png).
+ 5. smooth single-row skirt around the hips in unit_secret.shogun_idle — TABS: separate gold-edged layered tassets trailing down each outer thigh (ref: secret.shogun.blue.png)
+ 6. knees remain inside narrow trouser sleeves in unit_secret.shogun_idle — TABS: wide hakama legs that flare and end immediately above the knees (ref: secret.shogun.blue.png)
+b FAIL (1 since 544, 1 struck)
+ 2. dark disc above fist in unit_secret.shogun_idle — TABS: bright gold disc guard (ref: secret.shogun.blue.png)
+ 3. dark grip with isolated light rings in unit_secret.shogun_idle — TABS: extended pale wrapped grip with gold pommel (ref: secret.shogun.blue.png)
+c FAIL (1 since 544, 1 struck)
+ 2. walking swing with both feet planted near the target through unit_secret.shogun_release and unit_secret.shogun_flight — TABS: fast dash toward the target before the attack (ref: card Characteristics and secret.shogun.png).
+d PASS (544 stats)
 ## Ranked gaps
-1. [S] secret.shogun.a kabuto — blocker 1: the KABUTO helmet (samuraiGiantKabuto) plus a menpō mask under the eyes, maroon bowl and yellow flaps hidden — ref: secret.shogun.red.png — ours: unit_secret.shogun_idle.png
-2. [S] secret.shogun.b grip — blocker 1: a two-handed katana grip in the windup — ref: secret.shogun.red.png — ours: unit_secret.shogun_windup.png
+1. [S] secret.shogun.a kabuto — blocker 1: mount a downward-facing helmet and leave the eyes visible — ref: secret.shogun.blue.png — ours: unit_secret.shogun_idle.png
+6. [S] secret.shogun.c dash — blocker 2: short dash before Hurricane Slash — ref: secret.shogun.png — ours: unit_secret.shogun_release.png
 ## Attempts (iter | gap | criterion | verdict)
+544 | two-handed katana grip (c13f5ff2) | b | approved (struck 1)
+544 | gold Hurricane Slash trails (0ecd237c) | c | approved (struck 1)
 543 | sashimono: dark pole up the back over the helmet, tall team banner with a ring mon off a crossbar SASHIMONO (9b6a25ed, fe14a191; evidence 59740c19 idle .25 rad) | a | approved (struck 3)
 ## Rejected (last 4)
 ## Notes (max 3 lines)

@@ -19,7 +19,7 @@ Read at step 1; one fact a line, merge near cap.
 - A capture wipes iter-N (stats.json, audit.md): back up, rerun `stats.mjs --iter N` after the last capture (527). Checkpoint replaces summary.json (483). Detection stops 3 s after the first event: a late trigger needs ABILITY_PREF (543).
 - RotationX(+a) tips +y toward +z; a cylinder arc .5 under RotationX(+PI/2) has its half up (537). A turn-on-friends status: a friend in the scene, his log counted (537).
 - A cast fired as a man closes misses a duel whose man dies at range: second man walks in (537).
-- Probes (loop/scripts/probes/, repo root, --build after source changes): probe_bbox (--unit --pat --frame=torso), probe_near/close/head/local/axes/impale/bowdraw; probe_close --aim=head|torso|y:<y> --dist --yaw --noglow; probe_eval --unit --expr=<file> runs a function body (u, game, scene), prints its JSON.
+- Probes in loop/scripts/probes/ run from repo root. Use --build after source changes, --noglow for a material swatch.
 - capture's PLAIN regex takes any ability kind starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475 wizard firework: no ability shot).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
@@ -65,3 +65,4 @@ Read at step 1; one fact a line, merge near cap.
 - Fist prop hand frame: +y up the forearm, knuckles -y (492). bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
 - execSync runs cmd.exe (eats a caret): write sha~1 (530). On-death effects: RU.onDeath (the last death ends the duel first, 535).
+- A takeoff and follow-through pair can miss a full rotation. Capture the inversion separately (544).

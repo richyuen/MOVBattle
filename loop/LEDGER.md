@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+544 | 956424a6 | secret.samurai_giant.b | approved [S] (struck 2)
+544 | c13f5ff2 | secret.shogun.b | approved [S] (struck 1)
+544 | 47fb02cc | secret.ice_giant.c | approved [S] (struck 1)
+544 | 245dbe17 | secret.tree_giant.a | approved [S] (struck 1)
+544 | 9a1ef65e, 955af986 | secret.lady_red_jade.c | approved [S] (struck 1)
+544 | 0ecd237c | secret.shogun.c | approved [S] (struck 1)
+544 | f022685c | secret.samurai_giant.c | approved [S] (no strike)
+544 | b2312972, e26f7283 | secret.tree_giant.c | dropped [S]
+544 | 053746ca | secret.tree_giant.b | approved [S] (struck 3)
+
 543 | 9d99451a | secret.sensei.c | approved [S] (struck 1, c PASS; CONFIRM passed, D)
 543 | f27fa160 | secret.blackbeard.a | approved [S] (struck 5)
 543 | ce845b3f | secret.blackbeard.a | approved [S] (struck 4, a PASS; CONFIRM passed, D)
@@ -42,16 +52,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 540 | 415e5613 | secret.blackbeard.c | approved [S] (struck 1, 2, c PASS; evidence 931a204a)
 540 | a1768aeb, 06717795 | secret.artemis.b | approved [S] (struck 1, b PASS)
 
-539 | 01f56fe3 | secret.necromancer.a | approved [S] (struck 6, a PASS; CONFIRM failed a, b)
-539 | 25ff6c1c | secret.necromancer.a | approved [P] NECRO_SHORTS hem (row spent for further nudging)
-539 | b948a7cf | secret.vlad.a | approved [S] (struck 1)
-539 | 7adefe06, 209ee003 | secret.vlad.a | approved [S] (no strike; log covers the chest)
-539 | 2658848b | secret.vlad.a | approved [S] (struck 3; CONFIRM passed a)
-539 | 349ed27b | secret.blackbeard.b | approved [S] (struck 2, b PASS)
-539 | 58c71fd3, 8fdee906 | secret.blackbeard.c | approved [S] (no strike; balls unseen, evidence first)
-539 | 2b444e72, 2206053a | secret.blackbeard.a | approved [S] (struck 1)
-539 | 658d7e0f | secret.artemis.a | approved [S] (struck 1)
-539 | 896b1aac | secret.sensei.a | approved [S] (struck 1, 5)
 
 ## Spent (never retry as [P])
 secretDress:ICE_FIST (543, moved once toward the reference by a DEFECTS root)
@@ -59,6 +59,7 @@ secretDress:ICE_FIST (543, moved once toward the reference by a DEFECTS root)
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+UV/PB/RU/SS:544 | two_hand_katana grip .25s + longswordFists; Tree Giant bulk 1.24, legLength 1.35, torsoWidth .85, thigh .82 and shin width .76; tree root ball .15T with 5 stubs; Red Jade spin 16 rad/s; Ice Giant burst at punch contact; Shogun 3 gold arcs radius 1.35, band .34, life .48; Foot Stomp onset .4, range 4, rise 6.8, flip .52, cd 3, burst radius 4 | 544 | approved | single-handed .12s, bulk 1.85 and legLength .92, bare trunk, straight leap, freeze only, no arcs, no stomp
 secretDress/UF/UV/PB/SS/FX/capture:543 | SENSEI_TEMPEST first .3 every 6 near 3.2 seconds 3 radius 2.6 speed 7 lift 3.5 pulse .5, WIND_RING rows .35/1/1.65/2.2 streaks 4 segs 6 arc 1.1 thick .09 spin 7; BB_STRETCH torsoLength 1.32 legLength 1.18 armLength 1.18 bulk 1.28 -> 1.12; BB_TRICORN reach 1.18 seat .18 wall .78 lean .32 crownW 1.02 crownH .62, plain tricorn off; ULLR_CAP cap 1.12 capH .82 rim .12 haft .42 axeX .3 lean .32 tufts 13 tuft .26, viking helmet off; ARTEMIS_CHITON fit 1.08 foot 1.12 deep 1.12 blouse 1.2 strapW .16, yoke + pads off; ICE_SNOW top 1.08 down .95 round 1.18 vW 1.5 vL 1.05 cap .95, preset secret_ice -> default; [P] ICE_FIST fist 1.75 -> 1.1 swell 1.35 -> 1.2 (approved; spent); GIANT_TREE thick 1.5 strands 3 turns 1.25 core .42 ring 6 lobe .34 spread .3; KABUTO bowl 1.16 bowlH .78 tiers 3 lameH .16 hornH 1.05 hornW .78 hornT .1 gold (.78,.34,.03), shelm off (samurai_giant only); SASHIMONO pole .07 over 1.9 wide .62 long .72 (543.10b from over .55 long 1.15), banner_back off; capture idle swing .25 samurai_giant/shogun, sensei knight 7 m behind + ABILITY_PREF shuriken_tempest | 543 | approved | no tempest, uniform scale, plain tricorn slab, viking helmet, grey yoke + pads, pale ice body, ICE_FIST 1.75, three-lobe crown, flipped bowl helm, small banner_back flag, idle swing .6
 secretDress/UF/UV/PB/SS/PS/FX/RU:542 | ULLR_AXE haft .18 back .02 long .18 out .012 wide .075 tip .04, seatUllrAxe palm + rot z PI; ULLR_HANG out .22 fore -.1 bend -.2; ULLR_THROW burst 2.25, freeze at impact; ICE_BURST spikes 12 inner 5 ring .8 tall .75 wide .24 lean .35 grow .15 flash .35 alpha .5 last 1.6 sink .4; SENSEI_STAR tilt .9 spin 25 (held copy); SENSEI_HORN segs 4 long 3.6 root .75 start .1 curl 1 bone (.94,.9,.8); BEARD_FULL outline to .86 W, -.98 H, stand .14 bulge .5, 4 braids; BB_GLOVE mitt 1.55/1.35/1.6 cuff .95 foot 1.5 top 2 tan (.64,.42,.2); [P] blackbeard scale 1.95 -> 2.55 REJECTED (reverted; row closed to [P]: ledger reversal); ARTEMIS_DRESS top .32 hem .32 out 1.12 flare 1.42 dark .62; JADE_HAIR dome 1.1 bun .42 ring 1.05 ringT .075 beads 10, crown off; ICE_FIST fist 1.75 long 1.25 drop .85 swell 1.35 | 542 | approved (ICE_FIST moved 543) | ULLR_AXE haft .42 long .34 wide .13, duelist idle arms, freeze at queue, ninja 4-point flight star, straight steel spikes long 2.2 lean .55, chest wedge chestW .62 tip .55, bare mitts, trousers, crown, normal hands
 secretDress/UF/UV/PB/SS/PS/PA:541 | BB_COAT fitTop .92 fitFoot 1.06 skirt to knee hem .1 flare 1.14-1.6 wraps 2 at .08 h .2 out 1.2 tilt .09 tail .2x1.1 at .62, cape + tunicSkirt off; [P] blackbeard scale 1.58 -> 1.95 (pending: root of a.5, toward a ~3.5 m rig); SENSEI_VEST shade .78 open .38 strips .07 orange (.95,.42,.06), robe/drape off; SENSEI_BAND 2 bands h .2 out 1.08 step .96 rims .16; ARTEMIS_FAN 5 arrows nock .28 lift .12 land .18; ULLR_AXE haft .42 long .34 wide .13 curl .42, ullr axe pair duelist throw family; ULLR_THROW tumble 16 rearm .8 speed 25, freeze at queue; GUANDAO pole .78 grip .4 guard .17 blade .82 curl .22 + bombStickGrip wrap; TREE_HUG_ARM raise -1 out -.85 elbow -1.2, TIP (.12,1,.22), tree two-handed; ICE_APE upper 1.5 lower 1.6 girth 1.45/1.7 out 1.12 waist .72 | 541 | approved | navy vest + brown strap, scale 1.58, gold robe board, no band, one arrow per shot, bow + quiver, arrow volley, two swords, TREE_HIP_ARM (-.9,.15,-.4) tip (.9,.02,.35), arms to mid-thigh
