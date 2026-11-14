@@ -5957,6 +5957,47 @@ export function ullrJacket(scene: Scene, body: ArticulatedBody, team: Color3): M
 }
 
 /** Shogun's faceted cheek and chin guard sits directly below the eyes. */
+export function secretSamuraiCuirass(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const yoke = body.allMeshes.find(mesh => mesh.name.endsWith("_yoke"));
+  const trunk = limbBox(body.torsoMesh);
+  const shoulder = limbBox(yoke ?? body.torsoMesh);
+  const factory = getMaterialFactory();
+  const teamColor = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const goldColor = new Color3(1, 0.42, 0.1);
+  const gold = factory.get("cloth", goldColor, { emissive: goldColor.scale(0.12) });
+  const bands = [0.78, 1, 0.83, 0.73, 0.89];
+  const rings = bands.map((width, index) => {
+    const y = shoulder.mid + shoulder.half - index * (shoulder.mid + shoulder.half - trunk.mid + trunk.half) / 4;
+    return Array.from({ length: 9 }, (_, facet) => {
+      const angle = facet * Math.PI / 4;
+      return new Vector3(Math.sin(angle) * shoulder.wide * width, y, Math.cos(angle) * Math.max(trunk.deep, shoulder.deep) * 1.16);
+    });
+  });
+  const result: Mesh[] = [];
+  const add = (mesh: Mesh, material: Material) => {
+    mesh.parent = body.torso;
+    mesh.material = material;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+    result.push(mesh);
+  };
+  if (yoke) yoke.isVisible = false;
+  body.torsoMesh.isVisible = false;
+  for (let row = 0; row < rings.length - 1; row++) {
+    const upper = rings[row];
+    const lower = rings[row + 1];
+    const shade = teamColor.scale(row % 2 === 0 ? 0.88 : 0.69);
+    const plate = factory.get("cloth", shade, { emissive: shade.scale(0.12), roughness: 1 });
+    add(MeshBuilder.CreateRibbon("secretSamuraiLamella", { pathArray: [upper, lower], sideOrientation: Mesh.DOUBLESIDE }, scene).convertToFlatShadedMesh(), plate);
+    const border = lower.map(point => new Vector3(point.x * 1.015, point.y, point.z * 1.015));
+    add(MeshBuilder.CreateTube("secretSamuraiLamellaRim", { path: border, radius: trunk.half * 0.039, tessellation: 4 }, scene), gold);
+  }
+  for (const side of [-1, 1]) {
+    const strap = rings.map((ring, row) => Vector3.Lerp(ring[0], ring[side < 0 ? 7 : 1], row < 2 ? 0.66 : 0.4).add(new Vector3(0, 0, trunk.deep * 0.052)));
+    add(MeshBuilder.CreateTube("secretSamuraiLacing", { path: strap, radius: trunk.half * 0.067, tessellation: 4 }, scene), gold);
+  }
+  return result;
+}
+
 export function shogunMenpo(scene: Scene, body: ArticulatedBody): Mesh[] {
   const head = body.headMesh;
   const { center, extendSize: size } = head.getBoundingInfo().boundingBox;
