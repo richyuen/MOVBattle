@@ -5631,7 +5631,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
     }
     case "katana": {
       const giant = variant === "giant_katana";
-      const twoHanded = giant || variant === "two_hand_katana";
+      const shogun = variant === "two_hand_katana";
+      const twoHanded = giant || shogun;
       const bladeSections = [
         { y: -0.15, edge: -0.032, ridge: -0.004, spine: 0.027, thickness: 0.012 },
         { y: 0.05, edge: -0.045, ridge: 0, spine: 0.046, thickness: 0.012 },
@@ -5653,11 +5654,13 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       // [P] 416 light steel, not the "metal" preset (it rendered near-black; critic 415 on 44749436: TABS a pale grey blade, dynasty.samurai.red.png)
       blade.material = mat(scene, KATANA_STEEL, 0.12);
       // Tsuba (circular hand guard)
-      const tsuba = MeshBuilder.CreateDisc("tsuba", { radius: 0.04 * s, tessellation: 12 }, scene);
+      const tsuba = shogun
+        ? MeshBuilder.CreateCylinder("tsuba", { diameter: 0.14 * s, height: 0.016 * s, tessellation: 10 }, scene)
+        : MeshBuilder.CreateDisc("tsuba", { radius: 0.04 * s, tessellation: 12 }, scene);
       tsuba.position.y = -0.15 * s;
-      tsuba.rotation.x = Math.PI / 2;
+      if (!shogun) tsuba.rotation.x = Math.PI / 2;
       tsuba.parent = blade;
-      tsuba.material = mat(scene, new Color3(0.3, 0.25, 0.2), 0, "metal");
+      tsuba.material = shogun ? mat(scene, new Color3(1, 0.63, 0.10), 0.19) : mat(scene, new Color3(0.3, 0.25, 0.2), 0, "metal");
       // Grip wrap
       const gripLength = (twoHanded ? 0.25 : 0.12) * s;
       const grip = MeshBuilder.CreateCylinder(twoHanded ? "grip" : "kgrip", { height: gripLength, diameter: 0.022 * s }, scene);
