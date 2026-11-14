@@ -5630,8 +5630,26 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       return blade;
     }
     case "katana": {
-      const twoHanded = variant === "two_hand_katana";
-      const blade = MeshBuilder.CreateBox(twoHanded ? "blade" : "katana", { width: 0.025 * s, height: 0.6 * s, depth: 0.006 * s }, scene);
+      const giant = variant === "giant_katana";
+      const twoHanded = giant || variant === "two_hand_katana";
+      const bladeSections = [
+        { y: -0.15, edge: -0.032, ridge: -0.004, spine: 0.027, thickness: 0.012 },
+        { y: 0.05, edge: -0.045, ridge: 0, spine: 0.046, thickness: 0.012 },
+        { y: 0.53, edge: -0.038, ridge: 0.021, spine: 0.068, thickness: 0.012 },
+        { y: 0.82, edge: 0.005, ridge: 0.052, spine: 0.089, thickness: 0.008 },
+        { y: 0.98, edge: 0.082, ridge: 0.082, spine: 0.082, thickness: 0 },
+      ];
+      const blade = giant
+        ? MeshBuilder.CreateRibbon("blade", {
+          pathArray: [
+            bladeSections.map(({ edge, y }) => new Vector3(edge * s, y * s, 0)),
+            bladeSections.map(({ ridge, y, thickness }) => new Vector3(ridge * s, y * s, thickness * s)),
+            bladeSections.map(({ spine, y }) => new Vector3(spine * s, y * s, 0)),
+            bladeSections.map(({ ridge, y, thickness }) => new Vector3(ridge * s, y * s, -thickness * s)),
+          ],
+          closeArray: true, sideOrientation: Mesh.DOUBLESIDE,
+        }, scene)
+        : MeshBuilder.CreateBox(twoHanded ? "blade" : "katana", { width: 0.025 * s, height: 0.6 * s, depth: 0.006 * s }, scene);
       // [P] 416 light steel, not the "metal" preset (it rendered near-black; critic 415 on 44749436: TABS a pale grey blade, dynasty.samurai.red.png)
       blade.material = mat(scene, KATANA_STEEL, 0.12);
       // Tsuba (circular hand guard)
