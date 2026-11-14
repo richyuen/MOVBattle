@@ -515,6 +515,9 @@ async function main() {
           // [evidence 543] the Sensei's Shuriken Tempest rises when a man gets close (card Abilities): his stars knock the squire back and kill him at
           // range (look 543: no tempest in 9 s), so a knight starts 7 m behind him (farther than the squire, which stays his first target) and walks in
           if (id === "secret.sensei") game.spawnUnit("medieval.knight", 0, { x: d + 7, z: 1 });
+          if (id === "secret.artemis") {
+            for (const offset of [2, 4]) game.spawnUnit("medieval.knight", 0, { x: -d - offset, z: 0 });
+          }
           // [evidence 537] the Necromancer's graves rise when a man closes in (c.3); his skull rots the first squire dead on the way: a second walks on in
           window.__ufoe2 = id === "secret.necromancer" ? game.spawnUnit("medieval.squire", 0, { x: -d - 1.5, z: 1.5 }) : null;
           let ally = null;
@@ -538,6 +541,7 @@ async function main() {
             window.game.spawnUnit("medieval.squire", 0, { x: -80, z: 50 });
             window.game.spawnUnit("medieval.squire", 1, { x: 80, z: 50 });
           }
+          if (id === "secret.tree_giant") window.game.spawnUnit("medieval.squire", 0, { x: -80, z: 50 });
           window.game.startBattleImmediate();
           window.game.clearHitLog();
           window.game.clearAbilityLog();
@@ -836,7 +840,7 @@ async function main() {
           if (release.tick > 9) await take(`unit_${id}_windup`, release.tick - 9, far);
           const shotPath = id === "legacy.wizard" ? 7 : far;
           // Frame the Tree Giant's actual contact and keep the camera wide enough for the victim's launch.
-          const treeContact = id === "secret.tree_giant" ? impact : null;
+          const treeContact = id === "secret.tree_giant" ? det.events.find(e => e.kind === "melee hit") : null;
           await take(`unit_${id}_release`, treeContact?.tick ?? release.tick, treeContact ? 0 : shotPath);
           if (id === "legacy.wizard") await take(`unit_${id}_cast_origin`, release.tick, far);
           // [evidence 525] the torso-sized present covers the Present Elf's chest in the idle (a.2 vest): the idle's front three-quarter again,
@@ -873,6 +877,10 @@ async function main() {
           // The backflip completes in 0.52 s. Capture the halfway pose and the landing ring separately.
           if (takeoff) await take(`unit_${id}_stomp_inverted`, takeoff.tick + 16, 0);
           if (landing) await take(`unit_${id}_stomp_landing`, landing.tick + 3, 0);
+        }
+        if (id === "secret.artemis") {
+          const launch = det.events.find(e => e.kind === "artemis_line_launch");
+          if (launch) await take(`unit_${id}_line_launch`, launch.tick + 12, 4);
         }
         if (ability) {
           // A float (a balloon arrow's man rising under his balloons) is slow: its after shot is 60 ticks (1 s) on, framed on the struck man
