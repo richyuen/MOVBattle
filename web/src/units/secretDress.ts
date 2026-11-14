@@ -4,6 +4,36 @@ import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox, limbShell } from "./medievalDress";
 
+/** The broad beard narrows into a leather-tied bundle on the chest. */
+export function treeGiantBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const head = body.headMesh;
+  const bounds = head.getBoundingInfo().boundingBox;
+  const { x, y, z } = bounds.extendSize;
+  const c = bounds.center;
+  const hair = new Color3(0.29, 0.12, 0.075);
+  const leather = new Color3(0.54, 0.18, 0.095);
+  const factory = getMaterialFactory();
+  const beard = factory.get("cloth", hair, { emissive: hair.scale(0.12), roughness: 1 });
+  const wrap = factory.get("cloth", leather, { emissive: leather.scale(0.12), roughness: 1 });
+  const parts: Mesh[] = [];
+  const cone = (name: string, top: number, bottom: number, height: number, level: number, depth: number, material: Material) => {
+    const mesh = MeshBuilder.CreateCylinder(name, {
+      height: y * height, diameterTop: x * top, diameterBottom: x * bottom, tessellation: 7,
+    }, scene);
+    mesh.parent = head;
+    mesh.scaling.z = 0.63 * z / x;
+    mesh.position.set(c.x, c.y - y * level, c.z + z * depth);
+    mesh.material = material;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+    parts.push(mesh);
+  };
+  cone("treeBeardCheeks", 1.64, 0.45, 1.45, 1.05, 0.93, beard);
+  cone("treeBeardTie", 0.46, 0.47, 0.16, 1.83, 0.93, wrap);
+  cone("treeBeardTail", 0.4, 0.76, 0.56, 2.18, 0.93, beard);
+  cone("treeBeardTip", 0.76, 0.08, 0.31, 2.61, 0.93, beard);
+  return parts;
+}
+
 /** Separate ragged shorts ride each thigh and leave the knees exposed. */
 export function treeGiantShorts(scene: Scene, body: ArticulatedBody): Mesh[] {
   const brown = new Color3(0.28, 0.135, 0.09);

@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, samuraiGiantKabuto, shogunSashimono,senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, treeGiantShorts } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, samuraiGiantKabuto, shogunSashimono,senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, treeGiantBeard, treeGiantShorts } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -214,12 +214,10 @@ const REAPER_TEAM = 0.4;
  * The tree giant (253; units/secret.tree_giant): not a tree-man but a giant woodsman carrying a whole tree. Read off the reference: team-coloured bare skin on
  * the forearms, legs and face; a dark teal short-sleeved tunic over the chest and upper arms, a rope belt at the waist; a dark hood drawn over the crown, open on
  * the face so the bead eyes show, running into a long beard that hangs from the chin onto the chest; ragged shorts over each thigh.
- *   TREE_GIANT_HOOD heads across, TREE_GIANT_HOOD_OPEN of its round open at the face; beard TREE_GIANT_BEARD heads long, TREE_GIANT_BEARD_WIDE heads across at the chin;
+ *   TREE_GIANT_HOOD heads across, TREE_GIANT_HOOD_OPEN of its round open at the face;
  */
 const TREE_GIANT_HOOD = 1.32;
 const TREE_GIANT_HOOD_OPEN = 0.42;
-const TREE_GIANT_BEARD = 1.05;
-const TREE_GIANT_BEARD_WIDE = 0.85;
 const TREE_GIANT_TUNIC = new Color3(0.08, 0.18, 0.2);
 const TREE_GIANT_HAIR = new Color3(0.42, 0.15, 0.17);
 const TREE_GIANT_HAIR_TEAM = 0.1;
@@ -1742,15 +1740,7 @@ function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   peak.convertToFlatShadedMesh();
   peak.parent = body.headMesh;
   added.push(peak);
-  // Beard: a faceted wedge from under the eyes down over the chin onto the chest, widest at the cheeks
-  const beard = MeshBuilder.CreateCylinder(`${body.headMesh.name}_beard`, { height: headSize * TREE_GIANT_BEARD, diameterTop: headSize * TREE_GIANT_BEARD_WIDE, diameterBottom: headSize * 0.22, tessellation: 6 }, scene);
-  beard.scaling.z = 0.6;
-  beard.rotation.x = 0.28;
-  beard.position.set(0, -headSize * 0.52, headSize * 0.3);
-  beard.material = hair;
-  beard.convertToFlatShadedMesh();
-  beard.parent = body.headMesh;
-  added.push(beard);
+  added.push(...treeGiantBeard(scene, body));
   added.push(...treeGiantShorts(scene, body));
   return added;
 }
