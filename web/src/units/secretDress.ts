@@ -5793,6 +5793,45 @@ export function blackbeardBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
 const JADE_HAIR = { dome: 1.1, seat: 0.02, domeH: 0.72, back: 0.06, nape: 0.3, bun: 0.42, ring: 1.05, ringT: 0.075, beads: 10, bead: 0.13, top: 0.16,
   hair: new Color3(0.08, 0.06, 0.07), red: new Color3(1.25, 0.08, 0.03), orange: new Color3(1.1, 0.42, 0.04) };
 /** The knee-length dress has two gold scrolls across its front panels. */
+/** Lady Red Jade wears a shaped grey chest panel above a dark sash. */
+export function ladyRedJadeBodice(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const yoke = body.allMeshes.find(mesh => mesh.name.endsWith("_yoke"));
+  const torso = limbBox(yoke ?? body.torsoMesh);
+  yoke?.setEnabled(false);
+  body.torsoMesh.setEnabled(false);
+  const factory = getMaterialFactory();
+  const red = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
+  const cream = new Color3(0.59, 0.53, 0.45);
+  const dark = new Color3(0.045, 0.035, 0.066);
+  const garment = (name: string, mesh: Mesh, color: Color3) => {
+    mesh.name = name;
+    mesh.parent = body.torso;
+    mesh.material = factory.get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
+    mesh.convertToFlatShadedMesh();
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+    return mesh;
+  };
+  const shell = garment("jadeBodice", MeshBuilder.CreateCylinder("jadeBodice", {
+    height: torso.half * 1.88, diameterTop: torso.wide * 1.82, diameterBottom: torso.wide * 1.5, tessellation: 10,
+  }, scene), red);
+  shell.position.y = torso.mid;
+  shell.scaling.z = torso.deep * 1.12 / torso.wide;
+  const sash = garment("jadeSash", MeshBuilder.CreateCylinder("jadeSash", {
+    height: torso.half * 0.43, diameterTop: torso.wide * 1.62, diameterBottom: torso.wide * 1.68, tessellation: 10,
+  }, scene), dark);
+  sash.position.y = torso.mid - torso.half * 0.70;
+  sash.scaling.z = torso.deep * 1.17 / torso.wide;
+  const paths = [0, 1].map(row => [-1, -0.66, -0.33, 0, 0.33, 0.66, 1].map(x => {
+    const width = Math.abs(x);
+    const y = row === 0 ? 0.57 - width ** 2 * 0.4 : -0.46 + width ** 2 * 0.42;
+    return new Vector3(x * torso.wide * 0.8, torso.mid + y * torso.half, torso.deep * (1.08 - width ** 2 * 0.43));
+  }));
+  const panel = garment("jadeChestPanel", MeshBuilder.CreateRibbon("jadeChestPanel", {
+    pathArray: paths, sideOrientation: Mesh.DOUBLESIDE,
+  }, scene), cream);
+  return [shell, sash, panel];
+}
+
 export function ladyRedJadeSkirt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const hip = body.hip;
   const width = Math.abs(body.leftHip.position.x - body.rightHip.position.x) * 1.7;
