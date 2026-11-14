@@ -4,6 +4,48 @@ import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox, limbShell } from "./medievalDress";
 
+/** Separate ragged shorts ride each thigh and leave the knees exposed. */
+export function treeGiantShorts(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const brown = new Color3(0.28, 0.135, 0.09);
+  const cloth = getMaterialFactory().get("cloth", brown, { emissive: brown.scale(0.12), roughness: 1 });
+  const pelvis = body.hip.getChildMeshes(true).find((mesh) => mesh.name.endsWith("_pelvis"));
+  if (pelvis) pelvis.material = cloth;
+
+  return [
+    { thigh: body.leftUpperLeg, hip: body.leftHip, knee: body.leftKnee },
+    { thigh: body.rightUpperLeg, hip: body.rightHip, knee: body.rightKnee },
+  ].map(({ thigh, hip, knee }) => {
+    const { wide, deep } = limbBox(thigh);
+    const length = -knee.position.y;
+    const positions: number[] = [];
+    const indices: number[] = [];
+    const normals: number[] = [];
+    const facets = 12;
+    for (let i = 0; i < facets; i++) {
+      const angle = i * 2 * Math.PI / facets;
+      const x = Math.sin(angle) * wide;
+      const z = Math.cos(angle) * deep;
+      positions.push(x * 1.12, length * 0.08, z * 1.12);
+      positions.push(x * 1.18, -length * (i % 2 === 0 ? 0.94 : 0.75), z * 1.18);
+      const top = i * 2;
+      const next = (top + 2) % (facets * 2);
+      indices.push(top, next, top + 1, next, next + 1, top + 1);
+    }
+    VertexData.ComputeNormals(positions, indices, normals);
+    const data = new VertexData();
+    data.positions = positions;
+    data.indices = indices;
+    data.normals = normals;
+    const shorts = new Mesh("treeGiantShorts", scene);
+    data.applyToMesh(shorts);
+    shorts.parent = hip;
+    shorts.material = cloth;
+    shorts.convertToFlatShadedMesh();
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(shorts);
+    return shorts;
+  });
+}
+
 /*
  * Secret faction cloth, hats and ornaments (loop: new per-unit dress goes here, not into unitFactory or propBuilder).
  */

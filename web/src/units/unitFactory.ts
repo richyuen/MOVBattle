@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ullrSnowCap, samuraiGiantKabuto, shogunSashimono,senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle } from "./secretDress";
+import { witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ullrSnowCap, samuraiGiantKabuto, shogunSashimono,senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, treeGiantShorts } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -213,21 +213,16 @@ const REAPER_TEAM = 0.4;
 /*
  * The tree giant (253; units/secret.tree_giant): not a tree-man but a giant woodsman carrying a whole tree. Read off the reference: team-coloured bare skin on
  * the forearms, legs and face; a dark teal short-sleeved tunic over the chest and upper arms, a rope belt at the waist; a dark hood drawn over the crown, open on
- * the face so the bead eyes show, running into a long beard that hangs from the chin onto the chest; a ragged khaki skirt from the waist to the knee.
+ * the face so the bead eyes show, running into a long beard that hangs from the chin onto the chest; ragged shorts over each thigh.
  *   TREE_GIANT_HOOD heads across, TREE_GIANT_HOOD_OPEN of its round open at the face; beard TREE_GIANT_BEARD heads long, TREE_GIANT_BEARD_WIDE heads across at the chin;
- *   skirt TREE_GIANT_SKIRT thighs long flaring to TREE_GIANT_HEM pelvis widths, TREE_GIANT_TATTERS rags off the hem.
  */
 const TREE_GIANT_HOOD = 1.32;
 const TREE_GIANT_HOOD_OPEN = 0.42;
 const TREE_GIANT_BEARD = 1.05;
 const TREE_GIANT_BEARD_WIDE = 0.85;
-const TREE_GIANT_SKIRT = 0.85;
-const TREE_GIANT_HEM = 1.3;
-const TREE_GIANT_TATTERS = 8;
 const TREE_GIANT_TUNIC = new Color3(0.08, 0.18, 0.2);
 const TREE_GIANT_HAIR = new Color3(0.42, 0.15, 0.17);
 const TREE_GIANT_HAIR_TEAM = 0.1;
-const TREE_GIANT_RAGS = new Color3(0.56, 0.42, 0.28);
 /*
  * The painter (255; units/renaissance.painter): a two-tone man, not one team colour. A dark team doublet and sleeves, tan hose to the ankle, red-brown shoes, a
  * cream ruff in two stacked collars round the neck, a dark team beret; the palette rides in the off hand (propBuilder "palette").
@@ -1709,7 +1704,6 @@ function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   const tunic = getMaterialFactory().getCloth(Color3.Lerp(TREE_GIANT_TUNIC, teamColor.scale(0.3), 0.25));
   // The hood and beard are one maroon-brown, barely tinted to the team, self-lit so they do not go navy in the lineup shade
   const hair = getMaterialFactory().get("cloth", Color3.Lerp(TREE_GIANT_HAIR, teamColor.scale(0.45), TREE_GIANT_HAIR_TEAM), { emissiveIntensity: 0.18 });
-  const rags = getMaterialFactory().getCloth(TREE_GIANT_RAGS);
   // The tunic is whatever the body wore; forearms and legs go bare team skin, feet dark leather
   for (const mesh of body.allMeshes) {
     if (mesh.material === body.bodyMaterial) mesh.material = tunic;
@@ -1755,33 +1749,7 @@ function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   beard.convertToFlatShadedMesh();
   beard.parent = body.headMesh;
   added.push(beard);
-  // Rag skirt from the waist to the knee, its hem torn into points
-  const pelvis = body.hip.getChildMeshes(true).find((m) => /_pelvis$/.test(m.name));
-  if (pelvis) {
-    pelvis.material = rags;
-    const pExt = pelvis.getBoundingInfo().boundingBox.extendSize;
-    const thigh = body.leftUpperLeg.getBoundingInfo().boundingBox.extendSize.y * 2 * body.leftUpperLeg.scaling.y;
-    const long = thigh * TREE_GIANT_SKIRT;
-    const top = pExt.x * 2.2, hem = pExt.x * 2 * TREE_GIANT_HEM;
-    const skirt = MeshBuilder.CreateCylinder(`${pelvis.name}_rags`, { height: long, diameterTop: top, diameterBottom: Math.max(hem, top * 1.1), tessellation: 9 }, scene);
-    skirt.scaling.z = (pExt.z * 2.3) / top;
-    skirt.position.y = pelvis.position.y + pExt.y * 1.4 - long / 2;
-    skirt.material = rags;
-    skirt.convertToFlatShadedMesh();
-    skirt.parent = body.hip;
-    added.push(skirt);
-    const rim = Math.max(hem, top * 1.1);
-    for (let i = 0; i < TREE_GIANT_TATTERS; i++) {
-      const a = ((i + 0.5) / TREE_GIANT_TATTERS) * Math.PI * 2;
-      const drop = long * (0.16 + 0.12 * ((i * 5) % 3) / 2);
-      const tatter = MeshBuilder.CreateCylinder(`${pelvis.name}_rag`, { height: drop, diameterTop: rim * 0.36, diameterBottom: 0, tessellation: 3 }, scene);
-      tatter.position.set(Math.sin(a) * rim * 0.42, -long / 2 - drop / 2, Math.cos(a) * rim * 0.42);
-      tatter.rotation.y = a;
-      tatter.material = rags;
-      tatter.parent = skirt;
-      added.push(tatter);
-    }
-  }
+  added.push(...treeGiantShorts(scene, body));
   return added;
 }
 
