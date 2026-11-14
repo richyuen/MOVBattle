@@ -6869,7 +6869,8 @@ export class ProceduralAnimator {
     set(b.rightKnee, "x", 0.34);
     set(b.leftHip, "x", 0.36);
     set(b.leftKnee, "x", 0.1);
-    this._poseIceNock(draw * (1 - loose) * k);
+    this._bowStringDraw = draw * (1 - loose) * k;
+    this._poseIceNock(this._bowStringDraw);
     if (progress >= 1) this._state = AnimState.Idle;
   }
 
@@ -6880,6 +6881,7 @@ export class ProceduralAnimator {
    */
   /** [S] 420 a stave with the carry mark but no split string (the firework bow) still rides _restIceBow; its nock pieces are absent and _poseIceNock leaves it alone. */
   private _iceNock: { stave: Mesh; string?: Mesh; top?: Mesh; low?: Mesh; arrow?: Mesh } | null | undefined = undefined;
+  private _bowStringDraw = 0;
 
   /**
    * [S] 411 the Monk's bo held level across his chest (audit 411 b.1; dynasty.monk.red.png: the staff level across his front at chest height, a fist on
@@ -6955,6 +6957,11 @@ export class ProceduralAnimator {
     const w = st === AnimState.Idle || st === AnimState.Walking ? 1 - Math.min(1, this._limp) : 0;
     if (w <= 0.01) {
       if (this._iceRestAt) N.stave.position.copyFrom(this._iceRestAt);
+      if (st === AnimState.Attacking && this._attackMotion === "bow_draw_release" && N.stave.getChildren().some(node => node.name === "artemisDrawString")) {
+        const palm = this._body.rightHand.getChildMeshes(true).find(mesh => mesh.name.endsWith("_rHandM"));
+        if (palm) N.stave.position.copyFrom(palm.position);
+        this._poseIceNock(this._bowStringDraw);
+      }
       return;
     }
     const b = this._body;
@@ -7218,10 +7225,12 @@ export class ProceduralAnimator {
     for (let n: TransformNode | null = b.leftHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
     for (const n of chain) n.computeWorldMatrix(true);
     const inv = N.stave.computeWorldMatrix(true).clone().invert();
-    const hand = Vector3.TransformCoordinates(b.leftHand.getAbsolutePosition(), inv);
+    const artemis = N.stave.getChildren().some(m => m.name === "artemisDrawString");
+    const palm = artemis ? b.leftHand.getChildMeshes(true).find(mesh => mesh.name.endsWith("_lHandM")) : undefined;
+    palm?.computeWorldMatrix(true);
+    const hand = Vector3.TransformCoordinates(palm?.getAbsolutePosition() ?? b.leftHand.getAbsolutePosition(), inv);
     const half = N.string.getBoundingInfo().boundingBox.extendSize.y * N.string.scaling.y;
     const mid = N.string.position.clone();
-    const artemis = N.stave.getChildren().some(m => m.name === "artemisDrawString");
     const nock = Vector3.Lerp(mid, hand, Math.min(1, artemis ? (w - 0.2) / 0.22 : w));
     const span = (m: Mesh, from: Vector3, to: Vector3): void => {
       const d = to.subtract(from);
