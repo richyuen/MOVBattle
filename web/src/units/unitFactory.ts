@@ -1240,7 +1240,9 @@ export class UnitFactory {
     // [S] 542 (a.1): Lady Red Jade's black hair, bun and red bead ring in place of the crown (secretDress JADE_HAIR)
     if (definition.id === "secret.lady_red_jade" && !shouldUseVehicleBody) propMeshes.push(...ladyRedJadeHair(this._scene, body));
     // [S] 543 (a.1): the Samurai Giant's team kabuto, gold crescent maedate, tiered neck guard (secretDress KABUTO); the Shogun's helmet is left as it is
-    if (definition.id === "secret.samurai_giant" && !shouldUseVehicleBody) propMeshes.push(...samuraiGiantKabuto(this._scene, body, teamColor));
+    if ((definition.id === "secret.samurai_giant" || definition.id === "secret.shogun") && !shouldUseVehicleBody) {
+      propMeshes.push(...samuraiGiantKabuto(this._scene, body, teamColor));
+    }
     // [S] 543 (a.3): the Shogun's sashimono, a dark pole up his back over the helmet, a tall team banner with a mon (secretDress SASHIMONO)
     if (definition.id === "secret.shogun" && !shouldUseVehicleBody) propMeshes.push(...shogunSashimono(this._scene, body, teamColor));
     // [S] 543 (a.1): Ullr's dark snow cap with two mini axes, shaggy brown hair round the face (secretDress ULLR_CAP)
