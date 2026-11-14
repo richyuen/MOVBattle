@@ -1,21 +1,23 @@
 # secret.tree_giant
-Status: open   Audited: 538 (AUDIT x2)   Done: -
+Status: open   Audited: 538 (AUDIT x2), 545 (RE-AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (1 since 538, 1 struck)
- 2. maroon skullcap ending at the ears in unit_secret.tree_giant_idle — TABS: long brown hair down to the shoulders (ref: secret.tree_giant.red.png)
- 3. dark wedge on the chin in unit_secret.tree_giant_idle — TABS: long brown beard tied off with a band on the chest (ref: secret.tree_giant.red.png, card Appearance)
- 4. dark box boots in unit_secret.tree_giant_idle — TABS: bare team shins with brown sandals (ref: secret.tree_giant.red.png)
- 5. shirt colour in unit_secret.tree_giant_idle: dark navy — TABS: dark green-teal shirt (ref: secret.tree_giant.jpg; card Appearance "green shirt")
- 6. shorts in unit_secret.tree_giant_idle: grey kilt — TABS: brown ragged shorts with jagged hem (ref: secret.tree_giant.red.png)
- 7. scale in lineup_secret_4: about 2x neighbours — TABS: 3.5x, tallest after Ice Giant (ref: card Size; reference/factions/secret.jpg)
+a FAIL (1 since 545, 1 struck)
+ 1. Rounded maroon hair cap stops at the jaw in `unit_secret.tree_giant_idle` — TABS has dark brown hair flaring out onto the shoulders.
+ 2. Short rectangular chin block stops above the collar in `unit_secret.tree_giant_idle` — TABS has a wide beard that tapers into a tied bundle on the chest.
+ 3. Solid dark ankle boots in `unit_secret.tree_giant_idle` — TABS has open brown sandals with ankle and instep straps over team-colored feet.
+ 4. Blue-black shirt across the torso and upper arms in `unit_secret.tree_giant_idle` — TABS has a dark green-teal shirt.
+ 6. The body in `lineup_secret_4` stands roughly twice as tall as the smaller units in the same row — the TABS card specifies 3.5× baseline scale.
 b PASS (544: struck 3)
 c FAIL (0 since 538)
  1. small one-handed upward poke in unit_secret.tree_giant_release, with the knight still on his knees in unit_secret.tree_giant_flight — TABS: two-handed sideways swat that throws men flying in a shower of leaves (ref: secret.tree_giant.jpg)
-d PASS (544 stats)
+d PASS (545 stats)
 ## Ranked gaps
-5. [S] secret.tree_giant.a brown hair — blocker 2: shoulder-length locks — ref: secret.tree_giant.red.png — ours: unit_secret.tree_giant_idle.png
+1. [S] secret.tree_giant.a tied beard — blocker 2: build a faceted beard narrowing from both jaws into a wrapped upper-chest tail — ref: secret.tree_giant.jpg — ours: unit_secret.tree_giant_idle.png
+2. [S] secret.tree_giant.a shoulder hair — blocker 1: replace the rounded cap with a faceted crown and swept locks extending to the shoulders — ref: secret.tree_giant.jpg — ours: unit_secret.tree_giant_idle.png
+4. [S] secret.tree_giant.a open sandals — blocker 3: replace the boot shells with flat soles, ankle loops and layered straps over exposed team-colored feet — ref: secret.tree_giant.blue.png — ours: unit_secret.tree_giant_idle.png
 3. [S] secret.tree_giant.c swat — blocker 1: a two-handed sideways swat that launches men in a shower of leaves — ref: secret.tree_giant.jpg — ours: unit_secret.tree_giant_release.png
 ## Attempts (iter | gap | criterion | verdict)
+545 | separate ragged shorts (c0edc0ab) | a | approved (struck 5)
 544 | lanky rig and long legs (245dbe17) | a | approved (struck 1)
 544 | sideways swat (b2312972, e26f7283) | c | dropped (frames missed contact and launch)
 544 | earth clump and roots (053746ca) | b | approved (struck 3)
@@ -24,4 +26,4 @@ d PASS (544 stats)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
 - 541 critic: off fist rides up by the face.
-- 544: re-audit idle at 5.95 m rig height. Swat needs contact and launch frames.
+- 545 re-audit: look remains FAIL. Swat still needs contact and launch frames.

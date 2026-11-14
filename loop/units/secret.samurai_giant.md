@@ -11,7 +11,7 @@ a FAIL (0 since 544)
 b FAIL (1 since 544, 1 struck)
  1. thin katana of ordinary width, about arm-length to the giant, in unit_secret.samurai_giant_windup — TABS: giant broad-bladed katana (ref: secret.samurai_giant.png)
 c FAIL (1 since 544)
- 1. missing: backflip Giant Foot Stomp; summary records only a melee hit (ref: card Characteristics)
+ 1. missing: backflip Giant Foot Stomp in unit_secret.samurai_giant_stomp_inverted; landing is visible in unit_secret.samurai_giant_stomp_landing (ref: card Characteristics)
  2. swing in unit_secret.samurai_giant_release: a slow one-arm scoop at the ground — TABS: two-handed katana slash with a ground burst (ref: secret.samurai_giant.png)
 d PASS (544 stats)
 ## Ranked gaps
@@ -25,4 +25,4 @@ d PASS (544 stats)
 ## Notes (max 3 lines)
 - 543 critic: the maedate horns are thin wires (TABS a broad flat gold crescent).
 - Shares the Shogun's body (the Shogun is a 1.2x man); the KABUTO is gated on this id only.
-- 544: re-aim Foot Stomp capture for the inversion.
+- 545: takeoff and landing log reliably, but the takeoff +16 tick frame still shows an upright rig.
