@@ -6244,6 +6244,43 @@ export function artemisBand(scene: Scene, body: ArticulatedBody): Mesh[] {
 }
 
 /** A shallow snow cap leaves the Ice Giant's face and eyes exposed. */
+/** Team belt with an ice badge at the front and wooden shields worn edge-on at the hips. */
+export function iceGiantBelt(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const pelvis = body.hip.getChildMeshes(true).find(mesh => mesh.name.endsWith("_pelvis"));
+  if (!(pelvis instanceof Mesh)) return [];
+  const hips = limbBox(pelvis);
+  const factory = getMaterialFactory();
+  const cloth = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(0.62);
+  const meshes: Mesh[] = [];
+  const put = (mesh: Mesh, color: Color3, position: Vector3) => {
+    mesh.parent = body.hip;
+    mesh.position.copyFrom(position);
+    mesh.material = factory.get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+    meshes.push(mesh);
+    return mesh;
+  };
+  const y = hips.mid + hips.half * 0.64, width = hips.wide * 1.14, depth = hips.deep * 1.19;
+  const belt = put(MeshBuilder.CreateCylinder("iceGiantBelt", { height: hips.half * 0.92, diameter: width * 2, tessellation: 10 }, scene), cloth, new Vector3(0, y, 0));
+  belt.scaling.z = depth / width;
+  const badge = put(MeshBuilder.CreateCylinder("iceGiantBadge", { height: hips.half * 0.2, diameter: hips.half * 1.3, tessellation: 6 }, scene),
+    new Color3(0.10, 0.24, 0.35), new Vector3(0, y, depth * 1.03));
+  badge.rotation.x = Math.PI / 2;
+  const emblem = put(MeshBuilder.CreatePolyhedron("iceGiantIcicle", { type: 0, size: hips.half * 0.43 }, scene),
+    new Color3(0.49, 0.86, 1), new Vector3(0, y, depth * 1.03 + hips.half * 0.12));
+  emblem.scaling.set(0.57, 1.18, 0.18);
+  for (const side of [-1, 1]) {
+    for (const inset of [false, true]) {
+      const shield = put(MeshBuilder.CreateCylinder("iceGiantHipShield", {
+        height: hips.half * (inset ? 0.14 : 0.35), diameter: hips.half * (inset ? 1.88 : 2.28), tessellation: 10,
+      }, scene), inset ? new Color3(0.33, 0.17, 0.09) : new Color3(0.23, 0.19, 0.16),
+      new Vector3(side * (width + hips.half * (inset ? 0.27 : 0.09)), y - hips.half * 0.27, 0));
+      shield.rotation.z = side * (Math.PI / 2 - 0.12);
+    }
+  }
+  return meshes;
+}
+
 export function iceGiantSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
   const head = body.headMesh;
   const box = head.getBoundingInfo().boundingBox;
