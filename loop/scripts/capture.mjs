@@ -194,6 +194,7 @@ ABILITY_PREF["secret.banshee"] = "scream"; // [evidence 530] her ability shots f
 ABILITY_PREF["secret.cavalry"] = "shockwave"; // [evidence 530] a hoof shockwave, not the pull-back at spawn
 ABILITY_PREF["secret.skeleton_giant"] = "giant_fear"; // [531] his ability shots frame the Giant Fear burst
 ABILITY_PREF["secret.sensei"] = "shuriken_tempest"; // [evidence 543] his stars knock the man back: the capture waits for him to close and the wind ring to rise
+ABILITY_PREF["secret.samurai_giant"] = "giant_stomp_landed";
 ABILITY_PREF["secret.necromancer"] = "raise_dead"; // [evidence 535] his ability shots frame a skull-cursed corpse rising, not the curse landing
 
 // Colour calibration (loop v3): what a code value displays as through the game's lighting, SSAO, ACES and glow. Two walls of head-block
@@ -863,6 +864,13 @@ async function main() {
           // A running mechanic (the bard's Banjo Walk circles) shows over seconds, not in the motion pair: one more shot 90 ticks (1.5 s) on, both men framed
           const walk = /^banjo_walk/.test(release.kind) ? release : ability && /^banjo_walk/.test(ability.kind) ? ability : null;
           if (walk) await take(`unit_${id}_walk`, walk.tick + 90, 0);
+        }
+        if (id === "secret.samurai_giant") {
+          const takeoff = det.events.find(e => e.kind === "giant_foot_stomp");
+          const landing = det.events.find(e => e.kind === "giant_stomp_landed");
+          // The backflip completes in 0.52 s. Capture the halfway pose and the landing ring separately.
+          if (takeoff) await take(`unit_${id}_stomp_inverted`, takeoff.tick + 16, 0);
+          if (landing) await take(`unit_${id}_stomp_landing`, landing.tick + 3, 0);
         }
         if (ability) {
           // A float (a balloon arrow's man rising under his balloons) is slow: its after shot is 60 ticks (1 s) on, framed on the struck man
