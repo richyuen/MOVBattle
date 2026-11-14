@@ -5865,10 +5865,15 @@ export function ullrJacket(scene: Scene, body: ArticulatedBody, team: Color3): M
     coat.push(mesh);
   };
   const rings = [top, top - height * 0.55, hem].map((y, ring) =>
-    Array.from({ length: 11 }, (_, i) => {
-      const angle = 0.43 + (Math.PI * 2 - 0.86) * i / 10;
+    Array.from({ length: 17 }, (_, i) => {
+      const angle = 0.22 + (Math.PI * 2 - 0.44) * i / 16;
       const flare = ring === 2 ? 1.33 : 1.14;
-      return new Vector3(Math.sin(angle) * torso.wide * flare, y, Math.cos(angle) * torso.deep * flare);
+      const x = Math.sin(angle), z = Math.cos(angle);
+      return new Vector3(
+        Math.sign(x) * Math.sqrt(Math.abs(x)) * torso.wide * flare,
+        y,
+        Math.sign(z) * Math.sqrt(Math.abs(z)) * torso.deep * flare,
+      );
     }),
   );
   add(MeshBuilder.CreateRibbon("ullrJacket", { pathArray: rings, sideOrientation: Mesh.DOUBLESIDE }, scene), body.torso);
