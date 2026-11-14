@@ -3833,6 +3833,8 @@ export class SimulationSystem {
   private _tryAttack(attacker: RuntimeUnit, target: RuntimeUnit, attackProfile: AttackProfile, now: number): void {
     if (!attacker.canAttack(now)) return;
 
+    if (attacker.definition.id === "secret.ice_giant" && this._tryIceBreath(attacker, target, now)) return;
+
     const preset = getBehaviorPreset(attacker);
     const cooldownMultiplier = attacker.definition.cooldownMultiplier ?? 1;
     attacker.setAttackCooldown(now, attackProfile.cooldown * cooldownMultiplier);
@@ -5616,6 +5618,42 @@ export class SimulationSystem {
       }
     }
     this._applyCrowdShockwave(center, Math.max(1.8, radius + 0.8), attackerTeam, impulse.scale(0.28));
+  }
+
+  private _tryIceBreath(attacker: RuntimeUnit, target: RuntimeUnit, now: number): boolean {
+    if (now < (this._jumpReadyAt.get(attacker) ?? 0)) return false;
+    const reach = 7.5, tangent = Math.tan(Math.PI / 7);
+    const forward = target.position.subtract(attacker.position);
+    forward.y = 0;
+    const distance = forward.length();
+    if (distance < 0.1 || distance > reach) return false;
+    forward.scaleInPlace(1 / distance);
+    attacker.faceTarget(target.position);
+    const mouth = () => {
+      if (attacker.isDead) return null;
+      worldMatrixChain(attacker.body.headMesh);
+      const head = attacker.body.headMesh.getBoundingInfo().boundingBox;
+      return Vector3.TransformCoordinates(new Vector3(head.center.x, head.center.y - head.extendSize.y * 0.55, head.maximum.z), attacker.body.headMesh.getWorldMatrix());
+    };
+    const end = attacker.position.add(forward.scale(reach));
+    end.y = target.position.y + 0.65;
+    this.visualEffects?.spawnFlameJet(mouth, () => end, 0.64, {
+      white: new Color3(0.82, 0.96, 1), yellow: new Color3(0.28, 0.64, 0.95), near: 0.12, far: 0.9, farPer: 0.18,
+    });
+    for (const other of this._units) {
+      if (other.team === attacker.team || other.isDead || other.linkedParent || !other.isTargetable) continue;
+      const offset = other.position.subtract(attacker.position);
+      offset.y = 0;
+      const depth = Vector3.Dot(offset, forward);
+      const width = Math.abs(offset.x * forward.z - offset.z * forward.x);
+      if (depth <= 0 || depth > reach || width > depth * tangent + other.collisionBodyRadius) continue;
+      other.applySlow(0.18, 2, now);
+      other.applyFrost(2, now, true);
+    }
+    this._jumpReadyAt.set(attacker, now + 10);
+    attacker.setAttackCooldown(now, 0.64);
+    this._logAbility(attacker, "ice_breath", now, target.position);
+    return true;
   }
 
   private _applyOnHitStatuses(attacker: RuntimeUnit, target: RuntimeUnit, now: number, impactOrigin?: Vector3): void {
