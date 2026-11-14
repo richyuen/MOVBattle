@@ -6035,7 +6035,7 @@ export class ProceduralAnimator {
   }
 
   private _animateHeavySwing(dt: number): void {
-    if (this._carry?.weapon.prop?.node.name === "treeClubCarry") {
+    if (this._carry?.weapon?.prop?.node.name === "treeClubCarry") {
       this._animateTreeSwat(dt);
       return;
     }
