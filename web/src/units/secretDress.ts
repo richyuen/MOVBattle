@@ -5884,6 +5884,30 @@ export function ullrJacket(scene: Scene, body: ArticulatedBody, team: Color3): M
   return coat;
 }
 
+/** Shogun's faceted cheek and chin guard sits directly below the eyes. */
+export function shogunMenpo(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const head = body.headMesh;
+  const { center, extendSize: size } = head.getBoundingInfo().boundingBox;
+  const eyes = eyeBoxInHead(body);
+  const upper = Math.min(eyes?.lo.y ?? center.y, center.y + size.y * 0.12);
+  const lower = center.y - size.y * 0.99;
+  const depth = center.z + size.z;
+  const rows = [
+    { y: upper, width: 0.95, nose: 1.24 },
+    { y: upper * 0.58 + lower * 0.42, width: 0.90, nose: 1.36 },
+    { y: lower, width: 0.51, nose: 1.08 },
+  ].map(({ y, width, nose }) => [-1, -0.5, 0, 0.5, 1].map(x =>
+    new Vector3(center.x + x * width * size.x, y, depth + (nose - 1 - x * x * 0.65) * size.z),
+  ));
+  const mask = MeshBuilder.CreateRibbon("shogunMenpo", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  mask.parent = head;
+  const color = new Color3(0.035, 0.045, 0.10);
+  mask.material = getMaterialFactory().get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
+  mask.convertToFlatShadedMesh();
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(mask);
+  return [mask];
+}
+
 export function ullrSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = ULLR_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const slate = mf.get("cloth", K.slate, { emissive: K.slate.scale(0.3), roughness: 1 });
