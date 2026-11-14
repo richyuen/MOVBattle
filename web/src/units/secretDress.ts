@@ -6010,6 +6010,23 @@ export function artemisBand(scene: Scene, body: ArticulatedBody): Mesh[] {
   return [band];
 }
 
+/** A shallow snow cap leaves the Ice Giant's face and eyes exposed. */
+export function iceGiantSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const head = body.headMesh;
+  const box = head.getBoundingInfo().boundingBox;
+  const { x, y, z } = box.extendSize;
+  const snow = new Color3(0.93, 0.96, 1);
+  const material = getMaterialFactory().get("cloth", snow, { emissive: snow.scale(0.2), roughness: 1 });
+  const cap = MeshBuilder.CreateIcoSphere("iceGiantSnowCap", {
+    radiusX: x * 1.05, radiusY: y * 0.32, radiusZ: z * 1.12, subdivisions: 1, flat: true,
+  }, scene);
+  cap.parent = head;
+  cap.position.copyFrom(box.center).addInPlaceFromFloats(0, y * 0.86, -z * 0.08);
+  cap.material = material;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(cap);
+  return [cap];
+}
+
 /*
  * [S] 539 (sensei a.1) the Sensei's hood-helmet (audit 538: "grey wizard cone hat - TABS: team hood-helmet with flared neck flaps and a dark headband
  * carrying a shuriken emblem"; secret.sensei.red.png: a team hood closing over the whole head, a little taller than it and rounded on top; a dark
