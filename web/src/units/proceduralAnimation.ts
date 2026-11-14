@@ -7206,12 +7206,12 @@ export class ProceduralAnimator {
       this._iceNock = stave ? { stave, string, top, low, arrow } : null;
     }
     const N = this._iceNock;
-    if (!N || !N.string || !N.top || !N.low || !N.arrow) return;
+    if (!N || !N.string || !N.top || !N.low) return;
     const on = w > 0.2;
     N.string.setEnabled(!on);
     N.top.setEnabled(on);
     N.low.setEnabled(on);
-    N.arrow.setEnabled(on);
+    N.arrow?.setEnabled(on);
     if (!on) return;
     const b = this._body;
     const chain: TransformNode[] = [];
@@ -7221,7 +7221,8 @@ export class ProceduralAnimator {
     const hand = Vector3.TransformCoordinates(b.leftHand.getAbsolutePosition(), inv);
     const half = N.string.getBoundingInfo().boundingBox.extendSize.y * N.string.scaling.y;
     const mid = N.string.position.clone();
-    const nock = Vector3.Lerp(mid, hand, Math.min(1, w));
+    const artemis = N.stave.getChildren().some(m => m.name === "artemisDrawString");
+    const nock = Vector3.Lerp(mid, hand, Math.min(1, artemis ? (w - 0.2) / 0.22 : w));
     const span = (m: Mesh, from: Vector3, to: Vector3): void => {
       const d = to.subtract(from);
       const len = d.length();
@@ -7234,6 +7235,7 @@ export class ProceduralAnimator {
     span(N.top, new Vector3(mid.x, mid.y + half, mid.z), nock);
     span(N.low, new Vector3(mid.x, mid.y - half, mid.z), nock);
     // the arrow from the nock through the grip (the stave's middle)
+    if (!N.arrow) return;
     const along = new Vector3(0, 0, 0).subtract(nock);
     along.y = 0;
     if (along.lengthSquared() < 1e-8) return;

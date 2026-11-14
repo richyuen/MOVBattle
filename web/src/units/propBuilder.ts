@@ -6289,7 +6289,7 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         // little off its string; tan wraps near each tip and the team colour round the grip. Laid and seated as the plain bow (named "bow", string child).
         const Lb = fit.stand * (artemis ? ARTEMIS_BOW.long : firework ? FIREWORK_BOW.long : brown ? BROWN_LONGBOW.long : LONGBOW.long);
         const r0 = (artemis ? ARTEMIS_BOW.thick : LONGBOW.thick) * Lb * 0.5;
-        const zs = 0.04 * s;
+        const zs = artemis ? LONGBOW.bow * Lb : 0.04 * s;
         const radius = (t: number): number => r0 * (1 - (1 - LONGBOW.taper) * Math.abs(t));
         const ts: number[] = [];
         for (let i = 0; i <= 12; i++) ts.push(i / 6 - 1);
@@ -6368,8 +6368,17 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         string.position.z = zs;
         string.parent = stave;
         string.material = mat(scene, new Color3(0.85, 0.8, 0.7));
+        if (artemis) {
+          new TransformNode("artemisDrawString", scene).parent = stave;
+          for (const name of ["iceStringTop", "iceStringLow"]) {
+            const span = MeshBuilder.CreateCylinder(name, { height: 1, diameter: 0.006 * Lb, tessellation: 4 }, scene);
+            span.parent = stave;
+            span.material = string.material;
+            span.setEnabled(false);
+          }
+        }
         stave.rotation.z = Math.PI / 2;
-        stave.position.y = 0.1 * s;
+        stave.position.y = artemis ? 0 : 0.1 * s;
         return stave;
       }
       if (type === "crossbow" && variant === "repeating_crossbow") return buildRepeatingCrossbow(scene, s); // [S] 501 (REPEATING_CROSSBOW)
