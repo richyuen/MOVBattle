@@ -881,6 +881,14 @@ async function main() {
         if (id === "secret.artemis") {
           const launch = det.events.find(e => e.kind === "artemis_line_launch");
           if (launch) await take(`unit_${id}_line_launch`, launch.tick + 12, 4);
+          const volley = det.events.find(e => e.kind === "volley");
+          if (volley) {
+            const pair = { hold: volley.tick };
+            await take(`unit_${id}_volley`, volley.tick, 3, pair);
+            await take(`unit_${id}_volley_after`, volley.tick + 6, 3, pair);
+          } else {
+            summary.notes.push(`unit_${id}: shot may miss: no regular volley within the capture window`);
+          }
         }
         if (ability) {
           // A float (a balloon arrow's man rising under his balloons) is slow: its after shot is 60 ticks (1 s) on, framed on the struck man
