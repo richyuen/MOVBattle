@@ -1,16 +1,22 @@
 # secret.artemis
-Status: open   Audited: 538 (AUDIT x2)   Done: -
+Status: open   Audited: 538 (AUDIT x2), 546 (CONFIRM: failed a, b, c)   Done: -
 ## Verdicts
-a FAIL (3 since 538, 4 struck)
- 2. short dark brown cropped hair in unit_secret.artemis_idle — TABS: auburn hair in a bun with a braid down the back (ref: secret.artemis.red.png)
-b PASS (540: struck 1, tall wrapped longbow)
-c FAIL (1 since 538, 1 struck)
- 2. missing: charged knockback arrow that throws a line of units (ref: card Characteristics, secret.artemis.jpg)
+a FAIL (0 since 546)
+ 1. A flat rectangular chest with squared shoulder corners in `unit_secret.artemis_idle.png`, also visible in `lineup_secret_4.png`. TABS has a fitted, faceted sleeveless bodice that tapers at the waist (ref `secret.artemis.blue.png`).
+ 2. Dark, closed boot blocks in `unit_secret.artemis_idle.png`. TABS has open brown ankle and instep straps over team-colored feet (ref `secret.artemis.red.png`).
+b FAIL (0 since 546)
+ 1. The bow hand projects past the stave’s grip in `unit_secret.artemis_windup.png`, with a gap between the raised drawing fist and string. TABS seats the forward fist on the grip and brings the drawing hand to the nock and string (ref `secret.artemis.jpg` and card Weapons).
+c FAIL (0 since 546)
+ 1. The large shaft passes through the bow at waist height in `unit_secret.artemis_release.png`, below the extended bow hand and drawing fist. TABS looses its charged shaft from the nock at the drawn string (ref `secret.artemis.jpg`).
+ 2. `unit_secret.artemis_release.png` and `unit_secret.artemis_flight.png` both show the single charged arrow. The ordinary five-arrow cluster has no captured release or flight frame (ref card Weapons and Characteristics).
 d PASS (543 stats)
 ## Ranked gaps
-1. [S] secret.artemis.c knockback arrow — blocker 2: a charged arrow that throws a line of units (SS + PS) — ref: card Characteristics, secret.artemis.jpg — ours: unit_secret.artemis_release.png
-2. [S] secret.artemis.a hair — blocker 2: an auburn bun and a braid down the back under the gold band — ref: secret.artemis.red.png — ours: unit_secret.artemis_idle.png
+1. [S] secret.artemis.c charged loose — blocker 1: seat the projectile at the nock of the drawn string — ref: secret.artemis.jpg — ours: unit_secret.artemis_release.png
+2. [S] secret.artemis.b bow grip — blocker 1: seat the bow hand on the stave and the drawing fist at the string — ref: secret.artemis.jpg — ours: unit_secret.artemis_windup.png
+3. [S] secret.artemis.a bodice — blocker 1: fit the bodice over the torso and taper it to the waist — ref: secret.artemis.blue.png — ours: unit_secret.artemis_idle.png
 ## Attempts (iter | gap | criterion | verdict)
+546 | auburn bun and tapered braid (4a9ffed1) | a | approved (struck 2)
+546 | charged oversized arrow launches units in a line (8be46c23) | c | approved (struck 2)
 543 | team sleeveless chiton top bloused over the belt, brown strap shoulder to hip, grey yoke and pads off ARTEMIS_CHITON (9bbc2bb1) | a | approved (struck 3, 5 lineup)
 542 | long darker team dress, brown belt, to mid-shin ARTEMIS_DRESS (b18dd78e) | a | approved (struck 4)
 541 | five arrows on one tick ARTEMIS_FAN (fcfbebf5) | c | approved (struck 1)

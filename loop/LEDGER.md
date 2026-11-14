@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+546 | 36bb1488 | secret.ice_giant.a | approved [S], struck 2
+546 | 8be46c23 | secret.artemis.c | approved [S], struck 2
+546 | 4a9ffed1 | secret.artemis.a | approved [S], struck 2
+546 | 1dea7118, 423084eb | secret.tree_giant.c | approved [S]
+546 | 5f704998 | secret.samurai_giant.c | approved [S], struck 1
+546 | d457c95a | secret.shogun.a | approved [S], struck 1
+546 | f9a9ab0b | secret.ullr.a | approved [S]
+546 | 92fbbe9e | secret.lady_red_jade.a | approved [S], struck 3
+546 | 3711af45 | secret.tree_giant.a | approved [S], struck 2
+
 545 | c0edc0ab | secret.tree_giant.a | approved [S] (struck 5)
 
 544 | 956424a6 | secret.samurai_giant.b | approved [S] (struck 2)
@@ -44,23 +54,13 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 541 | 7e4100ff | secret.tree_giant.b | approved [S] (struck 1)
 541 | 816231de | secret.ice_giant.a | approved [S] (struck 1)
 
-540 | 82532e47 | secret.vlad.a | approved [S] (struck 2, a PASS; CONFIRM passed, D)
-540 | a803a83d | secret.necromancer.a | approved [S] (struck 1, 2)
-540 | 8bb7f01c | secret.necromancer.b | approved [S] (struck 1, b PASS)
-540 | 93159c23 | secret.necromancer.a | approved [S] (struck 3, a PASS; CONFIRM passed, D)
-540 | ac64e6be | secret.sensei.b | approved [S] (struck 1, b PASS)
-540 | 956195e2 | secret.sensei.a | approved [S] (struck 4)
-540 | 6e62a793, 4f98ec35 | secret.blackbeard.a | approved [S] (struck 4)
-540 | 415e5613 | secret.blackbeard.c | approved [S] (struck 1, 2, c PASS; evidence 931a204a)
-540 | a1768aeb, 06717795 | secret.artemis.b | approved [S] (struck 1, b PASS)
-
-
 ## Spent (never retry as [P])
 secretDress:ICE_FIST (543, moved once toward the reference by a DEFECTS root)
 
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+secretDress/UF/UV/RU/PA/SS/PS:546 | Ice Giant cap x1.05/y.32/z1.12 head radii, horned special off; Artemis charge .8 s, every 8 s, arrow size 2.8, corridor half-width 1.2 plus 8 m past the mark, launch 12/5; auburn bun and 8-link braid; Tree Giant sweep tip travels laterally and flings at 15/6, four-piece beard with tied tail; Samurai Giant flip around hip over .52 s; Shogun uses layered kabuto; Ullr two open coat fronts; Red Jade 12-sided flared skirt with two gold scrolls | 546 | approved | horned crown, regular fan only, cropped hair, upright tree poke, chin wedge, interrupted root flip, inverted helmet, bare torso, exposed trousers
 secretDress/UF:treeGiantShorts | brown (.28,.135,.09), 12 facets, thigh extents x1.12 to x1.18, alternating hems at .75/.94 of thigh length | 545 | approved | pelvis-mounted skirt and triangular flaps
 UV/PB/RU/SS:544 | two_hand_katana grip .25s + longswordFists; Tree Giant bulk 1.24, legLength 1.35, torsoWidth .85, thigh .82 and shin width .76; tree root ball .15T with 5 stubs; Red Jade spin 16 rad/s; Ice Giant burst at punch contact; Shogun 3 gold arcs radius 1.35, band .34, life .48; Foot Stomp onset .4, range 4, rise 6.8, flip .52, cd 3, burst radius 4 | 544 | approved | single-handed .12s, bulk 1.85 and legLength .92, bare trunk, straight leap, freeze only, no arcs, no stomp
 secretDress/UF/UV/PB/SS/FX/capture:543 | SENSEI_TEMPEST first .3 every 6 near 3.2 seconds 3 radius 2.6 speed 7 lift 3.5 pulse .5, WIND_RING rows .35/1/1.65/2.2 streaks 4 segs 6 arc 1.1 thick .09 spin 7; BB_STRETCH torsoLength 1.32 legLength 1.18 armLength 1.18 bulk 1.28 -> 1.12; BB_TRICORN reach 1.18 seat .18 wall .78 lean .32 crownW 1.02 crownH .62, plain tricorn off; ULLR_CAP cap 1.12 capH .82 rim .12 haft .42 axeX .3 lean .32 tufts 13 tuft .26, viking helmet off; ARTEMIS_CHITON fit 1.08 foot 1.12 deep 1.12 blouse 1.2 strapW .16, yoke + pads off; ICE_SNOW top 1.08 down .95 round 1.18 vW 1.5 vL 1.05 cap .95, preset secret_ice -> default; [P] ICE_FIST fist 1.75 -> 1.1 swell 1.35 -> 1.2 (approved; spent); GIANT_TREE thick 1.5 strands 3 turns 1.25 core .42 ring 6 lobe .34 spread .3; KABUTO bowl 1.16 bowlH .78 tiers 3 lameH .16 hornH 1.05 hornW .78 hornT .1 gold (.78,.34,.03), shelm off (samurai_giant only); SASHIMONO pole .07 over 1.9 wide .62 long .72 (543.10b from over .55 long 1.15), banner_back off; capture idle swing .25 samurai_giant/shogun, sensei knight 7 m behind + ABILITY_PREF shuriken_tempest | 543 | approved | no tempest, uniform scale, plain tricorn slab, viking helmet, grey yoke + pads, pale ice body, ICE_FIST 1.75, three-lobe crown, flipped bowl helm, small banner_back flag, idle swing .6

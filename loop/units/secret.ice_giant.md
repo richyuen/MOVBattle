@@ -1,8 +1,7 @@
 # secret.ice_giant
 Status: open   Audited: 538 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (2 since 538, 2 struck)
- 2. grey ball helmet with two horns in unit_secret.ice_giant_idle — TABS: bare team head with a snow cap (ref: secret.ice_giant.red.png)
+a FAIL (3 since 538, 3 struck)
  4. no belt in unit_secret.ice_giant_idle — TABS: team belt with an icicle emblem and brawler shields at the hips (ref: secret.ice_giant.red.png)
  5. no taller than the samurai and tree giants in lineup_secret_4 — TABS: the largest unit of the faction (ref: card Characteristics, secret.jpg far right)
 b PASS (543: struck 2)
@@ -11,9 +10,10 @@ c FAIL (1 since 538, 1 struck)
  3. punch in unit_secret.ice_giant_release: a short jab — TABS: long-arm slam (ref: secret.ice_giant.jpg)
 d PASS (544 stats)
 ## Ranked gaps
-3. [S] secret.ice_giant.a snow cap — blocker 2: replace helmet with snow sitting on the exposed head — ref: secret.ice_giant.red.png — ours: unit_secret.ice_giant_idle.png
-2. [S] secret.ice_giant.a head — blocker 2: helmet off (propBuilder giant_ice giantCrown/iceHorn), a bare team head with a snow cap — ref: secret.ice_giant.red.png — ours: unit_secret.ice_giant_idle.png
+1. [S] secret.ice_giant.a belt — blocker 4: badge on a team belt with paired side shields — ref: secret.ice_giant.red.png — ours: unit_secret.ice_giant_idle.png
+2. [S] secret.ice_giant.c Ice Breath — blocker 2: a freezing cone emitted in front of the face — ref: card Abilities — ours: unit_secret.ice_giant_ability.png
 ## Attempts (iter | gap | criterion | verdict)
+546 | shallow faceted snow cap in place of horned helmet (36bb1488) | a | approved (struck 2)
 544 | punch ice shockwave (47fb02cc) | c | approved (struck 1)
 543 | white faceted snow mantle, shoulder caps, V down the chest, team skin (preset default) ICE_SNOW (56dbea5a) | a | approved (struck 3)
 543 | [P] ICE_FIST fist 1.75 -> 1.1, swell 1.35 -> 1.2 (26e9bae9) | b | approved (struck 2, b PASS)

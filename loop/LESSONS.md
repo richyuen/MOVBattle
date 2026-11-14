@@ -28,7 +28,7 @@ Read at step 1; one fact a line, merge near cap.
 - Size a held prop off joint spreads (originIn), not limbBox (526); a stave thick by share of length: own girth when lengthened (540).
 - The idle is ~100 ms after spawn: full weight from spawn, in every re-solve (393).
 - A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).
-- `--units a,b` re-shoots lineup_<f> (498); a lethal blast freezes a duel: off-camera reserves (504).
+- `--units a,b` re-shoots lineup_<f> (498). For lethal blows, keep an off-camera reserve and time contact from the hit log (504, 546).
 - A dress change aimed at the idle must clear the rest pose and the held weapon: probe what covers it first (442; 539 log over chest). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Frame prop openings at the landing spot (522), toppled targets at torso bounds (509), a sky drop on the man ~20 ticks on, sky in frame (539).
 - Instant slam logs at swing start: use the pending blow (426); a special logged at let-go owns its missile (427); a cast status can put _struck before impact: ABILITY_PREF for on-landing effects (435).

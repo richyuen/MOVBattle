@@ -1,8 +1,7 @@
 # secret.shogun
 Status: open   Audited: 538 (AUDIT x2), 544 (RE-AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (0 since 544)
- 1. inverted maroon bowl with box tabs obscures the eyes in unit_secret.shogun_idle — TABS: downward-facing team kabuto with gold crescent, flared neck plates, and clear sightline to the eyes (ref: secret.shogun.blue.png)
+a FAIL (1 since 544, 1 struck)
  2. blank covered face in unit_secret.shogun_idle — TABS: a sculpted menpō below the eyes (ref: secret.shogun.blue.png)
  3. grey shoulder-width torso slab in unit_secret.shogun_idle — TABS: fitted team lamellar cuirass with gold straps (ref: secret.shogun.blue.png)
  4. bare forearms in unit_secret.shogun_idle — TABS: tapered gold-edged team vambraces (ref: secret.shogun.blue.png).
@@ -15,9 +14,11 @@ c FAIL (1 since 544, 1 struck)
  2. walking swing with both feet planted near the target through unit_secret.shogun_release and unit_secret.shogun_flight — TABS: fast dash toward the target before the attack (ref: card Characteristics and secret.shogun.png).
 d PASS (544 stats)
 ## Ranked gaps
-1. [S] secret.shogun.a kabuto — blocker 1: mount a downward-facing helmet and leave the eyes visible — ref: secret.shogun.blue.png — ours: unit_secret.shogun_idle.png
+4. [S] secret.shogun.a menpō — blocker 2: fitted angular mask below the eyes — ref: secret.shogun.blue.png — ours: unit_secret.shogun_idle.png
+9. [S] secret.shogun.a cuirass — blocker 3: fitted faceted lamellar cuirass with gold edging — ref: secret.shogun.blue.png — ours: unit_secret.shogun_idle.png
 6. [S] secret.shogun.c dash — blocker 2: short dash before Hurricane Slash — ref: secret.shogun.png — ours: unit_secret.shogun_release.png
 ## Attempts (iter | gap | criterion | verdict)
+546 | layered kabuto above the eyes (d457c95a) | a | approved (struck 1)
 544 | two-handed katana grip (c13f5ff2) | b | approved (struck 1)
 544 | gold Hurricane Slash trails (0ecd237c) | c | approved (struck 1)
 543 | sashimono: dark pole up the back over the helmet, tall team banner with a ring mon off a crossbar SASHIMONO (9b6a25ed, fe14a191; evidence 59740c19 idle .25 rad) | a | approved (struck 3)
