@@ -4975,6 +4975,13 @@ export class SimulationSystem {
     this.hitLog.push({ t: now, attackerUnit: attacker.definition.id, targetUnit: target.definition.id, x: impactOrigin.x, y: impactOrigin.y, z: impactOrigin.z, head: { x: head.x, y: head.y, z: head.z } });
     // Melee sparks
     if (this.visualEffects) this.visualEffects.spawnHitSparks(target.position);
+    // The punch sends a ring of ice across the ground from where it connected.
+    if (attacker.definition.id === "secret.ice_giant") {
+      this.visualEffects?.spawnIceBurst(
+        new Vector3(target.position.x, target.position.y, target.position.z),
+        splashRadius,
+      );
+    }
     // [S] 497 every Shadow Walker blow leaves one more green mark circling the struck man's chest (card; visualEffects WALKER_MARK)
     if (this.visualEffects && attacker.definition.id === "evil.shadow_walker" && !target.isDead) {
       const stacks = (this._walkerMarks.get(target) ?? 0) + 1;
