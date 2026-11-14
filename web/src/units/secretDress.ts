@@ -5953,10 +5953,27 @@ export function ullrJacket(scene: Scene, body: ArticulatedBody, team: Color3): M
     sleeve.position.y = arm.mid;
     add(sleeve, limb.parent as TransformNode);
   }
+  const fur = new Color3(0.45, 0.22, 0.15);
+  const furMaterial = getMaterialFactory().get("cloth", fur, { emissive: fur.scale(0.12), roughness: 1 });
+  const shoulders = Math.abs(originIn(body.rightShoulder, body.torso).x);
+  const collar = Array.from({ length: 3 }, (_, edge) =>
+    Array.from({ length: 13 }, (_, sector) => {
+      const angle = sector * Math.PI / 6;
+      const side = Math.abs(Math.sin(angle));
+      const width = [0.52, 1.14, 1.07][edge] * shoulders;
+      const depth = [0.72, 1.52, 1.42][edge] * torso.deep;
+      const height = [0.36, 0.1 + 0.22 * side, -0.35 + 0.22 * side][edge];
+      const tuft = edge === 1 && sector % 2 ? torso.half * 0.18 : 0;
+      return new Vector3(Math.sin(angle) * width, top + torso.half * height + tuft, Math.cos(angle) * depth);
+    }),
+  );
+  const mantle = MeshBuilder.CreateRibbon("ullrFurCollar", { pathArray: collar, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  add(mantle.convertToFlatShadedMesh(), body.torso);
+  mantle.material = furMaterial;
   return coat;
 }
 
-/** Shogun's faceted cheek and chin guard sits directly below the eyes. */
+/** A fitted lamellar shell with contrasting edges and front lacing. */
 export function secretSamuraiCuirass(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const yoke = body.allMeshes.find(mesh => mesh.name.endsWith("_yoke"));
   const trunk = limbBox(body.torsoMesh);
@@ -5998,6 +6015,7 @@ export function secretSamuraiCuirass(scene: Scene, body: ArticulatedBody, team: 
   return result;
 }
 
+/** Shogun's faceted cheek and chin guard sits directly below the eyes. */
 export function shogunMenpo(scene: Scene, body: ArticulatedBody): Mesh[] {
   const head = body.headMesh;
   const { center, extendSize: size } = head.getBoundingInfo().boundingBox;
