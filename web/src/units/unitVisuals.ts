@@ -1316,6 +1316,7 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_shogun":
       return vis({ scale: 1.58, bulk: 1.3, headSize: 1.08 }, "katana", "samurai_helmet", "none", "banner_back", "#a42323", undefined, {
+        weaponVariant: "two_hand_katana",
         posePreset: "duelist", materialPreset: "secret_royal", fxPreset: "royal",
         bodyDetailLevel: "hero",
       });
