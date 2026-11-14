@@ -775,6 +775,7 @@ async function main() {
             // [evidence 499] a second ability (SECOND_ABILITY) is waited for too: the monarch's first dodge comes after his transformation (probe 499:
             // the knights' charge has him down when the first arrow lands)
             if (second && !seen.has(second)) continue;
+            if (id === "secret.artemis" && !seen.has("volley")) continue;
             if (id === "secret.witch" && !seen.has("turncoat")) continue;
             if (id === "secret.necromancer" && !seen.has("gravestone_wall")) continue;
             if (events.some((e) => plain(e.kind)) && events.some((e) => special(e.kind)) && seen.has("impact")) break;
