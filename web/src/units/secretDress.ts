@@ -6169,6 +6169,42 @@ export function shogunHakama(scene: Scene, body: ArticulatedBody, team: Color3):
   return out;
 }
 
+/*
+ * [S] 550 (shogun a.5) the Shogun's tassets (audit 544: "smooth single-row skirt around the hips - TABS: separate gold-edged layered tassets
+ * trailing down each outer thigh"; secret.shogun.blue.png: from under the cuirass on each side hangs a column of dark team plates, three rows
+ * overlapping like shingles, each a little wider and further out than the one above, every row's foot edged in gold, the lowest reaching about
+ * half way down the thigh, the front of the hakama left open between them). The flared tunic skirt is off for him (unitFactory). SHOGUN_TASSET on
+ * the pelvis joint, per side (hx the hip joint's x, r the thigh's larger half-size, len the thigh's run to the knee): .rows plates .plate len tall,
+ * each .lap of a plate under the one above, the first's top .top r over the hip joint; .wide r front to back, .thick r thick; row i .out + i x .step
+ * r out from hx, leaned .lean rad out at the foot; a gold strip .rim of the plate tall along each foot, .proud of the plate's size. Dark team
+ * colour squared at .shade, self-lit .12; gold as the cuirass's lacing. Out of the glow.
+ */
+const SHOGUN_TASSET = { rows: 3, plate: 0.3, lap: 0.25, top: 0.4, wide: 2.9, thick: 0.2, out: 1.6, step: 0.22, lean: 0.3, rim: 0.16, proud: 1.06,
+  shade: 0.6, gold: new Color3(1, 0.42, 0.1) };
+export function shogunTassets(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = SHOGUN_TASSET, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const c = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(K.shade);
+  const plateMat = mf.get("cloth", c, { emissive: c.scale(0.12), roughness: 1 });
+  const gold = mf.get("cloth", K.gold, { emissive: K.gold.scale(0.12) });
+  const out: Mesh[] = [];
+  for (const [hipJ, thigh, knee, s] of [[body.leftHip, body.leftUpperLeg, body.leftKnee, -1], [body.rightHip, body.rightUpperLeg, body.rightKnee, 1]] as const) {
+    const U = limbBox(thigh), r = Math.max(U.wide, U.deep), len = Math.abs(knee.position.y);
+    const p = originIn(hipJ, body.hip), side = Math.sign(p.x) || s, ph = len * K.plate;
+    for (let i = 0; i < K.rows; i++) {
+      const node = new TransformNode("shogunTassetRow", scene);
+      node.parent = body.hip;
+      node.position.set(p.x + side * r * (K.out + i * K.step), p.y + r * K.top - i * ph * (1 - K.lap), p.z);
+      node.rotation.z = side * K.lean; // RotationZ(+a) swings -y toward +x: the foot out on +x for the right side
+      const plate = MeshBuilder.CreateBox("shogunTasset", { width: r * K.thick, height: ph, depth: r * K.wide }, scene);
+      plate.parent = node; plate.position.y = -ph / 2; plate.material = plateMat; out.push(plate);
+      const rim = MeshBuilder.CreateBox("shogunTassetRim", { width: r * K.thick * K.proud * 1.3, height: ph * K.rim, depth: r * K.wide * K.proud }, scene);
+      rim.parent = node; rim.position.y = -ph + (ph * K.rim) / 2; rim.material = gold; out.push(rim);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 export function ullrSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = ULLR_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const slate = mf.get("cloth", K.slate, { emissive: K.slate.scale(0.3), roughness: 1 });
