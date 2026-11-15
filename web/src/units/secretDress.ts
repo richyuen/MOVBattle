@@ -5902,6 +5902,14 @@ export function ladyRedJadeSkirt(scene: Scene, body: ArticulatedBody, team: Colo
     meshes.push(scroll);
   }
   for (const mesh of meshes) scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+  // [S] 551 (a.1: "tan/khaki apron panel over the front of the skirt below the belt - TABS: no apron; the skirt front stays team-coloured from the
+  // dark belt down to the hem"; secret.lady_red_jade.red.png). The panel was the clothed body's tunic skirt (pelvis cloth, warm self-light that
+  // reads tan) flaring out through the top of this skirt in front: retired, so the team skirt runs unbroken from the sash to the hem. The pelvis
+  // block it hangs from is dressed in the skirt's own cloth, so no corner of it shows over the skirt's top ring under the sash.
+  for (const m of body.root.getChildMeshes(false)) {
+    if (m.name === "tunicSkirt") m.setEnabled(false);
+    else if (m.name.endsWith("_pelvis")) m.material = skirt.material;
+  }
   return meshes;
 }
 
