@@ -806,6 +806,31 @@ function scotsPines(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): O
   return kept;
 }
 
+/**
+ * Clean water and a bare bridge (wiki shot): the base's grass blades (fieldBlades_* quads) and its tufts, flowers and pebbles are drawn over
+ * the river and the bridge deck. Spec: every blade quad whose root lies within the bank strip (|x - riverX(z)| < half width + 1.2 m) or on
+ * the bridge's footprint (span x width, plus 0.6 m) collapses onto its first vertex; small base props there are hidden.
+ */
+const SMALL_PROPS = new Set(["grassTuft", "flowerDot", "pebble"]);
+
+function clearWaterBlades(scene: Scene, built: Set<unknown>): void {
+  const wet = (x: number, z: number) =>
+    Math.abs(x - riverX(z)) < RIVER.halfWidth + 1.2 ||
+    (Math.abs(x - riverX(0)) < BRIDGE.span / 2 + 0.6 && Math.abs(z) < BRIDGE.width / 2 + 0.6);
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !(mesh instanceof Mesh)) continue;
+    if (mesh.name.startsWith("fieldBlades_")) {
+      const pos = mesh.getVerticesData("position");
+      if (!pos) continue;
+      for (let v = 0; v + 11 < pos.length; v += 12) {
+        if (!wet(pos[v], pos[v + 2])) continue;
+        for (let c = 3; c < 12; c++) pos[v + c] = pos[v + (c % 3)];
+      }
+      mesh.setVerticesData("position", pos);
+    } else if (SMALL_PROPS.has(mesh.name) && !mesh.parent && wet(mesh.position.x, mesh.position.z)) mesh.setEnabled(false);
+  }
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -828,5 +853,6 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
   obstacles.push(...bankWalls(scene));
   wheatStrips(scene);
   earthBowl(scene, built);
+  clearWaterBlades(scene, built);
   return { ...result, hazards, obstacles: roundIsland(scene, prior, scotsPines(scene, built, obstacles)) };
 }
