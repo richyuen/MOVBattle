@@ -139,6 +139,16 @@ function birchRing(scene: Scene, built: Set<unknown>): void {
   });
 }
 
+/**
+ * Open sky (autumn_tribal_1.png): the island floats alone in a teal sky with only clouds round it; the base's far ridge range and the
+ * floating rock roots under it (meshes mountainBase/Cap/Root) go, the clouds stay.
+ */
+function openSky(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && mesh.name.startsWith("mountain")) mesh.setEnabled(false);
+  }
+}
+
 const FIELD = { rx: 47, rz: 32 };
 const FIELD_PROPS = new Set(["boulder", "wallStone", "hayBale", "stump"]);
 
@@ -158,5 +168,6 @@ export function buildTribal1(scene: Scene, base: () => MapBuildResult): MapBuild
     && gone.some(([x, z]) => Math.abs(x - o.center.x) < 0.01 && Math.abs(z - o.center.z) < 0.01)));
   obstacles.push(...rimCliffs(scene));
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
+  openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles };
 }
