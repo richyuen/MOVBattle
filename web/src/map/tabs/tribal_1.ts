@@ -23,6 +23,16 @@ function rim(deg: number): [number, number] {
   return [c * r, s * r];
 }
 
+/**
+ * The cliff mass (wiki shot): each run is one deep continuous wall of rock, not a row of posts. Spec: a back rank of tall blocks on the
+ * rim (pulled 1 m in) and a lower front rank 4 m further in, a block every 3 degrees, 7-10 m wide and 5-7 m deep so neighbours overlap;
+ * heights follow a lumpy profile (a slow swell plus a per-block jitter) between 5 and 13 m, the front rank 55-75% of the back, and every
+ * third back block carries a leaning crag on top so the skyline is broken. Colliders stay one per 7 degrees, 3.5 m in, as before.
+ */
+function cliffHeight(deg: number, k: number): number {
+  return 8 + 3 * Math.sin(deg * 0.11) + 1.5 * Math.sin(deg * 0.37 + 1) + (seeded(k, 1) - 0.5) * 3;
+}
+
 function rimCliffs(scene: Scene): Obstacle[] {
   const rock = new StandardMaterial("tribal1Cliff", scene);
   rock.diffuseColor = new Color3(0.52, 0.49, 0.52);
@@ -32,25 +42,36 @@ function rimCliffs(scene: Scene): Obstacle[] {
   const obstacles: Obstacle[] = [];
   let k = 0;
   for (const [from, to] of CLIFF_RUNS) {
-    for (let deg = from; deg <= to; deg += CLIFF_STEP) {
+    for (let deg = from; deg <= to; deg += 3) {
       k++;
       const [rx, rz] = rim(deg);
-      const pull = 1 - 3.5 / Math.hypot(rx, rz);
-      const x = rx * pull, z = rz * pull;
-      const h = 5 + seeded(k, 1) * 4;
-      // Two or three stacked, leaning slabs per segment: a broken rock face, not a fence of posts
-      for (let j = 0; j < 3; j++) {
-        if (j === 2 && seeded(k, 2) < 0.4) continue;
-        const w = 4.5 + seeded(k * 3 + j, 3) * 2.5;
-        const slab = MeshBuilder.CreateCylinder("tribal1Cliff", {
-          diameterTop: w * 0.7, diameterBottom: w, height: h * (1 - j * 0.25), tessellation: 5,
+      const rr = Math.hypot(rx, rz);
+      const face = -Math.atan2(rz, rx) + Math.PI / 2;
+      const h = cliffHeight(deg, k);
+      for (const [pull, tall, row] of [[1, 1, 0], [5, 0.55 + seeded(k, 2) * 0.2, 1]] as const) {
+        const x = rx * (1 - pull / rr), z = rz * (1 - pull / rr);
+        const w = 7 + seeded(k * 2 + row, 3) * 3;
+        const hb = h * tall;
+        const block = MeshBuilder.CreateCylinder("tribal1Cliff", {
+          diameterTop: w * 0.78, diameterBottom: w, height: hb, tessellation: 6,
         }, scene);
-        slab.scaling.z = 0.6;
-        slab.position.set(x + (seeded(k * 3 + j, 4) - 0.5) * 2.5, (h * (1 - j * 0.25)) / 2, z + (seeded(k * 3 + j, 5) - 0.5) * 2.5);
-        slab.rotation.set((seeded(k * 3 + j, 6) - 0.5) * 0.12, -Math.atan2(z, x) + Math.PI / 2 + (seeded(k * 3 + j, 7) - 0.5) * 0.5, 0);
-        parts.push(slab);
+        block.scaling.z = 0.7;
+        block.position.set(x + (seeded(k * 2 + row, 4) - 0.5) * 1.2, hb / 2, z + (seeded(k * 2 + row, 5) - 0.5) * 1.2);
+        block.rotation.set((seeded(k * 2 + row, 6) - 0.5) * 0.1, face + (seeded(k * 2 + row, 7) - 0.5) * 0.3, (seeded(k * 2 + row, 8) - 0.5) * 0.08);
+        parts.push(block);
       }
-      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 2.6 });
+      if (k % 3 === 0) {
+        const x = rx * (1 - 2 / rr), z = rz * (1 - 2 / rr);
+        const crag = MeshBuilder.CreateCylinder("tribal1Crag", { diameterTop: 1.2, diameterBottom: 4.5, height: 3 + seeded(k, 9) * 3, tessellation: 5 }, scene);
+        crag.position.set(x, h + 1, z);
+        crag.rotation.set((seeded(k, 10) - 0.5) * 0.4, seeded(k, 11) * Math.PI, (seeded(k, 12) - 0.5) * 0.4);
+        parts.push(crag);
+      }
+    }
+    for (let deg = from; deg <= to; deg += CLIFF_STEP) {
+      const [rx, rz] = rim(deg);
+      const pull = 1 - 3.5 / Math.hypot(rx, rz);
+      obstacles.push({ type: "cylinder", center: new Vector3(rx * pull, 0, rz * pull), radius: 2.6 });
     }
   }
   const cliffs = Mesh.MergeMeshes(parts, true);
