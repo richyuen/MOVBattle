@@ -1525,6 +1525,7 @@ export class UnitFactory {
           || definition.id === "secret.bank_robbers" // [S] 527 a straight vest to the belt, no flare (secretDress bankRobberVest)
           || definition.id === "secret.ice_giant" // The hip belt and shields occupy the waist.
           || definition.id === "secret.shogun" // [S] 550 layered tassets at the sides over the hakama (secretDress SHOGUN_TASSET)
+          || definition.id === "secret.lady_red_jade" // [S] 551 her team skirt runs unbroken from the sash (secretDress ladyRedJadeSkirt)
         ? null
         : bareSkinned
         ? hangSkirt(this._scene, body, "hideKilt", 0.5, 1.45, body.bodyMaterial)
