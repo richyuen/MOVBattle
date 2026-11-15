@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { secretSamuraiCuirass, ullrBeard, witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, artemisSandals, ladyRedJadeHair, ladyRedJadeBodice, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, ullrBelt, ullrBoots, samuraiGiantKabuto, shogunSashimono, shogunMenpo, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, iceGiantBelt, treeGiantBeard, treeGiantHair, treeGiantShorts } from "./secretDress";
+import { secretSamuraiCuirass, ullrBeard, witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, artemisSandals, ladyRedJadeHair, ladyRedJadeBodice, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, ullrBelt, ullrBoots, samuraiGiantKabuto, shogunSashimono, shogunMenpo, shogunHakama, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, iceGiantBelt, treeGiantBeard, treeGiantHair, treeGiantShorts } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1240,6 +1240,8 @@ export class UnitFactory {
     if (definition.id === "secret.samurai_giant" && !shouldUseVehicleBody) propMeshes.push(...secretSamuraiCuirass(this._scene, body, teamColor));
     if (definition.id === "secret.shogun" && !shouldUseVehicleBody) {
       propMeshes.push(...shogunSashimono(this._scene, body, teamColor), ...shogunMenpo(this._scene, body), ...secretSamuraiCuirass(this._scene, body, teamColor));
+      // [S] 550 (a.6): wide flared team hakama legs ending just over the knee (secretDress SHOGUN_HAKAMA)
+      propMeshes.push(...shogunHakama(this._scene, body, teamColor));
     }
     // [S] 543 (a.1): Ullr's dark snow cap with two mini axes, shaggy brown hair round the face (secretDress ULLR_CAP)
     if (definition.id === "secret.ullr" && !shouldUseVehicleBody) propMeshes.push(...ullrSnowCap(this._scene, body), ...ullrJacket(this._scene, body, teamColor), ...ullrBeard(this._scene, body)); // [S] 549 (a.2) ULLR_BEARD

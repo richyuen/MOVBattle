@@ -6138,6 +6138,37 @@ export function shogunMenpo(scene: Scene, body: ArticulatedBody): Mesh[] {
   return [mask];
 }
 
+/*
+ * [S] 550 (shogun a.6) the Shogun's hakama (audit 544: "knees remain inside narrow trouser sleeves - TABS: wide hakama legs that flare and end
+ * immediately above the knees"; secret.shogun.blue.png: from the waist each leg a broad team-colour trouser leg about twice the thigh's width at its
+ * foot, widening all the way down, its open hem level just over the kneecap, the bare team shin below it). SHOGUN_HAKAMA on each thigh (box U, r its
+ * larger half-size): an 8-sided shell from .from of the way down the thigh to .to (past the joint's .08-.12 overrun, LESSONS 512: cut off the knee
+ * joint's height), .top r round at its top and .foot r round at its hem, .deep of the box's depth; a dark hem ring .hem of the length tall at its
+ * foot. In the team colour squared (LESSONS 517) at .shade, self-lit .12, out of the glow.
+ */
+const SHOGUN_HAKAMA = { from: -0.04, to: 0.86, top: 1.3, foot: 2.05, deep: 1.0, hem: 0.06, shade: 0.82 };
+export function shogunHakama(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = SHOGUN_HAKAMA, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const c = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(K.shade);
+  const cloth = mf.get("cloth", c, { emissive: c.scale(0.12), roughness: 1 });
+  const dark = mf.get("cloth", c.scale(0.55), { emissive: c.scale(0.06), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const [thigh, knee] of [[body.leftUpperLeg, body.leftKnee], [body.rightUpperLeg, body.rightKnee]] as const) {
+    const U = limbBox(thigh), r = Math.max(U.wide, U.deep);
+    // the thigh's run from its joint (y 0) down to the knee joint, not its box (which overruns the knee)
+    const len = Math.abs(knee.position.y);
+    const yTop = -len * K.from, yBot = -len * K.to, h = yTop - yBot;
+    const leg = MeshBuilder.CreateCylinder("shogunHakama", { height: h, diameterTop: r * 2 * K.top, diameterBottom: r * 2 * K.foot, tessellation: 8 }, scene);
+    leg.parent = thigh.parent; leg.position.set(thigh.position.x, (yTop + yBot) / 2, 0); leg.scaling.z = (U.deep / r) * K.deep * 1.1;
+    leg.material = cloth; out.push(leg);
+    const hem = MeshBuilder.CreateCylinder("shogunHakamaHem", { height: h * K.hem, diameter: r * 2 * K.foot * 1.03, tessellation: 8 }, scene);
+    hem.parent = thigh.parent; hem.position.set(thigh.position.x, yBot + (h * K.hem) / 2, 0); hem.scaling.z = leg.scaling.z;
+    hem.material = dark; out.push(hem);
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
 export function ullrSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = ULLR_CAP, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const slate = mf.get("cloth", K.slate, { emissive: K.slate.scale(0.3), roughness: 1 });
