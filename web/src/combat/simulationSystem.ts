@@ -34,8 +34,8 @@ const BEARER_AURA_KIND: Record<string, "haste" | "stay"> = { "legacy.flag_bearer
 const BEARER_PULSE = { every: 3, holds: 3.5 };
 // [S] 549 Artemis's charged shaft seated at the nock (spec at its spawn in _releasePendingThrows)
 const ARTEMIS_SHAFT = { size: 2.8, half: 0.375, chest: 1 };
-// [S] 549 the Shogun's dash lands its slash (spec at its use in the Shogun's decision): within .slack m past sword reach
-const SHOGUN_DASH = { slack: 1.2 };
+// [S] 549 the Shogun's dash lands its slash (spec at its use in the Shogun's decision): leap rise .rise m/s, the blow .settle s after touchdown
+const SHOGUN_DASH = { rise: 2.65, settle: 0.02 };
 // [S] 485 Shockwave Hammer (SimulationSystem._stepHammers): reach m, cooldown s, power x the mace blow, splash radius m, push, daze s, hinge angles rad, hang/fall/linger s
 const CHRONO_TRANSFORM = { settle: 0.2, drop: 1.45, tilt: 1.15, grow: 0.25, spin: 1.6, orbit: 0.9 };
 const PALADIN_HAMMER = { reach: 7, cooldown: 8, power: 1.5, radius: 2.5, push: 5, daze: 1.2, raised: -0.35, down: 1.5, hang: 0.4, fall: 0.3, linger: 0.35 };
@@ -844,7 +844,7 @@ export class SimulationSystem {
   private _units: RuntimeUnit[] = [];
   // Heavy blows swung but not yet landed: a club is raised when the swing starts and comes down on the man a few tenths of a second later, and that is
   // when he takes it (trailer_3_sheet_01 r2c3: the club is on the head at the hit). See _tryAttack and _landPendingBlows.
-  private _shogunDashed = new Set<RuntimeUnit>();
+
   private _pendingThrows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; shape: ProjectileShape; damage: number; splashRadius: number; knockback: Vector3; leavesAt: number; fromStaff?: boolean; fromBow?: boolean; artemisKnockback?: boolean }> = [];
   private _pendingBlows: Array<{ attacker: RuntimeUnit; target: RuntimeUnit; damage: number; splashRadius: number; knockback: Vector3; landAt: number }> = [];
   // A landed heavy blow dwells on the man before it throws him (trailer_3_sheet_01 r2c3: the club head is on the red man, chest to chest, as he starts to go):
@@ -2964,28 +2964,22 @@ export class SimulationSystem {
     if (unit.definition.id === "secret.shogun") {
       if (unit.isAirborne) return;
       const swordReach = unit.collisionBodyRadius + enemy.collisionBodyRadius + 0.8;
-      // [S] 549 (c.2) SHOGUN_DASH: the dash and the slash are one move. The swing that started with the dash is on its way down as he lands
-      // (runtimeUnit SHOGUN_LUNGE holds his legs split through the flight), and its blow lands on the first grounded tick, from where the dash
-      // put him, with no second planted windup; the attack cooldown starts there.
-      if (this._shogunDashed.delete(unit) && !enemy.isDead && distance <= swordReach + SHOGUN_DASH.slack && canAttack) {
-        const profile = getAttackProfile(unit.definition.attackProfileId);
-        unit.setAttackCooldown(now, profile.cooldown * (unit.definition.cooldownMultiplier ?? 1));
-        const push = enemy.position.subtract(unit.position);
-        push.y = 0;
-        if (push.lengthSquared() < 1e-6) push.set(Math.sin(unit.body.root.rotation.y), 0, Math.cos(unit.body.root.rotation.y));
-        unit.faceTarget(enemy.position);
-        this._landMeleeBlow(unit, enemy, profile.damage * (unit.definition.damageMultiplier ?? 1), profile.splashRadius,
-          push.normalize().scale(profile.knockback), now, unit.getImpactOrigin().position);
-        return;
-      }
       if (canMove && canAttack && unit.canAttack(now) && now >= (this._jumpReadyAt.get(unit) ?? 0)
         && distance > swordReach + 0.6 && distance <= Math.min(engageDistance + 2, swordReach + 4.3)) {
         const direction = enemy.position.subtract(unit.position);
         direction.y = 0;
         unit.faceTarget(enemy.position);
-        if (unit.leap(direction.normalize(), distance - swordReach, 2.65)) {
+        if (unit.leap(direction.normalize(), distance - swordReach, SHOGUN_DASH.rise)) {
           unit.triggerAttackVisual(0.29);
-          this._shogunDashed.add(unit);
+          // [S] 549 (c.2) SHOGUN_DASH: the dash and the slash are one move. The swing that starts with the dash is on its way down as he lands
+          // (runtimeUnit SHOGUN_LUNGE holds his legs split through the flight), and its blow is queued for the landing (the leap's airtime,
+          // 2 rise / 22, + .settle s), from where the dash put him, with no second planted windup; the attack cooldown runs from the dash.
+          const profile = getAttackProfile(unit.definition.attackProfileId);
+          unit.setAttackCooldown(now, profile.cooldown * (unit.definition.cooldownMultiplier ?? 1));
+          this._pendingBlows.push({
+            attacker: unit, target: enemy, damage: profile.damage * (unit.definition.damageMultiplier ?? 1), splashRadius: profile.splashRadius,
+            knockback: direction.normalize().scale(profile.knockback), landAt: now + (2 * SHOGUN_DASH.rise) / 22 + SHOGUN_DASH.settle,
+          });
           this._jumpReadyAt.set(unit, now + 2.4);
           this._clearPathState(unit);
           this._logAbility(unit, "hurricane_dash", now, enemy.position);
