@@ -601,8 +601,9 @@ function earthBowl(scene: Scene, built: Set<unknown>): void {
     return m;
   };
   const lip = mk("farmer2UnderLip", new Color3(0.42, 0.46, 0.13), 0.3);
-  const earth = mk("farmer2UnderEarth", new Color3(0.44, 0.36, 0.25), 0.45);
-  const pebble = mk("farmer2UnderStone", new Color3(0.66, 0.64, 0.58), 0.45);
+  // The bowl's face looks down and away from the sun: it is lit mostly by itself, or it reads near black
+  const earth = mk("farmer2UnderEarth", new Color3(0.5, 0.4, 0.27), 1.0);
+  const pebble = mk("farmer2UnderStone", new Color3(0.62, 0.57, 0.48), 0.9);
   const finish = (mesh: Mesh | null, name: string, mat: StandardMaterial) => {
     if (!mesh) return;
     mesh.name = name;
