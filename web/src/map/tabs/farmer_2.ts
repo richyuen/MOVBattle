@@ -230,7 +230,7 @@ function clearFieldJunk(scene: Scene, built: Set<unknown>, result: MapBuildResul
  * cross wall z -20 and the centre wall x -2.5 close), kept on the island; each a 1.1 m bundle pinched at the waist (a flared foot, a flared
  * head of ears) with a dark twine band at the waist, 0.7 m across; one in four lies down. Drawn only, no colliders.
  */
-const SHEAVES = { x0: -30, x1: -6, z0: -44, z1: -23, step: 5 };
+const SHEAVES = { x0: -30, x1: -6, z0: -36, z1: -16, step: 5 };
 
 function strawSheaves(scene: Scene): void {
   const mk = (name: string, c: Color3, glow: number) => {
@@ -251,7 +251,7 @@ function strawSheaves(scene: Scene): void {
       const px = x + (seeded(k, 61) - 0.5) * 3, pz = z + (seeded(k, 62) - 0.5) * 3;
       if ((px / 50) ** 2 + (pz / 46) ** 2 > 0.85) continue;
       const lying = seeded(k, 63) < 0.25;
-      const s = 0.85 + seeded(k, 64) * 0.3;
+      const s = (0.85 + seeded(k, 64) * 0.3) * 1.5;
       const foot = MeshBuilder.CreateCylinder("farmer2SheafFoot", { diameterTop: 0.38, diameterBottom: 0.7, height: 0.5, tessellation: 7 }, scene);
       foot.position.y = 0.25;
       const head = MeshBuilder.CreateCylinder("farmer2SheafHead", { diameterTop: 0.8, diameterBottom: 0.36, height: 0.6, tessellation: 7 }, scene);
