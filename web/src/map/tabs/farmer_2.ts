@@ -573,6 +573,82 @@ function roundIsland(scene: Scene, prior: Set<unknown>, obstacles: Obstacle[]): 
   return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
 }
 
+/**
+ * Island underside (farm_2.png; farmer_1's earth bowl kit, this map's own copy): under a thin olive grass lip the island is one deep
+ * rounded bowl of warm grey-brown earth with pale grey stones set all over its face; the base's navy islandUnder/islandShelf/islandCliff
+ * (shelf and black spikes) go. Spec: the bowl follows the round outline (ellipse 54 x 48), a 1.5 m lip band, then bulges down to a rounded
+ * point 34 m below the field (about 0.3 of the island width; scale 1, .98, .94, .86, .72, .52, .28, .04); about 110 flattened stones
+ * 1.6-3.6 m across sunk half into its face at every angle between 2 and 30 m down. Mid-tone, self-lit and out of the fog so the shaded
+ * face stays brown rather than black.
+ */
+const BOWL: Array<[number, number]> = [[1, -0.02], [1, -1.5], [0.98, -6], [0.94, -12], [0.86, -18], [0.72, -24], [0.52, -29], [0.28, -32.5], [0.04, -34]];
+const bowlOutline = (a: number): [number, number] => {
+  const c = Math.cos(a), s = Math.sin(a);
+  const r = ((c / 54) ** 2 + (s / 48) ** 2) ** -0.5;
+  return [c * r, s * r];
+};
+
+function earthBowl(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && ["islandUnder", "islandShelf", "islandCliff"].includes(mesh.name)) mesh.setEnabled(false);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const lip = mk("farmer2UnderLip", new Color3(0.42, 0.46, 0.13), 0.3);
+  const earth = mk("farmer2UnderEarth", new Color3(0.44, 0.36, 0.25), 0.45);
+  const pebble = mk("farmer2UnderStone", new Color3(0.66, 0.64, 0.58), 0.45);
+  const finish = (mesh: Mesh | null, name: string, mat: StandardMaterial) => {
+    if (!mesh) return;
+    mesh.name = name;
+    mesh.convertToFlatShadedMesh();
+    mesh.material = mat;
+    mesh.applyFog = false;
+    mesh.isPickable = false;
+    glow?.addExcludedMesh(mesh);
+  };
+  const bands: Mesh[] = [];
+  for (let i = 0; i < BOWL.length - 1; i++) {
+    const [s0, y0] = BOWL[i], [s1, y1] = BOWL[i + 1];
+    const band = MeshBuilder.CreateCylinder("farmer2Bowl", { diameterTop: s0, diameterBottom: s1, height: y0 - y1, tessellation: 64 }, scene);
+    const pos = band.getVerticesData("position")!;
+    for (let v = 0; v < pos.length; v += 3) {
+      const reach = Math.hypot(pos[v], pos[v + 2]) * 2;
+      const [x, z] = bowlOutline(Math.atan2(pos[v + 2], pos[v]));
+      pos[v] = x * reach;
+      pos[v + 2] = z * reach;
+    }
+    band.setVerticesData("position", pos);
+    band.position.y = (y0 + y1) / 2;
+    if (i === 0) finish(band, "farmer2BowlLip", lip);
+    else bands.push(band);
+  }
+  finish(Mesh.MergeMeshes(bands, true), "farmer2Bowl", earth);
+  // Stones set into the face at every angle and depth, flattened along the outward direction
+  const stones: Mesh[] = [];
+  for (let k = 0; k < 110; k++) {
+    const a = ((k + seeded(k, 91)) / 110) * Math.PI * 2;
+    const y = -2 - seeded(k, 92) * 28;
+    let j = 1;
+    while (j < BOWL.length - 1 && BOWL[j][1] > y) j++;
+    const [sa, ya] = BOWL[j - 1], [sb, yb] = BOWL[j];
+    const s = sa + (sb - sa) * ((y - ya) / (yb - ya));
+    const [ox, oz] = bowlOutline(a);
+    const d = 1.6 + seeded(k, 93) * 2;
+    const stone = MeshBuilder.CreateIcoSphere("farmer2UnderStone", { radius: d / 2, subdivisions: 2 }, scene);
+    stone.scaling.set(1.3, 0.85, 0.5);
+    stone.rotation.set(0, Math.PI / 2 - a, (seeded(k, 94) - 0.5) * 0.6);
+    stone.position.set(ox * s, y, oz * s);
+    stones.push(stone);
+  }
+  finish(Mesh.MergeMeshes(stones, true), "farmer2UnderStones", pebble);
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -589,5 +665,6 @@ export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuild
   WALLS.forEach((wall, w) => cobbleWall(scene, stone, wall, w, obstacles));
   wheatField(scene);
   strawSheaves(scene);
+  earthBowl(scene, built);
   return { ...result, obstacles: roundIsland(scene, prior, obstacles) };
 }
