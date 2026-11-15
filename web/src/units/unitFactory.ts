@@ -1240,6 +1240,9 @@ export class UnitFactory {
     }
     // [S] 543 (a.3): the Shogun's sashimono, a dark pole up his back over the helmet, a tall team banner with a mon (secretDress SASHIMONO)
     if (definition.id === "secret.samurai_giant" && !shouldUseVehicleBody) propMeshes.push(...secretSamuraiCuirass(this._scene, body, teamColor));
+    // [S] 552 (samurai_giant a.3: "narrow segmented thighs - TABS: flared knee-length hakama legs"; secret.samurai_giant.blue.png): the Shogun's
+    // flared team hakama on his thighs too (secretDress SHOGUN_HAKAMA), the grey tunic skirt off
+    if (definition.id === "secret.samurai_giant" && !shouldUseVehicleBody) propMeshes.push(...shogunHakama(this._scene, body, teamColor));
     if (definition.id === "secret.shogun" && !shouldUseVehicleBody) {
       propMeshes.push(...shogunSashimono(this._scene, body, teamColor), ...shogunMenpo(this._scene, body), ...secretSamuraiCuirass(this._scene, body, teamColor));
       // [S] 550 (a.6): wide flared team hakama legs ending just over the knee (secretDress SHOGUN_HAKAMA)
@@ -1528,6 +1531,7 @@ export class UnitFactory {
           || definition.id === "secret.bank_robbers" // [S] 527 a straight vest to the belt, no flare (secretDress bankRobberVest)
           || definition.id === "secret.ice_giant" // The hip belt and shields occupy the waist.
           || definition.id === "secret.shogun" // [S] 550 layered tassets at the sides over the hakama (secretDress SHOGUN_TASSET)
+          || definition.id === "secret.samurai_giant" // [S] 552 the Shogun's hakama from the cuirass down (secretDress SHOGUN_HAKAMA)
           || definition.id === "secret.lady_red_jade" // [S] 551 her team skirt runs unbroken from the sash (secretDress ladyRedJadeSkirt)
         ? null
         : bareSkinned
