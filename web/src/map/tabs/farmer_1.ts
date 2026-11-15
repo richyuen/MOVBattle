@@ -294,6 +294,75 @@ function redHouses(scene: Scene, obstacles: Obstacle[], built: Set<unknown>): Ob
   return kept;
 }
 
+/**
+ * Dry-stone walls (wiki shot): low grey cobble walls follow the river banks in the back half on both sides and the left bank in the front
+ * half by the boulders, and one runs across the houses' yard in front of them. Spec: knee-high runs (two courses of rough cobbles, 1 m
+ * thick) 4.8 m off the river's centre line so a 2.8 m grass bank stays between wall and water, each run with one 4 m gap: left bank
+ * z 10..36, right bank z 22..46, left bank z -32..-10, yard wall z 30 from x -34 to -7. They keep clear of the bridge (|z| < 10), the mill
+ * (z < -36) and the stage armies (team 1 stands in x 2..41, z -26..18). One box collider per 4 m of wall.
+ */
+const BANK_OFF = 4.8;
+const BANK_WALLS: Array<{ path: (t: number) => [number, number]; len: number; gap: number }> = [
+  { path: (t) => [riverX(10 + t) - BANK_OFF, 10 + t], len: 26, gap: 0.5 },
+  { path: (t) => [riverX(22 + t) + BANK_OFF, 22 + t], len: 24, gap: 0.35 },
+  { path: (t) => [riverX(-32 + t) - BANK_OFF, -32 + t], len: 22, gap: 0.6 },
+  { path: (t) => [-34 + t, 30], len: 27, gap: 0.55 },
+];
+
+function wallSeed(i: number, seed: number): number {
+  const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
+  return raw - Math.floor(raw);
+}
+
+function bankWalls(scene: Scene): Obstacle[] {
+  const stone = new StandardMaterial("farmer1WallStone", scene);
+  stone.diffuseColor = new Color3(0.62, 0.6, 0.56);
+  stone.emissiveColor = new Color3(0.08, 0.07, 0.07);
+  stone.specularColor = new Color3(0.04, 0.04, 0.04);
+  const stones: Mesh[] = [];
+  const obstacles: Obstacle[] = [];
+  let k = 0;
+  BANK_WALLS.forEach(({ path, len, gap }, w) => {
+    const gapFrom = gap * len - 2, gapTo = gap * len + 2;
+    for (let t = 0.4; t < len; t += 0.75) {
+      if (t > gapFrom && t < gapTo) continue;
+      const [x, z] = path(t);
+      const [x2, z2] = path(t + 0.5);
+      const l = Math.hypot(x2 - x, z2 - z) || 1;
+      const nx = -(z2 - z) / l, nz = (x2 - x) / l;
+      for (let layer = 0; layer < 2; layer++) {
+        for (const side of [-0.25, 0.25]) {
+          k++;
+          if (layer === 1 && wallSeed(k + w * 500, 3) < 0.25) continue;
+          const size = 0.42 + wallSeed(k + w * 500, 4) * 0.22;
+          const s = MeshBuilder.CreatePolyhedron("farmer1Cobble", { type: 1, size }, scene);
+          s.scaling.set(1, 0.7, 1);
+          const j = (wallSeed(k + w * 500, 5) - 0.5) * 0.3;
+          s.position.set(x + nx * side + (x2 - x) / l * j, 0.22 + layer * 0.38, z + nz * side + (z2 - z) / l * j);
+          s.rotation.set(wallSeed(k, 6) * 3, wallSeed(k, 7) * 3, wallSeed(k, 8) * 3);
+          stones.push(s);
+        }
+      }
+    }
+    for (let t = 0; t < len; t += 4) {
+      const mid = Math.min(t + 2, len - 0.5);
+      if (mid > gapFrom - 1 && mid < gapTo + 1) continue;
+      const [x, z] = path(mid);
+      const along = Math.abs(path(len)[0] - path(0)[0]) > Math.abs(path(len)[1] - path(0)[1]);
+      obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: along ? 2 : 0.5, halfZ: along ? 0.5 : 2 });
+    }
+  });
+  const merged = Mesh.MergeMeshes(stones, true);
+  if (merged) {
+    merged.name = "farmer1Walls";
+    merged.convertToFlatShadedMesh();
+    merged.material = stone;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  return obstacles;
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -310,5 +379,6 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
   const obstacles = redHouses(scene, result.obstacles.filter((o) => Math.abs(o.center.x - riverX(o.center.z)) > RIVER.halfWidth + 1.5), built);
   obstacles.push(...stoneBridge(scene));
   obstacles.push(...watermill(scene));
+  obstacles.push(...bankWalls(scene));
   return { ...result, hazards, obstacles };
 }
