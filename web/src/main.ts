@@ -66,6 +66,7 @@ import {
   setPlacementGuidesVisible,
   clampToIsland,
 } from "./map/mapBuilder";
+import { TABS_MAPS } from "./map/tabsMaps";
 import type { Obstacle } from "./map/obstacles";
 import { isPointInsideHazard } from "./map/hazards";
 import { PlacementValidator } from "./map/placementValidator";
@@ -111,7 +112,11 @@ const titleIntroEl = document.getElementById("titleIntro");
 const bodyEl = document.body;
 const btnCampaignEl = document.getElementById("btnCampaign") as HTMLButtonElement | null;
 const btnUnlimitedEl = document.getElementById("btnUnlimited") as HTMLButtonElement | null;
-const mapNameEl = document.getElementById("mapName");
+const mapNameEl = document.getElementById("mapName") as HTMLButtonElement | null;
+const mapOverlayEl = document.getElementById("mapOverlay")!;
+const mapPickerGridEl = document.getElementById("mapPickerGrid")!;
+const mapPickerNoteEl = document.getElementById("mapPickerNote")!;
+const btnCloseMapPickerEl = document.getElementById("btnCloseMapPicker") as HTMLButtonElement | null;
 const btnResultPrimaryEl = document.getElementById("btnResultPrimary") as HTMLButtonElement | null;
 const btnResultSecondaryEl = document.getElementById("btnResultSecondary") as HTMLButtonElement | null;
 const btnLeaveCampaignEl = document.getElementById("btnLeaveCampaign") as HTMLButtonElement | null;
@@ -755,6 +760,8 @@ function updateCampaignStatusDisplay(): void {
     btnUnlimitedEl.textContent = campaignSession?.unlimited ? "Unlimited: On" : "Unlimited: Off";
   }
   if (mapNameEl) mapNameEl.textContent = campaignSession ? "" : activeMapInstance.displayName;
+  // Leaving a campaign mid-stage: only offered while a stage is loaded, and it returns to the sandbox map picked before it
+  if (btnLeaveCampaignEl) btnLeaveCampaignEl.hidden = !campaignSession;
   if (!activeCampaign || !activeScenario) {
     campaignStatusEl.textContent = "";
     return;
@@ -825,8 +832,6 @@ function populateCampaignList(): void {
     btn.addEventListener("click", () => {
       selectedCampaignId = campaign.id;
       selectedCampaignScenarioId = campaign.scenarios[0]?.id ?? null;
-      // Sandbox pressed next opens on this level's map
-      sandboxPickedMapId = campaign.scenarios[0]?.mapId ?? null;
       populateCampaignList();
       populateCampaignScenarioList(campaign.id);
     });
@@ -835,11 +840,57 @@ function populateCampaignList(): void {
   populateCampaignScenarioList(selectedCampaignId);
 }
 
-// The map of the level last clicked on the Levels screen since it opened: the Sandbox button takes it (an empty field on that map), else the default map
-let sandboxPickedMapId: BattleMapId | null = null;
+// The sandbox's map, chosen on the map picker (the map name, top left): a campaign stage swaps it out, and leaving the campaign brings it back
+let sandboxMapId: BattleMapId = DEFAULT_BATTLE_MAP_ID;
+
+// The maps the sandbox can be played on: its own default map, then the TABS maps in TABS order
+const SANDBOX_MAP_CHOICES: Array<{ id: BattleMapId; title: string }> = [
+  { id: DEFAULT_BATTLE_MAP_ID, title: "Tribal Hills" },
+  ...Object.entries(TABS_MAPS).map(([key, entry]) => ({ id: `map.${key}` as BattleMapId, title: entry.title })),
+];
+
+function populateMapPicker(): void {
+  mapPickerGridEl.innerHTML = "";
+  const onField = placedUnits.filter((unit) => !unit.linkedParent).length;
+  mapPickerNoteEl.textContent = onField > 0
+    ? `Changing map clears the ${onField} unit${onField === 1 ? "" : "s"} on the field.`
+    : "Choose the battlefield for the sandbox.";
+  for (const choice of SANDBOX_MAP_CHOICES) {
+    const btn = document.createElement("button");
+    btn.className = "map-picker-item";
+    btn.dataset.mapId = choice.id;
+    btn.classList.toggle("active", activeMapInstance.id === choice.id);
+    btn.textContent = choice.title;
+    btn.addEventListener("click", () => pickSandboxMap(choice.id));
+    mapPickerGridEl.appendChild(btn);
+  }
+}
+
+function toggleMapPicker(visible: boolean): void {
+  if (visible) {
+    if (campaignSession) return;
+    if (stateMachine.currentState !== GameState.Placement) {
+      showStatus("The map can be changed before the battle starts.");
+      return;
+    }
+    populateMapPicker();
+  }
+  mapOverlayEl.classList.toggle("visible", visible);
+  mapOverlayEl.setAttribute("aria-hidden", visible ? "false" : "true");
+}
+
+function pickSandboxMap(mapId: BattleMapId): void {
+  toggleMapPicker(false);
+  if (campaignSession) return;
+  sandboxMapId = mapId;
+  if (activeMapInstance.id === mapId) return;
+  // Each map has its own placement zones, so the field is cleared before the switch
+  resetBattle({ suppressStatus: true });
+  loadMapById(mapId);
+  showStatus(`Map: ${activeMapInstance.displayName}.`);
+}
 
 function toggleCampaignOverlay(visible: boolean): void {
-  sandboxPickedMapId = null;
   campaignOverlayEl.classList.toggle("visible", visible);
   campaignOverlayEl.setAttribute("aria-hidden", visible ? "false" : "true");
   if (visible) {
@@ -1078,6 +1129,11 @@ btnResultSecondaryEl?.addEventListener("click", () => {
 });
 btnLeaveCampaignEl?.addEventListener("click", () => leaveCampaignMode());
 btnCloseCampaignEl?.addEventListener("click", () => toggleCampaignOverlay(false));
+mapNameEl?.addEventListener("click", () => toggleMapPicker(true));
+btnCloseMapPickerEl?.addEventListener("click", () => toggleMapPicker(false));
+mapOverlayEl.addEventListener("click", (event) => {
+  if (event.target === mapOverlayEl) toggleMapPicker(false);
+});
 campaignOverlayEl.addEventListener("click", (event) => {
   if (event.target === campaignOverlayEl) {
     toggleCampaignOverlay(false);
@@ -1440,8 +1496,8 @@ function resetBattle(options: {
   if (!options.preserveCampaignSession) {
     clearLockedCampaignUnits();
   }
-  if (options.restoreSandboxMap && activeMapInstance.id !== DEFAULT_BATTLE_MAP_ID) {
-    loadMapById(DEFAULT_BATTLE_MAP_ID);
+  if (options.restoreSandboxMap && activeMapInstance.id !== sandboxMapId) {
+    loadMapById(sandboxMapId);
   }
   updateBudgetDisplay();
   resultOverlayEl.classList.remove("visible");
@@ -1787,7 +1843,6 @@ function setCampaignUnlimited(enabled: boolean): void {
 }
 
 function leaveCampaignMode(): void {
-  const pickedMapId = sandboxPickedMapId;
   clearPendingCampaignResolution();
   toggleCampaignOverlay(false);
   campaignSession = null;
@@ -1796,10 +1851,9 @@ function leaveCampaignMode(): void {
   selectedCampaignScenarioId = null;
   resetBattle({
     preserveCampaignSession: true,
-    restoreSandboxMap: pickedMapId === null,
+    restoreSandboxMap: true,
     suppressStatus: true,
   });
-  if (pickedMapId !== null) loadMapById(pickedMapId);
   updateCampaignStatusDisplay();
   budgetSystem = new BudgetSystem(
     BATTLE_CONFIG.teamABudget,
@@ -1809,7 +1863,7 @@ function leaveCampaignMode(): void {
   buildUnitPanel();
   updateBudgetDisplay();
   updateSelectedUnitDisplay();
-  showStatus(pickedMapId !== null ? `Sandbox: ${activeMapInstance.displayName}.` : "Returned to sandbox.");
+  showStatus(`Sandbox: ${activeMapInstance.displayName}.`);
 }
 
 function buildSuggestedCampaignPlayerPlacements(scenario: CampaignScenarioDefinition): CampaignPlacementSpec[] {
@@ -3693,6 +3747,8 @@ const gameApi = {
   playAgain,
   openCampaignPicker: () => toggleCampaignOverlay(true),
   closeCampaignPicker: () => toggleCampaignOverlay(false),
+  openMapPicker: () => toggleMapPicker(true),
+  closeMapPicker: () => toggleMapPicker(false),
   leaveCampaignMode,
   toggleCampaignUnlimited: () => {
     if (!campaignSession) {

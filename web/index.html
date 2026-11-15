@@ -218,8 +218,15 @@
     .btn:disabled { opacity: 0.5; cursor: default; }
     /* Sandbox has no unlimited toggle: the top-left corner stays bare, keeping its place in the row */
     #btnUnlimited:disabled { visibility: hidden; }
-    /* Sandbox names its map there instead, as small plain text */
-    #mapName { padding: 10px 2px 0; font-size: 13px; letter-spacing: 0.03em; white-space: nowrap; pointer-events: none; }
+    /* Sandbox names its map there instead, as small plain text with a caret: clicking it opens the map picker */
+    #mapName {
+      padding: 10px 2px 0; font-size: 13px; letter-spacing: 0.03em; white-space: nowrap;
+      background: none; border: none; color: inherit; font-family: inherit; cursor: pointer;
+    }
+    #mapName::after { content: "  \25BE"; opacity: 0.7; }
+    #mapName:hover { color: #fff0b0; }
+    #mapName:disabled { cursor: default; color: inherit; }
+    #mapName:disabled::after { content: ""; }
     #mapName:empty { display: none; }
     .btn-start {
       min-width: 136px;
@@ -325,6 +332,21 @@
     .campaign-scenario-item.active::before { content: "\25B8  "; }
     .campaign-actions { margin-top: 14px; display: flex; gap: 10px; }
     .campaign-actions .btn { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
+    .campaign-actions .btn[hidden] { display: none; }
+
+    /* Sandbox map picker: the Levels screen's dark sea, the maps as a grid of thin-caps tiles, the current one filled */
+    #mapOverlay { position: absolute; inset: 0; z-index: 30; display: none; background: #0d1a26; overflow-y: auto; }
+    #mapOverlay.visible { display: block; }
+    .map-picker { position: relative; min-height: 100%; padding: 76px 32px 28px; box-sizing: border-box; color: #fff; }
+    .map-picker-note { min-height: 14px; font-size: 10px; color: rgba(255,255,255,0.55); letter-spacing: 0.08em; margin-bottom: 14px; }
+    .map-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    .map-picker-item {
+      background: rgba(8,14,20,0.82); border: 1px solid rgba(255,255,255,0.25); border-left: 2px solid rgba(255,255,255,0.6);
+      color: rgba(255,255,255,0.85); cursor: pointer; text-align: left; padding: 12px;
+      font-family: inherit; font-size: 11px; font-weight: 300; letter-spacing: 0.2em; text-transform: uppercase;
+    }
+    .map-picker-item:hover { color: #fff; border-color: rgba(255,255,255,0.7); }
+    .map-picker-item.active { background: #fff; color: #13212e; border-color: #fff; }
 
     #unitPanel {
       position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
@@ -515,6 +537,7 @@
     body.capture-mode #unitPanel,
     body.capture-mode #resultOverlay,
     body.capture-mode #campaignOverlay,
+    body.capture-mode #mapOverlay,
     body.capture-mode #touchCameraControls,
     body.capture-mode #controls-help,
     body.capture-mode #btnStopBattle,
@@ -591,6 +614,8 @@
 
       .campaign-card { left: 16px; right: 16px; bottom: 16px; width: auto; }
       .campaign-item-title { display: none; }
+      .map-picker { padding: 64px 16px 16px; }
+      .map-picker-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
     }
 
     @media (max-width: 400px) {
@@ -631,7 +656,7 @@
   <div id="hud">
     <div class="hud-topbar">
       <div class="hud-side left">
-        <span id="mapName"></span>
+        <button type="button" id="mapName" title="Choose a map"></button>
         <button class="btn btn-corner" id="btnUnlimited" disabled>Unlimited: Off</button>
       </div>
       <div class="hud-center">
@@ -691,9 +716,20 @@
         <div class="campaign-subtitle" id="campaignScenarioSubtitle">Select a campaign.</div>
         <div class="campaign-scenario-list" id="campaignScenarioList"></div>
         <div class="campaign-actions">
-          <button class="btn" id="btnLeaveCampaign">Sandbox</button>
+          <button class="btn" id="btnLeaveCampaign" hidden>Leave campaign</button>
           <button class="btn" id="btnCloseCampaign">Close</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mapOverlay" aria-hidden="true">
+    <div class="map-picker">
+      <div class="campaign-map-title">Maps</div>
+      <div class="map-picker-note" id="mapPickerNote"></div>
+      <div class="map-picker-grid" id="mapPickerGrid"></div>
+      <div class="campaign-actions">
+        <button class="btn" id="btnCloseMapPicker">Close</button>
       </div>
     </div>
   </div>
