@@ -109,12 +109,95 @@ function openSky(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+/**
+ * Island underside (autumn_tribal_2.png; tribal_1's tier kit, this map's own copy): under the field the island is three stacked rounded
+ * tiers of orange earth, each narrower than the one above with a crease between them, sparse white blocky stones set in their faces; the
+ * base's navy islandUnder/islandShelf/islandCliff (the black spikes) go. Spec: the tiers follow the island outline (superellipse 54 x 48,
+ * power 3) at 1.0, 0.86 and 0.66 of it, 16, 13 and 10 m tall (the reference's tiers stand about 0.19, 0.13 and 0.1 of the island's
+ * width), each side bulging 3% at mid height and rounding in to 88% at its foot; the last tier closes in a rounded foot; about 70 white
+ * boxes 1.2-2.4 m flat against the faces.
+ */
+const ISLAND = { a: 54, b: 48, round: 3 };
+const TIERS = [{ s: 1, top: -0.02, h: 16 }, { s: 0.86, top: -16.6, h: 13 }, { s: 0.66, top: -30.2, h: 10 }];
+
+function rim(deg: number): [number, number] {
+  const t = (deg * Math.PI) / 180, c = Math.cos(t), s = Math.sin(t);
+  const r = (Math.abs(c / ISLAND.a) ** ISLAND.round + Math.abs(s / ISLAND.b) ** ISLAND.round) ** (-1 / ISLAND.round);
+  return [c * r, s * r];
+}
+
+function tierProfile(s: number, top: number, h: number, last: boolean): Array<[number, number]> {
+  const p: Array<[number, number]> = [[s * (top > -0.1 ? 1 : 0.95), top], [s * 1.01, top - h * 0.2], [s * 1.03, top - h * 0.5], [s * 0.99, top - h * 0.8], [s * 0.88, top - h]];
+  if (last) p.push([s * 0.6, top - h - 1.5], [s * 0.15, top - h - 2.2]);
+  return p;
+}
+
+function earthTiers(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && ["islandUnder", "islandShelf", "islandCliff"].includes(mesh.name)) mesh.setEnabled(false);
+  }
+  const mk = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const earth = mk("tribal2UnderEarth", new Color3(0.88, 0.5, 0.2), 0.32);
+  const fleck = mk("tribal2UnderFleck", new Color3(0.95, 0.93, 0.88), 0.5);
+  const bands: Mesh[] = [];
+  TIERS.forEach(({ s, top, h }, t) => {
+    const prof = tierProfile(s, top, h, t === TIERS.length - 1);
+    for (let i = 0; i < prof.length - 1; i++) {
+      const [s0, y0] = prof[i], [s1, y1] = prof[i + 1];
+      const band = MeshBuilder.CreateCylinder("tribal2Tier", { diameterTop: s0, diameterBottom: s1, height: y0 - y1, tessellation: 72 }, scene);
+      const pos = band.getVerticesData("position")!;
+      for (let v = 0; v < pos.length; v += 3) {
+        const reach = Math.hypot(pos[v], pos[v + 2]) * 2;
+        const [x, z] = rim((Math.atan2(pos[v + 2], pos[v]) * 180) / Math.PI);
+        pos[v] = x * reach;
+        pos[v + 2] = z * reach;
+      }
+      band.setVerticesData("position", pos);
+      band.position.y = (y0 + y1) / 2;
+      bands.push(band);
+    }
+  });
+  const tiers = Mesh.MergeMeshes(bands, true);
+  if (tiers) {
+    tiers.name = "tribal2Tiers";
+    tiers.material = earth;
+    tiers.isPickable = false;
+  }
+  // White stones on the tier faces, at mid height where the face stands out furthest
+  const flecks: Mesh[] = [];
+  for (let k = 0; k < 70; k++) {
+    const { s, top, h } = TIERS[k % TIERS.length];
+    const deg = seeded(k, 31) * 360;
+    const y = top - h * 0.3 - seeded(k, 32) * h * 0.4;
+    const [ox, oz] = rim(deg);
+    const w = 1.2 + seeded(k, 33) * 1.2;
+    const box = MeshBuilder.CreateBox("tribal2Fleck", { width: w, height: w * (0.6 + seeded(k, 34) * 0.3), depth: 0.5 }, scene);
+    box.rotation.set(0, Math.PI / 2 - (deg * Math.PI) / 180, (seeded(k, 35) - 0.5) * 0.4);
+    box.position.set(ox * s * 1.025, y, oz * s * 1.025);
+    flecks.push(box);
+  }
+  const set = Mesh.MergeMeshes(flecks, true);
+  if (set) {
+    set.name = "tribal2Flecks";
+    set.material = fleck;
+    set.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(set);
+  }
+}
+
 export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   clearFieldWalls(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
+  earthTiers(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   const rock = new StandardMaterial("tribal2Mountain", scene);
   rock.diffuseColor = new Color3(0.6, 0.54, 0.52);
   rock.emissiveColor = new Color3(0.08, 0.06, 0.05);
