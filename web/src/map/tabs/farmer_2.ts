@@ -124,8 +124,11 @@ function wheatField(scene: Scene): void {
  * left cobble wall (x -26) a narrow alley is shut off from the track by a broken wooden fence: posts every 2 m with two rails, some rails
  * hanging, two posts down and one stretch missing. Ring trees standing on the track go. Spec: track centre x = PATH.x + a 2 m sway.
  */
-const PATH = { x: -37, half: 2.5, back: 44, front: -44 };
+// The alley (critic 557): the fence reads as a real barrier (posts 1.6 m, three rails), the alley between it and the wall is its own strip
+// of lush darker grass, and the track stops at the back yard wall (z 24) instead of running through it.
+const PATH = { x: -37, half: 2.5, back: 22.5, front: -44 };
 const FENCE = { x: -31, z0: -18, z1: 22, step: 2 };
+const ALLEY = { x0: -30.6, x1: -26.6, z0: -18, z1: 22 };
 const pathX = (z: number) => PATH.x + 2 * Math.sin(z * 0.06);
 
 function leftPathway(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
@@ -172,15 +175,15 @@ function leftPathway(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): 
     const missing = z > 2 && z < 7; // one stretch gone
     if (missing) continue;
     const down = seeded(k, 51) < 0.15;
-    const post = MeshBuilder.CreateBox("farmer2FencePost", { width: 0.22, height: 1.3, depth: 0.22 }, scene);
-    post.position.set(FENCE.x, down ? 0.15 : 0.65, z);
+    const post = MeshBuilder.CreateBox("farmer2FencePost", { width: 0.32, height: 1.6, depth: 0.32 }, scene);
+    post.position.set(FENCE.x, down ? 0.18 : 0.8, z);
     if (down) post.rotation.z = Math.PI / 2 - 0.2;
     else post.rotation.set((seeded(k, 52) - 0.5) * 0.2, 0, (seeded(k, 53) - 0.5) * 0.25);
     parts.push(post);
     if (z + FENCE.step >= FENCE.z1 || (z + FENCE.step > 2 && z + FENCE.step < 7) || down) continue;
-    for (const y of [0.45, 0.95]) {
-      const hanging = seeded(k * 2 + (y > 0.5 ? 1 : 0), 54) < 0.25;
-      const rail = MeshBuilder.CreateBox("farmer2FenceRail", { width: 0.1, height: 0.12, depth: FENCE.step + 0.2 }, scene);
+    for (const y of [0.4, 0.85, 1.3]) {
+      const hanging = seeded(k * 3 + Math.round(y * 2), 54) < 0.22;
+      const rail = MeshBuilder.CreateBox("farmer2FenceRail", { width: 0.14, height: 0.2, depth: FENCE.step + 0.2 }, scene);
       rail.position.set(FENCE.x, hanging ? y - 0.25 : y, z + FENCE.step / 2);
       if (hanging) rail.rotation.x = 0.35 * (seeded(k, 55) < 0.5 ? 1 : -1);
       parts.push(rail);
@@ -194,6 +197,17 @@ function leftPathway(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): 
     fence.receiveShadows = true;
     fence.isPickable = false;
   }
+  // The alley floor: lush darker grass between fence and wall, its edges wavering
+  const lush = mat("farmer2Alley", new Color3(0.4, 0.5, 0.14), 0.12);
+  const aLeft: Vector3[] = [], aRight: Vector3[] = [];
+  for (let z = ALLEY.z0; z <= ALLEY.z1; z += 1) {
+    aLeft.push(new Vector3(ALLEY.x0 + seeded(Math.round(z) + 50, 56) * 0.4, 0.055, z));
+    aRight.push(new Vector3(ALLEY.x1 - seeded(Math.round(z) + 50, 57) * 0.4, 0.055, z));
+  }
+  const alley = MeshBuilder.CreateRibbon("farmer2Alley", { pathArray: [aLeft, aRight], sideOrientation: Mesh.DOUBLESIDE }, scene);
+  alley.material = lush;
+  alley.receiveShadows = true;
+  alley.isPickable = false;
   // The fence blocks except at its missing stretch
   kept.push({ type: "box", center: new Vector3(FENCE.x, 0, (FENCE.z0 + 2) / 2), halfX: 0.2, halfZ: (2 - FENCE.z0) / 2 });
   kept.push({ type: "box", center: new Vector3(FENCE.x, 0, (7 + FENCE.z1) / 2), halfX: 0.2, halfZ: (FENCE.z1 - 7) / 2 });
