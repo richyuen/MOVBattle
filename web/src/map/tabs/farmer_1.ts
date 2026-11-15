@@ -522,8 +522,50 @@ const BOWL: Array<[number, number]> = [[1, -0.02], [1, -1.2], [0.98, -3.5], [0.9
 
 function islandOutline(a: number): [number, number] {
   const c = Math.cos(a), s = Math.sin(a);
-  const r = (Math.abs(c / 54) ** 3 + Math.abs(s / 48) ** 3) ** (-1 / 3);
+  const r = (Math.abs(c / 54) ** 2 + Math.abs(s / 48) ** 2) ** (-1 / 2);
   return [c * r, s * r];
+}
+
+/**
+ * Round island (wiki shot): the island is a near-circle with the meadow running to its rim, not a rounded-rectangle slab inside the
+ * translucent placement box. Spec: the outline is the ellipse 54 x 48 (islandOutline, which the earth bowl follows); the base's lawn slabs
+ * ("ground", "centerGrass") are remapped vertex by vertex from the base's superellipse (54 x 48, power 3) to it at the same fraction of the
+ * radius; thin-instanced blades and wheat past the rim (less 0.5 m) are dropped; base props standing past it (less 1 m) are hidden with
+ * their colliders; the placement guide slabs (campaign_zone_overlay_*, campaign_zone_border_*) are hidden.
+ */
+const RIM_PROPS = new Set(["trunk", "boulder", "wallStone", "hayBale", "stump", "hill", "grassTuft", "flowerDot", "pebble"]);
+
+function roundIsland(scene: Scene, prior: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const oldR = (a: number) => (Math.abs(Math.cos(a) / 54) ** 3 + Math.abs(Math.sin(a) / 48) ** 3) ** (-1 / 3);
+  const newR = (a: number) => Math.hypot(...islandOutline(a));
+  const inside = (x: number, z: number, m: number) => Math.hypot(x, z) <= newR(Math.atan2(z, x)) - m;
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (prior.has(mesh) || !(mesh instanceof Mesh)) continue;
+    if (/^campaign_zone_(overlay|border)_/.test(mesh.name)) mesh.setEnabled(false);
+    if (mesh.name === "ground" || mesh.name === "centerGrass") {
+      const pos = mesh.getVerticesData("position");
+      if (!pos) continue;
+      for (let v = 0; v < pos.length; v += 3) {
+        const a = Math.atan2(pos[v + 2], pos[v]);
+        if (Math.hypot(pos[v], pos[v + 2]) < 1e-6) continue;
+        const k = newR(a) / oldR(a);
+        pos[v] *= k;
+        pos[v + 2] *= k;
+      }
+      mesh.setVerticesData("position", pos);
+      mesh.refreshBoundingInfo();
+    } else if (mesh.thinInstanceCount > 0 && (mesh.name.startsWith("fieldBlades_") || mesh.name === "farmer1WheatStrips")) {
+      const kept = mesh.thinInstanceGetWorldMatrices().filter((w) => inside(w.m[12], w.m[14], 0.5));
+      const buf = new Float32Array(kept.length * 16);
+      kept.forEach((w, i) => buf.set(w.m, i * 16));
+      mesh.thinInstanceSetBuffer("matrix", buf, 16);
+    } else if (RIM_PROPS.has(mesh.name) && !mesh.parent && mesh.isEnabled() && !inside(mesh.position.x, mesh.position.z, 1)) {
+      gone.push([mesh.position.x, mesh.position.z]);
+      mesh.setEnabled(false);
+    }
+  }
+  return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
 }
 
 function earthBowl(scene: Scene, built: Set<unknown>): void {
@@ -668,7 +710,7 @@ function pumpkinPatch(scene: Scene): void {
  * red-brown trunk 8-11 m tall leaning 6-14 degrees outward, carrying 3 flattened faceted olive crown clumps 1.6-2.4 m across over its top
  * third, the highest at the tip; a 0.6 m collider at each foot.
  */
-const PINES: Array<[number, number]> = [[-34, 40], [-6, 46], [17, 43], [38, 32], [49, 14], [49, -12], [36, -33], [16, -44], [-46, -24], [-50, 6], [-45, 26]];
+const PINES: Array<[number, number]> = [[-32, 36], [-6, 46], [17, 43], [37, 31], [49, 14], [49, -12], [36, -33], [16, -44], [-44, -22], [-50, 6], [-42, 25]];
 
 function scotsPines(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
   const cleared: Array<[number, number]> = [];
@@ -748,5 +790,5 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
   obstacles.push(...bankWalls(scene));
   wheatStrips(scene);
   earthBowl(scene, built);
-  return { ...result, hazards, obstacles: scotsPines(scene, built, obstacles) };
+  return { ...result, hazards, obstacles: roundIsland(scene, prior, scotsPines(scene, built, obstacles)) };
 }
