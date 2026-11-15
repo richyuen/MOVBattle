@@ -6398,6 +6398,7 @@ export function ullrSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const KABUTO = { bowl: 1.16, bowlH: 0.78, seat: 0.03, peak: 0.18, tiers: 3, lameH: 0.16, segs: 7, arc: 3.6, out: 0.09, step: 0.12, lean: 0.55,
   hornH: 1.05, hornW: 0.78, hornT: 0.1, flat: 0.45, gold: new Color3(0.78, 0.34, 0.03) };
+const GIANT_SHIKORO = { tiers: 4, lameH: 0.2, segs: 9, arc: 4.3, out: 0.12, step: 0.17, lean: 0.85 };
 export function samuraiGiantKabuto(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = KABUTO, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   for (const m of body.root.getChildMeshes(false)) if (m.name === "shelm") m.setEnabled(false);
@@ -6419,19 +6420,27 @@ export function samuraiGiantKabuto(scene: Scene, body: ArticulatedBody, team: Co
   const peak = put(MeshBuilder.CreateBox("kabutoPeak", { width: W * 0.9, height: H * 0.04, depth: D * K.peak }, scene), cloth);
   peak.position.set(c.x, seat, c.z + D * 0.5 + (D * K.peak) / 2 - D * 0.04); peak.rotation.x = 0.3;
   // the tiered neck guard round the back and sides
-  for (let t = 0; t < K.tiers; t++) {
-    const r = R + W * K.out * (t + 0.5), y = seat - H * K.step * t - (H * K.lameH) / 2;
-    for (let k = 0; k < K.segs; k++) {
-      const a = -Math.PI / 2 - K.arc / 2 + (k + 0.5) * (K.arc / K.segs); // round the back (-z), from one cheek to the other
+  /*
+   * [S] 554 (samurai_giant a.3: "helmet neck guard ... a tight rounded dome that sits close to the head - TABS: the Shogun helmet's tiered gold-edged
+   * shikoro flaring out on both sides of the face down to the shoulders"; secret.samurai_giant.blue.png: beside each cheek four team lames step down
+   * from the brim to about the jaw, each wider out than the one above, the lowest about one and a half heads across, every lame's foot edged orange).
+   * GIANT_SHIKORO for the giant alone: more, taller tiers wrapped further round toward the face (.arc), each stepped further out (.out) and down
+   * (.step) and leaned out more (.lean), so the guard opens out beside the face in the front three-quarter.
+   */
+  const L = head.name.includes("samurai_giant") ? GIANT_SHIKORO : K;
+  for (let t = 0; t < L.tiers; t++) {
+    const r = R + W * L.out * (t + 0.5), y = seat - H * L.step * t - (H * L.lameH) / 2;
+    for (let k = 0; k < L.segs; k++) {
+      const a = -Math.PI / 2 - L.arc / 2 + (k + 0.5) * (L.arc / L.segs); // round the back (-z), from one cheek to the other
       const node = new TransformNode("kabutoLame", scene); node.parent = head;
-      node.position.set(c.x + Math.cos(a) * r, y + (H * K.lameH) / 2, c.z - D * 0.04 + Math.sin(a) * r * (D * 1.12) / W);
+      node.position.set(c.x + Math.cos(a) * r, y + (H * L.lameH) / 2, c.z - D * 0.04 + Math.sin(a) * r * (D * 1.12) / W);
       node.rotation.y = Math.PI / 2 - a; // local +z out
-      const lean = new TransformNode("kabutoLameLean", scene); lean.parent = node; lean.rotation.x = K.lean;
-      const segW = 2 * r * Math.sin(K.arc / K.segs / 2) * 1.12;
-      const lame = put(MeshBuilder.CreateBox("kabutoLamePlate", { width: segW, height: H * K.lameH, depth: W * 0.05 }, scene), cloth, lean);
-      lame.position.y = -(H * K.lameH) / 2;
+      const lean = new TransformNode("kabutoLameLean", scene); lean.parent = node; lean.rotation.x = L.lean;
+      const segW = 2 * r * Math.sin(L.arc / L.segs / 2) * 1.12;
+      const lame = put(MeshBuilder.CreateBox("kabutoLamePlate", { width: segW, height: H * L.lameH, depth: W * 0.05 }, scene), cloth, lean);
+      lame.position.y = -(H * L.lameH) / 2;
       const edge = put(MeshBuilder.CreateBox("kabutoLameEdge", { width: segW, height: H * 0.035, depth: W * 0.06 }, scene), gold, lean);
-      edge.position.y = -H * K.lameH;
+      edge.position.y = -H * L.lameH;
     }
   }
   // the gold crescent maedate rising from the brow
