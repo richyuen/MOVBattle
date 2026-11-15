@@ -6077,43 +6077,6 @@ export function secretSamuraiCuirass(scene: Scene, body: ArticulatedBody, team: 
   return result;
 }
 
-/*
- * [S] 549 (samurai_giant a.2: "bare blue forearms - TABS: flared angular vambraces with gold borders"; secret.samurai_giant.blue.png: on each
- * forearm a broad flat team plate, much wider than the arm, flaring from the wrist to the elbow, its four edges trimmed orange-gold).
- * SAMURAI_KOTE in the forearm's box: a 4-sided shell (corners out to the sides and front/back) from .from to .to of its length down from the
- * elbow, .elbow of the arm's radius across at the elbow end and .wrist at the wrist, flattened to .flat front to back, team (c^2) x .shade
- * self-lit .12; a gold tube .rim of the radius thick round each end and down the two side corners. Out of the glow.
- */
-const SAMURAI_KOTE = { from: 0.04, to: 0.9, elbow: 3.1, wrist: 2.1, flat: 0.55, shade: 0.8, rim: 0.16 };
-export function samuraiGiantVambraces(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
-  const K = SAMURAI_KOTE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
-  const teamC = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(K.shade);
-  const plate = mf.get("cloth", teamC, { emissive: teamC.scale(0.12), roughness: 1 });
-  const goldColor = new Color3(1, 0.42, 0.1);
-  const gold = mf.get("cloth", goldColor, { emissive: goldColor.scale(0.12) });
-  const out: Mesh[] = [];
-  for (const fore of [body.leftLowerArm, body.rightLowerArm]) {
-    const L = limbBox(fore), r = Math.max(L.wide, L.deep), top = L.mid + L.half;
-    const at = (t: number) => top - t * L.half * 2;
-    const yTop = at(K.from), yLow = at(K.to);
-    const shell = MeshBuilder.CreateCylinder("samuraiKote", { height: yTop - yLow, diameterTop: r * K.elbow, diameterBottom: r * K.wrist, tessellation: 4 }, scene);
-    shell.parent = fore.parent; shell.position.y = (yTop + yLow) / 2; shell.scaling.z = K.flat;
-    shell.material = plate; shell.convertToFlatShadedMesh(); glow?.addExcludedMesh(shell); out.push(shell);
-    // corners of the 4-sided section at a height: radius h/2 at angles 0, 90, 180, 270 degrees (x sides and z faces), z flattened
-    const corner = (y: number, d: number, k: number) => new Vector3(Math.sin((k * Math.PI) / 2) * d / 2 * 1.03, y, Math.cos((k * Math.PI) / 2) * d / 2 * K.flat * 1.03);
-    for (const [y, d] of [[yTop, r * K.elbow], [yLow, r * K.wrist]] as const) {
-      const ring = [0, 1, 2, 3, 4].map((k) => corner(y, d, k));
-      const tube = MeshBuilder.CreateTube("samuraiKoteRim", { path: ring, radius: r * K.rim, tessellation: 4 }, scene);
-      tube.parent = fore.parent; tube.material = gold; glow?.addExcludedMesh(tube); out.push(tube);
-    }
-    for (const k of [1, 3]) {
-      const edge = MeshBuilder.CreateTube("samuraiKoteRim", { path: [corner(yTop, r * K.elbow, k), corner(yLow, r * K.wrist, k)], radius: r * K.rim, tessellation: 4 }, scene);
-      edge.parent = fore.parent; edge.material = gold; glow?.addExcludedMesh(edge); out.push(edge);
-    }
-  }
-  return out;
-}
-
 /** Shogun's faceted cheek and chin guard sits directly below the eyes. */
 export function shogunMenpo(scene: Scene, body: ArticulatedBody): Mesh[] {
   const head = body.headMesh;
