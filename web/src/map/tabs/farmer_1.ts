@@ -471,8 +471,8 @@ function wheatStrips(scene: Scene): void {
   let k = 0;
   for (const s of WHEAT_STRIPS) {
     const cx = (s.x0 + s.x1) / 2, cz = (s.z0 + s.z1) / 2, rx = (s.x1 - s.x0) / 2, rz = (s.z1 - s.z0) / 2;
-    for (let x = s.x0; x <= s.x1; x += 0.9) {
-      for (let z = s.z0; z <= s.z1; z += 0.9) {
+    for (let x = s.x0; x <= s.x1; x += 0.7) {
+      for (let z = s.z0; z <= s.z1; z += 0.7) {
         k++;
         if (((x - cx) / rx) ** 4 + ((z - cz) / rz) ** 4 > 1) continue;
         const px = x + (wallSeed(k, 31) - 0.5) * 0.6, pz = z + (wallSeed(k, 32) - 0.5) * 0.6;
@@ -485,6 +485,30 @@ function wheatStrips(scene: Scene): void {
     }
   }
   tuft.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
+  // The stubble under the stalks: a golden patch in each strip's outline, so the strip reads as one block of gold from above
+  const stubble = new StandardMaterial("farmer1Stubble", scene);
+  stubble.diffuseColor = new Color3(0.76, 0.54, 0.17);
+  stubble.emissiveColor = new Color3(0.2, 0.13, 0.03);
+  stubble.specularColor = Color3.Black();
+  WHEAT_STRIPS.forEach((s, i) => {
+    const cx = (s.x0 + s.x1) / 2, cz = (s.z0 + s.z1) / 2, rx = (s.x1 - s.x0) / 2 + 0.3, rz = (s.z1 - s.z0) / 2 + 0.3;
+    const pts: Vector3[] = [];
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 24) {
+      const c = Math.cos(a), sn = Math.sin(a);
+      const r = (Math.abs(c / rx) ** 4 + Math.abs(sn / rz) ** 4) ** -0.25;
+      let px = cx + c * r, pz = cz + sn * r;
+      const f = Math.abs(px / 52) ** 3 + Math.abs(pz / 46) ** 3;
+      if (f > 1) { px *= f ** (-1 / 3); pz *= f ** (-1 / 3); }
+      pts.push(new Vector3(px, 0, pz));
+    }
+    pts.push(pts[0].clone());
+    const hub = pts.map(() => new Vector3(cx, 0, cz));
+    const patch = MeshBuilder.CreateRibbon(`farmer1Stubble${i}`, { pathArray: [pts, hub], sideOrientation: Mesh.DOUBLESIDE }, scene);
+    patch.position.y = 0.045;
+    patch.material = stubble;
+    patch.receiveShadows = true;
+    patch.isPickable = false;
+  });
 }
 
 /**
