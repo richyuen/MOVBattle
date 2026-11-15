@@ -145,10 +145,10 @@ function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResu
 
 /**
  * Open sky with far spires (autumn_tribal_sandbox.png): past the back tree line there is only teal sky and a few tall thin grey rock spires,
- * no ridge range. The base's range and its floating roots (mountainBase/Cap/Root) go; clouds stay. Spec: five faceted spires 3-6 m across
+ * no ridge range. The base's range and its floating roots (mountainBase/Cap/Root) go; clouds stay. Spec: five faceted stacks 6-9 m across
  * and 16-26 m above the lawn, rising out of the haze below the island, 64-80 m out behind the back and back-right rim, leaning a little.
  */
-const SPIRES: Array<[number, number, number, number]> = [[-28, 66, 4, 18], [-6, 74, 5, 26], [14, 70, 3.5, 21], [36, 64, 6, 17], [58, 46, 4.5, 23]];
+const SPIRES: Array<[number, number, number, number]> = [[-28, 66, 7, 18], [-6, 74, 8, 26], [14, 70, 6.5, 21], [36, 64, 9, 17], [58, 46, 7.5, 23]];
 
 function openSky(scene: Scene, built: Set<unknown>): void {
   for (const mesh of scene.meshes) {
@@ -161,11 +161,11 @@ function openSky(scene: Scene, built: Set<unknown>): void {
   const parts: Mesh[] = [];
   SPIRES.forEach(([x, z, w, h], i) => {
     const depth = 30;
-    const spire = MeshBuilder.CreateCylinder("tsSpire", { diameterTop: w * 0.45, diameterBottom: w * 0.8, height: h + depth, tessellation: 5 }, scene);
+    const spire = MeshBuilder.CreateCylinder("tsSpire", { diameterTop: w * 0.6, diameterBottom: w, height: h + depth, tessellation: 5 }, scene);
     spire.position.set(x, (h - depth) / 2, z);
     spire.rotation.set((seeded(i, 81) - 0.5) * 0.12, seeded(i, 82) * Math.PI, (seeded(i, 83) - 0.5) * 0.12);
-    const tip = MeshBuilder.CreateCylinder("tsSpireTip", { diameterTop: w * 0.1, diameterBottom: w * 0.5, height: w * 0.9, tessellation: 5 }, scene);
-    tip.position.set(x + (seeded(i, 84) - 0.5) * 0.6, h + w * 0.4, z);
+    const tip = MeshBuilder.CreateCylinder("tsSpireTip", { diameterTop: w * 0.2, diameterBottom: w * 0.55, height: w * 0.6, tessellation: 5 }, scene);
+    tip.position.set(x + (seeded(i, 84) - 0.5) * 0.6, h + w * 0.25, z);
     tip.rotation.y = seeded(i, 85) * Math.PI;
     parts.push(spire, tip);
   });
