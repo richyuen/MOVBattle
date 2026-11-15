@@ -173,6 +173,8 @@ const CUTLASS_SLASH = {
   commit: 0.4, twist: 0.7, cock: 1.9, end: -1.0, low: 0.08, arm: -1.35, outCock: -0.6, outEnd: 0.45, elbow: -0.35, offArm: 0.35,
   step: 0.3, pitch: 0.15, through: 0.45, hitAt: 0.66, hold: 0.75,
 };
+// [S] 549 Artemis's drawing fist at her chin on the line of the shot (spec at _animateBowDrawRelease)
+const ARTEMIS_NOCK = { back: 0.9, lift: 0.06, firm: 1.6 };
 const SCYTHE_SWEEP = { roll: Math.PI / 2, twist: 0.75, cock: 2.0, end: -1.1, low: 0.12, arm: -0.55, crouch: 0.25, through: 0.55, hitAt: 0.55, hold: 0.75 };
 /*
  * [S] the hay baler's level stick carry (344; farmer.hay_baler.blue.png: the stick held in the one weapon fist at hip height before the bale, run level
@@ -6885,6 +6887,21 @@ export class ProceduralAnimator {
     set(b.leftHip, "x", 0.36);
     set(b.leftKnee, "x", 0.1);
     this._bowStringDraw = draw * (1 - loose) * k;
+    // [S] 549 (artemis b.1: "the bow hand projects past the stave's grip ... with a gap between the raised drawing fist and string - TABS seats the
+    // forward fist on the grip and brings the drawing hand to the nock and string"; secret.artemis.jpg: the drawing fist at her chin, level with
+    // the bow fist, the arrow running from it through the grip). Her string arm is not set by joint angles (the generic draw raised her fist over
+    // her head on the long stave) but solved onto ARTEMIS_NOCK: on the line from the bow fist back to her neck, at the bow fist's height, .back
+    // of the way to the neck; the split string's apex is drawn to that palm (_poseIceNock).
+    if (this._iceNock?.stave.getChildren().some((n) => n.name === "artemisDrawString") && this._bowStringDraw > 0.01) {
+      const chain: TransformNode[] = [];
+      for (let n: TransformNode | null = b.rightHand; n; n = n.parent as TransformNode | null) chain.unshift(n);
+      for (const n of chain) n.computeWorldMatrix(true);
+      b.neck.computeWorldMatrix(true);
+      const grip = b.rightHand.getAbsolutePosition(), neck = b.neck.getAbsolutePosition();
+      const toward = new Vector3(neck.x - grip.x, 0, neck.z - grip.z);
+      const seat = grip.add(toward.scale(ARTEMIS_NOCK.back)).addInPlace(new Vector3(0, ARTEMIS_NOCK.lift * toward.length(), 0));
+      this._armTo(b.leftShoulder, b.leftElbow, b.leftHand, seat, Math.min(1, this._bowStringDraw * ARTEMIS_NOCK.firm), 2);
+    }
     this._poseIceNock(this._bowStringDraw);
     if (progress >= 1) this._state = AnimState.Idle;
   }
