@@ -191,6 +191,71 @@ function earthTiers(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+/**
+ * Before the cave (reference/stages/spooky.cave.png): the ground at the cave mouth is strewn with wide flat grey slab rocks lying almost
+ * flush with the earth, and old bones lie among them. Spec: 9 slabs 2.5-5.5 m across and 0.3-0.6 m high (faceted plates, a little
+ * narrower on top, tilted a few degrees), fanned out from the mouth over x 32..44, z -4..16; 12 bones (a 0.8-1.3 m shaft with a knob at
+ * each end) and 2 skulls lying between them. Drawn only, no colliders: units walk over them.
+ */
+const SLAB_SPREAD = { x0: 32, x1: 44, z0: -4, z1: 16 };
+
+function caveApron(scene: Scene): void {
+  const mk = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const slabMat = mk("tribal2Slab", new Color3(0.62, 0.55, 0.52), 0.18);
+  const boneMat = mk("tribal2Bone", new Color3(0.92, 0.88, 0.78), 0.35);
+  const slabs: Mesh[] = [];
+  for (let i = 0; i < 9; i++) {
+    const w = 2.5 + seeded(i, 41) * 3;
+    const h = 0.3 + seeded(i, 42) * 0.3;
+    const slab = MeshBuilder.CreateCylinder("tribal2Slab", { diameterTop: w * 0.82, diameterBottom: w, height: h, tessellation: 5 + (i % 2) }, scene);
+    slab.scaling.z = 0.55 + seeded(i, 43) * 0.35;
+    // Fanned out from the mouth: the near ones close to the rock, the far ones out toward the field
+    const t = i / 8;
+    const x = SLAB_SPREAD.x1 - t * (SLAB_SPREAD.x1 - SLAB_SPREAD.x0) + (seeded(i, 44) - 0.5) * 3;
+    const z = CAVE.z + (seeded(i, 45) - 0.5) * (6 + t * (SLAB_SPREAD.z1 - SLAB_SPREAD.z0 - 6));
+    slab.position.set(Math.min(x, FOOT_X - 1.5), h / 2 - 0.05, Math.max(SLAB_SPREAD.z0, Math.min(SLAB_SPREAD.z1, z)));
+    slab.rotation.set((seeded(i, 46) - 0.5) * 0.12, seeded(i, 47) * Math.PI, (seeded(i, 48) - 0.5) * 0.12);
+    slabs.push(slab);
+  }
+  const bones: Mesh[] = [];
+  for (let i = 0; i < 12; i++) {
+    const len = 0.8 + seeded(i, 51) * 0.5;
+    const shaft = MeshBuilder.CreateCylinder("tribal2Bone", { diameter: 0.14, height: len, tessellation: 6 }, scene);
+    shaft.rotation.z = Math.PI / 2;
+    const knobs = [-1, 1].map((e) => {
+      const knob = MeshBuilder.CreateIcoSphere("tribal2BoneKnob", { radius: 0.15, subdivisions: 1 }, scene);
+      knob.position.x = (e * len) / 2;
+      return knob;
+    });
+    const bone = Mesh.MergeMeshes([shaft, ...knobs], true)!;
+    bone.rotation.y = seeded(i, 52) * Math.PI;
+    bone.position.set(SLAB_SPREAD.x0 + seeded(i, 53) * (FOOT_X - 2 - SLAB_SPREAD.x0), 0.12, SLAB_SPREAD.z0 + seeded(i, 54) * (SLAB_SPREAD.z1 - SLAB_SPREAD.z0));
+    bones.push(bone);
+  }
+  for (let i = 0; i < 2; i++) {
+    const skull = MeshBuilder.CreateIcoSphere("tribal2Skull", { radius: 0.32, subdivisions: 1 }, scene);
+    skull.scaling.set(1, 0.85, 1.15);
+    skull.rotation.y = seeded(i, 56) * Math.PI;
+    skull.position.set(FOOT_X - 4 - i * 5, 0.26, CAVE.z - 3 + i * 7);
+    bones.push(skull);
+  }
+  for (const [list, mat, name] of [[slabs, slabMat, "tribal2Slabs"], [bones, boneMat, "tribal2Bones"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -198,6 +263,7 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   earthTiers(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
+  caveApron(scene);
   const rock = new StandardMaterial("tribal2Mountain", scene);
   rock.diffuseColor = new Color3(0.6, 0.54, 0.52);
   rock.emissiveColor = new Color3(0.08, 0.06, 0.05);
