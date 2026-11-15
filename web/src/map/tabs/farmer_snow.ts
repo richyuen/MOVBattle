@@ -5,6 +5,7 @@
 // No hazard. Built on campaign.introduction (base()).
 import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
+import type { Obstacle } from "../obstacles";
 
 const ICE = { halfWidth: 2, bend: 1.4, bendRate: 0.075, back: 48, front: -48, fall: 12 };
 const iceX = (z: number) => ICE.bend * Math.sin(z * ICE.bendRate);
@@ -59,6 +60,65 @@ function snowCover(scene: Scene, built: Set<unknown>): void {
     drifts.receiveShadows = true;
     drifts.isPickable = false;
   }
+}
+
+/**
+ * The arched stone bridge over the ice at the centre (wiki shot, Farmer 1's bridge in winter): a deck 10 m across the river and 6 m wide, a
+ * ring of voussoirs under each face, a humped parapet of rough blocks along each side, and snow lying on the deck and along the parapet tops.
+ */
+const BRIDGE = { span: 10, width: 6, rise: 1.1, parapet: 0.7 };
+
+function snowyBridge(scene: Scene): Obstacle[] {
+  const stone = new StandardMaterial("farmerSnowBridgeStone", scene);
+  stone.diffuseColor = new Color3(0.56, 0.56, 0.6);
+  stone.emissiveColor = new Color3(0.08, 0.08, 0.1);
+  stone.specularColor = new Color3(0.04, 0.04, 0.04);
+  const snow = new StandardMaterial("farmerSnowBridgeSnow", scene);
+  snow.diffuseColor = SNOW.clone();
+  snow.emissiveColor = SNOW_SHADE.clone();
+  snow.specularColor = new Color3(0.08, 0.08, 0.1);
+  const x = iceX(0);
+  const blocks: Mesh[] = [], caps: Mesh[] = [];
+  const deck = MeshBuilder.CreateBox("farmerSnowBridgeDeck", { width: BRIDGE.span, height: 0.3, depth: BRIDGE.width }, scene);
+  deck.position.set(x, 0.0, 0);
+  blocks.push(deck);
+  const deckSnow = MeshBuilder.CreateBox("farmerSnowBridgeDeckSnow", { width: BRIDGE.span - 0.6, height: 0.14, depth: BRIDGE.width - 1.4 }, scene);
+  deckSnow.position.set(x, 0.2, 0);
+  caps.push(deckSnow);
+  for (const side of [-1, 1]) {
+    const n = 9;
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI * (i + 0.5) / n;
+      const block = MeshBuilder.CreateBox("farmerSnowBridgeArch", { width: 1.15, height: 0.5, depth: 0.5 }, scene);
+      block.position.set(x - Math.cos(a) * (BRIDGE.span / 2 - 1.6), Math.sin(a) * BRIDGE.rise - 0.55, side * (BRIDGE.width / 2 - 0.25));
+      block.rotation.z = -Math.cos(a) * 0.9;
+      blocks.push(block);
+    }
+    for (let i = 0; i < 8; i++) {
+      const along = -BRIDGE.span / 2 + 0.6 + i * ((BRIDGE.span - 1.2) / 7);
+      const h = BRIDGE.parapet + 0.35 * Math.cos((along / BRIDGE.span) * Math.PI);
+      const block = MeshBuilder.CreateBox("farmerSnowBridgeParapet", { width: 1.2, height: h, depth: 0.55 }, scene);
+      block.position.set(x + along, h / 2, side * (BRIDGE.width / 2 - 0.1));
+      block.rotation.y = (i % 2 - 0.5) * 0.08;
+      blocks.push(block);
+      const cap = MeshBuilder.CreateIcoSphere("farmerSnowBridgeCap", { radius: 0.5, subdivisions: 1 }, scene);
+      cap.scaling.set(1.35, 0.35, 0.75);
+      cap.position.set(x + along, h + 0.04, side * (BRIDGE.width / 2 - 0.1));
+      caps.push(cap);
+    }
+  }
+  for (const [list, m, name] of [[blocks, stone, "farmerSnowBridge"], [caps, snow, "farmerSnowBridgeSnow"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  return [-1, 1].map((side) => ({
+    type: "box" as const, center: new Vector3(x, 0, side * (BRIDGE.width / 2 - 0.1)), halfX: BRIDGE.span / 2, halfZ: 0.3,
+  }));
 }
 
 export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBuildResult {
@@ -126,5 +186,5 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
     fall.material = ice;
     fall.isPickable = false;
   }
-  return result;
+  return { ...result, obstacles: [...result.obstacles, ...snowyBridge(scene)] };
 }
