@@ -6252,6 +6252,39 @@ export function shogunHakama(scene: Scene, body: ArticulatedBody, team: Color3):
 }
 
 /*
+ * [S] 552 (samurai_giant a.4: "bulky box boots - TABS: tall narrow shin guards over open strapped sandals"; secret.samurai_giant.blue.png: under
+ * the hakama hem each shin is a slim team-colour suneate from just under the knee to the ankle, ringed by three thin orange bands, the bare team
+ * foot below it in an open sandal with orange-red straps). The shins are slimmed in the rig (unitVisuals lowerLegWidth); SAMURAI_SUNEATE on each
+ * shin (S its box in the knee joint's frame, r its larger half-size): an 8-sided shell from .top to .low of S's half height either side of its
+ * middle, .round r round at the top tapering to .ankle r, .deep of the box's depth, in the team colour squared at .shade (darker than the body,
+ * self-lit .12); .bands thin rings .band of the shell tall at .at of its run, unlit orange .rim. The foot takes Artemis's open sandal.
+ */
+const SAMURAI_SUNEATE = { top: 0.82, low: 0.78, round: 1.12, ankle: 0.98, deep: 1.0, shade: 0.7, band: 0.07, at: [0.04, 0.5, 0.93], rim: new Color3(1, 0.3, 0.06) };
+export function samuraiGiantGreaves(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = SAMURAI_SUNEATE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const c = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(K.shade);
+  const plate = mf.get("cloth", c, { emissive: c.scale(0.12), roughness: 1 });
+  const rim = mf.get("unlit", K.rim, { emissive: K.rim });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const S = limbBox(shin), r = Math.max(S.wide, S.deep);
+    const yTop = S.mid + S.half * K.top, yBot = S.mid - S.half * K.low, h = yTop - yBot;
+    const zs = (S.deep / r) * K.deep;
+    const guard = MeshBuilder.CreateCylinder("samuraiSuneate", { height: h, diameterTop: r * 2 * K.round, diameterBottom: r * 2 * K.ankle, tessellation: 8 }, scene);
+    guard.parent = shin.parent; guard.position.set(shin.position.x, (yTop + yBot) / 2, shin.position.z); guard.scaling.z = zs;
+    guard.material = plate; out.push(guard);
+    for (const at of K.at) {
+      const d = r * 2 * (K.round + (K.ankle - K.round) * at) * 1.04;
+      const band = MeshBuilder.CreateCylinder("samuraiSuneateBand", { height: h * K.band, diameter: d, tessellation: 8 }, scene);
+      band.parent = shin.parent; band.position.set(shin.position.x, yTop - h * at, shin.position.z); band.scaling.z = zs;
+      band.material = rim; out.push(band);
+    }
+  }
+  for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  return out;
+}
+
+/*
  * [S] 550 (shogun a.5) the Shogun's tassets (audit 544: "smooth single-row skirt around the hips - TABS: separate gold-edged layered tassets
  * trailing down each outer thigh"; secret.shogun.blue.png: from under the cuirass on each side hangs a column of dark team plates, three rows
  * overlapping like shingles, each a little wider and further out than the one above, every row's foot edged in gold, the lowest reaching about

@@ -1290,7 +1290,8 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["quickdraw_smoke"] },
       });
     case "secret_samurai_giant":
-      return vis({ scale: 2.3, bulk: 1.75, headSize: 1.16, armLength: 1.1, legLength: 0.95 }, "katana", "samurai_helmet", "none", "cape", "#b53333", undefined, {
+      // [S] 552 (a.4) slim shins under the shin guards (secretDress SAMURAI_SUNEATE)
+      return vis({ scale: 2.3, bulk: 1.75, headSize: 1.16, armLength: 1.1, legLength: 0.95, lowerLegWidth: 0.5 }, "katana", "samurai_helmet", "none", "cape", "#b53333", undefined, {
         weaponVariant: "giant_katana",
         posePreset: "giant", materialPreset: "secret_royal", attachmentPreset: "giant_aura", fxPreset: "royal",
         bodyDetailLevel: "hero",
