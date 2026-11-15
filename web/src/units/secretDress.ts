@@ -6299,6 +6299,42 @@ export function artemisDress(scene: Scene, body: ArticulatedBody, team: Color3):
   return out;
 }
 
+/*
+ * [S] 550 (artemis a.2) open strap sandals, not boots (audit 547: "dark, closed boot blocks - TABS has open brown ankle and instep straps over
+ * team-colored feet"; secret.artemis.red.png: each foot bare and in team colour down to a thin brown sole; one thin brown strap across the toes,
+ * one over the instep, one round the ankle; nothing covers the foot between them). The foot mesh (a merged ankle cuff and toe box in the dark body
+ * shade, LESSONS 399) takes the shin's team shade and its cuff is cut down to .cuff of its height (the sole kept on the ground, as cupidFeet). Over it, in
+ * foot-box fractions (L long, W wide, H tall after the cut): the sole .sole H thick, .soleW W wide, the full length; thin brown bands, each a slab
+ * .band L deep wrapping the foot .wrap W wide: across the toes at .toe L from the heel (as tall as the toe box, .toeH H), over the instep at .instep L
+ * (.instepH H); round the ankle a band .ankleH H tall at .ankleAt H, over the cuff's back .ankleL L. Lit brown self-lit .14, out of the glow.
+ */
+const ARTEMIS_SANDAL = { cuff: 0.72, sole: 0.1, soleW: 1.08, band: 0.09, wrap: 1.08, toe: 0.8, toeH: 0.5, instep: 0.5, instepH: 0.62,
+  ankleAt: 0.72, ankleH: 0.14, ankleL: 0.5, brown: new Color3(0.3, 0.14, 0.06) };
+export function artemisSandals(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = ARTEMIS_SANDAL, glow = scene.getGlowLayerByName("glow");
+  const brown = getMaterialFactory().get("cloth", K.brown, { emissive: K.brown.scale(0.14), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) {
+    const lo0 = foot.getBoundingInfo().boundingBox.minimum.y;
+    foot.material = body.leftLowerLeg.material; // the shin's own team shade, so the foot reads as the bare leg run on down
+    foot.scaling.y *= K.cuff;
+    foot.position.y += lo0 * (1 - K.cuff);
+    // the box in the foot's own (unscaled) frame; the straps are parented to the foot, so they scale with the cut
+    const { minimum: lo, maximum: hi } = foot.getBoundingInfo().boundingBox;
+    const L = hi.z - lo.z, Wf = hi.x - lo.x, Hf = hi.y - lo.y, x = (lo.x + hi.x) / 2;
+    const part = (name: string, w: number, h: number, d: number, y0: number, z: number) => {
+      const m = MeshBuilder.CreateBox(name, { width: Wf * w, height: Hf * h, depth: L * d }, scene);
+      m.parent = foot; m.material = brown; m.position.set(x, lo.y + Hf * (y0 + h / 2), lo.z + L * z);
+      m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m);
+    };
+    part("artemisSandalSole", K.soleW, K.sole, 1.04, -K.sole * 0.4, 0.5);
+    part("artemisSandalToe", K.wrap, K.toeH - K.sole, K.band, K.sole * 0.6, K.toe);
+    part("artemisSandalInstep", K.wrap, K.instepH - K.sole, K.band, K.sole * 0.6, K.instep);
+    part("artemisSandalAnkle", K.wrap, K.ankleH, K.ankleL, K.ankleAt, K.ankleL / 2 - 0.02);
+  }
+  return out;
+}
+
 const ARTEMIS_BAND = { round: 1.08, top: 0.84, tall: 0.42, up: 0.18, tip: -0.42, deep: 1.0, gold: new Color3(1, 0.62, 0.14) };
 export function artemisBand(scene: Scene, body: ArticulatedBody): Mesh[] {
   const K = ARTEMIS_BAND, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
