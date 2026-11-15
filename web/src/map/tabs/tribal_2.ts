@@ -317,6 +317,43 @@ function rimRocks(scene: Scene): Array<{ type: "cylinder"; center: Vector3; radi
   return colliders;
 }
 
+/**
+ * Rubble at the mountain's foot (wiki shot; spooky.cave.png): loose boulders and stones edge the field all along the foot of the mountain,
+ * thickest from the cave mouth toward the front. Spec: 34 rounded stones 0.8-2.6 m across scattered in the strip x 41.5..44.5 from z 40
+ * to z -38 (skipping the cave mouth, |z - 6| < 3.5), bigger and denser toward the front, in the mountain's warm grey; plus 10 small pale
+ * stones a little further out (x 39.5..41.5). Drawn only: they sit at the stage armies' edge (team 1 stands at x <= 40) and are knee high.
+ */
+function footRubble(scene: Scene): void {
+  const mat = new StandardMaterial("tribal2Rubble", scene);
+  mat.diffuseColor = new Color3(0.6, 0.51, 0.45);
+  mat.emissiveColor = new Color3(0.09, 0.075, 0.065);
+  mat.specularColor = Color3.Black();
+  const stones: Mesh[] = [];
+  for (let i = 0; i < 44; i++) {
+    const near = i >= 34;
+    const t = seeded(i, 101);
+    // Front-weighted: the square pulls more stones toward z -38
+    const z = 40 - 78 * Math.sqrt(t);
+    if (Math.abs(z - CAVE.z) < 3.5) continue;
+    const front = (40 - z) / 78;
+    const r = near ? 0.25 + seeded(i, 102) * 0.2 : 0.4 + seeded(i, 102) * (0.5 + front * 0.4);
+    const x = near ? 39.5 + seeded(i, 103) * 2 : 41.5 + seeded(i, 103) * 3;
+    const stone = MeshBuilder.CreateIcoSphere("tribal2RubbleStone", { radius: r, subdivisions: 1 }, scene);
+    stone.scaling.set(1.2, 0.75, 1);
+    stone.rotation.set(seeded(i, 104), seeded(i, 105) * Math.PI, 0);
+    stone.position.set(x, r * 0.5, z);
+    stones.push(stone);
+  }
+  const merged = Mesh.MergeMeshes(stones, true);
+  if (merged) {
+    merged.name = "tribal2Rubble";
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -325,6 +362,7 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   earthTiers(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   caveApron(scene);
+  footRubble(scene);
   const rock = new StandardMaterial("tribal2Mountain", scene);
   rock.diffuseColor = new Color3(0.6, 0.54, 0.52);
   rock.emissiveColor = new Color3(0.08, 0.06, 0.05);
