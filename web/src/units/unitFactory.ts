@@ -216,7 +216,8 @@ const REAPER_TEAM = 0.4;
  * the forearms, legs and face; a dark teal short-sleeved tunic over the chest and upper arms, a rope belt at the waist; a dark hood drawn over the crown, open on
  * the face so the bead eyes show, running into a long beard that hangs from the chin onto the chest; ragged shorts over each thigh.
  */
-const TREE_GIANT_TUNIC = new Color3(0.08, 0.18, 0.2);
+// 551 (.08,.18,.2) blended 25% toward the team colour x .3 -> dark green-teal (palette.png teal row between x .25 and x .45, a touch greener)
+const TREE_GIANT_TUNIC = new Color3(0.06, 0.26, 0.21);
 /*
  * The painter (255; units/renaissance.painter): a two-tone man, not one team colour. A dark team doublet and sleeves, tan hose to the ankle, red-brown shoes, a
  * cream ruff in two stacked collars round the neck, a dark team beret; the palette rides in the off hand (propBuilder "palette").
@@ -1715,7 +1716,9 @@ function dressSkeleton(scene: Scene, body: ArticulatedBody, teamColor: Color3, u
 /** Dresses the tree giant as a hooded, bearded woodsman (see TREE_GIANT_*): team skin on the limbs and face, a dark tunic and rope belt, a hood into a long beard, a rag skirt. */
 function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3): Mesh[] {
   const added: Mesh[] = [];
-  const tunic = getMaterialFactory().getCloth(Color3.Lerp(TREE_GIANT_TUNIC, teamColor.scale(0.3), 0.25));
+  // [S] 551 (a.4: "blue-black shirt across the torso and upper arms - TABS has a dark green-teal shirt"; secret.tree_giant.red.png: the same dark
+  // teal on both teams): no blend toward the team colour (which turned it navy on blue), the dress modules' self-lit cloth so the shade reads teal
+  const tunic = getMaterialFactory().get("cloth", TREE_GIANT_TUNIC, { emissive: TREE_GIANT_TUNIC.scale(0.12), roughness: 1 });
   // The tunic is whatever the body wore; forearms and legs go bare team skin, feet dark leather
   for (const mesh of body.allMeshes) {
     if (mesh.material === body.bodyMaterial) mesh.material = tunic;
