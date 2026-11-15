@@ -195,12 +195,113 @@ function watermill(scene: Scene): Obstacle[] {
   return obstacles;
 }
 
+/**
+ * The two red timber houses at the back rim, left of the river (wiki shot): dark red board walls in a brown frame, a steep plank gable
+ * facing the field, a balcony with a rail across the front at the upper floor, lit yellow windows and a door. Spec: [x, z, wall height]:
+ * a 6 m house at the back-left and a taller 7.5 m one nearer the river, each 7 m wide and 6 m deep; the ring trees on their footprint go.
+ */
+const HOUSES: Array<[number, number, number]> = [[-26, 36, 6], [-11, 39, 7.5]];
+const HOUSE = { width: 7, depth: 6, roof: 4.2, balcony: 1.3 };
+
+function redHouses(scene: Scene, obstacles: Obstacle[], built: Set<unknown>): Obstacle[] {
+  const mat = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = new Color3(0.03, 0.03, 0.03);
+    return m;
+  };
+  const red = mat("farmer1HouseRed", new Color3(0.5, 0.1, 0.08), 0.22);
+  const timber = mat("farmer1HouseTimber", new Color3(0.42, 0.27, 0.15), 0.2);
+  const lit = new StandardMaterial("farmer1HouseLight", scene);
+  lit.diffuseColor = Color3.Black();
+  lit.emissiveColor = new Color3(1, 0.78, 0.3);
+  lit.specularColor = Color3.Black();
+  // Clear the ring trees standing on the footprints (and their colliders)
+  const cleared: Array<[number, number]> = [];
+  for (const trunk of scene.meshes.filter((m) => built.has(m) && m.name === "trunk")) {
+    const p = trunk.getAbsolutePosition();
+    if (!HOUSES.some(([x, z]) => Math.abs(p.x - x) < HOUSE.width / 2 + 2.5 && Math.abs(p.z - z) < HOUSE.depth / 2 + 3)) continue;
+    cleared.push([p.x, p.z]);
+    trunk.dispose();
+  }
+  const kept = obstacles.filter((o) => !cleared.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  const walls: Mesh[] = [], wood: Mesh[] = [], lights: Mesh[] = [];
+  for (const [cx, cz, wall] of HOUSES) {
+    const body = MeshBuilder.CreateBox("farmer1HouseBody", { width: HOUSE.width, height: wall, depth: HOUSE.depth }, scene);
+    body.position.set(cx, wall / 2, cz);
+    walls.push(body);
+    for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      const post = MeshBuilder.CreateBox("farmer1HousePost", { width: 0.4, height: wall, depth: 0.4 }, scene);
+      post.position.set(cx + dx * HOUSE.width / 2, wall / 2, cz + dz * HOUSE.depth / 2);
+      wood.push(post);
+    }
+    for (const y of [0.25, wall * 0.5, wall - 0.15]) {
+      const beam = MeshBuilder.CreateBox("farmer1HouseBeam", { width: HOUSE.width + 0.4, height: 0.3, depth: HOUSE.depth + 0.4 }, scene);
+      beam.position.set(cx, y, cz);
+      wood.push(beam);
+    }
+    // Gable roof, ridge along z so the gable faces the field (the mill's prism, turned the same way)
+    const roof = MeshBuilder.CreateCylinder("farmer1HouseRoof", { diameter: HOUSE.width * 1.3, height: HOUSE.depth + 1.2, tessellation: 3 }, scene);
+    roof.rotation.y = Math.PI / 2;
+    roof.bakeCurrentTransformIntoVertices();
+    roof.rotation.x = Math.PI / 2;
+    const tall = HOUSE.roof / (HOUSE.width * 1.3 * 0.75);
+    roof.scaling.set(1, 1, tall);
+    roof.position.set(cx, wall + HOUSE.width * 1.3 * 0.25 * tall, cz);
+    wood.push(roof);
+    // Balcony across the front at the upper floor: deck, posts under it, a rail with balusters
+    const front = cz - HOUSE.depth / 2;
+    const deckY = wall * 0.5;
+    const deck = MeshBuilder.CreateBox("farmer1HouseBalcony", { width: HOUSE.width * 0.8, height: 0.25, depth: HOUSE.balcony }, scene);
+    deck.position.set(cx, deckY, front - HOUSE.balcony / 2);
+    wood.push(deck);
+    for (const dx of [-1, 1]) {
+      const leg = MeshBuilder.CreateBox("farmer1HouseLeg", { width: 0.25, height: deckY, depth: 0.25 }, scene);
+      leg.position.set(cx + dx * HOUSE.width * 0.38, deckY / 2, front - HOUSE.balcony + 0.15);
+      wood.push(leg);
+    }
+    const rail = MeshBuilder.CreateBox("farmer1HouseRail", { width: HOUSE.width * 0.8, height: 0.15, depth: 0.15 }, scene);
+    rail.position.set(cx, deckY + 1, front - HOUSE.balcony + 0.08);
+    wood.push(rail);
+    for (let i = 0; i <= 8; i++) {
+      const b = MeshBuilder.CreateBox("farmer1HouseBaluster", { width: 0.1, height: 1, depth: 0.1 }, scene);
+      b.position.set(cx - HOUSE.width * 0.4 + i * (HOUSE.width * 0.8 / 8), deckY + 0.5, front - HOUSE.balcony + 0.08);
+      wood.push(b);
+    }
+    // Door below, two lit windows above, a lit window on the ground floor
+    const door = MeshBuilder.CreateBox("farmer1HouseDoor", { width: 1.2, height: 2, depth: 0.12 }, scene);
+    door.position.set(cx + 1.6, 1, front - 0.06);
+    wood.push(door);
+    for (const [dx, y] of [[-1.4, deckY + 1.3], [1.4, deckY + 1.3], [-1.6, 1.4]]) {
+      const w = MeshBuilder.CreateBox("farmer1HouseWindow", { width: 0.9, height: 0.9, depth: 0.1 }, scene);
+      w.position.set(cx + dx, y, front - 0.06);
+      lights.push(w);
+    }
+    kept.push({ type: "box", center: new Vector3(cx, 0, cz), halfX: HOUSE.width / 2, halfZ: HOUSE.depth / 2 });
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const [list, m, name] of [[walls, red, "farmer1HouseWalls"], [wood, timber, "farmer1HouseWood"], [lights, lit, "farmer1HouseLights"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    if (m !== lit) glow?.addExcludedMesh(merged);
+  }
+  return kept;
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
+  const prior = new Set(scene.meshes);
   const result = base();
+  const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   riverMeshes(scene);
   const hazards = [...result.hazards, ...riverHazards()];
   // Nothing the base put down may stand in the water
-  const obstacles = result.obstacles.filter((o) => Math.abs(o.center.x - riverX(o.center.z)) > RIVER.halfWidth + 1.5);
+  const obstacles = redHouses(scene, result.obstacles.filter((o) => Math.abs(o.center.x - riverX(o.center.z)) > RIVER.halfWidth + 1.5), built);
   obstacles.push(...stoneBridge(scene));
   obstacles.push(...watermill(scene));
   return { ...result, hazards, obstacles };
