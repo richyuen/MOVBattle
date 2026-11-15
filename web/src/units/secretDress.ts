@@ -6008,6 +6008,38 @@ export function ullrJacket(scene: Scene, body: ArticulatedBody, team: Color3): M
   return coat;
 }
 
+/*
+ * [S] 550 (ullr a.5) Ullr's belt (audit 538: "no belt - TABS: wide brown belt with two buckles"; secret.ullr.red.png: between the open coat fronts,
+ * at the waist, a broad brown leather band about a third of the trunk tall, two dark straps across it one over the other, a grey square buckle on
+ * each at the middle front). ULLR_BELT on the torso, in the trunk box T: a 10-sided band .tall T height tall, its middle .at T half under T's middle,
+ * .round of T's width round (proud of the trunk, inside the coat's open front), .deep of T's depth deep; two straps .strap of the band tall at
+ * .rows of its height, .proud round it; a buckle on each at the front, a square frame .buckle of T's width with a dark tongue. Lit brown self-lit .14.
+ */
+const ULLR_BELT = { tall: 0.62, at: 0.42, round: 1.12, deep: 1.22, strap: 0.16, rows: [0.27, 0.73], proud: 1.04, buckle: 0.22,
+  brown: new Color3(0.36, 0.17, 0.07), dark: new Color3(0.07, 0.04, 0.03), iron: new Color3(0.28, 0.3, 0.33) };
+export function ullrBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = ULLR_BELT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const mat = (c: Color3, e: number) => mf.get("cloth", c, { emissive: c.scale(e), roughness: 1 });
+  const brown = mat(K.brown, 0.14), dark = mat(K.dark, 0.4), iron = mat(K.iron, 0.3);
+  const T = limbBox(body.torsoMesh), out: Mesh[] = [];
+  const add = (m: Mesh, material: Material, x: number, y: number, z: number): Mesh => {
+    m.parent = body.torso; m.position.set(x, y, z); m.material = material; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m;
+  };
+  const h = T.half * 2 * K.tall * 0.5, y = T.mid - T.half * K.at, D = T.wide * 2 * K.round, sz = (T.deep / T.wide) * (K.deep / K.round);
+  const band = add(MeshBuilder.CreateCylinder("ullrBelt", { height: h, diameter: D, tessellation: 10 }, scene), brown, 0, y, 0);
+  band.scaling.z = sz;
+  const front = T.deep * K.deep;
+  for (const r of K.rows) {
+    const sy = y - h / 2 + h * r;
+    const strap = add(MeshBuilder.CreateCylinder("ullrBeltStrap", { height: h * K.strap, diameter: D * K.proud, tessellation: 10 }, scene), dark, 0, sy, 0);
+    strap.scaling.z = sz;
+    const b = T.wide * K.buckle;
+    add(MeshBuilder.CreateBox("ullrBeltBuckle", { width: b, height: b * 1.15, depth: b * 0.18 }, scene), iron, 0, sy, front * K.proud + b * 0.05);
+    add(MeshBuilder.CreateBox("ullrBeltTongue", { width: b * 0.28, height: b * 0.62, depth: b * 0.22 }, scene), dark, 0, sy, front * K.proud + b * 0.12);
+  }
+  return out;
+}
+
 /** A fitted lamellar shell with contrasting edges and front lacing. */
 export function secretSamuraiCuirass(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const yoke = body.allMeshes.find(mesh => mesh.name.endsWith("_yoke"));
