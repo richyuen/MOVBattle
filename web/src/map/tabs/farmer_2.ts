@@ -661,6 +661,16 @@ function oliveCrowns(scene: Scene, built: Set<unknown>): void {
   olive.emissiveColor = olive.diffuseColor.scale(0.25);
   olive.specularColor = Color3.Black();
   const glow = scene.getGlowLayerByName("glow");
+  // The ring is the base's oaks (oakCrown lumps on oakLeaves / oakLeavesDark): their light and dark lumps go light and deep olive
+  const oliveDark = new StandardMaterial("farmer2OliveLeafDark", scene);
+  oliveDark.diffuseColor = new Color3(0.34, 0.34, 0.1);
+  oliveDark.emissiveColor = oliveDark.diffuseColor.scale(0.25);
+  oliveDark.specularColor = Color3.Black();
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.name !== "oakCrown" || !mesh.isEnabled()) continue;
+    mesh.material = mesh.material?.name === "oakLeavesDark" ? oliveDark : olive;
+    mesh.applyFog = false;
+  }
   const clumps: Mesh[] = [];
   let k = 0;
   for (const mesh of [...scene.meshes]) {
