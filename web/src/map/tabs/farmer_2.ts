@@ -72,8 +72,8 @@ function cobbleWall(scene: Scene, mat: StandardMaterial, [x0, z0, x1, z1, gapAt]
 /**
  * The wheat field (wiki shot, the_tiniest_attack): tall golden wheat covers the right part of the island, from the front-right corner wall
  * back past the centre, beside the long centre wall. Spec: a field x 5..45, z -29..21 (its corners rounded off), filled with tufts of five
- * thin stalks 1.0-1.3 m tall with a fat ear on each, 0.9 m apart and jittered, leaning a little with the wind. Units walk through it (no
- * colliders) and stand a head above it. Drawn as thin instances of one tuft.
+ * thin stalks 0.5-0.7 m tall with a fat ear on each (waist high, under 1 m), 0.9 m apart and jittered, leaning a little with the wind. Units walk through it (no
+ * colliders) and stand chest-up above it. Drawn as thin instances of one tuft.
  */
 const WHEAT = { x0: 5, x1: 45, z0: -29, z1: 21, step: 0.9 };
 
@@ -85,7 +85,7 @@ function wheatField(scene: Scene): void {
   const parts: Mesh[] = [];
   for (let i = 0; i < 5; i++) {
     const a = (i / 5) * Math.PI * 2;
-    const h = 1.0 + seeded(i, 30) * 0.3;
+    const h = 0.5 + seeded(i, 30) * 0.2;
     const stalk = MeshBuilder.CreateCylinder("farmer2WheatStalk", { diameterTop: 0.05, diameterBottom: 0.09, height: h, tessellation: 3 }, scene);
     stalk.position.set(Math.cos(a) * 0.18, h / 2, Math.sin(a) * 0.18);
     stalk.rotation.set(Math.sin(a) * 0.15, 0, -Math.cos(a) * 0.15);
