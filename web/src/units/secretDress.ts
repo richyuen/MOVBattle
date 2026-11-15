@@ -3,6 +3,7 @@ import type { Material } from "@babylonjs/core";
 import type { ArticulatedBody } from "./bodyBuilder";
 import { getMaterialFactory } from "./materialFactory";
 import { limbBox, limbShell } from "./medievalDress";
+import { strapSandals } from "./ancientDress";
 
 /** The broad beard narrows into a leather-tied bundle on the chest. */
 export function treeGiantBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
@@ -60,6 +61,32 @@ export function treeGiantHair(scene: Scene, body: ArticulatedBody): Mesh[] {
     scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
   }
   return hair;
+}
+
+/*
+ * [S] 549 (tree_giant a.3: "solid dark ankle boots - TABS has open brown sandals with ankle and instep straps over team-colored feet";
+ * secret.tree_giant.red.png: bare team feet on a tan-brown sole, a strap over the instep, one round the back of the ankle and a thin one across
+ * the toes). The dark leather foot goes back to team skin under the hoplite's strapped sandal (ancientDress strapSandals: sole, instep strap,
+ * ankle strap) in TREE_SANDAL.brown, and a toe strap .toeD of the foot's depth across, .toe of the way from the toe end.
+ */
+const TREE_SANDAL = { brown: new Color3(0.42, 0.22, 0.11), glow: 0.14, toe: 0.14, toeD: 0.12, toeH: 0.6 };
+export function treeGiantSandals(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const T = TREE_SANDAL;
+  const out = strapSandals(scene, body, T.brown, T.glow, "treeGiantSandal");
+  const strap = getMaterialFactory().get("cloth", T.brown, { emissive: T.brown.scale(T.glow) });
+  for (const knee of [body.leftKnee, body.rightKnee]) {
+    for (const foot of knee.getChildMeshes(true)) {
+      if (!(foot instanceof Mesh) || !/_[lr]FootM$/.test(foot.name)) continue;
+      const fb = foot.getBoundingInfo().boundingBox, ex = fb.extendSize;
+      const toe = MeshBuilder.CreateBox("treeGiantSandalToe", { width: ex.x * 2.12, height: ex.y * 2 * T.toeH, depth: ex.z * 2 * T.toeD }, scene);
+      toe.parent = foot;
+      toe.position.set(fb.center.x, fb.minimum.y + ex.y * T.toeH, fb.maximum.z - ex.z * 2 * T.toe);
+      toe.material = strap;
+      out.push(toe);
+    }
+  }
+  for (const m of out) scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  return out;
 }
 
 /** Separate ragged shorts ride each thigh and leave the knees exposed. */
