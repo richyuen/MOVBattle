@@ -32,6 +32,8 @@ import { NavigationGrid } from "../map/navigation";
 const BEARER_AURA_KIND: Record<string, "haste" | "stay"> = { "legacy.flag_bearer": "haste", "legacy.banner_bearer": "stay" };
 /** [S] 465 a bearer is a melee man (his pole is his weapon, Stay Banner / Charge Flag): the ring's aura is a pulse of its own, every `every` s, held `holds` s. */
 const BEARER_PULSE = { every: 3, holds: 3.5 };
+// [S] 549 Artemis's charged shaft seated at the nock (spec at its spawn in _releasePendingThrows)
+const ARTEMIS_SHAFT = { size: 2.8, half: 0.375, chest: 1 };
 // [S] 485 Shockwave Hammer (SimulationSystem._stepHammers): reach m, cooldown s, power x the mace blow, splash radius m, push, daze s, hinge angles rad, hang/fall/linger s
 const CHRONO_TRANSFORM = { settle: 0.2, drop: 1.45, tilt: 1.15, grow: 0.25, spin: 1.6, orbit: 0.9 };
 const PALADIN_HAMMER = { reach: 7, cooldown: 8, power: 1.5, radius: 2.5, push: 5, daze: 1.2, raised: -0.35, down: 1.5, hang: 0.4, fall: 0.3, linger: 0.35 };
@@ -5202,12 +5204,21 @@ export class SimulationSystem {
       if (!this.projectileSystem || attacker.isDead || attacker.isToppled || attacker.isDowned || !this._units.includes(attacker)) continue;
       this._logAbility(attacker, t.fromStaff ? "cast" : "throw", now);
       if (t.artemisKnockback) {
+        // [S] 549 (artemis c.1: "the large shaft passes through the bow at waist height ... TABS looses its charged shaft from the nock at the
+        // drawn string"): the shaft leaves seated on the string, its tail (the 0.75 m arrow's half, x its .size) at the drawing palm the split
+        // string's apex is drawn to, laid from there toward the man's chest, so it runs forward through the bow fist and not centred on her
         const nockHand = attacker.body.leftHand;
-        nockHand.computeWorldMatrix(true);
-        const origin = nockHand.getAbsolutePosition();
+        const palm = nockHand.getChildMeshes(true).find((m) => m.name.endsWith("_lHandM")) ?? nockHand;
+        const chain: TransformNode[] = [];
+        for (let n: TransformNode | null = palm; n; n = n.parent as TransformNode | null) chain.unshift(n);
+        for (const n of chain) n.computeWorldMatrix(true);
+        const nock = palm.getAbsolutePosition().clone();
+        const toward = target.position.add(new Vector3(0, ARTEMIS_SHAFT.chest, 0)).subtract(nock);
+        if (toward.lengthSquared() < 1e-6) toward.set(Math.sin(attacker.body.root.rotation.y), 0, Math.cos(attacker.body.root.rotation.y));
+        const origin = nock.add(toward.normalize().scale(ARTEMIS_SHAFT.half * ARTEMIS_SHAFT.size));
         this.projectileSystem.spawnProjectile(
           "arrow", origin, target, t.damage, Vector3.Zero(), 0, attacker.team, this._units,
-          undefined, 0, { originLift: 0, size: 2.8, arc: 0.025, lineLaunch: true },
+          undefined, 0, { originLift: 0, size: ARTEMIS_SHAFT.size, arc: 0.025, lineLaunch: true },
         );
         this._logAbility(attacker, "artemis_knockback_arrow", now, target.position);
         continue;
