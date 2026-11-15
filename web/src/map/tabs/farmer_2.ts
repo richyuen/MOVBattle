@@ -118,13 +118,97 @@ function wheatField(scene: Scene): void {
   tuft.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
 }
 
+/**
+ * The open pathway down the left side and its alley (card Overview; wiki shot left edge): a wide dirt track, 5 m across with two darker
+ * wheel ruts, runs from the back-left rim down past the farmhouse corner to the front-left rim, bending a little; between it and the
+ * left cobble wall (x -26) a narrow alley is shut off from the track by a broken wooden fence: posts every 2 m with two rails, some rails
+ * hanging, two posts down and one stretch missing. Ring trees standing on the track go. Spec: track centre x = PATH.x + a 2 m sway.
+ */
+const PATH = { x: -37, half: 2.5, back: 44, front: -44 };
+const FENCE = { x: -31, z0: -18, z1: 22, step: 2 };
+const pathX = (z: number) => PATH.x + 2 * Math.sin(z * 0.06);
+
+function leftPathway(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const mat = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const dirt = mat("farmer2Path", new Color3(0.62, 0.45, 0.24), 0.18);
+  const rut = mat("farmer2PathRut", new Color3(0.45, 0.31, 0.16), 0.15);
+  const wood = mat("farmer2Fence", new Color3(0.4, 0.27, 0.15), 0.2);
+  const strip = (name: string, offset: number, half: number, y: number, m: StandardMaterial) => {
+    const left: Vector3[] = [], right: Vector3[] = [];
+    for (let z = PATH.back; z >= PATH.front; z -= 1) {
+      left.push(new Vector3(pathX(z) + offset - half, y, z));
+      right.push(new Vector3(pathX(z) + offset + half, y, z));
+    }
+    const mesh = MeshBuilder.CreateRibbon(name, { pathArray: [left, right], sideOrientation: Mesh.DOUBLESIDE }, scene);
+    mesh.material = m;
+    mesh.receiveShadows = true;
+    mesh.isPickable = false;
+  };
+  strip("farmer2Path", 0, PATH.half, 0.05, dirt);
+  strip("farmer2PathRut", -0.9, 0.25, 0.07, rut);
+  strip("farmer2PathRut", 0.9, 0.25, 0.07, rut);
+
+  // Clear ring trees off the track
+  const cleared: Array<[number, number]> = [];
+  for (const trunk of scene.meshes.filter((m) => built.has(m) && m.name === "trunk")) {
+    const p = trunk.getAbsolutePosition();
+    if (p.z > PATH.back || p.z < PATH.front || Math.abs(p.x - pathX(p.z)) > PATH.half + 1.5) continue;
+    cleared.push([p.x, p.z]);
+    trunk.dispose();
+  }
+  const kept = obstacles.filter((o) => !cleared.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+
+  // The broken fence along the alley
+  const parts: Mesh[] = [];
+  let k = 0;
+  for (let z = FENCE.z0; z < FENCE.z1; z += FENCE.step) {
+    k++;
+    const missing = z > 2 && z < 7; // one stretch gone
+    if (missing) continue;
+    const down = seeded(k, 51) < 0.15;
+    const post = MeshBuilder.CreateBox("farmer2FencePost", { width: 0.22, height: 1.3, depth: 0.22 }, scene);
+    post.position.set(FENCE.x, down ? 0.15 : 0.65, z);
+    if (down) post.rotation.z = Math.PI / 2 - 0.2;
+    else post.rotation.set((seeded(k, 52) - 0.5) * 0.2, 0, (seeded(k, 53) - 0.5) * 0.25);
+    parts.push(post);
+    if (z + FENCE.step >= FENCE.z1 || (z + FENCE.step > 2 && z + FENCE.step < 7) || down) continue;
+    for (const y of [0.45, 0.95]) {
+      const hanging = seeded(k * 2 + (y > 0.5 ? 1 : 0), 54) < 0.25;
+      const rail = MeshBuilder.CreateBox("farmer2FenceRail", { width: 0.1, height: 0.12, depth: FENCE.step + 0.2 }, scene);
+      rail.position.set(FENCE.x, hanging ? y - 0.25 : y, z + FENCE.step / 2);
+      if (hanging) rail.rotation.x = 0.35 * (seeded(k, 55) < 0.5 ? 1 : -1);
+      parts.push(rail);
+    }
+  }
+  const fence = Mesh.MergeMeshes(parts, true);
+  if (fence) {
+    fence.name = "farmer2Fence";
+    fence.convertToFlatShadedMesh();
+    fence.material = wood;
+    fence.receiveShadows = true;
+    fence.isPickable = false;
+  }
+  // The fence blocks except at its missing stretch
+  kept.push({ type: "box", center: new Vector3(FENCE.x, 0, (FENCE.z0 + 2) / 2), halfX: 0.2, halfZ: (2 - FENCE.z0) / 2 });
+  kept.push({ type: "box", center: new Vector3(FENCE.x, 0, (7 + FENCE.z1) / 2), halfX: 0.2, halfZ: (FENCE.z1 - 7) / 2 });
+  return kept;
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
+  const prior = new Set(scene.meshes);
   const result = base();
+  const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   const stone = new StandardMaterial("farmer2WallStone", scene);
   stone.diffuseColor = new Color3(0.62, 0.62, 0.6);
   stone.emissiveColor = new Color3(0.07, 0.07, 0.08);
   stone.specularColor = new Color3(0.04, 0.04, 0.04);
-  const obstacles = [...result.obstacles];
+  const obstacles = leftPathway(scene, built, [...result.obstacles]);
   WALLS.forEach((wall, w) => cobbleWall(scene, stone, wall, w, obstacles));
   wheatField(scene);
   return { ...result, obstacles };
