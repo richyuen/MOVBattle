@@ -14,8 +14,57 @@ function seeded(i: number, seed: number): number {
   return raw - Math.floor(raw);
 }
 
+/**
+ * Snow cover (wiki shot): the whole top of the island is white-blue snow, no green showing. The ground and grass materials of this build
+ * turn to snow, the grass blades and tufts go, and soft low drifts (0.3-0.6 m high, 2-6 m long, flattened) lie along the tree ring, at the
+ * rim and in a few banks on the field, none of them in the way (drawn only).
+ */
+const SNOW = new Color3(0.8, 0.85, 0.96);
+const SNOW_SHADE = new Color3(0.3, 0.34, 0.45);
+
+function snowCover(scene: Scene, built: Set<unknown>): void {
+  for (const name of ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"]) {
+    const m = scene.getMaterialByName(name) as StandardMaterial | null;
+    if (!m) continue;
+    m.diffuseColor = SNOW.clone();
+    m.emissiveColor = SNOW_SHADE.clone();
+    m.specularColor = new Color3(0.05, 0.05, 0.06);
+  }
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (mesh.name.startsWith("fieldBlades_") || mesh.name === "grassTuft" || mesh.name === "centerGrass" || mesh.name === "flowerDot") mesh.setEnabled(false);
+  }
+  const drift = new StandardMaterial("farmerSnowDrift", scene);
+  drift.diffuseColor = SNOW.clone();
+  drift.emissiveColor = SNOW_SHADE.clone();
+  drift.specularColor = new Color3(0.08, 0.08, 0.1);
+  const parts: Mesh[] = [];
+  for (let i = 0; i < 70; i++) {
+    const ring = i < 56;
+    const a = seeded(i, 11) * Math.PI * 2;
+    const band = ring ? 0.78 + seeded(i, 12) * 0.2 : 0.2 + seeded(i, 12) * 0.45;
+    const x = Math.cos(a) * 50 * band, z = Math.sin(a) * 42 * band;
+    if (Math.abs(x - iceX(z)) < ICE.halfWidth + 2.5) continue;
+    const len = 2 + seeded(i, 13) * 4;
+    const d = MeshBuilder.CreateIcoSphere("farmerSnowDrift", { radius: 1, subdivisions: 2 }, scene);
+    d.scaling.set(len, 0.3 + seeded(i, 14) * 0.3, len * (0.4 + seeded(i, 15) * 0.3));
+    d.rotation.y = -a + Math.PI / 2 + (seeded(i, 16) - 0.5) * 0.6;
+    d.position.set(x, 0, z);
+    parts.push(d);
+  }
+  const drifts = Mesh.MergeMeshes(parts, true);
+  if (drifts) {
+    drifts.name = "farmerSnowDrifts";
+    drifts.material = drift;
+    drifts.receiveShadows = true;
+    drifts.isPickable = false;
+  }
+}
+
 export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBuildResult {
+  const prior = new Set(scene.meshes);
   const result = base();
+  snowCover(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   const mat = (name: string, c: Color3, glow: number) => {
     const m = new StandardMaterial(name, scene);
     m.diffuseColor = c;
