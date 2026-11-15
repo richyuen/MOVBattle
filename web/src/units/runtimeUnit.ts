@@ -49,6 +49,14 @@ const ULLR_HANG = { out: 0.22, fore: -0.1, bend: -0.2 };
  * pose over the last of it.
  */
 const ICE_SLAM = { cock: -2.95, bend: -0.7, back: -0.12, hit: -0.8, end: -0.62, pitch: 0.32, raise: 0.55, hold: 0.6 };
+/*
+ * [S] 549 (shogun c.2: "walking swing with both feet planted near the target - TABS: fast dash toward the target before the attack";
+ * secret.shogun.png: a long low lunge, front knee bent over the foot, rear leg stretched straight behind, trunk pitched forward over the
+ * front thigh). Through the Hurricane Dash's flight (the leap's live-air state) his legs are split into that lunge: the off leg forward
+ * (.frontHip rad, knee .frontKnee), the weapon-side leg back (.backHip, knee .backKnee), pelvis pitched .pelvis and trunk .trunk forward;
+ * the arms are left to the swing that started with the dash (simulationSystem SHOGUN_DASH lands its blow as he comes down).
+ */
+const SHOGUN_LUNGE = { frontHip: -1.05, frontKnee: 1.15, backHip: 0.85, backKnee: 0.2, pelvis: 0.18, trunk: 0.42 };
 const JADE_SWEEP = { reach: -1.42, inward: 0.3, dip: 0.08, cock: 1.9, end: 1.7, wind: 0.4, through: 0.7, circleCock: 0.75, every: 2 };
 /*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
@@ -2047,6 +2055,15 @@ export class RuntimeUnit {
     if (this._maceWhirling(now)) this._applyMaceWhirl(now);
     if (this.definition.id === "secret.lady_red_jade") this._applyJadeSweep(isAttacking);
     if (this.definition.id === "secret.ice_giant") this._applyIceSlam(isAttacking);
+    if (this.definition.id === "secret.shogun" && this._leapAir && !this._grounded && !this._isDead) {
+      const L = SHOGUN_LUNGE, b = this.body;
+      b.leftHip.rotation.set(L.frontHip, 0, 0);
+      b.leftKnee.rotation.set(L.frontKnee, 0, 0);
+      b.rightHip.rotation.set(L.backHip, 0, 0);
+      b.rightKnee.rotation.set(L.backKnee, 0, 0);
+      b.hip.rotation.x += L.pelvis;
+      b.torso.rotation.x += L.trunk;
+    }
     this._applyCheer(now);
     this._applyIceThrow(now);
     this._applyCurseCast(now);
