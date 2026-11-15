@@ -6274,6 +6274,7 @@ export function shogunHakama(scene: Scene, body: ArticulatedBody, team: Color3, 
  * self-lit .12); .bands thin rings .band of the shell tall at .at of its run, unlit orange .rim. The foot takes Artemis's open sandal.
  */
 const SAMURAI_SUNEATE = { top: 0.82, low: 0.78, round: 1.12, ankle: 0.98, deep: 1.0, shade: 0.7, band: 0.07, at: [0.04, 0.5, 0.93], rim: new Color3(1, 0.3, 0.06) };
+const SUNEATE_STUD = { size: 0.28, proud: 0.98 };
 export function samuraiGiantGreaves(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = SAMURAI_SUNEATE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const c = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(K.shade);
@@ -6287,11 +6288,19 @@ export function samuraiGiantGreaves(scene: Scene, body: ArticulatedBody, team: C
     const guard = MeshBuilder.CreateCylinder("samuraiSuneate", { height: h, diameterTop: r * 2 * K.round, diameterBottom: r * 2 * K.ankle, tessellation: 8 }, scene);
     guard.parent = shin.parent; guard.position.set(shin.position.x, (yTop + yBot) / 2, shin.position.z); guard.scaling.z = zs;
     guard.material = plate; out.push(guard);
+    /*
+     * [S] 554 (a.2: "gold hoop bands ringing the thighs and shins - TABS: plain team-coloured leg greaves with small studs and no gold rings";
+     * secret.samurai_giant.blue.png: each shin guard one plain team plate, and on its outer and inner side a small orange knob at the top, middle
+     * and foot). The rings are gone: SUNEATE_STUD per height .at, a flat-shaded knob .size of r across on each side, .proud of the shell's half-width
+     * out, in the unlit orange .rim.
+     */
     for (const at of K.at) {
-      const d = r * 2 * (K.round + (K.ankle - K.round) * at) * 1.04;
-      const band = MeshBuilder.CreateCylinder("samuraiSuneateBand", { height: h * K.band, diameter: d, tessellation: 8 }, scene);
-      band.parent = shin.parent; band.position.set(shin.position.x, yTop - h * at, shin.position.z); band.scaling.z = zs;
-      band.material = rim; out.push(band);
+      const half = r * (K.round + (K.ankle - K.round) * at);
+      for (const s of [-1, 1]) {
+        const stud = MeshBuilder.CreateIcoSphere("samuraiSuneateStud", { radius: r * SUNEATE_STUD.size, subdivisions: 1, flat: true }, scene);
+        stud.parent = shin.parent; stud.position.set(shin.position.x + s * half * SUNEATE_STUD.proud, yTop - h * Math.min(Math.max(at, 0.1), 0.88), shin.position.z);
+        stud.scaling.set(0.6, 1, 1); stud.material = rim; out.push(stud);
+      }
     }
   }
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
