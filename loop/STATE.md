@@ -38,5 +38,5 @@ stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_
 ## Last verdicts (critic header lines verbatim)
 
 ## Notes for next iteration (max 5 lines)
-- v10 start: every TABS map is built on its old base map (TABS_MAPS[id].base in web/src/map/tabsMaps.ts); none has a builder in web/src/map/tabs/ yet. Stage enemy armies are scaffolded plain ranks (scaffold-stages.mjs).
+- v10 start: every TABS map is built on its old base map (TABS_MAPS[id].base in web/src/map/tabsMaps.ts); only map.hill has a builder in web/src/map/tabs/ (the terrain-height example: a ramp to a plateau, not yet audited). Stage enemy armies are scaffolded plain ranks (scaffold-stages.mjs).
 - Items are the 29 maps and 70 stages in loop/cards/_stages.json; stage ids are frozen (fetch-stage-cards.mjs --repick re-spreads them, never in the loop).
