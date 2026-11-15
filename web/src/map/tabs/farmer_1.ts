@@ -147,6 +147,14 @@ function stoneBridge(scene: Scene): Obstacle[] {
   // Splice the arch's springing points into the run so the opening's edge is sharp
   xs.push(-BRIDGE.arch, -BRIDGE.arch + 1e-3, BRIDGE.arch - 1e-3, BRIDGE.arch);
   xs.sort((a, b) => a - b);
+  // A ribbon's winding follows its path order: turn each surface so its first normal points the way it faces (deck up, soffit down,
+  // each side wall out), or it is lit from behind and renders black
+  const face = (mesh: Mesh, axis: 1 | 2, sign: number) => {
+    mesh.convertToFlatShadedMesh();
+    const n = mesh.getVerticesData("normal");
+    if (n && Math.sign(n[axis]) !== sign) mesh.flipFaces(true);
+    return mesh;
+  };
   const finish = (mesh: Mesh, mat: StandardMaterial) => {
     mesh.convertToFlatShadedMesh();
     mesh.material = mat;
@@ -157,16 +165,16 @@ function stoneBridge(scene: Scene): Obstacle[] {
   for (const side of [-1, 1]) {
     const top = xs.map((dx) => new Vector3(x0 + dx, deckTop(dx) + 0.02, side * W));
     const bottom = xs.map((dx) => new Vector3(x0 + dx, Math.min(under(dx), deckTop(dx) - 0.3), side * W));
-    finish(MeshBuilder.CreateRibbon("farmer1BridgeSide", { pathArray: [top, bottom] }, scene), stone);
+    finish(face(MeshBuilder.CreateRibbon("farmer1BridgeSide", { pathArray: [top, bottom] }, scene), 2, side), stone);
   }
   // The deck and the arch's soffit: ribbons across the width following each line
-  const across = (f: (dx: number) => number, name: string, mat: StandardMaterial, lift: number) => {
+  const across = (f: (dx: number) => number, name: string, mat: StandardMaterial, lift: number, up: number) => {
     const a = xs.map((dx) => new Vector3(x0 + dx, f(dx) + lift, -W));
     const b = xs.map((dx) => new Vector3(x0 + dx, f(dx) + lift, W));
-    finish(MeshBuilder.CreateRibbon(name, { pathArray: [a, b] }, scene), mat);
+    finish(face(MeshBuilder.CreateRibbon(name, { pathArray: [a, b] }, scene), 1, up), mat);
   };
-  across(deckTop, "farmer1BridgeDeck", deckStone, 0.02);
-  across((dx) => (Math.abs(dx) < BRIDGE.arch ? under(dx) : -0.3), "farmer1BridgeSoffit", stone, 0);
+  across(deckTop, "farmer1BridgeDeck", deckStone, 0.02, 1);
+  across((dx) => (Math.abs(dx) < BRIDGE.arch ? under(dx) : -0.3), "farmer1BridgeSoffit", stone, 0, -1);
   // Voussoirs round each face's arch and a rounded curb along each side of the hump
   const blocks: Mesh[] = [];
   for (const side of [-1, 1]) {
