@@ -24,8 +24,7 @@ Read at step 1; one fact a line, merge near cap.
 - materialPreset secret_ghost tints the team body 55% lavender: team garments want the plain preset (443).
 - Idle/lineup: front 3/4, weapon side; a face/chest/shield blocker judged side-on is mis-aimed (evidence commit); prop over the chest: post-release idle-angle shot (525); hips behind a shield: rig 13 (526); off-side shield: rig 14 mirror (534). Faceless at .6 rad reads as a back: .25 (497).
 - Size a held prop off joint spreads (originIn), not limbBox (526); a stave thick by share of length: own girth when lengthened (540).
-- The idle is ~100 ms after spawn: full weight from spawn, in every re-solve (393).
-- Prop over head + .3 height reframes all shots: RE-AUDIT (420, 447).
+- The idle is ~100 ms after spawn: full weight from spawn, in every re-solve (393); fix a random held carry (h(92)): prop marker + _carryTurn 1 (552).
 - `--units a,b` re-shoots lineup_<f> (498). For lethal blows, keep an off-camera reserve and time contact from the hit log (504, 546).
 - A dress change aimed at the idle must clear the rest pose and the held weapon: probe what covers it first (442; 539 log over chest). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Frame prop openings at the landing spot (522), toppled targets at torso bounds (509), a sky drop on the man ~20 ticks on, sky in frame (539).
@@ -44,7 +43,7 @@ Read at step 1; one fact a line, merge near cap.
 - A pole butt in the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target (509). A tall crown tips with the head pitch: stand it on the torso joint (500); a torso board on body.root (496).
 - A prop placed before movement can lag a turn: parent to the fist and convert world aim to hand space (521). IK: carryOverheadAt (520).
 - Linked actors share the parent's definition id. Gate dress on visual.special and shared pose presets on the unit id (518, 523); a horse actor holds mount_horse (527); suppressParentSpecial blanks the parent's: gate on posePreset.
-- Retire old skirts (482); a belt hides in a tunicSkirt flare: build off its top ring (517). Size shells off the `_yoke` (487); check later repaint passes (508).
+- Skirt on body.hip, not torso (yawed stance, 552). Retire old skirts (482); a belt hides in a tunicSkirt flare: build off its top ring (517). Size shells off the `_yoke` (487); check later repaint passes (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450). Shin limbShell 0 is the calf cap, ~.1 m over the knee.
 - aimLimb only aims a fixed-length bone (397). To change a leg's length scale thigh/shin and knee.position.y; the foot's sole is baked a shin under the knee, so move the foot by the shin's change, and the hip by the total (440). Leg length won't read while the pelvis box and boot tops cover the thigh (441 queen).
 - unitFactory overwrites mesh metadata: mark a prop for the animator with a named child node (427).
@@ -61,7 +60,7 @@ Read at step 1; one fact a line, merge near cap.
 - Replay probes as capture: mulberry32 0x4d4f5642 reseeded before resetBattle, resetClock, _nextRuntimeId 100000 (503, 512). hpoint without "haxe": shouldered carry (502).
 - Fist prop hand frame: +y up the forearm, knuckles -y (492). bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
-- execSync runs cmd.exe (eats a caret): write sha~1 (530). On-death effects: RU.onDeath (the last death ends the duel first, 535).
-- Takeoff + follow-through can miss a rotation: shoot the flip alone (544).
+- execSync eats a caret: write sha~1 (530). On-death effects: RU.onDeath (535).
+- Takeoff + follow-through can miss a rotation: shoot the flip alone (544). Prop over head: RE-AUDIT (420).
 - An unheld melee motion (not heavy/blade/halberd) lands at the decision: unit-posed attacks set animator.landsLate; a leap's blow is pending at 2 rise/22 (549). A weapon not in inferWeaponPresentationFamily is "default": set weaponPresentationFamily or its swing never runs (550).
 - fxPreset (RU _applyFxPreset) rewrites body emissive each frame: frost washes a team body pale (551). tunicSkirt is hung in unitFactory after the dress: exclude the id there (551).
