@@ -8,7 +8,7 @@ import type { Obstacle } from "../obstacles";
 
 // The cliffs: grey faceted rock walls standing just inside the rim behind the trees, 5-9 m tall, in three runs read off the wiki shot: the
 // back arc (left of centre to right of centre), the back-left corner down the left side, and the front-right. Angles from +x toward +z.
-const ISLAND = { a: 54, b: 48, round: 3 };
+const ISLAND = { a: 54, b: 48, round: 2 };
 const CLIFF_RUNS: Array<[number, number]> = [[55, 125], [140, 195], [-75, -25]];
 const CLIFF_STEP = 7; // degrees between cliff segments
 
@@ -112,7 +112,7 @@ function birchRing(scene: Scene, built: Set<unknown>): void {
   bark.emissiveColor = new Color3(0.4, 0.39, 0.37);
   bark.specularColor = Color3.Black();
   const glow = scene.getGlowLayerByName("glow");
-  const trunks = scene.meshes.filter((m): m is Mesh => built.has(m) && m.name === "trunk" && m instanceof Mesh);
+  const trunks = scene.meshes.filter((m): m is Mesh => built.has(m) && m.name === "trunk" && m instanceof Mesh && m.isEnabled());
   trunks.forEach((trunk, i) => {
     for (const child of trunk.getChildMeshes()) if (child.name === "canopy") child.dispose();
     const h = trunk.getBoundingInfo().boundingBox.extendSize.y * 2;
@@ -443,6 +443,49 @@ function ridges(scene: Scene, built: Set<unknown>): { obstacles: Obstacle[]; gon
   return { obstacles, gone };
 }
 
+/**
+ * Round island (wiki shot): the island is a near-circle, not the base's rounded rectangle (superellipse 54 x 48, power 3), so the ring,
+ * cliffs and ridges hug a curved rim with no square corners of bare earth. Spec: the outline is the ellipse 54 x 48 (power 2; ISLAND above,
+ * which every rim piece and the underside tiers follow); the base's lawn slabs ("ground", "centerGrass") are remapped vertex by vertex from
+ * the old outline to the new one at the same fraction of the radius, and every base prop or tree left standing outside the new rim (less
+ * 1 m) is hidden, with the collider at its spot.
+ */
+const BASE_RIM = { a: 54, b: 48, round: 3 };
+const RIM_PROPS = new Set(["trunk", "hazeTreeline", "boulder", "wallStone", "hayBale", "stump", "hill", "grassTuft", "flowerDot", "pebble"]);
+
+function outlineAt(deg: number, o: { a: number; b: number; round: number }): number {
+  const t = (deg * Math.PI) / 180, c = Math.cos(t), s = Math.sin(t);
+  return (Math.abs(c / o.a) ** o.round + Math.abs(s / o.b) ** o.round) ** (-1 / o.round);
+}
+
+function roundIsland(scene: Scene, built: Set<unknown>): Array<[number, number]> {
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !(mesh instanceof Mesh) || !["ground", "centerGrass"].includes(mesh.name)) continue;
+    const pos = mesh.getVerticesData("position");
+    if (!pos) continue;
+    for (let v = 0; v < pos.length; v += 3) {
+      const r = Math.hypot(pos[v], pos[v + 2]);
+      if (r < 1e-6) continue;
+      const deg = (Math.atan2(pos[v + 2], pos[v]) * 180) / Math.PI;
+      const k = outlineAt(deg, ISLAND) / outlineAt(deg, BASE_RIM);
+      pos[v] *= k;
+      pos[v + 2] *= k;
+    }
+    mesh.setVerticesData("position", pos);
+    mesh.refreshBoundingInfo();
+  }
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !RIM_PROPS.has(mesh.name) || mesh.parent) continue;
+    const { x, z } = mesh.position;
+    const deg = (Math.atan2(z, x) * 180) / Math.PI;
+    if (Math.hypot(x, z) <= outlineAt(deg, ISLAND) - 1) continue;
+    gone.push([x, z]);
+    mesh.setEnabled(false);
+  }
+  return gone;
+}
+
 const FIELD = { rx: 47, rz: 32 };
 const FIELD_PROPS = new Set(["boulder", "wallStone", "hayBale", "stump"]);
 
@@ -451,6 +494,8 @@ const inField = (x: number, z: number, margin = 0) => (x / (FIELD.rx + margin)) 
 export function buildTribal1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
+  const offRim = roundIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
+  result.obstacles = result.obstacles.filter((o) => !offRim.some(([x, z]) => Math.abs(x - o.center.x) < 0.01 && Math.abs(z - o.center.z) < 0.01));
   // Each prop's collider sits at its (main) mesh's own spot: the trees' colliders in the ring are kept
   const gone: Array<[number, number]> = [];
   for (const mesh of scene.meshes.filter((m) => !prior.has(m) && FIELD_PROPS.has(m.name))) {
