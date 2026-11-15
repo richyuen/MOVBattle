@@ -6040,6 +6040,38 @@ export function ullrBelt(scene: Scene, body: ArticulatedBody): Mesh[] {
   return out;
 }
 
+/*
+ * [S] 550 (ullr a.6) Ullr's lace-up boots (audit 538: "plain team shins - TABS: brown lace-up boots with tan ties"; secret.ullr.red.png: from about
+ * a third up the shin down, a dark brown boot over the foot; a pale tan band rings its top over the trouser leg; up its front tan ties cross in an X
+ * at two heights, a tan wrap round the ankle). ULLR_BOOT on each shin: a shell .out of its half-width round it from .from of the way down to its
+ * foot; its top a tan cuff .cuffH of the shin tall, .cuffOut round; two tan crossed ties (thin slabs leaned +-.lean rad) on its front at .ties
+ * of the way down; the foot mesh in the boot's brown. Lit, self-lit .14, out of the glow.
+ */
+const ULLR_BOOT = { from: 0.45, out: 1.38, cuffH: 0.09, cuffOut: 1.52, ties: [0.62, 0.82], tieL: 0.16, tieW: 0.035, lean: 0.62, tieOut: 1.5,
+  brown: new Color3(0.2, 0.09, 0.05), tan: new Color3(0.66, 0.44, 0.2) };
+export function ullrBoots(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const K = ULLR_BOOT, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const brown = mf.get("cloth", K.brown, { emissive: K.brown.scale(0.14), roughness: 1 });
+  const tan = mf.get("cloth", K.tan, { emissive: K.tan.scale(0.14), roughness: 1 });
+  const out: Mesh[] = [];
+  for (const shin of [body.leftLowerLeg, body.rightLowerLeg]) {
+    const S = limbBox(shin);
+    out.push(limbShell(scene, "ullrBoot", shin, K.from, 1, K.out, brown));
+    out.push(limbShell(scene, "ullrBootCuff", shin, K.from - K.cuffH * 0.5, K.from + K.cuffH * 0.5, K.cuffOut, tan));
+    const r = Math.max(S.wide, S.deep);
+    for (const at of K.ties) {
+      const y = S.mid + S.half - at * S.half * 2;
+      for (const s of [1, -1]) {
+        const tie = MeshBuilder.CreateBox("ullrBootTie", { width: S.half * 2 * K.tieW, height: S.half * 2 * K.tieL, depth: r * 0.12 }, scene);
+        tie.parent = shin.parent; tie.position.set(0, y, S.deep * K.tieOut); tie.rotation.z = s * K.lean; tie.material = tan; out.push(tie);
+      }
+    }
+  }
+  for (const foot of body.allMeshes.filter((m) => /_[lr]FootM$/.test(m.name))) foot.material = brown;
+  for (const m of out) glow?.addExcludedMesh(m);
+  return out;
+}
+
 /** A fitted lamellar shell with contrasting edges and front lacing. */
 export function secretSamuraiCuirass(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const yoke = body.allMeshes.find(mesh => mesh.name.endsWith("_yoke"));
