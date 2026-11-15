@@ -1329,6 +1329,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         torsoWidth: 0.85, upperLegWidth: 0.82, lowerLegWidth: 0.76 }, "tree_club", "none", "none", "giant_tree", "#6f8a42", undefined, {
         // [S] 543 (b.2) the big tree: a thick twisted trunk and a canopy wider than his shoulders (propBuilder GIANT_TREE)
         weaponVariant: "tree_giant",
+        // [S] 550 (c.1) the tree is swung like a club: the heavy-swing family runs the sideways swat (proceduralAnimation _animateTreeSwat, which the
+        // inferred "default" family for tree_club never reached) and holds the blow for its sweep, not the decision
+        weaponPresentationFamily: "heavy_swing",
         posePreset: "giant", materialPreset: "secret_nature", attachmentPreset: "giant_aura",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },

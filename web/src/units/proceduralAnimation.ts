@@ -6128,6 +6128,11 @@ export class ProceduralAnimator {
     this._body.rightShoulder.rotation.x = -1.15;
     this._body.rightShoulder.rotation.z = side * (0.65 - 0.8 * across);
     this._body.rightElbow.rotation.x = -0.85;
+    // [S] 550 (tree_giant c.1) two-handed (secret.tree_giant.jpg: both fists on the trunk, the off arm across his front): the off arm reaches over to
+    // the trunk and is carried round with the swing, a little behind the weapon arm
+    this._body.leftShoulder.rotation.x = -1.3;
+    this._body.leftShoulder.rotation.z = side * (0.95 - 0.8 * across);
+    this._body.leftElbow.rotation.x = -0.55;
     this._sweepTip = new Vector3(Math.sin(angle), 0.12 + recovery * 0.4, Math.cos(angle)).normalize();
     this._clubHold = 1;
     if (progress >= 1) this._state = AnimState.Idle;
