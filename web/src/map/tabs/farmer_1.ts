@@ -661,6 +661,71 @@ function pumpkinPatch(scene: Scene): void {
   }
 }
 
+/**
+ * Scots pines (wiki shot): the rim is mostly open grass with a few tall pines standing alone, not a solid ring of round dark trees. Every
+ * base ring tree (trunk with its crowns) and the haze band behind them go, with the trees' colliders. Spec read off the wiki shot: 11 pines
+ * round the rim (two by the back houses, two on the right by the wheat, one at the mill, the rest spaced on the flanks), each a thin
+ * red-brown trunk 8-11 m tall leaning 6-14 degrees outward, carrying 3 flattened faceted olive crown clumps 1.6-2.4 m across over its top
+ * third, the highest at the tip; a 0.6 m collider at each foot.
+ */
+const PINES: Array<[number, number]> = [[-34, 40], [-6, 46], [17, 43], [38, 32], [49, 14], [49, -12], [36, -33], [16, -44], [-46, -24], [-50, 6], [-45, 26]];
+
+function scotsPines(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const cleared: Array<[number, number]> = [];
+  for (const mesh of scene.meshes.filter((m) => built.has(m) && (m.name === "trunk" || m.name === "hazeTreeline"))) {
+    if (mesh.name === "trunk") {
+      const p = mesh.getAbsolutePosition();
+      cleared.push([p.x, p.z]);
+    }
+    mesh.setEnabled(false);
+  }
+  const kept = obstacles.filter((o) => !cleared.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  const bark = new StandardMaterial("farmer1PineBark", scene);
+  bark.diffuseColor = new Color3(0.3, 0.16, 0.09);
+  bark.emissiveColor = new Color3(0.06, 0.035, 0.02);
+  bark.specularColor = Color3.Black();
+  const needles = new StandardMaterial("farmer1PineCrown", scene);
+  needles.diffuseColor = new Color3(0.3, 0.32, 0.09);
+  needles.emissiveColor = new Color3(0.11, 0.12, 0.03);
+  needles.specularColor = Color3.Black();
+  const trunks: Mesh[] = [], crowns: Mesh[] = [];
+  PINES.forEach(([x, z], i) => {
+    const h = 8 + wallSeed(i, 61) * 3;
+    const lean = 0.1 + wallSeed(i, 62) * 0.14;
+    const out = Math.atan2(z, x);
+    const tipX = x + Math.cos(out) * Math.sin(lean) * h, tipZ = z + Math.sin(out) * Math.sin(lean) * h, tipY = Math.cos(lean) * h;
+    const trunk = MeshBuilder.CreateCylinder("farmer1PineTrunk", { diameterTop: 0.25, diameterBottom: 0.5, height: h, tessellation: 6 }, scene);
+    trunk.position.set((x + tipX) / 2, tipY / 2, (z + tipZ) / 2);
+    trunk.rotation.set(Math.sin(out) * lean, 0, -Math.cos(out) * lean);
+    trunks.push(trunk);
+    for (let c = 0; c < 3; c++) {
+      const t = 0.68 + c * 0.14;
+      const r = 1.6 + wallSeed(i * 3 + c, 63) * 0.8 - c * 0.15;
+      const side = (wallSeed(i * 3 + c, 64) - 0.5) * 2.2;
+      const crown = MeshBuilder.CreateIcoSphere("farmer1PineCrown", { radius: r, subdivisions: 1 }, scene);
+      crown.scaling.y = 0.62;
+      crown.rotation.y = wallSeed(i * 3 + c, 65) * Math.PI;
+      crown.position.set(x + (tipX - x) * t + side * Math.sin(out), tipY * t + r * 0.3, z + (tipZ - z) * t - side * Math.cos(out));
+      crowns.push(crown);
+    }
+    kept.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.6 });
+  });
+  const trunkMesh = Mesh.MergeMeshes(trunks, true);
+  if (trunkMesh) {
+    trunkMesh.name = "farmer1Pines";
+    trunkMesh.material = bark;
+    trunkMesh.isPickable = false;
+  }
+  const crownMesh = Mesh.MergeMeshes(crowns, true);
+  if (crownMesh) {
+    crownMesh.name = "farmer1PineCrowns";
+    crownMesh.convertToFlatShadedMesh();
+    crownMesh.material = needles;
+    crownMesh.isPickable = false;
+  }
+  return kept;
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -683,5 +748,5 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
   obstacles.push(...bankWalls(scene));
   wheatStrips(scene);
   earthBowl(scene, built);
-  return { ...result, hazards, obstacles };
+  return { ...result, hazards, obstacles: scotsPines(scene, built, obstacles) };
 }
