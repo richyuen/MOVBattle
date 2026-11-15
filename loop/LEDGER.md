@@ -12,5 +12,14 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 555 | ac1122a0 | map.tribal_sandbox.a | approved
 555 | 6e9a1c3a | map.farmer_1.a | approved
 555 | d9f9862b | map.farmer_snow.b | approved
+556 | 197aec95 | map.tribal_1.a | approved
+556 | 21889d91 | map.farmer_snow.a | approved
+556 | 0653fc87 | map.farmer_2.a | approved
+556 | 70cdfa92 | map.tribal_sandbox.a | approved
+556 | 781d89bf | map.farmer_1.a | approved
+556 | 5d00d620 | map.farmer_snow.b | approved
+556 | ffe9661a | map.farmer_1.b | approved
+556 | 6b645833 | map.tribal_2.b | approved
+556 | 4d116cbc | map.farmer_2.b | approved
 
 ## Tuned values
