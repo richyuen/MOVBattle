@@ -1302,8 +1302,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       return vis({ scale: 1.28, bulk: 1.05, armLength: 1.08 }, "axe", "none", "none", "cape", "#9cd5ff", "axe", {
         weaponVariant: "ullr_axe", offhandVariant: "ullr_axe", weaponPresentationFamily: "throw",
         // [S] 551 (a.7; secret.ullr.jpg: trunk, arms and trousers in the full team colour, the frost only in his cap, beard and axes): the whole-body
-        // secret_frost preset in place of secret_ice, which blended the body 60% toward a pale ice blue (unitFactory resolveMaterialTint)
-        posePreset: "duelist", materialPreset: "secret_frost", fxPreset: "frost",
+        // secret_frost preset in place of secret_ice, which blended the body 60% toward a pale ice blue (unitFactory resolveMaterialTint);
+        // 551.1c and no frost fx, whose pulse (runtimeUnit _applyFxPreset) lit the whole body pale ice blue every frame
+        posePreset: "duelist", materialPreset: "secret_frost", fxPreset: "none",
       });
     case "secret_lady_red_jade":
       // [S] 541 (b.1) one guandao upright in both fists on the halberd's two-handed grip, no second sword (propBuilder GUANDAO)
