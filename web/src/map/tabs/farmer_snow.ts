@@ -244,11 +244,103 @@ function pineGrove(scene: Scene): Obstacle[] {
   return obstacles;
 }
 
+/**
+ * Island underside (farm_snow.png; farmer_1's earth bowl kit, this map's own copy): under the snow lip the island is one deep rounded bowl
+ * of dark navy earth with blue-grey stones set in its face, each stone capped with snow, and nothing hangs outside it: the base's
+ * islandUnder/islandShelf/islandCliff (black spikes) go, and the translucent placement-guide slabs (campaign_zone_overlay_ and campaign_zone_border_ meshes)
+ * that reach past the rim are hidden (the zones stay in data). Spec: the bowl follows the island outline (superellipse 54 x 48, power 3),
+ * a 2 m snow-white lip band, then bulges down to a rounded point 34 m below the field (about 0.3 of the island width, as the reference
+ * shows; scale 1, .98, .94, .86, .72, .52, .28, .04); about 80 flattened stones 1.4-3.2 m across sunk half into its face between 3 and
+ * 26 m down, each with a flat snow cap on its top.
+ */
+const BOWL: Array<[number, number]> = [[1, -0.02], [1, -2], [0.98, -6], [0.94, -12], [0.86, -18], [0.72, -24], [0.52, -29], [0.28, -32.5], [0.04, -34]];
+
+function islandOutline(a: number): [number, number] {
+  const c = Math.cos(a), s = Math.sin(a);
+  const r = (Math.abs(c / 54) ** 3 + Math.abs(s / 48) ** 3) ** (-1 / 3);
+  return [c * r, s * r];
+}
+
+function navyBowl(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (["islandUnder", "islandShelf", "islandCliff"].includes(mesh.name) || /^campaign_zone_(overlay|border)_/.test(mesh.name)) mesh.setEnabled(false);
+  }
+  const mk = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const lip = mk("farmerSnowUnderLip", SNOW.scale(0.9), 0.3);
+  const earth = mk("farmerSnowUnderEarth", new Color3(0.13, 0.16, 0.34), 0.45);
+  const stoneMat = mk("farmerSnowUnderStone", new Color3(0.34, 0.38, 0.52), 0.35);
+  const capMat = mk("farmerSnowUnderCap", SNOW, 0.4);
+  const bands: Mesh[] = [];
+  for (let i = 0; i < BOWL.length - 1; i++) {
+    const [s0, y0] = BOWL[i], [s1, y1] = BOWL[i + 1];
+    const band = MeshBuilder.CreateCylinder("farmerSnowBowl", { diameterTop: s0, diameterBottom: s1, height: y0 - y1, tessellation: 64 }, scene);
+    const pos = band.getVerticesData("position")!;
+    for (let v = 0; v < pos.length; v += 3) {
+      const reach = Math.hypot(pos[v], pos[v + 2]) * 2;
+      const [x, z] = islandOutline(Math.atan2(pos[v + 2], pos[v]));
+      pos[v] = x * reach;
+      pos[v + 2] = z * reach;
+    }
+    band.setVerticesData("position", pos);
+    band.position.y = (y0 + y1) / 2;
+    if (i === 0) {
+      band.convertToFlatShadedMesh();
+      band.material = lip;
+      band.name = "farmerSnowBowlLip";
+      band.isPickable = false;
+    } else bands.push(band);
+  }
+  const bowl = Mesh.MergeMeshes(bands, true);
+  if (bowl) {
+    bowl.name = "farmerSnowBowl";
+    bowl.convertToFlatShadedMesh();
+    bowl.material = earth;
+    bowl.isPickable = false;
+  }
+  // Stones set into the face, flattened along the outward direction, each with a snow cap on its top
+  const stones: Mesh[] = [], caps: Mesh[] = [];
+  for (let k = 0; k < 80; k++) {
+    const a = seeded(k, 91) * Math.PI * 2;
+    const y = -3 - seeded(k, 92) * 23;
+    let j = 1;
+    while (j < BOWL.length - 1 && BOWL[j][1] > y) j++;
+    const [sa, ya] = BOWL[j - 1], [sb, yb] = BOWL[j];
+    const s = sa + (sb - sa) * ((y - ya) / (yb - ya));
+    const [ox, oz] = islandOutline(a);
+    const d = 1.4 + seeded(k, 93) * 1.8;
+    const stone = MeshBuilder.CreateBox("farmerSnowUnderStone", { width: d * 1.3, height: d * 0.7, depth: d * 0.5 }, scene);
+    stone.rotation.set(0, Math.PI / 2 - a, (seeded(k, 94) - 0.5) * 0.3);
+    stone.position.set(ox * s, y, oz * s);
+    stones.push(stone);
+    const cap = MeshBuilder.CreateBox("farmerSnowUnderCap", { width: d * 1.35, height: d * 0.16, depth: d * 0.56 }, scene);
+    cap.rotation.copyFrom(stone.rotation);
+    cap.position.set(ox * s, y + d * 0.38, oz * s);
+    caps.push(cap);
+  }
+  for (const [list, m, name] of [[stones, stoneMat, "farmerSnowUnderStones"], [caps, capMat, "farmerSnowUnderCaps"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
+  }
+}
+
 export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   snowCover(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   const restoreLights = nightSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
+  navyBowl(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   const mat = (name: string, c: Color3, glow: number) => {
     const m = new StandardMaterial(name, scene);
     m.diffuseColor = c;
