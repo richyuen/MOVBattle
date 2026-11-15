@@ -17,15 +17,15 @@ function seeded(i: number, seed: number): number {
 
 /** [x, z, width, height, depth] of each rock block, back to front */
 const BLOCKS: Array<[number, number, number, number, number]> = [
-  [51, 38, 10, 18, 10], [49, 30, 12, 22, 12], [50, 22, 11, 17, 10], [48.5, 15, 9, 13, 8],
-  [50, 2, 10, 12, 9], [48.5, -6, 8, 10, 8], [50, -14, 10, 8, 9], [48.5, -22, 8, 6, 8], [50, -30, 8, 4, 8], [49, -37, 6, 3, 6],
+  [53, 38, 16, 18, 14], [52, 29, 18, 22, 14], [53, 20, 16, 17, 12], [52, 13, 14, 13, 10],
+  [53, 1, 16, 12, 12], [52, -7, 14, 10, 10], [53, -15, 15, 8, 11], [52, -23, 13, 6, 10], [52, -31, 12, 4, 9], [51, -38, 9, 3, 7],
 ];
 
 export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const result = base();
   const rock = new StandardMaterial("tribal2Mountain", scene);
-  rock.diffuseColor = new Color3(0.56, 0.5, 0.52);
-  rock.emissiveColor = new Color3(0.1, 0.08, 0.1);
+  rock.diffuseColor = new Color3(0.6, 0.54, 0.52);
+  rock.emissiveColor = new Color3(0.08, 0.06, 0.05);
   rock.specularColor = new Color3(0.03, 0.03, 0.03);
   const dark = new StandardMaterial("tribal2Cave", scene);
   dark.diffuseColor = new Color3(0.04, 0.03, 0.04);
@@ -33,8 +33,8 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
 
   const pieces: Mesh[] = [];
   // The peak: a leaning faceted cone over the back-right blocks
-  const peak = MeshBuilder.CreateCylinder("tribal2Peak", { diameterTop: 5, diameterBottom: 18, height: 28, tessellation: 6 }, scene);
-  peak.position.set(52, 13, 28);
+  const peak = MeshBuilder.CreateCylinder("tribal2Peak", { diameterTop: 5, diameterBottom: 24, height: 30, tessellation: 6 }, scene);
+  peak.position.set(55, 14, 27);
   peak.rotation.set(0.08, 0.4, -0.1);
   pieces.push(peak);
   BLOCKS.forEach(([x, z, w, h, d], i) => {
@@ -43,7 +43,7 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
       const k = i * 10 + j;
       const s = 1 - j * 0.22;
       const slab = MeshBuilder.CreateCylinder("tribal2Block", {
-        diameterTop: w * s * 0.75, diameterBottom: w * s, height: h * (1 - j * 0.18), tessellation: 5,
+        diameterTop: w * s * 0.5, diameterBottom: w * s, height: h * (1 - j * 0.18), tessellation: 5,
       }, scene);
       slab.scaling.z = d / w;
       slab.position.set(x + (seeded(k, 1) - 0.5) * 3, h * (1 - j * 0.18) / 2, z + (seeded(k, 2) - 0.5) * 4);
