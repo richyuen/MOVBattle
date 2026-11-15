@@ -6441,7 +6441,7 @@ export function artemisDress(scene: Scene, body: ArticulatedBody, team: Color3):
  */
 const ARTEMIS_SANDAL = { cuff: 0.72, sole: 0.1, soleW: 1.08, band: 0.09, wrap: 1.08, toe: 0.8, toeH: 0.5, instep: 0.5, instepH: 0.62,
   ankleAt: 0.72, ankleH: 0.14, ankleL: 0.5, brown: new Color3(0.3, 0.14, 0.06) };
-export function artemisSandals(scene: Scene, body: ArticulatedBody): Mesh[] {
+export function artemisSandals(scene: Scene, body: ArticulatedBody, prefix = "artemisSandal"): Mesh[] {
   const K = ARTEMIS_SANDAL, glow = scene.getGlowLayerByName("glow");
   const brown = getMaterialFactory().get("cloth", K.brown, { emissive: K.brown.scale(0.14), roughness: 1 });
   const out: Mesh[] = [];
@@ -6458,10 +6458,10 @@ export function artemisSandals(scene: Scene, body: ArticulatedBody): Mesh[] {
       m.parent = foot; m.material = brown; m.position.set(x, lo.y + Hf * (y0 + h / 2), lo.z + L * z);
       m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m);
     };
-    part("artemisSandalSole", K.soleW, K.sole, 1.04, -K.sole * 0.4, 0.5);
-    part("artemisSandalToe", K.wrap, K.toeH - K.sole, K.band, K.sole * 0.6, K.toe);
-    part("artemisSandalInstep", K.wrap, K.instepH - K.sole, K.band, K.sole * 0.6, K.instep);
-    part("artemisSandalAnkle", K.wrap, K.ankleH, K.ankleL, K.ankleAt, K.ankleL / 2 - 0.02);
+    part(`${prefix}Sole`, K.soleW, K.sole, 1.04, -K.sole * 0.4, 0.5);
+    part(`${prefix}Toe`, K.wrap, K.toeH - K.sole, K.band, K.sole * 0.6, K.toe);
+    part(`${prefix}Instep`, K.wrap, K.instepH - K.sole, K.band, K.sole * 0.6, K.instep);
+    part(`${prefix}Ankle`, K.wrap, K.ankleH, K.ankleL, K.ankleAt, K.ankleL / 2 - 0.02);
   }
   return out;
 }

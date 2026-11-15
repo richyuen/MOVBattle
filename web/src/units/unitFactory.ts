@@ -1734,6 +1734,8 @@ function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   added.push(...treeGiantHair(scene, body));
   added.push(...treeGiantBeard(scene, body));
   added.push(...treeGiantShorts(scene, body));
+  // [S] 550 (a.3): open brown strap sandals on bare team feet, the dark boot cuff cut down (secretDress ARTEMIS_SANDAL, shared)
+  added.push(...artemisSandals(scene, body, "treeGiantSandal"));
   return added;
 }
 
