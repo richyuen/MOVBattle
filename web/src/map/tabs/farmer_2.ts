@@ -210,6 +210,68 @@ function clearFieldJunk(scene: Scene, built: Set<unknown>, result: MapBuildResul
   result.obstacles = result.obstacles.filter((o) => !FIELD_JUNK.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
 }
 
+/**
+ * Straw sheaves (wiki shot, front-left field): tied sheaves of pale golden straw stand scattered over the front-left field (right of the dirt pathway) and the front
+ * middle, about one every 5 m, some fallen on their side. Spec: about 18 sheaves on a jittered 5 m grid inside x -30..-6, z -44..-23 (the field the
+ * cross wall z -20 and the centre wall x -2.5 close), kept on the island; each a 1.1 m bundle pinched at the waist (a flared foot, a flared
+ * head of ears) with a dark twine band at the waist, 0.7 m across; one in four lies down. Drawn only, no colliders.
+ */
+const SHEAVES = { x0: -30, x1: -6, z0: -44, z1: -23, step: 5 };
+
+function strawSheaves(scene: Scene): void {
+  const mk = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const straw = mk("farmer2Sheaf", new Color3(0.9, 0.7, 0.36), 0.28);
+  const twine = mk("farmer2SheafBand", new Color3(0.42, 0.27, 0.13), 0.2);
+  const bodies: Mesh[] = [], bands: Mesh[] = [];
+  let k = 0;
+  for (let x = SHEAVES.x0; x <= SHEAVES.x1; x += SHEAVES.step) {
+    for (let z = SHEAVES.z0; z <= SHEAVES.z1; z += SHEAVES.step) {
+      k++;
+      if (seeded(k, 60) < 0.12) continue;
+      const px = x + (seeded(k, 61) - 0.5) * 3, pz = z + (seeded(k, 62) - 0.5) * 3;
+      if ((px / 50) ** 2 + (pz / 46) ** 2 > 0.85) continue;
+      const lying = seeded(k, 63) < 0.25;
+      const s = 0.85 + seeded(k, 64) * 0.3;
+      const foot = MeshBuilder.CreateCylinder("farmer2SheafFoot", { diameterTop: 0.38, diameterBottom: 0.7, height: 0.5, tessellation: 7 }, scene);
+      foot.position.y = 0.25;
+      const head = MeshBuilder.CreateCylinder("farmer2SheafHead", { diameterTop: 0.8, diameterBottom: 0.36, height: 0.6, tessellation: 7 }, scene);
+      head.position.y = 0.8;
+      const band = MeshBuilder.CreateCylinder("farmer2SheafBand", { diameter: 0.44, height: 0.12, tessellation: 7 }, scene);
+      band.position.y = 0.5;
+      for (const m of [foot, head, band]) {
+        if (lying) {
+          // Laid over on its side, its foot toward a random bearing
+          m.position.set(m.position.y - 0.55, 0.36, 0);
+          m.rotation.z = Math.PI / 2;
+        }
+        m.scaling.scaleInPlace(s);
+        m.position.scaleInPlace(s);
+        m.bakeCurrentTransformIntoVertices();
+        m.rotation.y = seeded(k, 65) * Math.PI * 2;
+        m.position.set(px, 0, pz);
+        m.bakeCurrentTransformIntoVertices();
+      }
+      bodies.push(foot, head);
+      bands.push(band);
+    }
+  }
+  for (const [list, m, name] of [[bodies, straw, "farmer2Sheaves"], [bands, twine, "farmer2SheafBands"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -222,5 +284,6 @@ export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuild
   const obstacles = leftPathway(scene, built, [...result.obstacles]);
   WALLS.forEach((wall, w) => cobbleWall(scene, stone, wall, w, obstacles));
   wheatField(scene);
+  strawSheaves(scene);
   return { ...result, obstacles };
 }
