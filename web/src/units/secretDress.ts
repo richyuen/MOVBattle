@@ -6665,7 +6665,11 @@ export function artemisDress(scene: Scene, body: ArticulatedBody, team: Color3):
   const pepFoot = top - (top - kneeY) * K.peplum;
   const peplum = MeshBuilder.CreateCylinder("artemisPeplum", { height: top - pepFoot, diameterTop: W * K.out * 1.03, diameterBottom: W * K.pepOut, tessellation: 10 }, scene);
   peplum.parent = body.hip; peplum.scaling.z = K.deep * 1.04; peplum.position.set(0, (top + pepFoot) / 2 - W * K.belt * 0.5, 0);
-  if (bare) peplum.material = bare;
+  // [P] 554 (a.2: "light skin-shade peplum band ... reading as a bare midriff - TABS: the tunic is one team cloth from the shoulders to its hem"):
+  // the peplum in the chiton's own cloth (ARTEMIS_CHITON shade; the chiton is hung after the dress, so its material is made here, the factory's
+  // cache hands both the same one), not the bare arms' shade
+  const tunicC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(ARTEMIS_CHITON.shade);
+  peplum.material = mf.get("cloth", tunicC, { emissive: tunicC.scale(0.12), roughness: 1 });
   peplum.convertToFlatShadedMesh(); glow?.addExcludedMesh(peplum); out.push(peplum);
   if (bare) for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = bare;
   return out;
