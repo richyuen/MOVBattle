@@ -1,21 +1,19 @@
 # map.farmer_1
-Status: open   Audited: 555 (AUDIT x2), 560 (CONFIRM: passed b; failed a)   Done: -
+Status: open   Audited: 555 (AUDIT x2), 560 (CONFIRM: passed b; failed a), 561 (CONFIRM: failed a)   Done: -
 ## Verdicts
-a FAIL (0 since 560, CONFIRM list): 1. grass tufts drawn over the river water and the bridge deck in map_farmer_1_ground.png — TABS: clean blue water and a bare stone bridge (ref: reference/maps/wiki/farmer_1.png) 2. flat slab bridge with boxy block parapets in map_farmer_1_ground.png — TABS: arched humped stone bridge (ref: reference/maps/wiki/farmer_1.png) 3. river drawn as a straight, ruler-edged canal in map_farmer_1_top.png — TABS: winding stream with rocky banks (ref: reference/maps/wiki/farmer_1.png)
+a FAIL plateau (0 since 561, CONFIRM list; second CONFIRM fail): 1. watermill roofs plain tan-brown gables over navy-blue walls in map_farmer_1_island (front centre) and map_farmer_1_top (bottom centre) — TABS: the two mill halves carry blue-grey roof panels framed by timber beams over plank-board walls (ref: reference/maps/wiki/farmer_1.png, lower left) 2. bridge is a smooth pale-grey half-pipe slab with plain rails in map_farmer_1_ground (centre) — TABS: a humped cobbled grey-stone arch with stone parapets (ref: reference/maps/wiki/farmer_1.png, centre) 3. flat pale-lime disc mounds at the rim in map_farmer_1_island (left and right) and map_farmer_1_top (left, back-left, right) — TABS: big faceted olive boulder/bush clumps (ref: reference/maps/wiki/farmer_1.png, left centre and bottom right) 4. no tilled furrow strips anywhere on the field in map_farmer_1_top — TABS: rows of raised tilled strips on both sides of the river in front of the bridge (ref: reference/maps/wiki/farmer_1.png, centre-left and centre-right)
 b PASS (560: struck 3; CONFIRM 560)
-c PASS (560 judge)
+c PASS (561 judge)
 ## Ranked gaps
-1. [S] a — blocker 1: collapse fieldBlades quads within the river and bridge deck (|x - riverX(z)| < halfWidth + 0.6, bridge span) — ours: map_farmer_1_ground.png
-2. [S] a — blocker 2: arched stone bridge (humped deck from curved segments, rounded arch under it, stone parapets as rows of blocks) replacing the flat slab
-3. [S] a — blocker 3: river course with wider S-bends (RIVER bend/bendRate) and grey rocks along both banks; hazards and walls follow riverX
-4. [P] a — MILL gap 2.8 -> 4 m so the wheel shows (fallout of d6119113) — map_farmer_1_island.png
+1. [R] a — rebuild the look from both CONFIRM lists (560: water tufts, flat bridge, straight canal; 561: blockers 1-4 above) plus critic 561's straight-course note: mill blue-grey roofs + timber-framed plank walls, cobbled stone deck with block courses, olive faceted boulder/bush clumps replacing the "hill" disc mounds, tilled strip rows either side of the river, riverX one large diagonal S-bend (keep |x| room for zones: hazards follow riverX)
 ## Attempts (iter | gap | criterion | verdict)
 555-559 | a: watermill, red houses, meadow + tracks, earth bowl, ruins out + pumpkins | a | 5 APPROVE, struck 1, 3, 5, 6
 555-558 | b: river, bridge, totem out, walls, wheat strips | b | 5 APPROVE, struck 1, 2, 4, 5, 6
-560 | [S] eleven sparse leaning Scots pines replace ring trees + haze band (8105869f) | a4 | APPROVE struck 4
-560 | [S] round island 54 x 48, crops/props past rim out, placement box hidden (22e0ba71, ba8232f8) | b3 | APPROVE struck 3
-560 | [S] watermill rebuilt: plinths, battened boards, jettied plank storeys, plank roofs, 9 m wheel (d6119113) | a2 | APPROVE struck 2
+560 | [S] Scots pines; round island; watermill rebuilt (8105869f, 22e0ba71+ba8232f8, d6119113) | a, b | 3 APPROVE struck a4, b3, a2
+561 | [S] blades cleared off river/deck (5f83a159) | a1 | APPROVE struck 1
+561 | [S] humped arched bridge, units drawn on the hump (37c2368f, dc06adf4) | a2 | APPROVE struck 2
+561 | [S] ragged stream edges, bend 1.9/rate 0.1, bank boulders (b23c5f33, 48c5b110) | a3 | APPROVE (kept: course still straight)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Builder tabs/farmer_1.ts on campaign.introduction; river |x|<4 (zones |x|>=5). islandOutline is the ellipse 54 x 48; earthBowl only 22 m deep (shows as a thin lip in the island shot).
-- Critic 560: two round dark-green base trees left in the field (want olive bushes); wheel edge-on between halves reads as a ladder.
+- Builder tabs/farmer_1.ts on campaign.introduction; river hazard |x - riverX| < 2 (zones |x|>=5); bridgeHeight is the map's drawn height (units ride the hump).
+- Critic 561: deck plain pale grey (want cobbled mid grey ~0.6,0.58,0.55); path flecks on the bridge foot; near bank rocks cool slate in shade.

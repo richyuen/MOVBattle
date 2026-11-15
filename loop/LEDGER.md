@@ -3,15 +3,6 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-556 | 197aec95 | map.tribal_1.a | approved
-556 | 21889d91 | map.farmer_snow.a | approved
-556 | 0653fc87 | map.farmer_2.a | approved
-556 | 70cdfa92 | map.tribal_sandbox.a | approved
-556 | 781d89bf | map.farmer_1.a | approved
-556 | 5d00d620 | map.farmer_snow.b | approved
-556 | ffe9661a | map.farmer_1.b | approved
-556 | 6b645833 | map.tribal_2.b | approved
-556 | 4d116cbc | map.farmer_2.b | approved
 557 | d588c550 | map.farmer_snow.a | approved
 557 | 2a626789 | map.farmer_1.b | approved
 557 | 41e533fa | map.tribal_1.a | approved
@@ -47,6 +38,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 560 | 90fc230f | map.farmer_2.a | approved
 560 | 7713f41b | map.farmer_2.b | approved
 560 | 674aaca3+5a6c6bb4 | map.farmer_2.a | approved
+561 | 037cd776+4b5e0fae | map.farmer_2.a | approved
+561 | b382569f+ceafd4a0+0792aa93 | map.farmer_2.a | approved
+561 | 5f83a159 | map.farmer_1.a | approved
+561 | 37c2368f+dc06adf4 | map.farmer_1.a | approved
+561 | b23c5f33+48c5b110 | map.farmer_1.a | approved
+561 | 81facedd | map.tribal_2.a | approved
+561 | 2a0f2cce | map.tribal_2.b | approved
+561 | 6142c5b2 | map.tribal_sandbox.a | approved
+561 | cb41584c | map.farmer_snow.b | approved
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height | 0.5-0.7 m | 557 | approved | 1.0-1.3 m
@@ -58,3 +58,7 @@ web/src/map/tabs/farmer_1.ts:islandOutline power | 2 (ellipse) | 560 | approved 
 web/src/map/tabs/farmer_2.ts:PATH.front | -32 | 560 | approved | -44
 web/src/map/tabs/farmer_2.ts:WALLS front-right / back-right ends | x 40 / z 42.5 | 560 | approved | x 46 / z 44
 web/src/map/tabs/farmer_2.ts:farmer2WallStone colour | (0.62,0.5,0.38) emissive (0.13,0.105,0.075) | 560 | approved | (0.62,0.62,0.6) emissive (0.07,0.07,0.08)
+web/src/map/tabs/farmer_1.ts:RIVER bend, bendRate | 1.9, 0.1 | 561 | approved | 1.4, 0.075
+web/src/map/tabs/farmer_1.ts:farmer1BankRock colour | (0.6,0.53,0.44) emissive (0.12,0.1,0.08) | 561 | approved | (0.5,0.47,0.44) emissive (0.07,0.065,0.06)
+web/src/map/tabs/farmer_2.ts:farmer2UnderEarth colour | (0.5,0.4,0.27) self-lit 1.0 | 561 | approved | (0.44,0.36,0.25) self-lit 0.45
+web/src/map/tabs/farmer_2.ts:farmer2OliveLeaf / Dark | (0.5,0.47,0.16) x0.6, (0.4,0.39,0.12) x0.55 | 561 | approved | (0.45,0.42,0.14) x0.25, (0.34,0.34,0.1) x0.25
