@@ -33,6 +33,15 @@ const PRESENT_HOLD = { out: 1.02, down: 0.1 };
 const SPINNER_FISTS = { out: 0.32, ahead: 0.08, up: 0.02 };
 const ULLR_HANG = { out: 0.22, fore: -0.1, bend: -0.2 };
 /*
+ * [S] 549 (lady_red_jade c.3: "short downward sword chop - TABS: wide arc and full-circle polearm sweeps"; card Characteristics: she swings "in very
+ * wide arcs, sometimes even in complete circles"). Through an attack on her feet both arms are held out level before the chest (shoulders .reach
+ * rad forward, .inward toward the middle, elbows straight), the guandao laid level out of the weapon fist along her front (.dip below level, blade
+ * first), and the whole rig turned about the hip: wound .cock rad to the weapon side over the first .wind of the run to the blow, swung through
+ * her front (yaw 0, on the man) at the blow (animator blowShare), on .end rad past it to the off side by .through of the rest, then eased back.
+ * Every .every-th attack is a complete circle: wound .circleCock, then round through 2 PI - .circleCock and settled a full turn on.
+ */
+const JADE_SWEEP = { reach: -1.42, inward: 0.3, dip: 0.08, cock: 1.9, end: 1.7, wind: 0.4, through: 0.7, circleCock: 0.75, every: 2 };
+/*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
  * upward. Heavier units may require more balloons to float"; Appearance: the arrow's ball "expand[s] into balloons"). A man a balloon arrow strikes
  * (floatOnBalloons) has `per` team balloons swell over his head in `swell` s, `size` m across on `string` m strings, up to `most` from several arrows;
@@ -2024,6 +2033,7 @@ export class RuntimeUnit {
 
     this._applyPoseOverlay(isAttacking);
     if (this._maceWhirling(now)) this._applyMaceWhirl(now);
+    if (this.definition.id === "secret.lady_red_jade") this._applyJadeSweep(isAttacking);
     this._applyCheer(now);
     this._applyIceThrow(now);
     this._applyCurseCast(now);
@@ -2133,6 +2143,62 @@ export class RuntimeUnit {
     b.rightElbow.rotation.set(H.bend, 0, 0);
     b.leftHand.rotation.setAll(0);
     b.rightHand.rotation.setAll(0);
+  }
+
+  // Lady Red Jade's guandao (the mesh carrying guandaoGuard) and its seat in the fist, looked up once (JADE_SWEEP)
+  private _jadeShaft: { node: TransformNode; pos: Vector3; rest: Quaternion; quat: boolean } | null | undefined = undefined;
+  private _jadeSweeps = 0;
+  private _jadeOn = false;
+  private _applyJadeSweep(isAttacking: boolean): void {
+    if (this._jadeShaft === undefined) {
+      const node = this.body.rightHand.getDescendants(false, (n) => (n as TransformNode).getChildren?.().some((c) => c.name === "guandaoGuard"))[0] as TransformNode | undefined;
+      this._jadeShaft = node ? {
+        node, pos: node.position.clone(), quat: !!node.rotationQuaternion,
+        rest: node.rotationQuaternion?.clone() ?? Quaternion.FromEulerAngles(node.rotation.x, node.rotation.y, node.rotation.z),
+      } : null;
+    }
+    const s = this._jadeShaft;
+    const on = isAttacking && this._grounded && !this._isDead && !this.isToppled && !this.isDowned && !!s;
+    if (on && !this._jadeOn) this._jadeSweeps++;
+    if (!on) {
+      if (this._jadeOn && s) {
+        s.node.position.copyFrom(s.pos);
+        if (s.quat) s.node.rotationQuaternion = s.rest.clone();
+        else s.node.rotationQuaternion = null;
+      }
+      this._jadeOn = false;
+      return;
+    }
+    this._jadeOn = true;
+    const J = JADE_SWEEP, b = this.body, side = Math.sign(b.rightShoulder.position.x) || 1;
+    const p = this.animator.attackShare, f = Math.min(0.85, Math.max(0.15, this.animator.blowShare));
+    const full = this._jadeSweeps % J.every === 0;
+    const cock = full ? J.circleCock : J.cock, end = full ? 2 * Math.PI - J.circleCock : J.end, settle = full ? -2 * Math.PI : 0;
+    const smooth = (u: number) => u * u * (3 - 2 * u);
+    let yaw: number;
+    const w = f * J.wind, t = f + (1 - f) * J.through;
+    if (p < w) yaw = cock * smooth(p / w);
+    else if (p < f) { const u = (p - w) / (f - w); yaw = cock * (1 - u * u); }
+    else if (p < t) yaw = -end * Math.sin(((p - f) / (t - f)) * Math.PI / 2);
+    else yaw = -end + (settle + end) * smooth((p - t) / (1 - t));
+    b.hip.rotation.y += side * yaw;
+    b.leftShoulder.rotation.set(J.reach, 0, J.inward);
+    b.rightShoulder.rotation.set(J.reach, 0, -J.inward);
+    b.leftElbow.rotation.setAll(0);
+    b.rightElbow.rotation.setAll(0);
+    b.leftHand.rotation.setAll(0);
+    b.rightHand.rotation.setAll(0);
+    // the pole laid level along her turned front, blade first, its seat along its own line out of the fist as the carry holds it
+    const holder = s!.node.parent as TransformNode;
+    const chain: TransformNode[] = [];
+    for (let n: TransformNode | null = holder; n; n = n.parent as TransformNode | null) chain.unshift(n);
+    for (const n of chain) n.computeWorldMatrix(true);
+    const heading = b.root.rotation.y + side * yaw;
+    const dir = new Vector3(Math.sin(heading), -J.dip, Math.cos(heading)).normalize();
+    const attitude = Quaternion.FromUnitVectorsToRef(Vector3.UpReadOnly, dir, new Quaternion());
+    const turn = Quaternion.Inverse(holder.absoluteRotationQuaternion).multiply(attitude);
+    s!.node.rotationQuaternion = turn;
+    s!.node.position.copyFrom(new Vector3(0, s!.pos.length(), 0).rotateByQuaternionToRef(turn, new Vector3()));
   }
 
   private _holdTeacherParry(now: number): void {

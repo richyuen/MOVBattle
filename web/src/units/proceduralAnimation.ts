@@ -1128,6 +1128,16 @@ export class ProceduralAnimator {
     return Math.max(0.001, this._blowLandFraction() * this._attackDuration - this._attackTimer);
   }
 
+  /** The running attack's share done (0 at the windup's start, 1 at its end); 0 out of an attack. */
+  get attackShare(): number {
+    return this._state === AnimState.Attacking ? Math.min(1, this._attackTimer / Math.max(0.001, this._attackDuration)) : 0;
+  }
+
+  /** The share of the attack at which its blow is on the man (_blowLandFraction). */
+  get blowShare(): number {
+    return this._blowLandFraction();
+  }
+
   /**
    * The blow on the man (spec above): from early in the drop the weapon arm is brought round to point from the shoulder at his head and the weapon's head laid
    * on it, the trunk pitched into it; held there after the swing, then let go. Overrides whatever the swing, shove or ready hold made of the arm.
