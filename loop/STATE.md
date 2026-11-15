@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 548   Batch: secret_4   Consecutive empty: 0   Done: 132/139   Parked: 0
+Iteration: 549   Batch: secret_4   Consecutive empty: 0   Done: 132/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -20,34 +20,33 @@ evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void
 secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer ++++ D | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo ++++ D | raptor_rider ++++ D | cheerleader ++++ D | cupid ++++ D | mace_spinner ++++ D | clams ++++ D | present_elf ++++ D | ice_mage ++++ D | infernal_whip ++++ D | bank_robbers ++++ D
 secret_3: witch ++++ D | banshee ++++ D | necromancer ++++ D | solar_architect ++++ D | wheelbarrow_dragon ++++ D | skeleton_giant ++++ D | bomb_cannon ++++ D | cavalry ++++ D | vlad ++++ D | gatling_gun ++++ D
-secret_4: blackbeard ++++ D | samurai_giant -+++ o | ullr -+++ o | lady_red_jade -+-+ o | sensei ++++ D | shogun ---+ o | tree_giant -+-+ o | artemis ---+ o | ice_giant -+-+ o
+secret_4: blackbeard ++++ D | samurai_giant -+++ o | ullr -+++ o | lady_red_jade -+++ o | sensei ++++ D | shogun -+++ o | tree_giant -+-+ o | artemis -+++ o | ice_giant -+++ o
 
-## Focus (iteration 548; BASE 6e9664c8; secret_4)
-- Evidence (1f0f6a3e): capture Hurricane Dash, Ice Breath and Tornado Swipe in motion.
-1. [S] secret.ice_giant.a mantle clearance and pointed icicle badge (c9d01196) APPROVE, struck 4
-2. [S] secret.samurai_giant.a fitted gold-laced lamellar cuirass (5b7b006d) APPROVE, struck 1
-3. [S] secret.shogun.a fitted gold-laced lamellar cuirass (544c1814) APPROVE, struck 3
-4. [S] secret.shogun.b raised gold katana guard (d8811ffd, a5ad1716) APPROVE, struck 2
-5. [S] secret.shogun.c low forward dash before the slash (a69bb893, a463a587) APPROVE
-6. [S] secret.ice_giant.c face-origin cone that freezes enemies (0dc76c7c) APPROVE, struck 2
-7. [S] secret.artemis.b split bowstring and seated grip (63f0cce9, 99a2a57f) APPROVE
-8. [S] secret.lady_red_jade.c travelling tornado that pulls and lifts targets (c4f05b7a, 8d35c79c) APPROVE, struck 2
-9. [S] secret.ullr.a faceted fur shoulder collar (ba15e809) APPROVE, struck 4
-- 9/9, 7 struck
+## Focus (iteration 549; BASE a06ba554; secret_4)
+- Evidence (9a8bfa4d): Shogun dash_mid and dash_slash on one camera held from the dash.
+1. [S] secret.lady_red_jade.c wide and full-circle guandao sweep (56a42adb, 17d5c28b) APPROVE, struck 3, c PASS
+2. [S] secret.ice_giant.c overhead long-arm slam (94a04464) APPROVE, struck 3, c PASS
+3. [S] secret.artemis.b drawing fist solved onto the nock (57b5c54c) APPROVE, struck 1, b PASS
+4. [S] secret.artemis.c charged shaft seated at the nock (a4d86a7a) APPROVE, struck 1, c PASS
+5. [S] secret.shogun.c lunge dash that lands its slash (72c599b5, 0329688a) APPROVE, struck 2, c PASS
+6. [S] secret.shogun.b cream tsuka, diamond cord, gold kashira (886fabbc) APPROVE, struck 3, b PASS
+7. [S] secret.tree_giant.a strapped sandals (b04ab33e) REJECT, reverted 5837b4d6
+8. [S] secret.samurai_giant.a vambraces (5ce1d544, 2482989c) dropped: not visible in the idle, reverted 3d645e19, 308cb4b0
+9. [S] secret.ullr.a broad olive beard and moustache (5110dfdf) APPROVE, struck 2
+- 7/9, 13 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] secret.ice_giant (c9d01196) / VERDICT: APPROVE / CRITERION: secret.ice_giant.a FAIL   (previous: FAIL)
-- GAP: [S] secret.samurai_giant (5b7b006d) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.a FAIL   (previous: FAIL)
-- GAP: [S] secret.shogun (544c1814) / VERDICT: APPROVE / CRITERION: secret.shogun.a FAIL   (previous: FAIL)
-- GAP: [S] secret.shogun (d8811ffd, a5ad1716) / VERDICT: APPROVE / CRITERION: secret.shogun.b FAIL   (previous: FAIL)
-- GAP: [S] secret.shogun (a69bb893, a463a587) / VERDICT: APPROVE / CRITERION: secret.shogun.c FAIL   (previous: FAIL)
-- GAP: [S] secret.ice_giant (0dc76c7c) / VERDICT: APPROVE / CRITERION: secret.ice_giant.c FAIL   (previous: FAIL)
-- GAP: [S] secret.artemis (63f0cce9, 99a2a57f) / VERDICT: APPROVE / CRITERION: secret.artemis.b FAIL   (previous: FAIL)
-- GAP: [S] secret.lady_red_jade (c4f05b7a, 8d35c79c) / VERDICT: APPROVE / CRITERION: secret.lady_red_jade.c FAIL   (previous: FAIL)
-- GAP: [S] secret.ullr (ba15e809) / VERDICT: APPROVE / CRITERION: secret.ullr.a FAIL   (previous: FAIL)
+- GAP: [S] secret.lady_red_jade (56a42adb, 17d5c28b) / VERDICT: APPROVE / CRITERION: secret.lady_red_jade.c PASS   (previous: FAIL)
+- GAP: [S] secret.ice_giant (94a04464) / VERDICT: APPROVE / CRITERION: secret.ice_giant.c PASS   (previous: FAIL)
+- GAP: [S] secret.artemis (57b5c54c) / VERDICT: APPROVE / CRITERION: secret.artemis.b PASS   (previous: FAIL)
+- GAP: [S] secret.artemis (a4d86a7a) / VERDICT: APPROVE / CRITERION: secret.artemis.c PASS   (previous: FAIL)
+- GAP: [S] secret.shogun (72c599b5, 0329688a) / VERDICT: APPROVE / CRITERION: secret.shogun.c PASS   (previous: FAIL)
+- GAP: [S] secret.shogun (886fabbc) / VERDICT: APPROVE / CRITERION: secret.shogun.b PASS   (previous: FAIL)
+- GAP: [S] secret.tree_giant (b04ab33e) / VERDICT: REJECT / CRITERION: secret.tree_giant.a FAIL   (previous: FAIL)
+- GAP: [S] secret.ullr (5110dfdf) / VERDICT: APPROVE / CRITERION: secret.ullr.a FAIL   (previous: FAIL)
 - REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Shogun's advance reads as a glide. The contact pair comes after the dash. Capture the dash-to-slash transition in an evidence commit before another c.2 gap.
-- Artemis grips the stave. The string apex still sits below and inside the drawing palm, and the charged loose remains open.
-- Continue Tree Giant's trunk contact pose and the remaining Ice Giant punch blocker.
+- Every open unit now fails only a (plus tree_giant c). Size/build blockers (jade a.4, ice a.5, tree a.6, samurai a.6) are ranked [S] rig gaps; a unit whose last blocker clears goes to CONFIRM.
+- Samurai Giant vambraces: the idle hides the forearms behind the broad blade (probe_bbox 549). Evidence commit or a pose change before another a.2 pick.
+- Tree Giant sandals: thin straps over a team foot, no toe block; strapSandals boxes read as a boot (critic 549). Artemis a.2 sandals: same warning.

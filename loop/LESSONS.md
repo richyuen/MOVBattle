@@ -17,10 +17,9 @@ Read at step 1; one fact a line, merge near cap.
 - stats.mjs rounds knobs to .01 (under .005 prints 0): set the exact ratio.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter).
 - A capture wipes iter-N (stats.json, audit.md): back up, rerun `stats.mjs --iter N` after the last capture (527). Checkpoint replaces summary.json (483). Detection stops 3 s after the first event: a late trigger needs ABILITY_PREF (543).
-- RotationX(+a) tips +y toward +z; a cylinder arc .5 under RotationX(+PI/2) has its half up (537). A turn-on-friends status: a friend in the scene, his log counted (537).
-- A cast fired as a man closes misses a duel whose man dies at range: second man walks in (537).
+- RotationX(+a) tips +y toward +z (537). A turn-on-friends status needs a friend in the scene; a cast at a closing man needs a second man walking in (537).
 - Probes in loop/scripts/probes/ run from repo root. Use --build after source changes, --noglow for a material swatch.
-- capture's PLAIN regex takes any ability kind starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475 wizard firework: no ability shot).
+- capture's PLAIN regex takes ability kinds starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
 - materialPreset secret_ghost tints the team body 55% lavender: team garments want the plain preset (443).
@@ -40,7 +39,7 @@ Read at step 1; one fact a line, merge near cap.
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
 - Flat ico faces sit ~20% inside: ray-cast dress on (512). Pinned pairs: RU.holdUpright (514).
 - Held-prop throw: options.flight at card speed (541); heldProp with no letGoOfThrow throws a copy, fist kept (542); landing area effect: iceBurstHook (542).
-- A vehicle rider is an addOperator in its builder, posed in the callback (529); flip a held blade at its grip, a rotation offset turns it about its middle.
+- A vehicle rider is an addOperator in its builder, posed in the callback (529); flip a held blade at its grip.
 ## Rig and dress
 - A chain or rope off a moving fist: a world-space rope pinned to the hand in RU.update, laid out at spawn (secretDress ChainWhip, 519).
 - A pole butt in the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target (509). A tall crown tips with the head pitch: stand it on the torso joint (500); a torso board on body.root (496).
@@ -66,3 +65,4 @@ Read at step 1; one fact a line, merge near cap.
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
 - execSync runs cmd.exe (eats a caret): write sha~1 (530). On-death effects: RU.onDeath (the last death ends the duel first, 535).
 - A takeoff and follow-through pair can miss a full rotation. Capture the inversion separately (544).
+- A melee motion the sim does not hold (not heavy/blade/halberd) lands at the decision (release = windup's 1st frame): a unit-posed attack sets animator.landsLate; a leap's blow is a pending blow at 2 rise/22 (549).

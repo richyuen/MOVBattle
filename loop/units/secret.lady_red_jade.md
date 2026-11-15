@@ -4,12 +4,12 @@ Status: open   Audited: 538 (AUDIT x2)   Done: -
 a FAIL (0 since 547, 3 struck)
  4. build in lineup_secret_4: stocky — TABS: substantially tall, slim (ref: card Appearance)
 b PASS (541: struck 1, one two-handed guandao)
-c FAIL (0 since 548, 1 struck)
- 3. short downward sword chop in unit_secret.lady_red_jade_release — TABS: wide arc and full-circle polearm sweeps (ref: card Characteristics)
+c PASS (549: struck 3)
 d PASS (544 stats)
 ## Ranked gaps
-1. [S] secret.lady_red_jade.c wide guandao arc — blocker 3: animate the two-handed sweep — ref: secret.lady_red_jade.jpg — ours: unit_secret.lady_red_jade_release.png
+1. [S] secret.lady_red_jade.a build — blocker 4: a tall, slim rig (longer legs and torso, narrower girth) — ref: secret.lady_red_jade.red.png — ours: lineup_secret_4.png
 ## Attempts (iter | gap | criterion | verdict)
+549 | wide and full-circle guandao sweep JADE_SWEEP, blow timed to the sweep (56a42adb, 17d5c28b) | c | approved (struck 3, c PASS)
 548 | travelling tornado that pulls and lifts targets (c4f05b7a, 8d35c79c) | c | approved (struck 2)
 547 | shaped dress top and dark sash (44fa534c) | a | approved (struck 2)
 546 | flared knee-length skirt with gold scrolls (92fbbe9e) | a | approved (struck 3)
@@ -19,4 +19,4 @@ d PASS (544 stats)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
 - 541 critic: guard disc sits at head height and reads yellow (TABS orange at the shoulder).
-- 542 critic: the ring is a thin wire, not fat bead loops (close up only).
+- 549 critic: the pole snaps back upright 150 ms after the blow (TABS carries it through on the off side).
