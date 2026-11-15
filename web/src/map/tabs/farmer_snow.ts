@@ -274,8 +274,9 @@ function navyBowl(scene: Scene, built: Set<unknown>): void {
     return m;
   };
   const lip = mk("farmerSnowUnderLip", SNOW.scale(0.9), 0.3);
-  const earth = mk("farmerSnowUnderEarth", new Color3(0.13, 0.16, 0.34), 0.45);
-  const stoneMat = mk("farmerSnowUnderStone", new Color3(0.34, 0.38, 0.52), 0.35);
+  // The moonlight and the night haze lift a lit navy toward lavender: the earth is a deep blue lit mostly by itself, out of the fog
+  const earth = mk("farmerSnowUnderEarth", new Color3(0.035, 0.05, 0.16), 0.9);
+  const stoneMat = mk("farmerSnowUnderStone", new Color3(0.2, 0.24, 0.4), 0.45);
   const capMat = mk("farmerSnowUnderCap", SNOW, 0.4);
   const bands: Mesh[] = [];
   for (let i = 0; i < BOWL.length - 1; i++) {
@@ -302,7 +303,9 @@ function navyBowl(scene: Scene, built: Set<unknown>): void {
     bowl.name = "farmerSnowBowl";
     bowl.convertToFlatShadedMesh();
     bowl.material = earth;
+    bowl.applyFog = false;
     bowl.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(bowl);
   }
   // Stones set into the face, flattened along the outward direction, each with a snow cap on its top
   const stones: Mesh[] = [], caps: Mesh[] = [];
@@ -330,6 +333,7 @@ function navyBowl(scene: Scene, built: Set<unknown>): void {
     merged.name = name;
     merged.convertToFlatShadedMesh();
     merged.material = m;
+    merged.applyFog = false;
     merged.isPickable = false;
     scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
   }
