@@ -18,6 +18,63 @@ const OUTCROP = { x: -34, z: 25, width: 12, height: 7 };
 const HEAP = { x: -30, z: -24 };
 const SLABS: Array<[number, number, number]> = [[-16, -12, 3.2], [-6, 22, 2.6], [16, 28, 3.4], [36, 8, 2.8], [30, -20, 2.4], [-22, 8, 2.2]];
 
+/**
+ * Rim cliffs (wiki shot): a continuous wall of tall grey faceted rock stands behind the back tree line, from the back-left round the back to
+ * the back-right, 7-11 m high, its face broken into leaning slabs that overlap with no gaps, a flat top behind it; a lower run closes the
+ * left side. Spec: segments every 4 degrees along the island rim (superellipse a 54, b 48), pulled 3 m in; each segment two overlapping
+ * slabs 7-10 m wide and a capstone. Angles from +x toward +z.
+ */
+const RIM = { a: 54, b: 48, round: 3 };
+const CLIFFS: Array<[number, number, number]> = [[30, 150, 1], [155, 205, 0.7]]; // [from, to, height factor]
+
+function rimPoint(deg: number): [number, number] {
+  const t = (deg * Math.PI) / 180, c = Math.cos(t), s = Math.sin(t);
+  const r = (Math.abs(c / RIM.a) ** RIM.round + Math.abs(s / RIM.b) ** RIM.round) ** (-1 / RIM.round);
+  return [c * r, s * r];
+}
+
+function backCliffs(scene: Scene, obstacles: Obstacle[]): void {
+  const rock = new StandardMaterial("tribalSandboxCliff", scene);
+  rock.diffuseColor = new Color3(0.6, 0.55, 0.52);
+  rock.emissiveColor = new Color3(0.09, 0.07, 0.06);
+  rock.specularColor = new Color3(0.03, 0.03, 0.03);
+  const parts: Mesh[] = [];
+  let k = 0;
+  for (const [from, to, tall] of CLIFFS) {
+    for (let deg = from; deg <= to; deg += 4) {
+      k++;
+      const [rx, rz] = rimPoint(deg);
+      const pull = 1 - 3 / Math.hypot(rx, rz);
+      const x = rx * pull, z = rz * pull;
+      const face = -Math.atan2(z, x) + Math.PI / 2;
+      const h = (7 + seeded(k, 41) * 4) * tall;
+      for (let j = 0; j < 2; j++) {
+        const w = 7 + seeded(k * 2 + j, 42) * 3;
+        const hj = h * (1 - j * 0.18);
+        const slab = MeshBuilder.CreateCylinder("tsCliff", { diameterTop: w * 0.75, diameterBottom: w, height: hj, tessellation: 5 }, scene);
+        slab.scaling.z = 0.55;
+        slab.position.set(x * (1 + j * 0.03) + (seeded(k * 2 + j, 43) - 0.5) * 1.5, hj / 2, z * (1 + j * 0.03) + (seeded(k * 2 + j, 44) - 0.5) * 1.5);
+        slab.rotation.set((seeded(k * 2 + j, 45) - 0.5) * 0.1, face + (seeded(k * 2 + j, 46) - 0.5) * 0.35, 0);
+        parts.push(slab);
+      }
+      const cap = MeshBuilder.CreateCylinder("tsCliffCap", { diameterTop: 5.5, diameterBottom: 7, height: 1.4, tessellation: 5 }, scene);
+      cap.scaling.z = 0.6;
+      cap.position.set(x * 1.04, h - 0.3, z * 1.04);
+      cap.rotation.set(0, face + seeded(k, 47), (seeded(k, 48) - 0.5) * 0.15);
+      parts.push(cap);
+      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 3 });
+    }
+  }
+  const cliffs = Mesh.MergeMeshes(parts, true);
+  if (cliffs) {
+    cliffs.name = "tribalSandboxCliffs";
+    cliffs.convertToFlatShadedMesh();
+    cliffs.material = rock;
+    cliffs.receiveShadows = true;
+    cliffs.isPickable = false;
+  }
+}
+
 export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const result = base();
   const rock = new StandardMaterial("tribalSandboxRock", scene);
@@ -82,5 +139,6 @@ export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): Ma
     rocks.receiveShadows = true;
     rocks.isPickable = false;
   }
+  backCliffs(scene, obstacles);
   return { ...result, obstacles };
 }
