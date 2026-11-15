@@ -35,6 +35,41 @@ export function treeGiantBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
   return parts;
 }
 
+/*
+ * [S] 549 (ullr a.2: "small brown wedge beard - TABS: big green-tan beard with mustache to the collar"; secret.ullr.red.png: a broad faceted
+ * olive-tan beard filling the face from cheek to cheek under the eyes, squared at the jaw and falling in a shorter tuft onto the fur collar, a
+ * drooping moustache of the same colour over the mouth). ULLR_BEARD in the head box (x, y, z half sizes, c centre), head-parented 7-sided
+ * cones flattened front to back: the main beard .cheek of x across at its top, .jaw at its foot, .tall of y tall, its top .top of y under c,
+ * .ahead of z forward; the tuft below it from .jaw to .tip across, .tuft of y long; the moustache two tapering 4-sided horns from the middle
+ * under the nose, .mW of x thick, .mL of y long, drooping .droop rad out to each side, .mY of y under c. Olive-tan lit cloth self-lit .12.
+ */
+const ULLR_BEARD = { cheek: 1.8, jaw: 1.25, tall: 1.05, top: 0.32, ahead: 0.88, tip: 0.45, tuft: 0.6, flat: 0.62, mW: 0.26, mL: 0.62, droop: 1.05, mY: 0.36,
+  olive: new Color3(0.42, 0.4, 0.18) };
+export function ullrBeard(scene: Scene, body: ArticulatedBody): Mesh[] {
+  const B = ULLR_BEARD, head = body.headMesh;
+  const bounds = head.getBoundingInfo().boundingBox;
+  const { x, y, z } = bounds.extendSize;
+  const c = bounds.center;
+  const hair = getMaterialFactory().get("cloth", B.olive, { emissive: B.olive.scale(0.12), roughness: 1 });
+  const glow = scene.getGlowLayerByName("glow");
+  const out: Mesh[] = [];
+  const add = (m: Mesh) => { m.parent = head; m.material = hair; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const beard = add(MeshBuilder.CreateCylinder("ullrBeard", { height: y * B.tall, diameterTop: x * B.cheek, diameterBottom: x * B.jaw, tessellation: 7 }, scene));
+  beard.scaling.z = (B.flat * z) / x;
+  beard.position.set(c.x, c.y - y * B.top - (y * B.tall) / 2, c.z + z * B.ahead);
+  const tuft = add(MeshBuilder.CreateCylinder("ullrBeardTuft", { height: y * B.tuft, diameterTop: x * B.jaw * 0.92, diameterBottom: x * B.tip, tessellation: 7 }, scene));
+  tuft.scaling.z = (B.flat * 0.8 * z) / x;
+  tuft.position.set(c.x, c.y - y * B.top - y * B.tall - (y * B.tuft) / 2 + y * 0.04, c.z + z * B.ahead * 1.02);
+  for (const side of [-1, 1]) {
+    const horn = add(MeshBuilder.CreateCylinder("ullrMoustache", { height: y * B.mL, diameterTop: x * B.mW, diameterBottom: x * B.mW * 0.25, tessellation: 4 }, scene));
+    // the root under the nose, the horn hanging down and out to its side
+    const dir = new Vector3(side * Math.sin(B.droop), -Math.cos(B.droop), 0);
+    horn.rotation.z = side * B.droop; // its wide top (+y) turned to -dir: back at the root
+    horn.position.set(c.x + dir.x * y * B.mL * 0.5, c.y - y * B.mY + dir.y * y * B.mL * 0.5, c.z + z * (B.ahead + 0.14));
+  }
+  return out;
+}
+
 /** A swept crown and layered locks reach Tree Giant's shoulders. */
 export function treeGiantHair(scene: Scene, body: ArticulatedBody): Mesh[] {
   const head = body.headMesh;
