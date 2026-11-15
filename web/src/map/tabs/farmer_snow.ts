@@ -339,6 +339,124 @@ function navyBowl(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+/**
+ * Buildings (wiki farmer_snow.png; Farmer 1's layout in winter, this map's own pieces): two timber houses stand on the back rim facing the
+ * field and the two-halved watermill straddles the frozen river at the front rim, all roofed in snow. Spec: houses at (-26, 36) and
+ * (-11, 39), 7 m wide and 6 m deep, dark red-brown board walls 4.4 m high on a 0.6 m stone footing, a steep gable roof 3.8 m high with its
+ * ridge running front to back (the gable end faces the field), roof planes overhanging 0.6 m, laid as a dark board layer under a 0.3 m
+ * snow layer; two lit yellow windows and a door on the gable end, one lit window upstairs. The mill: two halves 9 m wide and 10 m deep
+ * either side of the ice (2.8 m gap) at z -41, a 1.2 m stone plinth, 6 m of dark blue-grey boards, the same snow gable roof (4.4 m), a lit
+ * window on each field face, and a 8 m wheel (two rims, eight spokes, twelve paddles) standing in the gap, its rims capped with snow.
+ * Each house is one box collider; the mill (both halves and the wheel) is one.
+ */
+const SNOW_HOUSES: Array<[number, number]> = [[-26, 36], [-11, 39]];
+const SNOW_MILL = { z: -41, gap: 2.8, width: 9, depth: 10, plinth: 1.2, wall: 6, roof: 4.4, wheel: 8 };
+
+function snowBuildings(scene: Scene): Obstacle[] {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    wall: mk("farmerSnowHouseWall", new Color3(0.36, 0.12, 0.08), 0.35),
+    mill: mk("farmerSnowMillWall", new Color3(0.2, 0.23, 0.32), 0.4),
+    board: mk("farmerSnowRoofBoard", new Color3(0.2, 0.12, 0.08), 0.3),
+    snow: mk("farmerSnowRoofSnow", SNOW, 0.35),
+    stone: mk("farmerSnowFooting", new Color3(0.34, 0.37, 0.48), 0.35),
+    lit: mk("farmerSnowWindow", new Color3(1, 0.72, 0.28), 1),
+    wood: mk("farmerSnowWheel", new Color3(0.24, 0.16, 0.1), 0.35),
+  };
+  const lists: Record<keyof typeof mats, Mesh[]> = { wall: [], mill: [], board: [], snow: [], stone: [], lit: [], wood: [] };
+  const box = (list: keyof typeof mats, w: number, h: number, d: number, x: number, y: number, z: number, rz = 0) => {
+    const b = MeshBuilder.CreateBox("farmerSnowPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.rotation.z = rz;
+    lists[list].push(b);
+    return b;
+  };
+  // A block with a gable roof whose ridge runs along z: walls, gable rhombus, two roof planes each a board layer under a snow layer
+  const gabled = (wallList: "wall" | "mill", x: number, z: number, w: number, d: number, base: number, high: number, roof: number) => {
+    box(wallList, w, high, d, x, base + high / 2, z);
+    const gable = MeshBuilder.CreateBox("farmerSnowGable", { size: 1 }, scene);
+    gable.rotation.z = Math.PI / 4;
+    gable.bakeCurrentTransformIntoVertices();
+    gable.scaling.set(w / Math.SQRT2, (2 * roof) / Math.SQRT2, d);
+    gable.bakeCurrentTransformIntoVertices();
+    gable.position.set(x, base + high, z);
+    lists[wallList].push(gable);
+    const pitch = Math.atan2(roof, w / 2), slope = Math.hypot(w / 2, roof) + 0.6;
+    for (const side of [-1, 1]) {
+      // Outward normal of the plane sloping down toward this side, and its centre moved 0.3 m down-slope for the eave overhang
+      const nx = side * Math.sin(pitch), ny = Math.cos(pitch);
+      const cx = x + side * (w / 4) + side * 0.3 * Math.cos(pitch), cy = base + high + roof / 2 - 0.3 * Math.sin(pitch);
+      box("board", slope, 0.25, d + 1.2, cx + nx * 0.15, cy + ny * 0.15, z, -side * pitch);
+      box("snow", slope + 0.1, 0.3, d + 1.3, cx + nx * 0.42, cy + ny * 0.42, z, -side * pitch);
+    }
+  };
+  const obstacles: Obstacle[] = [];
+  for (const [x, z] of SNOW_HOUSES) {
+    box("stone", 7.6, 0.6, 6.6, x, 0.3, z);
+    gabled("wall", x, z, 7, 6, 0.6, 4.4, 3.8);
+    const front = z - 3.05;
+    box("lit", 1.1, 1.2, 0.12, x - 2, 2.4, front);
+    box("lit", 1.1, 1.2, 0.12, x + 2, 2.4, front);
+    box("lit", 1, 1.1, 0.12, x, 5.6, front);
+    box("board", 1.3, 2.3, 0.14, x, 1.75, front);
+    obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 3.8, halfZ: 3.3 });
+  }
+  const x0 = iceX(SNOW_MILL.z), off = SNOW_MILL.gap / 2 + SNOW_MILL.width / 2;
+  for (const side of [-1, 1]) {
+    const x = x0 + side * off;
+    box("stone", SNOW_MILL.width, SNOW_MILL.plinth, SNOW_MILL.depth, x, SNOW_MILL.plinth / 2, SNOW_MILL.z);
+    gabled("mill", x, SNOW_MILL.z, SNOW_MILL.width - 0.4, SNOW_MILL.depth - 0.4, SNOW_MILL.plinth, SNOW_MILL.wall, SNOW_MILL.roof);
+    box("lit", 1.2, 1.3, 0.12, x, SNOW_MILL.plinth + 3.2, SNOW_MILL.z + SNOW_MILL.depth / 2 - 0.15);
+  }
+  // The wheel turns about x in the gap: rims, spokes and paddles in the y-z plane
+  const R = SNOW_MILL.wheel / 2, wz = SNOW_MILL.z, wy = R - 1;
+  for (const dx of [-0.9, 0.9]) {
+    const rim = MeshBuilder.CreateTorus("farmerSnowRim", { diameter: SNOW_MILL.wheel, thickness: 0.35, tessellation: 24 }, scene);
+    rim.rotation.z = Math.PI / 2;
+    rim.position.set(x0 + dx, wy, wz);
+    lists.wood.push(rim);
+    const cap = MeshBuilder.CreateTorus("farmerSnowRimCap", { diameter: SNOW_MILL.wheel, thickness: 0.2, tessellation: 24 }, scene);
+    cap.rotation.z = Math.PI / 2;
+    cap.position.set(x0 + dx, wy + 0.2, wz);
+    lists.snow.push(cap);
+  }
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const paddle = MeshBuilder.CreateBox("farmerSnowPaddle", { width: 2, height: 0.12, depth: 1.1 }, scene);
+    paddle.position.set(x0, wy + Math.sin(a) * R, wz + Math.cos(a) * R);
+    paddle.rotation.x = -a;
+    lists.wood.push(paddle);
+    if (i % 3 === 0) {
+      const spoke = MeshBuilder.CreateBox("farmerSnowSpoke", { width: 1.6, height: 0.2, depth: SNOW_MILL.wheel }, scene);
+      spoke.position.set(x0, wy, wz);
+      spoke.rotation.x = a;
+      lists.wood.push(spoke);
+    }
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(lists) as Array<keyof typeof mats>) {
+    const merged = lists[key].length ? Mesh.MergeMeshes(lists[key], true) : null;
+    if (!merged) continue;
+    merged.name = `farmerSnowBuildings_${key}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    if (key !== "lit") {
+      merged.applyFog = false;
+      glow?.addExcludedMesh(merged);
+    }
+  }
+  obstacles.push({ type: "box", center: new Vector3(x0, 0, SNOW_MILL.z), halfX: off + SNOW_MILL.width / 2, halfZ: SNOW_MILL.depth / 2 });
+  return obstacles;
+}
+
 export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -409,7 +527,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   const baseDispose = result.dispose;
   return {
     ...result,
-    obstacles: [...result.obstacles, ...snowyBridge(scene), ...pineGrove(scene)],
+    obstacles: [...result.obstacles, ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene)],
     dispose: () => {
       restoreLights();
       baseDispose?.();
