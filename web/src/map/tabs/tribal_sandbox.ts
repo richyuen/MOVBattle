@@ -75,8 +75,25 @@ function backCliffs(scene: Scene, obstacles: Obstacle[]): void {
   }
 }
 
+// The open plain (wiki shot): no dry-stone walls cross it; the base's wall stones inside the ellipse |x| < 47, |z| < 32 go with their colliders
+const FIELD = { rx: 47, rz: 32 };
+const inField = (x: number, z: number, margin = 0) => (x / (FIELD.rx + margin)) ** 2 + (z / (FIELD.rz + margin)) ** 2 < 1;
+
+function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes.filter((m) => built.has(m) && m.name === "wallStone")) {
+    if (!inField(mesh.position.x, mesh.position.z, 2)) continue;
+    gone.push([mesh.position.x, mesh.position.z]);
+    mesh.dispose();
+  }
+  result.obstacles = result.obstacles.filter((o) => !(inField(o.center.x, o.center.z, 2)
+    && gone.some(([x, z]) => Math.abs(x - o.center.x) < 0.01 && Math.abs(z - o.center.z) < 0.01)));
+}
+
 export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
+  const prior = new Set(scene.meshes);
   const result = base();
+  clearFieldWalls(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
   const rock = new StandardMaterial("tribalSandboxRock", scene);
   rock.diffuseColor = new Color3(0.62, 0.57, 0.56);
   rock.emissiveColor = new Color3(0.08, 0.07, 0.07);
