@@ -40,6 +40,15 @@ const ULLR_HANG = { out: 0.22, fore: -0.1, bend: -0.2 };
  * her front (yaw 0, on the man) at the blow (animator blowShare), on .end rad past it to the off side by .through of the rest, then eased back.
  * Every .every-th attack is a complete circle: wound .circleCock, then round through 2 PI - .circleCock and settled a full turn on.
  */
+/*
+ * [S] 549 (ice_giant c.3: "punch: a short jab - TABS: long-arm slam"; secret.ice_giant.jpg: one long arm brought down straight onto the ground
+ * before him; card Characteristics "long arms ... create shockwaves of ice with each punch that connects with a surface"). The fists take turns.
+ * Through an attack on his feet the slamming arm is raised (shoulder .cock rad, near straight up, elbow bent .bend, trunk leaning back .back) over
+ * the first .raise of the run to the blow (animator blowShare), then brought down straight, fast at the end, to .hit (forward and down to the
+ * ground ahead, elbow straight, trunk pitched .pitch into it) at the blow; held on to .end by .hold of the rest and eased back to the animator's
+ * pose over the last of it.
+ */
+const ICE_SLAM = { cock: -2.95, bend: -0.7, back: -0.12, hit: -0.8, end: -0.62, pitch: 0.32, raise: 0.55, hold: 0.6 };
 const JADE_SWEEP = { reach: -1.42, inward: 0.3, dip: 0.08, cock: 1.9, end: 1.7, wind: 0.4, through: 0.7, circleCock: 0.75, every: 2 };
 /*
  * [S] balloon float (332; renaissance.balloon_archer card Characteristics: "balloons attached to them that causes whatever unit the arrow has hit to float
@@ -471,7 +480,8 @@ export class RuntimeUnit {
     // [S] the hoplite carries his dory low at the weapon hip, point forward and down (380; proceduralAnimation DORY_CARRY)
     this.animator.carriesDory = definition.id === "ancient.hoplite";
     // [S] 549 Lady Red Jade's sweep is posed by JADE_SWEEP: her blow lands when the guandao crosses her front
-    this.animator.landsLate = definition.id === "secret.lady_red_jade";
+    // [S] 549 ...and the Ice Giant's slam by ICE_SLAM: his blow lands when the arm comes down
+    this.animator.landsLate = definition.id === "secret.lady_red_jade" || definition.id === "secret.ice_giant";
     this._spawnPosition = body.root.position.clone();
     this._spawnRotationY = body.root.rotation.y;
   }
@@ -2036,6 +2046,7 @@ export class RuntimeUnit {
     this._applyPoseOverlay(isAttacking);
     if (this._maceWhirling(now)) this._applyMaceWhirl(now);
     if (this.definition.id === "secret.lady_red_jade") this._applyJadeSweep(isAttacking);
+    if (this.definition.id === "secret.ice_giant") this._applyIceSlam(isAttacking);
     this._applyCheer(now);
     this._applyIceThrow(now);
     this._applyCurseCast(now);
@@ -2145,6 +2156,34 @@ export class RuntimeUnit {
     b.rightElbow.rotation.set(H.bend, 0, 0);
     b.leftHand.rotation.setAll(0);
     b.rightHand.rotation.setAll(0);
+  }
+
+  private _iceSlams = 0;
+  private _iceSlamOn = false;
+  private _applyIceSlam(isAttacking: boolean): void {
+    const on = isAttacking && this._grounded && !this._isDead && !this.isToppled && !this.isDowned;
+    if (on && !this._iceSlamOn) this._iceSlams++;
+    this._iceSlamOn = on;
+    if (!on) return;
+    const S = ICE_SLAM, b = this.body;
+    const p = this.animator.attackShare, f = Math.min(0.85, Math.max(0.2, this.animator.blowShare));
+    const smooth = (u: number) => u * u * (3 - 2 * u);
+    const up = f * S.raise, t = f + (1 - f) * S.hold;
+    // the arm's angle and bend, the trunk's pitch, and how much of the animator's pose they take
+    let arm: number, bend: number, pitch: number, w: number;
+    if (p < up) { const u = smooth(p / up); arm = S.cock * u; bend = S.bend * u; pitch = S.back * u; w = Math.min(1, p / (up * 0.4)); }
+    else if (p < f) { const u = (p - up) / (f - up), d = u * u; arm = S.cock + (S.hit - S.cock) * d; bend = S.bend * (1 - d); pitch = S.back + (S.pitch - S.back) * d; w = 1; }
+    else if (p < t) { const u = (p - f) / (t - f); arm = S.hit + (S.end - S.hit) * u; bend = 0; pitch = S.pitch; w = 1; }
+    else { arm = S.end; bend = 0; pitch = S.pitch; w = 1 - smooth((p - t) / (1 - t)); }
+    const right = this._iceSlams % 2 === 1;
+    const shoulder = right ? b.rightShoulder : b.leftShoulder, elbow = right ? b.rightElbow : b.leftElbow;
+    shoulder.rotation.x += (arm - shoulder.rotation.x) * w;
+    shoulder.rotation.y *= 1 - w;
+    shoulder.rotation.z *= 1 - w;
+    elbow.rotation.x += (bend - elbow.rotation.x) * w;
+    elbow.rotation.y *= 1 - w;
+    elbow.rotation.z *= 1 - w;
+    b.torso.rotation.x += pitch * w;
   }
 
   // Lady Red Jade's guandao (the mesh carrying guandaoGuard) and its seat in the fist, looked up once (JADE_SWEEP)
