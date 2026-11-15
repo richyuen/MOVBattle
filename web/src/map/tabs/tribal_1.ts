@@ -153,15 +153,15 @@ function openSky(scene: Scene, built: Set<unknown>): void {
  * Island underside (autumn_tribal_1.png): under the field the island is three stacked rounded tiers of orange earth, each narrower than the
  * one above with a deep crease between them, sparse white blocky stones set in their faces; the base's navy islandUnder/islandShelf/
  * islandCliff (the black spikes) go. Spec: the tiers follow the island outline (superellipse 54 x 48, power 3) at 1.0, 0.88 and 0.66 of
- * it; each tier 5.6 m tall, its side bulging 3% at mid height and pulled in 10% at its foot so the creases read; total depth 18 m (a third
- * of the island width), the last tier closing in a rounded foot; about 60 white boxes 0.8-1.7 m, flat against the faces, none in a crease.
+ * it; the tiers 16, 13 and 10 m tall (the reference's tiers stand about 0.19, 0.13 and 0.1 of the island's width), each side bulging 3%
+ * at mid height and rounding in to 88% at its foot so the creases read; total depth about 41 m, the last tier closing in a rounded foot;
+ * about 70 white boxes 1.2-2.4 m, flat against the faces, none in a crease.
  */
-const TIERS = [{ s: 1, top: -0.02 }, { s: 0.88, top: -6.1 }, { s: 0.66, top: -12.2 }];
-const TIER_H = 5.6;
+const TIERS = [{ s: 1, top: -0.02, h: 16 }, { s: 0.86, top: -16.6, h: 13 }, { s: 0.66, top: -30.2, h: 10 }];
 
-function tierProfile(s: number, top: number, last: boolean): Array<[number, number]> {
-  const p: Array<[number, number]> = [[s * (top > -0.1 ? 1 : 0.96), top], [s * 1.01, top - 1.2], [s * 1.03, top - TIER_H * 0.5], [s * 0.99, top - TIER_H + 1.1], [s * 0.9, top - TIER_H]];
-  if (last) p.push([s * 0.6, top - TIER_H - 0.9], [s * 0.15, top - TIER_H - 1.3]);
+function tierProfile(s: number, top: number, h: number, last: boolean): Array<[number, number]> {
+  const p: Array<[number, number]> = [[s * (top > -0.1 ? 1 : 0.95), top], [s * 1.01, top - h * 0.2], [s * 1.03, top - h * 0.5], [s * 0.99, top - h * 0.8], [s * 0.88, top - h]];
+  if (last) p.push([s * 0.6, top - h - 1.5], [s * 0.15, top - h - 2.2]);
   return p;
 }
 
@@ -179,8 +179,8 @@ function earthTiers(scene: Scene, built: Set<unknown>): void {
   const earth = mk("tribal1UnderEarth", new Color3(0.88, 0.5, 0.2), 0.32);
   const fleck = mk("tribal1UnderFleck", new Color3(0.95, 0.93, 0.88), 0.5);
   const bands: Mesh[] = [];
-  TIERS.forEach(({ s, top }, t) => {
-    const prof = tierProfile(s, top, t === TIERS.length - 1);
+  TIERS.forEach(({ s, top, h }, t) => {
+    const prof = tierProfile(s, top, h, t === TIERS.length - 1);
     for (let i = 0; i < prof.length - 1; i++) {
       const [s0, y0] = prof[i], [s1, y1] = prof[i + 1];
       const band = MeshBuilder.CreateCylinder("tribal1Tier", { diameterTop: s0, diameterBottom: s1, height: y0 - y1, tessellation: 72 }, scene);
@@ -204,12 +204,12 @@ function earthTiers(scene: Scene, built: Set<unknown>): void {
   }
   // White stones on the tier faces, at mid height where the face stands out furthest
   const flecks: Mesh[] = [];
-  for (let k = 0; k < 60; k++) {
-    const { s, top } = TIERS[k % TIERS.length];
+  for (let k = 0; k < 70; k++) {
+    const { s, top, h } = TIERS[k % TIERS.length];
     const deg = seeded(k, 31) * 360;
-    const y = top - 1.4 - seeded(k, 32) * (TIER_H - 2.8);
+    const y = top - h * 0.3 - seeded(k, 32) * h * 0.4;
     const [ox, oz] = rim(deg);
-    const w = 0.8 + seeded(k, 33) * 0.9;
+    const w = 1.2 + seeded(k, 33) * 1.2;
     const box = MeshBuilder.CreateBox("tribal1Fleck", { width: w, height: w * (0.6 + seeded(k, 34) * 0.3), depth: 0.5 }, scene);
     box.rotation.set(0, Math.PI / 2 - (deg * Math.PI) / 180, (seeded(k, 35) - 0.5) * 0.4);
     box.position.set(ox * s * 1.025, y, oz * s * 1.025);
@@ -220,6 +220,7 @@ function earthTiers(scene: Scene, built: Set<unknown>): void {
     set.name = "tribal1Flecks";
     set.material = fleck;
     set.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(set);
   }
 }
 
