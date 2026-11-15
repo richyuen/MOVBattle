@@ -1344,7 +1344,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_artemis":
       // [S] 539 (a.1) no halo over her head (special and the hero_halo flare off): a gold band over her hair instead (secretDress ARTEMIS_BAND)
-      return vis({ scale: 1.45, bulk: 1.02, armLength: 1.12 }, "bow", "laurel", "none", "none", "#f5d566", undefined, {
+      // [R] 552 (a.1: "squat block figure ... TABS: a lanky wobbler whose legs are about half the height"): legs drawn out 1 -> 1.4 under slimmer
+      // shins, the skirt over them cut to just under the knee (secretDress ARTEMIS_DRESS spec)
+      return vis({ scale: 1.45, bulk: 1.02, armLength: 1.12, legLength: 1.4, lowerLegWidth: 0.85 }, "bow", "laurel", "none", "none", "#f5d566", undefined, {
         posePreset: "archer", materialPreset: "secret_hero", fxPreset: "solar",
         // [S] 540 (b.1) a tall brown wrapped longbow carried upright (propBuilder ARTEMIS_BOW)
         weaponVariant: "artemis_bow",

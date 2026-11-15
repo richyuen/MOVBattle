@@ -6552,26 +6552,38 @@ export function artemisQuiver(scene: Scene, body: ArticulatedBody, team: Color3)
   return out;
 }
 
-const ARTEMIS_DRESS = { top: 0.32, hem: 0.32, out: 1.12, flare: 1.42, deep: 0.82, belt: 0.09, dark: 0.62, brown: new Color3(0.3, 0.15, 0.07) };
+/*
+ * [R] 552 (artemis a, plateau: CONFIRM 546, 550, 551 "squat block figure: the dress hides the legs down to the feet ... TABS: a lanky wobbler whose
+ * legs are about half the height, with long bare shins"; "one dress chunk falling to the ankles ... TABS: a team tunic top over a darker wrap skirt
+ * ending just below the knee, with bare team shins and strapped sandals below"). Spec off secret.artemis.red.png and .jpg: sole to hip joint about
+ * half her height (the rig's legs drawn out to 1.4, slimmer shins, unitVisuals secret_artemis); the skirt from the belt at her waist falls nearly
+ * straight (hem barely wider than the hips: .flare 1.18 of W against .out 1.1 at the top) and stops a short way under the knee (.hem .14 of the
+ * shin's length below it), so about two thirds of each shin shows bare in team colour above the sandal straps; the skirt a darker team shade
+ * (.dark), the brown belt at its top. It is stood a touch deeper than before (.deep .86) so the front hem clears the knee when she steps.
+ */
+const ARTEMIS_DRESS = { top: 0.32, hem: 0.14, out: 1.16, flare: 1.4, deep: 1.15, belt: 0.09, dark: 0.62, brown: new Color3(0.3, 0.15, 0.07) };
 export function artemisDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = ARTEMIS_DRESS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const dressC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(K.dark);
   const cloth = mf.get("cloth", dressC, { emissive: dressC.scale(0.12), roughness: 1 });
   const brown = mf.get("cloth", K.brown, { emissive: K.brown.scale(0.12), roughness: 1 });
   const out: Mesh[] = [];
-  const hipY = (originIn(body.leftHip, body.torso).y + originIn(body.rightHip, body.torso).y) / 2;
-  const kneeY = (originIn(body.leftKnee, body.torso).y + originIn(body.rightKnee, body.torso).y) / 2;
+  const hipY = (originIn(body.leftHip, body.hip).y + originIn(body.rightHip, body.hip).y) / 2;
+  const kneeY = (originIn(body.leftKnee, body.hip).y + originIn(body.rightKnee, body.hip).y) / 2;
   const shin = limbBox(body.leftLowerLeg), footY = kneeY - Math.abs(shin.mid) - shin.half;
-  const hx = Math.abs(originIn(body.leftHip, body.torso).x - originIn(body.rightHip, body.torso).x);
+  const hx = Math.abs(originIn(body.leftHip, body.hip).x - originIn(body.rightHip, body.hip).x);
   const pelvis = body.allMeshes.find((m) => m.name.endsWith("_pelvis"));
   const W = Math.max(hx * 1.9, pelvis ? limbBox(pelvis).wide * 2 : 0);
   const top = hipY + W * K.top, hem = kneeY - (kneeY - footY) * K.hem, long = top - hem;
   const skirt = MeshBuilder.CreateCylinder("artemisDress", { height: long, diameterTop: W * K.out, diameterBottom: W * K.flare, tessellation: 10 }, scene);
-  skirt.parent = body.torso; skirt.scaling.z = K.deep; skirt.position.set(0, (top + hem) / 2, 0);
+  skirt.parent = body.hip; skirt.scaling.z = K.deep; skirt.position.set(0, (top + hem) / 2, 0);
   skirt.material = cloth; skirt.convertToFlatShadedMesh(); glow?.addExcludedMesh(skirt); out.push(skirt);
   const belt = MeshBuilder.CreateCylinder("artemisDressBelt", { height: W * K.belt, diameter: W * K.out * 1.04, tessellation: 10 }, scene);
-  belt.parent = body.torso; belt.scaling.z = K.deep; belt.position.set(0, top - W * K.belt / 2, 0);
+  belt.parent = body.hip; belt.scaling.z = K.deep; belt.position.set(0, top - W * K.belt / 2, 0);
   belt.material = brown; belt.convertToFlatShadedMesh(); glow?.addExcludedMesh(belt); out.push(belt);
+  // [R] 552: the legs under the skirt bare, in the arms' own team shade (the dark body shade read as trousers); the sandals then take the shin's
+  const bare = body.leftLowerArm.material;
+  if (bare) for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = bare;
   return out;
 }
 
