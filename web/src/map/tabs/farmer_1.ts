@@ -298,6 +298,12 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  // Open grass where the base stood its dark totem pillar (22, 0) and black barricade box (10, 16): meshes and colliders go
+  const FIELD_JUNK: Array<[number, number]> = [[22, 0], [10, 16]];
+  for (const mesh of scene.meshes.filter((m) => built.has(m) && /^Introduction Grounds_(cyl|box|totem_top)$/.test(m.name))) {
+    if (FIELD_JUNK.some(([x, z]) => Math.hypot(mesh.position.x - x, mesh.position.z - z) < 0.5)) mesh.dispose();
+  }
+  result.obstacles = result.obstacles.filter((o) => !FIELD_JUNK.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
   riverMeshes(scene);
   const hazards = [...result.hazards, ...riverHazards()];
   // Nothing the base put down may stand in the water
