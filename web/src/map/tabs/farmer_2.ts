@@ -403,12 +403,23 @@ function backYard(scene: Scene, built: Set<unknown>, result: MapBuildResult): vo
   }
 }
 
+/**
+ * Nothing outside the island (farm_2.png): the base's translucent placement-guide slabs (campaign_zone_overlay_* and
+ * campaign_zone_border_*, rectangles reaching past the rim) are hidden; the placement zones stay in the map data.
+ */
+function hidePlacementGuides(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && /^campaign_zone_(overlay|border)_/.test(mesh.name)) mesh.setEnabled(false);
+  }
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   clearFieldJunk(scene, built, result);
   backYard(scene, built, result);
+  hidePlacementGuides(scene, built);
   oliveMeadow(scene);
   const stone = new StandardMaterial("farmer2WallStone", scene);
   stone.diffuseColor = new Color3(0.62, 0.62, 0.6);
