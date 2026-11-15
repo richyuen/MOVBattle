@@ -26,7 +26,7 @@ Read at step 1; one fact a line, merge near cap.
 - Idle/lineup: front 3/4, weapon side; a face/chest/shield blocker judged side-on is mis-aimed (evidence commit); prop over the chest: post-release idle-angle shot (525); hips behind a shield: rig 13 (526); off-side shield: rig 14 mirror (534). Faceless at .6 rad reads as a back: .25 (497).
 - Size a held prop off joint spreads (originIn), not limbBox (526); a stave thick by share of length: own girth when lengthened (540).
 - The idle is ~100 ms after spawn: full weight from spawn, in every re-solve (393).
-- A prop above head + .3 unit height reframes all shots: RE-AUDIT (420, 447).
+- Prop over head + .3 height reframes all shots: RE-AUDIT (420, 447).
 - `--units a,b` re-shoots lineup_<f> (498). For lethal blows, keep an off-camera reserve and time contact from the hit log (504, 546).
 - A dress change aimed at the idle must clear the rest pose and the held weapon: probe what covers it first (442; 539 log over chest). A giant's metrics.overallHeight is pre-hover: use headTop world y.
 - Frame prop openings at the landing spot (522), toppled targets at torso bounds (509), a sky drop on the man ~20 ticks on, sky in frame (539).
@@ -64,5 +64,5 @@ Read at step 1; one fact a line, merge near cap.
 - Fist prop hand frame: +y up the forearm, knuckles -y (492). bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum, 494); by self-lit skin or bone the glow halo browns it: exclude those from the glow (495).
 - execSync runs cmd.exe (eats a caret): write sha~1 (530). On-death effects: RU.onDeath (the last death ends the duel first, 535).
-- A takeoff and follow-through pair can miss a full rotation. Capture the inversion separately (544).
-- A melee motion the sim does not hold (not heavy/blade/halberd) lands at the decision (release = windup's 1st frame): a unit-posed attack sets animator.landsLate; a leap's blow is a pending blow at 2 rise/22 (549).
+- Takeoff + follow-through can miss a rotation: shoot the flip alone (544).
+- An unheld melee motion (not heavy/blade/halberd) lands at the decision: unit-posed attacks set animator.landsLate; a leap's blow is pending at 2 rise/22 (549). A weapon not in inferWeaponPresentationFamily is "default": set weaponPresentationFamily or its swing never runs (550).
