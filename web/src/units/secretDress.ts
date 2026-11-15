@@ -6594,7 +6594,15 @@ export function artemisQuiver(scene: Scene, body: ArticulatedBody, team: Color3)
  * shin's length below it), so about two thirds of each shin shows bare in team colour above the sandal straps; the skirt a darker team shade
  * (.dark), the brown belt at its top. It is stood a touch deeper than before (.deep .86) so the front hem clears the knee when she steps.
  */
-const ARTEMIS_DRESS = { top: 0.32, hem: 0.14, out: 1.16, flare: 1.4, deep: 1.15, belt: 0.09, dark: 0.62, brown: new Color3(0.3, 0.15, 0.07) };
+/*
+ * [S] 553 (artemis a.1: "squat block figure: the dress hides the legs down to the feet ... TABS: a lanky wobbler whose legs are about half the height,
+ * with long bare shins"; probe 552: hip 1.44, knee .73, hem .61, head top 2.61 m, so the hem already sat just under the knee, but the wide deep cone
+ * (flare 1.4, deep 1.15) stood its front rim ahead of the shins and read as a dark block from the belt to the ankles). Spec off secret.artemis.red.png:
+ * belt about 62% up her height; the light team tunic runs on below the belt in a short peplum to about the hip joint (.peplum of the belt-to-knee
+ * drop, .pepOut of W across its foot, over the skirt's top); the dark skirt from there falls nearly straight (.flare 1.18 of W at the hem, .deep .9)
+ * to the knee itself (.hem .02 of the shin under it), so the dark band is about a quarter of her height and the bare shins about a fifth.
+ */
+const ARTEMIS_DRESS = { top: 0.32, hem: 0.02, out: 1.12, flare: 1.18, deep: 0.9, belt: 0.09, dark: 0.62, peplum: 0.3, pepOut: 1.24, brown: new Color3(0.3, 0.15, 0.07) };
 export function artemisDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = ARTEMIS_DRESS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const dressC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(K.dark);
@@ -6616,6 +6624,12 @@ export function artemisDress(scene: Scene, body: ArticulatedBody, team: Color3):
   belt.material = brown; belt.convertToFlatShadedMesh(); glow?.addExcludedMesh(belt); out.push(belt);
   // [R] 552: the legs under the skirt bare, in the arms' own team shade (the dark body shade read as trousers); the sandals then take the shin's
   const bare = body.leftLowerArm.material;
+  // [S] 553: the tunic's peplum, light team cloth from the belt over the skirt's top, so the dark skirt starts at the hip
+  const pepFoot = top - (top - kneeY) * K.peplum;
+  const peplum = MeshBuilder.CreateCylinder("artemisPeplum", { height: top - pepFoot, diameterTop: W * K.out * 1.03, diameterBottom: W * K.pepOut, tessellation: 10 }, scene);
+  peplum.parent = body.hip; peplum.scaling.z = K.deep * 1.04; peplum.position.set(0, (top + pepFoot) / 2 - W * K.belt * 0.5, 0);
+  if (bare) peplum.material = bare;
+  peplum.convertToFlatShadedMesh(); glow?.addExcludedMesh(peplum); out.push(peplum);
   if (bare) for (const leg of [body.leftUpperLeg, body.rightUpperLeg, body.leftLowerLeg, body.rightLowerLeg]) leg.material = bare;
   return out;
 }
