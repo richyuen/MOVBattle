@@ -144,6 +144,77 @@ function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResu
 }
 
 /**
+ * Rock nooks (wiki shot): along the right and back of the ring, clusters of big piled grey boulders with birches growing out of them stand
+ * into the plain, each a horseshoe open toward the centre so it holds a pocket a squad can hide in. Spec: four nooks at (34, 24), (44, -6),
+ * (28, -28), (6, 33); each six boulders 3-5.5 m on an arc of 7 m radius, 200 degrees wide, its open side facing the island centre, the
+ * middle ones stacked a second boulder high; two or three birches (white trunk, ball crown in the ring's colours) stand among the rocks.
+ * One collider per boulder.
+ */
+const NOOKS: Array<[number, number]> = [[34, 24], [44, -6], [28, -28], [6, 33]];
+
+function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
+  const rock = new StandardMaterial("tribalSandboxNook", scene);
+  rock.diffuseColor = new Color3(0.62, 0.57, 0.56);
+  rock.emissiveColor = new Color3(0.08, 0.07, 0.07);
+  rock.specularColor = new Color3(0.03, 0.03, 0.03);
+  const bark = scene.getMaterialByName("tribalSandboxBirch");
+  const crowns = BIRCH_CROWNS.map(([name]) => scene.getMaterialByName(name)).filter((m) => m !== null);
+  const glow = scene.getGlowLayerByName("glow");
+  const boulders: Mesh[] = [];
+  NOOKS.forEach(([cx, cz], n) => {
+    const open = Math.atan2(-cz, -cx); // the open side faces the centre
+    for (let i = 0; i < 6; i++) {
+      const k = n * 10 + i;
+      const a = open + Math.PI + ((i / 5) - 0.5) * (200 * Math.PI / 180);
+      const d = 3 + seeded(k, 51) * 2.5;
+      const x = cx + Math.cos(a) * 7, z = cz + Math.sin(a) * 7;
+      const b = MeshBuilder.CreateIcoSphere("tsNookRock", { radius: d / 2, subdivisions: 1 }, scene);
+      b.scaling.set(1.15, 0.9 + seeded(k, 52) * 0.3, 1);
+      b.rotation.set(seeded(k, 53) * 0.5, seeded(k, 54) * Math.PI, seeded(k, 55) * 0.4);
+      b.position.set(x, d * 0.38, z);
+      boulders.push(b);
+      if (i >= 2 && i <= 3) {
+        const top = MeshBuilder.CreateIcoSphere("tsNookRock", { radius: d * 0.38, subdivisions: 1 }, scene);
+        top.rotation.y = seeded(k, 56) * Math.PI;
+        top.position.set(x + (seeded(k, 57) - 0.5), d * 0.85 + d * 0.25, z + (seeded(k, 58) - 0.5));
+        boulders.push(top);
+      }
+      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: d * 0.48 });
+    }
+    // Birches among the rocks, just behind the arc
+    const trees = 2 + (n % 2);
+    for (let t = 0; t < trees; t++) {
+      const k = n * 10 + t;
+      const a = open + Math.PI + (t - (trees - 1) / 2) * 0.9;
+      const x = cx + Math.cos(a) * 8.5, z = cz + Math.sin(a) * 8.5;
+      const h = 6 + seeded(k, 59) * 3;
+      const trunk = MeshBuilder.CreateCylinder("tsNookBirch", { diameterTop: 0.22, diameterBottom: 0.32, height: h, tessellation: 5 }, scene);
+      trunk.position.set(x, h / 2, z);
+      if (bark) trunk.material = bark;
+      trunk.isPickable = false;
+      const r = 1.6 + seeded(k, 60) * 0.8;
+      const ball = MeshBuilder.CreateIcoSphere("tsNookCrown", { radius: r, subdivisions: 1 }, scene);
+      ball.scaling.y = 1.08;
+      ball.position.set(x, h + r * 0.6, z);
+      ball.convertToFlatShadedMesh();
+      if (crowns.length) ball.material = crowns[Math.floor(seeded(k, 61) * crowns.length)];
+      ball.applyFog = false;
+      ball.isPickable = false;
+      glow?.addExcludedMesh(ball);
+      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.5 });
+    }
+  });
+  const merged = Mesh.MergeMeshes(boulders, true);
+  if (merged) {
+    merged.name = "tribalSandboxNooks";
+    merged.convertToFlatShadedMesh();
+    merged.material = rock;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
+/**
  * Open sky with far spires (autumn_tribal_sandbox.png): past the back tree line there is only teal sky and a few tall thin grey rock spires,
  * no ridge range. The base's range and its floating roots (mountainBase/Cap/Root) go; clouds stay. Spec: five faceted stacks 6-9 m across
  * and 16-26 m above the lawn, rising out of the haze below the island, 64-80 m out behind the back and back-right rim, leaning a little.
@@ -247,5 +318,6 @@ export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): Ma
   backCliffs(scene, obstacles);
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
+  rockNooks(scene, obstacles);
   return { ...result, obstacles };
 }
