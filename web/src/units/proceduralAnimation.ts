@@ -2751,6 +2751,8 @@ export class ProceduralAnimator {
     const sideAxe = !!node?.getChildren().some((c) => c.name === "beardedAxeCarry" || c.name === "uprightHammerCarry");
     // [S] 552 the Shogun's guard (a katana marked `uprightGuard`, propBuilder two_hand_katana): one fixed carry, not the four random ones (SHOGUN_GUARD)
     const guard = !!node?.getChildren().some((c) => c.name === "uprightGuard");
+    // ...and he stands in it from the first frame (the idle is shot ~100 ms after spawn, before the carry's easing has turned the blade up)
+    if (guard) this._carryTurn = 1;
     const attitude = guard
       ? { raise: SHOGUN_GUARD.raise, out: SHOGUN_GUARD.out, elbow: SHOGUN_GUARD.elbow, tip: new Vector3(SHOGUN_GUARD.tip[0] * side, SHOGUN_GUARD.tip[1], SHOGUN_GUARD.tip[2]).normalize() }
       : potion
