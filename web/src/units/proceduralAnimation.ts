@@ -297,6 +297,13 @@ const TWO_FIST_SWORD: Record<string, number> = { longswordFists: 0.4, zweiFists:
  * the off fist goes onto the grip under it (FISTS_ON_GRIP). Probe 552: the random shouldered carry ran the blade back over his shoulder.
  */
 const SHOGUN_GUARD = { raise: -0.75, out: -0.4, elbow: -1.75, tip: [-0.08, 1, 0.16] as const };
+/**
+ * [S] 553 (samurai_giant a.2: "bare blue forearms - TABS: flared angular vambraces with gold borders"; secret.samurai_giant.blue.png: both fists
+ * low on the grip before his belly, the forearms slanting in from the elbows at his sides so their broad plated faces show to the front, the
+ * blade standing straight up before his face). One fixed carry (the random four put the forearms at the brow or behind the blade, 549, 552):
+ * the upper arm a little forward (.raise), in toward the middle (.out), the elbow half bent (.elbow), the blade's line .tip near vertical.
+ */
+const SAMURAI_GUARD = { raise: -0.4, out: -0.32, elbow: -1.25, tip: [-0.04, 1, 0.12] as const };
 /*
  * [S] the Knight's arming sword held out (355; medieval.knight.red.png: the sword arm out from his side at the waist, the whole grey blade stood up and a
  * little out beside the shield, never shouldered along the arm). A blade marked `armingOut` (propBuilder, weaponVariant arming_sword) skips the four hashed
@@ -2753,7 +2760,12 @@ export class ProceduralAnimator {
     const guard = !!node?.getChildren().some((c) => c.name === "uprightGuard");
     // ...and he stands in it from the first frame (the idle is shot ~100 ms after spawn, before the carry's easing has turned the blade up)
     if (guard) this._carryTurn = 1;
-    const attitude = guard
+    // [S] 553 the Samurai Giant's low guard (a katana marked `lowGuard`), likewise fixed and at full weight from spawn (SAMURAI_GUARD)
+    const lowGuard = !!node?.getChildren().some((c) => c.name === "lowGuard");
+    if (lowGuard) this._carryTurn = 1;
+    const attitude = lowGuard
+      ? { raise: SAMURAI_GUARD.raise, out: SAMURAI_GUARD.out, elbow: SAMURAI_GUARD.elbow, tip: new Vector3(SAMURAI_GUARD.tip[0] * side, SAMURAI_GUARD.tip[1], SAMURAI_GUARD.tip[2]).normalize() }
+      : guard
       ? { raise: SHOGUN_GUARD.raise, out: SHOGUN_GUARD.out, elbow: SHOGUN_GUARD.elbow, tip: new Vector3(SHOGUN_GUARD.tip[0] * side, SHOGUN_GUARD.tip[1], SHOGUN_GUARD.tip[2]).normalize() }
       : potion
       ?{ raise: POTION_HANG.raise, out: POTION_HANG.out, elbow: POTION_HANG.elbow, tip: POTION_HANG.tip.clone() }

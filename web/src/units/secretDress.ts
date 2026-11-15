@@ -6167,8 +6167,15 @@ export function secretSamuraiCuirass(scene: Scene, body: ArticulatedBody, team: 
  * (c^2) x .shade self-lit .12; a gold tube .rim of the radius thick round each end and down the two side corners. Out of the glow.
  */
 const SHOGUN_KOTE = { from: 0.06, to: 0.86, elbow: 3.8, wrist: 2.6, flat: 0.62, shade: 0.62, rim: 0.16, gold: new Color3(1, 0.42, 0.1) };
-export function shogunVambraces(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
-  const K = SHOGUN_KOTE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+/*
+ * [S] 553 (samurai_giant a.2: "bare blue forearms - TABS: flared angular vambraces with gold borders"; secret.samurai_giant.blue.png: a flat team
+ * plate on each forearm about twice its width at the elbow, flaring from a narrower wrist, edged orange-gold). The Shogun's kote on his own
+ * forearms (bulk 1.75 makes the arm's radius the larger share, so the plate's widths are cut back to read about twice the arm, not four times).
+ */
+const SAMURAI_KOTE = { ...SHOGUN_KOTE, from: 0.04, to: 0.84, elbow: 2.5, wrist: 1.7, rim: 0.11 };
+export function samuraiGiantVambraces(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] { return shogunVambraces(scene, body, team, SAMURAI_KOTE); }
+export function shogunVambraces(scene: Scene, body: ArticulatedBody, team: Color3, K = SHOGUN_KOTE): Mesh[] {
+  const mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const teamC = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(K.shade);
   const plate = mf.get("cloth", teamC, { emissive: teamC.scale(0.12), roughness: 1 });
   const gold = mf.get("cloth", K.gold, { emissive: K.gold.scale(0.12) });
@@ -6281,6 +6288,8 @@ export function samuraiGiantGreaves(scene: Scene, body: ArticulatedBody, team: C
     }
   }
   for (const m of out) { m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); }
+  // [S] 553 (a.2) the arm harness goes on with the leg harness: his flared vambraces (SAMURAI_KOTE)
+  out.push(...samuraiGiantVambraces(scene, body, team));
   return out;
 }
 

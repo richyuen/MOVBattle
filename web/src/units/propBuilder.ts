@@ -5677,6 +5677,8 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
         // [S] 552 (b.1) carried upright before the face in both fists (proceduralAnimation SHOGUN_GUARD)
         new TransformNode("uprightGuard", scene).parent = blade;
       }
+      // [S] 553 (samurai_giant a.2) the giant's low upright guard, so his vambraced forearms always face the camera (proceduralAnimation SAMURAI_GUARD)
+      if (giant) new TransformNode("lowGuard", scene).parent = blade;
       if (shogun) {
         // [S] 549 (shogun b.3: "dark grip with isolated light rings - TABS: extended pale wrapped grip with gold pommel"; secret.shogun.blue.png:
         // a long cream tsuka under the gold guard, its dark cord crossing in diamonds the whole way down, a broad gold cap at the end). SHOGUN_TSUKA
