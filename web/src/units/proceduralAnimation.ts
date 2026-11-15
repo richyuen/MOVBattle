@@ -289,6 +289,14 @@ const OFFHAND_GRIP_UP = 0.11;
  * Not the pole carry (POLE_GRIP): that turns the sword pommel-first (351). Held through idle, the march and the swing.
  */
 const TWO_FIST_SWORD: Record<string, number> = { longswordFists: 0.4, zweiFists: 0.4 };
+/**
+ * [S] 552 (shogun b.1: "only the white hilt shows, pointing down from the gold tsuba; the blade hidden behind the head - TABS: the long thin blade
+ * stands upright in front of the face above a short white hilt and gold tsuba, both hands on the grip"; secret.shogun.red.png). Spec: the weapon
+ * fist before the middle of his chest a little under the chin (.raise forward, .out in toward the middle, .elbow well bent), the blade's line
+ * (.tip in his own frame: x his weapon side, y up, z forward) near vertical, canted a touch forward so it stands before the face, not behind it;
+ * the off fist goes onto the grip under it (FISTS_ON_GRIP). Probe 552: the random shouldered carry ran the blade back over his shoulder.
+ */
+const SHOGUN_GUARD = { raise: -0.75, out: -0.4, elbow: -1.75, tip: [-0.08, 1, 0.16] as const };
 /*
  * [S] the Knight's arming sword held out (355; medieval.knight.red.png: the sword arm out from his side at the waist, the whole grey blade stood up and a
  * little out beside the shield, never shouldered along the arm). A blade marked `armingOut` (propBuilder, weaponVariant arming_sword) skips the four hashed
@@ -2741,8 +2749,12 @@ export class ProceduralAnimator {
     const armingOut = !!node?.getChildren().some((c) => c.name === "armingOut");
     // [S] 493 the Paladin's hammer (marked `uprightHammerCarry`) takes the same head-up carry beside the shield (good.righteous_paladin.red.png)
     const sideAxe = !!node?.getChildren().some((c) => c.name === "beardedAxeCarry" || c.name === "uprightHammerCarry");
-    const attitude = potion
-      ? { raise: POTION_HANG.raise, out: POTION_HANG.out, elbow: POTION_HANG.elbow, tip: POTION_HANG.tip.clone() }
+    // [S] 552 the Shogun's guard (a katana marked `uprightGuard`, propBuilder two_hand_katana): one fixed carry, not the four random ones (SHOGUN_GUARD)
+    const guard = !!node?.getChildren().some((c) => c.name === "uprightGuard");
+    const attitude = guard
+      ? { raise: SHOGUN_GUARD.raise, out: SHOGUN_GUARD.out, elbow: SHOGUN_GUARD.elbow, tip: new Vector3(SHOGUN_GUARD.tip[0] * side, SHOGUN_GUARD.tip[1], SHOGUN_GUARD.tip[2]).normalize() }
+      : potion
+      ?{ raise: POTION_HANG.raise, out: POTION_HANG.out, elbow: POTION_HANG.elbow, tip: POTION_HANG.tip.clone() }
       : armingOut
       ? { raise: ARMING_OUT.raise, out: ARMING_OUT.out, elbow: ARMING_OUT.elbow, tip: new Vector3(ARMING_OUT.tip[0] * side, ARMING_OUT.tip[1], ARMING_OUT.tip[2]).normalize() }
       : sideAxe
