@@ -474,6 +474,17 @@ function roundIsland(scene: Scene, built: Set<unknown>): Array<[number, number]>
     mesh.setVerticesData("position", pos);
     mesh.refreshBoundingInfo();
   }
+  // The haze band is one merged mesh laid along the old straight edges: it goes whole. Grass blades past the rim are dropped.
+  const inside = (x: number, z: number, m = 1) => Math.hypot(x, z) <= outlineAt((Math.atan2(z, x) * 180) / Math.PI, ISLAND) - m;
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !(mesh instanceof Mesh)) continue;
+    if (mesh.name === "hazeTreeline") mesh.setEnabled(false);
+    if (!mesh.name.startsWith("fieldBlades_") || mesh.thinInstanceCount < 1) continue;
+    const kept = mesh.thinInstanceGetWorldMatrices().filter((w) => inside(w.m[12], w.m[14], 0.5));
+    const buf = new Float32Array(kept.length * 16);
+    kept.forEach((w, i) => buf.set(w.m, i * 16));
+    mesh.thinInstanceSetBuffer("matrix", buf, 16);
+  }
   const gone: Array<[number, number]> = [];
   for (const mesh of scene.meshes) {
     if (!built.has(mesh) || !RIM_PROPS.has(mesh.name) || mesh.parent) continue;
