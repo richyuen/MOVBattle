@@ -1360,7 +1360,10 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       // the legs into the trunk, legs 1.4 -> .9 and trunk 1.3 -> 2.4, so his head still tops the Tree Giant's; the arms drawn out in ICE_APE
       return vis({ scale: 2.48, bulk: 1.88, headSize: 1.12, armLength: 1.12, legLength: 0.9, torsoLength: 2.4 }, "none", "none", "none", "none", "#9fe9ff", undefined, {
         // [S] 543 (a.3) team skin under the snow mantle (secretDress ICE_SNOW): the pale ice preset off
-        posePreset: "giant", materialPreset: "default", attachmentPreset: "giant_aura", fxPreset: "frost",
+        // [S] 552 (a.3: "torso below the snow mantle is a pale washed-out blue/grey - TABS: saturated team colour flanks the snow V down to the
+        // belt"; secret.ice_giant.red.png: trunk, arms and head one deep team colour like the legs): Ullr's whole-body secret_frost preset (the team
+        // colour squared, as the trouser cloth is) in place of default, and no frost fx, whose pulse lit the whole body pale every frame
+        posePreset: "giant", materialPreset: "secret_frost", attachmentPreset: "giant_aura", fxPreset: "none",
         bodyDetailLevel: "hero",
         stateVariants: { attacking: ["giant_shards"], "ability-active": ["giant_shards"] },
       });
