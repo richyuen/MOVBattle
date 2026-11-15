@@ -121,10 +121,14 @@ function stoneBridge(scene: Scene): Obstacle[] {
 }
 
 /**
- * The watermill farmhouse straddling the river at the front rim (farm_1.png): two timber houses either side of the water, blue-grey
- * board walls in a brown frame under steep plank gables, and a big waterwheel turning in the river between them.
+ * The watermill farmhouse straddling the river at the front rim (farm_1.png, wiki shot front-left): two tall timber halves either side of
+ * the water joined by a big waterwheel turning in the river between them. Spec read off the references: each half 9 m wide and 10 m deep
+ * on a 1.2 m grey stone plinth, a 4.2 m blue-grey board ground storey with dark vertical battens every metre on its front and outer faces
+ * and a brown frame (corner posts, sill and eave beams), a 3 m upper storey of brown planks jettied 0.4 m out all round, and a steep 4.5 m
+ * gable roof running front to back laid as seven pale plank strips a side over a gable prism, overhanging 0.8 m; the wheel 9 m across and
+ * 1.8 m wide, two rims with eight spokes each, sixteen paddles and a hub on an axle reaching both halves, its foot 1.2 m into the river.
  */
-const MILL = { z: -41, gap: 2.6, width: 8, depth: 8, wall: 5, roof: 4, wheel: 6.4 };
+const MILL = { z: -41, gap: 2.8, width: 9, depth: 10, plinth: 1.2, wall: 4.2, upper: 3, jetty: 0.4, roof: 4.5, eave: 0.8, wheel: 9, wheelWide: 1.8 };
 
 function watermill(scene: Scene): Obstacle[] {
   const mat = (name: string, c: Color3, glow: number) => {
@@ -135,55 +139,80 @@ function watermill(scene: Scene): Obstacle[] {
     return m;
   };
   const boards = mat("farmer1MillBoards", new Color3(0.44, 0.48, 0.58), 0.12);
-  const timber = mat("farmer1MillTimber", new Color3(0.5, 0.36, 0.22), 0.15);
+  const timber = mat("farmer1MillTimber", new Color3(0.36, 0.23, 0.12), 0.15);
+  const planks = mat("farmer1MillPlanks", new Color3(0.62, 0.45, 0.26), 0.15);
+  const stone = mat("farmer1MillStone", new Color3(0.5, 0.45, 0.41), 0.1);
   const x0 = riverX(MILL.z);
-  const walls: Mesh[] = [], wood: Mesh[] = [];
+  const walls: Mesh[] = [], wood: Mesh[] = [], roofs: Mesh[] = [], stones: Mesh[] = [];
   const obstacles: Obstacle[] = [];
+  const box = (list: Mesh[], w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("farmer1MillPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    list.push(b);
+    return b;
+  };
+  const { width: W, depth: D, plinth: P, wall: H, upper: U, jetty: J } = MILL;
   for (const side of [-1, 1]) {
-    const cx = x0 + side * (MILL.gap + MILL.width / 2);
-    const body = MeshBuilder.CreateBox("farmer1MillBody", { width: MILL.width, height: MILL.wall, depth: MILL.depth }, scene);
-    body.position.set(cx, MILL.wall / 2, MILL.z);
-    walls.push(body);
-    // Frame: corner posts, a sill beam and a beam under the eaves
-    for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-      const post = MeshBuilder.CreateBox("farmer1MillPost", { width: 0.45, height: MILL.wall, depth: 0.45 }, scene);
-      post.position.set(cx + dx * MILL.width / 2, MILL.wall / 2, MILL.z + dz * MILL.depth / 2);
-      wood.push(post);
+    const cx = x0 + side * (MILL.gap + W / 2);
+    const z = MILL.z;
+    box(stones, W + 0.4, P, D + 0.4, cx, P / 2, z);
+    box(walls, W, H, D, cx, P + H / 2, z);
+    // Battens on the front face (-z) and on the outer side face
+    for (let i = 0; i <= Math.floor(W); i++) box(wood, 0.18, H, 0.12, cx - W / 2 + 0.5 + i * ((W - 1) / Math.floor(W)), P + H / 2, z - D / 2 - 0.06);
+    for (let i = 0; i <= Math.floor(D); i++) box(wood, 0.12, H, 0.18, cx + side * (W / 2 + 0.06), P + H / 2, z - D / 2 + 0.5 + i * ((D - 1) / Math.floor(D)));
+    for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) box(wood, 0.45, H, 0.45, cx + (dx * W) / 2, P + H / 2, z + (dz * D) / 2);
+    for (const y of [P + 0.2, P + H - 0.15]) box(wood, W + 0.5, 0.35, D + 0.5, cx, y, z);
+    // Jettied plank upper storey
+    const wu = W + 2 * J, du = D + 2 * J, top = P + H + U;
+    box(wood, wu, U, du, cx, P + H + U / 2, z);
+    for (let k = 1; k < 4; k++) box(roofs, wu + 0.06, 0.08, du + 0.06, cx, P + H + (k * U) / 4, z);
+    // Gable prism (ridge along z), then plank strips on both slopes
+    const span = wu + 2 * MILL.eave, half = span / 2;
+    const gable = MeshBuilder.CreateCylinder("farmer1MillGable", { diameter: wu * 1.155, height: du, tessellation: 3 }, scene);
+    gable.rotation.y = Math.PI / 2;
+    gable.bakeCurrentTransformIntoVertices();
+    gable.rotation.x = Math.PI / 2;
+    const tall = MILL.roof / (wu * 1.155 * 0.75);
+    gable.scaling.set(1, 1, tall);
+    gable.position.set(cx, top + wu * 1.155 * 0.25 * tall, z);
+    walls.push(gable);
+    const theta = Math.atan2(MILL.roof * (span / wu), half);
+    const slope = Math.hypot(half, MILL.roof * (span / wu));
+    for (const s2 of [-1, 1]) {
+      for (let j = 0; j < 7; j++) {
+        const s = ((j + 0.5) / 7) * slope;
+        const p = box(roofs, slope / 7 + 0.12, 0.2, D + 2 * J + 1.6, cx + s2 * (half - s * Math.cos(theta)), top - MILL.roof * ((2 * MILL.eave) / wu) + s * Math.sin(theta) + 0.12, z);
+        p.rotation.z = -s2 * theta;
+      }
     }
-    for (const y of [0.3, MILL.wall - 0.2]) {
-      const beam = MeshBuilder.CreateBox("farmer1MillBeam", { width: MILL.width + 0.5, height: 0.35, depth: MILL.depth + 0.5 }, scene);
-      beam.position.set(cx, y, MILL.z);
-      wood.push(beam);
+    obstacles.push({ type: "box", center: new Vector3(cx, 0, z), halfX: W / 2 + 0.2, halfZ: D / 2 + 0.2 });
+  }
+  // The waterwheel between the halves: two rims, spokes, paddles, hub, axle
+  const R = MILL.wheel / 2, cy = R - 1.2, wz = MILL.z;
+  for (const dx of [-MILL.wheelWide / 2, MILL.wheelWide / 2]) {
+    const rimRing = MeshBuilder.CreateTorus("farmer1MillWheel", { diameter: MILL.wheel, thickness: 0.35, tessellation: 20 }, scene);
+    rimRing.rotation.z = Math.PI / 2;
+    rimRing.position.set(x0 + dx, cy, wz);
+    wood.push(rimRing);
+    for (let i = 0; i < 4; i++) {
+      const spoke = box(wood, 0.18, MILL.wheel - 0.3, 0.22, x0 + dx, cy, wz);
+      spoke.rotation.x = (i / 4) * Math.PI;
     }
-    // A steep gable roof running along z, overhanging the walls
-    const roof = MeshBuilder.CreateCylinder("farmer1MillRoof", { diameter: MILL.width * 1.25, height: MILL.depth + 1.4, tessellation: 3 }, scene);
-    // Turn one corner of the triangle to -z and bake, then tip the prism's axis onto z: that corner becomes the ridge, straight up
-    roof.rotation.y = Math.PI / 2;
-    roof.bakeCurrentTransformIntoVertices();
-    roof.rotation.x = Math.PI / 2;
-    const tall = MILL.roof / (MILL.width * 1.25 * 0.75); // the triangle is 1.5 circumradii tall
-    roof.scaling.set(1, 1, tall);
-    roof.position.set(cx, MILL.wall + MILL.width * 1.25 * 0.25 * tall, MILL.z);
-    wood.push(roof);
-    obstacles.push({ type: "box", center: new Vector3(cx, 0, MILL.z), halfX: MILL.width / 2, halfZ: MILL.depth / 2 });
   }
-  // The waterwheel in the river between the houses: rim, hub and paddles, its axle across the river
-  const wheel = MeshBuilder.CreateTorus("farmer1MillWheel", { diameter: MILL.wheel, thickness: 0.5, tessellation: 12 }, scene);
-  wheel.rotation.z = Math.PI / 2;
-  wheel.position.set(x0, MILL.wheel / 2 - 0.6, MILL.z - 1);
-  wood.push(wheel);
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
-    const paddle = MeshBuilder.CreateBox("farmer1MillPaddle", { width: 1.6, height: 0.2, depth: MILL.wheel * 0.55 }, scene);
-    paddle.rotation.x = a;
-    paddle.position.set(x0, MILL.wheel / 2 - 0.6 + Math.sin(a) * MILL.wheel * 0.24, MILL.z - 1 + Math.cos(a) * MILL.wheel * 0.24);
-    wood.push(paddle);
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    const paddle = box(roofs, MILL.wheelWide + 0.2, 1.3, 0.14, x0, cy + Math.sin(a) * (R - 0.55), wz + Math.cos(a) * (R - 0.55));
+    paddle.rotation.x = -a;
   }
-  const axle = MeshBuilder.CreateCylinder("farmer1MillAxle", { diameter: 0.5, height: MILL.gap * 2 + 0.4, tessellation: 6 }, scene);
+  const hub = MeshBuilder.CreateCylinder("farmer1MillHub", { diameter: 1.3, height: MILL.wheelWide + 0.3, tessellation: 8 }, scene);
+  hub.rotation.z = Math.PI / 2;
+  hub.position.set(x0, cy, wz);
+  wood.push(hub);
+  const axle = MeshBuilder.CreateCylinder("farmer1MillAxle", { diameter: 0.45, height: MILL.gap * 2 + 0.6, tessellation: 6 }, scene);
   axle.rotation.z = Math.PI / 2;
-  axle.position.set(x0, MILL.wheel / 2 - 0.6, MILL.z - 1);
+  axle.position.set(x0, cy, wz);
   wood.push(axle);
-  for (const [list, m, name] of [[walls, boards, "farmer1MillWalls"], [wood, timber, "farmer1MillWood"]] as const) {
+  for (const [list, m, name] of [[walls, boards, "farmer1MillWalls"], [wood, timber, "farmer1MillWood"], [roofs, planks, "farmer1MillRoofs"], [stones, stone, "farmer1MillPlinth"]] as const) {
     const merged = Mesh.MergeMeshes(list, true);
     if (!merged) continue;
     merged.name = name;
