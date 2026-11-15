@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { secretSamuraiCuirass, ullrBeard, witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ladyRedJadeBodice, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, samuraiGiantKabuto, shogunSashimono, shogunMenpo, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, iceGiantBelt, treeGiantBeard, treeGiantHair, treeGiantShorts, treeGiantSandals } from "./secretDress";
+import { secretSamuraiCuirass, ullrBeard, witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ladyRedJadeBodice, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, samuraiGiantKabuto, shogunSashimono, shogunMenpo, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, iceGiantBelt, treeGiantBeard, treeGiantHair, treeGiantShorts } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1723,8 +1723,6 @@ function dressTreeGiant(scene: Scene, body: ArticulatedBody, teamColor: Color3):
   added.push(...treeGiantHair(scene, body));
   added.push(...treeGiantBeard(scene, body));
   added.push(...treeGiantShorts(scene, body));
-  // [S] 549 (a.3): open brown strapped sandals on bare team feet (secretDress TREE_SANDAL)
-  added.push(...treeGiantSandals(scene, body));
   return added;
 }
 
