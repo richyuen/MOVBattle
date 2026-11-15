@@ -58,8 +58,9 @@ function riverMeshes(scene: Scene): void {
 
   // Rocky banks: grey boulders, flattened and half sunk, strung along both edges (none on the bridge or under the mill)
   const rockMat = new StandardMaterial("farmer1BankRock", scene);
-  rockMat.diffuseColor = new Color3(0.5, 0.47, 0.44);
-  rockMat.emissiveColor = new Color3(0.07, 0.065, 0.06);
+  // A warm grey: r well over b, or the stones read slate blue
+  rockMat.diffuseColor = new Color3(0.6, 0.53, 0.44);
+  rockMat.emissiveColor = new Color3(0.12, 0.1, 0.08);
   rockMat.specularColor = new Color3(0.03, 0.03, 0.03);
   const rocks: Mesh[] = [];
   let k = 0;
