@@ -6651,8 +6651,14 @@ export function iceGiantBelt(scene: Scene, body: ArticulatedBody, team: Color3):
     meshes.push(mesh);
     return mesh;
   };
-  const y = hips.mid + hips.half * 0.64, width = hips.wide * 1.14, depth = hips.deep * 1.19;
-  const belt = put(MeshBuilder.CreateCylinder("iceGiantBelt", { height: hips.half * 0.92, diameter: width * 2, tessellation: 10 }, scene), cloth, new Vector3(0, y, 0));
+  // [S] 551 (a.4: "pale tunic-hem panel below the belt over the crotch - TABS: team-coloured legs come straight out of a broad team-coloured
+  // belt"; secret.ice_giant.blue.png). The panel was the pelvis block hanging under the belt in the body cloth (the pale trunk shade): it is
+  // dressed in the legs' own team trouser cloth, so the legs run up into the belt, and the belt is broader (.92 -> 1.15 of the pelvis half
+  // height), its foot lower, so it reads as the wide band of the reference
+  const legCloth = body.leftUpperLeg.material;
+  if (legCloth) pelvis.material = legCloth;
+  const y = hips.mid + hips.half * 0.52, width = hips.wide * 1.14, depth = hips.deep * 1.19;
+  const belt = put(MeshBuilder.CreateCylinder("iceGiantBelt", { height: hips.half * 1.15, diameter: width * 2, tessellation: 10 }, scene), cloth, new Vector3(0, y, 0));
   belt.scaling.z = depth / width;
   const badge = put(MeshBuilder.CreateCylinder("iceGiantBadge", { height: hips.half * 0.2, diameter: hips.half * 1.3, tessellation: 6 }, scene),
     new Color3(0.10, 0.24, 0.35), new Vector3(0, y, depth * 1.03));
