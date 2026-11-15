@@ -5874,7 +5874,6 @@ export function ladyRedJadeSkirt(scene: Scene, body: ArticulatedBody, team: Colo
   const hem = body.leftHip.position.y + body.leftKnee.position.y * 0.98;
   const height = top - hem;
   const color = new Color3(team.r ** 2, team.g ** 2, team.b ** 2);
-  const gold = new Color3(1, 0.42, 0.1);
   const factory = getMaterialFactory();
   const skirt = MeshBuilder.CreateCylinder("jadeSkirt", {
     height, diameterTop: width, diameterBottom: width * 1.45, tessellation: 12,
@@ -5884,7 +5883,6 @@ export function ladyRedJadeSkirt(scene: Scene, body: ArticulatedBody, team: Colo
   skirt.scaling.z = 0.8;
   skirt.material = factory.get("cloth", color, { emissive: color.scale(0.12), roughness: 1 });
   skirt.convertToFlatShadedMesh();
-  const trim = factory.get("unlit", gold, { emissive: gold });
   const meshes = [skirt];
   /*
    * [S] 551 (a.2: "orange swirl ornament on the skirt reduced to one thin yellow hook - TABS: broad orange cloud-swirl bands across the front and
@@ -5894,20 +5892,37 @@ export function ladyRedJadeSkirt(scene: Scene, body: ArticulatedBody, team: Colo
    * on the skirt's surface (radius width x (.5 + .225 level), z x .8) as a closed flat band .w of the width wide across the surface and .th
    * thick off it (four ribbon rails closed round), unlit orange out of the glow.
    */
-  const SW = { at: [[0.5, 0.42], [1.5, 0.58]] as const, tail: 0.55, turns: 1.15, curl: 0.34, lvl: 0.75, w: 0.085, th: 0.035, steps: 40 };
+  /*
+   * [S] 552 (a.2 again: the 551 hooks were "too narrow, yellow"; secret.lady_red_jade.red.png: on each half of the skirt front one broad orange
+   * cloud band runs from under the sash beside the middle out and down round the flank, then rolls back under itself into a curl low on the
+   * skirt; a second, smaller cloud curl on each side behind). JADE_CLOUD replaces the hook tails: each band is a polyline in (angle round from the
+   * front, level 0 top 1 hem) through .arch, then a curl about .eye of .turns turns from the arch's end, shrinking to .shrink of its start;
+   * .w of the skirt width across (about a fifth), .th thick, a redder unlit orange (.orange: palette unlit row between orange and red).
+   */
+  const SW = { lvl: 0.75, w: 0.2, th: 0.04, steps: 40, turns: 1.1, shrink: 0.2, orange: new Color3(1, 0.26, 0.05),
+    bands: [
+      { arch: [[0.1, 0.06], [0.42, 0.2], [0.78, 0.38], [0.98, 0.55]], eye: [0.62, 0.72] },
+      { arch: [[1.55, 0.12], [1.85, 0.3], [2.0, 0.5]], eye: [1.72, 0.66] },
+    ] };
+  const cloud = factory.get("unlit", SW.orange, { emissive: SW.orange });
   const surf = (angle: number, level: number, out: number) => {
     const r = width * (0.5 + level * 0.225) + out;
     return new Vector3(Math.sin(angle) * r, top - height * level, Math.cos(angle) * r * 0.8);
   };
   for (const side of [-1, 1]) {
-    for (const [a0, l0] of SW.at) {
+    for (const B of SW.bands) {
       const pts: Array<[number, number]> = [];
-      // the tail: a sweep in along the curl's lower edge, from .tail rad further round to the curl's foot
-      for (let i = 0; i <= 8; i++) pts.push([a0 + SW.tail * (1 - i / 8), l0 + SW.curl * SW.lvl]);
-      // the curl: from its foot, round .turns turns, shrinking into its centre
-      for (let i = 1; i <= SW.steps; i++) {
-        const t = i / SW.steps, phase = Math.PI / 2 + t * SW.turns * Math.PI * 2, k = SW.curl * (1 - t * 0.85);
-        pts.push([a0 - Math.cos(phase) * k, l0 + Math.sin(phase) * k * SW.lvl]);
+      // the arch, each leg cut in 6
+      for (let j = 0; j + 1 < B.arch.length; j++) {
+        const [a1, l1] = B.arch[j], [a2, l2] = B.arch[j + 1];
+        for (let i = 0; i < 6; i++) pts.push([a1 + ((a2 - a1) * i) / 6, l1 + ((l2 - l1) * i) / 6]);
+      }
+      // the curl: from the arch's end round its eye, on in the same sense (out and down, then under and back in), shrinking into the eye
+      const [ae, le] = B.arch[B.arch.length - 1], [ac, lc] = B.eye;
+      const r0 = Math.hypot(ae - ac, (le - lc) / SW.lvl), p0 = Math.atan2((le - lc) / SW.lvl, ae - ac);
+      for (let i = 0; i <= SW.steps; i++) {
+        const t = i / SW.steps, phase = p0 + t * SW.turns * Math.PI * 2, k = r0 * (1 - t * (1 - SW.shrink));
+        pts.push([ac + Math.cos(phase) * k, lc + Math.sin(phase) * k * SW.lvl]);
       }
       const rails: Vector3[][] = [[], [], [], []];
       pts.forEach(([a, l], i) => {
@@ -5922,7 +5937,7 @@ export function ladyRedJadeSkirt(scene: Scene, body: ArticulatedBody, team: Colo
       });
       const band = MeshBuilder.CreateRibbon("jadeSkirtScroll", { pathArray: rails, closeArray: true, sideOrientation: Mesh.DOUBLESIDE }, scene);
       band.parent = hip;
-      band.material = trim;
+      band.material = cloud;
       meshes.push(band);
     }
   }
