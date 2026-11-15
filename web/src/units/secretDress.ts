@@ -6975,7 +6975,10 @@ export function iceGiantSnowMantle(scene: Scene, body: ArticulatedBody): Mesh[] 
   return out;
 }
 
-const ICE_APE = { upper: 1.5, lower: 1.6, girth: 1.45, foreGirth: 1.7, out: 1.12, waist: 0.72 };
+// 551 upper 1.5 -> 2.8, lower 1.6 -> 3.05 (CONFIRM 550 a.2: the hanging fists reached mid-thigh; TABS knuckles near the ground, the arms about
+// twice the legs; probe 551 with the trunk drawn out to 2.4: shoulder-to-wrist 3.3-3.5 m over 1.65 m legs; the fists hung at the hip at
+// 2.0/2.15 and sank into the ground at 3.1/3.4)
+const ICE_APE = { upper: 2.8, lower: 3.05, girth: 1.45, foreGirth: 1.7, out: 1.12, waist: 0.72 };
 export function iceGiantApeBuild(body: ArticulatedBody): void {
   const K = ICE_APE;
   const arms = [

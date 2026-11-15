@@ -1353,7 +1353,10 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       // [S] 550 (a.5) the tallest unit of the faction (card Characteristics "the largest unit in the game"; secret.ice_giant.red.png: the legs about
       // two fifths of his height, the trunk as tall as the legs): the rig drawn out under the same scale, legs .92 -> 1.4 and trunk 1.3, so his head
       // stands over the Tree Giant's (probe 550: head top 3.47 m against the tree's 4.2 m before)
-      return vis({ scale: 2.48, bulk: 1.88, headSize: 1.12, armLength: 1.12, legLength: 1.4, torsoLength: 1.3 }, "none", "none", "none", "none", "#9fe9ff", undefined, {
+      // [S] 551 (a.1+2, CONFIRM 550: "legs too long ... TABS: ape build, a huge snow torso over short legs"; "arms too short ... knuckles near
+      // the ground"; secret.ice_giant.red.png: belt-to-sole about .75 of shoulder-to-belt, the arms half again the trunk): the height moved from
+      // the legs into the trunk, legs 1.4 -> .9 and trunk 1.3 -> 2.4, so his head still tops the Tree Giant's; the arms drawn out in ICE_APE
+      return vis({ scale: 2.48, bulk: 1.88, headSize: 1.12, armLength: 1.12, legLength: 0.9, torsoLength: 2.4 }, "none", "none", "none", "none", "#9fe9ff", undefined, {
         // [S] 543 (a.3) team skin under the snow mantle (secretDress ICE_SNOW): the pale ice preset off
         posePreset: "giant", materialPreset: "default", attachmentPreset: "giant_aura", fxPreset: "frost",
         bodyDetailLevel: "hero",
