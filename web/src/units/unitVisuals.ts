@@ -1291,7 +1291,11 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_samurai_giant":
       // [S] 552 (a.4) slim shins under the shin guards (secretDress SAMURAI_SUNEATE)
-      return vis({ scale: 2.3, bulk: 1.75, headSize: 1.16, armLength: 1.1, legLength: 0.95, lowerLegWidth: 0.5 }, "katana", "samurai_helmet", "none", "cape", "#b53333", undefined, {
+      // [S] 553 (a.6: "stands less than twice Shogun's body height in lineup_secret_4 - TABS: towering giant around 3x baseline, more than twice
+      // the 1.2x Shogun"; card Size 3.00x against the Shogun's 1.2x; secret.samurai_giant.blue.png: sole to hip about half his height under the
+      // hakama): the rig drawn out to the giants' own height (probe 552: head top 3.25 m against the Shogun's 2.17 m and the Tree Giant's ~4.9 m),
+      // scale 2.3 -> 2.9 and legs .95 -> 1.2, so he stands well over twice the Shogun, level with the other giants (probe: head top ~4.75 m)
+      return vis({ scale: 2.9, bulk: 1.75, headSize: 1.16, armLength: 1.1, legLength: 1.2, lowerLegWidth: 0.5 }, "katana", "samurai_helmet", "none", "cape", "#b53333", undefined, {
         weaponVariant: "giant_katana",
         posePreset: "giant", materialPreset: "secret_royal", attachmentPreset: "giant_aura", fxPreset: "royal",
         bodyDetailLevel: "hero",
