@@ -6398,7 +6398,7 @@ export function ullrSnowCap(scene: Scene, body: ArticulatedBody): Mesh[] {
  */
 const KABUTO = { bowl: 1.16, bowlH: 0.78, seat: 0.03, peak: 0.18, tiers: 3, lameH: 0.16, segs: 7, arc: 3.6, out: 0.09, step: 0.12, lean: 0.55,
   hornH: 1.05, hornW: 0.78, hornT: 0.1, flat: 0.45, gold: new Color3(0.78, 0.34, 0.03) };
-const GIANT_SHIKORO = { tiers: 4, lameH: 0.2, segs: 9, arc: 4.3, out: 0.12, step: 0.17, lean: 0.85 };
+const GIANT_SHIKORO = { tiers: 4, lameH: 0.26, segs: 9, arc: 4.3, out: 0.13, step: 0.15, lean: 0.5 }; // 554.4b: lean .85 opened louvre gaps
 export function samuraiGiantKabuto(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = KABUTO, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   for (const m of body.root.getChildMeshes(false)) if (m.name === "shelm") m.setEnabled(false);
