@@ -595,6 +595,72 @@ function earthBowl(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+/**
+ * No ruins (wiki shot): the base's grey ruins on the far rim (meshes ruin*: the broken tower at (16, 29), five lone pillars, a fallen
+ * pillar and loose blocks) go with their colliders; one of them stood inside the wheat strip. In their stead the field is dressed as a
+ * farm: a pumpkin patch on the left of the river at mid-field (the wiki shot's left edge, by a bush and a stone wall). Spec: a dark tilled
+ * earth patch 12 x 14 m centred at (-34, 2); 24 pumpkins on it in rough rows, 0.7-1.1 m across, squat (0.75 high), deep orange with a
+ * short brown stem, and dark green leaf clumps between them. Drawn only, no colliders: units walk through it.
+ */
+const RUIN_COLLIDERS: Array<[number, number]> = [[16, 29], [-31, 29], [-24, 27], [-16, 30], [-8, 28], [30, 26], [-16.5, 24]];
+const PUMPKINS = { x: -34, z: 2, w: 12, d: 14 };
+
+function clearRuins(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  for (const mesh of scene.meshes.filter((m) => built.has(m) && m.name.startsWith("ruin"))) mesh.dispose();
+  return obstacles.filter((o) => !RUIN_COLLIDERS.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.01));
+}
+
+function pumpkinPatch(scene: Scene): void {
+  const mk = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const soil = MeshBuilder.CreateDisc("farmer1PumpkinSoil", { radius: 0.5, tessellation: 18, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  soil.rotation.x = Math.PI / 2;
+  soil.scaling.set(PUMPKINS.w, PUMPKINS.d, 1);
+  soil.position.set(PUMPKINS.x, 0.05, PUMPKINS.z);
+  soil.material = mk("farmer1PumpkinSoil", new Color3(0.36, 0.24, 0.12), 0.15);
+  soil.receiveShadows = true;
+  soil.isPickable = false;
+  const fruit: Mesh[] = [], stems: Mesh[] = [], leaves: Mesh[] = [];
+  for (let k = 0; k < 24; k++) {
+    const row = k % 4, col = Math.floor(k / 4);
+    const x = PUMPKINS.x - PUMPKINS.w * 0.35 + row * (PUMPKINS.w * 0.7 / 3) + (wallSeed(k, 71) - 0.5) * 1.6;
+    const z = PUMPKINS.z - PUMPKINS.d * 0.38 + col * (PUMPKINS.d * 0.76 / 5) + (wallSeed(k, 72) - 0.5) * 1.4;
+    const d = 0.7 + wallSeed(k, 73) * 0.4;
+    const p = MeshBuilder.CreateSphere("farmer1Pumpkin", { diameter: d, segments: 6 }, scene);
+    p.scaling.y = 0.75;
+    p.position.set(x, d * 0.36, z);
+    fruit.push(p);
+    const stem = MeshBuilder.CreateCylinder("farmer1PumpkinStem", { diameterTop: 0.06, diameterBottom: 0.1, height: 0.22, tessellation: 5 }, scene);
+    stem.position.set(x, d * 0.72 + 0.08, z);
+    stem.rotation.z = (wallSeed(k, 74) - 0.5) * 0.6;
+    stems.push(stem);
+    const leaf = MeshBuilder.CreateIcoSphere("farmer1PumpkinLeaf", { radius: 0.45, subdivisions: 1 }, scene);
+    leaf.scaling.set(1.3, 0.35, 1);
+    leaf.position.set(x + (wallSeed(k, 75) - 0.5) * 1.8, 0.14, z + 0.6 + wallSeed(k, 76) * 0.5);
+    leaf.rotation.y = wallSeed(k, 77) * Math.PI;
+    leaves.push(leaf);
+  }
+  const mats: Array<[Mesh[], StandardMaterial, string]> = [
+    [fruit, mk("farmer1Pumpkin", new Color3(0.86, 0.36, 0.05), 0.3), "farmer1Pumpkins"],
+    [stems, mk("farmer1PumpkinStem", new Color3(0.36, 0.26, 0.1), 0.15), "farmer1PumpkinStems"],
+    [leaves, mk("farmer1PumpkinLeaf", new Color3(0.2, 0.36, 0.1), 0.15), "farmer1PumpkinLeaves"],
+  ];
+  for (const [list, m, name] of mats) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -605,7 +671,9 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
     if (FIELD_JUNK.some(([x, z]) => Math.hypot(mesh.position.x - x, mesh.position.z - z) < 0.5)) mesh.dispose();
   }
   result.obstacles = result.obstacles.filter((o) => !FIELD_JUNK.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  result.obstacles = clearRuins(scene, built, result.obstacles);
   warmMeadow(scene);
+  pumpkinPatch(scene);
   riverMeshes(scene);
   const hazards = [...result.hazards, ...riverHazards()];
   // Nothing the base put down may stand in the water
