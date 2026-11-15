@@ -224,6 +224,122 @@ function earthTiers(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+/**
+ * The campfire (card Overview, wiki shot right edge): on the far right of the field, just inside the ring, a ring of grey stones round
+ * crossed logs with a tall orange-yellow flame, a dream-catcher post (a tall pole with a hoop, a web cross and hanging feathers) beside it
+ * and a sitting stone dog facing the fire, two log benches. Spec: fire at 22 degrees on the ring, 9 m in from the field edge ((38, 12));
+ * stone ring 3.6 m across, flame 2.6 m tall (self-lit), post 5.5 m with a 1.8 m hoop 3 m to the back, dog 2.2 m tall 3.5 m to the front.
+ * One collider round the fire, one on the post, one on the dog.
+ */
+const FIRE = { x: 38, z: 12 };
+
+function campfire(scene: Scene): Obstacle[] {
+  const mk = (name: string, c: Color3, self: number, unlit = false) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = unlit ? Color3.Black() : c;
+    m.emissiveColor = unlit ? c : c.scale(self);
+    m.specularColor = Color3.Black();
+    if (unlit) m.disableLighting = true;
+    return m;
+  };
+  const stone = mk("tribal1FireStone", new Color3(0.5, 0.45, 0.41), 0.1);
+  const wood = mk("tribal1FireLog", new Color3(0.2, 0.11, 0.055), 0.15);
+  const flameOut = mk("tribal1Flame", new Color3(1.2, 0.42, 0.02), 0, true);
+  const flameIn = mk("tribal1FlameCore", new Color3(1.2, 0.95, 0.25), 0, true);
+  const hoopMat = mk("tribal1Hoop", new Color3(0.55, 0.33, 0.14), 0.2);
+  const feather = mk("tribal1Feather", new Color3(0.92, 0.9, 0.85), 0.4);
+  const { x, z } = FIRE;
+  const stones: Mesh[] = [];
+  for (let i = 0; i < 9; i++) {
+    const t = (i / 9) * Math.PI * 2;
+    const s = MeshBuilder.CreateIcoSphere("tribal1FireStone", { radius: 0.45 + seeded(i, 41) * 0.2, subdivisions: 1 }, scene);
+    s.scaling.y = 0.7;
+    s.position.set(x + Math.cos(t) * 1.8, 0.25, z + Math.sin(t) * 1.8);
+    stones.push(s);
+  }
+  // The dog: haunches, upright chest, head with snout and ears, on a low plinth, sitting 3.5 m in front of the fire looking at it
+  const dx = x - 1.5, dz = z - 3.5;
+  const dogParts: Array<[number, number, number, number, number, number]> = [
+    [0, 0.2, 0, 1.6, 0.4, 1.8], [0, 0.85, 0.35, 1.1, 0.9, 1.2], [0, 1.45, -0.05, 0.9, 1.3, 0.8],
+    [0, 2.2, -0.15, 0.85, 0.75, 0.85], [0, 2.05, -0.7, 0.45, 0.4, 0.55], [-0.28, 2.7, -0.05, 0.22, 0.45, 0.2], [0.28, 2.7, -0.05, 0.22, 0.45, 0.2],
+  ];
+  const dog = dogParts.map(([ox, oy, oz, w, h, d]) => {
+    const b = MeshBuilder.CreateBox("tribal1Dog", { width: w, height: h, depth: d }, scene);
+    b.position.set(ox, oy, oz);
+    return b;
+  });
+  const dogMesh = Mesh.MergeMeshes(dog, true)!;
+  dogMesh.rotation.y = Math.atan2(x - dx, z - dz) + Math.PI;
+  dogMesh.position.set(dx, 0, dz);
+  dogMesh.scaling.setAll(1.1);
+  dogMesh.bakeCurrentTransformIntoVertices();
+  stones.push(dogMesh);
+  const ring = Mesh.MergeMeshes(stones, true)!;
+  ring.name = "tribal1FireStones";
+  ring.convertToFlatShadedMesh();
+  ring.material = stone;
+  // Crossed logs and two benches
+  const logs: Mesh[] = [];
+  for (let i = 0; i < 3; i++) {
+    const l = MeshBuilder.CreateCylinder("tribal1FireLog", { diameter: 0.35, height: 2.6, tessellation: 6 }, scene);
+    l.rotation.set(Math.PI / 2 - 0.35, (i / 3) * Math.PI, 0);
+    l.position.set(x, 0.45, z);
+    logs.push(l);
+  }
+  for (const [bx, bz, ry] of [[x + 3.6, z + 0.5, 0.2], [x, z + 3.6, 1.6]]) {
+    const b = MeshBuilder.CreateCylinder("tribal1Bench", { diameter: 0.6, height: 2.8, tessellation: 7 }, scene);
+    b.rotation.set(0, ry, Math.PI / 2);
+    b.position.set(bx, 0.3, bz);
+    logs.push(b);
+  }
+  // The dream-catcher post with its hoop facing the field
+  const px = x + 2.4, pz = z + 3.2;
+  const pole = MeshBuilder.CreateCylinder("tribal1Post", { diameterTop: 0.22, diameterBottom: 0.32, height: 5.5, tessellation: 6 }, scene);
+  pole.position.set(px, 2.75, pz);
+  logs.push(pole);
+  const logMesh = Mesh.MergeMeshes(logs, true)!;
+  logMesh.name = "tribal1FireLogs";
+  logMesh.material = wood;
+  const hoopParts: Mesh[] = [MeshBuilder.CreateTorus("tribal1Hoop", { diameter: 1.8, thickness: 0.14, tessellation: 18 }, scene)];
+  for (const r of [0, Math.PI / 3, -Math.PI / 3]) {
+    const s = MeshBuilder.CreateBox("tribal1Web", { width: 1.75, height: 0.05, depth: 0.05 }, scene);
+    s.rotation.y = r;
+    hoopParts.push(s);
+  }
+  const hoop = Mesh.MergeMeshes(hoopParts, true)!;
+  hoop.name = "tribal1Hoop";
+  hoop.material = hoopMat;
+  hoop.rotation.set(Math.PI / 2, Math.atan2(-px, -pz), 0);
+  hoop.position.set(px, 4.6, pz);
+  const feathers: Mesh[] = [];
+  for (const ox of [-0.6, 0, 0.6]) {
+    const f = MeshBuilder.CreateCylinder("tribal1Feather", { diameterTop: 0.05, diameterBottom: 0.3, height: 0.9, tessellation: 4 }, scene);
+    f.rotation.set(Math.PI, Math.atan2(-px, -pz), 0);
+    f.position.set(px + ox * Math.cos(Math.atan2(-px, -pz)), 3.3, pz - ox * Math.sin(Math.atan2(-px, -pz)));
+    feathers.push(f);
+  }
+  const fMesh = Mesh.MergeMeshes(feathers, true)!;
+  fMesh.name = "tribal1Feathers";
+  fMesh.material = feather;
+  // The flame: an outer orange cone and a yellow core, out of fog
+  const outer = MeshBuilder.CreateCylinder("tribal1Flame", { diameterTop: 0, diameterBottom: 1.9, height: 2.6, tessellation: 7 }, scene);
+  outer.position.set(x, 1.4, z);
+  outer.material = flameOut;
+  const core = MeshBuilder.CreateCylinder("tribal1FlameCore", { diameterTop: 0, diameterBottom: 1.1, height: 1.7, tessellation: 6 }, scene);
+  core.position.set(x + 0.15, 1.1, z - 0.2);
+  core.material = flameIn;
+  for (const m of [ring, logMesh, hoop, fMesh, outer, core]) {
+    m.isPickable = false;
+    m.applyFog = false;
+  }
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(ring);
+  return [
+    { type: "cylinder", center: new Vector3(x, 0, z), radius: 2.2 },
+    { type: "cylinder", center: new Vector3(px, 0, pz), radius: 0.5 },
+    { type: "cylinder", center: new Vector3(dx, 0, dz), radius: 1.1 },
+  ];
+}
+
 const FIELD = { rx: 47, rz: 32 };
 const FIELD_PROPS = new Set(["boulder", "wallStone", "hayBale", "stump"]);
 
@@ -242,6 +358,7 @@ export function buildTribal1(scene: Scene, base: () => MapBuildResult): MapBuild
   const obstacles = result.obstacles.filter((o) => !(inField(o.center.x, o.center.z)
     && gone.some(([x, z]) => Math.abs(x - o.center.x) < 0.01 && Math.abs(z - o.center.z) < 0.01)));
   obstacles.push(...rimCliffs(scene));
+  obstacles.push(...campfire(scene));
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   earthTiers(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
