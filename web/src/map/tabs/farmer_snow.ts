@@ -3,7 +3,7 @@
 // Spec: Farmer 1's river course (down x = 0 with a gentle bend, about 4 m wide, back rim to front rim) laid as a sheet of pale blue ice
 // level with the ground, in a frosted bank, with a few darker crack lines across it and a frozen icefall hanging off the front rim.
 // No hazard. Built on campaign.introduction (base()).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -121,10 +121,76 @@ function snowyBridge(scene: Scene): Obstacle[] {
   }));
 }
 
+/**
+ * Night (farm_snow.png): a deep navy sky full of stars and big soft snowflakes, no clouds and no far mountains or second slab, the
+ * island lit by a dim cold blue moonlight so the snow reads blue-white. Spec: sky and fog navy (0.03, 0.06, 0.2); 260 star points on a
+ * shell 160-190 m out above the horizon; 220 flakes 0.2-0.5 m drifting in the air over and around the island, out to 90 m and up to 40 m.
+ * The lights are put back when the map goes (dispose).
+ */
+const NIGHT = new Color3(0.03, 0.06, 0.2);
+
+function nightSky(scene: Scene, built: Set<unknown>): () => void {
+  scene.clearColor.set(NIGHT.r, NIGHT.g, NIGHT.b, 1);
+  scene.fogColor = NIGHT.clone();
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && (mesh.name.startsWith("mountain") || mesh.name === "cloud")) mesh.setEnabled(false);
+  }
+  const hemi = scene.getLightByName("hemi") as HemisphericLight | null;
+  const dir = scene.getLightByName("dir") as DirectionalLight | null;
+  const saved = {
+    hemi: hemi ? [hemi.intensity, hemi.diffuse.clone(), hemi.groundColor.clone()] as const : null,
+    dir: dir ? [dir.intensity, dir.diffuse.clone()] as const : null,
+  };
+  if (hemi) {
+    hemi.intensity = 0.35;
+    hemi.diffuse = new Color3(0.45, 0.6, 1.3);
+    hemi.groundColor = new Color3(0.12, 0.16, 0.36);
+  }
+  if (dir) {
+    dir.intensity = 0.55;
+    dir.diffuse = new Color3(0.6, 0.72, 1.0);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  const dots = (name: string, count: number, place: (i: number) => [number, number, number, number], c: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = Color3.Black();
+    m.emissiveColor = c;
+    m.specularColor = Color3.Black();
+    m.disableLighting = true;
+    const parts: Mesh[] = [];
+    for (let i = 0; i < count; i++) {
+      const [x, y, z, r] = place(i);
+      const d = MeshBuilder.CreateIcoSphere(name, { radius: r, subdivisions: 1 }, scene);
+      d.position.set(x, y, z);
+      parts.push(d);
+    }
+    const merged = Mesh.MergeMeshes(parts, true);
+    if (!merged) return;
+    merged.name = name;
+    merged.material = m;
+    merged.applyFog = false;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  };
+  dots("farmerSnowStars", 260, (i) => {
+    const a = seeded(i, 61) * Math.PI * 2, up = 0.05 + seeded(i, 62) * 1.4, r = 160 + seeded(i, 63) * 30;
+    return [Math.cos(a) * Math.cos(up) * r, Math.sin(up) * r - 10, Math.sin(a) * Math.cos(up) * r, 0.35 + seeded(i, 64) * 0.5];
+  }, new Color3(0.95, 0.95, 0.85));
+  dots("farmerSnowFlakes", 220, (i) => {
+    const a = seeded(i, 71) * Math.PI * 2, r = 8 + seeded(i, 72) * 82;
+    return [Math.cos(a) * r, -12 + seeded(i, 73) * 52, Math.sin(a) * r, 0.2 + seeded(i, 74) * 0.3];
+  }, new Color3(0.9, 0.92, 1.0));
+  return () => {
+    if (hemi && saved.hemi) [hemi.intensity, hemi.diffuse, hemi.groundColor] = [saved.hemi[0], saved.hemi[1], saved.hemi[2]];
+    if (dir && saved.dir) [dir.intensity, dir.diffuse] = [saved.dir[0], saved.dir[1]];
+  };
+}
+
 export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   snowCover(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
+  const restoreLights = nightSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   const mat = (name: string, c: Color3, glow: number) => {
     const m = new StandardMaterial(name, scene);
     m.diffuseColor = c;
@@ -186,5 +252,13 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
     fall.material = ice;
     fall.isPickable = false;
   }
-  return { ...result, obstacles: [...result.obstacles, ...snowyBridge(scene)] };
+  const baseDispose = result.dispose;
+  return {
+    ...result,
+    obstacles: [...result.obstacles, ...snowyBridge(scene)],
+    dispose: () => {
+      restoreLights();
+      baseDispose?.();
+    },
+  };
 }
