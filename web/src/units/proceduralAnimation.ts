@@ -1089,6 +1089,8 @@ export class ProceduralAnimator {
 
   /** A swing that lands on a man: heavy (club, hammer, axe) or a blade's slash. */
   private _strikesAtMan(): boolean {
+    // [S] 549 a sweep or slam posed over the attack by its unit (runtimeUnit JADE_SWEEP): the sim holds the hit for the pose's blow
+    if (this.landsLate) return true;
     // a halberd's chop, and the farmer's stab (FORK_STAB): the sim holds the hit for the moment the tines go home
     const chop = this._attackMotion === "thrust" && (this._halberd() !== null || this._stabsFork());
     // [S] 412 the monk's bo: the sim holds the hit for the moment the swept far end crosses the man (MONK_SWING.hit)
@@ -1127,6 +1129,9 @@ export class ProceduralAnimator {
     if (this._state !== AnimState.Attacking || !this._strikesAtMan()) return 0;
     return Math.max(0.001, this._blowLandFraction() * this._attackDuration - this._attackTimer);
   }
+
+  /** Set by the unit for an attack it poses itself: its blow lands at blowShare, not at the decision. */
+  landsLate = false;
 
   /** The running attack's share done (0 at the windup's start, 1 at its end); 0 out of an attack. */
   get attackShare(): number {

@@ -470,6 +470,8 @@ export class RuntimeUnit {
     this.animator.levelsPike = definition.id === "ancient.sarissa" || definition.id === "legacy.pike";
     // [S] the hoplite carries his dory low at the weapon hip, point forward and down (380; proceduralAnimation DORY_CARRY)
     this.animator.carriesDory = definition.id === "ancient.hoplite";
+    // [S] 549 Lady Red Jade's sweep is posed by JADE_SWEEP: her blow lands when the guandao crosses her front
+    this.animator.landsLate = definition.id === "secret.lady_red_jade";
     this._spawnPosition = body.root.position.clone();
     this._spawnRotationY = body.root.rotation.y;
   }
