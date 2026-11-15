@@ -6,6 +6,7 @@
 import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { HazardRegion } from "../hazards";
+import type { Obstacle } from "../obstacles";
 
 const RIVER = { halfWidth: 2, bend: 1.4, bendRate: 0.075, back: 48, front: -48, crossing: 4, step: 8, fall: 16 };
 
@@ -73,11 +74,58 @@ function riverMeshes(scene: Scene): void {
   }
 }
 
+/** The arched stone bridge over the crossing: a low deck the width of the gap, a stone arch under each face, a parapet along each side */
+const BRIDGE = { span: 10, width: 6, deck: 0.12, rise: 1.1, parapet: 0.7 };
+
+function stoneBridge(scene: Scene): Obstacle[] {
+  const stone = new StandardMaterial("farmer1BridgeStone", scene);
+  stone.diffuseColor = new Color3(0.64, 0.62, 0.58);
+  stone.emissiveColor = new Color3(0.07, 0.07, 0.07);
+  stone.specularColor = new Color3(0.04, 0.04, 0.04);
+  const x = riverX(0);
+  const parts: Mesh[] = [];
+  const deck = MeshBuilder.CreateBox("farmer1BridgeDeck", { width: BRIDGE.span, height: 0.3, depth: BRIDGE.width }, scene);
+  deck.position.set(x, BRIDGE.deck - 0.15, 0);
+  parts.push(deck);
+  // Each face is a ring of voussoirs over the water: an arch read from the banks
+  for (const side of [-1, 1]) {
+    const n = 9;
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI * (i + 0.5) / n;
+      const block = MeshBuilder.CreateBox("farmer1BridgeArch", { width: 1.15, height: 0.5, depth: 0.5 }, scene);
+      block.position.set(x - Math.cos(a) * (BRIDGE.span / 2 - 1.6), Math.sin(a) * BRIDGE.rise - 0.55, side * (BRIDGE.width / 2 - 0.25));
+      block.rotation.z = -Math.cos(a) * 0.9;
+      parts.push(block);
+    }
+    // Parapet: a hump of rough blocks, highest over the middle
+    for (let i = 0; i < 8; i++) {
+      const along = -BRIDGE.span / 2 + 0.6 + i * ((BRIDGE.span - 1.2) / 7);
+      const h = BRIDGE.parapet + 0.35 * Math.cos((along / BRIDGE.span) * Math.PI);
+      const block = MeshBuilder.CreateBox("farmer1BridgeParapet", { width: 1.2, height: h, depth: 0.55 }, scene);
+      block.position.set(x + along, h / 2, side * (BRIDGE.width / 2 - 0.1));
+      block.rotation.y = (i % 2 - 0.5) * 0.08;
+      parts.push(block);
+    }
+  }
+  const bridge = Mesh.MergeMeshes(parts, true);
+  if (bridge) {
+    bridge.name = "farmer1Bridge";
+    bridge.convertToFlatShadedMesh();
+    bridge.material = stone;
+    bridge.receiveShadows = true;
+    bridge.isPickable = false;
+  }
+  return [-1, 1].map((side) => ({
+    type: "box" as const, center: new Vector3(x, 0, side * (BRIDGE.width / 2 - 0.1)), halfX: BRIDGE.span / 2, halfZ: 0.3,
+  }));
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const result = base();
   riverMeshes(scene);
   const hazards = [...result.hazards, ...riverHazards()];
   // Nothing the base put down may stand in the water
   const obstacles = result.obstacles.filter((o) => Math.abs(o.center.x - riverX(o.center.z)) > RIVER.halfWidth + 1.5);
+  obstacles.push(...stoneBridge(scene));
   return { ...result, hazards, obstacles };
 }
