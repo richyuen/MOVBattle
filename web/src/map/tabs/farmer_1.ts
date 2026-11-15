@@ -487,6 +487,90 @@ function wheatStrips(scene: Scene): void {
   tuft.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
 }
 
+/**
+ * Island underside (farm_1.png): under the grass lip the island is one deep rounded bowl of dark brown-grey earth with pale grey rounded
+ * stones set into its face, not a navy slab hung with black spikes, and no far ridge range or second slab stands behind it. The base's
+ * islandUnder/islandShelf/islandCliff and mountain* meshes go. Spec: the bowl follows the island outline (superellipse 54 x 48, power 3),
+ * a 1.2 m earth lip, then bulges down in six bands to a rounded point 22 m below the lawn (scale 1, .98, .93, .84, .7, .5, .26, .04);
+ * about 70 flattened stones 1.2-3 m across, sunk half into its face between 2 and 16 m down.
+ */
+const BOWL: Array<[number, number]> = [[1, -0.02], [1, -1.2], [0.98, -3.5], [0.93, -7.5], [0.84, -11.5], [0.7, -15.5], [0.5, -19], [0.26, -21], [0.04, -22]];
+
+function islandOutline(a: number): [number, number] {
+  const c = Math.cos(a), s = Math.sin(a);
+  const r = (Math.abs(c / 54) ** 3 + Math.abs(s / 48) ** 3) ** (-1 / 3);
+  return [c * r, s * r];
+}
+
+function earthBowl(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (mesh.name.startsWith("mountain") || ["islandUnder", "islandShelf", "islandCliff"].includes(mesh.name)) mesh.setEnabled(false);
+  }
+  const mk = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const lip = mk("farmer1UnderLip", new Color3(0.5, 0.4, 0.24), 0.2);
+  const earth = mk("farmer1UnderEarth", new Color3(0.34, 0.29, 0.25), 0.22);
+  const pebble = mk("farmer1UnderStone", new Color3(0.6, 0.57, 0.52), 0.25);
+  const bands: Mesh[] = [];
+  for (let i = 0; i < BOWL.length - 1; i++) {
+    const [s0, y0] = BOWL[i], [s1, y1] = BOWL[i + 1];
+    const band = MeshBuilder.CreateCylinder("farmer1Bowl", { diameterTop: s0, diameterBottom: s1, height: y0 - y1, tessellation: 64 }, scene);
+    const pos = band.getVerticesData("position")!;
+    for (let v = 0; v < pos.length; v += 3) {
+      const a = Math.atan2(pos[v + 2], pos[v]);
+      const reach = Math.hypot(pos[v], pos[v + 2]) * 2;
+      const [x, z] = islandOutline(a);
+      pos[v] = x * reach;
+      pos[v + 2] = z * reach;
+    }
+    band.setVerticesData("position", pos);
+    band.position.y = (y0 + y1) / 2;
+    if (i === 0) {
+      band.convertToFlatShadedMesh();
+      band.material = lip;
+      band.name = "farmer1BowlLip";
+      band.isPickable = false;
+    } else bands.push(band);
+  }
+  const bowl = Mesh.MergeMeshes(bands, true);
+  if (bowl) {
+    bowl.name = "farmer1Bowl";
+    bowl.convertToFlatShadedMesh();
+    bowl.material = earth;
+    bowl.isPickable = false;
+  }
+  // Stones set into the face: each sits on the bowl at its depth, flattened along the outward direction
+  const stones: Mesh[] = [];
+  for (let k = 0; k < 70; k++) {
+    const a = wallSeed(k, 91) * Math.PI * 2;
+    const y = -2 - wallSeed(k, 92) * 14;
+    let j = 1;
+    while (j < BOWL.length - 1 && BOWL[j][1] > y) j++;
+    const [sa, ya] = BOWL[j - 1], [sb, yb] = BOWL[j];
+    const s = sa + (sb - sa) * ((y - ya) / (yb - ya));
+    const [ox, oz] = islandOutline(a);
+    const d = 1.2 + wallSeed(k, 93) * 1.8;
+    const stone = MeshBuilder.CreateIcoSphere("farmer1UnderStone", { radius: d / 2, subdivisions: 2 }, scene);
+    stone.scaling.set(1.3, 0.8, 0.45);
+    stone.rotation.set(0, Math.PI / 2 - a, (wallSeed(k, 94) - 0.5) * 0.6);
+    stone.position.set(ox * s, y, oz * s);
+    stones.push(stone);
+  }
+  const set = Mesh.MergeMeshes(stones, true);
+  if (set) {
+    set.name = "farmer1UnderStones";
+    set.convertToFlatShadedMesh();
+    set.material = pebble;
+    set.isPickable = false;
+  }
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -506,5 +590,6 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
   obstacles.push(...watermill(scene));
   obstacles.push(...bankWalls(scene));
   wheatStrips(scene);
+  earthBowl(scene, built);
   return { ...result, hazards, obstacles };
 }
