@@ -13,7 +13,6 @@ Read at step 1; one fact a line, merge near cap.
 - holdInFist aims a prop by its local +Z: build up +Y under a child turned +PI/2 on x (395).
 
 ## Capture and probes
-- A volley unit fires through SS._fireVolley: per-unit arrow options (heartArrow, iceArrow) go there too (519).
 - stats.mjs rounds knobs to .01 (under .005 prints 0): set the exact ratio.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter).
 - A capture wipes iter-N (stats.json, audit.md): back up, rerun `stats.mjs --iter N` after the last capture (527). Checkpoint replaces summary.json (483). Detection stops 3 s after the first event: a late trigger needs ABILITY_PREF (543).
@@ -58,7 +57,6 @@ Read at step 1; one fact a line, merge near cap.
 - A faction tint plus the clothed recolour's warm hue shift turns red-team body cloth tan (449 wild_west): a garment the ref shows in team colour gets its own team cloth material, not body.bodyMaterial; check the red team on a --noglow swatch.
 - Hashed crouch pokes a knee through a hem: stand up (451). A glove's blow is blade_slash: gate on Attacking (463).
 - A torso-rooted shield detaches in windup (483, 489 pavise); dispose sim meshes in endSimulation (485).
-- _buildCarry turns only nodes in its name regex (marker child uprightHammerCarry: head-up carry, 493).
 - A ground-length skirt hides a hover lift: robe under the knee rides each shin (493).
 - Replay probes as capture: mulberry32 0x4d4f5642 reseeded before resetBattle, resetClock, _nextRuntimeId 100000 (503, 512). hpoint without "haxe": shouldered carry (502).
 - Fist prop hand frame: +y up the forearm, knuckles -y (492). bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent (495).
@@ -66,3 +64,4 @@ Read at step 1; one fact a line, merge near cap.
 - execSync runs cmd.exe (eats a caret): write sha~1 (530). On-death effects: RU.onDeath (the last death ends the duel first, 535).
 - Takeoff + follow-through can miss a rotation: shoot the flip alone (544).
 - An unheld melee motion (not heavy/blade/halberd) lands at the decision: unit-posed attacks set animator.landsLate; a leap's blow is pending at 2 rise/22 (549). A weapon not in inferWeaponPresentationFamily is "default": set weaponPresentationFamily or its swing never runs (550).
+- fxPreset (RU _applyFxPreset) rewrites body emissive each frame: frost washes a team body pale (551). tunicSkirt is hung in unitFactory after the dress: exclude the id there (551).

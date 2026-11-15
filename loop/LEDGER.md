@@ -2,6 +2,16 @@
 
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms; stats exempt. Alias paths below.
 
+551 | 15c39a75, 6040363a, 4c7818a8 | secret.ullr.a | approve [S], struck 7, a PASS (CONFIRM passed: D)
+551 | 351b5b75 | secret.shogun.a | approve [S], struck 4, a PASS (CONFIRM failed b)
+551 | 6daa0794, 896128f1 | secret.lady_red_jade.a | approve [S], struck 1
+551 | c9e7a885 | secret.lady_red_jade.a | approve [S], no strike
+551 | 5be01cb8 | secret.tree_giant.a | approve [S], struck 4
+551 | a2d3db32 | secret.artemis.a | approve [R], struck 1 (CONFIRM failed a)
+551 | 94674c8e | secret.ice_giant.a | approve [S], struck 1, 2
+551 | bea519a5 | secret.ice_giant.a | approve [S], struck 4
+551 | 42b8f4e7 | secret.tree_giant.a | approve [S], struck 6, a PASS (CONFIRM passed: D)
+
 550 | ac99338e | secret.lady_red_jade.a | approve [S], struck 4 (CONFIRM failed a)
 550 | 56982960 | secret.ice_giant.a | approve [S], struck 5 (CONFIRM failed a)
 550 | b4f1b1e3 | secret.artemis.a | approve [S], struck 2 (CONFIRM failed a)
@@ -42,16 +52,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 547 | 7d42f44a | secret.samurai_giant.b | approved [S], struck 1
 547 | ad2a7610 | secret.samurai_giant.c | approved [S], struck 2
 
-546 | 36bb1488 | secret.ice_giant.a | approved [S], struck 2
-546 | 8be46c23 | secret.artemis.c | approved [S], struck 2
-546 | 4a9ffed1 | secret.artemis.a | approved [S], struck 2
-546 | 1dea7118, 423084eb | secret.tree_giant.c | approved [S]
-546 | 5f704998 | secret.samurai_giant.c | approved [S], struck 1
-546 | d457c95a | secret.shogun.a | approved [S], struck 1
-546 | f9a9ab0b | secret.ullr.a | approved [S]
-546 | 92fbbe9e | secret.lady_red_jade.a | approved [S], struck 3
-546 | 3711af45 | secret.tree_giant.a | approved [S], struck 2
-
 
 ## Spent (never retry as [P])
 secretDress:ICE_FIST (543, moved once toward the reference by a DEFECTS root)
@@ -59,6 +59,7 @@ secretDress:ICE_FIST (543, moved once toward the reference by a DEFECTS root)
 Aliases: LD=legacyDress.ts, VB=vehicleBuilder.ts, UV=unitVisuals.ts, PB=propBuilder.ts, FX=visualEffects.ts, RU=runtimeUnit.ts, SS=simulationSystem.ts, PA=proceduralAnimation.ts, PS=projectileSystem.ts.
 
 ## Rows
+UV/UF/secretDress:551 | ULLR materialPreset secret_frost (team colour squared, emissive (0,.01,.02)), fxPreset none; SHOGUN_KOTE from .06 to .86 elbow 3.8 wrist 2.6 flat .62 shade .62 rim .16; Jade no tunicSkirt, pelvis in skirt cloth; JADE_SWIRL at (.5,.42)/(1.5,.58) tail .55 turns 1.15 curl .34 lvl .75 w .085 th .035; TREE_GIANT_TUNIC (.06,.26,.21) self-lit .12, no team blend; tree giant scale 2.45 -> 2.85; ARTEMIS_QUIVER r .24 foot (-.35,-.75) mouth (.78,.95) back 1.45 count 7 fan .42 lean .12 stick 1.35 vanes .42/.16; ICE rig legLength .9 torsoLength 2.4, ICE_APE upper 2.8 lower 3.05; ice pelvis in leg cloth, belt 1.15 tall at .52 | 551 | approved | secret_ice + frost fx, bare forearms, tunic skirt apron, thin gold hook swirls, navy team-blend shirt, scale 2.45, no quiver, legs 1.4 trunk 1.3 arms 1.5/1.6, pale pelvis, belt .92
 UV/PA/secretDress/UF:550 | JADE rig legLength 1.38 torsoLength 1.12 bulk .9 head 1.0; ICE rig legLength 1.4 torsoLength 1.3; ARTEMIS_SANDAL cuff .72 sole .1 band .09 toe .8 instep .5 ankleAt .72 (shared by tree giant); ULLR_BELT tall .62 at .42 round 1.12 straps 2 buckle .22; ULLR_BOOT from .45 out 1.38 cuff tan ties .62/.82 lean .62; SHOGUN_HAKAMA from -.04 to .86 top 1.3 foot 2.05, tunic skirt off; SHOGUN_TASSET rows 3 plate .3 lap .25 top .4 wide 2.9 out 1.6 step .22 lean .3; tree giant weaponPresentationFamily heavy_swing, swat off arm | 550 | approved | bulk 1.18 stocky, legs .92, dark boot feet, no belt, plain shins, narrow trousers + single tunic skirt, tree family default (swat never ran)
 RU/PA/SS/PB/secretDress/capture:549 | JADE_SWEEP reach -1.42 inward .3 dip .08 cock 1.9 end 1.7 wind .4 through .7 circleCock .75 every 2, animator landsLate (jade, ice giant); ICE_SLAM cock -2.95 bend -.7 back -.12 hit -.8 end -.62 pitch .32 raise .55 hold .6; ARTEMIS_NOCK back .9 lift .06 firm 1.6; ARTEMIS_SHAFT size 2.8 half .375 chest 1; SHOGUN_LUNGE frontHip -1.05 frontKnee 1.15 backHip .85 backKnee .2 pelvis .18 trunk .42, SHOGUN_DASH rise 2.65 settle .02; SHOGUN_TSUKA long .32 thick .026 turns 3.5 cord .0035 cap .036 capH .022; ULLR_BEARD cheek 1.8 jaw 1.25 tall 1.05 olive (.42,.4,.18); capture shogun dash_mid/dash_slash | 549 | approved | halberd chop, jab at the decision, generic raised draw, arrow centred on the hand, upright glide + planted swing, dark ringed grip, small wedge beard
 secretDress/UF/PB/PA/RU/SS/capture:548 | 4-row secret samurai cuirass with gold lacing; Shogun 10-sided gold guard .098, dash rise 2.65 and cooldown 2.4 s; Ice Breath cone 7.5 m, half-angle PI/7, 2 s frost; Jade tornado 5 m/s, radius 1.65, lift 6, cooldown 15 s; Artemis split spans to draw hand; Ullr 12-sector fur collar; exposed ice emblem | 548 | approved | slab cuirass, thin dark guard, walking entry, punch-only frost, spin-only Jade, straight string, bare shoulders, covered badge
