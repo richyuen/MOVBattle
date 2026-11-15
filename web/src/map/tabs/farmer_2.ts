@@ -272,11 +272,64 @@ function strawSheaves(scene: Scene): void {
   }
 }
 
+/**
+ * Olive meadow (wiki shot): the grass is a warm olive yellow-green (not a cool grey-green, and not farmer_1's lemon), with faint darker
+ * furrow strips worn into the open middle field between the left wall and the centre. Spec: grass, ground, dry-grass and blade materials of
+ * this build take the olive hue (blades keep their shade ratio to the lawn); seven furrows 1.2 m wide, 3 m apart, run front to back
+ * over x -23..-5, z -15..21, each a darker olive ribbon with a wavering edge, drawn only.
+ */
+const MEADOW = new Color3(0.62, 0.64, 0.2);
+const FURROWS = { x0: -23, count: 7, gap: 3, z0: -15, z1: 21, half: 0.6 };
+
+function oliveMeadow(scene: Scene): void {
+  const grass = scene.getMaterialByName("grass") as StandardMaterial | null;
+  if (grass) {
+    const old = grass.diffuseColor.clone();
+    grass.diffuseColor = MEADOW.clone();
+    grass.emissiveColor = new Color3(0.05, 0.05, 0.0);
+    for (const name of ["grassBladeDark", "grassBladeLight"]) {
+      const blade = scene.getMaterialByName(name) as StandardMaterial | null;
+      if (!blade) continue;
+      const d = blade.diffuseColor;
+      blade.diffuseColor = new Color3(d.r / old.r * MEADOW.r, d.g / old.g * MEADOW.g, d.b / old.b * MEADOW.b);
+      blade.emissiveColor = grass.emissiveColor.clone();
+    }
+  }
+  const ground = scene.getMaterialByName("groundMat") as StandardMaterial | null;
+  if (ground) ground.diffuseColor = new Color3(0.56, 0.54, 0.2);
+  const dry = scene.getMaterialByName("dryGrass") as StandardMaterial | null;
+  if (dry) dry.diffuseColor = new Color3(0.66, 0.62, 0.24);
+  const furrow = new StandardMaterial("farmer2Furrow", scene);
+  furrow.diffuseColor = new Color3(0.46, 0.48, 0.15);
+  furrow.emissiveColor = new Color3(0.04, 0.04, 0.0);
+  furrow.specularColor = Color3.Black();
+  const strips: Mesh[] = [];
+  for (let f = 0; f < FURROWS.count; f++) {
+    const x = FURROWS.x0 + f * FURROWS.gap;
+    const left: Vector3[] = [], right: Vector3[] = [];
+    for (let z = FURROWS.z0; z <= FURROWS.z1; z += 1.5) {
+      const w = FURROWS.half * (0.8 + 0.4 * seeded(f * 40 + Math.round(z), 70));
+      const sway = Math.sin(z * 0.08 + f) * 0.4;
+      left.push(new Vector3(x + sway - w, 0.045, z));
+      right.push(new Vector3(x + sway + w, 0.045, z));
+    }
+    strips.push(MeshBuilder.CreateRibbon("farmer2Furrow", { pathArray: [right, left], sideOrientation: Mesh.DOUBLESIDE }, scene));
+  }
+  const merged = Mesh.MergeMeshes(strips, true);
+  if (merged) {
+    merged.name = "farmer2Furrows";
+    merged.material = furrow;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   clearFieldJunk(scene, built, result);
+  oliveMeadow(scene);
   const stone = new StandardMaterial("farmer2WallStone", scene);
   stone.diffuseColor = new Color3(0.62, 0.62, 0.6);
   stone.emissiveColor = new Color3(0.07, 0.07, 0.08);
