@@ -302,8 +302,10 @@ const SHOGUN_GUARD = { raise: -0.75, out: -0.4, elbow: -1.75, tip: [-0.08, 1, 0.
  * low on the grip before his belly, the forearms slanting in from the elbows at his sides so their broad plated faces show to the front, the
  * blade standing straight up before his face). One fixed carry (the random four put the forearms at the brow or behind the blade, 549, 552):
  * the upper arm a little forward (.raise), in toward the middle (.out), the elbow half bent (.elbow), the blade's line .tip near vertical.
+ * 553.3b: his broad giant blade stood dead upright hid the whole face and crest, so it is canted out to his weapon side (.tip x) to stand
+ * beside the helmet.
  */
-const SAMURAI_GUARD = { raise: -0.4, out: -0.32, elbow: -1.25, tip: [-0.04, 1, 0.12] as const };
+const SAMURAI_GUARD = { raise: -0.4, out: -0.32, elbow: -1.25, tip: [0.42, 1, 0.1] as const };
 /*
  * [S] the Knight's arming sword held out (355; medieval.knight.red.png: the sword arm out from his side at the waist, the whole grey blade stood up and a
  * little out beside the shield, never shouldered along the arm). A blade marked `armingOut` (propBuilder, weaponVariant arming_sword) skips the four hashed
