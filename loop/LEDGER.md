@@ -3,5 +3,14 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+555 | 9a6acff4 | map.farmer_1.b | approved
+555 | 5403e24d | map.farmer_2.b | approved
+555 | eee10129+91f31445 | map.tribal_2.a | approved
+555 | d76751b7 | map.farmer_1.b | approved
+555 | a7a8f62e | map.tribal_1.b | approved
+555 | aef862a5 | map.tribal_1.a | approved
+555 | ac1122a0 | map.tribal_sandbox.a | approved
+555 | 6e9a1c3a | map.farmer_1.a | approved
+555 | d9f9862b | map.farmer_snow.b | approved
 
 ## Tuned values
