@@ -479,11 +479,15 @@ function roundIsland(scene: Scene, built: Set<unknown>): Array<[number, number]>
   for (const mesh of scene.meshes) {
     if (!built.has(mesh) || !(mesh instanceof Mesh)) continue;
     if (mesh.name === "hazeTreeline") mesh.setEnabled(false);
-    if (!mesh.name.startsWith("fieldBlades_") || mesh.thinInstanceCount < 1) continue;
-    const kept = mesh.thinInstanceGetWorldMatrices().filter((w) => inside(w.m[12], w.m[14], 0.5));
-    const buf = new Float32Array(kept.length * 16);
-    kept.forEach((w, i) => buf.set(w.m, i * 16));
-    mesh.thinInstanceSetBuffer("matrix", buf, 16);
+    if (!mesh.name.startsWith("fieldBlades_")) continue;
+    // Each blade is a quad of four vertices: one past the rim collapses onto its first corner
+    const pos = mesh.getVerticesData("position");
+    if (!pos) continue;
+    for (let v = 0; v + 11 < pos.length; v += 12) {
+      if (inside(pos[v], pos[v + 2], 0.5)) continue;
+      for (let c = 3; c < 12; c++) pos[v + c] = pos[v + (c % 3)];
+    }
+    mesh.setVerticesData("position", pos);
   }
   const gone: Array<[number, number]> = [];
   for (const mesh of scene.meshes) {
