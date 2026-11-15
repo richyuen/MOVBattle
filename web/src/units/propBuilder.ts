@@ -4487,6 +4487,9 @@ const BERSERKER_AXE = { scale: 0.78 };
 // [P] 415 .haft of the cut haft kept (critic 414: still 1.5x hand-to-shoulder, a forearm of butt under the fist and the head at the brow)
 /** [P] 416 the katana's blade colour: a light steel grey. */
 const KATANA_STEEL = new Color3(0.62, 0.64, 0.68);
+// [S] 549 the Shogun's long cream tsuka, dark diamond cord, gold kashira (spec at its use in the katana case)
+const SHOGUN_TSUKA = { long: 0.32, thick: 0.026, turns: 3.5, steps: 40, cord: 0.0035, stand: 0.0015, cap: 0.036, capH: 0.022,
+  cream: new Color3(0.86, 0.8, 0.64), dark: new Color3(0.06, 0.05, 0.06) };
 const BRAWLER_HATCHET = { scale: 0.6, steel: new Color3(0.11, 0.11, 0.12), haft: 0.67 };
 function buildBeardedAxe(scene: Scene, s: number, steelColor: Color3 = BEARDED_AXE.steel, haft = 1): Mesh {
   const A = BEARDED_AXE;
@@ -5662,21 +5665,42 @@ function buildWeapon(scene: Scene, type: WeaponType, _s: number, accent: Color3,
       tsuba.parent = blade;
       tsuba.material = shogun ? mat(scene, new Color3(1, 0.63, 0.10), 0.19) : mat(scene, new Color3(0.3, 0.25, 0.2), 0, "metal");
       // Grip wrap
-      const gripLength = (twoHanded ? 0.25 : 0.12) * s;
-      const grip = MeshBuilder.CreateCylinder(twoHanded ? "grip" : "kgrip", { height: gripLength, diameter: 0.022 * s }, scene);
+      const gripLength = (shogun ? SHOGUN_TSUKA.long : twoHanded ? 0.25 : 0.12) * s;
+      const grip = MeshBuilder.CreateCylinder(twoHanded ? "grip" : "kgrip", { height: gripLength, diameter: (shogun ? SHOGUN_TSUKA.thick : 0.022) * s, tessellation: shogun ? 8 : 24 }, scene);
       grip.position.y = -0.16 * s - gripLength / 2;
       grip.parent = blade;
       if (twoHanded) {
         const marker = new TransformNode("longswordFists", scene);
         marker.parent = blade;
       }
-      grip.material = mat(scene, new Color3(0.15, 0.1, 0.08));
-      addGripWraps(scene, grip, [-0.03 * s, 0, 0.03 * s], 0.026 * s);
+      if (shogun) {
+        // [S] 549 (shogun b.3: "dark grip with isolated light rings - TABS: extended pale wrapped grip with gold pommel"; secret.shogun.blue.png:
+        // a long cream tsuka under the gold guard, its dark cord crossing in diamonds the whole way down, a broad gold cap at the end). SHOGUN_TSUKA
+        // in the blade's scale: the grip .long long, .thick across, pale cream lit cloth self-lit .35; two dark cords wound round it in opposite
+        // senses, .turns turns each, .cord thick, standing .stand proud, so they cross in diamonds; the kashira a gold cap .cap across, .capH tall.
+        const T = SHOGUN_TSUKA;
+        grip.material = mat(scene, T.cream, 0.35, "cloth");
+        const cordMat = mat(scene, T.dark, 0.3, "cloth");
+        for (const sense of [1, -1]) {
+          const path: Vector3[] = [];
+          for (let i = 0; i <= T.steps; i++) {
+            const u = i / T.steps, a = sense * u * T.turns * Math.PI * 2;
+            const r = (T.thick / 2 + T.stand) * s;
+            path.push(new Vector3(Math.cos(a) * r, (u - 0.5) * gripLength * 0.96, Math.sin(a) * r));
+          }
+          const cord = MeshBuilder.CreateTube("tsukaCord", { path, radius: T.cord * s, tessellation: 4 }, scene);
+          cord.material = cordMat;
+          cord.parent = grip;
+        }
+      } else {
+        grip.material = mat(scene, new Color3(0.15, 0.1, 0.08));
+        addGripWraps(scene, grip, [-0.03 * s, 0, 0.03 * s], 0.026 * s);
+      }
       // Kashira (pommel cap)
-      const kashira = MeshBuilder.CreateCylinder("kashira", { height: 0.015 * s, diameter: 0.028 * s, tessellation: 8 }, scene);
+      const kashira = MeshBuilder.CreateCylinder("kashira", { height: (shogun ? SHOGUN_TSUKA.capH : 0.015) * s, diameter: (shogun ? SHOGUN_TSUKA.cap : 0.028) * s, tessellation: shogun ? 10 : 8 }, scene);
       kashira.position.y = -0.17 * s - gripLength;
       kashira.parent = blade;
-      kashira.material = mat(scene, new Color3(0.3, 0.25, 0.2), 0, "metal");
+      kashira.material = shogun ? mat(scene, new Color3(1, 0.63, 0.10), 0.19) : mat(scene, new Color3(0.3, 0.25, 0.2), 0, "metal");
       blade.position.y = 0.15 * s;
       blade.rotation.z = 0.05;
       return blade;
