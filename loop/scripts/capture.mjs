@@ -950,6 +950,16 @@ async function main() {
             } else summary.notes.push(`unit_${id}: shot may miss: no punch within 15 s of the landing`);
           }
         }
+        // [evidence 549] the Shogun's dash runs into his slash (critic 548 c.2: the release camera came after the transition): one camera held
+        // from the dash, the landing half way to the first slash after it, and that slash's contact
+        if (id === "secret.shogun" && ability) {
+          const slash = det.events.find((e) => e.kind === "hurricane_slash" && e.tick >= ability.tick);
+          if (slash) {
+            summary.notes.push(`unit_${id}: hurricane_slash ${Math.round((slash.tick - ability.tick) * TICK)} ms after the dash`);
+            await take(`unit_${id}_dash_mid`, Math.round((ability.tick + slash.tick) / 2), 0, { hold: ability.tick });
+            await take(`unit_${id}_dash_slash`, slash.tick, 0, { hold: ability.tick });
+          } else summary.notes.push(`unit_${id}: shot may miss: no hurricane_slash after the dash`);
+        }
         const second = SECOND_ABILITY[id] ? det.events.find((e) => e.kind === SECOND_ABILITY[id]) : null;
         if (second) {
           summary.notes.push(`unit_${id}: second ability ${second.kind} at ${ms(second)} ms`);
