@@ -74,49 +74,94 @@ function riverMeshes(scene: Scene): void {
   }
 }
 
-/** The arched stone bridge over the crossing: a low deck the width of the gap, a stone arch under each face, a parapet along each side */
-const BRIDGE = { span: 10, width: 6, deck: 0.12, rise: 1.1, parapet: 0.7 };
+/**
+ * The humped stone bridge over the crossing (wiki shot, centre): a single round-arched span whose deck rises in a smooth hump over the water
+ * and lands on both banks, its solid stone sides edged by a ring of voussoirs round the arch, a rounded stone curb along each side.
+ * Spec read off farmer_1.png: the bridge runs across the river (along x) 6 m wide; the deck climbs 1.0 m over a 13 m run (lands 6.5 m
+ * either side of the river's centre), the arch opening 6.4 m wide with its crown 0.5 m over the water, voussoirs 0.55 m deep standing 0.12 m
+ * proud of each face, the curb a 0.32 m round stone roll following the hump. Units crossing are drawn on the hump (MapBuildResult.height);
+ * the sim stays flat and the two side colliders are unchanged.
+ */
+const BRIDGE = { span: 10, width: 6, rise: 1.0, land: 6.5, arch: 3.2, crown: 0.5, spring: -0.4, curb: 0.32 };
+
+/** The deck's top above the ground at x along the bridge (0 at the river's centre line) */
+function deckTop(dx: number): number {
+  const u = dx / BRIDGE.land;
+  return Math.abs(u) >= 1 ? 0 : BRIDGE.rise * (1 - u * u) * (1 - 0.25 * u * u);
+}
+
+/** The drawn height of the deck, for units crossing it */
+export function bridgeHeight(x: number, z: number): number {
+  return Math.abs(z) < BRIDGE.width / 2 - 0.2 ? deckTop(x - riverX(0)) : 0;
+}
 
 function stoneBridge(scene: Scene): Obstacle[] {
-  const stone = new StandardMaterial("farmer1BridgeStone", scene);
-  stone.diffuseColor = new Color3(0.64, 0.62, 0.58);
-  stone.emissiveColor = new Color3(0.07, 0.07, 0.07);
-  stone.specularColor = new Color3(0.04, 0.04, 0.04);
-  const x = riverX(0);
-  const parts: Mesh[] = [];
-  const deck = MeshBuilder.CreateBox("farmer1BridgeDeck", { width: BRIDGE.span, height: 0.3, depth: BRIDGE.width }, scene);
-  deck.position.set(x, BRIDGE.deck - 0.15, 0);
-  parts.push(deck);
-  // Each face is a ring of voussoirs over the water: an arch read from the banks
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = new Color3(0.03, 0.03, 0.03);
+    m.backFaceCulling = false;
+    return m;
+  };
+  const stone = mk("farmer1BridgeStone", new Color3(0.6, 0.58, 0.55), 0.14);
+  const deckStone = mk("farmer1BridgeDeck", new Color3(0.68, 0.66, 0.62), 0.14);
+  const ring = mk("farmer1BridgeRing", new Color3(0.5, 0.48, 0.46), 0.12);
+  const x0 = riverX(0), W = BRIDGE.width / 2;
+  // The arch's underside: an elliptic opening over the water, below ground outside it
+  const under = (dx: number) =>
+    Math.abs(dx) < BRIDGE.arch ? BRIDGE.spring + (BRIDGE.crown - BRIDGE.spring) * Math.sqrt(1 - (dx / BRIDGE.arch) ** 2) : -0.3;
+  const N = 40;
+  const xs = Array.from({ length: N + 1 }, (_, i) => -BRIDGE.land + (2 * BRIDGE.land * i) / N);
+  // Splice the arch's springing points into the run so the opening's edge is sharp
+  xs.push(-BRIDGE.arch, -BRIDGE.arch + 1e-3, BRIDGE.arch - 1e-3, BRIDGE.arch);
+  xs.sort((a, b) => a - b);
+  const finish = (mesh: Mesh, mat: StandardMaterial) => {
+    mesh.convertToFlatShadedMesh();
+    mesh.material = mat;
+    mesh.receiveShadows = true;
+    mesh.isPickable = false;
+  };
+  // The two side walls: each a ribbon between the deck line and the arch line
   for (const side of [-1, 1]) {
-    const n = 9;
-    for (let i = 0; i < n; i++) {
-      const a = Math.PI * (i + 0.5) / n;
-      const block = MeshBuilder.CreateBox("farmer1BridgeArch", { width: 1.15, height: 0.5, depth: 0.5 }, scene);
-      block.position.set(x - Math.cos(a) * (BRIDGE.span / 2 - 1.6), Math.sin(a) * BRIDGE.rise - 0.55, side * (BRIDGE.width / 2 - 0.25));
-      block.rotation.z = -Math.cos(a) * 0.9;
-      parts.push(block);
-    }
-    // Parapet: a hump of rough blocks, highest over the middle
-    for (let i = 0; i < 8; i++) {
-      const along = -BRIDGE.span / 2 + 0.6 + i * ((BRIDGE.span - 1.2) / 7);
-      const h = BRIDGE.parapet + 0.35 * Math.cos((along / BRIDGE.span) * Math.PI);
-      const block = MeshBuilder.CreateBox("farmer1BridgeParapet", { width: 1.2, height: h, depth: 0.55 }, scene);
-      block.position.set(x + along, h / 2, side * (BRIDGE.width / 2 - 0.1));
-      block.rotation.y = (i % 2 - 0.5) * 0.08;
-      parts.push(block);
-    }
+    const top = xs.map((dx) => new Vector3(x0 + dx, deckTop(dx) + 0.02, side * W));
+    const bottom = xs.map((dx) => new Vector3(x0 + dx, Math.min(under(dx), deckTop(dx) - 0.3), side * W));
+    finish(MeshBuilder.CreateRibbon("farmer1BridgeSide", { pathArray: [top, bottom] }, scene), stone);
   }
-  const bridge = Mesh.MergeMeshes(parts, true);
-  if (bridge) {
-    bridge.name = "farmer1Bridge";
-    bridge.convertToFlatShadedMesh();
-    bridge.material = stone;
-    bridge.receiveShadows = true;
-    bridge.isPickable = false;
+  // The deck and the arch's soffit: ribbons across the width following each line
+  const across = (f: (dx: number) => number, name: string, mat: StandardMaterial, lift: number) => {
+    const a = xs.map((dx) => new Vector3(x0 + dx, f(dx) + lift, -W));
+    const b = xs.map((dx) => new Vector3(x0 + dx, f(dx) + lift, W));
+    finish(MeshBuilder.CreateRibbon(name, { pathArray: [a, b] }, scene), mat);
+  };
+  across(deckTop, "farmer1BridgeDeck", deckStone, 0.02);
+  across((dx) => (Math.abs(dx) < BRIDGE.arch ? under(dx) : -0.3), "farmer1BridgeSoffit", stone, 0);
+  // Voussoirs round each face's arch and a rounded curb along each side of the hump
+  const blocks: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    const n = 11;
+    for (let i = 0; i < n; i++) {
+      const t = Math.PI * (i + 0.5) / n;
+      const ex = -Math.cos(t) * BRIDGE.arch, ey = BRIDGE.spring + Math.sin(t) * (BRIDGE.crown - BRIDGE.spring);
+      // Normal of the ellipse at t points out of the opening: the block's long side runs along it
+      const nx = -Math.cos(t) / BRIDGE.arch, ny = Math.sin(t) / (BRIDGE.crown - BRIDGE.spring);
+      const ang = Math.atan2(ny, nx);
+      const block = MeshBuilder.CreateBox("farmer1BridgeArch", { width: 0.55, height: 0.62, depth: 0.24 }, scene);
+      block.position.set(x0 + ex + Math.cos(ang) * 0.27, ey + Math.sin(ang) * 0.27, side * (W + 0.1));
+      block.rotation.z = ang;
+      blocks.push(block);
+    }
+    const path = xs.filter((dx) => Math.abs(dx) <= BRIDGE.land - 0.4).map((dx) => new Vector3(x0 + dx, deckTop(dx) + BRIDGE.curb * 0.7, side * (W - 0.2)));
+    const curb = MeshBuilder.CreateTube("farmer1BridgeCurb", { path, radius: BRIDGE.curb, tessellation: 7, cap: Mesh.CAP_ALL }, scene);
+    finish(curb, stone);
+  }
+  const merged = Mesh.MergeMeshes(blocks, true);
+  if (merged) {
+    merged.name = "farmer1BridgeArches";
+    finish(merged, ring);
   }
   return [-1, 1].map((side) => ({
-    type: "box" as const, center: new Vector3(x, 0, side * (BRIDGE.width / 2 - 0.1)), halfX: BRIDGE.span / 2, halfZ: 0.3,
+    type: "box" as const, center: new Vector3(x0, 0, side * (W - 0.1)), halfX: BRIDGE.span / 2, halfZ: 0.3,
   }));
 }
 
@@ -854,5 +899,5 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
   wheatStrips(scene);
   earthBowl(scene, built);
   clearWaterBlades(scene, built);
-  return { ...result, hazards, obstacles: roundIsland(scene, prior, scotsPines(scene, built, obstacles)) };
+  return { ...result, hazards, height: bridgeHeight, obstacles: roundIsland(scene, prior, scotsPines(scene, built, obstacles)) };
 }
