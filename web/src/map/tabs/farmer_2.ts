@@ -200,10 +200,21 @@ function leftPathway(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): 
   return kept;
 }
 
+/** Open plots (wiki shot): the base's dark totem pillar (22, 0) and black barricade box (10, 16) go, meshes and colliders */
+const FIELD_JUNK: Array<[number, number]> = [[22, 0], [10, 16]];
+
+function clearFieldJunk(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  for (const mesh of scene.meshes.filter((m) => built.has(m) && /^Introduction Grounds_(cyl|box|totem_top)$/.test(m.name))) {
+    if (FIELD_JUNK.some(([x, z]) => Math.hypot(mesh.position.x - x, mesh.position.z - z) < 0.5)) mesh.dispose();
+  }
+  result.obstacles = result.obstacles.filter((o) => !FIELD_JUNK.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  clearFieldJunk(scene, built, result);
   const stone = new StandardMaterial("farmer2WallStone", scene);
   stone.diffuseColor = new Color3(0.62, 0.62, 0.6);
   stone.emissiveColor = new Color3(0.07, 0.07, 0.08);
