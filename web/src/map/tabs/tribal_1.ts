@@ -340,6 +340,109 @@ function campfire(scene: Scene): Obstacle[] {
   ];
 }
 
+/**
+ * The ridges (card Overview "short hills on the far back and far front, stretching left to right"; autumn_tribal_1.png front edge):
+ * raised benches of orange earth running along the rim across the back and the front, with a grey rock face toward the field and the ring
+ * trees standing on top. Spec: back arc 35-145 degrees, front arc -165 to -15; each bench 3.6 m high and 13 m deep from the rim, its inner
+ * edge wandering +-1.5 m, tapering to nothing over the last 12 degrees of each end; a rock block every 4 degrees along the inner face,
+ * 0.5-2.5 m above the top; every tree, crown and haze crown standing on a bench is lifted onto it. The base's four flat corner mounds
+ * ("hill") and their colliders go. Colliders every 5 degrees on the inner face where the bench stands over half its height.
+ */
+const RIDGES: Array<[number, number]> = [[35, 145], [-165, -15]];
+const RIDGE = { h: 3.6, depth: 13, taper: 12 };
+
+function ridgeAt(deg: number): number {
+  for (const [from, to] of RIDGES) {
+    if (deg < from || deg > to) continue;
+    const e = Math.min(deg - from, to - deg) / RIDGE.taper;
+    return e >= 1 ? 1 : e * e * (3 - 2 * e);
+  }
+  return 0;
+}
+
+function ridgeInner(deg: number, f: number): number {
+  const [rx, rz] = rim(deg);
+  return Math.hypot(rx, rz) - RIDGE.depth * Math.max(f, 0.15) + Math.sin(deg * 0.31) * 1.5 * f;
+}
+
+function ridges(scene: Scene, built: Set<unknown>): { obstacles: Obstacle[]; gone: Array<[number, number]> } {
+  const earth = new StandardMaterial("tribal1Ridge", scene);
+  earth.diffuseColor = new Color3(0.88, 0.5, 0.2);
+  earth.emissiveColor = new Color3(0.2, 0.1, 0.03);
+  earth.specularColor = Color3.Black();
+  const rock = new StandardMaterial("tribal1RidgeRock", scene);
+  rock.diffuseColor = new Color3(0.5, 0.44, 0.4);
+  rock.emissiveColor = new Color3(0.07, 0.06, 0.055);
+  rock.specularColor = new Color3(0.03, 0.03, 0.03);
+  // The flat corner mounds and their colliders
+  const gone: Array<[number, number]> = [];
+  for (const m of scene.meshes.filter((m) => built.has(m) && m.name === "hill")) {
+    gone.push([m.position.x, m.position.z]);
+    m.dispose();
+  }
+  const benches: Mesh[] = [];
+  const blocks: Mesh[] = [];
+  const obstacles: Obstacle[] = [];
+  let k = 0;
+  for (const [from, to] of RIDGES) {
+    const paths: Vector3[][] = [[], [], [], []];
+    for (let deg = from; deg <= to; deg += 2) {
+      const [rx, rz] = rim(deg);
+      const rr = Math.hypot(rx, rz), ux = rx / rr, uz = rz / rr;
+      const f = ridgeAt(deg), h = RIDGE.h * f, ri = ridgeInner(deg, f);
+      paths[0].push(new Vector3(ux * (ri - 1.8 * f), 0.03, uz * (ri - 1.8 * f)));
+      paths[1].push(new Vector3(ux * ri, h + 0.03, uz * ri));
+      paths[2].push(new Vector3(ux * (rr - 0.3), h + 0.03, uz * (rr - 0.3)));
+      paths[3].push(new Vector3(ux * rr, -0.4, uz * rr));
+    }
+    benches.push(MeshBuilder.CreateRibbon("tribal1Ridge", { pathArray: paths }, scene));
+    for (let deg = from + 4; deg <= to - 4; deg += 4) {
+      k++;
+      const f = ridgeAt(deg);
+      if (f < 0.3) continue;
+      const [rx, rz] = rim(deg);
+      const rr = Math.hypot(rx, rz), ri = ridgeInner(deg, f);
+      const hb = RIDGE.h * f + 0.5 + seeded(k, 51) * 2;
+      const w = 4 + seeded(k, 52) * 2.5;
+      const b = MeshBuilder.CreateCylinder("tribal1RidgeRock", { diameterTop: w * 0.75, diameterBottom: w, height: hb, tessellation: 6 }, scene);
+      b.scaling.z = 0.6;
+      b.position.set((rx / rr) * (ri + 0.6), hb / 2, (rz / rr) * (ri + 0.6));
+      b.rotation.set((seeded(k, 53) - 0.5) * 0.12, -Math.atan2(rz, rx) + Math.PI / 2 + (seeded(k, 54) - 0.5) * 0.4, 0);
+      blocks.push(b);
+    }
+    for (let deg = from; deg <= to; deg += 5) {
+      const f = ridgeAt(deg);
+      if (f < 0.5) continue;
+      const [rx, rz] = rim(deg);
+      const rr = Math.hypot(rx, rz), ri = ridgeInner(deg, f) + 2;
+      obstacles.push({ type: "cylinder", center: new Vector3((rx / rr) * ri, 0, (rz / rr) * ri), radius: 2.8 });
+    }
+  }
+  const bench = Mesh.MergeMeshes(benches, true);
+  if (bench) {
+    bench.name = "tribal1Ridges";
+    bench.material = earth;
+    bench.receiveShadows = true;
+    bench.isPickable = false;
+  }
+  const face = Mesh.MergeMeshes(blocks, true);
+  if (face) {
+    face.name = "tribal1RidgeRocks";
+    face.convertToFlatShadedMesh();
+    face.material = rock;
+    face.receiveShadows = true;
+    face.isPickable = false;
+  }
+  // Trees standing on a bench go up onto it
+  for (const m of scene.meshes) {
+    if (!built.has(m) || !["trunk", "tribal1Crown", "hazeTreeline"].includes(m.name) || m.parent) continue;
+    const deg = (Math.atan2(m.position.z, m.position.x) * 180) / Math.PI;
+    const f = ridgeAt(deg);
+    if (f > 0 && Math.hypot(m.position.x, m.position.z) >= ridgeInner(deg, f)) m.position.y += RIDGE.h * f;
+  }
+  return { obstacles, gone };
+}
+
 const FIELD = { rx: 47, rz: 32 };
 const FIELD_PROPS = new Set(["boulder", "wallStone", "hayBale", "stump"]);
 
@@ -362,5 +465,7 @@ export function buildTribal1(scene: Scene, base: () => MapBuildResult): MapBuild
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   earthTiers(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
-  return { ...result, obstacles };
+  const ridge = ridges(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
+  const kept = obstacles.filter((o) => !ridge.gone.some(([x, z]) => Math.abs(x - o.center.x) < 0.01 && Math.abs(z - o.center.z) < 0.01));
+  return { ...result, obstacles: kept.concat(ridge.obstacles) };
 }
