@@ -1,6 +1,7 @@
-// Enforces the context budget of the improvement loop's memory files (loop v4).
+// Enforces the context budget of the improvement loop's memory files (loop v10: maps and stages).
 //   node loop/scripts/budget.mjs
-// Exit 1 if any capped file is missing or over its cap, a card or unit file is over its cap, or a roster unit has no card. Caps are bytes.
+// Exit 1 if any capped file is missing or over its cap, a card or item file is over its cap, a map or stage of _stages.json has no card, or a
+// roster unit has no card. Caps are bytes.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,9 +18,9 @@ const CAPS = {
 const CARD_CAP = 3_200;
 const UNIT_CAP = 3_200;
 const STATS_CAP = 60_000;
-// What one iteration reads: the four memory files, plus up to a batch of unit files and the cards of the units it picks gaps on
+// What one iteration reads: the four memory files, plus up to a batch of item files and the cards of the items it picks gaps on
 const PER_ITERATION = ["loop/ITERATE.md", "loop/STATE.md", "loop/LEDGER.md", "loop/LESSONS.md"];
-const BATCH_UNITS = 17; // two batches overlap at a tail (ITERATE step 3); done units are not read, so more names cost nothing
+const BATCH_UNITS = 15; // two batches overlap at a tail (ITERATE step 3: maps_4 has 9, a campaign 6); done items are not read
 const PICKED_CARDS = 7;
 const PER_ITERATION_WARN = 130_000;
 
@@ -56,7 +57,21 @@ function dirCheck(rel, cap, label) {
   return { count: files.length, max };
 }
 const cards = dirCheck("loop/cards", CARD_CAP, "loop/cards/*.md");
-const units = dirCheck("loop/units", UNIT_CAP, "loop/units/*.md");
+const units = dirCheck("loop/items", UNIT_CAP, "loop/items/*.md");
+const mapCards = dirCheck("loop/cards/maps", CARD_CAP, "loop/cards/maps/*.md");
+const stageCards = dirCheck("loop/cards/stages", CARD_CAP, "loop/cards/stages/*.md");
+const worldFile = path.join(root, "loop", "cards", "_stages.json");
+if (!fs.existsSync(worldFile)) { console.log("MISSING loop/cards/_stages.json (node loop/scripts/fetch-stage-cards.mjs)"); failed = true; }
+else {
+  const w = JSON.parse(fs.readFileSync(worldFile, "utf8"));
+  const missing = [
+    ...w.maps.filter((m) => !fs.existsSync(path.join(root, "loop", "cards", "maps", `${m.id}.md`))).map((m) => `map.${m.id}`),
+    ...w.stages.filter((s) => !fs.existsSync(path.join(root, "loop", "cards", "stages", `${s.id}.md`))).map((s) => s.id),
+  ];
+  if (missing.length) failed = true;
+  console.log(`${missing.length ? "MISS " : "ok   "} ${"loop/cards/_stages.json".padEnd(26)} ${w.maps.length} maps, ${w.stages.length} stages${missing.length ? `, NO CARD for ${missing.join(" ")}` : ""}`);
+}
+cards.max = Math.max(cards.max, mapCards.max, stageCards.max);
 const statsFile = path.join(root, "loop", "cards", "_stats.json");
 if (!fs.existsSync(statsFile)) { console.log("MISSING loop/cards/_stats.json"); failed = true; }
 else {
@@ -69,12 +84,14 @@ else {
 }
 perIteration += Math.min(units.max, UNIT_CAP) * BATCH_UNITS + Math.min(cards.max, CARD_CAP) * PICKED_CARDS;
 const warn = perIteration > PER_ITERATION_WARN ? ` (WARN: over ${PER_ITERATION_WARN})` : "";
-console.log(`per-iteration read set (memory + ${BATCH_UNITS} unit files + ${PICKED_CARDS} cards): ${perIteration} bytes${warn}`);
+console.log(`per-iteration read set (memory + ${BATCH_UNITS} item files + ${PICKED_CARDS} cards): ${perIteration} bytes${warn}`);
 // [v5] A batch named on STATE's Batch line must still have an open (o) or queued (q) unit: when none is left, ITERATE step 8 owes its
 // checkpoint and the name must go (the viking checkpoint was skipped at 418 because nothing checked).
 try {
   const state = fs.readFileSync(path.join(root, "loop", "STATE.md"), "utf8");
-  const batchLine = state.match(/^Iteration:.*?\bBatch:\s*([^\n(]+)/m);
+  // [v10] the Batch value is one token (`maps_1`, `maps_4+stages_introduction`); the old [^\n(]+ ran on into "Consecutive empty: 0" and the
+  // name, holding a colon, was skipped: this check never ran in v5-v9
+  const batchLine = state.match(/^Iteration:.*?\bBatch:\s*(\S+)/m);
   const named = batchLine ? batchLine[1].split("+").map((s) => s.trim()).filter((s) => s && !s.includes(":")) : [];
   for (const name of named) {
     const row = state.match(new RegExp(`^${name.replace(/[^a-z0-9_]/gi, "")}:\\s*(.+)$`, "m"));

@@ -1,0 +1,2884 @@
+{
+ "fetched": "2026-11-15",
+ "per": 6,
+ "stages": [
+  {
+   "id": "introduction.clubs",
+   "campaign": "introduction",
+   "order": 1,
+   "of": 20,
+   "title": "Clubs",
+   "page": "Clubs",
+   "map": "tribal_1",
+   "mapTitle": "Tribal 1",
+   "budget": 600,
+   "enemyTypes": [
+    "tribal.clubber"
+   ],
+   "enemyCounts": {
+    "tribal.clubber": 6
+   },
+   "enemyTotal": 6,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "6 Clubbers",
+   "available": {
+    "factions": [],
+    "units": [
+     "tribal.clubber",
+     "tribal.protector",
+     "tribal.spear_thrower"
+    ],
+    "text": ""
+   },
+   "objective": "",
+   "image": "Introduction-1.png"
+  },
+  {
+   "id": "introduction.army",
+   "campaign": "introduction",
+   "order": 4,
+   "of": 20,
+   "title": "Army",
+   "page": "Army",
+   "map": "tribal_1",
+   "mapTitle": "Tribal 1",
+   "budget": 1800,
+   "enemyTypes": [
+    "tribal.clubber",
+    "tribal.protector"
+   ],
+   "enemyCounts": {
+    "tribal.clubber": 27,
+    "tribal.protector": 11
+   },
+   "enemyTotal": 38,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "27 Clubbers, 11 Protectors",
+   "available": {
+    "factions": [],
+    "units": [
+     "tribal.clubber",
+     "tribal.protector",
+     "tribal.spear_thrower",
+     "tribal.stoner",
+     "tribal.bone_mage"
+    ],
+    "text": ""
+   },
+   "objective": "",
+   "image": "Introduction-4.png"
+  },
+  {
+   "id": "introduction.hay_and_pitchforks",
+   "campaign": "introduction",
+   "order": 7,
+   "of": 20,
+   "title": "Hay and Pitchforks",
+   "page": "Hay and Pitchforks",
+   "map": "farmer_2",
+   "mapTitle": "Farmer 2",
+   "budget": 2600,
+   "enemyTypes": [
+    "farmer.farmer",
+    "farmer.hay_baler"
+   ],
+   "enemyCounts": {
+    "farmer.hay_baler": 14,
+    "farmer.farmer": 8
+   },
+   "enemyTotal": 22,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "14 Hay Balers, 8 Farmers",
+   "available": {
+    "factions": [
+     "tribal"
+    ],
+    "units": [],
+    "text": "Tribal Faction"
+   },
+   "objective": "",
+   "image": "Introduction-7.png"
+  },
+  {
+   "id": "introduction.basic_formation",
+   "campaign": "introduction",
+   "order": 13,
+   "of": 20,
+   "title": "Basic Formation",
+   "page": "Basic Formation",
+   "map": "ancient_1",
+   "mapTitle": "Ancient 1",
+   "budget": 2100,
+   "enemyTypes": [
+    "ancient.shield_bearer",
+    "ancient.sarissa"
+   ],
+   "enemyCounts": {
+    "ancient.shield_bearer": 8,
+    "ancient.sarissa": 8
+   },
+   "enemyTotal": 16,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "8 Shield Bearers, 8 Sarrisas",
+   "available": {
+    "factions": [
+     "medieval"
+    ],
+    "units": [],
+    "text": "Medieval Faction"
+   },
+   "objective": "",
+   "image": "Introduction-13.png"
+  },
+  {
+   "id": "introduction.ice_archers_only_almost",
+   "campaign": "introduction",
+   "order": 17,
+   "of": 20,
+   "title": "Ice Archers Only, Almost",
+   "page": "Ice Archers Only, Almost",
+   "map": "viking",
+   "mapTitle": "Viking (Map)",
+   "budget": 3500,
+   "enemyTypes": [
+    "viking.ice_archer",
+    "viking.brawler"
+   ],
+   "enemyCounts": {
+    "viking.ice_archer": 12,
+    "viking.brawler": 6
+   },
+   "enemyTotal": 18,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "12 Ice Archers, 6 Brawlers",
+   "available": {
+    "factions": [
+     "ancient"
+    ],
+    "units": [],
+    "text": "Ancient Faction"
+   },
+   "objective": "",
+   "image": "Introduction-17.png"
+  },
+  {
+   "id": "introduction.longships",
+   "campaign": "introduction",
+   "order": 20,
+   "of": 20,
+   "title": "Longships",
+   "page": "Longships",
+   "map": "viking",
+   "mapTitle": "Viking (Map)",
+   "budget": 6000,
+   "enemyTypes": [
+    "viking.brawler",
+    "viking.longship"
+   ],
+   "enemyCounts": {
+    "viking.brawler": 11,
+    "viking.longship": 3
+   },
+   "enemyTotal": 14,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "11 Brawlers, 3 Longships",
+   "available": {
+    "factions": [
+     "ancient"
+    ],
+    "units": [],
+    "text": "Ancient Faction"
+   },
+   "objective": "",
+   "image": "Introduction-20.png"
+  },
+  {
+   "id": "adventure.tree_tribe",
+   "campaign": "adventure",
+   "order": 1,
+   "of": 62,
+   "title": "Tree Tribe",
+   "page": "Tree Tribe",
+   "map": "tribal_1",
+   "mapTitle": "Tribal 1",
+   "budget": 3000,
+   "enemyTypes": [
+    "tribal.clubber",
+    "tribal.protector",
+    "tribal.spear_thrower",
+    "tribal.stoner",
+    "tribal.bone_mage",
+    "tribal.chieftain"
+   ],
+   "enemyCounts": {
+    "tribal.clubber": 7,
+    "tribal.protector": 11,
+    "tribal.spear_thrower": 10,
+    "tribal.stoner": 4,
+    "tribal.bone_mage": 3,
+    "tribal.chieftain": 4
+   },
+   "enemyTotal": 39,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "7 Clubbers, 11 Protectors, 10 Spear Throwers, 4 Stoners, 3 Bone Mages, 4 Chieftains",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Adventure-1.png"
+  },
+  {
+   "id": "adventure.the_tiniest_attack",
+   "campaign": "adventure",
+   "order": 9,
+   "of": 62,
+   "title": "The Tiniest Attack",
+   "page": "The Tiniest Attack",
+   "map": "farmer_2",
+   "mapTitle": "Farmer 2",
+   "budget": 3800,
+   "enemyTypes": [
+    "farmer.halfling",
+    "farmer.farmer"
+   ],
+   "enemyCounts": {
+    "farmer.farmer": 1,
+    "farmer.halfling": 31
+   },
+   "enemyTotal": 32,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "1 Farmer",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Adventure-9.png"
+  },
+  {
+   "id": "adventure.sneaky_tribe",
+   "campaign": "adventure",
+   "order": 22,
+   "of": 62,
+   "title": "Sneaky Tribe",
+   "page": "Sneaky Tribe",
+   "map": "tribal_1",
+   "mapTitle": "Tribal 1",
+   "budget": 5500,
+   "enemyTypes": [
+    "tribal.clubber",
+    "tribal.protector",
+    "tribal.spear_thrower",
+    "tribal.stoner",
+    "tribal.bone_mage",
+    "tribal.chieftain"
+   ],
+   "enemyCounts": {
+    "tribal.clubber": 7,
+    "tribal.protector": 6,
+    "tribal.spear_thrower": 6,
+    "tribal.stoner": 6,
+    "tribal.bone_mage": 3,
+    "tribal.chieftain": 4
+   },
+   "enemyTotal": 32,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "(counted from the survey prose)",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Adventure-22.png"
+  },
+  {
+   "id": "adventure.tree_mammoths",
+   "campaign": "adventure",
+   "order": 36,
+   "of": 62,
+   "title": "Tree Mammoths",
+   "page": "Tree Mammoths",
+   "map": "tribal_1",
+   "mapTitle": "Tribal 1",
+   "budget": 6500,
+   "enemyTypes": [
+    "tribal.mammoth"
+   ],
+   "enemyCounts": {
+    "tribal.mammoth": 5
+   },
+   "enemyTotal": 5,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "(counted from the survey prose)",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Adventure-36.png"
+  },
+  {
+   "id": "adventure.final_destination_wheelbarrow",
+   "campaign": "adventure",
+   "order": 47,
+   "of": 62,
+   "title": "Final Destination Wheelbarrow",
+   "page": "Final Destination Wheelbarrow",
+   "map": "ancient_1",
+   "mapTitle": "Ancient 1",
+   "budget": 1000,
+   "enemyTypes": [
+    "farmer.wheelbarrow"
+   ],
+   "enemyCounts": {
+    "farmer.wheelbarrow": 1
+   },
+   "enemyTotal": 1,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "(counted from the survey prose)",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Adventure-47.png"
+  },
+  {
+   "id": "adventure.a_fierce_rider",
+   "campaign": "adventure",
+   "order": 61,
+   "of": 62,
+   "title": "A Fierce Rider",
+   "page": "A Fierce Rider",
+   "map": "tribal_1",
+   "mapTitle": "Tribal 1",
+   "budget": 9000,
+   "enemyTypes": [
+    "tribal.mammoth",
+    "farmer.halfling"
+   ],
+   "enemyCounts": {
+    "tribal.mammoth": 6,
+    "farmer.halfling": 1
+   },
+   "enemyTotal": 7,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "(counted from the survey prose)",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Adventure-61.png"
+  },
+  {
+   "id": "challenge.ice_archer_and_friends",
+   "campaign": "challenge",
+   "order": 1,
+   "of": 31,
+   "title": "Ice Archer and Friends",
+   "page": "Ice Archers and Friends",
+   "map": "viking",
+   "mapTitle": "Viking (Map)",
+   "budget": 3900,
+   "enemyTypes": [
+    "viking.headbutter",
+    "viking.ice_archer",
+    "viking.berserker"
+   ],
+   "enemyCounts": {
+    "viking.headbutter": 11,
+    "viking.ice_archer": 7,
+    "viking.berserker": 10
+   },
+   "enemyTotal": 28,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "11 Headbutters, 7 Ice Archers, 10 Berserkers.",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Challenge-1.png"
+  },
+  {
+   "id": "challenge.knights_and_priests",
+   "campaign": "challenge",
+   "order": 7,
+   "of": 31,
+   "title": "Knights and Priests",
+   "page": "Knights and Priests",
+   "map": "medieval_2",
+   "mapTitle": "Medieval 2",
+   "budget": 2500,
+   "enemyTypes": [
+    "medieval.healer",
+    "medieval.knight"
+   ],
+   "enemyCounts": {
+    "medieval.healer": 4,
+    "medieval.knight": 3
+   },
+   "enemyTotal": 7,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "4 Healers, 3 Knights.",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Challenge-7.png"
+  },
+  {
+   "id": "challenge.a_warm_welcome",
+   "campaign": "challenge",
+   "order": 13,
+   "of": 31,
+   "title": "A Warm Welcome",
+   "page": "A Warm Welcome",
+   "map": "tribal_2",
+   "mapTitle": "Tribal 2",
+   "budget": 2200,
+   "enemyTypes": [
+    "tribal.clubber",
+    "tribal.protector",
+    "tribal.bone_mage",
+    "tribal.chieftain"
+   ],
+   "enemyCounts": {
+    "tribal.clubber": 13,
+    "tribal.protector": 4,
+    "tribal.bone_mage": 1,
+    "tribal.chieftain": 8
+   },
+   "enemyTotal": 26,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "13 Clubbers, 4 Protectors, 1 Bone Mage, 8 Chieftains.",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Challenge-13.png"
+  },
+  {
+   "id": "challenge.zeus",
+   "campaign": "challenge",
+   "order": 19,
+   "of": 31,
+   "title": "Zeus",
+   "page": "Zeus (Level)",
+   "map": "ancient_2",
+   "mapTitle": "Ancient 2",
+   "budget": 3800,
+   "enemyTypes": [
+    "ancient.shield_bearer",
+    "ancient.sarissa",
+    "ancient.hoplite",
+    "ancient.zeus"
+   ],
+   "enemyCounts": {
+    "ancient.shield_bearer": 14,
+    "ancient.sarissa": 14,
+    "ancient.hoplite": 5,
+    "ancient.zeus": 1
+   },
+   "enemyTotal": 34,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "14 Shield Bearers, 14 Sarissas, 5 Hoplites, 1 Zeus.",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Challenge-19.png"
+  },
+  {
+   "id": "challenge.twin_lords",
+   "campaign": "challenge",
+   "order": 25,
+   "of": 31,
+   "title": "Twin Lords",
+   "page": "Twin Lords",
+   "map": "medieval_2",
+   "mapTitle": "Medieval 2",
+   "budget": 3800,
+   "enemyTypes": [
+    "medieval.bard",
+    "medieval.squire",
+    "medieval.archer",
+    "medieval.healer",
+    "medieval.knight"
+   ],
+   "enemyCounts": {
+    "medieval.bard": 3,
+    "medieval.squire": 6,
+    "medieval.archer": 9,
+    "medieval.healer": 2,
+    "medieval.knight": 2
+   },
+   "enemyTotal": 22,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "3 Bards, 6 Squires, 9 Archers, 2 Healers, 2 Knights.",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Challenge-25.png"
+  },
+  {
+   "id": "challenge.big_brawl",
+   "campaign": "challenge",
+   "order": 31,
+   "of": 31,
+   "title": "Big Brawl",
+   "page": "Big Brawl",
+   "map": "viking",
+   "mapTitle": "Viking (Map)",
+   "budget": 7500,
+   "enemyTypes": [
+    "viking.headbutter",
+    "viking.ice_archer",
+    "viking.brawler",
+    "viking.berserker",
+    "viking.valkyrie",
+    "viking.longship",
+    "viking.jarl"
+   ],
+   "enemyCounts": {
+    "viking.headbutter": 6,
+    "viking.ice_archer": 6,
+    "viking.brawler": 11,
+    "viking.berserker": 8,
+    "viking.valkyrie": 4,
+    "viking.jarl": 3,
+    "viking.longship": 1
+   },
+   "enemyTotal": 39,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "6 Headbutters, 6 Ice Archers, 11 Brawlers, 8 Berserkers, 4 Valkyries, 3 Jarls, 1 Longship.",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All units"
+   },
+   "objective": "",
+   "image": "Challenge-31.png"
+  },
+  {
+   "id": "dynasty.samurai",
+   "campaign": "dynasty",
+   "order": 1,
+   "of": 32,
+   "title": "Samurai",
+   "page": "Samurai (Level)",
+   "map": "dynasty",
+   "mapTitle": "Dynasty (Map)",
+   "budget": 3500,
+   "enemyTypes": [
+    "dynasty.samurai",
+    "dynasty.monk"
+   ],
+   "enemyCounts": {
+    "dynasty.samurai": 18,
+    "dynasty.monk": 1
+   },
+   "enemyTotal": 19,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "18 Samurai, 1 Monk.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking Faction"
+   },
+   "objective": "",
+   "image": "Dynasty-1.png"
+  },
+  {
+   "id": "dynasty.art_of_war",
+   "campaign": "dynasty",
+   "order": 7,
+   "of": 32,
+   "title": "Art of War",
+   "page": "Art of War",
+   "map": "dynasty",
+   "mapTitle": "Dynasty (Map)",
+   "budget": 3600,
+   "enemyTypes": [
+    "dynasty.samurai",
+    "dynasty.monk",
+    "dynasty.ninja"
+   ],
+   "enemyCounts": {
+    "dynasty.samurai": 8,
+    "dynasty.ninja": 6,
+    "dynasty.monk": 2
+   },
+   "enemyTotal": 16,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "8 Samurai, 6 Ninja, 2 Monks.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking Faction"
+   },
+   "objective": "",
+   "image": "Dynasty-7.png"
+  },
+  {
+   "id": "dynasty.area_of_effect",
+   "campaign": "dynasty",
+   "order": 13,
+   "of": 32,
+   "title": "Area of Effect",
+   "page": "Area of Effect",
+   "map": "tribal_2",
+   "mapTitle": "Tribal 2",
+   "budget": 4700,
+   "enemyTypes": [
+    "tribal.protector",
+    "tribal.stoner",
+    "tribal.bone_mage",
+    "tribal.chieftain",
+    "tribal.mammoth"
+   ],
+   "enemyCounts": {
+    "tribal.protector": 12,
+    "tribal.stoner": 10,
+    "tribal.bone_mage": 2,
+    "tribal.chieftain": 2,
+    "tribal.mammoth": 1
+   },
+   "enemyTotal": 27,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "12 Protectors, 10 Stoners, 2 Bone Mages, 2 Chieftains, 1 Mammoth.",
+   "available": {
+    "factions": [
+     "dynasty"
+    ],
+    "units": [],
+    "text": "Dynasty Faction"
+   },
+   "objective": "",
+   "image": "Dynasty-13.png"
+  },
+  {
+   "id": "dynasty.catapults",
+   "campaign": "dynasty",
+   "order": 20,
+   "of": 32,
+   "title": "Catapults",
+   "page": "Catapults",
+   "map": "medieval_1",
+   "mapTitle": "Medieval 1",
+   "budget": 2100,
+   "enemyTypes": [
+    "medieval.catapult"
+   ],
+   "enemyCounts": {
+    "medieval.catapult": 3
+   },
+   "enemyTotal": 3,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "3 Catapults.",
+   "available": {
+    "factions": [
+     "dynasty"
+    ],
+    "units": [],
+    "text": "Dynasty Faction"
+   },
+   "objective": "",
+   "image": "Dynasty-20.png"
+  },
+  {
+   "id": "dynasty.zeus_and_other_folks",
+   "campaign": "dynasty",
+   "order": 26,
+   "of": 32,
+   "title": "Zeus and Other Folks",
+   "page": "Zeus and Other Folks",
+   "map": "ancient_1",
+   "mapTitle": "Ancient 1",
+   "budget": 3000,
+   "enemyTypes": [
+    "ancient.shield_bearer",
+    "ancient.sarissa",
+    "ancient.zeus"
+   ],
+   "enemyCounts": {
+    "ancient.shield_bearer": 6,
+    "ancient.sarissa": 6,
+    "ancient.zeus": 1
+   },
+   "enemyTotal": 13,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "6 Shield Bearers, 6 Sarissas, 1 Zeus.",
+   "available": {
+    "factions": [
+     "dynasty"
+    ],
+    "units": [],
+    "text": "Dynasty Faction"
+   },
+   "objective": "",
+   "image": "Dynasty-26.png"
+  },
+  {
+   "id": "dynasty.viking_army",
+   "campaign": "dynasty",
+   "order": 32,
+   "of": 32,
+   "title": "Viking Army",
+   "page": "Viking Army",
+   "map": "viking",
+   "mapTitle": "Viking (Map)",
+   "budget": 6000,
+   "enemyTypes": [
+    "viking.berserker",
+    "viking.longship",
+    "viking.jarl"
+   ],
+   "enemyCounts": {
+    "viking.berserker": 10,
+    "viking.longship": 2,
+    "viking.jarl": 2
+   },
+   "enemyTotal": 14,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "10 Berserkers, 2 Longships, 2 Jarls.",
+   "available": {
+    "factions": [
+     "dynasty"
+    ],
+    "units": [],
+    "text": "Dynasty Faction"
+   },
+   "objective": "",
+   "image": "Dynasty-32.png"
+  },
+  {
+   "id": "renaissance.a_new_art_wave",
+   "campaign": "renaissance",
+   "order": 1,
+   "of": 33,
+   "title": "A New Art Wave",
+   "page": "A New Art Wave",
+   "map": "renaissance",
+   "mapTitle": "Renaissance (Map)",
+   "budget": 2000,
+   "enemyTypes": [
+    "renaissance.painter"
+   ],
+   "enemyCounts": {
+    "renaissance.painter": 54
+   },
+   "enemyTotal": 54,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "54 Painters.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty Faction"
+   },
+   "objective": "",
+   "image": "Renaissance-1.png"
+  },
+  {
+   "id": "renaissance.balloons",
+   "campaign": "renaissance",
+   "order": 7,
+   "of": 33,
+   "title": "Balloons",
+   "page": "Balloons",
+   "map": "renaissance",
+   "mapTitle": "Renaissance (Map)",
+   "budget": 5800,
+   "enemyTypes": [
+    "renaissance.balloon_archer",
+    "secret.ballooner"
+   ],
+   "enemyCounts": {
+    "renaissance.balloon_archer": 18,
+    "secret.ballooner": 12
+   },
+   "enemyTotal": 30,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "18 Balloon Archers, 12 Ballooners.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty Faction"
+   },
+   "objective": "",
+   "image": "Renaissance-7.png"
+  },
+  {
+   "id": "renaissance.renaissance_fencer",
+   "campaign": "renaissance",
+   "order": 13,
+   "of": 33,
+   "title": "Renaissance Fencer",
+   "page": "Renaissance Fencer",
+   "map": "renaissance",
+   "mapTitle": "Renaissance (Map)",
+   "budget": 2800,
+   "enemyTypes": [
+    "renaissance.fencer",
+    "renaissance.musketeer"
+   ],
+   "enemyCounts": {
+    "renaissance.fencer": 12,
+    "renaissance.musketeer": 8
+   },
+   "enemyTotal": 20,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "12 Fencers, 8 Musketeers",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty Faction"
+   },
+   "objective": "",
+   "image": "Renaissance-13.png"
+  },
+  {
+   "id": "renaissance.renaissance_vs_farmer_1",
+   "campaign": "renaissance",
+   "order": 19,
+   "of": 33,
+   "title": "Renaissance vs Farmer 1",
+   "page": "Renaissance vs Farmer 1",
+   "map": "farmer_1",
+   "mapTitle": "Farmer 1",
+   "budget": 500,
+   "enemyTypes": [
+    "farmer.halfling",
+    "farmer.harvester"
+   ],
+   "enemyCounts": {
+    "farmer.halfling": 10,
+    "farmer.harvester": 2
+   },
+   "enemyTotal": 12,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "10 Halflings, 2 Harvesters.",
+   "available": {
+    "factions": [
+     "renaissance"
+    ],
+    "units": [],
+    "text": "Renaissance Faction"
+   },
+   "objective": "",
+   "image": "Renaissance-19.png"
+  },
+  {
+   "id": "renaissance.renaissance_vs_ancient_2",
+   "campaign": "renaissance",
+   "order": 26,
+   "of": 33,
+   "title": "Renaissance vs Ancient 2",
+   "page": "Renaissance vs Ancient 2",
+   "map": "ancient_2",
+   "mapTitle": "Ancient 2",
+   "budget": 8000,
+   "enemyTypes": [
+    "ancient.shield_bearer",
+    "ancient.sarissa",
+    "ancient.minotaur",
+    "ancient.zeus"
+   ],
+   "enemyCounts": {
+    "ancient.shield_bearer": 9,
+    "ancient.sarissa": 8,
+    "ancient.minotaur": 4,
+    "ancient.zeus": 4
+   },
+   "enemyTotal": 25,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "Enemy units: 9 Shield Bearers, 8 Sarissas, 4 Minotaurs, 4 Zeuses",
+   "available": {
+    "factions": [
+     "renaissance"
+    ],
+    "units": [],
+    "text": "Renaissance Faction"
+   },
+   "objective": "",
+   "image": "Renaissance-26.png"
+  },
+  {
+   "id": "renaissance.renaissance_vs_dynasty_3",
+   "campaign": "renaissance",
+   "order": 33,
+   "of": 33,
+   "title": "Renaissance vs Dynasty 3",
+   "page": "Renaissance vs Dynasty 3",
+   "map": "dynasty",
+   "mapTitle": "Dynasty (Map)",
+   "budget": 3650,
+   "enemyTypes": [
+    "dynasty.samurai",
+    "secret.chu_ko_nu"
+   ],
+   "enemyCounts": {
+    "dynasty.samurai": 10,
+    "secret.chu_ko_nu": 7
+   },
+   "enemyTotal": 17,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "Enemy units: 10 Samurais, 7 Chu Ko Nu.",
+   "available": {
+    "factions": [
+     "renaissance"
+    ],
+    "units": [],
+    "text": "Renaissance Faction"
+   },
+   "objective": "",
+   "image": "Renaissance-33.png"
+  },
+  {
+   "id": "pirate.x_marks_the_spot",
+   "campaign": "pirate",
+   "order": 1,
+   "of": 24,
+   "title": "X Marks the Spot",
+   "page": "X Marks the Spot",
+   "map": "pirate",
+   "mapTitle": "Pirate (Map)",
+   "budget": 1700,
+   "enemyTypes": [
+    "pirate.flintlock"
+   ],
+   "enemyCounts": {
+    "pirate.flintlock": 22
+   },
+   "enemyTotal": 22,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "22 Flintlocks",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance Faction"
+   },
+   "objective": "",
+   "image": "Pirate-1.png"
+  },
+  {
+   "id": "pirate.a_rival_captain",
+   "campaign": "pirate",
+   "order": 5,
+   "of": 24,
+   "title": "A Rival Captain",
+   "page": "A Rival Captain",
+   "map": "pirate",
+   "mapTitle": "Pirate (Map)",
+   "budget": 5000,
+   "enemyTypes": [
+    "pirate.flintlock",
+    "pirate.blunderbuss",
+    "pirate.bomb_thrower",
+    "pirate.captain",
+    "pirate.cannon"
+   ],
+   "enemyCounts": {
+    "pirate.flintlock": 6,
+    "pirate.blunderbuss": 5,
+    "pirate.bomb_thrower": 2,
+    "pirate.cannon": 2,
+    "pirate.captain": 1
+   },
+   "enemyTotal": 16,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "6 Flintlocks, 5 Blunderbusses, 2 Bomb Throwers, 2 Cannons, 1 Captain.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance Faction"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "pirate.a_small_tribe",
+   "campaign": "pirate",
+   "order": 11,
+   "of": 24,
+   "title": "A Small Tribe",
+   "page": "A Small Tribe",
+   "map": "tribal_1",
+   "mapTitle": "Tribal 1",
+   "budget": 2900,
+   "enemyTypes": [
+    "tribal.protector",
+    "tribal.stoner",
+    "tribal.bone_mage",
+    "tribal.chieftain"
+   ],
+   "enemyCounts": {
+    "tribal.protector": 1,
+    "tribal.stoner": 4,
+    "tribal.bone_mage": 2,
+    "tribal.chieftain": 5
+   },
+   "enemyTotal": 12,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "1 Protector, 4 Stoners, 2 Bone Mages, 5 Chieftains",
+   "available": {
+    "factions": [
+     "pirate"
+    ],
+    "units": [],
+    "text": "Pirate Faction"
+   },
+   "objective": "",
+   "image": "Pirate-11.png"
+  },
+  {
+   "id": "pirate.you_won_t_make_us_walk_the_plank",
+   "campaign": "pirate",
+   "order": 15,
+   "of": 24,
+   "title": "You Won't Make Us Walk the Plank",
+   "page": "You Won't Make Us Walk the Plank",
+   "map": "medieval_1",
+   "mapTitle": "Medieval 1",
+   "budget": 3100,
+   "enemyTypes": [
+    "medieval.archer",
+    "medieval.healer",
+    "medieval.knight"
+   ],
+   "enemyCounts": {
+    "medieval.archer": 8,
+    "medieval.healer": 3,
+    "medieval.knight": 3
+   },
+   "enemyTotal": 14,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "8 Archers, 3 Healers, 3 Knights",
+   "available": {
+    "factions": [
+     "pirate"
+    ],
+    "units": [],
+    "text": "Pirate Faction"
+   },
+   "objective": "",
+   "image": "Pirate-15.png"
+  },
+  {
+   "id": "pirate.arrows_and_arrow",
+   "campaign": "pirate",
+   "order": 20,
+   "of": 24,
+   "title": "Arrows and Arrow",
+   "page": "Arrows and Arrow",
+   "map": "viking_sandbox",
+   "mapTitle": "Viking Sandbox",
+   "budget": 4500,
+   "enemyTypes": [
+    "viking.headbutter",
+    "viking.ice_archer",
+    "viking.brawler"
+   ],
+   "enemyCounts": {
+    "viking.headbutter": 4,
+    "viking.ice_archer": 9,
+    "viking.brawler": 15
+   },
+   "enemyTotal": 28,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "4 Headbutters, 9 Ice Archers, 15 Brawlers",
+   "available": {
+    "factions": [
+     "pirate"
+    ],
+    "units": [],
+    "text": "Pirate Faction"
+   },
+   "objective": "",
+   "image": "Pirate-20.png"
+  },
+  {
+   "id": "pirate.boom_and_the_units_go_down",
+   "campaign": "pirate",
+   "order": 24,
+   "of": 24,
+   "title": "Boom and the Units Go Down",
+   "page": "Boom and the Units Go Down",
+   "map": "renaissance",
+   "mapTitle": "Renaissance (Map)",
+   "budget": 4200,
+   "enemyTypes": [
+    "renaissance.fencer",
+    "renaissance.musketeer",
+    "renaissance.halberd"
+   ],
+   "enemyCounts": {
+    "renaissance.fencer": 7,
+    "renaissance.musketeer": 7,
+    "renaissance.halberd": 5
+   },
+   "enemyTotal": 19,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "7 Fencers, 7 Musketeers, 5 Halberds",
+   "available": {
+    "factions": [
+     "pirate"
+    ],
+    "units": [],
+    "text": "Pirate Faction"
+   },
+   "objective": "",
+   "image": "Pirate-24.png"
+  },
+  {
+   "id": "spooky.bone",
+   "campaign": "spooky",
+   "order": 1,
+   "of": 24,
+   "title": "Bone",
+   "page": "Bone",
+   "map": "spooky_1",
+   "mapTitle": "Spooky 1",
+   "budget": 1800,
+   "enemyTypes": [
+    "spooky.skeleton_warrior"
+   ],
+   "enemyCounts": {
+    "spooky.skeleton_warrior": 20
+   },
+   "enemyTotal": 20,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "20 Skeleton Warriors",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance",
+     "pirate"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance FactionPirate Faction"
+   },
+   "objective": "",
+   "image": "Spooky-1.png"
+  },
+  {
+   "id": "spooky.war",
+   "campaign": "spooky",
+   "order": 6,
+   "of": 24,
+   "title": "War",
+   "page": "War",
+   "map": "spooky_2",
+   "mapTitle": "Spooky 2",
+   "budget": 5000,
+   "enemyTypes": [
+    "spooky.skeleton_warrior",
+    "spooky.skeleton_archer",
+    "spooky.vampire",
+    "spooky.pumpkin_catapult"
+   ],
+   "enemyCounts": {
+    "spooky.skeleton_warrior": 19,
+    "spooky.skeleton_archer": 6,
+    "spooky.vampire": 9,
+    "spooky.pumpkin_catapult": 2
+   },
+   "enemyTotal": 36,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "19 Skeleton Warriors, 6 Skeleton Archers, 9 Vampires, 2 Pumpkin Catapults",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance",
+     "pirate"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance FactionPirate Faction"
+   },
+   "objective": "",
+   "image": "Spooky-6.png"
+  },
+  {
+   "id": "spooky.cave",
+   "campaign": "spooky",
+   "order": 11,
+   "of": 24,
+   "title": "Cave",
+   "page": "Cave",
+   "map": "tribal_2",
+   "mapTitle": "Tribal 2",
+   "budget": 3000,
+   "enemyTypes": [
+    "tribal.protector",
+    "tribal.chieftain"
+   ],
+   "enemyCounts": {
+    "tribal.protector": 6,
+    "tribal.chieftain": 15
+   },
+   "enemyTotal": 21,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "6 Protectors, 15 Chieftains",
+   "available": {
+    "factions": [
+     "spooky"
+    ],
+    "units": [],
+    "text": "Spooky Faction"
+   },
+   "objective": "",
+   "image": "Spooky-11.png"
+  },
+  {
+   "id": "spooky.turtle",
+   "campaign": "spooky",
+   "order": 15,
+   "of": 24,
+   "title": "Turtle",
+   "page": "Cliffside Battle",
+   "map": "medieval_1",
+   "mapTitle": "Medieval 1",
+   "budget": 3000,
+   "enemyTypes": [
+    "medieval.squire",
+    "medieval.archer"
+   ],
+   "enemyCounts": {
+    "medieval.squire": 18,
+    "medieval.archer": 11
+   },
+   "enemyTotal": 29,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "18 Squires, 11 Archers",
+   "available": {
+    "factions": [
+     "spooky"
+    ],
+    "units": [],
+    "text": "Spooky Faction"
+   },
+   "objective": "",
+   "image": "Spooky-15.png"
+  },
+  {
+   "id": "spooky.breakout",
+   "campaign": "spooky",
+   "order": 20,
+   "of": 24,
+   "title": "Breakout",
+   "page": "Berserkerpile",
+   "map": "viking",
+   "mapTitle": "Viking (Map)",
+   "budget": 4500,
+   "enemyTypes": [
+    "viking.berserker",
+    "viking.jarl"
+   ],
+   "enemyCounts": {
+    "viking.berserker": 18,
+    "viking.jarl": 4
+   },
+   "enemyTotal": 22,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "18 Berserkers, 4 Jarls",
+   "available": {
+    "factions": [
+     "spooky"
+    ],
+    "units": [],
+    "text": "Spooky Faction"
+   },
+   "objective": "",
+   "image": "Spooky-20.png"
+  },
+  {
+   "id": "spooky.plunder",
+   "campaign": "spooky",
+   "order": 24,
+   "of": 24,
+   "title": "Plunder",
+   "page": "Plunder",
+   "map": "pirate",
+   "mapTitle": "Pirate (Map)",
+   "budget": 8000,
+   "enemyTypes": [
+    "pirate.blunderbuss",
+    "pirate.bomb_thrower",
+    "pirate.cannon",
+    "pirate.captain",
+    "pirate.pirate_queen"
+   ],
+   "enemyCounts": {
+    "pirate.blunderbuss": 4,
+    "pirate.bomb_thrower": 6,
+    "pirate.cannon": 2,
+    "pirate.captain": 2,
+    "pirate.pirate_queen": 1
+   },
+   "enemyTotal": 15,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "4 Blunderbusses, 6 Bomb Throwers, 2 Cannon, 2 Captains, 1 Pirate Queen",
+   "available": {
+    "factions": [
+     "spooky"
+    ],
+    "units": [],
+    "text": "Spooky Faction"
+   },
+   "objective": "",
+   "image": "Spooky-24.png"
+  },
+  {
+   "id": "simulation.bridge_battle",
+   "campaign": "simulation",
+   "order": 1,
+   "of": 17,
+   "title": "Bridge Battle",
+   "page": "Bridge Battle",
+   "map": "bridge",
+   "mapTitle": "Bridge",
+   "budget": 5000,
+   "enemyTypes": [
+    "ancient.shield_bearer",
+    "ancient.sarissa",
+    "renaissance.balloon_archer",
+    "renaissance.jouster"
+   ],
+   "enemyCounts": {
+    "ancient.shield_bearer": 8,
+    "ancient.sarissa": 9,
+    "renaissance.balloon_archer": 5,
+    "renaissance.jouster": 3
+   },
+   "enemyTotal": 25,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "8 Shield Bearers, 9 Sarissas, 5 Balloon Archers, 3 Jousters",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All Units"
+   },
+   "objective": "",
+   "image": "Simulation-1.png"
+  },
+  {
+   "id": "simulation.hill",
+   "campaign": "simulation",
+   "order": 4,
+   "of": 17,
+   "title": "Hill (Level)",
+   "page": "Hill (Level)",
+   "map": "hill",
+   "mapTitle": "Hill",
+   "budget": 5500,
+   "enemyTypes": [
+    "dynasty.monk",
+    "renaissance.musketeer",
+    "pirate.harpooner"
+   ],
+   "enemyCounts": {
+    "dynasty.monk": 12,
+    "renaissance.musketeer": 14,
+    "pirate.harpooner": 3
+   },
+   "enemyTotal": 29,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "12 Monks, 14 Musketeers, 3 Harpooners",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All Units"
+   },
+   "objective": "",
+   "image": "Simulation-4.png"
+  },
+  {
+   "id": "simulation.wall",
+   "campaign": "simulation",
+   "order": 7,
+   "of": 17,
+   "title": "Wall",
+   "page": "Wall",
+   "map": "corridor",
+   "mapTitle": "Corridor",
+   "budget": 5000,
+   "enemyTypes": [
+    "ancient.shield_bearer",
+    "ancient.sarissa",
+    "viking.berserker"
+   ],
+   "enemyCounts": {
+    "ancient.shield_bearer": 8,
+    "ancient.sarissa": 19,
+    "viking.berserker": 10
+   },
+   "enemyTotal": 37,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "8 Shield Bearers, 19 Sarissas, 10 Berserkers",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All Units"
+   },
+   "objective": "",
+   "image": "Simulation-7.png"
+  },
+  {
+   "id": "simulation.siege",
+   "campaign": "simulation",
+   "order": 10,
+   "of": 17,
+   "title": "Siege",
+   "page": "Siege",
+   "map": "defend_the_castle",
+   "mapTitle": "Defend The Castle",
+   "budget": 8000,
+   "enemyTypes": [
+    "medieval.king",
+    "viking.brawler",
+    "viking.jarl",
+    "renaissance.fencer",
+    "renaissance.musketeer"
+   ],
+   "enemyCounts": {
+    "medieval.king": 2,
+    "viking.brawler": 9,
+    "viking.jarl": 3,
+    "renaissance.fencer": 8,
+    "renaissance.musketeer": 8
+   },
+   "enemyTotal": 30,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "2 Kings, 9 Brawlers, 3 Jarls, 8 Fencers, 8 Musketeers",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All Units"
+   },
+   "objective": "",
+   "image": "Simulation-10.png"
+  },
+  {
+   "id": "simulation.catapult_castle",
+   "campaign": "simulation",
+   "order": 13,
+   "of": 17,
+   "title": "Catapult Castle",
+   "page": "Catapult Castle",
+   "map": "high_ground",
+   "mapTitle": "High Ground",
+   "budget": 5000,
+   "enemyTypes": [
+    "medieval.catapult"
+   ],
+   "enemyCounts": {
+    "medieval.catapult": 9
+   },
+   "enemyTotal": 9,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "9 Catapults",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All Units"
+   },
+   "objective": "",
+   "image": "Simulation-13.png"
+  },
+  {
+   "id": "simulation.pit",
+   "campaign": "simulation",
+   "order": 17,
+   "of": 17,
+   "title": "Pit",
+   "page": "Pit",
+   "map": "low_ground",
+   "mapTitle": "Low Ground",
+   "budget": 4500,
+   "enemyTypes": [
+    "dynasty.samurai",
+    "dynasty.firework_archer",
+    "dynasty.monk",
+    "dynasty.hwacha"
+   ],
+   "enemyCounts": {
+    "dynasty.samurai": 5,
+    "dynasty.firework_archer": 9,
+    "dynasty.monk": 4,
+    "dynasty.hwacha": 2
+   },
+   "enemyTotal": 20,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "5 Samurai, 9 Firework Archers, 4 Monks, 2 Hwachas",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All Units"
+   },
+   "objective": "",
+   "image": "Simulation-17.png"
+  },
+  {
+   "id": "wild_west.leading_cacti",
+   "campaign": "wild_west",
+   "order": 2,
+   "of": 39,
+   "title": "Leading Cacti",
+   "page": "Leading Cacti",
+   "map": "wild_west",
+   "mapTitle": "Wild West (Map)",
+   "budget": 3600,
+   "enemyTypes": [
+    "wild_west.miner",
+    "wild_west.cactus"
+   ],
+   "enemyCounts": {
+    "wild_west.miner": 12,
+    "wild_west.cactus": 4
+   },
+   "enemyTotal": 16,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "12 Miners, 4 Cacti.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance",
+     "pirate",
+     "spooky"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance FactionPirate FactionSpooky Faction"
+   },
+   "objective": "",
+   "image": "WildWest-2.png"
+  },
+  {
+   "id": "wild_west.bullets_and_chains",
+   "campaign": "wild_west",
+   "order": 8,
+   "of": 39,
+   "title": "Bullets and Chains",
+   "page": "Bullets and Chains",
+   "map": "wild_west",
+   "mapTitle": "Wild West (Map)",
+   "budget": 7500,
+   "enemyTypes": [
+    "wild_west.cactus",
+    "wild_west.gunslinger",
+    "secret.ball_n_chain"
+   ],
+   "enemyCounts": {
+    "wild_west.cactus": 6,
+    "wild_west.gunslinger": 2,
+    "secret.ball_n_chain": 10
+   },
+   "enemyTotal": 18,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "6 Cacti, 2 Gunslingers, 10 Ball 'n' Chains.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance",
+     "pirate",
+     "spooky"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance FactionPirate FactionSpooky Faction"
+   },
+   "objective": "",
+   "image": "WildWest-8.png"
+  },
+  {
+   "id": "wild_west.lone_ranger_and_his_friends",
+   "campaign": "wild_west",
+   "order": 15,
+   "of": 39,
+   "title": "Lone Ranger and His Friends",
+   "page": "Lone Ranger and His Friends",
+   "map": "wild_west",
+   "mapTitle": "Wild West (Map)",
+   "budget": 7500,
+   "enemyTypes": [
+    "wild_west.miner",
+    "wild_west.cactus",
+    "wild_west.gunslinger",
+    "wild_west.lasso",
+    "wild_west.deadeye",
+    "wild_west.quick_draw"
+   ],
+   "enemyCounts": {
+    "wild_west.miner": 4,
+    "wild_west.cactus": 3,
+    "wild_west.gunslinger": 2,
+    "wild_west.lasso": 2,
+    "wild_west.deadeye": 2,
+    "wild_west.quick_draw": 1
+   },
+   "enemyTotal": 14,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "4 Miners, 3 Cacti, 2 Gunslingers, 2 Lassos, 2 Deadeyes, 1 Quickdraw.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance",
+     "pirate",
+     "spooky"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance FactionPirate FactionSpooky Faction"
+   },
+   "objective": "",
+   "image": "WildWest-15.png"
+  },
+  {
+   "id": "wild_west.laughing_knights",
+   "campaign": "wild_west",
+   "order": 21,
+   "of": 39,
+   "title": "Laughing Knights",
+   "page": "Laughing Knights",
+   "map": "medieval_1",
+   "mapTitle": "Medieval 1",
+   "budget": 2800,
+   "enemyTypes": [
+    "medieval.healer",
+    "medieval.knight",
+    "secret.jester",
+    "secret.executioner"
+   ],
+   "enemyCounts": {
+    "medieval.healer": 2,
+    "medieval.knight": 2,
+    "secret.jester": 4,
+    "secret.executioner": 2
+   },
+   "enemyTotal": 10,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "2 Healers, 2 Knights, 4 Jesters, 2 Executioners.",
+   "available": {
+    "factions": [
+     "wild_west"
+    ],
+    "units": [
+     "secret.ball_n_chain",
+     "secret.bank_robbers",
+     "secret.gatling_gun"
+    ],
+    "text": "Wild West Faction"
+   },
+   "objective": "",
+   "image": "WildWest-21.png"
+  },
+  {
+   "id": "wild_west.shogun_s_samurai",
+   "campaign": "wild_west",
+   "order": 28,
+   "of": 39,
+   "title": "Shogun's Samurai",
+   "page": "Shogun's Samurai",
+   "map": "dynasty",
+   "mapTitle": "Dynasty (Map)",
+   "budget": 7400,
+   "enemyTypes": [
+    "dynasty.samurai",
+    "secret.samurai_giant",
+    "secret.shogun"
+   ],
+   "enemyCounts": {
+    "dynasty.samurai": 17,
+    "secret.samurai_giant": 1,
+    "secret.shogun": 1
+   },
+   "enemyTotal": 19,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "17 Samurai, 1 Samurai Giant, 1 Shogun.",
+   "available": {
+    "factions": [
+     "wild_west"
+    ],
+    "units": [
+     "secret.ball_n_chain",
+     "secret.bank_robbers",
+     "secret.gatling_gun"
+    ],
+    "text": "Wild West Faction"
+   },
+   "objective": "",
+   "image": "WildWest-28.png"
+  },
+  {
+   "id": "wild_west.spooky_army",
+   "campaign": "wild_west",
+   "order": 34,
+   "of": 39,
+   "title": "Spooky Army",
+   "page": "Spooky Army",
+   "map": "spooky_2",
+   "mapTitle": "Spooky 2",
+   "budget": 7200,
+   "enemyTypes": [
+    "spooky.skeleton_archer",
+    "spooky.candlehead",
+    "spooky.vampire",
+    "spooky.swordcaster",
+    "spooky.reaper"
+   ],
+   "enemyCounts": {
+    "spooky.skeleton_archer": 8,
+    "spooky.candlehead": 6,
+    "spooky.vampire": 8,
+    "spooky.swordcaster": 3,
+    "spooky.reaper": 1
+   },
+   "enemyTotal": 26,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "8 Skeleton Archers, 6 Candleheads, 8 Vampires, 3 Swordcasters, 1 Reaper.",
+   "available": {
+    "factions": [
+     "wild_west"
+    ],
+    "units": [
+     "secret.ball_n_chain",
+     "secret.bank_robbers",
+     "secret.gatling_gun"
+    ],
+    "text": "Wild West Faction"
+   },
+   "objective": "",
+   "image": "WildWest-34.png"
+  },
+  {
+   "id": "legacy.siege",
+   "campaign": "legacy",
+   "order": 6,
+   "of": 33,
+   "title": "Siege",
+   "page": "Siege",
+   "map": "defend_the_castle",
+   "mapTitle": "Defend The Castle",
+   "budget": 8000,
+   "enemyTypes": [
+    "medieval.king",
+    "viking.brawler",
+    "viking.jarl",
+    "renaissance.fencer",
+    "renaissance.musketeer"
+   ],
+   "enemyCounts": {
+    "medieval.king": 2,
+    "viking.brawler": 9,
+    "viking.jarl": 3,
+    "renaissance.fencer": 8,
+    "renaissance.musketeer": 8
+   },
+   "enemyTotal": 30,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "2 Kings, 9 Brawlers, 3 Jarls, 8 Fencers, 8 Musketeers",
+   "available": {
+    "factions": [],
+    "units": [],
+    "text": "All Units"
+   },
+   "objective": "",
+   "image": "Simulation-10.png"
+  },
+  {
+   "id": "legacy.a_tank",
+   "campaign": "legacy",
+   "order": 10,
+   "of": 33,
+   "title": "A Tank",
+   "page": "A Tank",
+   "map": "legacy",
+   "mapTitle": "Legacy (Map)",
+   "budget": 7000,
+   "enemyTypes": [
+    "renaissance.musketeer",
+    "legacy.barrel_roller",
+    "legacy.flag_bearer",
+    "legacy.tank"
+   ],
+   "enemyCounts": {
+    "renaissance.musketeer": 6,
+    "legacy.barrel_roller": 2,
+    "legacy.flag_bearer": 2,
+    "legacy.tank": 1
+   },
+   "enemyTotal": 11,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "6 Musketeers, 2 Barrel Rollers, 2 Flag Bearers, 1 Tank.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance",
+     "pirate",
+     "spooky",
+     "wild_west"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance FactionPirate FactionSpooky FactionWild West Faction"
+   },
+   "objective": "",
+   "image": "Legacy-10.png"
+  },
+  {
+   "id": "legacy.the_war",
+   "campaign": "legacy",
+   "order": 11,
+   "of": 33,
+   "title": "The War",
+   "page": "The War",
+   "map": "legacy",
+   "mapTitle": "Legacy (Map)",
+   "budget": 15000,
+   "enemyTypes": [
+    "legacy.tank"
+   ],
+   "enemyCounts": {
+    "legacy.tank": 6
+   },
+   "enemyTotal": 6,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "6 Tanks.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance",
+     "pirate",
+     "spooky",
+     "wild_west"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance FactionPirate FactionSpooky FactionWild West Faction"
+   },
+   "objective": "",
+   "image": "Legacy-11.png"
+  },
+  {
+   "id": "legacy.thor_s_battle",
+   "campaign": "legacy",
+   "order": 12,
+   "of": 33,
+   "title": "Thor's Battle",
+   "page": "Thor's Battle",
+   "map": "legacy",
+   "mapTitle": "Legacy (Map)",
+   "budget": 5000,
+   "enemyTypes": [
+    "legacy.peasant",
+    "legacy.barrel_roller",
+    "legacy.pike",
+    "legacy.thor"
+   ],
+   "enemyCounts": {
+    "legacy.peasant": 13,
+    "legacy.barrel_roller": 5,
+    "legacy.pike": 24,
+    "legacy.thor": 1
+   },
+   "enemyTotal": 43,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "13 Peasants, 5 Barrel Rollers, 24 Pikes, 1 Thor.",
+   "available": {
+    "factions": [
+     "tribal",
+     "farmer",
+     "medieval",
+     "ancient",
+     "viking",
+     "dynasty",
+     "renaissance",
+     "pirate",
+     "spooky",
+     "wild_west"
+    ],
+    "units": [],
+    "text": "Tribal FactionFarmer FactionMedieval FactionAncient FactionViking FactionDynasty FactionRenaissance FactionPirate FactionSpooky FactionWild West Faction"
+   },
+   "objective": "",
+   "image": "Legacy-12.png"
+  },
+  {
+   "id": "fantasy_good.colossal_spike",
+   "campaign": "fantasy_good",
+   "order": 11,
+   "of": 32,
+   "title": "Colossal Spike",
+   "page": "Colossal Spike",
+   "map": "tribal_1",
+   "mapTitle": "Tribal 1",
+   "budget": 5800,
+   "enemyTypes": [
+    "tribal.protector",
+    "tribal.spear_thrower",
+    "tribal.chieftain",
+    "tribal.mammoth"
+   ],
+   "enemyCounts": {
+    "tribal.protector": 3,
+    "tribal.spear_thrower": 8,
+    "tribal.chieftain": 2,
+    "tribal.mammoth": 2
+   },
+   "enemyTotal": 15,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "3 Protectors, 8 Spear Throwers, 2 Chieftains, 2 Mammoths.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.solar_architect"
+    ],
+    "text": "Fantasy Good"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_good.royal_archers",
+   "campaign": "fantasy_good",
+   "order": 15,
+   "of": 32,
+   "title": "Royal Archers",
+   "page": "Royal Archers",
+   "map": "medieval_1",
+   "mapTitle": "Medieval 1",
+   "budget": 4500,
+   "enemyTypes": [
+    "medieval.archer",
+    "medieval.king"
+   ],
+   "enemyCounts": {
+    "medieval.archer": 8,
+    "medieval.king": 4
+   },
+   "enemyTotal": 12,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "8 Archers, 4 Kings.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.solar_architect"
+    ],
+    "text": "Fantasy Good Faction"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_good.clash_of_warriors",
+   "campaign": "fantasy_good",
+   "order": 19,
+   "of": 32,
+   "title": "Clash of Warriors",
+   "page": "Clash of Warriors",
+   "map": "viking",
+   "mapTitle": "Viking (Map)",
+   "budget": 6000,
+   "enemyTypes": [
+    "viking.berserker",
+    "viking.valkyrie"
+   ],
+   "enemyCounts": {
+    "viking.berserker": 31,
+    "viking.valkyrie": 5
+   },
+   "enemyTotal": 36,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "31 Berserkers, 5 Valyries.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.solar_architect"
+    ],
+    "text": "Fantasy Good"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_good.chaotic_cavalry",
+   "campaign": "fantasy_good",
+   "order": 24,
+   "of": 32,
+   "title": "Chaotic Cavalry",
+   "page": "Chaotic Cavalry",
+   "map": "renaissance",
+   "mapTitle": "Renaissance (Map)",
+   "budget": 7000,
+   "enemyTypes": [
+    "renaissance.jouster",
+    "renaissance.da_vinci_tank"
+   ],
+   "enemyCounts": {
+    "renaissance.jouster": 4,
+    "renaissance.da_vinci_tank": 2
+   },
+   "enemyTotal": 6,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "4 Jousters, 2 Da Vinci Tanks.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.solar_architect"
+    ],
+    "text": "Fantasy Good"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_good.vicious_terror",
+   "campaign": "fantasy_good",
+   "order": 28,
+   "of": 32,
+   "title": "Vicious Terror",
+   "page": "Vicious Terror",
+   "map": "spooky_2",
+   "mapTitle": "Spooky 2",
+   "budget": 7200,
+   "enemyTypes": [
+    "spooky.skeleton_archer",
+    "spooky.candlehead",
+    "spooky.reaper"
+   ],
+   "enemyCounts": {
+    "spooky.skeleton_archer": 12,
+    "spooky.candlehead": 8,
+    "spooky.reaper": 2
+   },
+   "enemyTotal": 22,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "12 Skeleton Archers, 8 Candleheads, 2 Reapers.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.solar_architect"
+    ],
+    "text": "Fantasy Good Faction"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_good.fortified_formation",
+   "campaign": "fantasy_good",
+   "order": 32,
+   "of": 32,
+   "title": "Fortified Formation",
+   "page": "Fortified Formation",
+   "map": "legacy",
+   "mapTitle": "Legacy (Map)",
+   "budget": 10000,
+   "enemyTypes": [
+    "legacy.pike",
+    "legacy.pharaoh",
+    "legacy.tank"
+   ],
+   "enemyCounts": {
+    "legacy.pike": 12,
+    "legacy.pharaoh": 2,
+    "legacy.tank": 2
+   },
+   "enemyTotal": 16,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "12 Pikes, 2 Pharaohs, 2 Tanks.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.solar_architect"
+    ],
+    "text": "Fantasy Good Faction"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_evil.encircling_tribe",
+   "campaign": "fantasy_evil",
+   "order": 11,
+   "of": 32,
+   "title": "Encircling Tribe",
+   "page": "Encircling Tribe",
+   "map": "tribal_1",
+   "mapTitle": "Tribal 1",
+   "budget": 2800,
+   "enemyTypes": [
+    "tribal.protector",
+    "tribal.spear_thrower",
+    "tribal.bone_mage",
+    "tribal.chieftain"
+   ],
+   "enemyCounts": {
+    "tribal.protector": 11,
+    "tribal.spear_thrower": 6,
+    "tribal.bone_mage": 4,
+    "tribal.chieftain": 2
+   },
+   "enemyTotal": 23,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "11 Protectors, 6 Spear Throwers, 4 Bone Mages, 2 Chieftain",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.infernal_whip"
+    ],
+    "text": "Fantasy Evil"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_evil.raze_the_homestead",
+   "campaign": "fantasy_evil",
+   "order": 13,
+   "of": 32,
+   "title": "Raze the Homestead",
+   "page": "Raze the Homestead",
+   "map": "farmer_1",
+   "mapTitle": "Farmer 1",
+   "budget": 2500,
+   "enemyTypes": [
+    "farmer.farmer",
+    "farmer.potion_seller",
+    "farmer.harvester"
+   ],
+   "enemyCounts": {
+    "farmer.farmer": 13,
+    "farmer.harvester": 2,
+    "farmer.potion_seller": 4
+   },
+   "enemyTotal": 19,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "13 Farmers, 2 Harvesters, 4 Potionsellers.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.infernal_whip"
+    ],
+    "text": "Fantasy Evil"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_evil.farmer_uprising_evil",
+   "campaign": "fantasy_evil",
+   "order": 14,
+   "of": 32,
+   "title": "Farmer Uprising (Evil)",
+   "page": "Farmer Uprising (Evil)",
+   "map": "farmer_2",
+   "mapTitle": "Farmer 2",
+   "budget": 3300,
+   "enemyTypes": [
+    "farmer.hay_baler",
+    "farmer.harvester",
+    "farmer.scarecrow"
+   ],
+   "enemyCounts": {
+    "farmer.hay_baler": 6,
+    "farmer.harvester": 3,
+    "farmer.scarecrow": 3
+   },
+   "enemyTotal": 12,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "6 Hay Balers, 3 Harvesters, 3 Scarecrows.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.infernal_whip"
+    ],
+    "text": "Fantasy Evil Faction"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_evil.storm_the_fortress",
+   "campaign": "fantasy_evil",
+   "order": 16,
+   "of": 32,
+   "title": "Storm the Fortress",
+   "page": "Storm the Fortress",
+   "map": "medieval_2",
+   "mapTitle": "Medieval 2",
+   "budget": 6400,
+   "enemyTypes": [
+    "medieval.squire",
+    "medieval.archer",
+    "medieval.knight",
+    "medieval.catapult",
+    "medieval.king"
+   ],
+   "enemyCounts": {
+    "medieval.squire": 11,
+    "medieval.archer": 12,
+    "medieval.knight": 2,
+    "medieval.catapult": 2,
+    "medieval.king": 2
+   },
+   "enemyTotal": 29,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "11 Squires, 12 Archers, 2 Knights, 2 Catapults, 2 Kings.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.infernal_whip"
+    ],
+    "text": "Fantasy Evil"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_evil.blasted_skirmish",
+   "campaign": "fantasy_evil",
+   "order": 17,
+   "of": 32,
+   "title": "Blasted Skirmish",
+   "page": "Blasted Skirmish",
+   "map": "ancient_1",
+   "mapTitle": "Ancient 1",
+   "budget": 5000,
+   "enemyTypes": [
+    "ancient.hoplite",
+    "ancient.snake_archer",
+    "ancient.minotaur"
+   ],
+   "enemyCounts": {
+    "ancient.hoplite": 11,
+    "ancient.snake_archer": 4,
+    "ancient.minotaur": 2
+   },
+   "enemyTotal": 17,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "11 Hoplites, 4 Snake Archers, 2 Minotaurs.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.infernal_whip"
+    ],
+    "text": "Fantasy Evil"
+   },
+   "objective": "",
+   "image": null
+  },
+  {
+   "id": "fantasy_evil.dismantle_the_spears",
+   "campaign": "fantasy_evil",
+   "order": 19,
+   "of": 32,
+   "title": "Dismantle the Spears",
+   "page": "Dismantle the Spears",
+   "map": "viking",
+   "mapTitle": "Viking (Map)",
+   "budget": 4000,
+   "enemyTypes": [
+    "viking.headbutter",
+    "viking.brawler"
+   ],
+   "enemyCounts": {
+    "viking.headbutter": 20,
+    "viking.brawler": 12
+   },
+   "enemyTotal": 32,
+   "unknownUnits": [],
+   "uncounted": [],
+   "totalLine": "20 Headbutters, 12 Brawlers.",
+   "available": {
+    "factions": [],
+    "units": [
+     "secret.infernal_whip"
+    ],
+    "text": "Fantasy Evil"
+   },
+   "objective": "",
+   "image": null
+  }
+ ],
+ "maps": [
+  {
+   "id": "tribal_1",
+   "title": "Tribal 1",
+   "page": "Tribal 1",
+   "found": true,
+   "images": [
+    "20200828175818 1.jpg"
+   ],
+   "view": "reference/maps/autumn_tribal_1.png",
+   "usedBy": [
+    "introduction.clubs",
+    "introduction.army",
+    "adventure.tree_tribe",
+    "adventure.sneaky_tribe",
+    "adventure.tree_mammoths",
+    "adventure.a_fierce_rider",
+    "pirate.a_small_tribe",
+    "fantasy_good.colossal_spike",
+    "fantasy_evil.encircling_tribe"
+   ]
+  },
+  {
+   "id": "farmer_2",
+   "title": "Farmer 2",
+   "page": "Farmer 2",
+   "found": true,
+   "images": [
+    "F2.jpg"
+   ],
+   "view": "reference/maps/farm_2.png",
+   "usedBy": [
+    "introduction.hay_and_pitchforks",
+    "adventure.the_tiniest_attack",
+    "fantasy_evil.farmer_uprising_evil"
+   ]
+  },
+  {
+   "id": "ancient_1",
+   "title": "Ancient 1",
+   "page": "Ancient 1",
+   "found": true,
+   "images": [
+    "Ac1.jpg"
+   ],
+   "view": "reference/maps/greek_ancient_1.png",
+   "usedBy": [
+    "introduction.basic_formation",
+    "adventure.final_destination_wheelbarrow",
+    "dynasty.zeus_and_other_folks",
+    "fantasy_evil.blasted_skirmish"
+   ]
+  },
+  {
+   "id": "viking",
+   "title": "Viking (Map)",
+   "page": "Viking (Map)",
+   "found": true,
+   "images": [
+    "20200829150648 1.jpg"
+   ],
+   "view": "reference/maps/winter_viking.png",
+   "usedBy": [
+    "introduction.ice_archers_only_almost",
+    "introduction.longships",
+    "challenge.ice_archer_and_friends",
+    "challenge.big_brawl",
+    "dynasty.viking_army",
+    "spooky.breakout",
+    "fantasy_good.clash_of_warriors",
+    "fantasy_evil.dismantle_the_spears"
+   ]
+  },
+  {
+   "id": "medieval_2",
+   "title": "Medieval 2",
+   "page": "Medieval 2",
+   "found": true,
+   "images": [
+    "M2.jpg"
+   ],
+   "view": "reference/maps/meadow_medieval_2.png",
+   "usedBy": [
+    "challenge.knights_and_priests",
+    "challenge.twin_lords",
+    "fantasy_evil.storm_the_fortress"
+   ]
+  },
+  {
+   "id": "tribal_2",
+   "title": "Tribal 2",
+   "page": "Tribal 2",
+   "found": true,
+   "images": [
+    "T2.jpg"
+   ],
+   "view": "reference/maps/autumn_tribal_2.png",
+   "usedBy": [
+    "challenge.a_warm_welcome",
+    "dynasty.area_of_effect",
+    "spooky.cave"
+   ]
+  },
+  {
+   "id": "ancient_2",
+   "title": "Ancient 2",
+   "page": "Ancient 2",
+   "found": true,
+   "images": [
+    "Ca1.jpg"
+   ],
+   "view": "reference/maps/greek_ancient_2.png",
+   "usedBy": [
+    "challenge.zeus",
+    "renaissance.renaissance_vs_ancient_2"
+   ]
+  },
+  {
+   "id": "dynasty",
+   "title": "Dynasty (Map)",
+   "page": "Dynasty (Map)",
+   "found": true,
+   "images": [
+    "Dynaty.jpg"
+   ],
+   "view": "reference/maps/dynasty.png",
+   "usedBy": [
+    "dynasty.samurai",
+    "dynasty.art_of_war",
+    "renaissance.renaissance_vs_dynasty_3",
+    "wild_west.shogun_s_samurai"
+   ]
+  },
+  {
+   "id": "medieval_1",
+   "title": "Medieval 1",
+   "page": "Medieval 1",
+   "found": true,
+   "images": [
+    "Medieval1.jpg"
+   ],
+   "view": "reference/maps/meadow_medieval_1.png",
+   "usedBy": [
+    "dynasty.catapults",
+    "pirate.you_won_t_make_us_walk_the_plank",
+    "spooky.turtle",
+    "wild_west.laughing_knights",
+    "fantasy_good.royal_archers"
+   ]
+  },
+  {
+   "id": "renaissance",
+   "title": "Renaissance (Map)",
+   "page": "Renaissance (Map)",
+   "found": true,
+   "images": [
+    "Re.jpg"
+   ],
+   "view": "reference/maps/renaissance_town.png",
+   "usedBy": [
+    "renaissance.a_new_art_wave",
+    "renaissance.balloons",
+    "renaissance.renaissance_fencer",
+    "pirate.boom_and_the_units_go_down",
+    "fantasy_good.chaotic_cavalry"
+   ]
+  },
+  {
+   "id": "farmer_1",
+   "title": "Farmer 1",
+   "page": "Farmer 1",
+   "found": true,
+   "images": [
+    "F1.jpg"
+   ],
+   "view": "reference/maps/farm_1.png",
+   "usedBy": [
+    "renaissance.renaissance_vs_farmer_1",
+    "fantasy_evil.raze_the_homestead"
+   ]
+  },
+  {
+   "id": "pirate",
+   "title": "Pirate (Map)",
+   "page": "Pirate (Map)",
+   "found": true,
+   "images": [
+    "20200902101907 1.jpg"
+   ],
+   "view": "reference/maps/pirate_beach.png",
+   "usedBy": [
+    "pirate.x_marks_the_spot",
+    "pirate.a_rival_captain",
+    "spooky.plunder"
+   ]
+  },
+  {
+   "id": "viking_sandbox",
+   "title": "Viking Sandbox",
+   "page": "Viking Sandbox",
+   "found": true,
+   "images": [
+    "20200826102036 1.jpg"
+   ],
+   "view": "reference/maps/winter_viking_sandbox.png",
+   "usedBy": [
+    "pirate.arrows_and_arrow"
+   ]
+  },
+  {
+   "id": "spooky_1",
+   "title": "Spooky 1",
+   "page": "Spooky 1",
+   "found": true,
+   "images": [
+    "20200828192702 1.jpg"
+   ],
+   "view": "reference/maps/spooky_1.png",
+   "usedBy": [
+    "spooky.bone"
+   ]
+  },
+  {
+   "id": "spooky_2",
+   "title": "Spooky 2",
+   "page": "Spooky 2",
+   "found": true,
+   "images": [
+    "20200828192912 1.jpg"
+   ],
+   "view": "reference/maps/spooky_2.png",
+   "usedBy": [
+    "spooky.war",
+    "wild_west.spooky_army",
+    "fantasy_good.vicious_terror"
+   ]
+  },
+  {
+   "id": "bridge",
+   "title": "Bridge",
+   "page": "Bridge",
+   "found": true,
+   "images": [
+    "Bridge.jpg"
+   ],
+   "view": null,
+   "usedBy": [
+    "simulation.bridge_battle"
+   ]
+  },
+  {
+   "id": "hill",
+   "title": "Hill",
+   "page": "Hill",
+   "found": true,
+   "images": [
+    "20200610145739 1.jpg"
+   ],
+   "view": null,
+   "usedBy": [
+    "simulation.hill"
+   ]
+  },
+  {
+   "id": "corridor",
+   "title": "Corridor",
+   "page": "Corridor",
+   "found": true,
+   "images": [
+    "Corridor-0.jpg"
+   ],
+   "view": null,
+   "usedBy": [
+    "simulation.wall"
+   ]
+  },
+  {
+   "id": "defend_the_castle",
+   "title": "Defend The Castle",
+   "page": "Defend The Castle",
+   "found": true,
+   "images": [
+    "20200610181729 1.jpg"
+   ],
+   "view": null,
+   "usedBy": [
+    "simulation.siege",
+    "legacy.siege"
+   ]
+  },
+  {
+   "id": "high_ground",
+   "title": "High Ground",
+   "page": "High Ground",
+   "found": true,
+   "images": [
+    "20200610174636 1.jpg"
+   ],
+   "view": null,
+   "usedBy": [
+    "simulation.catapult_castle"
+   ]
+  },
+  {
+   "id": "low_ground",
+   "title": "Low Ground",
+   "page": "Low Ground",
+   "found": true,
+   "images": [
+    "20200610175736 1.jpg"
+   ],
+   "view": null,
+   "usedBy": [
+    "simulation.pit"
+   ]
+  },
+  {
+   "id": "wild_west",
+   "title": "Wild West (Map)",
+   "page": "Wild West (Map)",
+   "found": true,
+   "images": [
+    "Wildwest.jpg"
+   ],
+   "view": "reference/maps/western.png",
+   "usedBy": [
+    "wild_west.leading_cacti",
+    "wild_west.bullets_and_chains",
+    "wild_west.lone_ranger_and_his_friends"
+   ]
+  },
+  {
+   "id": "legacy",
+   "title": "Legacy (Map)",
+   "page": "Legacy (Map)",
+   "found": true,
+   "images": [
+    "Legacy map.jpg"
+   ],
+   "view": "reference/maps/legacy.png",
+   "usedBy": [
+    "legacy.a_tank",
+    "legacy.the_war",
+    "legacy.thor_s_battle",
+    "fantasy_good.fortified_formation"
+   ]
+  },
+  {
+   "id": "tribal_sandbox",
+   "title": "Tribal Sandbox",
+   "page": "Tribal Sandbox",
+   "found": true,
+   "images": [
+    "20200829150328 1.jpg"
+   ],
+   "view": "reference/maps/autumn_tribal_sandbox.png",
+   "usedBy": []
+  },
+  {
+   "id": "ancient_sandbox",
+   "title": "Ancient Sandbox",
+   "page": "Ancient Sandbox",
+   "found": true,
+   "images": [
+    "20200828175641 1.jpg"
+   ],
+   "view": "reference/maps/greek_ancient_sandbox.png",
+   "usedBy": []
+  },
+  {
+   "id": "farmer_snow",
+   "title": "Farmer Snow",
+   "page": "Farmer Snow",
+   "found": true,
+   "images": [
+    "20201207123753 1.jpg"
+   ],
+   "view": "reference/maps/farm_snow.png",
+   "usedBy": []
+  },
+  {
+   "id": "fantasy_good",
+   "title": "Fantasy Good (Map)",
+   "page": "Fantasy Good (Map)",
+   "found": true,
+   "images": [
+    "Good.jpg"
+   ],
+   "view": "reference/maps/heaven_good.png",
+   "usedBy": []
+  },
+  {
+   "id": "fantasy_evil",
+   "title": "Fantasy Evil (Map)",
+   "page": "Fantasy Evil (Map)",
+   "found": true,
+   "images": [
+    "Darkfantasymap.jpg"
+   ],
+   "view": "reference/maps/void_evil.png",
+   "usedBy": []
+  },
+  {
+   "id": "simulation",
+   "title": "Simulation (Map)",
+   "page": "Simulation (Map)",
+   "found": true,
+   "images": [
+    "20200828173310 1.jpg"
+   ],
+   "view": "reference/maps/simulation.png",
+   "usedBy": []
+  }
+ ]
+}

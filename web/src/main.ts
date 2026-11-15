@@ -3729,6 +3729,68 @@ const gameApi = {
     };
   },
   validateCampaignDefinitions: () => validateCampaignDefinitionsStructure(),
+  // Loop v10 maps phase (loop/scripts/capture-world.mjs): a map alone in sandbox placement, and what it is made of.
+  loadMapForCapture: (mapId: string) => {
+    if (campaignSession) leaveCampaignMode();
+    resetBattle();
+    loadMapById(mapId as BattleMapId);
+    const zones = activeMapInstance.placementZones ?? activeMapInstance.zones;
+    return {
+      mapId: activeMapInstance.id,
+      zones: zones.map((z) => ({ team: z.team, x: z.center.x, z: z.center.z, w: z.size.x, d: z.size.z })),
+      obstacles: activeMapInstance.obstacles.length,
+      hazards: activeMapInstance.hazards.map((h) => h.kind),
+    };
+  },
+  // Units of a team standing in a hazard (water, void, pit) or dead from one: a map whose men walk into its own water fails criterion c.
+  countUnitsInHazards: (team: number) => countAliveUnitsInHazards(team),
+  // Loop v10 stages phase (loop/scripts/capture-world.mjs): load one stage and report what the game made of it.
+  checkStage: (campaignId: CampaignId, scenarioId: string) => {
+    const nextSession = createCampaignSession(campaignId, false, scenarioId);
+    if (!nextSession || nextSession.scenarioId !== scenarioId) return { error: `no stage ${campaignId}/${scenarioId}` };
+    campaignSession = nextSession;
+    loadCampaignScenario("Stage check.");
+    const scenario = getActiveCampaignScenarioDefinition()!;
+    const zones = activeMapInstance.placementZones ?? activeMapInstance.zones;
+    const validator = new PlacementValidator(zones, activeMapInstance.obstacles, activeMapInstance.hazards);
+    const misplaced: string[] = [];
+    // For each misplaced unit, the nearest valid spot (rings of 0.6 m out to 30 m, clear of the units already standing) as a fix suggestion
+    const moves: Array<{ index: number; unitId: string; from: [number, number]; to: [number, number] | null }> = [];
+    const standing: Array<{ x: number; z: number; r: number }> = [];
+    const clearOfStanding = (x: number, z: number, r: number) => standing.every((s) => (s.x - x) ** 2 + (s.z - z) ** 2 >= (s.r + r) ** 2);
+    scenario.placements.forEach((p, index) => {
+      const r = getUnit(p.unitId)?.collisionRadius ?? 0.5;
+      const ok = (x: number, z: number) => !validator.validate(p.team, new Vector3(x, 0, z), r, []) && clearOfStanding(x, z, r);
+      const why = validator.validate(p.team, new Vector3(p.position.x, 0, p.position.z), r, []);
+      if (!why) { standing.push({ x: p.position.x, z: p.position.z, r }); return; }
+      misplaced.push(`${p.unitId}@${p.position.x},${p.position.z}: ${why}`);
+      let to: [number, number] | null = null;
+      for (let ring = 1; ring <= 50 && !to; ring++) {
+        const d = ring * 0.6;
+        const steps = Math.max(8, Math.round(ring * 6));
+        for (let k = 0; k < steps; k++) {
+          const a = (k / steps) * Math.PI * 2;
+          const x = Math.round((p.position.x + Math.cos(a) * d) * 10) / 10, z = Math.round((p.position.z + Math.sin(a) * d) * 10) / 10;
+          if (ok(x, z)) { to = [x, z]; break; }
+        }
+      }
+      if (to) standing.push({ x: to[0], z: to[1], r });
+      moves.push({ index, unitId: p.unitId, from: [p.position.x, p.position.z], to });
+    });
+    const spawned: Record<string, number> = {};
+    for (const unit of placedUnits) {
+      if (unit.team !== 1 || unit.isDead || unit.linkedParent) continue;
+      spawned[unit.definition.id] = (spawned[unit.definition.id] ?? 0) + 1;
+    }
+    return {
+      mapId: activeMapInstance.id,
+      budget: scenario.restrictions.budget,
+      allowedUnitIds: scenario.restrictions.allowedUnitIds,
+      spawned,
+      misplaced,
+      moves,
+    };
+  },
   validateCurrentCampaignScenario,
   runCampaignSmokeCheck,
   runCampaignScenarioDeterministicCheck,

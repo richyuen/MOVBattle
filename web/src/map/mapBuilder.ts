@@ -4,6 +4,8 @@ import {
 import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
 import type { HazardKind, HazardRegion } from "./hazards";
+import { TABS_MAPS, type TabsMapId } from "./tabsMaps";
+import { TABS_MAP_BUILDERS } from "./tabs";
 
 const MAP_WIDTH = 160;  // full X extent (placement/navigation bounds)
 const MAP_DEPTH = 120;  // full Z extent (placement/navigation bounds)
@@ -1170,7 +1172,8 @@ export type BattleMapId =
   | "campaign.wild_west"
   | "campaign.legacy"
   | "campaign.fantasy_good"
-  | "campaign.fantasy_evil";
+  | "campaign.fantasy_evil"
+  | `map.${TabsMapId}`;
 
 interface CampaignPropSpec {
   kind:
@@ -3167,7 +3170,7 @@ const defaultHalfZones = (): PlacementZone[] => [
   zone(1, 40, 0, 70, 80),
 ];
 
-const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal">, CampaignMapTheme> = {
+const campaignThemes: Record<Exclude<BattleMapId, "sandbox.tribal" | `map.${string}`>, CampaignMapTheme> = {
   "campaign.introduction": {
     displayName: "Introduction Grounds",
     clearColor: new Color3(0.64, 0.79, 0.94),
@@ -3496,8 +3499,31 @@ const battleMapEntries: Array<[BattleMapId, BattleMapDefinition]> = [
       build: (scene: Scene) => trackMapBuild(scene, id as BattleMapId, theme.displayName, () => buildCampaignBattlefield(scene, theme)),
     },
   ] as [BattleMapId, BattleMapDefinition]),
+  // TABS maps (loop v10): a map's own builder in ./tabs/ when it has one, else its base map's build
+  ...(Object.entries(TABS_MAPS) as Array<[TabsMapId, (typeof TABS_MAPS)[TabsMapId]]>).map(([key, entry]) => {
+    const id = `map.${key}` as BattleMapId;
+    return [id, {
+      id,
+      displayName: entry.title,
+      build: (scene: Scene) => trackMapBuild(scene, id, entry.title, () => {
+        const own = TABS_MAP_BUILDERS[key];
+        return own ? own(scene, () => buildBaseMap(scene, entry.base as BattleMapId)) : buildBaseMap(scene, entry.base as BattleMapId);
+      }),
+    }] as [BattleMapId, BattleMapDefinition];
+  }),
 ];
 const mapRegistry = new Map<BattleMapId, BattleMapDefinition>(battleMapEntries);
+
+/** The MapBuildResult of an older map, for a TABS map that starts from it (no tracking: the TABS map tracks itself). */
+function buildBaseMap(scene: Scene, id: BattleMapId): MapBuildResult {
+  if (id === DEFAULT_BATTLE_MAP_ID) {
+    restoreSandboxSceneLook(scene);
+    return new TribalSandboxMapBuilder(scene).build();
+  }
+  const theme = campaignThemes[id as keyof typeof campaignThemes];
+  if (!theme) throw new Error(`no base map ${id}`);
+  return buildCampaignBattlefield(scene, theme);
+}
 
 export function loadBattleMap(scene: Scene, id: string): BattleMapInstance {
   const definition = mapRegistry.get(id as BattleMapId) ?? mapRegistry.get(DEFAULT_BATTLE_MAP_ID)!;
