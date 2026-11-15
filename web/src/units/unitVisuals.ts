@@ -76,6 +76,7 @@ export type MaterialPreset =
   | "secret_hero"
   | "secret_ghost"
   | "secret_ice"
+  | "secret_frost"
   | "secret_nature"
   | "secret_bone"
   | "secret_demon"
@@ -1300,7 +1301,9 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       // [S] 543 (a.1) no viking helmet: his snow cap and mane are secretDress ULLR_CAP
       return vis({ scale: 1.28, bulk: 1.05, armLength: 1.08 }, "axe", "none", "none", "cape", "#9cd5ff", "axe", {
         weaponVariant: "ullr_axe", offhandVariant: "ullr_axe", weaponPresentationFamily: "throw",
-        posePreset: "duelist", materialPreset: "secret_ice", fxPreset: "frost",
+        // [S] 551 (a.7; secret.ullr.jpg: trunk, arms and trousers in the full team colour, the frost only in his cap, beard and axes): the whole-body
+        // secret_frost preset in place of secret_ice, which blended the body 60% toward a pale ice blue (unitFactory resolveMaterialTint)
+        posePreset: "duelist", materialPreset: "secret_frost", fxPreset: "frost",
       });
     case "secret_lady_red_jade":
       // [S] 541 (b.1) one guandao upright in both fists on the halberd's two-handed grip, no second sword (propBuilder GUANDAO)

@@ -55,6 +55,7 @@ const TEAM_DOMINANT_BODY_PRESETS = new Set<MaterialPreset>([
   "secret_demon",
   "secret_ghost",
   "secret_ice",
+  "secret_frost",
   "secret_nature",
 ]);
 
@@ -3469,6 +3470,9 @@ function resolveMaterialTint(materialPreset: MaterialPreset, bodyColor: Color3, 
       return { metallic: 0.1, roughness: 0.3, bodyDiffuse: blend(new Color3(0.82, 0.78, 0.96), 0.55), bodyEmissive: new Color3(0.06, 0.04, 0.08), skinDiffuse: flesh(new Color3(0.9, 0.9, 1.0), 0.4), skinEmissive: new Color3(0.02, 0.02, 0.04), alpha: 0.94 };
     case "secret_ice":
       return { metallic: 0.15, roughness: 0.2, bodyDiffuse: blend(new Color3(0.62, 0.88, 0.98), 0.6), bodyEmissive: new Color3(0.03, 0.06, 0.08), skinDiffuse: flesh(new Color3(0.88, 0.96, 1.0), 0.45), skinEmissive: zero, alpha: 1 };
+    case "secret_frost":
+      // One whole-body material in the team colour itself (no pale blend; skin unblended), a little smoother, with a faint cool self-light
+      return { ...base, roughness: 0.7, bodyDiffuse: bodyColor, bodyEmissive: new Color3(0.0, 0.01, 0.02), skinDiffuse: skinBase, skinEmissive: zero, alpha: 1 };
     case "secret_nature":
       return { ...base, roughness: 0.85, bodyDiffuse: blend(new Color3(0.4, 0.54, 0.28), 0.6), bodyEmissive: new Color3(0.02, 0.04, 0.01), skinDiffuse: flesh(new Color3(0.68, 0.58, 0.46), 0.35), skinEmissive: zero, alpha: 1 };
     case "secret_bone":
