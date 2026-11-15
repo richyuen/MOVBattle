@@ -17,7 +17,7 @@ Read at step 1; one fact a line, merge near cap.
 - `release` is the first PLAIN event in the list, and only then `events[0]`: a mechanic judged in `_release` must also log a plain hit at its blow (394 headbutter).
 - A capture wipes iter-N (stats.json, audit.md): back up, rerun `stats.mjs --iter N` after the last capture (527). Checkpoint replaces summary.json (483). Detection stops 3 s after the first event: a late trigger needs ABILITY_PREF (543).
 - RotationX(+a) tips +y toward +z (537). A turn-on-friends status needs a friend in the scene; a cast at a closing man needs a second man walking in (537).
-- Probes in loop/scripts/probes/ run from repo root. Use --build after source changes, --noglow for a material swatch.
+- Probes (loop/scripts/probes/) run from repo root; --build after source changes, --noglow for a swatch.
 - capture's PLAIN regex takes ability kinds starting missile/fire/throw/cast/burst/volley as the plain attack: a special's kind must not (475).
 - A held pole stands planted upright (PRIEST_HOLD) only as a rod (named "staff" with an "orb" or "uprightPole" child); any other staff rides the support slant, +y to the ground (457).
 - A bowman not in simulationSystem DRAWS_BEFORE_LOOSE looses at the decision: his _release/_windup shots catch the carry, never the draw (443 skeleton archer); a struck shot may frame the ENEMY archer.
@@ -33,11 +33,11 @@ Read at step 1; one fact a line, merge near cap.
 - A neck-rooted piece must clear the head box: probe_bbox it (439). Probe yaw and pitch before flipping a pose's sign.
 - A world box refreshes only on render: computeWorldMatrix(true) before centerWorld in a per-tick pose (516). Gate an idle hold on the fire (451). Team garment shade: saturate (c^2), scale, self-lit .12; x k at self-lit .4 reads grey (517). RuntimeUnit._applyPoseOverlay runs after the animator and re-turns a held aim (455).
 - _heading() is the move heading (backing off, it points away): aim a held weapon at the target; re-lay a fist prop off the hand's world position, not its hand-frame offset (511).
-- Gate ability starts on his feet (512). Offset-0 linked actor: build off body.root (528).
+- Gate ability starts on his feet (512); offset-0 linked actor off body.root (528); pinned pairs RU.holdUpright (514); flat ico faces sit ~20% in (512).
 - RU.leap sets _leapAir (the in-flight pose hook) only for jump_charge: a leap with a flight pose must set it (513).
-- Flat ico faces sit ~20% inside: ray-cast dress on (512). Pinned pairs: RU.holdUpright (514).
+- Squat (few heads tall, square trunk): lower scale, raise torsoLength/legLength (554).
 - Held-prop throw: options.flight at card speed (541); heldProp with no letGoOfThrow throws a copy, fist kept (542); landing area effect: iceBurstHook (542).
-- A vehicle rider is an addOperator in its builder, posed in the callback (529); flip a held blade at its grip.
+- Vehicle rider: addOperator in its builder, posed in the callback (529).
 ## Rig and dress
 - A chain or rope off a moving fist: a world-space rope pinned to the hand in RU.update, laid out at spawn (secretDress ChainWhip, 519).
 - A pole butt in the hip box hides the off fist: carry it ahead of the hips (511). Move the whole body to reach a target (509). A tall crown tips with the head pitch: stand it on the torso joint (500); a torso board on body.root (496).
@@ -46,7 +46,7 @@ Read at step 1; one fact a line, merge near cap.
 - Skirt on body.hip, not torso (yawed stance, 552). Retire old skirts (482); a belt hides in a tunicSkirt flare: build off its top ring (517). Size shells off the `_yoke` (487); check later repaint passes (508).
 - Before changing stance, probe hem sides, cuff top and hip sink (450). Shin limbShell 0 is the calf cap, ~.1 m over the knee.
 - aimLimb aims a fixed-length bone (397). Leg length: scale thigh/shin and knee.position.y, move the foot by the shin's change, the hip by the total (440); it won't read under a pelvis box or boot tops (441).
-- unitFactory overwrites mesh metadata: mark a prop for the animator with a named child node (427).
+- unitFactory overwrites mesh metadata: mark a prop with a named child node (427).
 - A foot mesh is a merged cuff + toe box ~half the shin tall: a tuft at its bbox middle is buried; the instep's top is lo.y + ~.42 (399). Shoes, anklets, socks go at that height or the boot eats the shin (433); the grass hides a foot box to ~.6, so a shoe must top that (434).
 - A hem or band cut at a share of limbBox(thigh) misses the knee: the thigh runs ~.08-.12 past the joint; anchor to knee.position.y - thigh.position.y (shin: -shin.position.y) (512 shouter). Shin, foot, trunk and _yoke meshes in the dark body shade read as boots or a vest: recolour them to the dress cloth (433); open dress stands off the _yoke box (525).
 - A head-hung piece cannot run on down the torso (it sits inside the chest box): build the torso run torso-parented (401).

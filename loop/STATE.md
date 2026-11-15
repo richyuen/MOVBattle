@@ -1,5 +1,5 @@
 # Loop state (v4: two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 553   Batch: secret_4   Consecutive empty: 0   Done: 137/139   Parked: 0
+Iteration: 554   Batch: secret_4   Consecutive empty: 0   Done: 139/139   Parked: 0
 Batches, in order: tribal, renaissance, farmer, medieval, farmer:re, ancient, viking, dynasty, pirate, spooky, wild_west, legacy_1, legacy_2, good, evil, secret_1, secret_2, secret_3, secret_4
 
 ## Scoreboard (a b c d as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
@@ -20,25 +20,24 @@ evil: shadow_walker ++++ D | exiled_sentinel ++++ D | mad_mechanic ++++ D | void
 secret_1: ballooner ++++ D | bomb_on_a_stick ++++ D | fan_bearer ++++ D | raptor ++++ D | the_teacher ++++ D | jester ++++ D | ball_n_chain ++++ D | chu_ko_nu ++++ D | executioner ++++ D | shouter ++++ D
 secret_2: taekwondo ++++ D | raptor_rider ++++ D | cheerleader ++++ D | cupid ++++ D | mace_spinner ++++ D | clams ++++ D | present_elf ++++ D | ice_mage ++++ D | infernal_whip ++++ D | bank_robbers ++++ D
 secret_3: witch ++++ D | banshee ++++ D | necromancer ++++ D | solar_architect ++++ D | wheelbarrow_dragon ++++ D | skeleton_giant ++++ D | bomb_cannon ++++ D | cavalry ++++ D | vlad ++++ D | gatling_gun ++++ D
-secret_4: blackbeard ++++ D | samurai_giant -+++ o | ullr ++++ D | lady_red_jade ++++ D | sensei ++++ D | shogun ++++ D | tree_giant ++++ D | artemis -+++ o | ice_giant ++++ D
+secret_4: blackbeard ++++ D | samurai_giant ++++ D | ullr ++++ D | lady_red_jade ++++ D | sensei ++++ D | shogun ++++ D | tree_giant ++++ D | artemis ++++ D | ice_giant ++++ D
 
-## Focus (iteration 553; BASE 79a3ea6d; secret_4)
-1. [S] secret.samurai_giant.a scale 2.9 legs 1.2 (91749ead) APPROVE, struck 6
-2. [S] secret.artemis.a straight shallow skirt to the knee + peplum (d041bc48) APPROVE, struck 1, added 2 (peplum material)
-3. [S] secret.samurai_giant.a vambraces SAMURAI_KOTE + low guard SAMURAI_GUARD (85b298cc, 2b57229d, 74f4038c) APPROVE, struck 2
-4. [S] secret.samurai_giant.a broad crescent maedate (0d259eb8) APPROVE, struck 5, a PASS; CONFIRM failed a (3 new blockers)
+## Focus (iteration 554; BASE 1aaccdae; secret_4)
+1. [S] secret.samurai_giant.a lanky build + straight SAMURAI_HAKAMA (9c042750) APPROVE, struck 1
+2. [P] secret.artemis.a peplum in the chiton cloth (2c63862f) APPROVE, struck 2, a PASS; CONFIRM passed: D
+3. [S] secret.samurai_giant.a plain greaves with side studs (f83d86e6) APPROVE, struck 2
+4. [S] secret.samurai_giant.a GIANT_SHIKORO flared lames (b0e670f7, 1bdc350d) APPROVE, struck 3, a PASS; CONFIRM passed: D
 - 4/4, 4 struck
 
 ## Last verdicts (critic header lines verbatim)
-- GAP: [S] secret.samurai_giant (91749ead) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.a FAIL   (previous: FAIL)
-- GAP: [S] secret.artemis (d041bc48) / VERDICT: APPROVE / CRITERION: secret.artemis.a FAIL   (previous: FAIL)
-- GAP: [S] secret.samurai_giant (85b298cc, 2b57229d, 74f4038c) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.a FAIL   (previous: FAIL)
-- GAP: [S] secret.samurai_giant (0d259eb8) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.a PASS   (previous: FAIL)
+- GAP: [S] secret.samurai_giant (9c042750) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.a FAIL   (previous: FAIL)
+- GAP: [P] secret.artemis (2c63862f) / VERDICT: APPROVE / CRITERION: secret.artemis.a PASS   (previous: FAIL)
+- GAP: [S] secret.samurai_giant (f83d86e6) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.a FAIL   (previous: FAIL)
+- GAP: [S] secret.samurai_giant (b0e670f7, follow-up 1bdc350d) / VERDICT: APPROVE / CRITERION: secret.samurai_giant.a PASS   (previous: FAIL)
 - REGRESSIONS: none
-- CONFIRM 553: artemis a, b, c PASS (gap critic added a.2); samurai_giant b, c PASS, a FAIL (build, gold leg hoops, flared shikoro)
+- CONFIRM 554: samurai_giant a PASS (b, c confirmed); artemis a, b, c confirmed; both D
 
 ## Notes for next iteration (max 5 lines)
-- Artemis a.2 only: artemisPeplum takes the chiton/torso cloth, not body.leftLowerArm.material; CONFIRM already passed a, b, c (a pass makes her D).
-- Samurai Giant a (CONFIRM list): slimmer build with legs ~half (bulk 1.75 is the root), SAMURAI_SUNEATE without gold hoops, KABUTO lames flared to the shoulders.
-- LEDGER is at 15986/16000: archive the secret_3 rows (538-540, all done) to one archived line before adding rows.
-- Head heights (553): samurai giant ~4.75 m, Shogun 2.17, tree giant ~4.9, ice giant ~5.2.
+- All 139 units are D and the batch list is exhausted: the next iteration finds no open or queued unit and writes STOP (step 1).
+- secret_4 checkpoint 554: regression-only 12/12 GREEN, 0 page errors.
+- Samurai Giant critic defects left (not blockers): olive pelvis sliver at the left hip behind the hakama top; studs a touch large; small gaps between shikoro lames.
