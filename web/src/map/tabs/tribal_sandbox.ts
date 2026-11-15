@@ -289,6 +289,61 @@ function openSky(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+/**
+ * Red shrubs (wiki tribal_sandbox.png): low crinkly red and red-orange bushes are scattered at the feet of the ring birches and tucked
+ * against the rock nooks and outcrops. Spec read off the wiki shot: about one ring birch in three has a clump 1-2 m in front of it on the
+ * field side, and each nook, the outcrop and the heap have two; a clump is 2-4 bumpy balls 0.9-1.6 m across (finer facets than the
+ * crowns), in crimson (linear (0.7, 0.07, 0.04)) and red-orange (0.78, 0.2, 0.05), self-lit, out of fog and glow. Any base bushes go.
+ * Drawn only: units push through.
+ */
+function redShrubs(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) if (built.has(mesh) && (mesh.name === "bush" || mesh.name === "bushLump")) mesh.setEnabled(false);
+  const mats = [new Color3(0.7, 0.07, 0.04), new Color3(0.78, 0.2, 0.05)].map((c, i) => {
+    const m = new StandardMaterial(`tribalSandboxShrub${i}`, scene);
+    m.diffuseColor = c.scale(0.6);
+    m.emissiveColor = c.scale(0.5);
+    m.specularColor = Color3.Black();
+    return m;
+  });
+  const spots: Array<[number, number]> = [];
+  const trunks = scene.meshes.filter((m) => built.has(m) && m.name === "trunk" && m.isEnabled());
+  trunks.forEach((t, i) => {
+    if (i % 3 !== 0) return;
+    const p = t.getAbsolutePosition();
+    const l = Math.hypot(p.x, p.z) || 1;
+    const d = 1 + seeded(i, 121);
+    spots.push([p.x - (p.x / l) * d, p.z - (p.z / l) * d]);
+  });
+  for (const [x, z] of [...NOOKS, [OUTCROP.x, OUTCROP.z] as [number, number], [HEAP.x, HEAP.z] as [number, number]]) {
+    const l = Math.hypot(x, z) || 1;
+    for (const side of [-1, 1]) spots.push([x - (x / l) * 5 + (-z / l) * side * 3.5, z - (z / l) * 5 + (x / l) * side * 3.5]);
+  }
+  const groups: Mesh[][] = [[], []];
+  spots.forEach(([x, z], s) => {
+    const n = 2 + Math.floor(seeded(s, 122) * 3);
+    for (let b = 0; b < n; b++) {
+      const k = s * 10 + b;
+      const r = 0.45 + seeded(k, 123) * 0.35;
+      const ball = MeshBuilder.CreateIcoSphere("tsShrub", { radius: r, subdivisions: 2 }, scene);
+      const a = seeded(k, 124) * Math.PI * 2, off = b === 0 ? 0 : 0.6 + seeded(k, 125) * 0.4;
+      ball.scaling.y = 0.85;
+      ball.position.set(x + Math.cos(a) * off, r * 0.75, z + Math.sin(a) * off);
+      groups[seeded(k, 126) < 0.6 ? 0 : 1].push(ball);
+    }
+  });
+  const glow = scene.getGlowLayerByName("glow");
+  groups.forEach((list, i) => {
+    const merged = list.length ? Mesh.MergeMeshes(list, true) : null;
+    if (!merged) return;
+    merged.name = `tribalSandboxShrubs${i}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[i];
+    merged.applyFog = false;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  });
+}
+
 export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -359,5 +414,6 @@ export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): Ma
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   rockNooks(scene, obstacles);
+  redShrubs(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles };
 }
