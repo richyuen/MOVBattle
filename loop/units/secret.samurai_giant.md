@@ -1,25 +1,26 @@
 # secret.samurai_giant
-Status: open   Audited: 538 (AUDIT x2), 544 (RE-AUDIT x2)   Done: -
+Status: open   Audited: 538 (AUDIT x2), 544 (RE-AUDIT x2), 553 (CONFIRM: passed b, c; failed a)   Done: -
 ## Verdicts
-a FAIL (2 since 548, 3 struck)
- 2. bare blue forearms in unit_secret.samurai_giant_idle — TABS: flared angular vambraces with gold borders (ref: secret.samurai_giant.blue.png)
- 5. gold brow ornament reads as two thin wires in unit_secret.samurai_giant_idle — TABS: broad flat gold crescent with a center disk (ref: secret.samurai_giant.blue.png)
- 6. stands less than twice Shogun's body height in lineup_secret_4 — TABS: towering giant around 3x baseline, more than twice the 1.2x Shogun (ref: reference/factions/secret.jpg, card Infobox)
-b PASS (547)
-c PASS (547)
-d PASS (552 stats)
+a FAIL (0 since 553, CONFIRM list)
+ 1. build in unit_secret.samurai_giant_idle: a squat giant with a slab torso about as wide as it is tall, a wide-flared armour skirt and short thick legs that are well under half the height — TABS: a lanky magnified samurai with a narrow torso, a straight hakama to the knee and long thin shins, the legs about half the height (ref: reference/units/secret.samurai_giant.red.png, .blue.png; reference/factions/secret.jpg, the tall slim figure beside the Tree Giant)
+ 2. gold hoop bands ringing the thighs and shins in unit_secret.samurai_giant_idle — TABS: plain team-coloured leg greaves with small studs and no gold rings (ref: reference/units/secret.samurai_giant.red.png)
+ 3. helmet neck guard in unit_secret.samurai_giant_idle: a tight rounded dome that sits close to the head — TABS: the Shogun helmet's tiered gold-edged shikoro flaring out on both sides of the face down to the shoulders (ref: reference/units/secret.samurai_giant.red.png; card Appearance "uses the Shogun helmet")
+b PASS (547; CONFIRM 553)
+c PASS (547; CONFIRM 553)
+d PASS (553 stats)
 ## Ranked gaps
-1. [S] secret.samurai_giant.a forearms — blocker 2: flared gold-bordered team vambraces (reuse shogunVambraces) — ref: secret.samurai_giant.blue.png — ours: unit_secret.samurai_giant_idle.png (552 critic and lineup place the bare forearms at the face: the idle shows them now)
-2. [S] secret.samurai_giant.a brow ornament — blocker 5: a broad flat gold crescent maedate with a centre disk in samuraiGiantKabuto — ref: secret.samurai_giant.blue.png — ours: unit_secret.samurai_giant_idle.png
-3. [S] secret.samurai_giant.a scale — blocker 6: raise the giant's height toward more than 2x the Shogun (a scale or legLength mechanism change, not a nudge) — ref: reference/factions/secret.jpg — ours: lineup_secret_4.png
+1. [S] secret.samurai_giant.a build — blocker 1: slimmer torso (bulk 1.75 down, cuirass narrower), straight hakama, legs toward half the height — ref: secret.samurai_giant.red.png — ours: unit_secret.samurai_giant_idle.png
+2. [S] secret.samurai_giant.a greaves — blocker 2: SAMURAI_SUNEATE plain team plates with small studs, no gold hoops — ref: secret.samurai_giant.red.png — ours: unit_secret.samurai_giant_idle.png
+3. [S] secret.samurai_giant.a helmet — blocker 3: KABUTO lames flared wide down to the shoulders on both sides of the face, as the Shogun's layered kabuto — ref: secret.samurai_giant.red.png — ours: unit_secret.samurai_giant_idle.png
 ## Attempts (iter | gap | criterion | verdict)
-552 | Shogun's hakama SHOGUN_HAKAMA on him, tunic skirt off (2f25e8fb) | a | approved (struck 3)
-552 | banded team shin guards SAMURAI_SUNEATE + Artemis sandals, lowerLegWidth .5 (debe76f4) | a | approved (struck 4)
-549 | flared gold-bordered vambraces SAMURAI_KOTE (5ce1d544, 2482989c) | a | dropped (forearms hidden behind the blade in the idle; reverted 3d645e19, 308cb4b0)
-548 | fitted gold-laced lamellar cuirass (5b7b006d) | a | approved (struck 1)
-543-547 | kabuto KABUTO, broad katana, two-handed grip, Foot Stomp flip and burst, katana ground burst | a, b, c | approved
+553 | scale 2.3 -> 2.9, legLength .95 -> 1.2 (91749ead) | a | approved (struck 6)
+553 | vambraces SAMURAI_KOTE + fixed low guard SAMURAI_GUARD (85b298cc, 2b57229d, 74f4038c) | a | approved (struck 2)
+553 | broad flat crescent maedate + boss in KABUTO (0d259eb8) | a | approved (struck 5; a PASS, CONFIRM failed a)
+552 | hakama SHOGUN_HAKAMA (2f25e8fb); banded shin guards SAMURAI_SUNEATE + sandals (debe76f4) | a | approved (struck 3, 4)
+549 | vambraces SAMURAI_KOTE (5ce1d544, 2482989c) | a | dropped (hidden behind the blade)
+543-548 | kabuto, broad katana, two-handed grip, Foot Stomp flip and burst, katana ground burst, cuirass | a, b, c | approved
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 552 critic: hakama hem a little short of the knee; shin guards a touch wide.
-- Shares the Shogun's body (a 1.2x man); the KABUTO is gated on this id only.
-- 552: idle carry is random per spawn (proceduralAnimation h(92)): the forearms showed at the face this time; check the shot before the vambrace pick.
+- Probe 553: head top ~4.75 m (Shogun 2.17, Tree Giant ~4.9). Shares the Shogun's body; KABUTO's giant branch is gated on the head mesh name.
+- The guard blade is canted out (SAMURAI_GUARD tip x .42): upright, the broad blade hid the face and crest. Critic noted the cant, not a b fail.
+- The 553 CONFIRM's gold hoops (2) are SAMURAI_SUNEATE's rim bands: dropping them is part of a.
