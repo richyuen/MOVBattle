@@ -6420,6 +6420,27 @@ export function samuraiGiantKabuto(scene: Scene, body: ArticulatedBody, team: Co
   }
   // the gold crescent maedate rising from the brow
   const foot = new Vector3(c.x, seat + H * 0.08, c.z + D * 0.52);
+  if (head.name.includes("samurai_giant")) {
+    /*
+     * [S] 553 (samurai_giant a.5: "gold brow ornament reads as two thin wires - TABS: broad flat gold crescent with a center disk";
+     * secret.samurai_giant.blue.png: over the brow a flat gold crescent about as wide as the helmet, its two horns broad at the root and curving
+     * out and up to points about half a head over the root, a round gold boss at its middle). MAEDATE: each horn .segs closed flat slabs along
+     * the curve (out .w of W, up .h of H), .root of W broad at the root tapering to .tip, .thick of D deep; the boss a disc .boss of W across.
+     */
+    const M = { segs: 7, w: 0.56, h: 0.62, root: 0.26, tip: 0.06, thick: 0.07, boss: 0.34 };
+    const boss = put(MeshBuilder.CreateCylinder("kabutoCrest", { height: D * M.thick * 1.4, diameter: W * M.boss, tessellation: 12 }, scene), gold);
+    boss.rotation.x = Math.PI / 2; boss.position.set(foot.x, foot.y, foot.z + D * M.thick * 0.3);
+    for (const side of [-1, 1]) {
+      const at = (u: number) => new Vector3(foot.x + side * W * M.w * Math.sin(u * Math.PI * 0.5), foot.y + H * M.h * (1 - Math.cos(u * Math.PI * 0.5)) + H * 0.04 * u, foot.z);
+      for (let k = 0; k < M.segs; k++) {
+        const a = at(k / M.segs), b = at((k + 1) / M.segs), d = b.subtract(a), u = (k + 0.5) / M.segs;
+        const broad = W * (M.root + (M.tip - M.root) * u);
+        const slab = put(MeshBuilder.CreateBox("kabutoMaedate", { width: d.length() * 1.18, height: broad, depth: D * M.thick }, scene), gold);
+        slab.position.copyFrom(a.add(b).scale(0.5)); slab.rotation.z = Math.atan2(d.y, d.x);
+      }
+    }
+    return out;
+  }
   const disc = put(MeshBuilder.CreateCylinder("kabutoCrest", { height: D * 0.06, diameter: W * 0.22, tessellation: 8 }, scene), gold);
   disc.rotation.x = Math.PI / 2; disc.position.copyFrom(foot);
   for (const side of [-1, 1]) {
