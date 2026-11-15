@@ -658,14 +658,15 @@ function earthBowl(scene: Scene, built: Set<unknown>): void {
  */
 function oliveCrowns(scene: Scene, built: Set<unknown>): void {
   const olive = new StandardMaterial("farmer2OliveLeaf", scene);
-  olive.diffuseColor = new Color3(0.45, 0.42, 0.14);
-  olive.emissiveColor = olive.diffuseColor.scale(0.25);
+  // Mostly self-lit: lit only by the sun the shaded lumps read dark olive-brown, not TABS's pale khaki
+  olive.diffuseColor = new Color3(0.5, 0.47, 0.16);
+  olive.emissiveColor = olive.diffuseColor.scale(0.6);
   olive.specularColor = Color3.Black();
   const glow = scene.getGlowLayerByName("glow");
   // The ring is the base's oaks (oakCrown lumps on oakLeaves / oakLeavesDark): their light and dark lumps go light and deep olive
   const oliveDark = new StandardMaterial("farmer2OliveLeafDark", scene);
-  oliveDark.diffuseColor = new Color3(0.34, 0.34, 0.1);
-  oliveDark.emissiveColor = oliveDark.diffuseColor.scale(0.25);
+  oliveDark.diffuseColor = new Color3(0.4, 0.39, 0.12);
+  oliveDark.emissiveColor = oliveDark.diffuseColor.scale(0.55);
   oliveDark.specularColor = Color3.Black();
   for (const mesh of scene.meshes) {
     if (!built.has(mesh) || mesh.name !== "oakCrown" || !mesh.isEnabled()) continue;
