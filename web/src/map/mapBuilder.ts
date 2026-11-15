@@ -5,6 +5,7 @@ import type { PlacementZone } from "./placementValidator";
 import type { Obstacle } from "./obstacles";
 import type { HazardKind, HazardRegion } from "./hazards";
 import { TABS_MAPS, type TabsMapId } from "./tabsMaps";
+import { markStatic, type HeightField } from "./terrain";
 import { TABS_MAP_BUILDERS } from "./tabs";
 
 const MAP_WIDTH = 160;  // full X extent (placement/navigation bounds)
@@ -301,6 +302,8 @@ export interface MapBuildResult {
   placementZones?: PlacementZone[];
   obstacles: Obstacle[];
   hazards: HazardRegion[];
+  /** The map's ground height under (x, z), drawn only (map/terrain.ts): absent on a flat map. */
+  height?: HeightField;
   dispose?: () => void;
 }
 
@@ -1250,8 +1253,12 @@ function cylinderHazard(kind: HazardKind, x: number, z: number, radius: number):
 function trackMapBuild(scene: Scene, id: BattleMapId, displayName: string, build: () => MapBuildResult): BattleMapInstance {
   const priorMeshes = new Set(scene.meshes);
   const priorMaterials = new Set(scene.materials);
+  const priorNodes = new Set(scene.transformNodes);
   const result = build();
   const createdMeshes = scene.meshes.filter((mesh) => !priorMeshes.has(mesh));
+  // The map's own geometry is drawn where it was built: never lifted onto the height field
+  markStatic(createdMeshes);
+  markStatic(scene.transformNodes.filter((node) => !priorNodes.has(node)));
   const createdMaterials = scene.materials.filter((material) => !priorMaterials.has(material));
   return {
     ...result,

@@ -4,7 +4,11 @@
 import type { Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { TabsMapId } from "../tabsMaps";
+import { buildHill } from "./hill";
 
+// Ground height is visual only (../terrain.ts): return `height` in the MapBuildResult and shape the ground with terrainMesh(); hill.ts is the example.
 export type TabsMapBuilder = (scene: Scene, base: () => MapBuildResult) => MapBuildResult;
 
-export const TABS_MAP_BUILDERS: Partial<Record<TabsMapId, TabsMapBuilder>> = {};
+export const TABS_MAP_BUILDERS: Partial<Record<TabsMapId, TabsMapBuilder>> = {
+  hill: buildHill,
+};

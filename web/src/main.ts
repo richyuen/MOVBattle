@@ -69,6 +69,7 @@ import {
 import type { Obstacle } from "./map/obstacles";
 import { isPointInsideHazard } from "./map/hazards";
 import { PlacementValidator } from "./map/placementValidator";
+import { installTerrainLift, setActiveHeightField } from "./map/terrain";
 import {
   CameraController,
   type CameraViewState,
@@ -378,6 +379,10 @@ projectileSystem.impactPresentation = impactPresentation;
 const unitFactory = new UnitFactory(scene);
 unitFactory.shadowGenerator = shadowGen;
 let activeMapInstance: BattleMapInstance = loadBattleMap(scene, DEFAULT_BATTLE_MAP_ID);
+// Visual terrain height (map/terrain.ts): everything in the scene so far is fixed; units, missiles and effects made from here on are drawn on the
+// active map's ground. Its draw-time lift is the last before-render observer, after the sim's step.
+installTerrainLift(scene);
+setActiveHeightField(activeMapInstance.height ?? null);
 RuntimeUnit.obstacles = buildRuntimeObstacles(activeMapInstance);
 RuntimeUnit.hazards = activeMapInstance.hazards;
 let placementValidator = new PlacementValidator(activeMapInstance.placementZones ?? activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
@@ -662,6 +667,7 @@ function loadMapById(mapId: BattleMapId): void {
   if (activeMapInstance.id === mapId) return;
   activeMapInstance.dispose?.();
   activeMapInstance = loadBattleMap(scene, mapId);
+  setActiveHeightField(activeMapInstance.height ?? null);
   RuntimeUnit.obstacles = buildRuntimeObstacles(activeMapInstance);
   RuntimeUnit.hazards = activeMapInstance.hazards;
   placementValidator = new PlacementValidator(activeMapInstance.placementZones ?? activeMapInstance.zones, activeMapInstance.obstacles, activeMapInstance.hazards);
