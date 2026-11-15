@@ -31,22 +31,22 @@ function cobbleWall(scene: Scene, mat: StandardMaterial, [x0, z0, x1, z1, gapAt]
   const gapFrom = gapAt * len - GAP / 2, gapTo = gapAt * len + GAP / 2;
   const stones: Mesh[] = [];
   let k = 0;
-  for (let along = 0.4; along < len; along += 0.75) {
+  // Big rounded field stones (wiki shot): a bottom course two stones wide (0.85-1.1 m across), a top course of single stones riding the
+  // seam (0.7-0.95 m, one in five missing), so the wall stands about 1.2 m high and 1.3 m wide, a heap of round grey boulders
+  for (let along = 0.45; along < len; along += 0.85) {
     if (along > gapFrom && along < gapTo) continue;
-    for (let layer = 0; layer < 2; layer++) {
-      for (const side of [-0.25, 0.25]) {
-        k++;
-        if (layer === 1 && seeded(k + w * 500, 3) < 0.25) continue; // a broken top line
-        const size = 0.42 + seeded(k + w * 500, 4) * 0.22;
-        const stone = MeshBuilder.CreatePolyhedron("farmer2Cobble", { type: 1, size }, scene);
-        stone.scaling.set(1, 0.7, 1);
-        const jitter = (seeded(k + w * 500, 5) - 0.5) * 0.3;
-        const ax = along + jitter;
-        stone.position.set(x0 + ux * ax - uz * side, 0.22 + layer * 0.38, z0 + uz * ax + ux * side);
-        stone.rotation.set(seeded(k, 6) * 3, seeded(k, 7) * 3, seeded(k, 8) * 3);
-        stones.push(stone);
-      }
-    }
+    const courses: Array<[number, number, number, number]> = [[-0.32, 0.36, 0.85, 0.25], [0.32, 0.36, 0.85, 0.25], [0, 0.92, 0.7, 0.25]];
+    courses.forEach(([side, y, d, spread], c) => {
+      k++;
+      if (c === 2 && seeded(k + w * 500, 3) < 0.2) return;
+      const r = (d + seeded(k + w * 500, 4) * spread) / 2;
+      const stone = MeshBuilder.CreateIcoSphere("farmer2Cobble", { radius: r, subdivisions: 1 }, scene);
+      stone.scaling.set(1.1, 0.78, 0.95);
+      const ax = along + (seeded(k + w * 500, 5) - 0.5) * 0.3 + (c === 2 ? 0.42 : 0);
+      stone.position.set(x0 + ux * ax - uz * side, y + (seeded(k, 9) - 0.5) * 0.1, z0 + uz * ax + ux * side);
+      stone.rotation.set(seeded(k, 6) * 3, seeded(k, 7) * 3, seeded(k, 8) * 3);
+      stones.push(stone);
+    });
   }
   const merged = Mesh.MergeMeshes(stones, true);
   if (merged) {
@@ -582,8 +582,8 @@ export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuild
   hidePlacementGuides(scene, built);
   oliveMeadow(scene);
   const stone = new StandardMaterial("farmer2WallStone", scene);
-  stone.diffuseColor = new Color3(0.62, 0.62, 0.6);
-  stone.emissiveColor = new Color3(0.07, 0.07, 0.08);
+  stone.diffuseColor = new Color3(0.58, 0.51, 0.44);
+  stone.emissiveColor = new Color3(0.09, 0.08, 0.065);
   stone.specularColor = new Color3(0.04, 0.04, 0.04);
   const obstacles = farmhouse(scene, built, leftPathway(scene, built, [...result.obstacles]));
   WALLS.forEach((wall, w) => cobbleWall(scene, stone, wall, w, obstacles));
