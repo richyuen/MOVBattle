@@ -150,7 +150,7 @@ function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResu
  * middle ones stacked a second boulder high; two or three birches (white trunk, ball crown in the ring's colours) stand among the rocks.
  * One collider per boulder.
  */
-const NOOKS: Array<[number, number]> = [[34, 24], [44, -6], [28, -28], [6, 33]];
+const NOOKS: Array<[number, number]> = [[25.8, 18.2], [34.1, -4.7], [20.9, -20.9], [4.2, 23.2]];
 
 function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
   const rock = new StandardMaterial("tribalSandboxNook", scene);
@@ -166,7 +166,7 @@ function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
     for (let i = 0; i < 6; i++) {
       const k = n * 10 + i;
       const a = open + Math.PI + ((i / 5) - 0.5) * (200 * Math.PI / 180);
-      const d = 3 + seeded(k, 51) * 2.5;
+      const d = 4.5 + seeded(k, 51) * 2.5;
       const x = cx + Math.cos(a) * 7, z = cz + Math.sin(a) * 7;
       const b = MeshBuilder.CreateIcoSphere("tsNookRock", { radius: d / 2, subdivisions: 1 }, scene);
       b.scaling.set(1.15, 0.9 + seeded(k, 52) * 0.3, 1);
