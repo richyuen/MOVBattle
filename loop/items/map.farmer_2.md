@@ -1,19 +1,20 @@
 # map.farmer_2
-Status: open   Audited: 555 (AUDIT x2)   Done: -
+Status: open   Audited: 555 (AUDIT x2), 560 (CONFIRM: passed b; failed a)   Done: -
 ## Verdicts
-a FAIL (559: struck 6): 3. cobble walls in map_farmer_2_top.png — TABS: grey dry-stone walls cutting the field into sections (ref: reference/maps/wiki/farmer_2.png) 5. farmhouse in map_farmer_2_island.png — TABS: a single timber farmhouse at the back left among olive pines (ref: reference/maps/wiki/farmer_2.png)
-b FAIL (559: struck 5): 4. field outline in map_farmer_2_island.png — TABS: a round island with a domed field; ours is a rounded-rectangle slab (ref: reference/maps/farm_2.png)
-c PASS (559 judge)
+a FAIL (0 since 560, CONFIRM list): 1. underside of the island as dark navy/black stalactite spikes in map_farmer_2_island.png — TABS: rounded grey-brown rock slab with pale embedded stones (ref: reference/maps/farm_2.png) 2. tree crowns in a deep saturated forest green in map_farmer_2_ground.png — TABS: olive/khaki yellow-green crowns (ref: reference/maps/wiki/farmer_2.png)
+b PASS (560: struck 4; CONFIRM 560)
+c PASS (560 judge)
 ## Ranked gaps
-1. [S] a — blocker 5: single timber farmhouse (plank walls, steep roof, lit windows) at the back left among olive pines (behind the yard wall z 24)
-2. [S] b — blocker 4: round island outline, field domed toward the centre, its earth running to the rim (an earth bowl like farmer_1's, deep)
-3. [S] a — blocker 3: walls as big rounded warm-grey stones (r well over b), not thin lilac lines
+1. [S] a — blocker 1: deep grey-brown earth bowl with pale stones under the round rim (farmer_1's earthBowl kit, own copy, ~34 m deep), islandUnder/Shelf/Cliff hidden — ours: map_farmer_2_island.png
+2. [S] a — blocker 2: ring crowns as olive faceted clumps (fresh olive materials, out of fog/glow; or olive pines like the yard pines) — ours: map_farmer_2_ground.png
+3. [P] a — COTTAGE x -14 -> -20 (fallout of 90fc230f) — map_farmer_2_top.png
 ## Attempts (iter | gap | criterion | verdict)
-555-558 | a: wheat field, sheaves, olive meadow + furrows, wheat cut, sheaves x1.5 | a | 5 APPROVE, struck 1, 2, 4
-555-558 | b: walls, pathway + fence, totem out, alley | b | 4 APPROVE, struck 1, 2, 3, 6
-559 | [S] ruins + far range gone, olive bushes with pumpkins behind the yard wall (62c765fa) | a6 | APPROVE struck 6
-559 | [S] placement-guide slabs hidden (4cf35a90) | b5 | APPROVE struck 5
+555-559 | a: wheat field, sheaves, olive meadow + furrows, wheat cut, sheaves x1.5, ruins out + bushes | a | 6 APPROVE, struck 1, 2, 4, 6
+555-559 | b: walls, pathway + fence, totem out, alley, guides hidden | b | 5 APPROVE, struck 1, 2, 3, 5, 6
+560 | [S] timber farmhouse + two olive pines at the back left (90fc230f) | a5 | APPROVE struck 5
+560 | [S] round island: lawn + underside slabs on 54 x 48 ellipse, path z -32, walls end inside rim (7713f41b) | b4 | APPROVE struck 4
+560 | [S] walls of big rounded warm grey field stones, 1.6 m high (674aaca3, 5a6c6bb4) | a3 | APPROVE struck 3
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Team 1 armies stand in x 2..41, z -26..18 (inside the wheat).
-- Critic 559: back-yard bushes small and hard to tell from the ring (TABS 2-3 m tall).
+- Team 1 armies stand in x 2..41, z -26..18 (inside the wheat). Island outline now the ellipse 54 x 48 (roundIsland remaps base slabs).
+- Critic 560: field is bright lime (TABS yellower green).
