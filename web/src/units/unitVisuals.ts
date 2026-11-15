@@ -1304,7 +1304,10 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       });
     case "secret_lady_red_jade":
       // [S] 541 (b.1) one guandao upright in both fists on the halberd's two-handed grip, no second sword (propBuilder GUANDAO)
-      return vis({ scale: 1.52, bulk: 1.18, headSize: 1.05 }, "halberd", "none", "none", "cape", "#cf2f2f", undefined, {
+      // [S] 550 (a.4) tall and slim, not stocky (card Appearance "a substantially tall wobbler"; secret.lady_red_jade.red.png: the legs about half
+      // her height under a knee-length skirt, a narrow trunk no wider than the hips): the rig drawn out under the same scale, legs 1.38, trunk 1.12,
+      // girth 1.18 -> .9, so she stands a head over the Shogun and reads lean (probe 550: head top 2.14 m, as tall as the Shogun's 2.17 m)
+      return vis({ scale: 1.52, bulk: 0.9, headSize: 1.0, legLength: 1.38, torsoLength: 1.12 }, "halberd", "none", "none", "cape", "#cf2f2f", undefined, {
         weaponVariant: "guandao", materialPreset: "secret_royal", fxPreset: "royal",
         bodyDetailLevel: "hero",
       });
