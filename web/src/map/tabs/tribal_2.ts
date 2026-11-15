@@ -36,10 +36,74 @@ function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResu
     && gone.some(([x, z]) => Math.abs(x - o.center.x) < 0.01 && Math.abs(z - o.center.z) < 0.01)));
 }
 
+/**
+ * Autumn birches (wiki shot; tribal_1's birch kit, this map's own copy): every ring tree is one faceted ball crown on a tall thin white
+ * trunk, crowns red, orange and yellow (about 2:2:1), 2.8-4.4 m across the ball (larger than tribal_1's first cut, which read half size).
+ * Crowns are lit by their own colour and kept out of fog, glow and the canopy haze so they stay saturated. Trees standing under the
+ * mountain (x > FOOT_X - 2) go, so no crown pokes out of the rock.
+ */
+const BIRCH_CROWNS: Array<[string, Color3]> = [
+  ["tribal2CrownRed", new Color3(0.72, 0.12, 0.05)],
+  ["tribal2CrownOrange", new Color3(0.82, 0.3, 0.05)],
+  ["tribal2CrownRed2", new Color3(0.66, 0.16, 0.06)],
+  ["tribal2CrownOrange2", new Color3(0.78, 0.38, 0.07)],
+  ["tribal2CrownYellow", new Color3(0.7, 0.55, 0.08)],
+];
+const BIRCH_STRETCH = 1.5;
+
+function birchRing(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const crowns = BIRCH_CROWNS.map(([name, c]) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c.scale(0.55);
+    m.emissiveColor = c.scale(0.55);
+    m.specularColor = Color3.Black();
+    return m;
+  });
+  const bark = new StandardMaterial("tribal2Birch", scene);
+  bark.diffuseColor = new Color3(0.9, 0.88, 0.84);
+  bark.emissiveColor = new Color3(0.4, 0.39, 0.37);
+  bark.specularColor = Color3.Black();
+  const glow = scene.getGlowLayerByName("glow");
+  const trunks = scene.meshes.filter((m): m is Mesh => built.has(m) && m.name === "trunk" && m instanceof Mesh);
+  const buried: Array<[number, number]> = [];
+  trunks.forEach((trunk, i) => {
+    const p = trunk.getAbsolutePosition();
+    if (p.x > FOOT_X - 2) {
+      buried.push([p.x, p.z]);
+      trunk.dispose();
+      return;
+    }
+    for (const child of trunk.getChildMeshes()) if (child.name === "canopy") child.dispose();
+    const h = trunk.getBoundingInfo().boundingBox.extendSize.y * 2;
+    trunk.scaling.set(0.7, BIRCH_STRETCH, 0.7);
+    trunk.position.y = (h * BIRCH_STRETCH) / 2 - 0.15;
+    trunk.material = bark;
+    trunk.computeWorldMatrix(true);
+    const top = Vector3.TransformCoordinates(new Vector3(0, h / 2, 0), trunk.getWorldMatrix());
+    const r = 1.4 + seeded(i, 21) * 0.8 + h * 0.1;
+    const ball = MeshBuilder.CreateIcoSphere("tribal2Crown", { radius: r, subdivisions: 1 }, scene);
+    ball.scaling.y = 1.08;
+    ball.rotation.y = seeded(i, 22) * Math.PI;
+    ball.position.set(top.x, top.y + r * 0.7, top.z);
+    ball.convertToFlatShadedMesh();
+    ball.material = crowns[Math.floor(seeded(i, 23) * crowns.length)];
+    ball.applyFog = false;
+    ball.isPickable = false;
+    glow?.addExcludedMesh(ball);
+  });
+  result.obstacles = result.obstacles.filter((o) => !buried.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  // The low band of ball crowns behind the ring takes the same colours
+  scene.meshes.filter((m) => built.has(m) && m.name === "hazeTreeline").forEach((m, i) => {
+    m.material = crowns[i % 2 === 0 ? 0 : 1];
+    m.applyFog = false;
+  });
+}
+
 export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   clearFieldWalls(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
+  birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
   const rock = new StandardMaterial("tribal2Mountain", scene);
   rock.diffuseColor = new Color3(0.6, 0.54, 0.52);
   rock.emissiveColor = new Color3(0.08, 0.06, 0.05);
