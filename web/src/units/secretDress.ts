@@ -6084,7 +6084,8 @@ export function secretSamuraiCuirass(scene: Scene, body: ArticulatedBody, team: 
  * elbow, .elbow of the arm's radius across at the elbow end and .wrist at the wrist, flattened to .flat front to back, team (c^2) x .shade
  * self-lit .12; a gold tube .rim of the radius thick round each end and down the two side corners. Out of the glow.
  */
-const SAMURAI_KOTE = { from: 0.04, to: 0.9, elbow: 3.1, wrist: 2.1, flat: 0.55, shade: 0.8, rim: 0.16 };
+// 549.8b elbow 3.1 -> 4.8, wrist 2.1 -> 3.2, rim .16 -> .2 (probe_bbox: the shell sat flush with the forearm, hidden behind the blade)
+const SAMURAI_KOTE = { from: 0.04, to: 0.9, elbow: 4.8, wrist: 3.2, flat: 0.55, shade: 0.8, rim: 0.2 };
 export function samuraiGiantVambraces(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = SAMURAI_KOTE, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const teamC = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(K.shade);
