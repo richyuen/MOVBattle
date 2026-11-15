@@ -1295,7 +1295,13 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
       // the 1.2x Shogun"; card Size 3.00x against the Shogun's 1.2x; secret.samurai_giant.blue.png: sole to hip about half his height under the
       // hakama): the rig drawn out to the giants' own height (probe 552: head top 3.25 m against the Shogun's 2.17 m and the Tree Giant's ~4.9 m),
       // scale 2.3 -> 2.9 and legs .95 -> 1.2, so he stands well over twice the Shogun, level with the other giants (probe: head top ~4.75 m)
-      return vis({ scale: 2.9, bulk: 1.75, headSize: 1.16, armLength: 1.1, legLength: 1.2, lowerLegWidth: 0.5 }, "katana", "samurai_helmet", "none", "cape", "#b53333", undefined, {
+      // [S] 554 (a.1: "a squat giant with a slab torso about as wide as it is tall ... short thick legs - TABS: a lanky magnified samurai with a
+      // narrow torso, a straight hakama to the knee and long thin shins"; secret.samurai_giant.red.png: about eight helmet-widths tall, the trunk
+      // some two and a half heads long and half again a head wide, the legs half the height; probe 553: head top 4.77, hip 2.41, head .97 wide,
+      // trunk 1.47 wide x 1.67 tall, so five heads tall with a square trunk): the trunk drawn out (torsoLength 1.4) and thinned (bulk 1.75 -> 1.4,
+      // thighs .8, head .95), the legs longer (1.2 -> 1.4), the whole cut back to scale 2.45 so he stands as tall as before (probe: head top 4.77, hip
+      // 2.39, trunk 1.22 wide x 1.75 tall, hakama ~1 m wide against 2.1)
+      return vis({ scale: 2.45, bulk: 1.4, torsoLength: 1.4, headSize: 0.95, armLength: 1.15, legLength: 1.4, upperLegWidth: 0.8, lowerLegWidth: 0.5 }, "katana", "samurai_helmet", "none", "cape", "#b53333", undefined, {
         weaponVariant: "giant_katana",
         posePreset: "giant", materialPreset: "secret_royal", attachmentPreset: "giant_aura", fxPreset: "royal",
         bodyDetailLevel: "hero",

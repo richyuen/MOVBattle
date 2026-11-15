@@ -6236,8 +6236,15 @@ export function shogunMenpo(scene: Scene, body: ArticulatedBody): Mesh[] {
  * foot. In the team colour squared (LESSONS 517) at .shade, self-lit .12, out of the glow.
  */
 const SHOGUN_HAKAMA = { from: -0.04, to: 0.86, top: 1.3, foot: 2.05, deep: 1.0, hem: 0.06, shade: 0.82 };
-export function shogunHakama(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
-  const K = SHOGUN_HAKAMA, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+/*
+ * [S] 554 (samurai_giant a.1: "a wide-flared armour skirt ... TABS: a straight hakama to the knee"; secret.samurai_giant.red.png: each hakama leg
+ * a straight team tube from the cuirass's foot to just over the knee, its hem barely wider than its top, the two legs standing apart). The giant's
+ * own hakama: the Shogun's shell from just under the hip joint (.from) nearly straight (.top 1.15 to .foot 1.4 of r), so no flare reads at the hips.
+ */
+const SAMURAI_HAKAMA = { ...SHOGUN_HAKAMA, from: 0.04, top: 1.15, foot: 1.4 };
+export function samuraiGiantHakama(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] { return shogunHakama(scene, body, team, SAMURAI_HAKAMA); }
+export function shogunHakama(scene: Scene, body: ArticulatedBody, team: Color3, K = SHOGUN_HAKAMA): Mesh[] {
+  const mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
   const c = new Color3(team.r ** 2, team.g ** 2, team.b ** 2).scale(K.shade);
   const cloth = mf.get("cloth", c, { emissive: c.scale(0.12), roughness: 1 });
   const dark = mf.get("cloth", c.scale(0.55), { emissive: c.scale(0.06), roughness: 1 });
