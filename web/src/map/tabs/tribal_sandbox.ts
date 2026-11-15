@@ -75,6 +75,59 @@ function backCliffs(scene: Scene, obstacles: Obstacle[]): void {
   }
 }
 
+/**
+ * Autumn birches (wiki shot; tribal_1's birch kit, this map's own copy): every ring tree is one faceted ball crown on a tall thin white
+ * trunk, crowns red, orange and yellow (about 2:2:1), 2.8-4.4 m across the ball; the low band of ball crowns behind the ring (which read
+ * as olive hedges) takes the red and orange too. Crowns are lit by their own colour and kept out of fog, glow and the canopy haze.
+ */
+const BIRCH_CROWNS: Array<[string, Color3]> = [
+  ["tribalSandboxCrownRed", new Color3(0.72, 0.12, 0.05)],
+  ["tribalSandboxCrownOrange", new Color3(0.82, 0.3, 0.05)],
+  ["tribalSandboxCrownRed2", new Color3(0.66, 0.16, 0.06)],
+  ["tribalSandboxCrownOrange2", new Color3(0.78, 0.38, 0.07)],
+  ["tribalSandboxCrownYellow", new Color3(0.7, 0.55, 0.08)],
+];
+const BIRCH_STRETCH = 1.5;
+
+function birchRing(scene: Scene, built: Set<unknown>): void {
+  const crowns = BIRCH_CROWNS.map(([name, c]) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c.scale(0.55);
+    m.emissiveColor = c.scale(0.55);
+    m.specularColor = Color3.Black();
+    return m;
+  });
+  const bark = new StandardMaterial("tribalSandboxBirch", scene);
+  bark.diffuseColor = new Color3(0.9, 0.88, 0.84);
+  bark.emissiveColor = new Color3(0.4, 0.39, 0.37);
+  bark.specularColor = Color3.Black();
+  const glow = scene.getGlowLayerByName("glow");
+  const trunks = scene.meshes.filter((m): m is Mesh => built.has(m) && m.name === "trunk" && m instanceof Mesh);
+  trunks.forEach((trunk, i) => {
+    for (const child of trunk.getChildMeshes()) if (child.name === "canopy") child.dispose();
+    const h = trunk.getBoundingInfo().boundingBox.extendSize.y * 2;
+    trunk.scaling.set(0.7, BIRCH_STRETCH, 0.7);
+    trunk.position.y = (h * BIRCH_STRETCH) / 2 - 0.15;
+    trunk.material = bark;
+    trunk.computeWorldMatrix(true);
+    const top = Vector3.TransformCoordinates(new Vector3(0, h / 2, 0), trunk.getWorldMatrix());
+    const r = 1.4 + seeded(i, 21) * 0.8 + h * 0.1;
+    const ball = MeshBuilder.CreateIcoSphere("tribalSandboxCrown", { radius: r, subdivisions: 1 }, scene);
+    ball.scaling.y = 1.08;
+    ball.rotation.y = seeded(i, 22) * Math.PI;
+    ball.position.set(top.x, top.y + r * 0.7, top.z);
+    ball.convertToFlatShadedMesh();
+    ball.material = crowns[Math.floor(seeded(i, 23) * crowns.length)];
+    ball.applyFog = false;
+    ball.isPickable = false;
+    glow?.addExcludedMesh(ball);
+  });
+  scene.meshes.filter((m) => built.has(m) && m.name === "hazeTreeline").forEach((m, i) => {
+    m.material = crowns[i % 2 === 0 ? 0 : 1];
+    m.applyFog = false;
+  });
+}
+
 // The open plain (wiki shot): no dry-stone walls cross it; the base's wall stones inside the ellipse |x| < 47, |z| < 32 go with their colliders
 const FIELD = { rx: 47, rz: 32 };
 const inField = (x: number, z: number, margin = 0) => (x / (FIELD.rx + margin)) ** 2 + (z / (FIELD.rz + margin)) ** 2 < 1;
@@ -157,5 +210,6 @@ export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): Ma
     rocks.isPickable = false;
   }
   backCliffs(scene, obstacles);
+  birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles };
 }
