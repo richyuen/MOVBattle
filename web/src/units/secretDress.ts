@@ -6170,9 +6170,9 @@ const SHOGUN_KOTE = { from: 0.06, to: 0.86, elbow: 3.8, wrist: 2.6, flat: 0.62, 
 /*
  * [S] 553 (samurai_giant a.2: "bare blue forearms - TABS: flared angular vambraces with gold borders"; secret.samurai_giant.blue.png: a flat team
  * plate on each forearm about twice its width at the elbow, flaring from a narrower wrist, edged orange-gold). The Shogun's kote on his own
- * forearms (bulk 1.75 makes the arm's radius the larger share, so the plate's widths are cut back to read about twice the arm, not four times).
+ * forearms, stood deeper (.flat) so his thick forearm does not push through the plate's faces (553.3c: at elbow 2.5 the shell sat inside the arm).
  */
-const SAMURAI_KOTE = { ...SHOGUN_KOTE, from: 0.04, to: 0.84, elbow: 2.5, wrist: 1.7, rim: 0.11 };
+const SAMURAI_KOTE = { ...SHOGUN_KOTE, from: 0.04, to: 0.84, elbow: 4.2, wrist: 3.0, flat: 0.8, rim: 0.13 };
 export function samuraiGiantVambraces(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] { return shogunVambraces(scene, body, team, SAMURAI_KOTE); }
 export function shogunVambraces(scene: Scene, body: ArticulatedBody, team: Color3, K = SHOGUN_KOTE): Mesh[] {
   const mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
