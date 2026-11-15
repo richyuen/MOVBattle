@@ -555,7 +555,16 @@ function roundIsland(scene: Scene, prior: Set<unknown>, obstacles: Obstacle[]): 
       }
       mesh.setVerticesData("position", pos);
       mesh.refreshBoundingInfo();
-    } else if (mesh.thinInstanceCount > 0 && (mesh.name.startsWith("fieldBlades_") || mesh.name === "farmer1WheatStrips")) {
+    } else if (mesh.name.startsWith("fieldBlades_")) {
+      // Each blade is a quad of four vertices: one past the rim collapses onto its first corner
+      const pos = mesh.getVerticesData("position");
+      if (!pos) continue;
+      for (let v = 0; v + 11 < pos.length; v += 12) {
+        if (inside(pos[v], pos[v + 2], 0.5)) continue;
+        for (let c = 3; c < 12; c++) pos[v + c] = pos[v + (c % 3)];
+      }
+      mesh.setVerticesData("position", pos);
+    } else if (mesh.thinInstanceCount > 0 && mesh.name === "farmer1WheatStrips") {
       const kept = mesh.thinInstanceGetWorldMatrices().filter((w) => inside(w.m[12], w.m[14], 0.5));
       const buf = new Float32Array(kept.length * 16);
       kept.forEach((w, i) => buf.set(w.m, i * 16));
