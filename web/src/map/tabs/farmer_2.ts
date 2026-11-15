@@ -14,8 +14,8 @@ const WALLS: Array<[number, number, number, number, number]> = [
   [-44, -20, -6, -20, 0.3],       // front-left sheaf field's back wall
   [-40, 24, 40, 24, 0.5],         // back yard wall
   [-26, -16, -26, 20, 0.6],       // left pathway | alley
-  [22, 24, 22, 44, 0.45],         // back-right corner
-  [8, -31, 46, -31, 0.4],         // front-right corner
+  [22, 24, 22, 42.5, 0.45],       // back-right corner
+  [8, -31, 40, -31, 0.4],         // front-right corner (ends at the round rim)
 ];
 const GAP = 4;
 const THICK = 1.0;
@@ -126,7 +126,7 @@ function wheatField(scene: Scene): void {
  */
 // The alley (critic 557): the fence reads as a real barrier (posts 1.6 m, three rails), the alley between it and the wall is its own strip
 // of lush darker grass, and the track stops at the back yard wall (z 24) instead of running through it.
-const PATH = { x: -37, half: 2.5, back: 22.5, front: -44 };
+const PATH = { x: -37, half: 2.5, back: 22.5, front: -32 };
 const FENCE = { x: -31, z0: -18, z1: 22, step: 2 };
 const ALLEY = { x0: -30.6, x1: -26.6, z0: -18, z1: 22 };
 const pathX = (z: number) => PATH.x + 2 * Math.sin(z * 0.06);
@@ -521,6 +521,58 @@ function farmhouse(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Ob
   return kept;
 }
 
+/**
+ * Round island (farm_2.png): the island is a near-circle with the field running to its rim, not a rounded-rectangle slab. Spec: the outline
+ * is the ellipse 54 x 48; every base slab that follows the base's superellipse (54 x 48, power 3: "ground", "centerGrass", the underside
+ * "islandUnder", "islandShelf", "islandCliff") is remapped vertex by vertex onto it at the same fraction of the radius; grass blades and
+ * wheat tufts past the rim (less 0.5 m) are dropped, base props past it (less 1 m) hidden with their colliders; the pathway stops at
+ * z -32 and the front-right and back-right walls end inside the rim.
+ */
+const RIM_PROPS = new Set(["trunk", "boulder", "wallStone", "hayBale", "stump", "hill", "grassTuft", "flowerDot", "pebble"]);
+const REMAPPED = new Set(["ground", "centerGrass", "islandUnder", "islandShelf", "islandCliff"]);
+
+function roundIsland(scene: Scene, prior: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const oldR = (a: number) => (Math.abs(Math.cos(a) / 54) ** 3 + Math.abs(Math.sin(a) / 48) ** 3) ** (-1 / 3);
+  const newR = (a: number) => ((Math.cos(a) / 54) ** 2 + (Math.sin(a) / 48) ** 2) ** -0.5;
+  const inside = (x: number, z: number, m: number) => Math.hypot(x, z) <= newR(Math.atan2(z, x)) - m;
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (prior.has(mesh) || !(mesh instanceof Mesh)) continue;
+    // The haze band is one merged mesh laid along the old straight edges: it goes whole
+    if (mesh.name === "hazeTreeline") mesh.setEnabled(false);
+    else if (REMAPPED.has(mesh.name)) {
+      const pos = mesh.getVerticesData("position");
+      if (!pos) continue;
+      for (let v = 0; v < pos.length; v += 3) {
+        if (Math.hypot(pos[v], pos[v + 2]) < 1e-6) continue;
+        const a = Math.atan2(pos[v + 2], pos[v]);
+        const k = newR(a) / oldR(a);
+        pos[v] *= k;
+        pos[v + 2] *= k;
+      }
+      mesh.setVerticesData("position", pos);
+      mesh.refreshBoundingInfo();
+    } else if (mesh.name.startsWith("fieldBlades_")) {
+      const pos = mesh.getVerticesData("position");
+      if (!pos) continue;
+      for (let v = 0; v + 11 < pos.length; v += 12) {
+        if (inside(pos[v], pos[v + 2], 0.5)) continue;
+        for (let c = 3; c < 12; c++) pos[v + c] = pos[v + (c % 3)];
+      }
+      mesh.setVerticesData("position", pos);
+    } else if (mesh.thinInstanceCount > 0 && mesh.name === "farmer2WheatField") {
+      const kept = mesh.thinInstanceGetWorldMatrices().filter((w) => inside(w.m[12], w.m[14], 0.5));
+      const buf = new Float32Array(kept.length * 16);
+      kept.forEach((w, i) => buf.set(w.m, i * 16));
+      mesh.thinInstanceSetBuffer("matrix", buf, 16);
+    } else if (RIM_PROPS.has(mesh.name) && !mesh.parent && mesh.isEnabled() && !inside(mesh.position.x, mesh.position.z, 1)) {
+      gone.push([mesh.position.x, mesh.position.z]);
+      mesh.setEnabled(false);
+    }
+  }
+  return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -537,5 +589,5 @@ export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuild
   WALLS.forEach((wall, w) => cobbleWall(scene, stone, wall, w, obstacles));
   wheatField(scene);
   strawSheaves(scene);
-  return { ...result, obstacles };
+  return { ...result, obstacles: roundIsland(scene, prior, obstacles) };
 }
