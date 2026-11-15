@@ -5886,20 +5886,45 @@ export function ladyRedJadeSkirt(scene: Scene, body: ArticulatedBody, team: Colo
   skirt.convertToFlatShadedMesh();
   const trim = factory.get("unlit", gold, { emissive: gold });
   const meshes = [skirt];
+  /*
+   * [S] 551 (a.2: "orange swirl ornament on the skirt reduced to one thin yellow hook - TABS: broad orange cloud-swirl bands across the front and
+   * sides of the skirt that read at distance"; secret.lady_red_jade.red.png: wide flat orange bands curling over the skirt front either side of
+   * the middle and round onto each side). JADE_SWIRL: one band per centre (.at: angle round the skirt from its front in rad, level 0 top 1 hem,
+   * mirrored), a tail sweeping in from .tail rad round, then a curl of .turns turns shrinking from .curl rad (x .lvl in level) to nothing; laid
+   * on the skirt's surface (radius width x (.5 + .225 level), z x .8) as a closed flat band .w of the width wide across the surface and .th
+   * thick off it (four ribbon rails closed round), unlit orange out of the glow.
+   */
+  const SW = { at: [[0.5, 0.42], [1.5, 0.58]] as const, tail: 0.55, turns: 1.15, curl: 0.34, lvl: 0.75, w: 0.085, th: 0.035, steps: 40 };
+  const surf = (angle: number, level: number, out: number) => {
+    const r = width * (0.5 + level * 0.225) + out;
+    return new Vector3(Math.sin(angle) * r, top - height * level, Math.cos(angle) * r * 0.8);
+  };
   for (const side of [-1, 1]) {
-    const path: Vector3[] = [];
-    for (let i = 0; i <= 24; i++) {
-      const t = i / 24;
-      const phase = t * Math.PI * 2.1 - Math.PI / 2;
-      const angle = side * (0.54 + Math.cos(phase) * 0.38 * (1 - t));
-      const level = 0.52 + Math.sin(phase) * 0.38 * (1 - t);
-      const radius = width * (0.53 + level * 0.225);
-      path.push(new Vector3(Math.sin(angle) * radius, top - height * level, Math.cos(angle) * radius * 0.8));
+    for (const [a0, l0] of SW.at) {
+      const pts: Array<[number, number]> = [];
+      // the tail: a sweep in along the curl's lower edge, from .tail rad further round to the curl's foot
+      for (let i = 0; i <= 8; i++) pts.push([a0 + SW.tail * (1 - i / 8), l0 + SW.curl * SW.lvl]);
+      // the curl: from its foot, round .turns turns, shrinking into its centre
+      for (let i = 1; i <= SW.steps; i++) {
+        const t = i / SW.steps, phase = Math.PI / 2 + t * SW.turns * Math.PI * 2, k = SW.curl * (1 - t * 0.85);
+        pts.push([a0 - Math.cos(phase) * k, l0 + Math.sin(phase) * k * SW.lvl]);
+      }
+      const rails: Vector3[][] = [[], [], [], []];
+      pts.forEach(([a, l], i) => {
+        const [a1, l1] = pts[Math.min(i + 1, pts.length - 1)], [a2, l2] = pts[Math.max(i - 1, 0)];
+        const p = surf(side * a, l, width * SW.th * 0.3);
+        const tangent = surf(side * a1, l1, 0).subtract(surf(side * a2, l2, 0)).normalize();
+        const normal = new Vector3(Math.sin(side * a), 0, Math.cos(side * a) / 0.8).normalize();
+        const across = Vector3.Cross(normal, tangent).normalize().scale((width * SW.w) / 2);
+        const up = normal.scale(width * SW.th);
+        rails[0].push(p.subtract(across)); rails[1].push(p.subtract(across).add(up));
+        rails[2].push(p.add(across).add(up)); rails[3].push(p.add(across));
+      });
+      const band = MeshBuilder.CreateRibbon("jadeSkirtScroll", { pathArray: rails, closeArray: true, sideOrientation: Mesh.DOUBLESIDE }, scene);
+      band.parent = hip;
+      band.material = trim;
+      meshes.push(band);
     }
-    const scroll = MeshBuilder.CreateTube("jadeSkirtScroll", { path, radius: width * 0.025, tessellation: 4 }, scene);
-    scroll.parent = hip;
-    scroll.material = trim;
-    meshes.push(scroll);
   }
   for (const mesh of meshes) scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
   // [S] 551 (a.1: "tan/khaki apron panel over the front of the skirt below the belt - TABS: no apron; the skirt front stays team-coloured from the
