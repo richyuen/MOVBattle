@@ -21,5 +21,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 556 | ffe9661a | map.farmer_1.b | approved
 556 | 6b645833 | map.tribal_2.b | approved
 556 | 4d116cbc | map.farmer_2.b | approved
+557 | d588c550 | map.farmer_snow.a | approved
+557 | 2a626789 | map.farmer_1.b | approved
+557 | 41e533fa | map.tribal_1.a | approved
+557 | dd302114 | map.farmer_1.a | approved
+557 | bbba2e12 | map.farmer_2.b | approved
+557 | 748358f1 | map.farmer_2.a | approved
+557 | b4f7e9e0 | map.tribal_2.a | approved
+557 | 5ef24499 | map.tribal_sandbox.b | approved
+557 | d88bbd91 | map.tribal_sandbox.a | approved
 
 ## Tuned values
+web/src/map/tabs/farmer_2.ts:wheatField stalk height | 0.5-0.7 m | 557 | approved | 1.0-1.3 m
