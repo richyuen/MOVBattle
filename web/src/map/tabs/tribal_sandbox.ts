@@ -215,6 +215,46 @@ function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
 }
 
 /**
+ * Plain boulders (wiki shot): the rocks lying loose on the plain are big warm grey faceted boulders, angular with flat faces, 3-5 m across
+ * and about two thirds as high, not the base's small dark navy round stones. Spec: every base "boulder" mesh goes with its collider and a
+ * warm grey dodecahedron boulder stands in its place, 3-4.8 m across, squashed to 0.6-0.8 of its width in height, sunk a fifth into the
+ * ground and turned at random; one collider per boulder at 0.45 of its width. Warm grey with red well over blue (lavender otherwise).
+ */
+function plainBoulders(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const spots: Array<[number, number]> = [];
+  for (const mesh of scene.meshes.filter((m) => built.has(m) && m.name === "boulder")) {
+    const p = mesh.getAbsolutePosition();
+    spots.push([p.x, p.z]);
+    mesh.dispose();
+  }
+  const kept = obstacles.filter((o) => !spots.some(([x, z]) => Math.abs(o.center.x - x) < 0.01 && Math.abs(o.center.z - z) < 0.01));
+  const stone = new StandardMaterial("tribalSandboxBoulder", scene);
+  stone.diffuseColor = new Color3(0.7, 0.6, 0.5);
+  stone.emissiveColor = new Color3(0.11, 0.09, 0.07);
+  stone.specularColor = new Color3(0.03, 0.03, 0.03);
+  const parts: Mesh[] = [];
+  spots.forEach(([x, z], i) => {
+    const d = 3 + seeded(i, 71) * 1.8;
+    const b = MeshBuilder.CreatePolyhedron("tsBoulder", { type: 2, size: d / 2.6 }, scene);
+    const h = 0.6 + seeded(i, 72) * 0.2;
+    b.scaling.set(1 + seeded(i, 73) * 0.25, h, 1);
+    b.rotation.set((seeded(i, 74) - 0.5) * 0.3, seeded(i, 75) * Math.PI * 2, (seeded(i, 76) - 0.5) * 0.3);
+    b.position.set(x, d * h * 0.3, z);
+    parts.push(b);
+    kept.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: d * 0.45 });
+  });
+  const merged = Mesh.MergeMeshes(parts, true);
+  if (merged) {
+    merged.name = "tribalSandboxBoulders";
+    merged.convertToFlatShadedMesh();
+    merged.material = stone;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  return kept;
+}
+
+/**
  * Open sky with far spires (autumn_tribal_sandbox.png): past the back tree line there is only teal sky and a few tall thin grey rock spires,
  * no ridge range. The base's range and its floating roots (mountainBase/Cap/Root) go; clouds stay. Spec: five faceted stacks 6-9 m across
  * and 16-26 m above the lawn, rising out of the haze below the island, 64-80 m out behind the back and back-right rim, leaning a little.
@@ -258,7 +298,7 @@ export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): Ma
   rock.emissiveColor = new Color3(0.08, 0.07, 0.07);
   rock.specularColor = new Color3(0.03, 0.03, 0.03);
   const parts: Mesh[] = [];
-  const obstacles: Obstacle[] = [...result.obstacles];
+  const obstacles: Obstacle[] = plainBoulders(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), [...result.obstacles]);
 
   // Mushroom pillar: stem, then a broad slab cap leaning a little
   const stem = MeshBuilder.CreateCylinder("tsPillarStem", { diameterTop: 2.6, diameterBottom: 3.6, height: PILLAR.height - 1.6, tessellation: 6 }, scene);
