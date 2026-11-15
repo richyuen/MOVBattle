@@ -6474,6 +6474,69 @@ export function artemisChiton(scene: Scene, body: ArticulatedBody, team: Color3)
   return out;
 }
 
+/*
+ * [R] 551 (artemis a.1, plateau: CONFIRM 546 and 550 both "quiver missing from her back ... TABS: a quiver on the back with a bunch of dark arrow
+ * shafts and fletchings rising over the shoulder behind the head"; card Appearance "a Greek light dress and a quiver"; secret.artemis.blue.png:
+ * a brown leather quiver slung across her back, its mouth behind her bow-hand (right) shoulder, from which a bunch of about seven arrows fans up
+ * past the side of her head to about the top of her bun: pale wooden shafts, dark team-coloured fletchings, the fletched ends spread wider than
+ * the quiver's mouth; its foot is hidden behind her opposite hip). Not the old propBuilder hip quiver (removed in 541 for ARTEMIS_FAN).
+ * ARTEMIS_QUIVER on the torso joint, in the yoke box T (mid, half height, wide, deep): an 8-sided leather tube .r of T.wide in radius, from its
+ * foot at (-.footX of T.wide on the far side, .footY of T.half under T.mid) to its mouth at (.mouthX of T.wide on the right side, .mouthY of
+ * T.half over T.mid), .back of T.deep behind the trunk's middle (behind the chiton's strap), a darker rim .rimH of T.half tall round its mouth;
+ * .count arrows set round the mouth .seat of the radius out, each leaning off the tube's axis by a fan of +-.fan rad across the back and .lean
+ * rad backward, .stick of T.half out of the mouth: a shaft .shaftR of T.wide thick, then near its end two crossed fletching vanes .vaneL of
+ * T.half long, .vaneW of T.wide wide. Leather lit brown, shafts pale wood, vanes team (c^2) x .dark; all self-lit .12, out of the glow.
+ */
+const ARTEMIS_QUIVER = { r: 0.24, footX: 0.35, footY: 0.75, mouthX: 0.78, mouthY: 0.95, back: 1.45, rimH: 0.12, count: 7, seat: 0.5, fan: 0.42, lean: 0.12,
+  stick: 1.35, shaftR: 0.028, vaneL: 0.42, vaneW: 0.16, dark: 0.45,
+  leather: new Color3(0.3, 0.15, 0.07), rim: new Color3(0.12, 0.06, 0.03), wood: new Color3(0.62, 0.45, 0.25) };
+export function artemisQuiver(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
+  const K = ARTEMIS_QUIVER, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
+  const lit = (c: Color3) => mf.get("cloth", c, { emissive: c.scale(0.12), roughness: 1 });
+  const vaneC = new Color3(team.r * team.r, team.g * team.g, team.b * team.b).scale(K.dark);
+  const leather = lit(K.leather), rimMat = lit(K.rim), wood = lit(K.wood), vaneMat = lit(vaneC);
+  const yoke = body.allMeshes.find((m) => m.name.endsWith("_yoke"));
+  const T = limbBox(yoke ?? body.torsoMesh);
+  const right = Math.sign(body.rightShoulder.position.x) || 1;
+  // the back is -z (the chiton's chest panel and the eyes face +z)
+  const foot = new Vector3(-right * T.wide * K.footX, T.mid - T.half * K.footY, -T.deep * K.back);
+  const mouth = new Vector3(right * T.wide * K.mouthX, T.mid + T.half * K.mouthY, -T.deep * K.back);
+  const axis = mouth.subtract(foot), len = axis.length();
+  axis.normalize();
+  const out: Mesh[] = [];
+  const add = (m: Mesh, mt: Material): Mesh => { m.parent = body.torso; m.material = mt; m.convertToFlatShadedMesh(); glow?.addExcludedMesh(m); out.push(m); return m; };
+  const along = (m: Mesh, from: Vector3, dir: Vector3, length: number, spin = 0) => {
+    m.position.copyFrom(from.add(dir.scale(length / 2)));
+    m.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion()).multiply(Quaternion.RotationAxis(Vector3.Up(), spin));
+  };
+  const R = T.wide * K.r;
+  const tube = add(MeshBuilder.CreateCylinder("artemisQuiver", { height: len, diameterTop: R * 2, diameterBottom: R * 1.8, tessellation: 8 }, scene), leather);
+  along(tube, foot, axis, len);
+  const rimH = T.half * K.rimH;
+  const rim = add(MeshBuilder.CreateCylinder("artemisQuiverRim", { height: rimH, diameter: R * 2.2, tessellation: 8 }, scene), rimMat);
+  along(rim, mouth.subtract(axis.scale(rimH)), axis, rimH);
+  // the fan runs across the back (perpendicular to the axis in the back's plane); the lean tips the arrows back off it
+  const across = Vector3.Cross(axis, new Vector3(0, 0, 1)).normalize();
+  const backward = new Vector3(0, 0, -1);
+  const stick = T.half * K.stick, vaneL = T.half * K.vaneL;
+  for (let i = 0; i < K.count; i++) {
+    const t = K.count === 1 ? 0 : (i / (K.count - 1)) * 2 - 1;
+    const ring = (i * 2 * Math.PI) / K.count;
+    const seat = mouth.add(across.scale(Math.cos(ring) * R * K.seat)).add(backward.scale(Math.sin(ring) * R * K.seat * 0.6));
+    const dir = axis.add(across.scale(Math.tan(t * K.fan))).add(backward.scale(Math.tan(K.lean * (0.6 + 0.4 * Math.abs(t))))).normalize();
+    const start = seat.subtract(dir.scale(rimH * 1.5));
+    const shaftLen = stick + rimH * 1.5;
+    const shaft = add(MeshBuilder.CreateCylinder("artemisQuiverShaft", { height: shaftLen, diameter: T.wide * K.shaftR * 2, tessellation: 5 }, scene), wood);
+    along(shaft, start, dir, shaftLen);
+    const vFrom = start.add(dir.scale(shaftLen - vaneL));
+    for (const spin of [0, Math.PI / 2]) {
+      const vane = add(MeshBuilder.CreateBox("artemisQuiverVane", { width: T.wide * K.vaneW, height: vaneL, depth: T.wide * K.shaftR * 0.8 }, scene), vaneMat);
+      along(vane, vFrom, dir, vaneL, spin + i * 0.4);
+    }
+  }
+  return out;
+}
+
 const ARTEMIS_DRESS = { top: 0.32, hem: 0.32, out: 1.12, flare: 1.42, deep: 0.82, belt: 0.09, dark: 0.62, brown: new Color3(0.3, 0.15, 0.07) };
 export function artemisDress(scene: Scene, body: ArticulatedBody, team: Color3): Mesh[] {
   const K = ARTEMIS_DRESS, mf = getMaterialFactory(), glow = scene.getGlowLayerByName("glow");
