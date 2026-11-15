@@ -21,8 +21,25 @@ const BLOCKS: Array<[number, number, number, number, number]> = [
   [53, 1, 16, 12, 12], [52, -7, 14, 10, 10], [53, -15, 15, 8, 11], [52, -23, 13, 6, 10], [52, -31, 12, 4, 9], [51, -38, 9, 3, 7],
 ];
 
+// The open field (wiki shot): no dry-stone walls cross it; the base's wall stones inside the ellipse |x| < 47, |z| < 32 go with their colliders
+const FIELD = { rx: 47, rz: 32 };
+const inField = (x: number, z: number, margin = 0) => (x / (FIELD.rx + margin)) ** 2 + (z / (FIELD.rz + margin)) ** 2 < 1;
+
+function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes.filter((m) => built.has(m) && m.name === "wallStone")) {
+    if (!inField(mesh.position.x, mesh.position.z, 2)) continue;
+    gone.push([mesh.position.x, mesh.position.z]);
+    mesh.dispose();
+  }
+  result.obstacles = result.obstacles.filter((o) => !(inField(o.center.x, o.center.z, 2)
+    && gone.some(([x, z]) => Math.abs(x - o.center.x) < 0.01 && Math.abs(z - o.center.z) < 0.01)));
+}
+
 export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
+  const prior = new Set(scene.meshes);
   const result = base();
+  clearFieldWalls(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
   const rock = new StandardMaterial("tribal2Mountain", scene);
   rock.diffuseColor = new Color3(0.6, 0.54, 0.52);
   rock.emissiveColor = new Color3(0.08, 0.06, 0.05);
