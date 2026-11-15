@@ -40,7 +40,7 @@ import { dressHoplite, dressMinotaur, dressSarissa, dressShieldBearer, dressSnak
 import { balloonArcherFront, featherClump, fencerTrim, halberdBreeches, halberdHose, heldBalloonArrow, musketeerHose, PAINTER_SWEATER, painterJabot, painterSweaterRib } from "./renaissanceDress";
 import { headbutterBraids, headbutterCap, headbutterKit, headbutterLegs, headbutterTunic, headbutterTunicCloth, iceArcherCoat, iceArcherCoatCloth, iceArcherQuiver, ICE_ARCHER_COAT, brawlerHelm, brawlerBeard, brawlerLegs, jarlPelt, jarlBeard, jarlArmWraps, jarlBelt, berserkerBeard, berserkerBelt, berserkerArmpits, iceArcherCap, iceArcherMantle, valkyrieHelm, valkyrieCollar, valkyrieArmour } from "./vikingDress";
 import { lichHover } from "./evilDress";
-import { secretSamuraiCuirass, witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ladyRedJadeBodice, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, samuraiGiantKabuto, shogunSashimono, shogunMenpo, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, iceGiantBelt, treeGiantBeard, treeGiantHair, treeGiantShorts, treeGiantSandals } from "./secretDress";
+import { secretSamuraiCuirass, samuraiGiantVambraces, witchBroom, witchRobe, witchRobeDark, solarArchitectCoat, solarArchitectLegs, necromancerHornCap, necromancerVest, bansheeCrown, bansheeFace, bansheeHair, vladHair, vladMustache, bansheeBodyChains, bansheeArmbands, necromancerDark, NECRO_SHORTS, necromancerBoots, vladBoots, blackbeardBeard, blackbeardGloves, necromancerArmbands, blackbeardHat, artemisBand, artemisDress, artemisChiton, ladyRedJadeHair, ladyRedJadeBodice, ladyRedJadeSkirt, ullrJacket, ullrSnowCap, samuraiGiantKabuto, shogunSashimono, shogunMenpo, senseiHood, senseiBracers, blackbeardPegLeg, blackbeardCoat, senseiVest, senseiWaistBand, iceGiantApeBuild, iceGiantFists, iceGiantSnowMantle, iceGiantSnowCap, iceGiantBelt, treeGiantBeard, treeGiantHair, treeGiantShorts, treeGiantSandals } from "./secretDress";
 
 export interface SpawnVisualOptions {
   visualOverride?: UnitVisualConfig;
@@ -1238,6 +1238,8 @@ export class UnitFactory {
     }
     // [S] 543 (a.3): the Shogun's sashimono, a dark pole up his back over the helmet, a tall team banner with a mon (secretDress SASHIMONO)
     if (definition.id === "secret.samurai_giant" && !shouldUseVehicleBody) propMeshes.push(...secretSamuraiCuirass(this._scene, body, teamColor));
+    // [S] 549 (a.2): flared flat team vambraces trimmed gold on the Samurai Giant's forearms (secretDress SAMURAI_KOTE)
+    if (definition.id === "secret.samurai_giant" && !shouldUseVehicleBody) propMeshes.push(...samuraiGiantVambraces(this._scene, body, teamColor));
     if (definition.id === "secret.shogun" && !shouldUseVehicleBody) {
       propMeshes.push(...shogunSashimono(this._scene, body, teamColor), ...shogunMenpo(this._scene, body), ...secretSamuraiCuirass(this._scene, body, teamColor));
     }
