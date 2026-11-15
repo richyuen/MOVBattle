@@ -338,11 +338,77 @@ function oliveMeadow(scene: Scene): void {
   }
 }
 
+/**
+ * Back yard (wiki shot): no ruins and no far ridge range; behind the back yard wall stand big round olive bushes with pumpkins lying at
+ * their feet. The base's ruins (meshes ruin*: tower at (16, 29), pillars, fallen pillar, blocks) go with their colliders, and its far
+ * range (mountain*) is hidden. Spec: 7 bushes along z 27..35 between x -34 and 34, each 2-4 faceted olive balls 1.4-2.6 m across
+ * heaped together; 16 pumpkins in clusters of 2-3 at the bushes' field side, 0.7-1.1 m across, squat, deep orange with a stem.
+ * Drawn only, no colliders (all of it stands behind the wall, clear of the armies).
+ */
+const RUIN_COLLIDERS: Array<[number, number]> = [[16, 29], [-31, 29], [-24, 27], [-16, 30], [-8, 28], [30, 26], [-16.5, 24]];
+const BUSHES: Array<[number, number]> = [[-33, 30], [-21, 33], [-9, 29], [3, 34], [13, 28], [24, 32], [34, 29]];
+
+function backYard(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  for (const mesh of scene.meshes.filter((m) => built.has(m) && (m.name.startsWith("ruin") || m.name.startsWith("mountain")))) {
+    if (mesh.name.startsWith("ruin")) mesh.dispose();
+    else mesh.setEnabled(false);
+  }
+  result.obstacles = result.obstacles.filter((o) => !RUIN_COLLIDERS.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.01));
+  const mk = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const balls: Mesh[] = [], fruit: Mesh[] = [], stems: Mesh[] = [];
+  let k = 0;
+  BUSHES.forEach(([bx, bz], b) => {
+    const n = 2 + Math.floor(seeded(b, 81) * 3);
+    for (let j = 0; j < n; j++) {
+      const r = 0.7 + seeded(b * 5 + j, 82) * 0.6;
+      const ball = MeshBuilder.CreateIcoSphere("farmer2Bush", { radius: r, subdivisions: 1 }, scene);
+      ball.scaling.y = 0.85;
+      ball.rotation.y = seeded(b * 5 + j, 83) * Math.PI;
+      ball.position.set(bx + (j - (n - 1) / 2) * r * 1.2, r * 0.75 + (j === 1 ? r * 0.5 : 0), bz + (seeded(b * 5 + j, 84) - 0.5) * 1.5);
+      balls.push(ball);
+    }
+    // Pumpkins at the bush's field side
+    const m = b % 3 === 1 ? 3 : 2;
+    for (let j = 0; j < m; j++, k++) {
+      const d = 0.7 + seeded(k, 85) * 0.4;
+      const x = bx + (seeded(k, 86) - 0.5) * 3.5, z = bz - 2.2 - seeded(k, 87) * 1.2;
+      const p = MeshBuilder.CreateSphere("farmer2Pumpkin", { diameter: d, segments: 6 }, scene);
+      p.scaling.y = 0.75;
+      p.position.set(x, d * 0.36, z);
+      fruit.push(p);
+      const stem = MeshBuilder.CreateCylinder("farmer2PumpkinStem", { diameterTop: 0.06, diameterBottom: 0.1, height: 0.22, tessellation: 5 }, scene);
+      stem.position.set(x, d * 0.72 + 0.08, z);
+      stems.push(stem);
+    }
+  });
+  const mats: Array<[Mesh[], StandardMaterial, string]> = [
+    [balls, mk("farmer2Bush", new Color3(0.5, 0.52, 0.18), 0.2), "farmer2Bushes"],
+    [fruit, mk("farmer2Pumpkin", new Color3(0.86, 0.36, 0.05), 0.3), "farmer2Pumpkins"],
+    [stems, mk("farmer2PumpkinStem", new Color3(0.36, 0.26, 0.1), 0.15), "farmer2PumpkinStems"],
+  ];
+  for (const [list, m, name] of mats) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   clearFieldJunk(scene, built, result);
+  backYard(scene, built, result);
   oliveMeadow(scene);
   const stone = new StandardMaterial("farmer2WallStone", scene);
   stone.diffuseColor = new Color3(0.62, 0.62, 0.6);
