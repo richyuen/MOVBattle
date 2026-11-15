@@ -186,6 +186,64 @@ function nightSky(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
+/**
+ * The evergreen grove (card Overview; wiki shot upper right): where Farmer 1 has its wheat, a cluster of dark snowy pines stands in the
+ * back-right corner. Spec: 15 pines on a jittered 6 m grid over x 9..35, z 18..40 (kept 3 m in from the rim), each 5.5-9 m tall: a short
+ * brown trunk under three stacked dark green cones, each cone wearing a white snow cap on its upper half. Kept out of the glow and fog so
+ * they read dark against the snow. A trunk collider (0.7 m) per pine.
+ */
+function pineGrove(scene: Scene): Obstacle[] {
+  const glow = scene.getGlowLayerByName("glow");
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const needles = mk("farmerSnowPine", new Color3(0.07, 0.2, 0.14), 0.35);
+  const capSnow = mk("farmerSnowPineSnow", new Color3(0.82, 0.87, 0.97), 0.3);
+  const bark = mk("farmerSnowPineBark", new Color3(0.26, 0.16, 0.09), 0.3);
+  const greens: Mesh[] = [], whites: Mesh[] = [], trunks: Mesh[] = [];
+  const obstacles: Obstacle[] = [];
+  let k = 0;
+  for (let x = 9; x <= 35; x += 6) {
+    for (let z = 18; z <= 40; z += 6) {
+      k++;
+      const px = x + (seeded(k, 101) - 0.5) * 3.5, pz = z + (seeded(k, 102) - 0.5) * 3.5;
+      if (Math.abs(px / 51) ** 3 + Math.abs(pz / 45) ** 3 > 1 || seeded(k, 103) < 0.12) continue;
+      const h = 5.5 + seeded(k, 104) * 3.5, w = h * 0.42;
+      const trunk = MeshBuilder.CreateCylinder("farmerSnowPineTrunk", { diameterTop: 0.3, diameterBottom: 0.45, height: h * 0.25, tessellation: 5 }, scene);
+      trunk.position.set(px, h * 0.125, pz);
+      trunks.push(trunk);
+      for (let t = 0; t < 3; t++) {
+        const tw = w * (1 - t * 0.27), th = h * (0.42 - t * 0.06), ty = h * (0.18 + t * 0.24);
+        const cone = MeshBuilder.CreateCylinder("farmerSnowPineCone", { diameterTop: 0, diameterBottom: tw, height: th, tessellation: 7 }, scene);
+        cone.position.set(px, ty + th / 2, pz);
+        cone.rotation.y = seeded(k * 3 + t, 105) * Math.PI;
+        greens.push(cone);
+        const cap = MeshBuilder.CreateCylinder("farmerSnowPineCap", { diameterTop: 0, diameterBottom: tw * 0.6, height: th * 0.55, tessellation: 7 }, scene);
+        cap.position.set(px, ty + th * 0.45 + th * 0.55 / 2 + 0.05, pz);
+        cap.rotation.y = cone.rotation.y;
+        whites.push(cap);
+      }
+      obstacles.push({ type: "cylinder", center: new Vector3(px, 0, pz), radius: 0.7 });
+    }
+  }
+  for (const [list, m, name] of [[greens, needles, "farmerSnowPines"], [whites, capSnow, "farmerSnowPineCaps"], [trunks, bark, "farmerSnowPineTrunks"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.applyFog = false;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+  return obstacles;
+}
+
 export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -255,7 +313,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   const baseDispose = result.dispose;
   return {
     ...result,
-    obstacles: [...result.obstacles, ...snowyBridge(scene)],
+    obstacles: [...result.obstacles, ...snowyBridge(scene), ...pineGrove(scene)],
     dispose: () => {
       restoreLights();
       baseDispose?.();
