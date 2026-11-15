@@ -30,6 +30,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 557 | b4f7e9e0 | map.tribal_2.a | approved
 557 | 5ef24499 | map.tribal_sandbox.b | approved
 557 | d88bbd91 | map.tribal_sandbox.a | approved
+558 | cce131b2 | map.tribal_1.a | approved
+558 | 78418c38 | map.tribal_2.a | approved
+558 | 2394adb1+f9f9f72a | map.tribal_sandbox.a | approved
+558 | 2d04d016+2acd436e | map.farmer_1.b | approved
+558 | 84bfd3eb | map.farmer_1.a | approved
+558 | d9949729 | map.farmer_2.a | approved
+558 | 2ec1ca47 | map.farmer_snow.b | approved
+558 | 5e406f86 | map.tribal_sandbox.b | approved
+558 | 110fbe0a | map.farmer_2.b | approved
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height | 0.5-0.7 m | 557 | approved | 1.0-1.3 m
+web/src/map/tabs/farmer_2.ts:SHEAVES z range, scale | z -36..-16, x1.5 | 558 | approved | z -44..-23, x1

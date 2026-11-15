@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 557   Batch: maps_1   Consecutive empty: 0   Done: 0/99   Parked: 0
+Iteration: 558   Batch: maps_1   Consecutive empty: 0   Done: 0/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<level>):
 # <id>
@@ -33,34 +33,34 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 557: maps_1, 9 [S] + 1 [P]; BASE ebdaabc8)
-- [S] map.farmer_snow.a blocker 2 night sky (d588c550) APPROVE, struck 2
-- [S] map.farmer_1.b blocker 4 bank + yard walls (2a626789) APPROVE, struck 4
-- [S] map.tribal_1.a blocker 2 continuous cliff mass (41e533fa) APPROVE, struck 2
-- [S] map.farmer_1.a blocker 1 warm meadow + tracks (dd302114) APPROVE, struck 1
-- [S] map.farmer_2.b blocker 6 totem + box removed (bbba2e12) APPROVE, struck 6
-- [S] map.farmer_2.a blocker 4 straw sheaves (748358f1) APPROVE, not struck
-- [S] map.tribal_2.a blocker 1 birch ring (b4f7e9e0) APPROVE, struck 1
-- [S] map.tribal_sandbox.b blocker 4 field walls cleared (5ef24499) APPROVE, struck 4
-- [S] map.tribal_sandbox.a blocker 1 birch ring (d88bbd91) APPROVE, struck 1
-- [P] map.farmer_2.a wheat to waist height (fec0a4e6) APPROVE
-- 10/10, 8 struck
+## Focus (iter 558: maps_1, 9 [S] + 1 [P]; BASE d49311b6)
+- [S] map.tribal_1.a blocker 5 open sky, range hidden (cce131b2) APPROVE, struck 5
+- [S] map.tribal_2.a blocker 5 open sky, range hidden (78418c38) APPROVE, struck 5
+- [S] map.tribal_sandbox.a blocker 4 open sky + far rock stacks (2394adb1, f9f9f72a) APPROVE, struck 4
+- [S] map.farmer_1.b blocker 5 wheat strips + stubble (2d04d016, 2acd436e) APPROVE, struck 5
+- [S] map.farmer_1.a blocker 6 earth bowl underside (84bfd3eb) APPROVE, struck 6
+- [S] map.farmer_2.a blocker 1 olive meadow + furrows (d9949729) APPROVE, struck 1
+- [S] map.farmer_snow.b blocker 4 snowy pine grove (2ec1ca47) APPROVE, struck 4
+- [S] map.tribal_sandbox.b blocker 2 boulder nooks (5e406f86) APPROVE, not struck
+- [S] map.farmer_2.b blocker 3 alley + fence (110fbe0a) APPROVE, struck 3
+- [P] map.farmer_2.a blocker 4 sheaves forward x1.5 (4a375df6) APPROVE, struck 4
+- 10/10, 9 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.farmer_snow (d588c550) VERDICT: APPROVE CRITERION: map.farmer_snow.a FAIL
-GAP: [S] map.farmer_1 (2a626789) VERDICT: APPROVE CRITERION: map.farmer_1.b FAIL
-GAP: [S] map.tribal_1 (41e533fa) VERDICT: APPROVE CRITERION: map.tribal_1.a FAIL
-GAP: [S] map.farmer_1 (dd302114) VERDICT: APPROVE CRITERION: map.farmer_1.a FAIL
-GAP: [S] map.farmer_2 (bbba2e12) VERDICT: APPROVE CRITERION: map.farmer_2.b FAIL
-GAP: [S] map.farmer_2 (748358f1) VERDICT: APPROVE CRITERION: map.farmer_2.a FAIL
-GAP: [S] map.tribal_2 (b4f7e9e0) VERDICT: APPROVE CRITERION: map.tribal_2.a FAIL
-GAP: [S] map.tribal_sandbox (5ef24499) VERDICT: APPROVE CRITERION: map.tribal_sandbox.b FAIL
-GAP: [S] map.tribal_sandbox (d88bbd91) VERDICT: APPROVE CRITERION: map.tribal_sandbox.a FAIL
-GAP: [P] map.farmer_2 (fec0a4e6) VERDICT: APPROVE CRITERION: map.farmer_2.a FAIL
+GAP: [S] map.tribal_1 (cce131b2) VERDICT: APPROVE CRITERION: map.tribal_1.a FAIL
+GAP: [S] map.tribal_2 (78418c38) VERDICT: APPROVE CRITERION: map.tribal_2.a FAIL
+GAP: [S] map.tribal_sandbox (2394adb1 + f9f9f72a) VERDICT: APPROVE CRITERION: map.tribal_sandbox.a FAIL
+GAP: [S] map.farmer_1 (2d04d016 + 2acd436e) VERDICT: APPROVE CRITERION: map.farmer_1.b FAIL
+GAP: [S] map.farmer_1 (84bfd3eb) VERDICT: APPROVE CRITERION: map.farmer_1.a FAIL
+GAP: [S] map.farmer_2 (d9949729) VERDICT: APPROVE CRITERION: map.farmer_2.a FAIL
+GAP: [S] map.farmer_snow (2ec1ca47) VERDICT: APPROVE CRITERION: map.farmer_snow.b FAIL
+GAP: [S] map.tribal_sandbox (5e406f86) VERDICT: APPROVE CRITERION: map.tribal_sandbox.b FAIL
+GAP: [S] map.farmer_2 (110fbe0a) VERDICT: APPROVE CRITERION: map.farmer_2.b FAIL
+GAP: [P] map.farmer_2 (4a375df6) VERDICT: APPROVE CRITERION: map.farmer_2.a FAIL
 REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- Every maps_1 map has its own self-contained builder in web/src/map/tabs/. The far mountain range + second slab (base meshes mountainBase/Cap/Root) is a standing blocker on tribal_1/2/sandbox/farmer_1: farmer_snow's nightSky hides them by name; copy that per map.
-- Shared standing blockers: navy spiked underside (islandUnder/crags), translucent zone box (capture-side zone overlay? check before touching), rounded-rectangle outline.
+- Every maps_1 map has its own self-contained builder in web/src/map/tabs/. farmer_1's earthBowl (hides islandUnder/Shelf/Cliff + mountain*) is the underside kit: copy it per map (tribal: three orange tiers with white flecks; snow: navy with snowy stones). farmer_2 still shows the mountain* range.
+- The translucent box (farmer_1/2/snow b) is the placement guide campaign_zone_overlay_*/campaign_zone_border_* (a map mesh): a builder may hide it by name; zones stay in data.
 - Stage armies on tribal_2/farmer_1/farmer_2 stand in x 2..41, z -26..18 (team 1); tribal_1 armies within 27 m of centre. A footprint must keep clear or the judge fails c.
-- iter-557 critic.md is saved; no CONFIRM ran (no item near done). Step-5 capture: 75 shots, ~12 min, run in the background.
+- iter-558 critic.md is saved; no CONFIRM ran (no item near done). Step-5 capture of 6 maps + 17 stages: run in the background (~12 min).
