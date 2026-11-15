@@ -3,7 +3,7 @@
 // Spec read off farm_1.png: the team centre line runs down the river, so the river follows x = 0 with a gentle bend, about 4 m wide, from
 // z = +48 (back rim) to z = -48 (front rim); the crossing is at the centre (z = 0), 8 m clear. The water kills like any water hazard; it stays
 // inside |x| < 4 so both team zones (|x| >= 5) stay dry. Built on campaign.introduction (base()).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { HazardRegion } from "../hazards";
 import type { Obstacle } from "../obstacles";
@@ -433,6 +433,60 @@ function warmMeadow(scene: Scene): void {
   });
 }
 
+/**
+ * Golden wheat strips (wiki shot, back right): beyond the right-bank wall two long strips of tall golden wheat run back to the rim beside the
+ * river, parted by a grass lane a cart could use. Spec (farmer_2's wheat kit, this map's own copy): strips x 8..17 and x 21..33, z 20..44,
+ * their ends rounded and cut at the rim, tufts of five stalks 0.5-0.7 m tall with fat ears (waist high), 0.9 m apart and jittered. No
+ * colliders: units walk through. They stay behind the stage armies (team 1 stands at z <= 18).
+ */
+const WHEAT_STRIPS: Array<{ x0: number; x1: number; z0: number; z1: number }> = [
+  { x0: 8, x1: 17, z0: 20, z1: 44 },
+  { x0: 21, x1: 33, z0: 20, z1: 42 },
+];
+
+function wheatStrips(scene: Scene): void {
+  const gold = new StandardMaterial("farmer1Wheat", scene);
+  gold.diffuseColor = new Color3(0.78, 0.55, 0.16);
+  gold.emissiveColor = new Color3(0.26, 0.17, 0.04);
+  gold.specularColor = Color3.Black();
+  const parts: Mesh[] = [];
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const h = 0.5 + wallSeed(i, 30) * 0.2;
+    const stalk = MeshBuilder.CreateCylinder("farmer1WheatStalk", { diameterTop: 0.05, diameterBottom: 0.09, height: h, tessellation: 3 }, scene);
+    stalk.position.set(Math.cos(a) * 0.18, h / 2, Math.sin(a) * 0.18);
+    stalk.rotation.set(Math.sin(a) * 0.15, 0, -Math.cos(a) * 0.15);
+    const ear = MeshBuilder.CreateCylinder("farmer1WheatEar", { diameterTop: 0.04, diameterBottom: 0.16, height: 0.38, tessellation: 4 }, scene);
+    ear.rotation.x = Math.PI;
+    ear.position.set(Math.cos(a) * 0.25, h + 0.1, Math.sin(a) * 0.25);
+    parts.push(stalk, ear);
+  }
+  const tuft = Mesh.MergeMeshes(parts, true);
+  if (!tuft) return;
+  tuft.name = "farmer1WheatStrips";
+  tuft.convertToFlatShadedMesh();
+  tuft.material = gold;
+  tuft.isPickable = false;
+  const matrices: number[] = [];
+  let k = 0;
+  for (const s of WHEAT_STRIPS) {
+    const cx = (s.x0 + s.x1) / 2, cz = (s.z0 + s.z1) / 2, rx = (s.x1 - s.x0) / 2, rz = (s.z1 - s.z0) / 2;
+    for (let x = s.x0; x <= s.x1; x += 0.9) {
+      for (let z = s.z0; z <= s.z1; z += 0.9) {
+        k++;
+        if (((x - cx) / rx) ** 4 + ((z - cz) / rz) ** 4 > 1) continue;
+        const px = x + (wallSeed(k, 31) - 0.5) * 0.6, pz = z + (wallSeed(k, 32) - 0.5) * 0.6;
+        // Cut at the rim (the island superellipse 54 x 48, power 3), 2 m in
+        if (Math.abs(px / 52) ** 3 + Math.abs(pz / 46) ** 3 > 1) continue;
+        const sc = 0.85 + wallSeed(k, 33) * 0.3;
+        const m = Matrix.Compose(new Vector3(sc, sc, sc), Quaternion.RotationYawPitchRoll(wallSeed(k, 34) * Math.PI * 2, 0.08, (wallSeed(k, 35) - 0.5) * 0.1), new Vector3(px, 0, pz));
+        m.copyToArray(matrices, matrices.length);
+      }
+    }
+  }
+  tuft.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -451,5 +505,6 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
   obstacles.push(...stoneBridge(scene));
   obstacles.push(...watermill(scene));
   obstacles.push(...bankWalls(scene));
+  wheatStrips(scene);
   return { ...result, hazards, obstacles };
 }
