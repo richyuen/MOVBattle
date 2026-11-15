@@ -413,6 +413,114 @@ function hidePlacementGuides(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+/**
+ * The farmhouse (wiki shot, back left): one timber cottage behind the back-left yard wall, its gable facing the field, among tall olive
+ * pines. Spec: centred (-14, 37), 8 m wide, 6.5 m deep; walls 3.6 m of pale vertical planks (a batten every 0.8 m on the front and sides)
+ * in a dark frame on a low stone sill; a steep 4.6 m gable roof of dark plank strips (eight a side) running front to back with a 0.7 m
+ * overhang; a door and two lit yellow windows on the front, one lit window on each side. Two olive pines flank it at (-24, 39) and (-4, 40):
+ * an 11-12 m trunk with four faceted olive clumps stacked up its top half, narrowing to the tip. The ring trees on the plot go with their
+ * colliders; the house and pines get colliders.
+ */
+const COTTAGE = { x: -14, z: 37, w: 8, d: 6.5, wall: 3.6, roof: 4.6, eave: 0.7 };
+const YARD_PINES: Array<[number, number]> = [[-24, 39], [-4, 40]];
+
+function farmhouse(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const { x: cx, z: cz, w: W, d: D, wall: H } = COTTAGE;
+  const cleared: Array<[number, number]> = [];
+  for (const trunk of scene.meshes.filter((m) => built.has(m) && m.name === "trunk")) {
+    const p = trunk.getAbsolutePosition();
+    const onPlot = Math.abs(p.x - cx) < W / 2 + 3 && Math.abs(p.z - cz) < D / 2 + 3;
+    if (!onPlot && !YARD_PINES.some(([x, z]) => Math.hypot(p.x - x, p.z - z) < 3.5)) continue;
+    cleared.push([p.x, p.z]);
+    trunk.dispose();
+  }
+  const kept = obstacles.filter((o) => !cleared.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  const mk = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const plankMat = mk("farmer2HousePlank", new Color3(0.6, 0.44, 0.26), 0.18);
+  const darkMat = mk("farmer2HouseFrame", new Color3(0.26, 0.15, 0.08), 0.15);
+  const roofMat = mk("farmer2HouseRoof", new Color3(0.36, 0.23, 0.13), 0.15);
+  const sillMat = mk("farmer2HouseSill", new Color3(0.5, 0.45, 0.41), 0.1);
+  const lit = new StandardMaterial("farmer2HouseLight", scene);
+  lit.diffuseColor = Color3.Black();
+  lit.emissiveColor = new Color3(1, 0.78, 0.3);
+  lit.specularColor = Color3.Black();
+  const needles = mk("farmer2PineCrown", new Color3(0.4, 0.42, 0.13), 0.25);
+  const bark = mk("farmer2PineBark", new Color3(0.3, 0.17, 0.09), 0.15);
+  const lists: Record<string, Mesh[]> = { plank: [], dark: [], roof: [], sill: [], lit: [], crown: [], bark: [] };
+  const box = (k: string, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox(`farmer2House_${k}`, { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    lists[k].push(b);
+    return b;
+  };
+  box("sill", W + 0.4, 0.5, D + 0.4, cx, 0.25, cz);
+  box("plank", W, H, D, cx, 0.5 + H / 2, cz);
+  for (let i = 0; i <= 10; i++) box("dark", 0.14, H, 0.1, cx - W / 2 + (i * W) / 10, 0.5 + H / 2, cz - D / 2 - 0.05);
+  for (const s of [-1, 1]) for (let i = 0; i <= 8; i++) box("dark", 0.1, H, 0.14, cx + s * (W / 2 + 0.05), 0.5 + H / 2, cz - D / 2 + (i * D) / 8);
+  for (const y of [0.6, 0.5 + H - 0.1]) box("dark", W + 0.3, 0.3, D + 0.3, cx, y, cz);
+  // Door and lit windows on the front, a lit window on each side
+  box("dark", 1.3, 2.2, 0.2, cx, 0.5 + 1.1, cz - D / 2 - 0.1);
+  for (const s of [-1, 1]) {
+    box("lit", 1.1, 1, 0.2, cx + s * 2.5, 0.5 + 1.9, cz - D / 2 - 0.1);
+    box("lit", 0.2, 1, 1.1, cx + s * (W / 2 + 0.1), 0.5 + 1.9, cz);
+  }
+  // Gable prism and plank roof strips
+  const top = 0.5 + H, span = W + 2 * COTTAGE.eave, half = span / 2;
+  const gable = MeshBuilder.CreateCylinder("farmer2HouseGable", { diameter: W * 1.155, height: D, tessellation: 3 }, scene);
+  gable.rotation.y = Math.PI / 2;
+  gable.bakeCurrentTransformIntoVertices();
+  gable.rotation.x = Math.PI / 2;
+  const tall = COTTAGE.roof / (W * 1.155 * 0.75);
+  gable.scaling.set(1, 1, tall);
+  gable.position.set(cx, top + W * 1.155 * 0.25 * tall, cz);
+  lists.plank.push(gable);
+  const theta = Math.atan2(COTTAGE.roof, W / 2);
+  const slope = half / Math.cos(theta);
+  const eaveY = top - COTTAGE.eave * Math.tan(theta);
+  for (const s2 of [-1, 1]) {
+    for (let j = 0; j < 8; j++) {
+      const s = ((j + 0.5) / 8) * slope;
+      const p = box("roof", slope / 8 + 0.1, 0.2, D + 1.4, cx + s2 * (half - s * Math.cos(theta)), eaveY + s * Math.sin(theta) + 0.12, cz);
+      p.rotation.z = -s2 * theta;
+    }
+  }
+  kept.push({ type: "box", center: new Vector3(cx, 0, cz), halfX: W / 2 + 0.2, halfZ: D / 2 + 0.2 });
+  // Olive pines either side
+  YARD_PINES.forEach(([x, z], i) => {
+    const h = 11 + seeded(i, 91);
+    const trunk = MeshBuilder.CreateCylinder("farmer2PineTrunk", { diameterTop: 0.25, diameterBottom: 0.55, height: h, tessellation: 6 }, scene);
+    trunk.position.set(x, h / 2, z);
+    lists.bark.push(trunk);
+    for (let c = 0; c < 4; c++) {
+      const r = 2.3 - c * 0.45;
+      const clump = MeshBuilder.CreateIcoSphere("farmer2PineCrown", { radius: r, subdivisions: 1 }, scene);
+      clump.scaling.y = 0.8;
+      clump.rotation.y = seeded(i * 4 + c, 92) * Math.PI;
+      clump.position.set(x + (seeded(i * 4 + c, 93) - 0.5) * 1.2, h * 0.5 + c * h * 0.15 + r * 0.4, z + (seeded(i * 4 + c, 94) - 0.5) * 1.2);
+      lists.crown.push(clump);
+    }
+    kept.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.6 });
+  });
+  const mats: Record<string, StandardMaterial> = { plank: plankMat, dark: darkMat, roof: roofMat, sill: sillMat, lit, crown: needles, bark };
+  for (const [k, list] of Object.entries(lists)) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = `farmer2House_${k}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[k];
+    merged.receiveShadows = k !== "lit";
+    merged.isPickable = false;
+    if (k === "lit") scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
+  }
+  return kept;
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -425,7 +533,7 @@ export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuild
   stone.diffuseColor = new Color3(0.62, 0.62, 0.6);
   stone.emissiveColor = new Color3(0.07, 0.07, 0.08);
   stone.specularColor = new Color3(0.04, 0.04, 0.04);
-  const obstacles = leftPathway(scene, built, [...result.obstacles]);
+  const obstacles = farmhouse(scene, built, leftPathway(scene, built, [...result.obstacles]));
   WALLS.forEach((wall, w) => cobbleWall(scene, stone, wall, w, obstacles));
   wheatField(scene);
   strawSheaves(scene);
