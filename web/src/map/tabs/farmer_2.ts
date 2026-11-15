@@ -649,6 +649,52 @@ function earthBowl(scene: Scene, built: Set<unknown>): void {
   finish(Mesh.MergeMeshes(stones, true), "farmer2UnderStones", pebble);
 }
 
+/**
+ * Olive crowns (wiki farmer_2.png): the trees round the island wear faceted khaki/olive yellow-green crowns, not deep forest green. Spec:
+ * every base crown ("canopy" under a "trunk") still standing after the round outline gets one fresh olive material (linear (0.45, 0.42,
+ * 0.14), a quarter self-lit), drawn out of the fog and the glow so the haze cannot pale or green it; its name does not end in "Crown", so
+ * the base's sky-mixing canopy plugin leaves it alone. Crowns of trunks hidden past the rim stay hidden.
+ */
+function oliveCrowns(scene: Scene, built: Set<unknown>): void {
+  const olive = new StandardMaterial("farmer2OliveLeaf", scene);
+  olive.diffuseColor = new Color3(0.45, 0.42, 0.14);
+  olive.emissiveColor = olive.diffuseColor.scale(0.25);
+  olive.specularColor = Color3.Black();
+  const glow = scene.getGlowLayerByName("glow");
+  const clumps: Mesh[] = [];
+  let k = 0;
+  for (const mesh of [...scene.meshes]) {
+    if (!built.has(mesh) || mesh.name !== "canopy" || !(mesh.parent instanceof Mesh) || mesh.parent.name !== "trunk") continue;
+    if (!mesh.parent.isEnabled() || !mesh.isEnabled()) continue;
+    mesh.material = olive;
+    mesh.applyFog = false;
+    glow?.addExcludedMesh(mesh as Mesh);
+    // TABS crowns are clusters of faceted lumps: two smaller lumps hang off each crown's side and top
+    mesh.parent.computeWorldMatrix(true);
+    mesh.computeWorldMatrix(true);
+    const box = mesh.getBoundingInfo().boundingSphere;
+    for (let j = 0; j < 2; j++, k++) {
+      const a = seeded(k, 61) * Math.PI * 2;
+      const r = box.radiusWorld * (0.42 + seeded(k, 62) * 0.15);
+      const lump = MeshBuilder.CreateIcoSphere("farmer2CrownLump", { radius: r, subdivisions: 1 }, scene);
+      const c = box.centerWorld;
+      const out = box.radiusWorld * 0.7;
+      lump.position.set(c.x + Math.cos(a) * out, c.y + (j === 0 ? -0.25 : 0.45) * box.radiusWorld, c.z + Math.sin(a) * out);
+      lump.rotation.set(seeded(k, 63), seeded(k, 64) * 3, 0);
+      clumps.push(lump);
+    }
+  }
+  const merged = clumps.length ? Mesh.MergeMeshes(clumps, true) : null;
+  if (merged) {
+    merged.name = "farmer2CrownLumps";
+    merged.convertToFlatShadedMesh();
+    merged.material = olive;
+    merged.applyFog = false;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+}
+
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -666,5 +712,7 @@ export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuild
   wheatField(scene);
   strawSheaves(scene);
   earthBowl(scene, built);
-  return { ...result, obstacles: roundIsland(scene, prior, obstacles) };
+  const kept = roundIsland(scene, prior, obstacles);
+  oliveCrowns(scene, built);
+  return { ...result, obstacles: kept };
 }
