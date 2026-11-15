@@ -256,6 +256,67 @@ function caveApron(scene: Scene): void {
   }
 }
 
+/**
+ * Rim rocks (wiki tribal_2.png): a broken wall of grey rock cliffs runs along the back-left arc of the rim behind the birches, and big boulder
+ * piles sit along the front rim between the trees. Spec read off the wiki shot: the cliff run spans the rim from the back centre (90 deg)
+ * round to the left (205 deg), 15 blocks, each two or three leaning faceted slabs 7-10 m along the rim, 5-9 m high, 5 m deep, their faces at
+ * 0.9 of the rim; the front has 7 piles between 225 and 320 deg, each 3-5 rounded boulders 2.4-4.8 m across at 0.9 of the rim. The
+ * rock is a warm grey (r well over b; the cool grey reads lavender). Each block and pile is solid (one cylinder collider).
+ */
+function rimRocks(scene: Scene): Array<{ type: "cylinder"; center: Vector3; radius: number }> {
+  const rock = new StandardMaterial("tribal2RimRock", scene);
+  rock.diffuseColor = new Color3(0.62, 0.52, 0.45);
+  rock.emissiveColor = new Color3(0.1, 0.08, 0.065);
+  rock.specularColor = new Color3(0.03, 0.03, 0.03);
+  const pieces: Mesh[] = [];
+  const colliders: Array<{ type: "cylinder"; center: Vector3; radius: number }> = [];
+  for (let i = 0; i < 15; i++) {
+    const deg = 90 + (i / 14) * 115 + (seeded(i, 71) - 0.5) * 4;
+    const [rx, rz] = rim(deg);
+    const cx = rx * 0.92, cz = rz * 0.92;
+    const along = 7 + seeded(i, 72) * 3, high = 5 + seeded(i, 73) * 4;
+    // The block's long side runs along the rim
+    const yaw = -(deg * Math.PI) / 180 - Math.PI / 2;
+    for (let j = 0; j < 3; j++) {
+      const k = i * 10 + j;
+      const s = 1 - j * 0.25;
+      const h = high * (1 - j * 0.22);
+      const slab = MeshBuilder.CreateCylinder("tribal2CliffSlab", { diameterTop: along * s * 0.55, diameterBottom: along * s, height: h, tessellation: 5 }, scene);
+      slab.scaling.z = 5 / along;
+      slab.rotation.set((seeded(k, 74) - 0.5) * 0.18, yaw + (seeded(k, 75) - 0.5) * 0.4, (seeded(k, 76) - 0.5) * 0.18);
+      slab.position.set(cx + (seeded(k, 77) - 0.5) * 3, h / 2 - 0.2, cz + (seeded(k, 78) - 0.5) * 3);
+      pieces.push(slab);
+    }
+    colliders.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: 3 });
+  }
+  for (let p = 0; p < 7; p++) {
+    const deg = 228 + (p / 6) * 90 + (seeded(p, 81) - 0.5) * 6;
+    const [rx, rz] = rim(deg);
+    const cx = rx * 0.9, cz = rz * 0.9;
+    const n = 3 + Math.floor(seeded(p, 82) * 3);
+    for (let b = 0; b < n; b++) {
+      const k = p * 10 + b;
+      const r = 1.2 + seeded(k, 83) * 1.2;
+      const boulder = MeshBuilder.CreateIcoSphere("tribal2Boulder", { radius: r, subdivisions: 1 }, scene);
+      boulder.scaling.set(1.15, 0.8 + seeded(k, 84) * 0.25, 1);
+      boulder.rotation.set(seeded(k, 85), seeded(k, 86) * Math.PI, 0);
+      const a = seeded(k, 87) * Math.PI * 2, d = b === 0 ? 0 : 1.6 + seeded(k, 88) * 1.4;
+      boulder.position.set(cx + Math.cos(a) * d, r * 0.55 + (b === n - 1 && n > 3 ? r * 0.7 : 0), cz + Math.sin(a) * d);
+      pieces.push(boulder);
+    }
+    colliders.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: 2.8 });
+  }
+  const merged = Mesh.MergeMeshes(pieces, true);
+  if (merged) {
+    merged.name = "tribal2RimRocks";
+    merged.convertToFlatShadedMesh();
+    merged.material = rock;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  return colliders;
+}
+
 export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -311,6 +372,7 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
   const obstacles = [
     ...result.obstacles,
     { type: "box" as const, center: new Vector3(FOOT_X + 6, 0, 3), halfX: 6, halfZ: 41 },
+    ...rimRocks(scene),
   ];
   return { ...result, obstacles };
 }
