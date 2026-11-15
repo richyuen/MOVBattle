@@ -1340,7 +1340,10 @@ function getPresetVisual(id: string): UnitVisualConfig | null {
         stateVariants: { attacking: ["drawn_arrow"], "ability-active": ["drawn_arrow"] },
       });
     case "secret_ice_giant":
-      return vis({ scale: 2.48, bulk: 1.88, headSize: 1.12, armLength: 1.12, legLength: 0.92 }, "none", "none", "none", "none", "#9fe9ff", undefined, {
+      // [S] 550 (a.5) the tallest unit of the faction (card Characteristics "the largest unit in the game"; secret.ice_giant.red.png: the legs about
+      // two fifths of his height, the trunk as tall as the legs): the rig drawn out under the same scale, legs .92 -> 1.4 and trunk 1.3, so his head
+      // stands over the Tree Giant's (probe 550: head top 3.47 m against the tree's 4.2 m before)
+      return vis({ scale: 2.48, bulk: 1.88, headSize: 1.12, armLength: 1.12, legLength: 1.4, torsoLength: 1.3 }, "none", "none", "none", "none", "#9fe9ff", undefined, {
         // [S] 543 (a.3) team skin under the snow mantle (secretDress ICE_SNOW): the pale ice preset off
         posePreset: "giant", materialPreset: "default", attachmentPreset: "giant_aura", fxPreset: "frost",
         bodyDetailLevel: "hero",
