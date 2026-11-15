@@ -363,6 +363,76 @@ function bankWalls(scene: Scene): Obstacle[] {
   return obstacles;
 }
 
+/**
+ * Warm meadow and dirt tracks (wiki shot): the grass is a warm yellow-green (olive-gold in the sun), not a cool green, and worn tan dirt
+ * tracks lead off the bridge ends: one west across the left half to the left rim, bending toward the front, and one east from the bridge
+ * bending down to the front-right rim. Spec: grass, ground and blade materials of this build take the warm hue (blades keep their shade
+ * ratio to the lawn); each track is a 3 m tan ribbon with a paler worn centre strip, drawn only (units walk on it).
+ */
+const GRASS_WARM = new Color3(0.82, 0.8, 0.24);
+const TRACKS: Array<Array<[number, number]>> = [
+  [[-5, 0], [-14, 1], [-24, -1], [-33, -5], [-41, -11], [-47, -16]],
+  [[5, 0], [13, -3], [21, -9], [28, -17], [34, -26], [38, -34]],
+];
+
+function warmMeadow(scene: Scene): void {
+  const grass = scene.getMaterialByName("grass") as StandardMaterial | null;
+  if (grass) {
+    const old = grass.diffuseColor.clone();
+    grass.diffuseColor = GRASS_WARM.clone();
+    grass.emissiveColor = new Color3(0.08, 0.07, 0.0);
+    for (const name of ["grassBladeDark", "grassBladeLight"]) {
+      const blade = scene.getMaterialByName(name) as StandardMaterial | null;
+      if (!blade) continue;
+      const d = blade.diffuseColor;
+      blade.diffuseColor = new Color3(d.r / old.r * GRASS_WARM.r, d.g / old.g * GRASS_WARM.g, d.b / old.b * GRASS_WARM.b);
+      blade.emissiveColor = grass.emissiveColor.clone();
+    }
+  }
+  const ground = scene.getMaterialByName("groundMat") as StandardMaterial | null;
+  if (ground) ground.diffuseColor = new Color3(0.7, 0.62, 0.24);
+  const dry = scene.getMaterialByName("dryGrass") as StandardMaterial | null;
+  if (dry) dry.diffuseColor = new Color3(0.78, 0.7, 0.26);
+
+  const mk = (name: string, c: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(0.18);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const dirt = mk("farmer1Track", new Color3(0.66, 0.5, 0.28));
+  const worn = mk("farmer1TrackWorn", new Color3(0.76, 0.62, 0.38));
+  TRACKS.forEach((pts, t) => {
+    // A smooth line through the points (Catmull-Rom), then a ribbon either side of it
+    const line: Vector3[] = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+      for (let s = 0; s < 6; s++) {
+        const u = s / 6, u2 = u * u, u3 = u2 * u;
+        const f = (a: number, b: number, c: number, d: number) => 0.5 * (2 * b + (-a + c) * u + (2 * a - 5 * b + 4 * c - d) * u2 + (-a + 3 * b - 3 * c + d) * u3);
+        line.push(new Vector3(f(p0[0], p1[0], p2[0], p3[0]), 0, f(p0[1], p1[1], p2[1], p3[1])));
+      }
+    }
+    const last = pts[pts.length - 1];
+    line.push(new Vector3(last[0], 0, last[1]));
+    for (const [name, half, y, m] of [["farmer1Track", 1.5, 0.05, dirt], ["farmer1TrackWorn", 0.45, 0.065, worn]] as const) {
+      const left: Vector3[] = [], right: Vector3[] = [];
+      line.forEach((p, i) => {
+        const q = line[Math.min(i + 1, line.length - 1)], o = line[Math.max(i - 1, 0)];
+        const dx = q.x - o.x, dz = q.z - o.z, l = Math.hypot(dx, dz) || 1;
+        const w = half * (0.85 + 0.3 * Math.sin(i * 0.9 + t));
+        left.push(new Vector3(p.x + dz / l * w, y, p.z - dx / l * w));
+        right.push(new Vector3(p.x - dz / l * w, y, p.z + dx / l * w));
+      });
+      const mesh = MeshBuilder.CreateRibbon(`${name}${t}`, { pathArray: [left, right], sideOrientation: Mesh.DOUBLESIDE }, scene);
+      mesh.material = m;
+      mesh.receiveShadows = true;
+      mesh.isPickable = false;
+    }
+  });
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -373,6 +443,7 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
     if (FIELD_JUNK.some(([x, z]) => Math.hypot(mesh.position.x - x, mesh.position.z - z) < 0.5)) mesh.dispose();
   }
   result.obstacles = result.obstacles.filter((o) => !FIELD_JUNK.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  warmMeadow(scene);
   riverMeshes(scene);
   const hazards = [...result.hazards, ...riverHazards()];
   // Nothing the base put down may stand in the water
