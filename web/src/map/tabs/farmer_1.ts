@@ -8,7 +8,7 @@ import type { MapBuildResult } from "../mapBuilder";
 import type { HazardRegion } from "../hazards";
 import type { Obstacle } from "../obstacles";
 
-const RIVER = { halfWidth: 2, bend: 1.4, bendRate: 0.075, back: 48, front: -48, crossing: 4, step: 8, fall: 16 };
+const RIVER = { halfWidth: 2, bend: 1.9, bendRate: 0.1, back: 48, front: -48, crossing: 4, step: 8, fall: 16 };
 
 /** The river's centre line: x at depth z */
 export function riverX(z: number): number {
@@ -40,19 +40,50 @@ function riverMeshes(scene: Scene): void {
   foam.emissiveColor = new Color3(0.3, 0.34, 0.38);
   foam.specularColor = Color3.Black();
 
-  const strip = (name: string, half: number, y: number, mat: StandardMaterial) => {
+  // A stream, not a canal: each edge wanders on its own (two summed waves per side), so the water swells and narrows and the banks are ragged
+  const wob = (z: number, s: number) => 0.32 * Math.sin(z * 0.37 + s * 1.7) + 0.18 * Math.sin(z * 0.91 + s * 4.1);
+  const strip = (name: string, half: number, y: number, mat: StandardMaterial, ragged: number) => {
     const left: Vector3[] = [], right: Vector3[] = [];
-    for (let z = RIVER.back + 1; z >= RIVER.front - 0.5; z -= 1) {
-      left.push(new Vector3(riverX(z) - half, y, z));
-      right.push(new Vector3(riverX(z) + half, y, z));
+    for (let z = RIVER.back + 1; z >= RIVER.front - 0.5; z -= 0.5) {
+      left.push(new Vector3(riverX(z) - half - ragged * wob(z, 1), y, z));
+      right.push(new Vector3(riverX(z) + half + ragged * wob(z, 2), y, z));
     }
     const mesh = MeshBuilder.CreateRibbon(name, { pathArray: [left, right], sideOrientation: Mesh.DOUBLESIDE }, scene);
     mesh.material = mat;
     mesh.receiveShadows = true;
     mesh.isPickable = false;
   };
-  strip("farmer1RiverBank", RIVER.halfWidth + 0.7, 0.05, bank);
-  strip("farmer1River", RIVER.halfWidth, 0.08, water);
+  strip("farmer1RiverBank", RIVER.halfWidth + 0.9, 0.05, bank, 1.6);
+  strip("farmer1River", RIVER.halfWidth, 0.08, water, 0.8);
+
+  // Rocky banks: grey boulders, flattened and half sunk, strung along both edges (none on the bridge or under the mill)
+  const rockMat = new StandardMaterial("farmer1BankRock", scene);
+  rockMat.diffuseColor = new Color3(0.5, 0.47, 0.44);
+  rockMat.emissiveColor = new Color3(0.07, 0.065, 0.06);
+  rockMat.specularColor = new Color3(0.03, 0.03, 0.03);
+  const rocks: Mesh[] = [];
+  let k = 0;
+  for (const side of [-1, 1]) {
+    for (let z = RIVER.back - 2; z > RIVER.front + 4; z -= 1.6 + Math.abs(Math.sin(k * 2.3)) * 2.4) {
+      k++;
+      if (Math.abs(z) < 7.5 || Math.abs(z - MILL.z) < MILL.depth / 2 + 1) continue;
+      const r = 0.45 + Math.abs(Math.sin(k * 5.1)) * 0.55;
+      const edge = RIVER.halfWidth + 0.8 * wob(z, side < 0 ? 1 : 2) + r * 0.5 + 0.1;
+      const rock = MeshBuilder.CreateIcoSphere("farmer1BankRock", { radius: r, subdivisions: 1 }, scene);
+      rock.scaling.set(1.2 + Math.sin(k * 1.3) * 0.25, 0.6, 1 + Math.cos(k * 1.9) * 0.25);
+      rock.rotation.y = k * 1.1;
+      rock.position.set(riverX(z) + side * edge, r * 0.15, z);
+      rocks.push(rock);
+    }
+  }
+  const bankRocks = Mesh.MergeMeshes(rocks, true);
+  if (bankRocks) {
+    bankRocks.name = "farmer1BankRocks";
+    bankRocks.convertToFlatShadedMesh();
+    bankRocks.material = rockMat;
+    bankRocks.receiveShadows = true;
+    bankRocks.isPickable = false;
+  }
 
   // The waterfall: a sheet of white water off the front rim, widening as it falls, with a churned lip
   const x = riverX(RIVER.front);
