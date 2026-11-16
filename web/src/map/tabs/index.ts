@@ -16,6 +16,7 @@ import { buildMedieval2 } from "./medieval_2";
 import { buildVikingSandbox } from "./viking_sandbox";
 import { buildAncientSandbox } from "./ancient_sandbox";
 import { buildAncient2 } from "./ancient_2";
+import { buildMedieval1 } from "./medieval_1";
 
 // Ground height is visual only (../terrain.ts): return `height` in the MapBuildResult and shape the ground with terrainMesh(); hill.ts is the example.
 export type TabsMapBuilder = (scene: Scene, base: () => MapBuildResult) => MapBuildResult;
@@ -33,4 +34,5 @@ export const TABS_MAP_BUILDERS: Partial<Record<TabsMapId, TabsMapBuilder>> = {
   viking_sandbox: buildVikingSandbox,
   ancient_sandbox: buildAncientSandbox,
   ancient_2: buildAncient2,
+  medieval_1: buildMedieval1,
 };
