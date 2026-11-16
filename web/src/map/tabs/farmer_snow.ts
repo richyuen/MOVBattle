@@ -188,9 +188,9 @@ function nightSky(scene: Scene, built: Set<unknown>): () => void {
 
 /**
  * The evergreen grove (card Overview; wiki shot upper right): where Farmer 1 has its wheat, a cluster of dark snowy pines stands in the
- * back-right corner. Spec: 15 pines on a jittered 6 m grid over x 9..35, z 18..40 (kept 3 m in from the rim), each 5.5-9 m tall: a short
- * brown trunk under three stacked dark green cones, each cone wearing a white snow cap on its upper half. Kept out of the glow and fog so
- * they read dark against the snow. A trunk collider (0.7 m) per pine.
+ * back-right corner. Spec: pines on a jittered 5 m grid over x 15..40, z 18..40 (kept 4 m in from the rim), each 6.5-10 m tall: a short
+ * brown trunk under three stacked dark green cones, each cone wearing a white snow cap on its upper half and a white band along its rim.
+ * Out of the fog; needles and bark stay in the glow pass so they read dark against the snow. A trunk collider (0.7 m) per pine.
  */
 function pineGrove(scene: Scene): Obstacle[] {
   const glow = scene.getGlowLayerByName("glow");
@@ -207,13 +207,14 @@ function pineGrove(scene: Scene): Obstacle[] {
   const greens: Mesh[] = [], whites: Mesh[] = [], trunks: Mesh[] = [];
   const obstacles: Obstacle[] = [];
   let k = 0;
-  for (let x = 9; x <= 35; x += 6) {
-    for (let z = 18; z <= 40; z += 6) {
+  // Dense grove (563): a tight 5 m jittered grid over x 15..40, z 18..40, no random gaps, so the pines stand as one dark mass
+  for (let x = 15; x <= 40; x += 5) {
+    for (let z = 18; z <= 40; z += 5) {
       k++;
-      const px = x + (seeded(k, 101) - 0.5) * 3.5, pz = z + (seeded(k, 102) - 0.5) * 3.5;
-      // Inside the round outline (ellipse 54 x 48), 3 m in
-      if ((px / 51) ** 2 + (pz / 45) ** 2 > 1 || seeded(k, 103) < 0.12) continue;
-      const h = 5.5 + seeded(k, 104) * 3.5, w = h * 0.42;
+      const px = x + (seeded(k, 101) - 0.5) * 2.5, pz = z + (seeded(k, 102) - 0.5) * 2.5;
+      // Inside the round outline (ellipse 54 x 48), 4 m in
+      if ((px / 50) ** 2 + (pz / 44) ** 2 > 1) continue;
+      const h = 6.5 + seeded(k, 104) * 3.5, w = h * 0.46;
       const trunk = MeshBuilder.CreateCylinder("farmerSnowPineTrunk", { diameterTop: 0.3, diameterBottom: 0.45, height: h * 0.25, tessellation: 5 }, scene);
       trunk.position.set(px, h * 0.125, pz);
       trunks.push(trunk);
@@ -227,6 +228,11 @@ function pineGrove(scene: Scene): Obstacle[] {
         cap.position.set(px, ty + th * 0.45 + th * 0.55 / 2 + 0.05, pz);
         cap.rotation.y = cone.rotation.y;
         whites.push(cap);
+        // White tier line: a thin snow band along each cone's lower rim
+        const band = MeshBuilder.CreateCylinder("farmerSnowPineBand", { diameterTop: tw * 0.86, diameterBottom: tw * 1.02, height: 0.22, tessellation: 7 }, scene);
+        band.position.set(px, ty + 0.12, pz);
+        band.rotation.y = cone.rotation.y;
+        whites.push(band);
       }
       obstacles.push({ type: "cylinder", center: new Vector3(px, 0, pz), radius: 0.7 });
     }
@@ -240,7 +246,8 @@ function pineGrove(scene: Scene): Obstacle[] {
     merged.applyFog = false;
     merged.receiveShadows = true;
     merged.isPickable = false;
-    glow?.addExcludedMesh(merged);
+    // Dark solids stay in the glow pass (LESSONS 562): excluded, they wear the snow's glow as a pale veil
+    if (m !== needles && m !== bark) glow?.addExcludedMesh(merged);
   }
   return obstacles;
 }
