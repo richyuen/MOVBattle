@@ -473,5 +473,29 @@ export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): Ma
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   rockNooks(scene, obstacles);
   redShrubs(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
-  return { ...result, obstacles };
+
+  // Enlarge the arena in the ground plane and keep the navigation footprint in the same coordinates.
+  const spread = 1.45;
+  const footprint = new Vector3(spread, 1, spread);
+  const island = new Mesh("tribalSandboxFootprint", scene);
+  for (const mesh of scene.meshes) {
+    if (mesh !== island && !mesh.parent && !prior.has(mesh) && !/^cloud/.test(mesh.name)) mesh.parent = island;
+  }
+  island.scaling.copyFrom(footprint);
+  island.isPickable = false;
+  const expandZones = (zones: MapBuildResult["zones"]): MapBuildResult["zones"] =>
+    zones.map((zone) => ({ ...zone, center: zone.center.multiply(footprint), size: zone.size.multiply(footprint) }));
+  const expandBox = <T extends { center: Vector3; halfX: number; halfZ: number }>(box: T): T =>
+    ({ ...box, center: box.center.multiply(footprint), halfX: box.halfX * spread, halfZ: box.halfZ * spread });
+  return {
+    ...result,
+    zones: expandZones(result.zones),
+    placementZones: result.placementZones && expandZones(result.placementZones),
+    obstacles: obstacles.map((obstacle) => obstacle.type === "box"
+      ? expandBox(obstacle)
+      : { ...obstacle, center: obstacle.center.multiply(footprint), radius: obstacle.radius * spread }),
+    hazards: result.hazards.map((hazard) => hazard.shape === "box"
+      ? expandBox(hazard)
+      : { ...hazard, center: hazard.center.multiply(footprint), radius: hazard.radius * spread }),
+  };
 }
