@@ -45,7 +45,7 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
         }, scene);
         shaft.scaling.z = 0.72;
         shaft.rotation.y = Math.atan2(a.z - b.z, b.x - a.x);
-        shaft.position.set(x, top - height / 2, z);
+        shaft.position.set(x, top - height / 2 - 0.18, z);
         shaft.material = stone;
         shaft.convertToFlatShadedMesh();
         const cap = MeshBuilder.CreateCylinder("medieval1TurfLedge", {
@@ -53,7 +53,7 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
         }, scene);
         cap.scaling.copyFrom(shaft.scaling);
         cap.rotation.y = shaft.rotation.y;
-        cap.position.set(x, top - 0.36, z);
+        cap.position.set(x, top - 0.39, z);
         cap.material = grass;
       }
     }
