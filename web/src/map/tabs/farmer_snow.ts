@@ -211,7 +211,8 @@ function pineGrove(scene: Scene): Obstacle[] {
     for (let z = 18; z <= 40; z += 6) {
       k++;
       const px = x + (seeded(k, 101) - 0.5) * 3.5, pz = z + (seeded(k, 102) - 0.5) * 3.5;
-      if (Math.abs(px / 51) ** 3 + Math.abs(pz / 45) ** 3 > 1 || seeded(k, 103) < 0.12) continue;
+      // Inside the round outline (ellipse 54 x 48), 3 m in
+      if ((px / 51) ** 2 + (pz / 45) ** 2 > 1 || seeded(k, 103) < 0.12) continue;
       const h = 5.5 + seeded(k, 104) * 3.5, w = h * 0.42;
       const trunk = MeshBuilder.CreateCylinder("farmerSnowPineTrunk", { diameterTop: 0.3, diameterBottom: 0.45, height: h * 0.25, tessellation: 5 }, scene);
       trunk.position.set(px, h * 0.125, pz);
@@ -257,8 +258,49 @@ const BOWL: Array<[number, number]> = [[1, -0.02], [1, -2], [0.98, -6], [0.94, -
 
 function islandOutline(a: number): [number, number] {
   const c = Math.cos(a), s = Math.sin(a);
-  const r = (Math.abs(c / 54) ** 3 + Math.abs(s / 48) ** 3) ** (-1 / 3);
+  const r = (Math.abs(c / 54) ** 2 + Math.abs(s / 48) ** 2) ** (-1 / 2);
   return [c * r, s * r];
+}
+
+/**
+ * Round island (wiki farmer_snow.png): the island is a near-circle with the snow field running to its rim, not a rounded-rectangle slab
+ * ringed by dense trees. Spec (farmer_1's remap kit, this map's own copy): the outline is the ellipse 54 x 48 (islandOutline, which the
+ * bowl follows); the base's lawn slab "ground" is remapped vertex by vertex from the base's superellipse (54 x 48, power 3) to it at the
+ * same fraction of the radius; base props standing past it (less 1 m) are hidden with their colliders; the ring trees are thinned to one
+ * in three (the rest hidden with their colliders) and the haze band behind them goes, so the snow shows open to the rim.
+ */
+const SNOW_RIM_PROPS = new Set(["trunk", "boulder", "wallStone", "hayBale", "stump", "hill", "pebble"]);
+
+function roundSnowIsland(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const oldR = (a: number) => (Math.abs(Math.cos(a) / 54) ** 3 + Math.abs(Math.sin(a) / 48) ** 3) ** (-1 / 3);
+  const newR = (a: number) => Math.hypot(...islandOutline(a));
+  const inside = (x: number, z: number, m: number) => Math.hypot(x, z) <= newR(Math.atan2(z, x)) - m;
+  const gone: Array<[number, number]> = [];
+  let tree = 0;
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !(mesh instanceof Mesh)) continue;
+    if (mesh.name === "ground") {
+      const pos = mesh.getVerticesData("position");
+      if (!pos) continue;
+      for (let v = 0; v < pos.length; v += 3) {
+        if (Math.hypot(pos[v], pos[v + 2]) < 1e-6) continue;
+        const k = newR(Math.atan2(pos[v + 2], pos[v])) / oldR(Math.atan2(pos[v + 2], pos[v]));
+        pos[v] *= k;
+        pos[v + 2] *= k;
+      }
+      mesh.setVerticesData("position", pos);
+      mesh.refreshBoundingInfo();
+    } else if (mesh.name === "hazeTreeline") {
+      mesh.setEnabled(false);
+    } else if (SNOW_RIM_PROPS.has(mesh.name) && !mesh.parent && mesh.isEnabled()) {
+      const p = mesh.getAbsolutePosition();
+      const thin = mesh.name === "trunk" && tree++ % 3 !== 0;
+      if (!thin && inside(p.x, p.z, 1)) continue;
+      gone.push([p.x, p.z]);
+      mesh.setEnabled(false);
+    }
+  }
+  return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
 }
 
 function navyBowl(scene: Scene, built: Set<unknown>): void {
@@ -527,7 +569,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   const baseDispose = result.dispose;
   return {
     ...result,
-    obstacles: [...result.obstacles, ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene)],
+    obstacles: [...roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene)],
     dispose: () => {
       restoreLights();
       baseDispose?.();
