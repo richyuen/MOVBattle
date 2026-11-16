@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 565   Batch: maps_1+maps_2   Consecutive empty: 0   Done: 3/99   Parked: 0
+Iteration: 566   Batch: maps_1+maps_2   Consecutive empty: 0   Done: 4/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<level>):
 # <id>
@@ -16,7 +16,7 @@ c ...
 Marks below: one per criterion a b c (+ pass, - fail, ? unscored); map a look, b layout, c play; stage a army, b formation, c battle. -->
 
 ## Scoreboard (a b c as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
-maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox +-+ o | farmer_1 +++ D | farmer_2 -++ o (a plateau) | farmer_snow -++ o
+maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox --+ o | farmer_1 +++ D | farmer_2 +++ D | farmer_snow -++ o
 maps_2: medieval_1 --+ o | medieval_2 --+ o | ancient_1 --+ o | ancient_2 --+ o | ancient_sandbox --+ o | viking --+ o | viking_sandbox --+ o
 maps_3: dynasty ??? q | renaissance ??? q | pirate ??? q | spooky_1 ??? q | spooky_2 ??? q | wild_west ??? q | legacy ??? q
 maps_4: fantasy_good ??? q | fantasy_evil ??? q | simulation ??? q | bridge ??? q | hill ??? q | corridor ??? q | defend_the_castle ??? q | high_ground ??? q | low_ground ??? q
@@ -33,32 +33,56 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 565: maps_1+maps_2, 1 [R] + 7 [S]; BASE 93c67eaf)
-- [S] map.viking_sandbox.b blocker 4 base field dressing + pits removed (6278850c) APPROVE, struck 4
-- [S] map.ancient_sandbox.b blocker 5 base field dressing + pits removed (b149e156) APPROVE, struck 5
-- [S] map.tribal_2.a blocker 3 two-tier ledge wall, ledge birches (e503d93f) APPROVE, struck 3 (PASS; CONFIRM passed -> D)
-- [S] map.farmer_snow.b blocker 2 mill onto the +x bank, wheel in the ice (ca008f0d) APPROVE, struck 2 (b PASS)
-- [S] map.viking.a blocker 1 own builder: ice lake + cracks, snow banks (4d8db327) APPROVE, struck a1, b1
-- [S] map.medieval_2.b blocker 1 own builder: front pond, paths, lagoons/plank out (61b2ec07+4e086afe) APPROVE, struck 1, 2, 3
-- [S] map.ancient_2.a blocker 2 own builder: temple complex (b364ac2a) APPROVE, struck a2, b2
-- [R] map.farmer_2.a blockers 1-4 rim masses, pale cottage, straw wheat, alley (b84ba5a1) APPROVE, struck 1, 2, 4 (CONFIRM passed a; critic kept 3)
-- Skipped: tribal_sandbox.b1 (evidence commit first), medieval_1, ancient_1 (starve at 567: take them first in 566)
-- 8/8, 14 struck
+## Focus (iter 566: maps_1+maps_2, 9 [S] + 1 [R]; BASE 21a8a59d)
+- Evidence: Tribal Sandbox camera limit and framing (21a8a59d+9704ba46), re-AUDIT x2 reopened a and b.
+- [S] map.medieval_1.b blocker 2 split plateaus, inlet and stone bridge (70777289+20b7df96) APPROVE, struck a2, b1, b2, b3
+- [S] map.ancient_1.b blocker 1 rectangular paved slab, two streets and central arch (29f15c87+fb977c70) APPROVE, struck a1, b1, b3, b5
+- [S] map.tribal_sandbox.b blocker 1 expand island, placement and collision footprint 1.45x (49d2750c) APPROVE, struck b1
+- [R] map.farmer_2.a blocker 3 swept wheat, separated warm heads and stems (1e5f5680+e6c89ac4) APPROVE, struck a3 (a PASS; CONFIRM -> D)
+- [S] map.farmer_snow.a blocker 1 open snow rim with a few corner pines (ae2ad902) APPROVE, struck a1
+- [S] map.medieval_2.a blocker 1 crenellated castle facade, ivy and arched gate (373e0c1c+c3ddcf73) APPROVE, struck a1
+- [S] map.ancient_2.b blocker 5 clear inherited field obstacles and pits (13fa8e2a) APPROVE, struck b5
+- [S] map.viking.b blocker 4 clear inherited obstacles and pits off the lake (1e70afc3) APPROVE, struck b4
+- [S] map.ancient_sandbox.a blocker 1 green meadow with brown clay paths (9358dcce) APPROVE, struck a1
+- [S] map.viking_sandbox.a blocker 4 cyan sky and airborne snow (b2df5dd6) APPROVE, struck a4
+- 10/10, 16 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.viking_sandbox (6278850c) VERDICT: APPROVE CRITERION: map.viking_sandbox.b FAIL
-GAP: [S] map.ancient_sandbox (b149e156) VERDICT: APPROVE CRITERION: map.ancient_sandbox.b FAIL
-GAP: [S] map.tribal_2 (e503d93f) VERDICT: APPROVE CRITERION: map.tribal_2.a PASS
-GAP: [S] map.farmer_snow (ca008f0d) VERDICT: APPROVE CRITERION: map.farmer_snow.b PASS
-GAP: [S] map.viking (4d8db327) VERDICT: APPROVE CRITERION: map.viking.a FAIL
-GAP: [S] map.medieval_2 (61b2ec07 + 4e086afe) VERDICT: APPROVE CRITERION: map.medieval_2.b FAIL
-GAP: [S] map.ancient_2 (b364ac2a) VERDICT: APPROVE CRITERION: map.ancient_2.a FAIL
-GAP: [R] map.farmer_2 (b84ba5a1) VERDICT: APPROVE CRITERION: map.farmer_2.a FAIL plateau
-REGRESSIONS: none
+GAP: [S] map.medieval_1 (70777289 + 20b7df96)
+VERDICT: APPROVE
+CRITERION: map.medieval_1.b FAIL (previous: FAIL)
+GAP: [S] map.ancient_1 (29f15c87 + fb977c70)
+VERDICT: APPROVE
+CRITERION: map.ancient_1.b FAIL (previous: FAIL)
+GAP: [S] map.tribal_sandbox (49d2750c)
+VERDICT: APPROVE
+CRITERION: map.tribal_sandbox.b FAIL (previous: FAIL)
+GAP: [R] map.farmer_2 (1e5f5680 + e6c89ac4)
+VERDICT: APPROVE
+CRITERION: map.farmer_2.a PASS (previous: FAIL)
+GAP: [S] map.farmer_snow (ae2ad902)
+VERDICT: APPROVE
+CRITERION: map.farmer_snow.a FAIL (previous: FAIL)
+GAP: [S] map.medieval_2 (373e0c1c + c3ddcf73)
+VERDICT: APPROVE
+CRITERION: map.medieval_2.a FAIL (previous: FAIL)
+GAP: [S] map.ancient_2 (13fa8e2a)
+VERDICT: APPROVE
+CRITERION: map.ancient_2.b FAIL (previous: FAIL)
+GAP: [S] map.viking (1e70afc3)
+VERDICT: APPROVE
+CRITERION: map.viking.b FAIL (previous: FAIL)
+GAP: [S] map.ancient_sandbox (9358dcce)
+VERDICT: APPROVE
+CRITERION: map.ancient_sandbox.a FAIL (previous: FAIL)
+GAP: [S] map.viking_sandbox (b2df5dd6)
+VERDICT: APPROVE
+CRITERION: map.viking_sandbox.a FAIL (previous: FAIL)
+REGRESSIONS: none. Judge passes c for all 10 maps and a/c for all 26 stages.
 
 ## Notes for next iteration (max 5 lines)
-- Starving at 567: medieval_1 (a, b) and ancient_1 (a, b) have no attempt since their 562 audit: give them own builders first in 566 (base campaign.introduction / campaign.challenge; never edit bases).
-- [R] slot: farmer_2.a, one blocker left (wheat colour): lower the self-light (<= 0.15) at a warm gold-orange; CONFIRM 565 already passed a.
-- tribal_sandbox.b1 needs an evidence commit first: cameraController upperRadiusLimit 120 clamps the top (135) and island (200) poses; lift it in capture-world.mjs for that map's shots only.
-- The challenge-base junk clear (wallStone, boulder, hayBale, hill, stump, pits) is ranked for viking.b4 and ancient_2.b5: copy viking_sandbox's clearFieldDressing.
+- Medieval 1 and Ancient 1 had their first layout attempts. Prioritize their appearance gaps (stepped cliffs and white city frontage).
+- Tribal Sandbox's enlarged footprint cleared b1. Re-audit a1/a2 and b2 remain on the rock stacks, crowns and regular back wall.
+- Farmer 2 confirmed and map-picker thumbnail refreshed. Both map batches still have open items.
+- 566 final capture: 118 shots, zero page errors, 10 map c and 52 stage a/c checks passed. Local commits ready; automatic approval review blocked the push to origin/main because external publication authorization and destination trust were unverified.
 - Critic 562 aside still open: stage_fantasy_evil.raze_the_homestead_field.png pale grey rectangle behind the island; check at the maps_1 checkpoint.

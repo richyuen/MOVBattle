@@ -3,15 +3,6 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-560 | cb6fa15d | map.tribal_1.a | approved
-560 | 57c3a0af | map.tribal_1.b | approved
-560 | f66ba3a2+8c0b9641+8a89fc24 | map.tribal_1.b | approved
-560 | 8105869f | map.farmer_1.a | approved
-560 | 22e0ba71+ba8232f8 | map.farmer_1.b | approved
-560 | d6119113 | map.farmer_1.a | approved
-560 | 90fc230f | map.farmer_2.a | approved
-560 | 7713f41b | map.farmer_2.b | approved
-560 | 674aaca3+5a6c6bb4 | map.farmer_2.a | approved
 561 | 037cd776+4b5e0fae | map.farmer_2.a | approved
 561 | b382569f+ceafd4a0+0792aa93 | map.farmer_2.a | approved
 561 | 5f83a159 | map.farmer_1.a | approved
@@ -54,6 +45,17 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 565 | b364ac2a | map.ancient_2.a | approved
 565 | b84ba5a1 [R] | map.farmer_2.a | approved (CONFIRM passed a; critic kept blocker 3)
 
+566 | 70777289+20b7df96 | map.medieval_1.b | approved
+566 | 29f15c87+fb977c70 | map.ancient_1.b | approved
+566 | 49d2750c | map.tribal_sandbox.b | approved
+566 | 1e5f5680+e6c89ac4 [R] | map.farmer_2.a | approved (CONFIRM passed)
+566 | ae2ad902 | map.farmer_snow.a | approved
+566 | 373e0c1c+c3ddcf73 | map.medieval_2.a | approved
+566 | 13fa8e2a | map.ancient_2.b | approved
+566 | 1e70afc3 | map.viking.b | approved
+566 | 9358dcce | map.ancient_sandbox.a | approved
+566 | b2df5dd6 | map.viking_sandbox.a | approved
+
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
 web/src/map/tabs/farmer_2.ts:SHEAVES z range, scale | z -36..-16, x1.5 | 558 | approved | z -44..-23, x1
@@ -70,6 +72,8 @@ web/src/map/tabs/farmer_1.ts:farmer1BankRock colour | (0.6,0.53,0.44) emissive (
 web/src/map/tabs/farmer_2.ts:farmer2UnderEarth colour | (0.5,0.4,0.27) self-lit 1.0 | 561 | approved | (0.44,0.36,0.25) self-lit 0.45
 web/src/map/tabs/farmer_2.ts:farmer2OliveLeaf / Dark | (0.62,0.56,0.19) x0.6, (0.5,0.46,0.15) x0.55 (oliveGrove) | 563 | approved | (0.5,0.47,0.16) x0.6, (0.4,0.39,0.12) x0.55; (0.45,0.42,0.14) x0.25
 web/src/map/tabs/farmer_2.ts:MEADOW | (0.6,0.54,0.18) | 563 | approved | (0.62,0.64,0.2)
-web/src/map/tabs/farmer_2.ts:farmer2Wheat colour | (1,0.8,0.3) self-lit 0.35 + straw floor (0.92,0.72,0.3) x0.3 | 565 | approved (critic: cream from above, khaki at ground) | (0.9,0.66,0.2) self-lit 0.3 (CONFIRM: dull ochre); (0.95,0.8,0.32) self-lit 0.4 (CONFIRM: too pale); (0.78,0.55,0.16) emissive (0.26,0.17,0.04)
+web/src/map/tabs/farmer_2.ts:farmer2Wheat colour | unlit heads (1.1,0.67,0.23), stems (0.88,0.51,0.14), out of glow; floor (0.94,0.58,0.17) x0.145 | 566 | approved | (1,0.8,0.3) self-lit 0.35 + straw floor (0.92,0.72,0.3) x0.3; (0.9,0.66,0.2) self-lit 0.3 (CONFIRM: dull ochre); (0.95,0.8,0.32) self-lit 0.4 (CONFIRM: too pale); (0.78,0.55,0.16) emissive (0.26,0.17,0.04)
 web/src/map/tabs/farmer_2.ts:farmer2HousePlank / Frame / Roof | (0.88,0.74,0.52) x0.32, (0.56,0.43,0.28) x0.25, (0.74,0.65,0.5) x0.3 | 565 | approved | (0.6,0.44,0.26) x0.18, (0.26,0.15,0.08) x0.15, (0.36,0.23,0.13) x0.15
 web/src/map/tabs/tribal_2.ts:tribal2Mountain colour | (0.6,0.5,0.4) emissive (0.1,0.075,0.05) | 564 | approved | (0.6,0.54,0.52) emissive (0.08,0.06,0.05)
+web/src/map/tabs/tribal_sandbox.ts:spread | 1.45x horizontal geometry/nav/collisions | 566 | approved | 1x
+web/src/map/tabs/viking_sandbox.ts:clearColor and fogColor | cyan (0.52,0.78,0.83) and (0.62,0.82,0.86) | 566 | approved | inherited beige (0.74,0.68,0.52)
