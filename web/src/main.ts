@@ -196,6 +196,7 @@ shadowGen.normalBias = 0.02;
 
 // Camera
 const camCtrl = new CameraController(scene, canvas);
+const defaultCameraRadiusLimit = camCtrl.camera.upperRadiusLimit;
 // Panning stops at the island's rim: every map stands on the same island
 camCtrl.setGroundBounds(clampToIsland);
 bodyEl.classList.toggle("touch-device", camCtrl.isTouchDevice);
@@ -3923,7 +3924,8 @@ const gameApi = {
       };
     }),
   // Capture harness: frame the camera on a point (a landed blow), close, without advancing the battle.
-  frameCamera: (target: { x: number; y: number; z: number }, radius: number, alpha: number, beta: number) => {
+  frameCamera: (target: { x: number; y: number; z: number }, radius: number, alpha: number, beta: number, radiusLimit = defaultCameraRadiusLimit) => {
+    camCtrl.camera.upperRadiusLimit = radiusLimit;
     camCtrl.applyGalleryPreset("state_read_duel", { alpha, beta, radius, target });
   },
   // Map picker thumbnails (loop/scripts/map-thumbs.mjs): a high oblique on the loaded map, fitted to its placement zones and its terrain's
