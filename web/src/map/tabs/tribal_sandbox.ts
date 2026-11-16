@@ -25,7 +25,9 @@ const SLABS: Array<[number, number, number]> = [[-16, -12, 3.2], [-6, 22, 2.6], 
  * slabs 7-10 m wide and a capstone. Angles from +x toward +z.
  */
 const RIM = { a: 54, b: 48, round: 3 };
-const CLIFFS: Array<[number, number, number]> = [[30, 150, 1], [155, 205, 0.7]]; // [from, to, height factor]
+const CLIFFS: Array<[number, number, number]> = [
+  [29, 45, 0.92], [60, 76, 1], [93, 113, 0.78], [129, 145, 1.06], [163, 176, 0.82], [190, 205, 0.7],
+]; // [from, to, height factor]
 
 function rimPoint(deg: number): [number, number] {
   const t = (deg * Math.PI) / 180, c = Math.cos(t), s = Math.sin(t);
@@ -41,10 +43,10 @@ function backCliffs(scene: Scene, obstacles: Obstacle[]): void {
   const parts: Mesh[] = [];
   let k = 0;
   for (const [from, to, tall] of CLIFFS) {
-    for (let deg = from; deg <= to; deg += 4) {
+    for (let deg = from; deg <= to; deg += 5) {
       k++;
       const [rx, rz] = rimPoint(deg);
-      const pull = 1 - 3 / Math.hypot(rx, rz);
+      const pull = 1 - (2 + 4 * seeded(k, 40)) / Math.hypot(rx, rz);
       const x = rx * pull, z = rz * pull;
       const face = -Math.atan2(z, x) + Math.PI / 2;
       const h = (7 + seeded(k, 41) * 4) * tall;
@@ -54,7 +56,7 @@ function backCliffs(scene: Scene, obstacles: Obstacle[]): void {
         const slab = MeshBuilder.CreateCylinder("tsCliff", { diameterTop: w * 0.75, diameterBottom: w, height: hj, tessellation: 5 }, scene);
         slab.scaling.z = 0.55;
         slab.position.set(x * (1 + j * 0.03) + (seeded(k * 2 + j, 43) - 0.5) * 1.5, hj / 2, z * (1 + j * 0.03) + (seeded(k * 2 + j, 44) - 0.5) * 1.5);
-        slab.rotation.set((seeded(k * 2 + j, 45) - 0.5) * 0.1, face + (seeded(k * 2 + j, 46) - 0.5) * 0.35, 0);
+        slab.rotation.set((seeded(k * 2 + j, 45) - 0.5) * 0.28, face + (seeded(k * 2 + j, 46) - 0.5) * 0.6, (seeded(k * 2 + j, 49) - 0.5) * 0.32);
         parts.push(slab);
       }
       const cap = MeshBuilder.CreateCylinder("tsCliffCap", { diameterTop: 5.5, diameterBottom: 7, height: 1.4, tessellation: 5 }, scene);
