@@ -200,12 +200,58 @@ function castleFront(scene: Scene, obstacles: MapBuildResult["obstacles"]): void
   }
 }
 
+function castleOaks(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult["obstacles"]): MapBuildResult["obstacles"] {
+  const oldTrunks: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !/^(trunk|oakCrown|hazeTreeline)$/.test(mesh.name)) continue;
+    if (mesh.name === "trunk") oldTrunks.push(mesh.position.clone());
+    mesh.setEnabled(false);
+  }
+  const kept = obstacles.filter(({ center }) => !oldTrunks.some((p) => Math.hypot(p.x - center.x, p.z - center.z) < 0.5));
+  const bark = new StandardMaterial("medieval2OakBark", scene);
+  bark.diffuseColor = new Color3(0.36, 0.19, 0.11);
+  bark.emissiveColor = bark.diffuseColor.scale(0.16);
+  const leaves = new StandardMaterial("medieval2OakLeaves", scene);
+  leaves.diffuseColor = new Color3(0.31, 0.46, 0.13);
+  leaves.emissiveColor = leaves.diffuseColor.scale(0.23);
+  const groves = [[-29, 24], [-40, 29], [-24, 32], [9, 28], [14, 35], [28, 36], [43, 28], [41, -30], [46, -19], [-40, -30], [-45, -24]];
+  groves.forEach(([x, z], i) => {
+    const h = 5.5 + seeded(i, 51) * 3.5;
+    const lean = (i % 2 ? 1 : -1) * (1.1 + seeded(i, 52));
+    const origin = new Vector3(x, 0, z);
+    const fork = new Vector3(x + lean * 0.55, h * 0.63, z - 0.5);
+    const crown = new Vector3(x + lean, h, z + 0.6);
+    const path = [origin, new Vector3(x - lean * 0.34, h * 0.33, z + 0.36), fork, crown];
+    const trunk = MeshBuilder.CreateTube("medieval2OakTrunk", {
+      path, tessellation: 7, cap: Mesh.CAP_ALL, radiusFunction: (index) => [0.75, 0.61, 0.4, 0.18][index],
+    }, scene);
+    trunk.material = bark;
+    for (let j = 0; j < 4; j++) {
+      const angle = j * Math.PI / 2 + i;
+      const tip = crown.add(new Vector3(2.1 * Math.cos(angle), -0.75 + (j % 2) * 0.85, 2.1 * Math.sin(angle)));
+      const branch = MeshBuilder.CreateTube("medieval2OakBranch", {
+        path: [fork, Vector3.Lerp(fork, tip, 0.58).add(new Vector3(0, -0.65, 0)), tip], tessellation: 6,
+        radiusFunction: (index) => [0.35, 0.22, 0.09][index],
+      }, scene);
+      branch.material = bark;
+      const clump = MeshBuilder.CreateIcoSphere("medieval2OakCrown", { radius: 2.1 + seeded(i * 4 + j, 53) * 0.9, subdivisions: 1 }, scene);
+      clump.position.copyFrom(tip);
+      clump.scaling.y = 0.77;
+      clump.material = leaves;
+      clump.convertToFlatShadedMesh();
+      clump.isPickable = false;
+    }
+    kept.push({ type: "cylinder", center: origin, radius: 0.85 });
+  });
+  return kept;
+}
+
 export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   const hazards = [...clearCentrePools(scene, built, result), ...frontPond(scene)];
-  const obstacles = clearPondGround(scene, built, [...result.obstacles]);
+  const obstacles = castleOaks(scene, built, clearPondGround(scene, built, [...result.obstacles]));
   dirtPaths(scene);
   castleFront(scene, obstacles);
   return { ...result, obstacles, hazards };
