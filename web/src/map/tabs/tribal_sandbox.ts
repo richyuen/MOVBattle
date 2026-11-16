@@ -323,9 +323,9 @@ function redShrubs(scene: Scene, built: Set<unknown>): void {
     const n = 2 + Math.floor(seeded(s, 122) * 3);
     for (let b = 0; b < n; b++) {
       const k = s * 10 + b;
-      const r = 0.45 + seeded(k, 123) * 0.35;
+      const r = (0.45 + seeded(k, 123) * 0.35) * 2.5;
       const ball = MeshBuilder.CreateIcoSphere("tsShrub", { radius: r, subdivisions: 2 }, scene);
-      const a = seeded(k, 124) * Math.PI * 2, off = b === 0 ? 0 : 0.6 + seeded(k, 125) * 0.4;
+      const a = seeded(k, 124) * Math.PI * 2, off = b === 0 ? 0 : (0.6 + seeded(k, 125) * 0.4) * 2;
       ball.scaling.y = 0.85;
       ball.position.set(x + Math.cos(a) * off, r * 0.75, z + Math.sin(a) * off);
       groups[seeded(k, 126) < 0.6 ? 0 : 1].push(ball);
