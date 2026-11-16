@@ -404,7 +404,8 @@ function snowBuildings(scene: Scene): Obstacle[] {
   };
   const mats = {
     wall: mk("farmerSnowHouseWall", new Color3(0.36, 0.12, 0.08), 0.35),
-    mill: mk("farmerSnowMillWall", new Color3(0.2, 0.23, 0.32), 0.4),
+    // Dark timber boards (wiki shot, left): the mill reads as a dark wooden house under snow, its frame a shade lighter
+    mill: mk("farmerSnowMillWall", new Color3(0.2, 0.13, 0.08), 0.45),
     board: mk("farmerSnowRoofBoard", new Color3(0.2, 0.12, 0.08), 0.3),
     snow: mk("farmerSnowRoofSnow", SNOW, 0.35),
     stone: mk("farmerSnowFooting", new Color3(0.34, 0.37, 0.48), 0.35),
@@ -455,6 +456,16 @@ function snowBuildings(scene: Scene): Obstacle[] {
     box("stone", SNOW_MILL.width, SNOW_MILL.plinth, SNOW_MILL.depth, x, SNOW_MILL.plinth / 2, SNOW_MILL.z);
     gabled("mill", x, SNOW_MILL.z, SNOW_MILL.width - 0.4, SNOW_MILL.depth - 0.4, SNOW_MILL.plinth, SNOW_MILL.wall, SNOW_MILL.roof);
     box("lit", 1.2, 1.3, 0.12, x, SNOW_MILL.plinth + 3.2, SNOW_MILL.z + SNOW_MILL.depth / 2 - 0.15);
+    // Timber framing over the boards: corner posts, sill, mid and eave beams round all four faces, battens every 1.5 m on the rim
+    // (-z) and outer faces, each beam with a snow line on top
+    const W = SNOW_MILL.width - 0.4, D = SNOW_MILL.depth - 0.4, P = SNOW_MILL.plinth, H = SNOW_MILL.wall, z = SNOW_MILL.z;
+    for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) box("wood", 0.5, H, 0.5, x + (dx * W) / 2, P + H / 2, z + (dz * D) / 2);
+    for (const y of [P + 0.25, P + H / 2, P + H - 0.2]) {
+      box("wood", W + 0.4, 0.4, D + 0.4, x, y, z);
+      box("snow", W + 0.5, 0.12, D + 0.5, x, y + 0.25, z);
+    }
+    for (let i = 1; i < 6; i++) box("wood", 0.22, H, 0.16, x - W / 2 + (i * W) / 6, P + H / 2, z - D / 2 - 0.1);
+    for (let i = 1; i < 6; i++) box("wood", 0.16, H, 0.22, x + side * (W / 2 + 0.1), P + H / 2, z - D / 2 + (i * D) / 6);
   }
   // The wheel turns about x in the gap: rims, spokes and paddles in the y-z plane
   const R = SNOW_MILL.wheel / 2, wz = SNOW_MILL.z, wy = R - 1;
