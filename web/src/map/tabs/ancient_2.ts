@@ -158,6 +158,31 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
   }
 }
 
+function fieldPaths(scene: Scene): void {
+  const clay = new StandardMaterial("ancient2PathClay", scene);
+  clay.diffuseColor = new Color3(0.86, 0.76, 0.54);
+  clay.emissiveColor = clay.diffuseColor.scale(0.24);
+  const routes = [
+    [[-48, -7], [-30, -7], [-13, -4], [0, 0], [16, -12], [31, -25], [38, -32]],
+    [[-15, -42], [-10, -31], [-6, -15], [0, 0], [0, 11], [0, 24]],
+  ];
+  routes.forEach((route, index) => {
+    const edges: [Vector3[], Vector3[]] = [[], []];
+    route.forEach(([x, z], i) => {
+      const before = route[Math.max(0, i - 1)], after = route[Math.min(route.length - 1, i + 1)];
+      const dx = after[0] - before[0], dz = after[1] - before[1];
+      const width = (1.8 + 0.35 * seeded(i, index + 91)) / Math.hypot(dx, dz);
+      const y = 0.035 + 0.005 * index;
+      edges[0].push(new Vector3(x - dz * width, y, z + dx * width));
+      edges[1].push(new Vector3(x + dz * width, y, z - dx * width));
+    });
+    const path = MeshBuilder.CreateRibbon("ancient2FieldPath", { pathArray: edges, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    path.material = clay;
+    path.receiveShadows = true;
+    path.isPickable = false;
+  });
+}
+
 export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -173,6 +198,7 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
     (p.x / 54) ** 2 + (p.z / 48) ** 2 < 0.8 ** 2 && Math.hypot(center.x - p.x, center.z - p.z) < 3.4));
   result.hazards = result.hazards.filter((hazard) => hazard.kind !== "pit");
   const obstacles = clearFootprint(scene, built, [...result.obstacles]);
+  fieldPaths(scene);
   templeComplex(scene, obstacles);
   return { ...result, obstacles };
 }
