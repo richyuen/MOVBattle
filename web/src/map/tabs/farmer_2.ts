@@ -105,21 +105,21 @@ function cobbleWall(scene: Scene, mat: StandardMaterial, [x0, z0, x1, z1, gapAt]
 
 /**
  * The wheat field (wiki shot, the_tiniest_attack): tall golden wheat covers the right part of the island, from the front-right corner wall
- * back past the centre, beside the long centre wall. Spec: a field x 5..45, z -29..21 (its corners rounded off), filled with tufts of five
- * thin stalks 0.65-0.8 m tall with a fat ear on each (under the waist, to about 1 m), 0.75 m apart and jittered, leaning a little with the wind. Units walk through it (no
- * colliders) and stand chest-up above it. Drawn as thin instances of one tuft.
+ * back past the centre, beside the long centre wall. The reference shows a warm straw-gold canopy
+ * with a deeper orange at the rows' feet. Six swept stalks per clump, 0.65–0.95 m to the tips,
+ * keep the crop below the waist. The heads overlap in the high shot and read separately at ground level.
  */
 const WHEAT = { x0: 5, x1: 45, z0: -29, z1: 21, step: 0.75 };
 
 function wheatField(scene: Scene): void {
   const gold = new StandardMaterial("farmer2Wheat", scene);
-  gold.diffuseColor = new Color3(1, 0.8, 0.3);
-  gold.emissiveColor = gold.diffuseColor.scale(0.35);
+  gold.diffuseColor = new Color3(1, 0.71, 0.24);
+  gold.emissiveColor = gold.diffuseColor.scale(0.14);
   gold.specularColor = Color3.Black();
   // A straw floor under the tufts ([R] 565): from above the gaps between them showed the meadow and shadow as dark speckle
   const straw = new StandardMaterial("farmer2WheatFloor", scene);
-  straw.diffuseColor = new Color3(0.92, 0.72, 0.3);
-  straw.emissiveColor = straw.diffuseColor.scale(0.3);
+  straw.diffuseColor = new Color3(0.94, 0.58, 0.17);
+  straw.emissiveColor = straw.diffuseColor.scale(0.145);
   straw.specularColor = Color3.Black();
   const floor = MeshBuilder.CreateCylinder("farmer2WheatFloor", { diameter: 2, height: 0.04, tessellation: 64 }, scene);
   const fpos = floor.getVerticesData("position")!;
@@ -139,15 +139,21 @@ function wheatField(scene: Scene): void {
   floor.receiveShadows = true;
   floor.isPickable = false;
   const parts: Mesh[] = [];
-  for (let i = 0; i < 5; i++) {
-    const a = (i / 5) * Math.PI * 2;
-    const h = 0.65 + seeded(i, 30) * 0.15;
-    const stalk = MeshBuilder.CreateCylinder("farmer2WheatStalk", { diameterTop: 0.05, diameterBottom: 0.09, height: h, tessellation: 3 }, scene);
-    stalk.position.set(Math.cos(a) * 0.18, h / 2, Math.sin(a) * 0.18);
-    stalk.rotation.set(Math.sin(a) * 0.15, 0, -Math.cos(a) * 0.15);
-    const ear = MeshBuilder.CreateCylinder("farmer2WheatEar", { diameterTop: 0.04, diameterBottom: 0.16, height: 0.38, tessellation: 4 }, scene);
-    ear.rotation.x = Math.PI;
-    ear.position.set(Math.cos(a) * 0.25, h + 0.1, Math.sin(a) * 0.25);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const x = Math.cos(a), z = Math.sin(a);
+    const h = 0.5 + seeded(i, 30) * 0.22;
+    const foot = new Vector3(x * 0.11, 0, z * 0.11);
+    const bend = new Vector3(x * 0.18 + 0.07, h * 0.58, z * 0.18);
+    const tip = new Vector3(x * 0.24 + 0.13, h, z * 0.24);
+    const stalk = MeshBuilder.CreateTube("farmer2WheatStalk", {
+      path: [foot, bend, tip], radiusFunction: (index) => 0.044 - index * 0.009, tessellation: 3,
+    }, scene);
+    const ear = MeshBuilder.CreateIcoSphere("farmer2WheatEar", { radius: 0.15, subdivisions: 1 }, scene);
+    ear.position.copyFrom(tip);
+    ear.position.y += 0.08;
+    ear.scaling.set(0.55, 1.55, 0.55);
+    ear.rotation.z = -0.29;
     parts.push(stalk, ear);
   }
   const tuft = Mesh.MergeMeshes(parts, true);
