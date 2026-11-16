@@ -155,9 +155,7 @@ function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResu
 const NOOKS: Array<[number, number]> = [[25.8, 18.2], [34.1, -4.7], [20.9, -20.9], [4.2, 23.2]];
 
 function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
-  // 563: cliff-block outcrops (wiki shot: stacked flat-topped faceted rock blocks with birches growing on their tops), not round boulders.
-  // Each nook is five upright faceted blocks (5-6 sided, flat tops, 4.5-7 m across) on the 200-degree horseshoe, 3-7.5 m tall and tallest at
-  // the back of the arc, each block with a thinner flat slab set on its top at an offset; the birches stand on the tops of the two tallest.
+  // Broad fractured masses rise at the back of each horseshoe, with tilted slabs leaning out from their bases.
   const rock = new StandardMaterial("tribalSandboxNook", scene);
   rock.diffuseColor = new Color3(0.62, 0.53, 0.46);
   rock.emissiveColor = new Color3(0.1, 0.08, 0.065);
@@ -176,15 +174,15 @@ function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
       const back = 1 - Math.abs(i - 2) / 2; // 1 at the back of the arc, 0 at the tips
       const h = 3 + back * 3.5 + seeded(k, 52) * 1;
       const x = cx + Math.cos(a) * 7, z = cz + Math.sin(a) * 7;
-      const block = MeshBuilder.CreateCylinder("tsNookBlock", { diameterTop: d * 0.86, diameterBottom: d, height: h, tessellation: 5 + (i % 2) }, scene);
-      block.rotation.set((seeded(k, 53) - 0.5) * 0.08, seeded(k, 54) * Math.PI, (seeded(k, 55) - 0.5) * 0.08);
-      block.position.set(x, h / 2 - 0.1, z);
+      const block = MeshBuilder.CreatePolyhedron("tsNookBlock", { type: 2, sizeX: d * 0.65, sizeY: h * 0.62, sizeZ: d * 0.52 }, scene);
+      block.rotation.set((seeded(k, 53) - 0.5) * 0.48, seeded(k, 54) * Math.PI, (seeded(k, 55) - 0.5) * 0.55);
+      block.position.set(x, h / 2 - 0.15, z);
       boulders.push(block);
-      const slab = MeshBuilder.CreateCylinder("tsNookSlab", { diameterTop: d * 0.62, diameterBottom: d * 0.7, height: 1, tessellation: 5 }, scene);
-      slab.rotation.set(0, seeded(k, 56) * Math.PI, 0);
-      slab.position.set(x + (seeded(k, 57) - 0.5) * 1.2, h + 0.4, z + (seeded(k, 58) - 0.5) * 1.2);
+      const slab = MeshBuilder.CreatePolyhedron("tsNookSlab", { type: 2, sizeX: d * 0.58, sizeY: d * 0.24, sizeZ: d * 0.54 }, scene);
+      slab.rotation.set(0.3 + seeded(k, 57) * 0.36, seeded(k, 56) * Math.PI, -0.3 + seeded(k, 58) * 0.2);
+      slab.position.set(x - Math.cos(a) * d * 0.43, h * 0.28, z - Math.sin(a) * d * 0.43);
       boulders.push(slab);
-      tops.push([x, z, h + 0.9]);
+      tops.push([x, z, h * 0.84]);
       obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: d * 0.48 });
     }
     // Birches growing on the tops of the tallest blocks
