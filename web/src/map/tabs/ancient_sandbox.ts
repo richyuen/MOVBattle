@@ -145,12 +145,32 @@ function clearFieldJunk(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
   return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
 }
 
+// The rest of the base's field dressing (565, named by a probe of the built set): the low dark dry-stone wall runs ("wallStone", the black
+// block row of the battle shot), navy boulder clusters ("boulder"), gold hay bales ("hayBale"), grass mounds ("hill"), stumps ("stump"),
+// and the two pits (a dark see-through box overlay each, with its hazard). TABS's field is wide open: all of them go, and every base
+// collider standing on them (inside 0.8 of the rim, where only that dressing stands; the ring trees stand further out).
+const FIELD_DRESSING = new Set(["wallStone", "boulder", "hayBale", "hill", "stump", "campaign_hazard_box_pit"]);
+
+function clearFieldDressing(scene: Scene, built: Set<unknown>, result: MapBuildResult, obstacles: Obstacle[]): { obstacles: Obstacle[]; hazards: MapBuildResult["hazards"] } {
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !FIELD_DRESSING.has(mesh.name)) continue;
+    gone.push([mesh.position.x, mesh.position.z]);
+    mesh.setEnabled(false);
+  }
+  const inside = (x: number, z: number) => (x / 54) ** 2 + (z / 48) ** 2 < 0.8 ** 2;
+  return {
+    obstacles: obstacles.filter((o) => !(inside(o.center.x, o.center.z) && gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 4))),
+    hazards: result.hazards.filter((h) => h.kind !== "pit"),
+  };
+}
+
 export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   terracottaCliffs(scene, built);
   sea(scene);
-  const obstacles = clearFieldJunk(scene, built, [...result.obstacles]);
-  return { ...result, obstacles };
+  const cleared = clearFieldDressing(scene, built, result, clearFieldJunk(scene, built, [...result.obstacles]));
+  return { ...result, obstacles: cleared.obstacles, hazards: cleared.hazards };
 }
