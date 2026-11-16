@@ -538,6 +538,61 @@ function dogShrine(scene: Scene): { type: "cylinder"; center: Vector3; radius: n
   return { type: "cylinder", center: new Vector3(x, 0, z), radius: 2.6 };
 }
 
+/**
+ * Field scatter (564; CONFIRM 563 a4, wiki tribal_2.png): the open field carries pale grey stones and bone-white sticks, not navy-black
+ * boulders. Spec: each of the base's field "boulder" meshes (sandbox.tribal) still standing on the field is hidden and in its place lies a
+ * cluster of 2-3 pale warm-grey faceted stones (0.8-1.8 m, flattened, half sunk), and every second cluster has one or two bone-white sticks
+ * (1.4-2.4 m, thin, lying flat at random angles) beside it. The base colliders stay where they were (the stones cover the same spot).
+ */
+function paleFieldStones(scene: Scene, built: Set<unknown>): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const stoneMat = mk("tribal2FieldStone", new Color3(0.66, 0.62, 0.56), 0.25);
+  const boneMat = mk("tribal2FieldBone", new Color3(0.92, 0.88, 0.78), 0.35);
+  const stones: Mesh[] = [], bones: Mesh[] = [];
+  let i = 0;
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.name !== "boulder" || mesh.parent || !mesh.isEnabled()) continue;
+    const { x, z } = mesh.position;
+    if (x > footX(z) - 1) continue;
+    mesh.setEnabled(false);
+    i++;
+    // A base heap is three "boulder" lumps: one or two stones per lump gives the 2-3 (to 6) stone cluster
+    const n = 1 + (seeded(i, 201) > 0.5 ? 1 : 0);
+    for (let s = 0; s < n; s++) {
+      const d = 0.8 + seeded(i * 5 + s, 202) * 1.0;
+      const st = MeshBuilder.CreateIcoSphere("tribal2FieldStone", { radius: d / 2, subdivisions: 1 }, scene);
+      st.scaling.set(1.1, 0.55 + seeded(i * 5 + s, 203) * 0.2, 0.9);
+      st.rotation.set(seeded(i * 5 + s, 204) * Math.PI, seeded(i * 5 + s, 205) * Math.PI, 0);
+      st.position.set(x + (seeded(i * 5 + s, 206) - 0.5) * 2.4, d * 0.15, z + (seeded(i * 5 + s, 207) - 0.5) * 2.4);
+      stones.push(st);
+    }
+    if (i % 2 === 0) {
+      for (let b = 0; b < 1 + (seeded(i, 208) > 0.5 ? 1 : 0); b++) {
+        const len = 1.4 + seeded(i * 3 + b, 209);
+        const bone = MeshBuilder.CreateCylinder("tribal2FieldBone", { diameter: 0.16, height: len, tessellation: 5 }, scene);
+        bone.rotation.set(Math.PI / 2, seeded(i * 3 + b, 210) * Math.PI, 0);
+        bone.position.set(x + 1.6 + (seeded(i * 3 + b, 211) - 0.5) * 2, 0.09, z + (seeded(i * 3 + b, 212) - 0.5) * 2);
+        bones.push(bone);
+      }
+    }
+  }
+  for (const [list, m, name] of [[stones, stoneMat, "tribal2FieldStones"], [bones, boneMat, "tribal2FieldBones"]] as const) {
+    const merged = Mesh.MergeMeshes([...list], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -546,6 +601,7 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   earthTiers(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
+  paleFieldStones(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   caveApron(scene);
   footRubble(scene);
   // Warm brownish grey (spooky.cave.png), r well over b so it does not read blue-violet
