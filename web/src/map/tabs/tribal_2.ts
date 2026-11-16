@@ -3,23 +3,52 @@
 // reference/stages/challenge.a_warm_welcome.png).
 // Spec read off the wiki shot: the mass runs along the right rim from the back (z +44) to the front (z -38); the peak, about 26 m high, stands
 // at the back-right; the middle is a 10-14 m cliff of blocks with the cave mouth (5 m wide, 4 m high) near the middle at its foot; the front is
-// a low step of boulders. Its foot keeps clear of the stage armies fought here (team 1 stands at x <= 40). Built on sandbox.tribal (base()).
+// a low step of boulders. Its foot keeps clear of the stage armies fought here (team 1 stands at x <= 24.4, |z| <= 9.9; the massif spec
+// is at footX). Built on sandbox.tribal (base()).
 import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
-const FOOT_X = 45;   // the mountain's field-side foot
 const CAVE = { z: 6, width: 5, height: 4 };
+
+/**
+ * The massif (563; wiki tribal_2.png: the mountain takes the right third of the island and the open field is a bowl on the left and centre).
+ * Spec: the field-side foot runs at x 31 from z -16 to z 30 (6 m clear of the stage armies, which stand at x <= 24.4, |z| <= 9.9) and
+ * curves out toward the rim at the front (x 43 at z -38) and the back (x 41 at z 44); from the foot to 0.96 of the rim the rock fills
+ * every 5 m band of z with 2-4 leaning faceted slabs across it, each band's height rising from the foot (0.55) to the rim (1.0) of its
+ * profile: 4 m at the front, 12 m at z -10, 16 m at z 10, 22 m at z 30; the peak cone stands at (41, 25) inside the rim. Slabs within
+ * 7 m of the dog shrine (43, -29) are left out so it keeps its notch at the front foot. One box collider per band.
+ */
+function footX(z: number): number {
+  if (z < -16) return 31 + ((-16 - z) / 22) ** 2 * 12;
+  if (z > 30) return 31 + ((z - 30) / 14) ** 2 * 10;
+  return 31;
+}
+const FOOT_X = footX(CAVE.z);   // the foot at the cave mouth
+const MASSIF_PROFILE: Array<[number, number]> = [[-38, 4], [-30, 6], [-20, 9], [-10, 12], [0, 14], [10, 16], [20, 20], [30, 22], [40, 18], [46, 12]];
+
+function massifHeight(z: number): number {
+  const p = MASSIF_PROFILE;
+  if (z <= p[0][0]) return p[0][1];
+  for (let i = 1; i < p.length; i++) {
+    if (z <= p[i][0]) return p[i - 1][1] + ((z - p[i - 1][0]) / (p[i][0] - p[i - 1][0])) * (p[i][1] - p[i - 1][1]);
+  }
+  return p[p.length - 1][1];
+}
+
+/** The rim's x on the right at a given z (bisection along +x) */
+function rimXAt(z: number): number {
+  let lo = 0, hi = 70;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2;
+    if (Math.hypot(mid, z) < rimR(mid, z)) lo = mid; else hi = mid;
+  }
+  return lo;
+}
 
 function seeded(i: number, seed: number): number {
   const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
   return raw - Math.floor(raw);
 }
-
-/** [x, z, width, height, depth] of each rock block, back to front */
-const BLOCKS: Array<[number, number, number, number, number]> = [
-  [53, 38, 16, 18, 14], [52, 29, 18, 22, 14], [53, 20, 16, 17, 12], [52, 13, 14, 13, 10],
-  [53, 1, 16, 12, 12], [52, -7, 14, 10, 10], [53, -15, 15, 8, 11], [52, -23, 13, 6, 10], [52, -31, 12, 4, 9], [51, -38, 9, 3, 7],
-];
 
 // The open field (wiki shot): no dry-stone walls cross it; the base's wall stones inside the ellipse |x| < 47, |z| < 32 go with their colliders
 const FIELD = { rx: 47, rz: 32 };
@@ -40,7 +69,7 @@ function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResu
  * Autumn birches (wiki shot; tribal_1's birch kit, this map's own copy): every ring tree is one faceted ball crown on a tall thin white
  * trunk, crowns red, orange and yellow (about 2:2:1), 2.8-4.4 m across the ball (larger than tribal_1's first cut, which read half size).
  * Crowns are lit by their own colour and kept out of fog, glow and the canopy haze so they stay saturated. Trees standing under the
- * mountain (x > FOOT_X - 2) go, so no crown pokes out of the rock.
+ * mountain (x > footX(z) - 2) go, so no crown pokes out of the rock.
  */
 const BIRCH_CROWNS: Array<[string, Color3]> = [
   ["tribal2CrownRed", new Color3(0.72, 0.12, 0.05)],
@@ -68,7 +97,7 @@ function birchRing(scene: Scene, built: Set<unknown>, result: MapBuildResult): v
   const buried: Array<[number, number]> = [];
   trunks.forEach((trunk, i) => {
     const p = trunk.getAbsolutePosition();
-    if (p.x > FOOT_X - 2 || Math.hypot(p.x - SHRINE.x, p.z - SHRINE.z) < SHRINE.clear) {
+    if (p.x > footX(p.z) - 2 || Math.hypot(p.x - SHRINE.x, p.z - SHRINE.z) < SHRINE.clear) {
       buried.push([p.x, p.z]);
       trunk.dispose();
       return;
@@ -265,7 +294,7 @@ function earthTiers(scene: Scene, built: Set<unknown>): void {
  * narrower on top, tilted a few degrees), fanned out from the mouth over x 32..44, z -4..16; 12 bones (a 0.8-1.3 m shaft with a knob at
  * each end) and 2 skulls lying between them. Drawn only, no colliders: units walk over them.
  */
-const SLAB_SPREAD = { x0: 32, x1: 44, z0: -4, z1: 16 };
+const SLAB_SPREAD = { x0: FOOT_X - 12, x1: FOOT_X, z0: -4, z1: 16 };
 
 function caveApron(scene: Scene): void {
   const mk = (name: string, c: Color3, glow: number) => {
@@ -516,25 +545,37 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
   dark.specularColor = Color3.Black();
 
   const pieces: Mesh[] = [];
-  // The peak: a leaning faceted cone over the back-right blocks
-  const peak = MeshBuilder.CreateCylinder("tribal2Peak", { diameterTop: 5, diameterBottom: 24, height: 30, tessellation: 6 }, scene);
-  peak.position.set(55, 14, 27);
-  peak.rotation.set(0.08, 0.4, -0.1);
+  const massifColliders: Array<{ type: "box"; center: Vector3; halfX: number; halfZ: number }> = [];
+  // The peak: a leaning faceted cone over the back-right of the massif, inside the rim
+  const peak = MeshBuilder.CreateCylinder("tribal2Peak", { diameterTop: 4, diameterBottom: 20, height: 30, tessellation: 6 }, scene);
+  peak.position.set(41, 14, 25);
+  peak.rotation.set(0.06, 0.4, -0.08);
   pieces.push(peak);
-  BLOCKS.forEach(([x, z, w, h, d], i) => {
-    // Each block is two or three leaning slabs, so the face reads as stacked rock and not one box
-    for (let j = 0; j < 3; j++) {
-      const k = i * 10 + j;
-      const s = 1 - j * 0.22;
-      const slab = MeshBuilder.CreateCylinder("tribal2Block", {
-        diameterTop: w * s * 0.5, diameterBottom: w * s, height: h * (1 - j * 0.18), tessellation: 5,
-      }, scene);
-      slab.scaling.z = d / w;
-      slab.position.set(x + (seeded(k, 1) - 0.5) * 3, h * (1 - j * 0.18) / 2, z + (seeded(k, 2) - 0.5) * 4);
+  let band = 0;
+  for (let z = -38; z <= 46; z += 5) {
+    band++;
+    const x0 = footX(z), x1 = rimXAt(z) * 0.96;
+    if (x1 - x0 < 3) continue;
+    const n = Math.max(2, Math.min(4, Math.round((x1 - x0) / 5)));
+    const w = ((x1 - x0) / n) * 1.5;
+    for (let j = 0; j < n; j++) {
+      const k = band * 10 + j;
+      const frac = (j + 0.5) / n;
+      const x = x0 + frac * (x1 - x0);
+      const zz = z + (seeded(k, 2) - 0.5) * 2.5;
+      if (Math.hypot(x - SHRINE.x, zz - SHRINE.z) < 7) continue;
+      const h = massifHeight(zz) * (0.55 + 0.45 * frac) * (0.9 + seeded(k, 6) * 0.2);
+      // Leaning faceted slabs, so the face reads as stacked rock and not one box
+      const slab = MeshBuilder.CreateCylinder("tribal2Block", { diameterTop: w * 0.5, diameterBottom: w, height: h, tessellation: 5 }, scene);
+      slab.scaling.z = 6.5 / w;
+      slab.position.set(x + (seeded(k, 1) - 0.5) * 1.5, h / 2 - 0.1, zz);
       slab.rotation.set((seeded(k, 3) - 0.5) * 0.15, seeded(k, 4) * Math.PI, (seeded(k, 5) - 0.5) * 0.15);
       pieces.push(slab);
     }
-  });
+    // Bands beside the shrine stop short of its notch (the shrine has its own collider)
+    const cx1 = Math.abs(z - SHRINE.z) < 9 ? Math.min(x1, SHRINE.x - 6) : x1;
+    if (cx1 - x0 > 2) massifColliders.push({ type: "box", center: new Vector3((x0 + 0.8 + cx1) / 2, 0, z), halfX: (cx1 - x0 - 0.8) / 2, halfZ: 2.5 });
+  }
   const mountain = Mesh.MergeMeshes(pieces, true);
   if (mountain) {
     mountain.name = "tribal2Mountain";
@@ -550,10 +591,10 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
   mouth.material = dark;
   mouth.isPickable = false;
 
-  // The mountain is solid: one box over its foot along the right rim
+  // The mountain is solid: one box per band from its foot to the rim
   const obstacles = [
     ...result.obstacles,
-    { type: "box" as const, center: new Vector3(FOOT_X + 6, 0, 3), halfX: 6, halfZ: 41 },
+    ...massifColliders,
     ...rimRocks(scene),
     dogShrine(scene),
   ];
