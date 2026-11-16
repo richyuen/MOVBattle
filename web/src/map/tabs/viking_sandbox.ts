@@ -206,9 +206,39 @@ export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): Ma
   const obstacles = cleared.obstacles;
   snowAndIce(scene, built);
   iceWall(scene, obstacles);
+  const oldClear = scene.clearColor.clone();
+  const oldFog = scene.fogColor.clone();
+  const oldDensity = scene.fogDensity;
+  scene.clearColor.set(0.52, 0.78, 0.83, 1);
+  scene.fogColor = new Color3(0.62, 0.82, 0.86);
+  scene.fogDensity = 0.012;
+  const flakes: Mesh[] = [];
+  for (let i = 0; i < 155; i++) {
+    const flake = MeshBuilder.CreateIcoSphere("vikingSandboxFlake", { radius: 0.045 + seeded(i, 290) * 0.08, subdivisions: 1 }, scene);
+    flake.position.set((seeded(i, 291) - 0.5) * 115, 1 + seeded(i, 292) * 22, (seeded(i, 293) - 0.5) * 100);
+    flake.scaling.set(1.8, 0.6, 1);
+    flakes.push(flake);
+  }
+  const flurry = Mesh.MergeMeshes(flakes, true);
+  if (flurry) {
+    const snow = new StandardMaterial("vikingSandboxFlurry", scene);
+    snow.disableLighting = true;
+    snow.emissiveColor = new Color3(0.94, 0.98, 1);
+    flurry.material = snow;
+    flurry.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(flurry);
+  }
   const placementZones = (result.placementZones ?? result.zones).map((zone) => {
     const x0 = Math.max(zone.center.x - zone.size.x / 2, -INSIDE_X), x1 = Math.min(zone.center.x + zone.size.x / 2, INSIDE_X);
     return { ...zone, center: new Vector3((x0 + x1) / 2, zone.center.y, zone.center.z), size: new Vector3(x1 - x0, zone.size.y, zone.size.z) };
   });
-  return { ...result, obstacles, hazards: cleared.hazards, placementZones };
+  return {
+    ...result, obstacles, hazards: cleared.hazards, placementZones,
+    dispose: () => {
+      scene.clearColor.copyFrom(oldClear);
+      scene.fogColor.copyFrom(oldFog);
+      scene.fogDensity = oldDensity;
+      result.dispose?.();
+    },
+  };
 }
