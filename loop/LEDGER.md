@@ -3,15 +3,6 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-561 | 037cd776+4b5e0fae | map.farmer_2.a | approved
-561 | b382569f+ceafd4a0+0792aa93 | map.farmer_2.a | approved
-561 | 5f83a159 | map.farmer_1.a | approved
-561 | 37c2368f+dc06adf4 | map.farmer_1.a | approved
-561 | b23c5f33+48c5b110 | map.farmer_1.a | approved
-561 | 81facedd | map.tribal_2.a | approved
-561 | 2a0f2cce | map.tribal_2.b | approved
-561 | 6142c5b2 | map.tribal_sandbox.a | approved
-561 | cb41584c | map.farmer_snow.b | approved
 562 | 170c7a00 [R] | map.farmer_1.a | approved
 562 | 317a5b85 | map.tribal_2.a | approved
 562 | e9d95cfa | map.farmer_snow.b | approved
@@ -56,6 +47,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 566 | 9358dcce | map.ancient_sandbox.a | approved
 566 | b2df5dd6 | map.viking_sandbox.a | approved
 
+567 | db48feef | map.tribal_sandbox.b | approved
+567 | 03d00d50 | map.tribal_sandbox.a | approved
+567 | 96d8ba1d | map.tribal_sandbox.a | approved
+567 | d32c689e+cd4783d7 | map.farmer_snow.a | approved
+567 | 0a2b80e6+254e73fa | map.medieval_1.a | approved
+567 | 81b97c93 | map.ancient_1.a | approved
+567 | e2665129 | map.viking_sandbox.a | approved
+567 | 98b4b52f | map.ancient_2.b | approved
+567 | b64c0a48 | map.medieval_2.a | approved
+
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
 web/src/map/tabs/farmer_2.ts:SHEAVES z range, scale | z -36..-16, x1.5 | 558 | approved | z -44..-23, x1
@@ -77,3 +78,7 @@ web/src/map/tabs/farmer_2.ts:farmer2HousePlank / Frame / Roof | (0.88,0.74,0.52)
 web/src/map/tabs/tribal_2.ts:tribal2Mountain colour | (0.6,0.5,0.4) emissive (0.1,0.075,0.05) | 564 | approved | (0.6,0.54,0.52) emissive (0.08,0.06,0.05)
 web/src/map/tabs/tribal_sandbox.ts:spread | 1.45x horizontal geometry/nav/collisions | 566 | approved | 1x
 web/src/map/tabs/viking_sandbox.ts:clearColor and fogColor | cyan (0.52,0.78,0.83) and (0.62,0.82,0.86) | 566 | approved | inherited beige (0.74,0.68,0.52)
+web/src/map/tabs/tribal_sandbox.ts:CLIFFS | six staggered sectors with grove breaks; setbacks 2–6 m | 567 | approved | two near-contiguous arcs; 3 m setback
+web/src/map/tabs/tribal_sandbox.ts:rockNooks profile and crowns | faceted masses and tilted slabs; five crowns per nook at several heights | 567 | approved (a failed CONFIRM) | stacked flat blocks; two high crowns per nook
+web/src/map/tabs/farmer_snow.ts:SNOW_MILL tower and wheel | 5.4 × 5.8 m tower above 4.8 m balcony deck; 10 m wheel angled pi/7 | 567 | approved | full-width gables over 1.2 m plinth; 8 m wheel along river
+web/src/map/tabs/medieval_1.ts:plateau cliff tiers | pale grey-lilac columns, shelf heights 6–12 m below turf | 567 | approved | continuous dark ribbon face
