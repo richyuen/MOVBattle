@@ -501,10 +501,10 @@ function snowBuildings(scene: Scene): Obstacle[] {
     merged.material = mats[key];
     merged.receiveShadows = true;
     merged.isPickable = false;
-    if (key !== "lit") {
-      merged.applyFog = false;
-      glow?.addExcludedMesh(merged);
-    }
+    if (key !== "lit") merged.applyFog = false;
+    // A mesh left out of the glow pass does not hide what glows behind it: the dark walls and timber stay in it, so they block the snow's
+    // glow instead of wearing it as a pale veil (the mill read washed-out white)
+    if (key === "snow") glow?.addExcludedMesh(merged);
   }
   obstacles.push({ type: "box", center: new Vector3(x0, 0, SNOW_MILL.z), halfX: off + SNOW_MILL.width / 2, halfZ: SNOW_MILL.depth / 2 });
   return obstacles;
