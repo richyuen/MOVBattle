@@ -172,12 +172,16 @@ function castleFront(scene: Scene, obstacles: MapBuildResult["obstacles"]): void
       box("medieval2Merlon", x + dx, 12.7, z - depth / 2 + 0.8, 1.55, 1.4, 1.6, stone);
     }
   }
-  box("medieval2Gatehouse", gateX, 9.6, z, 10.4, 6.4, 6, stone);
+  box("medieval2Gatehouse", gateX, 10.4, z, 10.4, 4.8, 6, stone);
+  for (const x of [-4.5, 4.5]) {
+    box("medieval2GateJamb", gateX + x, 4.05, gateZ - 0.17, 1.35, 8.1, 0.62, stone);
+  }
   for (let i = -4; i <= 4; i++) {
     const width = 0.87;
     const x = i * width;
     const height = 3.8 + Math.sqrt(16 - x * x);
-    box("medieval2GatePlank", gateX + x, height / 2, gateZ - 0.16, width - 0.025, height, 0.5, wood);
+    box("medieval2GatePlank", gateX + x, height / 2, gateZ - 0.11, width - 0.025, height, 0.5, wood);
+    box("medieval2GateArch", gateX + x, (height + 8.1) / 2, gateZ - 0.17, width + 0.02, 8.1 - height, 0.62, stone);
   }
   obstacles.push({ type: "box", center: new Vector3(gateX, 0, gateZ), halfX: 4, halfZ: 0.55 });
   for (const offset of [-12, 12]) {
