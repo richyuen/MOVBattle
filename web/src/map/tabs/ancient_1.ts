@@ -11,7 +11,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   const prior = new Set(scene.meshes);
   const result = base();
   for (const mesh of scene.meshes) {
-    if (!prior.has(mesh) && !/^(campaign_zone_|cloud)/.test(mesh.name)) mesh.setEnabled(false);
+    if (!prior.has(mesh) && !mesh.name.startsWith("cloud")) mesh.setEnabled(false);
   }
   const stone = new StandardMaterial("ancient1Pavement", scene);
   stone.diffuseColor = new Color3(0.53, 0.56, 0.62);
