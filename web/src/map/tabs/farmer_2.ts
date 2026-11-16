@@ -27,6 +27,17 @@
 //   (-4.5, -22.5), (6.5, -33.5) and beside the farmhouse (-20, 33), (-8, 33); one 3 m collider each.
 // - Front rim: open grass to the edge, the hay sheaves on it; the six front clumps by the walls stay, their balls 1.1-1.6 m (were 0.8-1.3),
 //   each with 1-2 khaki-grey faceted boulders 1.4-2.4 m: (-6, -41), (1.5, -40), (12, -36), (25, -37), (36, -34), (-41, -25) (2.4 m colliders).
+//
+// [R] 565 look rebuild (CONFIRM lists 560-564; wiki farmer_2.png, farm_2.png, stages/adventure.the_tiniest_attack.png):
+// - Rim: the base's flat olive "hill" discs at the rim (one jutted past the edge over the void) go; where each stood, a chunky bush mass of
+//   4-5 olive balls 1.5-2.1 m in radius (one riding on top) and two khaki-grey boulders 1.6-2.6 m sit on the field at 0.84 of the rim,
+//   nothing past the edge; one 3 m collider each.
+// - Farmhouse: pale weathered-tan plank walls (linear (0.88, 0.74, 0.52), a third self-lit), a mid-tan frame with half the battens, a light
+//   grey-tan roof (0.74, 0.65, 0.5) on the same steep gable, a lit yellow window up in the front gable beside the two front ones.
+// - Wheat: bright pale straw-gold (1, 0.8, 0.3), 0.35 self-lit (between the 563 pale and the 564 ochre), the lightest warm surface; a
+//   straw floor (0.92, 0.72, 0.3) under the tufts so the gaps no longer read as dark speckle from above.
+// - Alley: its lush green strip goes; the meadow runs between the fence and the wall (the field is one yellow-olive tone).
+// - The 564 grove groups, hedge and heaps are kept.
 import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
@@ -102,9 +113,31 @@ const WHEAT = { x0: 5, x1: 45, z0: -29, z1: 21, step: 0.75 };
 
 function wheatField(scene: Scene): void {
   const gold = new StandardMaterial("farmer2Wheat", scene);
-  gold.diffuseColor = new Color3(0.9, 0.66, 0.2);
-  gold.emissiveColor = gold.diffuseColor.scale(0.3);
+  gold.diffuseColor = new Color3(1, 0.8, 0.3);
+  gold.emissiveColor = gold.diffuseColor.scale(0.35);
   gold.specularColor = Color3.Black();
+  // A straw floor under the tufts ([R] 565): from above the gaps between them showed the meadow and shadow as dark speckle
+  const straw = new StandardMaterial("farmer2WheatFloor", scene);
+  straw.diffuseColor = new Color3(0.92, 0.72, 0.3);
+  straw.emissiveColor = straw.diffuseColor.scale(0.3);
+  straw.specularColor = Color3.Black();
+  const floor = MeshBuilder.CreateCylinder("farmer2WheatFloor", { diameter: 2, height: 0.04, tessellation: 64 }, scene);
+  const fpos = floor.getVerticesData("position")!;
+  for (let v = 0; v < fpos.length; v += 3) {
+    const reach = Math.hypot(fpos[v], fpos[v + 2]);
+    if (reach < 1e-6) continue;
+    // Pulled out from the unit circle to the field's rounded rectangle (the same superellipse, power 4)
+    const c = fpos[v] / reach, s = fpos[v + 2] / reach;
+    const r = (c ** 4 + s ** 4) ** -0.25;
+    fpos[v] = c * r * reach * ((WHEAT.x1 - WHEAT.x0) / 2 + 0.3);
+    fpos[v + 2] = s * r * reach * ((WHEAT.z1 - WHEAT.z0) / 2 + 0.3);
+  }
+  floor.setVerticesData("position", fpos);
+  floor.refreshBoundingInfo();
+  floor.position.set((WHEAT.x0 + WHEAT.x1) / 2, 0.06, (WHEAT.z0 + WHEAT.z1) / 2);
+  floor.material = straw;
+  floor.receiveShadows = true;
+  floor.isPickable = false;
   const parts: Mesh[] = [];
   for (let i = 0; i < 5; i++) {
     const a = (i / 5) * Math.PI * 2;
@@ -147,11 +180,10 @@ function wheatField(scene: Scene): void {
  * left cobble wall (x -26) a narrow alley is shut off from the track by a broken wooden fence: posts every 2 m with two rails, some rails
  * hanging, two posts down and one stretch missing. Ring trees standing on the track go. Spec: track centre x = PATH.x + a 2 m sway.
  */
-// The alley (critic 557): the fence reads as a real barrier (posts 1.6 m, three rails), the alley between it and the wall is its own strip
-// of lush darker grass, and the track stops at the back yard wall (z 24) instead of running through it.
+// The alley (critic 557): the fence reads as a real barrier (posts 1.6 m, three rails), the alley between it and the wall is meadow ([R]
+// 565: no strip of its own), and the track stops at the back yard wall (z 24) instead of running through it.
 const PATH = { x: -37, half: 2.5, back: 22.5, front: -32 };
 const FENCE = { x: -31, z0: -18, z1: 22, step: 2 };
-const ALLEY = { x0: -30.6, x1: -26.6, z0: -18, z1: 22 };
 const pathX = (z: number) => PATH.x + 2 * Math.sin(z * 0.06);
 
 function leftPathway(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
@@ -220,17 +252,7 @@ function leftPathway(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): 
     fence.receiveShadows = true;
     fence.isPickable = false;
   }
-  // The alley floor: lush darker grass between fence and wall, its edges wavering
-  const lush = mat("farmer2Alley", new Color3(0.4, 0.5, 0.14), 0.12);
-  const aLeft: Vector3[] = [], aRight: Vector3[] = [];
-  for (let z = ALLEY.z0; z <= ALLEY.z1; z += 1) {
-    aLeft.push(new Vector3(ALLEY.x0 + seeded(Math.round(z) + 50, 56) * 0.4, 0.055, z));
-    aRight.push(new Vector3(ALLEY.x1 - seeded(Math.round(z) + 50, 57) * 0.4, 0.055, z));
-  }
-  const alley = MeshBuilder.CreateRibbon("farmer2Alley", { pathArray: [aLeft, aRight], sideOrientation: Mesh.DOUBLESIDE }, scene);
-  alley.material = lush;
-  alley.receiveShadows = true;
-  alley.isPickable = false;
+  // The alley floor is the meadow itself ([R] 565: the whole field is one yellow-olive tone; the darker green strip went)
   // The fence blocks except at its missing stretch
   kept.push({ type: "box", center: new Vector3(FENCE.x, 0, (FENCE.z0 + 2) / 2), halfX: 0.2, halfZ: (2 - FENCE.z0) / 2 });
   kept.push({ type: "box", center: new Vector3(FENCE.x, 0, (7 + FENCE.z1) / 2), halfX: 0.2, halfZ: (FENCE.z1 - 7) / 2 });
@@ -465,9 +487,10 @@ function farmhouse(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Ob
     m.specularColor = Color3.Black();
     return m;
   };
-  const plankMat = mk("farmer2HousePlank", new Color3(0.6, 0.44, 0.26), 0.18);
-  const darkMat = mk("farmer2HouseFrame", new Color3(0.26, 0.15, 0.08), 0.15);
-  const roofMat = mk("farmer2HouseRoof", new Color3(0.36, 0.23, 0.13), 0.15);
+  // [R] 565 (CONFIRM 564: the cottage read as a dark chocolate cabin): pale weathered-tan planks, a mid-tan frame, a light grey-tan roof
+  const plankMat = mk("farmer2HousePlank", new Color3(0.88, 0.74, 0.52), 0.32);
+  const darkMat = mk("farmer2HouseFrame", new Color3(0.56, 0.43, 0.28), 0.25);
+  const roofMat = mk("farmer2HouseRoof", new Color3(0.74, 0.65, 0.5), 0.3);
   const sillMat = mk("farmer2HouseSill", new Color3(0.5, 0.45, 0.41), 0.1);
   const lit = new StandardMaterial("farmer2HouseLight", scene);
   lit.diffuseColor = Color3.Black();
@@ -484,11 +507,12 @@ function farmhouse(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Ob
   };
   box("sill", W + 0.4, 0.5, D + 0.4, cx, 0.25, cz);
   box("plank", W, H, D, cx, 0.5 + H / 2, cz);
-  for (let i = 0; i <= 10; i++) box("dark", 0.14, H, 0.1, cx - W / 2 + (i * W) / 10, 0.5 + H / 2, cz - D / 2 - 0.05);
-  for (const s of [-1, 1]) for (let i = 0; i <= 8; i++) box("dark", 0.1, H, 0.14, cx + s * (W / 2 + 0.05), 0.5 + H / 2, cz - D / 2 + (i * D) / 8);
+  for (let i = 0; i <= 10; i += 2) box("dark", 0.14, H, 0.1, cx - W / 2 + (i * W) / 10, 0.5 + H / 2, cz - D / 2 - 0.05);
+  for (const s of [-1, 1]) for (let i = 0; i <= 8; i += 2) box("dark", 0.1, H, 0.14, cx + s * (W / 2 + 0.05), 0.5 + H / 2, cz - D / 2 + (i * D) / 8);
   for (const y of [0.6, 0.5 + H - 0.1]) box("dark", W + 0.3, 0.3, D + 0.3, cx, y, cz);
-  // Door and lit windows on the front, a lit window on each side
+  // Door and lit windows on the front, a lit window on each side and one up in the front gable
   box("dark", 1.3, 2.2, 0.2, cx, 0.5 + 1.1, cz - D / 2 - 0.1);
+  box("lit", 0.9, 0.9, 0.2, cx, 0.5 + H + 1.3, cz - D / 2 - 0.1);
   for (const s of [-1, 1]) {
     box("lit", 1.1, 1, 0.2, cx + s * 2.5, 0.5 + 1.9, cz - D / 2 - 0.1);
     box("lit", 0.2, 1, 1.1, cx + s * (W / 2 + 0.1), 0.5 + 1.9, cz);
@@ -755,6 +779,33 @@ function oliveGrove(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): O
     }
   });
   // The hedge: two balls every 7 degrees along the back rim and the left edge
+  // Rim masses ([R] 565): the base's flat olive "hill" discs at the rim (one jutted past the edge) go; where each stood, a chunky bush
+  // mass of 4-5 balls (1.5-2.1 m) with two khaki-grey boulders sits on the field at 0.84 of the rim, nothing past the edge
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.name !== "hill" || !mesh.isEnabled()) continue;
+    const deg = (Math.atan2(mesh.position.z, mesh.position.x) * 180) / Math.PI;
+    mesh.setEnabled(false);
+    k++;
+    const [hx, hz] = rimAt(deg, 0.84);
+    if (Math.hypot(hx - COTTAGE.x, hz - COTTAGE.z) < 8) continue;
+    const n = 4 + (seeded(k, 170) > 0.5 ? 1 : 0);
+    for (let j = 0; j < n; j++) {
+      const r = 1.5 + seeded(k * 7 + j, 171) * 0.6;
+      const a = (j / n) * Math.PI * 2 + seeded(k, 172) * 2;
+      const lift = j === n - 1 ? r * 0.9 : 0;
+      ball(hx + Math.cos(a) * (j === n - 1 ? 0.4 : 1.9), r * 0.75 + lift, hz + Math.sin(a) * (j === n - 1 ? 0.4 : 1.9), r, 1400 + k * 7 + j);
+    }
+    for (let j = 0; j < 2; j++) {
+      const d = 1.6 + seeded(k * 3 + j, 173) * 1;
+      const rock = MeshBuilder.CreatePolyhedron("farmer2FrontRock", { type: 2, size: d / 2.6 }, scene);
+      rock.scaling.set(1.15, 0.7, 1);
+      rock.rotation.set(seeded(k * 3 + j, 174) * 0.4, seeded(k * 3 + j, 175) * Math.PI, 0);
+      const a = seeded(k * 3 + j, 176) * Math.PI * 2;
+      rock.position.set(hx + Math.cos(a) * 3, d * 0.28, hz + Math.sin(a) * 3);
+      rocks.push(rock);
+    }
+    kept.push({ type: "cylinder", center: new Vector3(hx, 0, hz), radius: 3 });
+  }
   for (let deg = GROVE.hedgeFrom; deg <= GROVE.hedgeTo; deg += 7) {
     k++;
     const [bx, bz] = rimAt(deg + (seeded(k, 165) - 0.5) * 3, GROVE.bushAt);
