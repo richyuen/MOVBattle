@@ -344,6 +344,58 @@ function redShrubs(scene: Scene, built: Set<unknown>): void {
   });
 }
 
+/**
+ * Raised rock tops at the rim (card Overview: "enemies can be hidden behind or on top of the mountains"; autumn_tribal_sandbox.png): broad
+ * flat-topped mesas stand into the ring at the front-left, front-right and right, standing over the birch crowns. Spec: at 215, 300 and 335
+ * degrees, 0.8 of the rim; each a six-sided block 13 m across at the foot, 11 m at its 10 m top, a flat cap slab 0.9 m thick and 12 m
+ * across lying on it, and a 5 m step block on its field side; the warm grey of the cliffs (r well over b). The ring birches within 9 m go
+ * with their colliders; one 6 m collider per mesa.
+ */
+const MESAS = [215, 300, 335];
+
+function rimMesas(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const rock = new StandardMaterial("tribalSandboxMesa", scene);
+  rock.diffuseColor = new Color3(0.62, 0.53, 0.46);
+  rock.emissiveColor = new Color3(0.1, 0.08, 0.065);
+  rock.specularColor = new Color3(0.03, 0.03, 0.03);
+  const parts: Mesh[] = [];
+  const spots: Array<[number, number]> = [];
+  MESAS.forEach((deg, i) => {
+    const [rx, rz] = rimPoint(deg);
+    const x = rx * 0.8, z = rz * 0.8;
+    spots.push([x, z]);
+    const l = Math.hypot(x, z);
+    const body = MeshBuilder.CreateCylinder("tsMesa", { diameterTop: 11, diameterBottom: 13, height: 10, tessellation: 6 }, scene);
+    body.position.set(x, 5, z);
+    body.rotation.y = seeded(i, 131) * Math.PI;
+    const cap = MeshBuilder.CreateCylinder("tsMesaCap", { diameterTop: 11.4, diameterBottom: 12, height: 0.9, tessellation: 7 }, scene);
+    cap.position.set(x + 0.3, 10.2, z - 0.2);
+    cap.rotation.set((seeded(i, 132) - 0.5) * 0.06, seeded(i, 133) * Math.PI, (seeded(i, 134) - 0.5) * 0.06);
+    const step = MeshBuilder.CreateCylinder("tsMesaStep", { diameterTop: 6.5, diameterBottom: 8, height: 5, tessellation: 5 }, scene);
+    step.position.set(x - (x / l) * 6, 2.5, z - (z / l) * 6);
+    step.rotation.y = seeded(i, 135) * Math.PI;
+    parts.push(body, cap, step);
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 6 });
+    obstacles.push({ type: "cylinder", center: new Vector3(x - (x / l) * 6, 0, z - (z / l) * 6), radius: 3.5 });
+  });
+  const merged = Mesh.MergeMeshes(parts, true);
+  if (merged) {
+    merged.name = "tribalSandboxMesas";
+    merged.convertToFlatShadedMesh();
+    merged.material = rock;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  const gone: Array<[number, number]> = [];
+  for (const trunk of scene.meshes.filter((m) => built.has(m) && m.name === "trunk")) {
+    const p = trunk.getAbsolutePosition();
+    if (!spots.some(([x, z]) => Math.hypot(p.x - x, p.z - z) < 9)) continue;
+    gone.push([p.x, p.z]);
+    trunk.dispose();
+  }
+  return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+}
+
 export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -411,6 +463,9 @@ export function buildTribalSandbox(scene: Scene, base: () => MapBuildResult): Ma
     rocks.isPickable = false;
   }
   backCliffs(scene, obstacles);
+  const kept = rimMesas(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), obstacles);
+  obstacles.length = 0;
+  obstacles.push(...kept);
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   rockNooks(scene, obstacles);
