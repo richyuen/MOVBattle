@@ -279,6 +279,7 @@ function roundSnowIsland(scene: Scene, built: Set<unknown>, obstacles: Obstacle[
   let tree = 0;
   for (const mesh of scene.meshes) {
     if (!built.has(mesh) || !(mesh instanceof Mesh)) continue;
+    mesh.computeWorldMatrix(true);
     if (mesh.name === "ground") {
       const pos = mesh.getVerticesData("position");
       if (!pos) continue;
@@ -295,7 +296,9 @@ function roundSnowIsland(scene: Scene, built: Set<unknown>, obstacles: Obstacle[
     } else if (SNOW_RIM_PROPS.has(mesh.name) && !mesh.parent && mesh.isEnabled()) {
       const p = mesh.getAbsolutePosition();
       const thin = mesh.name === "trunk" && tree++ % 3 !== 0;
-      if (!thin && inside(p.x, p.z, 1)) continue;
+      // A snow hill must sit wholly inside the rim: test it at its own radius, not its centre (the (40,-30) hill stood out past the rim)
+      const reach = mesh.name === "hill" ? Math.max(mesh.getBoundingInfo().boundingBox.extendSizeWorld.x, mesh.getBoundingInfo().boundingBox.extendSizeWorld.z) + 1 : 1;
+      if (!thin && inside(p.x, p.z, reach)) continue;
       gone.push([p.x, p.z]);
       mesh.setEnabled(false);
     }
