@@ -10,7 +10,7 @@
 // ground; cracks on a jittered 13 m grid of nodes inside the lake, each node joined to its right and back neighbours by a band of two kinked
 // segments, a quarter of the joins left out so the cells are uneven; the base's autumn lawn and tuft colours turn to snow and its grass
 // tufts and blades go. All drawn only (flat), nothing in the way.
-import { Color3, Mesh, MeshBuilder, StandardMaterial, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 function seeded(i: number, seed: number): number {
@@ -120,6 +120,16 @@ export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildR
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  const debris = new Set(["wallStone", "boulder", "hayBale", "hill", "stump", "campaign_hazard_box_pit"]);
+  const removed: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !(debris.has(mesh.name) || mesh.name.startsWith("Challenge Bluffs_"))) continue;
+    if (mesh.name !== "campaign_hazard_box_pit") removed.push(mesh.position.clone());
+    mesh.setEnabled(false);
+  }
+  result.obstacles = result.obstacles.filter(({ center }) => !removed.some((p) =>
+    (p.x / 54) ** 2 + (p.z / 48) ** 2 < 0.8 ** 2 && Math.hypot(center.x - p.x, center.z - p.z) < 3.4));
+  result.hazards = result.hazards.filter((hazard) => hazard.kind !== "pit");
   snowBanks(scene, built);
   frozenLake(scene);
   return result;
