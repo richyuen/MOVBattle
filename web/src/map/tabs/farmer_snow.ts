@@ -420,6 +420,12 @@ function navyBowl(scene: Scene, built: Set<unknown>): void {
  */
 const SNOW_HOUSES: Array<[number, number]> = [[-26, 36], [-11, 39]];
 const SNOW_MILL = { z: -41, gap: 2.8, width: 9, depth: 10, plinth: 1.2, wall: 6, roof: 4.4, wheel: 8 };
+// Mill on one bank (565; wiki farmer_snow.png: the mill stands on the field's bank at the river's end, its wheel turning in the water, the
+// houses across the river). Spec: both halves on the +x bank (the houses stand at x < 0), in a row along the river from z -41 back to
+// z -28.2 (2.8 m apart), each one's river wall 0.6 m back from the ice edge; the wheel stands in the ice beside them at z -34.6, between the
+// halves, its plane along the river; one box collider over both halves (the ice stays open beside them).
+const MILL_HALVES: Array<[number, number]> = [SNOW_MILL.z, SNOW_MILL.z + SNOW_MILL.depth + SNOW_MILL.gap].map((z) => [iceX(z) + ICE.halfWidth + 0.6 + SNOW_MILL.width / 2, z]);
+const MILL_WHEEL_Z = (MILL_HALVES[0][1] + MILL_HALVES[1][1]) / 2;
 
 function snowBuildings(scene: Scene): Obstacle[] {
   const mk = (name: string, c: Color3, self: number) => {
@@ -477,25 +483,26 @@ function snowBuildings(scene: Scene): Obstacle[] {
     box("board", 1.3, 2.3, 0.14, x, 1.75, front);
     obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 3.8, halfZ: 3.3 });
   }
-  const x0 = iceX(SNOW_MILL.z), off = SNOW_MILL.gap / 2 + SNOW_MILL.width / 2;
-  for (const side of [-1, 1]) {
-    const x = x0 + side * off;
-    box("stone", SNOW_MILL.width, SNOW_MILL.plinth, SNOW_MILL.depth, x, SNOW_MILL.plinth / 2, SNOW_MILL.z);
-    gabled("mill", x, SNOW_MILL.z, SNOW_MILL.width - 0.4, SNOW_MILL.depth - 0.4, SNOW_MILL.plinth, SNOW_MILL.wall, SNOW_MILL.roof);
-    box("lit", 1.2, 1.3, 0.12, x, SNOW_MILL.plinth + 3.2, SNOW_MILL.z + SNOW_MILL.depth / 2 - 0.15);
-    // Timber framing over the boards: corner posts, sill, mid and eave beams round all four faces, battens every 1.5 m on the rim
-    // (-z) and outer faces, each beam with a snow line on top
-    const W = SNOW_MILL.width - 0.4, D = SNOW_MILL.depth - 0.4, P = SNOW_MILL.plinth, H = SNOW_MILL.wall, z = SNOW_MILL.z;
+  MILL_HALVES.forEach(([x, z], h) => {
+    box("stone", SNOW_MILL.width, SNOW_MILL.plinth, SNOW_MILL.depth, x, SNOW_MILL.plinth / 2, z);
+    gabled("mill", x, z, SNOW_MILL.width - 0.4, SNOW_MILL.depth - 0.4, SNOW_MILL.plinth, SNOW_MILL.wall, SNOW_MILL.roof);
+    // A lit window on the field face (+x)
+    box("lit", 0.12, 1.3, 1.2, x + SNOW_MILL.width / 2 - 0.15, SNOW_MILL.plinth + 3.2, z);
+    // Timber framing over the boards: corner posts, sill, mid and eave beams round all four faces, battens every 1.5 m on the river
+    // (-x) face and on the outer gable end (-z for the front half, +z for the back one), each beam with a snow line on top
+    const W = SNOW_MILL.width - 0.4, D = SNOW_MILL.depth - 0.4, P = SNOW_MILL.plinth, H = SNOW_MILL.wall;
     for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) box("wood", 0.5, H, 0.5, x + (dx * W) / 2, P + H / 2, z + (dz * D) / 2);
     for (const y of [P + 0.25, P + H / 2, P + H - 0.2]) {
       box("wood", W + 0.4, 0.4, D + 0.4, x, y, z);
       box("snow", W + 0.5, 0.12, D + 0.5, x, y + 0.25, z);
     }
-    for (let i = 1; i < 6; i++) box("wood", 0.22, H, 0.16, x - W / 2 + (i * W) / 6, P + H / 2, z - D / 2 - 0.1);
-    for (let i = 1; i < 6; i++) box("wood", 0.16, H, 0.22, x + side * (W / 2 + 0.1), P + H / 2, z - D / 2 + (i * D) / 6);
-  }
-  // The wheel turns about x in the gap: rims, spokes and paddles in the y-z plane
-  const R = SNOW_MILL.wheel / 2, wz = SNOW_MILL.z, wy = R - 1;
+    const end = h === 0 ? -1 : 1;
+    for (let i = 1; i < 6; i++) box("wood", 0.22, H, 0.16, x - W / 2 + (i * W) / 6, P + H / 2, z + end * (D / 2 + 0.1));
+    for (let i = 1; i < 6; i++) box("wood", 0.16, H, 0.22, x - (W / 2 + 0.1), P + H / 2, z - D / 2 + (i * D) / 6);
+  });
+  // The wheel turns about x in the ice beside the mill: rims, spokes and paddles in the y-z plane
+  const x0 = iceX(MILL_WHEEL_Z) + 0.6;
+  const R = SNOW_MILL.wheel / 2, wz = MILL_WHEEL_Z, wy = R - 1;
   for (const dx of [-0.9, 0.9]) {
     const rim = MeshBuilder.CreateTorus("farmerSnowRim", { diameter: SNOW_MILL.wheel, thickness: 0.35, tessellation: 24 }, scene);
     rim.rotation.z = Math.PI / 2;
@@ -533,7 +540,8 @@ function snowBuildings(scene: Scene): Obstacle[] {
     // glow instead of wearing it as a pale veil (the mill read washed-out white)
     if (key === "snow") glow?.addExcludedMesh(merged);
   }
-  obstacles.push({ type: "box", center: new Vector3(x0, 0, SNOW_MILL.z), halfX: off + SNOW_MILL.width / 2, halfZ: SNOW_MILL.depth / 2 });
+  const [[mx], [, mz1]] = MILL_HALVES;
+  obstacles.push({ type: "box", center: new Vector3(mx, 0, (SNOW_MILL.z + mz1) / 2), halfX: SNOW_MILL.width / 2, halfZ: (mz1 - SNOW_MILL.z + SNOW_MILL.depth) / 2 });
   return obstacles;
 }
 
@@ -579,10 +587,12 @@ function festiveLights(scene: Scene): Obstacle[] {
     string(new Vector3(x, ridge, z), new Vector3(x + half, eave, z), 0.1);
   };
   gable(h2[0], h2[1] - 3.4, 3.8, 5, 8.8);
-  const x0 = iceX(SNOW_MILL.z), off = SNOW_MILL.gap / 2 + SNOW_MILL.width / 2;
-  const millEave = SNOW_MILL.plinth + SNOW_MILL.wall, millRidge = millEave + SNOW_MILL.roof, millFace = SNOW_MILL.z - SNOW_MILL.depth / 2 - 0.5;
-  for (const side of [-1, 1]) gable(x0 + side * off, millFace, SNOW_MILL.width / 2, millEave, millRidge);
-  string(new Vector3(x0 - off, millRidge, millFace), new Vector3(x0 + off, millRidge, millFace), 1.6);
+  // Each mill half's outer gable end, and a string across the gap between their ridges
+  const millEave = SNOW_MILL.plinth + SNOW_MILL.wall, millRidge = millEave + SNOW_MILL.roof;
+  const [[ax, az], [bx, bz]] = MILL_HALVES;
+  gable(ax, az - SNOW_MILL.depth / 2 - 0.5, SNOW_MILL.width / 2, millEave, millRidge);
+  gable(bx, bz + SNOW_MILL.depth / 2 + 0.5, SNOW_MILL.width / 2, millEave, millRidge);
+  string(new Vector3(ax, millRidge, az + SNOW_MILL.depth / 2), new Vector3(bx, millRidge, bz - SNOW_MILL.depth / 2), 0.6);
   // The Christmas tree
   const tx = -18.5, tz = 31;
   const trunk = MeshBuilder.CreateCylinder("farmerSnowXmasTrunk", { diameter: 0.4, height: 0.8, tessellation: 6 }, scene);
