@@ -339,14 +339,21 @@
     #mapOverlay.visible { display: block; }
     .map-picker { position: relative; min-height: 100%; padding: 76px 32px 28px; box-sizing: border-box; color: #fff; }
     .map-picker-note { min-height: 14px; font-size: 10px; color: rgba(255,255,255,0.55); letter-spacing: 0.08em; margin-bottom: 14px; }
-    .map-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    .map-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    /* A tile: the map's thumbnail (16:10) over its name in thin caps; the current map's name strip is filled white */
     .map-picker-item {
-      background: rgba(8,14,20,0.82); border: 1px solid rgba(255,255,255,0.25); border-left: 2px solid rgba(255,255,255,0.6);
-      color: rgba(255,255,255,0.85); cursor: pointer; text-align: left; padding: 12px;
+      display: flex; flex-direction: column; padding: 0; overflow: hidden;
+      background: rgba(8,14,20,0.82); border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.85); cursor: pointer; text-align: left;
       font-family: inherit; font-size: 11px; font-weight: 300; letter-spacing: 0.2em; text-transform: uppercase;
     }
+    .map-picker-thumb { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #13212e; opacity: 0.85; transition: opacity 0.15s; }
+    .map-picker-label { display: block; padding: 8px 10px; border-top: 1px solid rgba(255,255,255,0.15); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .map-picker-item:hover { color: #fff; border-color: rgba(255,255,255,0.7); }
-    .map-picker-item.active { background: #fff; color: #13212e; border-color: #fff; }
+    .map-picker-item:hover .map-picker-thumb { opacity: 1; }
+    .map-picker-item.active { border-color: #fff; box-shadow: 0 0 0 2px #fff; }
+    .map-picker-item.active .map-picker-thumb { opacity: 1; }
+    .map-picker-item.active .map-picker-label { background: #fff; color: #13212e; }
 
     #unitPanel {
       position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);

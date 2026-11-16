@@ -860,7 +860,18 @@ function populateMapPicker(): void {
     btn.className = "map-picker-item";
     btn.dataset.mapId = choice.id;
     btn.classList.toggle("active", activeMapInstance.id === choice.id);
-    btn.textContent = choice.title;
+    // Thumbnails are pre-rendered by loop/scripts/map-thumbs.mjs; a missing one leaves the tile's dark backdrop
+    const thumb = document.createElement("img");
+    thumb.className = "map-picker-thumb";
+    thumb.alt = "";
+    thumb.loading = "lazy";
+    // Relative to the page (served under /MOVBattle/), where vite copies web/public/
+    thumb.src = `maps/thumbs/${choice.id.replace(".", "_")}.jpg`;
+    thumb.addEventListener("error", () => thumb.remove());
+    const label = document.createElement("span");
+    label.className = "map-picker-label";
+    label.textContent = choice.title;
+    btn.append(thumb, label);
     btn.addEventListener("click", () => pickSandboxMap(choice.id));
     mapPickerGridEl.appendChild(btn);
   }
@@ -3748,6 +3759,7 @@ const gameApi = {
   openCampaignPicker: () => toggleCampaignOverlay(true),
   closeCampaignPicker: () => toggleCampaignOverlay(false),
   openMapPicker: () => toggleMapPicker(true),
+  listSandboxMaps: () => SANDBOX_MAP_CHOICES.map((choice) => ({ ...choice })),
   closeMapPicker: () => toggleMapPicker(false),
   leaveCampaignMode,
   toggleCampaignUnlimited: () => {
@@ -3913,6 +3925,30 @@ const gameApi = {
   // Capture harness: frame the camera on a point (a landed blow), close, without advancing the battle.
   frameCamera: (target: { x: number; y: number; z: number }, radius: number, alpha: number, beta: number) => {
     camCtrl.applyGalleryPreset("state_read_duel", { alpha, beta, radius, target });
+  },
+  // Map picker thumbnails (loop/scripts/map-thumbs.mjs): a high oblique on the loaded map, fitted to its placement zones and its terrain's
+  // height there, so a small map (the Simulation ramps) fills the tile as well as a big island does
+  frameMapThumbnail: (spread = 1.1, beta = 0.9) => {
+    const zones = activeMapInstance.placementZones ?? activeMapInstance.zones;
+    const xs = zones.flatMap((z) => [z.center.x - z.size.x / 2, z.center.x + z.size.x / 2]);
+    const zs = zones.flatMap((z) => [z.center.z - z.size.z / 2, z.center.z + z.size.z / 2]);
+    const [x0, x1, z0, z1] = [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
+    const height = activeMapInstance.height;
+    let lo = 0;
+    let hi = 0;
+    if (height) {
+      for (let i = 0; i <= 8; i++) {
+        for (let j = 0; j <= 8; j++) {
+          const h = height(x0 + ((x1 - x0) * i) / 8, z0 + ((z1 - z0) * j) / 8);
+          lo = Math.min(lo, h);
+          hi = Math.max(hi, h);
+        }
+      }
+    }
+    const span = Math.max(x1 - x0, z1 - z0, hi - lo, 20);
+    const target = { x: (x0 + x1) / 2, y: (lo + hi) / 2, z: (z0 + z1) / 2 };
+    camCtrl.applyGalleryPreset("state_read_duel", { alpha: -Math.PI / 2, beta, radius: span * spread, target });
+    return { target, radius: span * spread, bounds: { x0, x1, z0, z1, lo, hi } };
   },
   // Capture harness: the living units on the field (the lineup shot turns them to face its camera), and a gallery scenario's camera as applied.
   listLiveUnits: () => placedUnits.filter((unit) => !unit.isDead),
