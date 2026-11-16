@@ -56,6 +56,39 @@ function flatDisc(scene: Scene, name: string, outline: Array<[number, number]>, 
   mesh.isPickable = false;
 }
 
+// The pond's ground is open water: ring trees standing on it or its shore (within 4 m of the drawn outline) go with their colliders, the
+// haze band of crowns along the front rim goes (it is one merged mesh with the back band), and the grass blades inside it collapse
+// (fieldBlades_* are plain quads, 4 vertices a blade).
+function clearPondGround(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult["obstacles"]): MapBuildResult["obstacles"] {
+  const inPond = (x: number, z: number, grow: number) => ((x - POND.x) / (POND.rx + grow)) ** 2 + ((z - POND.z) / (POND.rz + grow)) ** 2 < 1;
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (mesh.name === "hazeTreeline") mesh.setEnabled(false);
+    else if ((mesh.name === "trunk" || mesh.name === "stump") && !mesh.parent && inPond(mesh.position.x, mesh.position.z, 4)) {
+      gone.push([mesh.position.x, mesh.position.z]);
+      mesh.setEnabled(false);
+    } else if (mesh.name.startsWith("fieldBlades_") && mesh instanceof Mesh) {
+      const pos = mesh.getVerticesData("position");
+      if (!pos) continue;
+      mesh.computeWorldMatrix(true);
+      const o = mesh.getAbsolutePosition();
+      let changed = false;
+      for (let q = 0; q + 12 <= pos.length; q += 12) {
+        if (!inPond(pos[q] + o.x, pos[q + 2] + o.z, 1.6)) continue;
+        for (let v = 3; v < 12; v += 3) {
+          pos[q + v] = pos[q];
+          pos[q + v + 1] = pos[q + 1];
+          pos[q + v + 2] = pos[q + 2];
+        }
+        changed = true;
+      }
+      if (changed) mesh.updateVerticesData("position", pos);
+    }
+  }
+  return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+}
+
 function frontPond(scene: Scene): MapBuildResult["hazards"] {
   const mk = (name: string, c: Color3, self: number) => {
     const m = new StandardMaterial(name, scene);
@@ -114,6 +147,7 @@ export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBui
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   const hazards = [...clearCentrePools(scene, built, result), ...frontPond(scene)];
+  const obstacles = clearPondGround(scene, built, [...result.obstacles]);
   dirtPaths(scene);
-  return { ...result, hazards };
+  return { ...result, obstacles, hazards };
 }
