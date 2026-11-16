@@ -548,9 +548,10 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
   earthTiers(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   caveApron(scene);
   footRubble(scene);
+  // Warm brownish grey (spooky.cave.png), r well over b so it does not read blue-violet
   const rock = new StandardMaterial("tribal2Mountain", scene);
-  rock.diffuseColor = new Color3(0.6, 0.54, 0.52);
-  rock.emissiveColor = new Color3(0.08, 0.06, 0.05);
+  rock.diffuseColor = new Color3(0.6, 0.5, 0.4);
+  rock.emissiveColor = new Color3(0.1, 0.075, 0.05);
   rock.specularColor = new Color3(0.03, 0.03, 0.03);
   const dark = new StandardMaterial("tribal2Cave", scene);
   dark.diffuseColor = new Color3(0.04, 0.03, 0.04);
@@ -558,31 +559,45 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
 
   const pieces: Mesh[] = [];
   const massifColliders: Array<{ type: "box"; center: Vector3; halfX: number; halfZ: number }> = [];
-  // The peak: a leaning faceted cone over the back-right of the massif, inside the rim
-  const peak = MeshBuilder.CreateCylinder("tribal2Peak", { diameterTop: 4, diameterBottom: 20, height: 30, tessellation: 6 }, scene);
-  peak.position.set(41, 14, 25);
-  peak.rotation.set(0.06, 0.4, -0.08);
-  pieces.push(peak);
+  // Boulder heap (564; CONFIRM 563 a1, wiki tribal_2.png): the massif is one craggy mountain of big rounded faceted boulders heaped up to a
+  // single peak, not a field of flat-topped prisms. Spec: each 5 m band of z, from the foot (footX) to 0.96 of the rim, holds 2-4 columns of
+  // boulders (low-poly icospheres, 6-12 m across, squashed 0.75-0.95 in height, turned at random so no face is flat on top); each column
+  // stacks boulders, smaller as they rise, until it reaches the band's height (the same profile as before, 0.55 at the foot to 1.0 at the
+  // rim). The peak at (41, 25) is a pile of five boulders, 20 m across at its foot to 6 m at its top, about 28 m high. The foot column's
+  // field-side edge stays at footX, the shrine notch and the band colliders are kept.
+  const boulder = (x: number, y: number, z: number, d: number, k: number) => {
+    const b = MeshBuilder.CreateIcoSphere("tribal2Boulder", { radius: d / 2, subdivisions: 1 }, scene);
+    b.scaling.set(1 + (seeded(k, 7) - 0.5) * 0.25, 0.75 + seeded(k, 8) * 0.2, 1 + (seeded(k, 9) - 0.5) * 0.25);
+    b.rotation.set(seeded(k, 10) * Math.PI, seeded(k, 11) * Math.PI, seeded(k, 12) * Math.PI);
+    b.position.set(x, y, z);
+    pieces.push(b);
+  };
+  [[20, 6], [16, 13], [12, 19], [9, 24], [6, 27.5]].forEach(([d, y], i) => {
+    boulder(41 + (seeded(i, 13) - 0.5) * 3, y, 25 + (seeded(i, 14) - 0.5) * 3, d, 900 + i);
+  });
   let band = 0;
   for (let z = -38; z <= 46; z += 5) {
     band++;
     const x0 = footX(z), x1 = rimXAt(z) * 0.96;
     if (x1 - x0 < 3) continue;
     const n = Math.max(2, Math.min(4, Math.round((x1 - x0) / 5)));
-    const w = ((x1 - x0) / n) * 1.5;
     for (let j = 0; j < n; j++) {
       const k = band * 10 + j;
       const frac = (j + 0.5) / n;
-      const x = x0 + frac * (x1 - x0);
       const zz = z + (seeded(k, 2) - 0.5) * 2.5;
-      if (Math.hypot(x - SHRINE.x, zz - SHRINE.z) < 7) continue;
       const h = massifHeight(zz) * (0.55 + 0.45 * frac) * (0.9 + seeded(k, 6) * 0.2);
-      // Leaning faceted slabs, so the face reads as stacked rock and not one box
-      const slab = MeshBuilder.CreateCylinder("tribal2Block", { diameterTop: w * 0.5, diameterBottom: w, height: h, tessellation: 5 }, scene);
-      slab.scaling.z = 6.5 / w;
-      slab.position.set(x + (seeded(k, 1) - 0.5) * 1.5, h / 2 - 0.1, zz);
-      slab.rotation.set((seeded(k, 3) - 0.5) * 0.15, seeded(k, 4) * Math.PI, (seeded(k, 5) - 0.5) * 0.15);
-      pieces.push(slab);
+      let d = Math.min(12, Math.max(6, (x1 - x0) / n * 1.6, h * 0.55));
+      // The foot column's field-side edge sits at the foot
+      // (by the cave mouth it stands 1.2 m further back so the dark mouth stays open)
+      const x = j === 0 ? x0 + d * (Math.abs(zz - CAVE.z) < 5 ? 0.5 : 0.42) + (Math.abs(zz - CAVE.z) < 5 ? 1.2 : 0) :x0 + frac * (x1 - x0) + (seeded(k, 1) - 0.5) * 1.5;
+      if (Math.hypot(x - SHRINE.x, zz - SHRINE.z) < 7) continue;
+      let y = d * 0.3, s = 0;
+      while (y < h) {
+        boulder(x + (seeded(k * 7 + s, 15) - 0.5) * 2, y, zz + (seeded(k * 7 + s, 16) - 0.5) * 2, d, k * 7 + s);
+        y += d * 0.55;
+        d = Math.max(4, d * 0.8);
+        s++;
+      }
     }
     // Bands beside the shrine stop short of its notch (the shrine has its own collider)
     const cx1 = Math.abs(z - SHRINE.z) < 9 ? Math.min(x1, SHRINE.x - 6) : x1;
