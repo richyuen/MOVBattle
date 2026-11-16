@@ -8,15 +8,25 @@
 // [R] 563 look rebuild, spec read off reference/maps/wiki/farmer_2.png and farm_2.png (both CONFIRM lists):
 // - Meadow: a yellow-olive khaki lawn, red above green (linear (0.6, 0.54, 0.18); green over red reads spring green), blades and dry grass
 //   in the same hue, furrows a darker khaki.
-// - Wheat: pale warm gold (linear (0.95, 0.8, 0.32), 0.4 self-lit) so the shaded stalks read gold, not orange-brown stubble.
 // - Ring: the base's oak wall goes whole (every "trunk" with its oakBole/oakCrown lumps and the two round "Introduction Grounds" trees,
-//   with their colliders). In its place, olive trees stand sparse round the back and sides: 13 at 0.88 of the round rim, every 20 degrees
-//   from 330 round the back to 210 (none across the front 215..325), none within 8 m of the farmhouse; each a thin dark trunk 5-6.5 m tall
-//   holding three stacked flattened faceted khaki crowns (4.6, 3.6, 2.5 m across, 1.4 m apart), about 10 m in all. Between each pair a
-//   round olive bush clump: 2-4 faceted balls 1.2-2 m across at 0.93 of the rim.
-// - Front rim: open grass to the edge, the hay sheaves on it; six big clumps beside the front walls, each 2-3 olive bush balls 1.6-2.6 m and
-//   1-2 khaki-grey faceted boulders 1.4-2.4 m: by the centre wall's foot (-6, -41), (1.5, -40), outside the front-right wall (12, -36),
-//   (25, -37), (36, -34), and at the front-left corner (-41, -25). One collider per tree (0.6 m) and per front clump (2.4 m).
+//   with their colliders).
+//
+// [R] 564 grove and wheat rebuild (CONFIRM lists 560, 561, 563; wiki farmer_2.png: trees stand in groups of two or three, each a tall
+// trunk carrying a column of big chunky faceted crown blocks, their feet buried in boulder-like olive bush masses that run on as a hedge
+// along the back rim and left edge; cottage-high bush heaps stand at the wall corners and beside the farmhouse; the wheat is a dense
+// warm gold, taller than the meadow grass but under a man's waist):
+// - Wheat: warm gold, linear (0.9, 0.66, 0.2), 0.3 self-lit (between the 562 orange and the 563 pale); stalks 0.65-0.8 m, ears to
+//   0.9-1.0 m, 0.75 m apart.
+// - Tree groups: 9 sites at 0.86 of the round rim (ellipse 54 x 48), angles 0, 40, 62, 84, 135, 158, 180, 197, 345 (from +x toward +z;
+//   none across the front 215..325, none within 9 m of the farmhouse); 2 or 3 trees a site, 3.5 m apart along the rim, 1 m in or out.
+//   Each tree: a dark trunk 0.5 / 0.85 m thick, 5.5-7 m tall, carrying 4 crown blocks stacked up it (7, 5.5, 4, 2.6 m across, flattened
+//   0.7, each pushed 0.6-1 m off the trunk line to a different side), crown top about 13 m. One 0.7 m collider per tree.
+// - Bush masses: at each tree's foot 3-4 olive balls 1.0-1.5 m in radius (2-3 m wide), and a hedge of 2 balls every 7 degrees at 0.93 of
+//   the rim from 60 round the back to 210 (the back rim and left edge), skipped within 6 m of the farmhouse.
+// - Bush heaps, cottage high (about 4 m): a ring of 4 balls 1.6-2 m radius under 1-2 more on top, at the wall corners (-43, 22), (42, 27),
+//   (-4.5, -22.5), (6.5, -33.5) and beside the farmhouse (-20, 33), (-8, 33); one 3 m collider each.
+// - Front rim: open grass to the edge, the hay sheaves on it; the six front clumps by the walls stay, their balls 1.1-1.6 m (were 0.8-1.3),
+//   each with 1-2 khaki-grey faceted boulders 1.4-2.4 m: (-6, -41), (1.5, -40), (12, -36), (25, -37), (36, -34), (-41, -25) (2.4 m colliders).
 import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
@@ -85,20 +95,20 @@ function cobbleWall(scene: Scene, mat: StandardMaterial, [x0, z0, x1, z1, gapAt]
 /**
  * The wheat field (wiki shot, the_tiniest_attack): tall golden wheat covers the right part of the island, from the front-right corner wall
  * back past the centre, beside the long centre wall. Spec: a field x 5..45, z -29..21 (its corners rounded off), filled with tufts of five
- * thin stalks 0.5-0.7 m tall with a fat ear on each (waist high, under 1 m), 0.9 m apart and jittered, leaning a little with the wind. Units walk through it (no
+ * thin stalks 0.65-0.8 m tall with a fat ear on each (under the waist, to about 1 m), 0.75 m apart and jittered, leaning a little with the wind. Units walk through it (no
  * colliders) and stand chest-up above it. Drawn as thin instances of one tuft.
  */
-const WHEAT = { x0: 5, x1: 45, z0: -29, z1: 21, step: 0.9 };
+const WHEAT = { x0: 5, x1: 45, z0: -29, z1: 21, step: 0.75 };
 
 function wheatField(scene: Scene): void {
   const gold = new StandardMaterial("farmer2Wheat", scene);
-  gold.diffuseColor = new Color3(0.95, 0.8, 0.32);
-  gold.emissiveColor = gold.diffuseColor.scale(0.4);
+  gold.diffuseColor = new Color3(0.9, 0.66, 0.2);
+  gold.emissiveColor = gold.diffuseColor.scale(0.3);
   gold.specularColor = Color3.Black();
   const parts: Mesh[] = [];
   for (let i = 0; i < 5; i++) {
     const a = (i / 5) * Math.PI * 2;
-    const h = 0.5 + seeded(i, 30) * 0.2;
+    const h = 0.65 + seeded(i, 30) * 0.15;
     const stalk = MeshBuilder.CreateCylinder("farmer2WheatStalk", { diameterTop: 0.05, diameterBottom: 0.09, height: h, tessellation: 3 }, scene);
     stalk.position.set(Math.cos(a) * 0.18, h / 2, Math.sin(a) * 0.18);
     stalk.rotation.set(Math.sin(a) * 0.15, 0, -Math.cos(a) * 0.15);
@@ -668,7 +678,9 @@ function earthBowl(scene: Scene, built: Set<unknown>): void {
  * sparse tall stacked-crown olive trees and round olive bush clumps stand round the back and sides, the front rim is open grass with big
  * bush/boulder clumps beside the front walls. Crowns are lit by their own colour, out of the fog; dark trunks stay in the glow pass.
  */
-const GROVE = { from: 330, to: 570, step: 20, at: 0.88, bushAt: 0.93 }; // angles from +x toward +z, 570 = 210 past a full turn
+const GROVE = { at: 0.86, bushAt: 0.93, hedgeFrom: 60, hedgeTo: 210 }; // angles from +x toward +z
+const GROVE_SITES = [0, 40, 62, 84, 135, 158, 180, 197, 345];
+const BUSH_HEAPS: Array<[number, number]> = [[-43, 22], [42, 27], [-4.5, -22.5], [6.5, -33.5], [-20, 33], [-8, 33]];
 const FRONT_CLUMPS: Array<[number, number]> = [[-6, -41], [1.5, -40], [12, -36], [25, -37], [36, -34], [-41, -25]];
 
 function oliveGrove(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
@@ -704,39 +716,72 @@ function oliveGrove(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): O
     b.position.set(x, y, z);
     (seeded(k, 143) < 0.55 ? light : dark).push(b);
   };
+  // Tree groups ([R] 564): 2-3 trees a site along the rim, each a thick trunk under a column of four chunky crown blocks, bush masses at
+  // their feet
   let k = 0;
-  for (let deg = GROVE.from; deg <= GROVE.to; deg += GROVE.step) {
-    k++;
-    const [x, z] = rimAt(deg + (seeded(k, 144) - 0.5) * 6, GROVE.at);
-    if (Math.hypot(x - COTTAGE.x, z - COTTAGE.z) >= 8) {
-      const h = 5 + seeded(k, 145) * 1.5;
-      const trunk = MeshBuilder.CreateCylinder("farmer2OliveTrunk", { diameterTop: 0.28, diameterBottom: 0.5, height: h, tessellation: 5 }, scene);
+  GROVE_SITES.forEach((deg, site) => {
+    const [sx, sz] = rimAt(deg, GROVE.at);
+    const len = Math.hypot(sx, sz), ux = sx / len, uz = sz / len;   // out from the centre
+    const tx = -uz, tz = ux;                                         // along the rim
+    const n = 2 + (seeded(site, 160) > 0.45 ? 1 : 0);
+    for (let j = 0; j < n; j++) {
+      k++;
+      const along = (j - (n - 1) / 2) * 3.5, out = (seeded(k, 161) - 0.5) * 2;
+      const x = sx + tx * along + ux * out, z = sz + tz * along + uz * out;
+      if (Math.hypot(x - COTTAGE.x, z - COTTAGE.z) < 9) continue;
+      const h = 5.5 + seeded(k, 145) * 1.5;
+      const trunk = MeshBuilder.CreateCylinder("farmer2OliveTrunk", { diameterTop: 0.5, diameterBottom: 0.85, height: h, tessellation: 5 }, scene);
       trunk.position.set(x, h / 2, z);
       trunk.rotation.z = (seeded(k, 146) - 0.5) * 0.12;
       trunks.push(trunk);
-      [4.6, 3.6, 2.5].forEach((w, t) => {
+      let y = h - 1.2;
+      [7, 5.5, 4, 2.6].forEach((w, t) => {
         const c = MeshBuilder.CreateIcoSphere("farmer2OliveCrown", { radius: w / 2, subdivisions: 1 }, scene);
-        c.scaling.y = 0.55;
-        c.rotation.y = seeded(k * 3 + t, 147) * Math.PI;
-        c.position.set(x + (seeded(k * 3 + t, 148) - 0.5) * 0.6, h - 0.6 + t * 1.4, z + (seeded(k * 3 + t, 149) - 0.5) * 0.6);
-        (t === 1 ? dark : light).push(c);
+        c.scaling.set(1, 0.7, 0.9);
+        c.rotation.set(seeded(k * 4 + t, 162) * 0.6, seeded(k * 4 + t, 147) * Math.PI, 0);
+        const side = seeded(k * 4 + t, 148) * Math.PI * 2, push = t === 0 ? 0.3 : 0.6 + seeded(k * 4 + t, 149) * 0.4;
+        c.position.set(x + Math.cos(side) * push, y, z + Math.sin(side) * push);
+        (t % 2 === 1 ? dark : light).push(c);
+        y += w * 0.7 * 0.62;
       });
-      kept.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.6 });
+      kept.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.7 });
+      // The bush mass at its foot
+      const m = 3 + (seeded(k, 163) > 0.5 ? 1 : 0);
+      for (let b = 0; b < m; b++) {
+        const r = 1 + seeded(k * 5 + b, 151) * 0.5;
+        const a = (b / m) * Math.PI * 2 + seeded(k, 164) * 2;
+        ball(x + Math.cos(a) * 1.6, r * 0.7, z + Math.sin(a) * 1.6, r, 500 + k * 5 + b);
+      }
     }
-    // A round bush clump halfway to the next tree
-    if (deg + GROVE.step > GROVE.to) continue;
-    const [bx, bz] = rimAt(deg + GROVE.step / 2, GROVE.bushAt);
+  });
+  // The hedge: two balls every 7 degrees along the back rim and the left edge
+  for (let deg = GROVE.hedgeFrom; deg <= GROVE.hedgeTo; deg += 7) {
+    k++;
+    const [bx, bz] = rimAt(deg + (seeded(k, 165) - 0.5) * 3, GROVE.bushAt);
     if (Math.hypot(bx - COTTAGE.x, bz - COTTAGE.z) < 6) continue;
-    const n = 2 + Math.floor(seeded(k, 150) * 3);
-    for (let j = 0; j < n; j++) {
-      const r = 0.6 + seeded(k * 5 + j, 151) * 0.4;
-      ball(bx + (j - (n - 1) / 2) * r * 1.3, r * 0.75 + (j === 1 ? r * 0.45 : 0), bz + (seeded(k * 5 + j, 152) - 0.5) * 1.2, r, k * 5 + j);
+    for (let j = 0; j < 2; j++) {
+      const r = 1 + seeded(k * 3 + j, 152) * 0.4;
+      const a = deg * (Math.PI / 180) + Math.PI / 2;
+      ball(bx + Math.cos(a) * (j - 0.5) * 1.8, r * 0.7, bz + Math.sin(a) * (j - 0.5) * 1.8, r, 800 + k * 3 + j);
     }
   }
+  // Cottage-high bush heaps at the wall corners and beside the farmhouse
+  BUSH_HEAPS.forEach(([cx, cz], p) => {
+    for (let j = 0; j < 4; j++) {
+      const r = 1.6 + seeded(p * 9 + j, 166) * 0.4;
+      const a = (j / 4) * Math.PI * 2 + seeded(p, 167);
+      ball(cx + Math.cos(a) * 1.7, r * 0.75, cz + Math.sin(a) * 1.7, r, 1200 + p * 9 + j);
+    }
+    for (let j = 0; j < 1 + (p % 2); j++) {
+      const r = 1.4 + seeded(p * 9 + 5 + j, 166) * 0.4;
+      ball(cx + (j - 0.5 * (p % 2)) * 1.4, 2.6 + r * 0.5, cz + (seeded(p * 9 + j, 168) - 0.5) * 1.2, r, 1250 + p * 9 + j);
+    }
+    kept.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: 3 });
+  });
   FRONT_CLUMPS.forEach(([cx, cz], p) => {
     const n = 2 + (p % 2);
     for (let j = 0; j < n; j++) {
-      const r = 0.8 + seeded(p * 7 + j, 153) * 0.5;
+      const r = 1.1 + seeded(p * 7 + j, 153) * 0.5;
       const a = (j / n) * Math.PI * 2 + seeded(p, 154);
       ball(cx + Math.cos(a) * 1.4, r * 0.75 + (j === n - 1 && n > 2 ? r * 0.5 : 0), cz + Math.sin(a) * 1.4, r, 300 + p * 7 + j);
     }
