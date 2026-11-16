@@ -210,14 +210,17 @@ function pineGrove(scene: Scene): Obstacle[] {
   // Dense grove (563): a tight 5 m jittered grid, no random gaps, so the pines stand as one dark mass. Placed (564) on the houses' bank
   // (x < 0, the far bank in the wiki shot) at its end away from the mill: x -47..-27, z 8..40, wrapping round behind and beside the
   // houses, 7 m clear of each house and 6 m clear of the ice
+  const sites: Array<[number, number, number]> = [[-45, -14, 11], [-22, -35, 9], [40, 20, 12], [27, 35, 10]];
   for (let x = -47; x <= -27; x += 5) {
-    for (let z = 8; z <= 40; z += 5) {
+    for (let z = 8; z <= 40; z += 5) sites.push([x, z, 0]);
+  }
+  for (const [x, z, cornerHeight] of sites) {
       k++;
       const px = x + (seeded(k, 101) - 0.5) * 2.5, pz = z + (seeded(k, 102) - 0.5) * 2.5;
       // Inside the round outline (ellipse 54 x 48), 4 m in
       if ((px / 50) ** 2 + (pz / 44) ** 2 > 1) continue;
-      if (Math.hypot(px + 26, pz - 36) < 7 || Math.hypot(px + 11, pz - 39) < 7 || px > iceX(pz) - 6) continue;
-      const h = 6.5 + seeded(k, 104) * 3.5, w = h * 0.46;
+      if (!cornerHeight && (Math.hypot(px + 26, pz - 36) < 7 || Math.hypot(px + 11, pz - 39) < 7 || px > iceX(pz) - 6)) continue;
+      const h = cornerHeight || 6.5 + seeded(k, 104) * 3.5, w = h * 0.46;
       const trunk = MeshBuilder.CreateCylinder("farmerSnowPineTrunk", { diameterTop: 0.3, diameterBottom: 0.45, height: h * 0.25, tessellation: 5 }, scene);
       trunk.position.set(px, h * 0.125, pz);
       trunks.push(trunk);
@@ -238,7 +241,6 @@ function pineGrove(scene: Scene): Obstacle[] {
         whites.push(band);
       }
       obstacles.push({ type: "cylinder", center: new Vector3(px, 0, pz), radius: 0.7 });
-    }
   }
   for (const [list, m, name] of [[greens, needles, "farmerSnowPines"], [whites, capSnow, "farmerSnowPineCaps"], [trunks, bark, "farmerSnowPineTrunks"]] as const) {
     const merged = Mesh.MergeMeshes(list, true);
@@ -634,6 +636,13 @@ function festiveLights(scene: Scene): Obstacle[] {
 export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
+  const trees: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (prior.has(mesh) || !/^(trunk|oakBole|oakCrown|canopy|hazeTreeline)/.test(mesh.name)) continue;
+    if (mesh.name === "trunk" || mesh.name === "trunkBase") trees.push(mesh.position.clone());
+    mesh.setEnabled(false);
+  }
+  result.obstacles = result.obstacles.filter((o) => !trees.some((p) => Math.hypot(p.x - o.center.x, p.z - o.center.z) < 0.55));
   snowCover(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   const restoreLights = nightSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   navyBowl(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
