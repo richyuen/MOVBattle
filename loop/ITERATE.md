@@ -73,6 +73,7 @@ When this iteration leaves no item of a batch named on `Batch:` open (all `D` or
 - In LEDGER drop Structural attempts older than 5 iterations and rows untouched for 25.
 - Append to `loop/LESSONS.md` (one line under its heading) anything learned this iteration that is not about one item: a rendering or capture behaviour, a camera rule, a pattern that failed twice. Near its cap, merge duplicates.
 - Rewrite `loop/STATE.md` fully: Iteration N, Batch, counters, Scoreboard (every item's marks and status), Focus with shas and verdicts ending in `- <approved>/<total>, <struck> struck`, Last verdicts (critic header lines verbatim), Notes (max 5 lines).
+- Each map that became `D` this iteration: `node loop/scripts/map-thumbs.mjs --items map.<id>[,map.<id>]` (its sandbox map-picker picture in `web/public/maps/thumbs/`; a failure goes to STATE Notes), committed with the docs.
 - `node loop/scripts/budget.mjs` must pass (read its output before committing). Commit the docs: subject `loop(N): <batch> <approved>/<total> gaps approved`.
 - `git push` (bare, no arguments). If it fails, note it in STATE Notes and carry on; the commit is what counts.
 - End the turn with a two-line summary. Do not ask questions.
