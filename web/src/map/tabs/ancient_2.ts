@@ -162,6 +162,16 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  const debris = new Set(["wallStone", "boulder", "hayBale", "hill", "stump", "campaign_hazard_box_pit"]);
+  const removed: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !(debris.has(mesh.name) || mesh.name.startsWith("Challenge Bluffs_"))) continue;
+    if (mesh.name !== "campaign_hazard_box_pit") removed.push(mesh.position.clone());
+    mesh.setEnabled(false);
+  }
+  result.obstacles = result.obstacles.filter(({ center }) => !removed.some((p) =>
+    (p.x / 54) ** 2 + (p.z / 48) ** 2 < 0.8 ** 2 && Math.hypot(center.x - p.x, center.z - p.z) < 3.4));
+  result.hazards = result.hazards.filter((hazard) => hazard.kind !== "pit");
   const obstacles = clearFootprint(scene, built, [...result.obstacles]);
   templeComplex(scene, obstacles);
   return { ...result, obstacles };
