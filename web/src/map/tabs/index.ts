@@ -12,6 +12,7 @@ import { buildTribal1 } from "./tribal_1";
 import { buildViking } from "./viking";
 import { buildTribalSandbox } from "./tribal_sandbox";
 import { buildFarmerSnow } from "./farmer_snow";
+import { buildMedieval2 } from "./medieval_2";
 import { buildVikingSandbox } from "./viking_sandbox";
 import { buildAncientSandbox } from "./ancient_sandbox";
 
@@ -27,6 +28,7 @@ export const TABS_MAP_BUILDERS: Partial<Record<TabsMapId, TabsMapBuilder>> = {
   tribal_1: buildTribal1,
   tribal_sandbox: buildTribalSandbox,
   farmer_snow: buildFarmerSnow,
+  medieval_2: buildMedieval2,
   viking_sandbox: buildVikingSandbox,
   ancient_sandbox: buildAncientSandbox,
 };
