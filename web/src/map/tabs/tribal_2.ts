@@ -122,8 +122,76 @@ const TIERS = [{ s: 1, top: -0.02, h: 16 }, { s: 0.86, top: -16.6, h: 13 }, { s:
 
 function rim(deg: number): [number, number] {
   const t = (deg * Math.PI) / 180, c = Math.cos(t), s = Math.sin(t);
-  const r = (Math.abs(c / ISLAND.a) ** ISLAND.round + Math.abs(s / ISLAND.b) ** ISLAND.round) ** (-1 / ISLAND.round);
+  const p = rimPower(c);
+  const r = (Math.abs(c / ISLAND.a) ** p + Math.abs(s / ISLAND.b) ** p) ** (-1 / p);
   return [c * r, s * r];
+}
+
+/**
+ * Round island (wiki tribal_2.png): the island is a near-circle with the field running out to the ring, not a rounded rectangle with a bare
+ * margin. Spec: the outline is 54 x 48 with its power blending from 2 (an ellipse) over the left half to the base's 3 under the mountain on
+ * the right (power 2 + max(0, cos a)^2), so the mountain's blocks keep their ground; the tiers and rim rocks follow rim(); the base's lawn
+ * slabs ("ground", "centerGrass") are remapped vertex by vertex from the base's superellipse (power 3) at the same fraction of the radius;
+ * blades and base props past the new rim (less 1 m) go with their colliders, the haze band goes whole; every ring birch beyond 0.6 of the
+ * rim is pushed out to 0.84-0.93 of it (its collider moves with it), so the trees stand at the rim with the field open up to them.
+ */
+function rimPower(c: number): number {
+  return 2 + Math.max(0, c) ** 2;
+}
+
+function rimR(x: number, z: number): number {
+  const [rx, rz] = rim((Math.atan2(z, x) * 180) / Math.PI);
+  return Math.hypot(rx, rz);
+}
+
+const ROUND_PROPS = new Set(["boulder", "wallStone", "hayBale", "stump", "hill", "grassTuft", "flowerDot", "pebble"]);
+
+function roundIsland(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const baseR = (a: number) => (Math.abs(Math.cos(a) / 54) ** 3 + Math.abs(Math.sin(a) / 48) ** 3) ** (-1 / 3);
+  const inside = (x: number, z: number, m: number) => Math.hypot(x, z) <= rimR(x, z) - m;
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !(mesh instanceof Mesh)) continue;
+    if (mesh.name === "ground" || mesh.name === "centerGrass") {
+      const pos = mesh.getVerticesData("position");
+      if (!pos) continue;
+      for (let v = 0; v < pos.length; v += 3) {
+        if (Math.hypot(pos[v], pos[v + 2]) < 1e-6) continue;
+        const k = rimR(pos[v], pos[v + 2]) / baseR(Math.atan2(pos[v + 2], pos[v]));
+        pos[v] *= k;
+        pos[v + 2] *= k;
+      }
+      mesh.setVerticesData("position", pos);
+      mesh.refreshBoundingInfo();
+    } else if (mesh.name === "hazeTreeline") {
+      mesh.setEnabled(false);
+    } else if (mesh.name.startsWith("fieldBlades_")) {
+      const pos = mesh.getVerticesData("position");
+      if (!pos) continue;
+      for (let v = 0; v + 11 < pos.length; v += 12) {
+        if (inside(pos[v], pos[v + 2], 0.5)) continue;
+        for (let c = 3; c < 12; c++) pos[v + c] = pos[v + (c % 3)];
+      }
+      mesh.setVerticesData("position", pos);
+    } else if (ROUND_PROPS.has(mesh.name) && !mesh.parent && mesh.isEnabled() && !inside(mesh.position.x, mesh.position.z, 1)) {
+      gone.push([mesh.position.x, mesh.position.z]);
+      mesh.setEnabled(false);
+    }
+  }
+  result.obstacles = result.obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  // Ring birches out to the rim, colliders with them
+  let i = 0;
+  for (const trunk of scene.meshes.filter((m) => built.has(m) && m.name === "trunk" && !m.parent)) {
+    const { x, z } = trunk.position;
+    const R = rimR(x, z), d = Math.hypot(x, z);
+    if (d < 0.6 * R) continue;
+    const k = ((0.84 + seeded(i++, 31) * 0.09) * R) / d;
+    const col = result.obstacles.find((o) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5);
+    trunk.position.x = x * k;
+    trunk.position.z = z * k;
+    trunk.computeWorldMatrix(true);
+    if (col) col.center = new Vector3(x * k, 0, z * k);
+  }
 }
 
 function tierProfile(s: number, top: number, h: number, last: boolean): Array<[number, number]> {
@@ -433,6 +501,7 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
   const prior = new Set(scene.meshes);
   const result = base();
   clearFieldWalls(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
+  roundIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
   birchRing(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result);
   openSky(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
   earthTiers(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
