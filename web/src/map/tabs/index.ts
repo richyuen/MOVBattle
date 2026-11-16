@@ -9,6 +9,7 @@ import { buildFarmer1 } from "./farmer_1";
 import { buildFarmer2 } from "./farmer_2";
 import { buildTribal2 } from "./tribal_2";
 import { buildTribal1 } from "./tribal_1";
+import { buildViking } from "./viking";
 import { buildTribalSandbox } from "./tribal_sandbox";
 import { buildFarmerSnow } from "./farmer_snow";
 import { buildVikingSandbox } from "./viking_sandbox";
@@ -19,6 +20,7 @@ export type TabsMapBuilder = (scene: Scene, base: () => MapBuildResult) => MapBu
 
 export const TABS_MAP_BUILDERS: Partial<Record<TabsMapId, TabsMapBuilder>> = {
   hill: buildHill,
+  viking: buildViking,
   farmer_1: buildFarmer1,
   farmer_2: buildFarmer2,
   tribal_2: buildTribal2,
