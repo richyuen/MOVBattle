@@ -172,5 +172,35 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
   terracottaCliffs(scene, built);
   sea(scene);
   const cleared = clearFieldDressing(scene, built, result, clearFieldJunk(scene, built, [...result.obstacles]));
+  const lawn = new Color3(0.51, 0.66, 0.23);
+  for (const name of ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"]) {
+    const mat = scene.getMaterialByName(name);
+    if (!(mat instanceof StandardMaterial)) continue;
+    mat.diffuseColor = lawn.scale(name === "grassBladeDark" ? 0.76 : 1);
+    mat.emissiveColor = mat.diffuseColor.scale(0.13);
+  }
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && /^fieldTufts/.test(mesh.name)) mesh.setEnabled(false);
+  }
+  const clay = new StandardMaterial("ancientSandboxClayPaths", scene);
+  clay.diffuseColor = new Color3(0.57, 0.34, 0.23);
+  clay.emissiveColor = clay.diffuseColor.scale(0.12);
+  const trails = [
+    [[-48, -8], [-42, 4], [-43, 15], [-36, 27], [-23, 31], [-8, 30]],
+    [[46, -25], [40, -12], [43, 6], [37, 20], [27, 29], [12, 32], [-8, 30]],
+  ];
+  for (const trail of trails) {
+    for (let i = 1; i < trail.length; i++) {
+      const [x0, z0] = trail[i - 1], [x1, z1] = trail[i];
+      const segment = MeshBuilder.CreateBox("ancientSandboxPath", {
+        width: Math.hypot(x1 - x0, z1 - z0) + 1, height: 0.03, depth: 2.15,
+      }, scene);
+      segment.position.set((x0 + x1) / 2, 0.055 + i * 0.001, (z0 + z1) / 2);
+      segment.rotation.y = -Math.atan2(z1 - z0, x1 - x0);
+      segment.material = clay;
+      segment.receiveShadows = true;
+      segment.isPickable = false;
+    }
+  }
   return { ...result, obstacles: cleared.obstacles, hazards: cleared.hazards };
 }
