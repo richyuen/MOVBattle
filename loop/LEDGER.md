@@ -45,6 +45,14 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 564 | 6d29e353 | map.tribal_2.a | approved
 564 | 140833c3 | map.tribal_2.a | approved
 564 | 8992d360 [R] | map.farmer_2.a | approved (CONFIRM failed a)
+565 | 6278850c | map.viking_sandbox.b | approved
+565 | b149e156 | map.ancient_sandbox.b | approved
+565 | e503d93f | map.tribal_2.a | approved
+565 | ca008f0d | map.farmer_snow.b | approved
+565 | 4d8db327 | map.viking.a | approved
+565 | 61b2ec07+4e086afe | map.medieval_2.b | approved
+565 | b364ac2a | map.ancient_2.a | approved
+565 | b84ba5a1 [R] | map.farmer_2.a | approved (CONFIRM passed a; critic kept blocker 3)
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
@@ -62,5 +70,6 @@ web/src/map/tabs/farmer_1.ts:farmer1BankRock colour | (0.6,0.53,0.44) emissive (
 web/src/map/tabs/farmer_2.ts:farmer2UnderEarth colour | (0.5,0.4,0.27) self-lit 1.0 | 561 | approved | (0.44,0.36,0.25) self-lit 0.45
 web/src/map/tabs/farmer_2.ts:farmer2OliveLeaf / Dark | (0.62,0.56,0.19) x0.6, (0.5,0.46,0.15) x0.55 (oliveGrove) | 563 | approved | (0.5,0.47,0.16) x0.6, (0.4,0.39,0.12) x0.55; (0.45,0.42,0.14) x0.25
 web/src/map/tabs/farmer_2.ts:MEADOW | (0.6,0.54,0.18) | 563 | approved | (0.62,0.64,0.2)
-web/src/map/tabs/farmer_2.ts:farmer2Wheat colour | (0.9,0.66,0.2) self-lit 0.3 | 564 | approved (CONFIRM: dull ochre) | (0.95,0.8,0.32) self-lit 0.4 (CONFIRM: too pale); (0.78,0.55,0.16) emissive (0.26,0.17,0.04)
+web/src/map/tabs/farmer_2.ts:farmer2Wheat colour | (1,0.8,0.3) self-lit 0.35 + straw floor (0.92,0.72,0.3) x0.3 | 565 | approved (critic: cream from above, khaki at ground) | (0.9,0.66,0.2) self-lit 0.3 (CONFIRM: dull ochre); (0.95,0.8,0.32) self-lit 0.4 (CONFIRM: too pale); (0.78,0.55,0.16) emissive (0.26,0.17,0.04)
+web/src/map/tabs/farmer_2.ts:farmer2HousePlank / Frame / Roof | (0.88,0.74,0.52) x0.32, (0.56,0.43,0.28) x0.25, (0.74,0.65,0.5) x0.3 | 565 | approved | (0.6,0.44,0.26) x0.18, (0.26,0.15,0.08) x0.15, (0.36,0.23,0.13) x0.15
 web/src/map/tabs/tribal_2.ts:tribal2Mountain colour | (0.6,0.5,0.4) emissive (0.1,0.075,0.05) | 564 | approved | (0.6,0.54,0.52) emissive (0.08,0.06,0.05)
