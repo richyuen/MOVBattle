@@ -354,10 +354,8 @@ function caveApron(scene: Scene): void {
 }
 
 /**
- * Rim rocks (wiki tribal_2.png): a broken wall of grey rock cliffs runs along the back-left arc of the rim behind the birches, and big boulder
- * piles sit along the front rim between the trees. Spec read off the wiki shot: the cliff run spans the rim from the back centre (90 deg)
- * round to the left (205 deg), 15 blocks, each two or three leaning faceted slabs 7-10 m along the rim, 5-9 m high, 5 m deep, their faces at
- * 0.9 of the rim; the front has 7 piles between 225 and 320 deg, each 3-5 rounded boulders 2.4-4.8 m across at 0.9 of the rim. The
+ * Rim rocks (wiki tribal_2.png): a stepped wall of grey rock cliffs runs along the back-left arc of the rim behind the birches (the tiered
+ * ledge spec is in the body, 565), and big boulder piles sit along the front rim between the trees. The front has 7 piles between 225 and 320 deg, each 3-5 rounded boulders 2.4-4.8 m across at 0.9 of the rim. The
  * rock is a warm grey (r well over b; the cool grey reads lavender). Each block and pile is solid (one cylinder collider).
  */
 function rimRocks(scene: Scene): Array<{ type: "cylinder"; center: Vector3; radius: number }> {
@@ -367,25 +365,49 @@ function rimRocks(scene: Scene): Array<{ type: "cylinder"; center: Vector3; radi
   rock.specularColor = new Color3(0.03, 0.03, 0.03);
   const pieces: Mesh[] = [];
   const colliders: Array<{ type: "cylinder"; center: Vector3; radius: number }> = [];
-  for (let i = 0; i < 15; i++) {
-    const deg = 90 + (i / 14) * 115 + (seeded(i, 71) - 0.5) * 4;
-    const [rx, rz] = rim(deg);
-    const cx = rx * 0.92, cz = rz * 0.92;
-    const along = 7 + seeded(i, 72) * 3, high = 5 + seeded(i, 73) * 4;
-    // The block's long side runs along the rim
-    const yaw = -(deg * Math.PI) / 180 - Math.PI / 2;
-    for (let j = 0; j < 3; j++) {
-      const k = i * 10 + j;
-      const s = 1 - j * 0.25;
-      const h = high * (1 - j * 0.22);
-      const slab = MeshBuilder.CreateCylinder("tribal2CliffSlab", { diameterTop: along * s * 0.55, diameterBottom: along * s, height: h, tessellation: 5 }, scene);
-      slab.scaling.z = 5 / along;
-      slab.rotation.set((seeded(k, 74) - 0.5) * 0.18, yaw + (seeded(k, 75) - 0.5) * 0.4, (seeded(k, 76) - 0.5) * 0.18);
-      slab.position.set(cx + (seeded(k, 77) - 0.5) * 3, h / 2 - 0.2, cz + (seeded(k, 78) - 0.5) * 3);
-      pieces.push(slab);
+  // Tiered ledge wall (565; wiki tribal_2.png, back-left: a continuous stepped grey cliff closes the rim behind the birches, two ledges
+  // high, with birches standing on its ledges). Spec: from 85 to 210 deg a block every 4 deg on each of two tiers, tier 1 centred at 0.94 of
+  // the rim (4-5.5 m high, 4 m deep), tier 2 behind it at 0.975 (8-10 m high, 3 m deep), each block an angular box 6-8 m along the rim with its
+  // top tilted 0.1-0.2 rad across and along (few flat tops), tier 2 offset half a step so the joints do not line up; on the ledge tops stand
+  // birches (white trunk 4-6 m, a ball crown 1.8-2.6 m in the ring's colours): every third tier-2 block and every fourth tier-1 block.
+  const crownMats = BIRCH_CROWNS.map(([name]) => scene.getMaterialByName(name)).filter((m): m is StandardMaterial => m instanceof StandardMaterial);
+  const bark = scene.getMaterialByName("tribal2Birch");
+  const ledgeBirch = (x: number, top: number, z: number, k: number) => {
+    const h = 4 + seeded(k, 79) * 2;
+    const trunk = MeshBuilder.CreateCylinder("tribal2LedgeBirch", { diameterTop: 0.22, diameterBottom: 0.32, height: h + 0.6, tessellation: 6 }, scene);
+    trunk.position.set(x, top + h / 2 - 0.3, z);
+    trunk.material = bark;
+    trunk.isPickable = false;
+    const r = 1.8 + seeded(k, 80) * 0.8;
+    const ball = MeshBuilder.CreateIcoSphere("tribal2LedgeCrown", { radius: r, subdivisions: 1 }, scene);
+    ball.scaling.y = 1.08;
+    ball.rotation.y = seeded(k, 89) * Math.PI;
+    ball.position.set(x, top + h + r * 0.6, z);
+    ball.convertToFlatShadedMesh();
+    if (crownMats.length) ball.material = crownMats[Math.floor(seeded(k, 90) * crownMats.length)];
+    ball.applyFog = false;
+    ball.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(ball);
+  };
+  const LEDGE_TIERS = [{ at: 0.94, h0: 4, h1: 5.5, deep: 4, birchEvery: 4 }, { at: 0.975, h0: 8, h1: 10, deep: 3, birchEvery: 3 }];
+  LEDGE_TIERS.forEach((tier, t) => {
+    let i = 0;
+    for (let deg = 85 + t * 2; deg <= 210; deg += 4, i++) {
+      const k = t * 100 + i;
+      const d = deg + (seeded(k, 71) - 0.5) * 1.5;
+      const [rx, rz] = rim(d);
+      const cx = rx * tier.at, cz = rz * tier.at;
+      const along = 6 + seeded(k, 72) * 2, high = tier.h0 + seeded(k, 73) * (tier.h1 - tier.h0);
+      // The block's long side runs along the rim
+      const yaw = -(d * Math.PI) / 180 - Math.PI / 2;
+      const block = MeshBuilder.CreateBox("tribal2LedgeBlock", { width: along, height: high, depth: tier.deep }, scene);
+      block.rotation.set((seeded(k, 74) < 0.5 ? -1 : 1) * (0.1 + seeded(k, 75) * 0.1), yaw + (seeded(k, 76) - 0.5) * 0.15, (seeded(k, 77) < 0.5 ? -1 : 1) * (0.06 + seeded(k, 78) * 0.08));
+      block.position.set(cx, high / 2 - 0.4, cz);
+      pieces.push(block);
+      if (i % tier.birchEvery === 1) ledgeBirch(cx, high - 0.6, cz, k);
+      if (t === 0 && i % 2 === 0) colliders.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: 3.2 });
     }
-    colliders.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: 3 });
-  }
+  });
   for (let p = 0; p < 7; p++) {
     const deg = 228 + (p / 6) * 90 + (seeded(p, 81) - 0.5) * 6;
     const [rx, rz] = rim(deg);
