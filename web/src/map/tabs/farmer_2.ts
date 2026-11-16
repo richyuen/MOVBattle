@@ -4,6 +4,19 @@
 // walls closing the back-right and front-right corners. Each wall has one gap a man can walk through.
 // Spec: walls are axis-aligned runs of rough cobbles, knee high (0.5-0.8 m), 1 m thick, one box obstacle per stretch. They keep clear of the
 // stage armies fought here (team 1 stands in x 2..41, z -26..18). Built on campaign.introduction (base()).
+//
+// [R] 563 look rebuild, spec read off reference/maps/wiki/farmer_2.png and farm_2.png (both CONFIRM lists):
+// - Meadow: a yellow-olive khaki lawn, red above green (linear (0.6, 0.54, 0.18); green over red reads spring green), blades and dry grass
+//   in the same hue, furrows a darker khaki.
+// - Wheat: pale warm gold (linear (0.95, 0.8, 0.32), 0.4 self-lit) so the shaded stalks read gold, not orange-brown stubble.
+// - Ring: the base's oak wall goes whole (every "trunk" with its oakBole/oakCrown lumps and the two round "Introduction Grounds" trees,
+//   with their colliders). In its place, olive trees stand sparse round the back and sides: 13 at 0.88 of the round rim, every 20 degrees
+//   from 330 round the back to 210 (none across the front 215..325), none within 8 m of the farmhouse; each a thin dark trunk 5-6.5 m tall
+//   holding three stacked flattened faceted khaki crowns (4.6, 3.6, 2.5 m across, 1.4 m apart), about 10 m in all. Between each pair a
+//   round olive bush clump: 2-4 faceted balls 1.2-2 m across at 0.93 of the rim.
+// - Front rim: open grass to the edge, the hay sheaves on it; six big clumps beside the front walls, each 2-3 olive bush balls 1.6-2.6 m and
+//   1-2 khaki-grey faceted boulders 1.4-2.4 m: by the centre wall's foot (-6, -41), (1.5, -40), outside the front-right wall (12, -36),
+//   (25, -37), (36, -34), and at the front-left corner (-41, -25). One collider per tree (0.6 m) and per front clump (2.4 m).
 import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
@@ -79,8 +92,8 @@ const WHEAT = { x0: 5, x1: 45, z0: -29, z1: 21, step: 0.9 };
 
 function wheatField(scene: Scene): void {
   const gold = new StandardMaterial("farmer2Wheat", scene);
-  gold.diffuseColor = new Color3(0.78, 0.55, 0.16);
-  gold.emissiveColor = new Color3(0.26, 0.17, 0.04);
+  gold.diffuseColor = new Color3(0.95, 0.8, 0.32);
+  gold.emissiveColor = gold.diffuseColor.scale(0.4);
   gold.specularColor = Color3.Black();
   const parts: Mesh[] = [];
   for (let i = 0; i < 5; i++) {
@@ -292,7 +305,7 @@ function strawSheaves(scene: Scene): void {
  * this build take the olive hue (blades keep their shade ratio to the lawn); seven furrows 1.2 m wide, 3 m apart, run front to back
  * over x -23..-5, z -15..21, each a darker olive ribbon with a wavering edge, drawn only.
  */
-const MEADOW = new Color3(0.62, 0.64, 0.2);
+const MEADOW = new Color3(0.6, 0.54, 0.18);
 const FURROWS = { x0: -23, count: 7, gap: 3, z0: -15, z1: 21, half: 0.6 };
 
 function oliveMeadow(scene: Scene): void {
@@ -310,11 +323,11 @@ function oliveMeadow(scene: Scene): void {
     }
   }
   const ground = scene.getMaterialByName("groundMat") as StandardMaterial | null;
-  if (ground) ground.diffuseColor = new Color3(0.56, 0.54, 0.2);
+  if (ground) ground.diffuseColor = new Color3(0.56, 0.5, 0.17);
   const dry = scene.getMaterialByName("dryGrass") as StandardMaterial | null;
-  if (dry) dry.diffuseColor = new Color3(0.66, 0.62, 0.24);
+  if (dry) dry.diffuseColor = new Color3(0.68, 0.6, 0.24);
   const furrow = new StandardMaterial("farmer2Furrow", scene);
-  furrow.diffuseColor = new Color3(0.46, 0.48, 0.15);
+  furrow.diffuseColor = new Color3(0.46, 0.41, 0.13);
   furrow.emissiveColor = new Color3(0.04, 0.04, 0.0);
   furrow.specularColor = Color3.Black();
   const strips: Mesh[] = [];
@@ -651,60 +664,105 @@ function earthBowl(scene: Scene, built: Set<unknown>): void {
 }
 
 /**
- * Olive crowns (wiki farmer_2.png): the trees round the island wear faceted khaki/olive yellow-green crowns, not deep forest green. Spec:
- * every base crown ("canopy" under a "trunk") still standing after the round outline gets one fresh olive material (linear (0.45, 0.42,
- * 0.14), a quarter self-lit), drawn out of the fog and the glow so the haze cannot pale or green it; its name does not end in "Crown", so
- * the base's sky-mixing canopy plugin leaves it alone. Crowns of trunks hidden past the rim stay hidden.
+ * Olive grove ring ([R] 563, spec at the head of this file): the base's oak wall and the two round field trees go with their colliders;
+ * sparse tall stacked-crown olive trees and round olive bush clumps stand round the back and sides, the front rim is open grass with big
+ * bush/boulder clumps beside the front walls. Crowns are lit by their own colour, out of the fog; dark trunks stay in the glow pass.
  */
-function oliveCrowns(scene: Scene, built: Set<unknown>): void {
-  const olive = new StandardMaterial("farmer2OliveLeaf", scene);
-  // Mostly self-lit: lit only by the sun the shaded lumps read dark olive-brown, not TABS's pale khaki
-  olive.diffuseColor = new Color3(0.5, 0.47, 0.16);
-  olive.emissiveColor = olive.diffuseColor.scale(0.6);
-  olive.specularColor = Color3.Black();
-  const glow = scene.getGlowLayerByName("glow");
-  // The ring is the base's oaks (oakCrown lumps on oakLeaves / oakLeavesDark): their light and dark lumps go light and deep olive
-  const oliveDark = new StandardMaterial("farmer2OliveLeafDark", scene);
-  oliveDark.diffuseColor = new Color3(0.4, 0.39, 0.12);
-  oliveDark.emissiveColor = oliveDark.diffuseColor.scale(0.55);
-  oliveDark.specularColor = Color3.Black();
+const GROVE = { from: 330, to: 570, step: 20, at: 0.88, bushAt: 0.93 }; // angles from +x toward +z, 570 = 210 past a full turn
+const FRONT_CLUMPS: Array<[number, number]> = [[-6, -41], [1.5, -40], [12, -36], [25, -37], [36, -34], [-41, -25]];
+
+function oliveGrove(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const gone: Array<[number, number]> = [];
   for (const mesh of scene.meshes) {
-    if (!built.has(mesh) || mesh.name !== "oakCrown" || !mesh.isEnabled()) continue;
-    mesh.material = mesh.material?.name === "oakLeavesDark" ? oliveDark : olive;
-    mesh.applyFog = false;
+    if (!built.has(mesh) || mesh.parent || !mesh.isEnabled()) continue;
+    if (mesh.name !== "trunk" && !mesh.name.startsWith("Introduction Grounds_")) continue;
+    gone.push([mesh.position.x, mesh.position.z]);
+    mesh.setEnabled(false);
   }
-  const clumps: Mesh[] = [];
+  const kept = obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const leaf = mk("farmer2OliveLeaf", new Color3(0.62, 0.56, 0.19), 0.6);
+  const leafDark = mk("farmer2OliveLeafDark", new Color3(0.5, 0.46, 0.15), 0.55);
+  const bark = mk("farmer2OliveBark", new Color3(0.2, 0.15, 0.1), 0.25);
+  const rockMat = mk("farmer2FrontRock", new Color3(0.6, 0.55, 0.44), 0.25);
+  const rimAt = (deg: number, f: number): [number, number] => {
+    const a = (deg * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a);
+    const r = ((c / 54) ** 2 + (s / 48) ** 2) ** -0.5 * f;
+    return [c * r, s * r];
+  };
+  const light: Mesh[] = [], dark: Mesh[] = [], trunks: Mesh[] = [], rocks: Mesh[] = [];
+  const ball = (x: number, y: number, z: number, r: number, k: number, squash = 0.85) => {
+    const b = MeshBuilder.CreateIcoSphere("farmer2OliveBall", { radius: r, subdivisions: 1 }, scene);
+    b.scaling.y = squash;
+    b.rotation.set(seeded(k, 141) * 0.5, seeded(k, 142) * Math.PI, 0);
+    b.position.set(x, y, z);
+    (seeded(k, 143) < 0.55 ? light : dark).push(b);
+  };
   let k = 0;
-  for (const mesh of [...scene.meshes]) {
-    if (!built.has(mesh) || mesh.name !== "canopy" || !(mesh.parent instanceof Mesh) || mesh.parent.name !== "trunk") continue;
-    if (!mesh.parent.isEnabled() || !mesh.isEnabled()) continue;
-    mesh.material = olive;
-    mesh.applyFog = false;
-    glow?.addExcludedMesh(mesh as Mesh);
-    // TABS crowns are clusters of faceted lumps: two smaller lumps hang off each crown's side and top
-    mesh.parent.computeWorldMatrix(true);
-    mesh.computeWorldMatrix(true);
-    const box = mesh.getBoundingInfo().boundingSphere;
-    for (let j = 0; j < 2; j++, k++) {
-      const a = seeded(k, 61) * Math.PI * 2;
-      const r = box.radiusWorld * (0.42 + seeded(k, 62) * 0.15);
-      const lump = MeshBuilder.CreateIcoSphere("farmer2CrownLump", { radius: r, subdivisions: 1 }, scene);
-      const c = box.centerWorld;
-      const out = box.radiusWorld * 0.7;
-      lump.position.set(c.x + Math.cos(a) * out, c.y + (j === 0 ? -0.25 : 0.45) * box.radiusWorld, c.z + Math.sin(a) * out);
-      lump.rotation.set(seeded(k, 63), seeded(k, 64) * 3, 0);
-      clumps.push(lump);
+  for (let deg = GROVE.from; deg <= GROVE.to; deg += GROVE.step) {
+    k++;
+    const [x, z] = rimAt(deg + (seeded(k, 144) - 0.5) * 6, GROVE.at);
+    if (Math.hypot(x - COTTAGE.x, z - COTTAGE.z) >= 8) {
+      const h = 5 + seeded(k, 145) * 1.5;
+      const trunk = MeshBuilder.CreateCylinder("farmer2OliveTrunk", { diameterTop: 0.28, diameterBottom: 0.5, height: h, tessellation: 5 }, scene);
+      trunk.position.set(x, h / 2, z);
+      trunk.rotation.z = (seeded(k, 146) - 0.5) * 0.12;
+      trunks.push(trunk);
+      [4.6, 3.6, 2.5].forEach((w, t) => {
+        const c = MeshBuilder.CreateIcoSphere("farmer2OliveCrown", { radius: w / 2, subdivisions: 1 }, scene);
+        c.scaling.y = 0.55;
+        c.rotation.y = seeded(k * 3 + t, 147) * Math.PI;
+        c.position.set(x + (seeded(k * 3 + t, 148) - 0.5) * 0.6, h - 0.6 + t * 1.4, z + (seeded(k * 3 + t, 149) - 0.5) * 0.6);
+        (t === 1 ? dark : light).push(c);
+      });
+      kept.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.6 });
+    }
+    // A round bush clump halfway to the next tree
+    if (deg + GROVE.step > GROVE.to) continue;
+    const [bx, bz] = rimAt(deg + GROVE.step / 2, GROVE.bushAt);
+    if (Math.hypot(bx - COTTAGE.x, bz - COTTAGE.z) < 6) continue;
+    const n = 2 + Math.floor(seeded(k, 150) * 3);
+    for (let j = 0; j < n; j++) {
+      const r = 0.6 + seeded(k * 5 + j, 151) * 0.4;
+      ball(bx + (j - (n - 1) / 2) * r * 1.3, r * 0.75 + (j === 1 ? r * 0.45 : 0), bz + (seeded(k * 5 + j, 152) - 0.5) * 1.2, r, k * 5 + j);
     }
   }
-  const merged = clumps.length ? Mesh.MergeMeshes(clumps, true) : null;
-  if (merged) {
-    merged.name = "farmer2CrownLumps";
+  FRONT_CLUMPS.forEach(([cx, cz], p) => {
+    const n = 2 + (p % 2);
+    for (let j = 0; j < n; j++) {
+      const r = 0.8 + seeded(p * 7 + j, 153) * 0.5;
+      const a = (j / n) * Math.PI * 2 + seeded(p, 154);
+      ball(cx + Math.cos(a) * 1.4, r * 0.75 + (j === n - 1 && n > 2 ? r * 0.5 : 0), cz + Math.sin(a) * 1.4, r, 300 + p * 7 + j);
+    }
+    for (let j = 0; j < 1 + (p % 2 === 0 ? 1 : 0); j++) {
+      const d = 1.4 + seeded(p * 3 + j, 155) * 1;
+      const rock = MeshBuilder.CreatePolyhedron("farmer2FrontRock", { type: 2, size: d / 2.6 }, scene);
+      rock.scaling.set(1.15, 0.7, 1);
+      rock.rotation.set(seeded(p * 3 + j, 156) * 0.4, seeded(p * 3 + j, 157) * Math.PI, 0);
+      const a = seeded(p * 3 + j, 158) * Math.PI * 2;
+      rock.position.set(cx + Math.cos(a) * 2.2, d * 0.28, cz + Math.sin(a) * 2.2);
+      rocks.push(rock);
+    }
+    kept.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: 2.4 });
+  });
+  for (const [list, m, name, inGlow] of [[light, leaf, "farmer2OliveCrowns", false], [dark, leafDark, "farmer2OliveCrownsDark", false], [trunks, bark, "farmer2OliveTrunks", true], [rocks, rockMat, "farmer2FrontRocks", true]] as const) {
+    const merged = list.length ? Mesh.MergeMeshes([...list], true) : null;
+    if (!merged) continue;
+    merged.name = name;
     merged.convertToFlatShadedMesh();
-    merged.material = olive;
+    merged.material = m;
     merged.applyFog = false;
+    merged.receiveShadows = true;
     merged.isPickable = false;
-    glow?.addExcludedMesh(merged);
+    if (!inGlow) scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
   }
+  return kept;
 }
 
 export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
@@ -724,7 +782,6 @@ export function buildFarmer2(scene: Scene, base: () => MapBuildResult): MapBuild
   wheatField(scene);
   strawSheaves(scene);
   earthBowl(scene, built);
-  const kept = roundIsland(scene, prior, obstacles);
-  oliveCrowns(scene, built);
+  const kept = oliveGrove(scene, built, roundIsland(scene, prior, obstacles));
   return { ...result, obstacles: kept };
 }
