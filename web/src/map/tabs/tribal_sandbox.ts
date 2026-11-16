@@ -144,7 +144,7 @@ function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResu
 }
 
 /**
- * Rock nooks (wiki shot): along the right and back of the ring, clusters of big piled grey boulders with birches growing out of them stand
+ * Rock nooks (wiki shot; cliff blocks since 563, spec in rockNooks): along the right and back of the ring, clusters of rock with birches growing out of them stand
  * into the plain, each a horseshoe open toward the centre so it holds a pocket a squad can hide in. Spec: four nooks at (34, 24), (44, -6),
  * (28, -28), (6, 33); each six boulders 3-5.5 m on an arc of 7 m radius, 200 degrees wide, its open side facing the island centre, the
  * middle ones stacked a second boulder high; two or three birches (white trunk, ball crown in the ring's colours) stand among the rocks.
@@ -153,9 +153,12 @@ function clearFieldWalls(scene: Scene, built: Set<unknown>, result: MapBuildResu
 const NOOKS: Array<[number, number]> = [[25.8, 18.2], [34.1, -4.7], [20.9, -20.9], [4.2, 23.2]];
 
 function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
+  // 563: cliff-block outcrops (wiki shot: stacked flat-topped faceted rock blocks with birches growing on their tops), not round boulders.
+  // Each nook is five upright faceted blocks (5-6 sided, flat tops, 4.5-7 m across) on the 200-degree horseshoe, 3-7.5 m tall and tallest at
+  // the back of the arc, each block with a thinner flat slab set on its top at an offset; the birches stand on the tops of the two tallest.
   const rock = new StandardMaterial("tribalSandboxNook", scene);
-  rock.diffuseColor = new Color3(0.62, 0.57, 0.56);
-  rock.emissiveColor = new Color3(0.08, 0.07, 0.07);
+  rock.diffuseColor = new Color3(0.62, 0.53, 0.46);
+  rock.emissiveColor = new Color3(0.1, 0.08, 0.065);
   rock.specularColor = new Color3(0.03, 0.03, 0.03);
   const bark = scene.getMaterialByName("tribalSandboxBirch");
   const crowns = BIRCH_CROWNS.map(([name]) => scene.getMaterialByName(name)).filter((m) => m !== null);
@@ -163,45 +166,45 @@ function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
   const boulders: Mesh[] = [];
   NOOKS.forEach(([cx, cz], n) => {
     const open = Math.atan2(-cz, -cx); // the open side faces the centre
-    for (let i = 0; i < 6; i++) {
+    const tops: Array<[number, number, number]> = [];
+    for (let i = 0; i < 5; i++) {
       const k = n * 10 + i;
-      const a = open + Math.PI + ((i / 5) - 0.5) * (200 * Math.PI / 180);
+      const a = open + Math.PI + ((i / 4) - 0.5) * (200 * Math.PI / 180);
       const d = 4.5 + seeded(k, 51) * 2.5;
+      const back = 1 - Math.abs(i - 2) / 2; // 1 at the back of the arc, 0 at the tips
+      const h = 3 + back * 3.5 + seeded(k, 52) * 1;
       const x = cx + Math.cos(a) * 7, z = cz + Math.sin(a) * 7;
-      const b = MeshBuilder.CreateIcoSphere("tsNookRock", { radius: d / 2, subdivisions: 1 }, scene);
-      b.scaling.set(1.15, 0.9 + seeded(k, 52) * 0.3, 1);
-      b.rotation.set(seeded(k, 53) * 0.5, seeded(k, 54) * Math.PI, seeded(k, 55) * 0.4);
-      b.position.set(x, d * 0.38, z);
-      boulders.push(b);
-      if (i >= 2 && i <= 3) {
-        const top = MeshBuilder.CreateIcoSphere("tsNookRock", { radius: d * 0.38, subdivisions: 1 }, scene);
-        top.rotation.y = seeded(k, 56) * Math.PI;
-        top.position.set(x + (seeded(k, 57) - 0.5), d * 0.85 + d * 0.25, z + (seeded(k, 58) - 0.5));
-        boulders.push(top);
-      }
+      const block = MeshBuilder.CreateCylinder("tsNookBlock", { diameterTop: d * 0.86, diameterBottom: d, height: h, tessellation: 5 + (i % 2) }, scene);
+      block.rotation.set((seeded(k, 53) - 0.5) * 0.08, seeded(k, 54) * Math.PI, (seeded(k, 55) - 0.5) * 0.08);
+      block.position.set(x, h / 2 - 0.1, z);
+      boulders.push(block);
+      const slab = MeshBuilder.CreateCylinder("tsNookSlab", { diameterTop: d * 0.62, diameterBottom: d * 0.7, height: 1, tessellation: 5 }, scene);
+      slab.rotation.set(0, seeded(k, 56) * Math.PI, 0);
+      slab.position.set(x + (seeded(k, 57) - 0.5) * 1.2, h + 0.4, z + (seeded(k, 58) - 0.5) * 1.2);
+      boulders.push(slab);
+      tops.push([x, z, h + 0.9]);
       obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: d * 0.48 });
     }
-    // Birches among the rocks, just behind the arc
-    const trees = 2 + (n % 2);
+    // Birches growing on the tops of the tallest blocks
+    tops.sort((p, q) => q[2] - p[2]);
+    const trees = 2;
     for (let t = 0; t < trees; t++) {
       const k = n * 10 + t;
-      const a = open + Math.PI + (t - (trees - 1) / 2) * 0.9;
-      const x = cx + Math.cos(a) * 8.5, z = cz + Math.sin(a) * 8.5;
-      const h = 6 + seeded(k, 59) * 3;
+      const [x, z, y0] = tops[t];
+      const h = 5 + seeded(k, 59) * 2.5;
       const trunk = MeshBuilder.CreateCylinder("tsNookBirch", { diameterTop: 0.22, diameterBottom: 0.32, height: h, tessellation: 5 }, scene);
-      trunk.position.set(x, h / 2, z);
+      trunk.position.set(x, y0 + h / 2, z);
       if (bark) trunk.material = bark;
       trunk.isPickable = false;
       const r = 1.6 + seeded(k, 60) * 0.8;
       const ball = MeshBuilder.CreateIcoSphere("tsNookCrown", { radius: r, subdivisions: 1 }, scene);
       ball.scaling.y = 1.08;
-      ball.position.set(x, h + r * 0.6, z);
+      ball.position.set(x, y0 + h + r * 0.6, z);
       ball.convertToFlatShadedMesh();
       if (crowns.length) ball.material = crowns[Math.floor(seeded(k, 61) * crowns.length)];
       ball.applyFog = false;
       ball.isPickable = false;
       glow?.addExcludedMesh(ball);
-      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.5 });
     }
   });
   const merged = Mesh.MergeMeshes(boulders, true);
