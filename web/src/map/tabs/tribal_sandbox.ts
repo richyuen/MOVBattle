@@ -185,23 +185,21 @@ function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
       tops.push([x, z, h * 0.84]);
       obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: d * 0.48 });
     }
-    // Birches growing on the tops of the tallest blocks
-    tops.sort((p, q) => q[2] - p[2]);
-    const trees = 2;
-    for (let t = 0; t < trees; t++) {
+    // Crowns overlap the outcrop from the low tips to the high ledges.
+    for (let t = 0; t < tops.length; t++) {
       const k = n * 10 + t;
       const [x, z, y0] = tops[t];
-      const h = 5 + seeded(k, 59) * 2.5;
+      const h = 1.4 + seeded(k, 59) * 2.6;
       const trunk = MeshBuilder.CreateCylinder("tsNookBirch", { diameterTop: 0.22, diameterBottom: 0.32, height: h, tessellation: 5 }, scene);
       trunk.position.set(x, y0 + h / 2, z);
       if (bark) trunk.material = bark;
       trunk.isPickable = false;
-      const r = 1.6 + seeded(k, 60) * 0.8;
+      const r = 2.3 + seeded(k, 60) * 1.1;
       const ball = MeshBuilder.CreateIcoSphere("tsNookCrown", { radius: r, subdivisions: 1 }, scene);
       ball.scaling.y = 1.08;
-      ball.position.set(x, y0 + h + r * 0.6, z);
+      ball.position.set(x, y0 + h + r * 0.35, z);
       ball.convertToFlatShadedMesh();
-      if (crowns.length) ball.material = crowns[Math.floor(seeded(k, 61) * crowns.length)];
+      if (crowns.length) ball.material = crowns[(t + n) % crowns.length];
       ball.applyFog = false;
       ball.isPickable = false;
       glow?.addExcludedMesh(ball);
