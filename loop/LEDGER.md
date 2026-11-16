@@ -3,15 +3,6 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-557 | d588c550 | map.farmer_snow.a | approved
-557 | 2a626789 | map.farmer_1.b | approved
-557 | 41e533fa | map.tribal_1.a | approved
-557 | dd302114 | map.farmer_1.a | approved
-557 | bbba2e12 | map.farmer_2.b | approved
-557 | 748358f1 | map.farmer_2.a | approved
-557 | b4f7e9e0 | map.tribal_2.a | approved
-557 | 5ef24499 | map.tribal_sandbox.b | approved
-557 | d88bbd91 | map.tribal_sandbox.a | approved
 558 | cce131b2 | map.tribal_1.a | approved
 558 | 78418c38 | map.tribal_2.a | approved
 558 | 2394adb1+f9f9f72a | map.tribal_sandbox.a | approved
@@ -47,12 +38,20 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 561 | 2a0f2cce | map.tribal_2.b | approved
 561 | 6142c5b2 | map.tribal_sandbox.a | approved
 561 | cb41584c | map.farmer_snow.b | approved
+562 | 170c7a00 [R] | map.farmer_1.a | approved
+562 | 317a5b85 | map.tribal_2.a | approved
+562 | e9d95cfa | map.farmer_snow.b | approved
+562 | d7b02859 | map.farmer_snow.a | approved
+562 | 23817396+452f35d3 | map.farmer_snow.a | approved
+562 | e08c4278 | map.tribal_2.b | approved
+562 | 22bf0f3a | map.tribal_sandbox.b | approved
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height | 0.5-0.7 m | 557 | approved | 1.0-1.3 m
 web/src/map/tabs/farmer_2.ts:SHEAVES z range, scale | z -36..-16, x1.5 | 558 | approved | z -44..-23, x1
 web/src/map/tabs/tribal_sandbox.ts:NOOKS centres | 10 m further in ((25.8,18.2) (34.1,-4.7) (20.9,-20.9) (4.2,23.2)) | 559 | approved | (34,24) (44,-6) (28,-28) (6,33)
 web/src/map/tabs/tribal_sandbox.ts:rockNooks boulder size | 4.5-7 m | 559 | approved | 3-5.5 m
+web/src/map/tabs/tribal_sandbox.ts:redShrubs ball radius, spread | (0.45-0.8) x2.5, off x2 | 562 | approved | 0.45-0.8 m, off 0.6-1.0 m
 web/src/map/tabs/tribal_1.ts:ISLAND round | 2 (ellipse) | 560 | approved | 3
 web/src/map/tabs/farmer_1.ts:islandOutline power | 2 (ellipse) | 560 | approved | 3
 web/src/map/tabs/farmer_2.ts:PATH.front | -32 | 560 | approved | -44
