@@ -278,6 +278,20 @@ function islandOutline(a: number): [number, number] {
  */
 const SNOW_RIM_PROPS = new Set(["trunk", "boulder", "wallStone", "hayBale", "stump", "hill", "pebble"]);
 
+// The base's field junk (Introduction Grounds: the dark barricade slab and the ball-topped totem post, read black on the snow) goes with its
+// colliders: TABS's snow field holds only carts, a boulder and small warm lamps. Each is a "<displayName>_box|_cyl|_totem_top" mesh; a
+// collider goes when its centre sits under a removed mesh.
+function clearFieldJunk(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (!/^Introduction Grounds_(box|cyl|totem_top)$/.test(mesh.name)) continue;
+    gone.push([mesh.position.x, mesh.position.z]);
+    mesh.setEnabled(false);
+  }
+  return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+}
+
 function roundSnowIsland(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
   const oldR = (a: number) => (Math.abs(Math.cos(a) / 54) ** 3 + Math.abs(Math.sin(a) / 48) ** 3) ** (-1 / 3);
   const newR = (a: number) => Math.hypot(...islandOutline(a));
@@ -674,7 +688,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   const baseDispose = result.dispose;
   return {
     ...result,
-    obstacles: [...roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene)],
+    obstacles: [...clearFieldJunk(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles)), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene)],
     dispose: () => {
       restoreLights();
       baseDispose?.();
