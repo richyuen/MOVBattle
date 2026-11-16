@@ -10,6 +10,7 @@
 // (0.72, 0.32, 0.17), half self-lit since the faces look away from the sun; the floor a darker brown. Drawn only (outside the field).
 import { Color3, Mesh, MeshBuilder, StandardMaterial, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
+import type { Obstacle } from "../obstacles";
 
 function seeded(i: number, seed: number): number {
   const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
@@ -81,9 +82,25 @@ function terracottaCliffs(scene: Scene, built: Set<unknown>): void {
   floor.isPickable = false;
 }
 
+// The base's field junk (Challenge Bluffs: two dark barricade slabs, the ruin block with its pillar, the ball-topped totem) goes with its
+// colliders: TABS's field is wide open. Every one of those is a "<displayName>_box|_cyl|_totem_top" mesh; a collider goes when its centre
+// sits under a removed mesh.
+function clearFieldJunk(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (!/^Challenge Bluffs_(box|cyl|totem_top)$/.test(mesh.name)) continue;
+    gone.push([mesh.position.x, mesh.position.z]);
+    mesh.setEnabled(false);
+  }
+  return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+}
+
 export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
-  terracottaCliffs(scene, new Set(scene.meshes.filter((m) => !prior.has(m))));
-  return result;
+  const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  terracottaCliffs(scene, built);
+  const obstacles = clearFieldJunk(scene, built, [...result.obstacles]);
+  return { ...result, obstacles };
 }
