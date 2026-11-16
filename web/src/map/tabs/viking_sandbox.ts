@@ -58,6 +58,86 @@ function clearFieldJunk(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
   return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
 }
 
+// Snow and cracked ice floor (564), spec read off the wiki shot: the arena floor is pale blue-white snow; over it lie big blotchy patches of
+// darker teal-blue ice (each 6-16 m across, ragged lobed outlines, about 45% of the floor, larger towards the middle), and thin white crack
+// lines (3-9 m, a few joined at angles) run across the ice. The base's autumn colours go: ground and grass materials turn to snow, the tuft
+// clumps and grass blades are hidden. All drawn only (flat, 3-8 cm high), nothing in the way.
+const SNOW = new Color3(0.8, 0.86, 0.95);
+const SNOW_SHADE = new Color3(0.3, 0.36, 0.44);
+const ICE_PATCH = new Color3(0.36, 0.62, 0.72);
+
+function snowAndIce(scene: Scene, built: Set<unknown>): void {
+  for (const name of ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"]) {
+    const m = scene.getMaterialByName(name) as StandardMaterial | null;
+    if (!m) continue;
+    m.diffuseColor = SNOW.clone();
+    m.emissiveColor = SNOW_SHADE.clone();
+    m.specularColor = new Color3(0.05, 0.05, 0.06);
+  }
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    const n = mesh.name;
+    if (n.startsWith("fieldBlades_") || n.startsWith("fieldTufts_") || n === "grassTuft" || n === "centerGrass" || n === "flowerDot") mesh.setEnabled(false);
+  }
+  const iceMat = new StandardMaterial("vikingSandboxFloorIce", scene);
+  iceMat.diffuseColor = ICE_PATCH;
+  iceMat.emissiveColor = ICE_PATCH.scale(0.4);
+  iceMat.specularColor = new Color3(0.15, 0.18, 0.2);
+  const crackMat = new StandardMaterial("vikingSandboxCrack", scene);
+  crackMat.diffuseColor = new Color3(0.9, 0.95, 1);
+  crackMat.emissiveColor = new Color3(0.45, 0.5, 0.55);
+  crackMat.specularColor = Color3.Black();
+  const patches: Mesh[] = [];
+  for (let i = 0; i < 46; i++) {
+    const a = seeded(i, 31) * Math.PI * 2;
+    const reach = Math.sqrt(seeded(i, 32)) * 0.78;
+    const [rx, rz] = rimPoint((a * 180) / Math.PI, reach);
+    const size = 6 + (1 - reach) * 6 + seeded(i, 33) * 4;
+    const p = MeshBuilder.CreateCylinder("vsIcePatch", { diameter: 1, height: 0.05, tessellation: 14 }, scene);
+    // A lobed ragged outline: each of the 14 rim directions pushed in or out by its own amount
+    const lobes = Array.from({ length: 14 }, (_, k) => 0.55 + seeded(i * 14 + k, 34) * 0.9);
+    const pos = p.getVerticesData("position")!;
+    for (let v = 0; v < pos.length; v += 3) {
+      const r = Math.hypot(pos[v], pos[v + 2]);
+      if (r < 1e-6) continue;
+      const ang = (Math.atan2(pos[v + 2], pos[v]) + Math.PI * 2) % (Math.PI * 2);
+      const f = lobes[Math.round((ang / (Math.PI * 2)) * 14) % 14];
+      pos[v] *= f;
+      pos[v + 2] *= f;
+    }
+    p.setVerticesData("position", pos);
+    p.scaling.set(size, 1, size * (0.6 + seeded(i, 35) * 0.5));
+    p.rotation.y = seeded(i, 36) * Math.PI;
+    p.position.set(rx, 0.025 + (i % 3) * 0.005, rz);
+    patches.push(p);
+  }
+  const cracks: Mesh[] = [];
+  for (let i = 0; i < 60; i++) {
+    const a = seeded(i, 41) * Math.PI * 2;
+    const [x, z] = rimPoint((a * 180) / Math.PI, Math.sqrt(seeded(i, 42)) * 0.76);
+    let px = x, pz = z, yaw = seeded(i, 43) * Math.PI;
+    for (let s = 0; s < 2; s++) {
+      const len = 3 + seeded(i * 2 + s, 44) * 6;
+      const c = MeshBuilder.CreateBox("vsIceCrack", { width: len, height: 0.04, depth: 0.16 }, scene);
+      c.rotation.y = yaw;
+      const dx = Math.cos(yaw) * len / 2, dz = -Math.sin(yaw) * len / 2;
+      c.position.set(px + dx, 0.07, pz + dz);
+      cracks.push(c);
+      px += dx * 2;
+      pz += dz * 2;
+      yaw += (seeded(i * 2 + s, 45) - 0.5) * 1.6;
+    }
+  }
+  for (const [list, m, name] of [[patches, iceMat, "vikingSandboxIcePatches"], [cracks, crackMat, "vikingSandboxIceCracks"]] as const) {
+    const merged = Mesh.MergeMeshes([...list], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 function iceWall(scene: Scene, obstacles: Obstacle[]): void {
   const mk = (name: string, c: Color3, self: number) => {
     const m = new StandardMaterial(name, scene);
@@ -106,6 +186,7 @@ export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): Ma
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   const obstacles = clearFieldJunk(scene, built, clearTreeRing(scene, built, [...result.obstacles]));
+  snowAndIce(scene, built);
   iceWall(scene, obstacles);
   const placementZones = (result.placementZones ?? result.zones).map((zone) => {
     const x0 = Math.max(zone.center.x - zone.size.x / 2, -INSIDE_X), x1 = Math.min(zone.center.x + zone.size.x / 2, INSIDE_X);
