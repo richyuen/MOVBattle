@@ -3,7 +3,7 @@
 // Spec: Farmer 1's river course (down x = 0 with a gentle bend, about 4 m wide, back rim to front rim) laid as a sheet of pale blue ice
 // level with the ground, in a frosted bank, with a few darker crack lines across it and a frozen icefall hanging off the front rim.
 // No hazard. Built on campaign.introduction (base()).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Space, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -501,17 +501,26 @@ function snowBuildings(scene: Scene): Obstacle[] {
     for (const dz of [-4.7, -1.55, 1.55, 4.7]) box("frame", 0.28, 1.7, 0.28, railX, P + 0.85, z + dz);
     for (const y of [P + 0.75, P + 1.5]) box("frame", 0.22, 0.25, 9.6, railX, y, z);
   });
-  // The wheel turns about x in the ice beside the mill: rims, spokes and paddles in the y-z plane
-  const x0 = iceX(MILL_WHEEL_Z) + 0.6;
+  // Rims, spokes and paddles share the same axle near the bend in the river.
+  const x0 = iceX(MILL_WHEEL_Z) + 0.2;
   const R = SNOW_MILL.wheel / 2, wz = MILL_WHEEL_Z, wy = R - 0.35;
+  const yaw = Math.PI / 7;
+  const setWheelAngle = (piece: Mesh) => {
+    const dx = piece.position.x - x0, dz = piece.position.z - wz;
+    piece.position.x = x0 + dx * Math.cos(yaw) + dz * Math.sin(yaw);
+    piece.position.z = wz - dx * Math.sin(yaw) + dz * Math.cos(yaw);
+    piece.rotate(Vector3.Up(), yaw, Space.WORLD);
+  };
   for (const dx of [-0.9, 0.9]) {
     const rim = MeshBuilder.CreateTorus("farmerSnowRim", { diameter: SNOW_MILL.wheel, thickness: 0.35, tessellation: 24 }, scene);
     rim.rotation.z = Math.PI / 2;
     rim.position.set(x0 + dx, wy, wz);
+    setWheelAngle(rim);
     lists.wood.push(rim);
     const cap = MeshBuilder.CreateTorus("farmerSnowRimCap", { diameter: SNOW_MILL.wheel, thickness: 0.2, tessellation: 24 }, scene);
     cap.rotation.z = Math.PI / 2;
     cap.position.set(x0 + dx, wy + 0.2, wz);
+    setWheelAngle(cap);
     lists.snow.push(cap);
   }
   for (let i = 0; i < 12; i++) {
@@ -519,11 +528,13 @@ function snowBuildings(scene: Scene): Obstacle[] {
     const paddle = MeshBuilder.CreateBox("farmerSnowPaddle", { width: 2, height: 0.12, depth: 1.1 }, scene);
     paddle.position.set(x0, wy + Math.sin(a) * R, wz + Math.cos(a) * R);
     paddle.rotation.x = -a;
+    setWheelAngle(paddle);
     lists.wood.push(paddle);
     if (i % 3 === 0) {
       const spoke = MeshBuilder.CreateBox("farmerSnowSpoke", { width: 1.6, height: 0.2, depth: SNOW_MILL.wheel }, scene);
       spoke.position.set(x0, wy, wz);
       spoke.rotation.x = a;
+      setWheelAngle(spoke);
       lists.wood.push(spoke);
     }
   }
