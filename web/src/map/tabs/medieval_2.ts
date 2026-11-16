@@ -142,6 +142,60 @@ function dirtPaths(scene: Scene): void {
   }
 }
 
+function castleFront(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const material = (name: string, color: Color3) => {
+    const mat = new StandardMaterial(name, scene);
+    mat.diffuseColor = color;
+    mat.emissiveColor = color.scale(0.16);
+    mat.specularColor = Color3.Black();
+    return mat;
+  };
+  const stone = material("medieval2CurtainStone", new Color3(0.46, 0.45, 0.52));
+  const wood = material("medieval2GateWood", new Color3(0.3, 0.15, 0.09));
+  const blue = material("medieval2BannerBlue", new Color3(0.045, 0.14, 0.58));
+  const gold = material("medieval2BannerTrim", new Color3(0.62, 0.45, 0.12));
+  const leaves = material("medieval2WallIvy", new Color3(0.25, 0.39, 0.12));
+  const box = (name: string, x: number, y: number, z: number, width: number, height: number, depth: number, mat: StandardMaterial) => {
+    const mesh = MeshBuilder.CreateBox(name, { width, height, depth }, scene);
+    mesh.position.set(x, y, z);
+    mesh.material = mat;
+    mesh.receiveShadows = true;
+    return mesh;
+  };
+  const [gateX, gateZ] = GATE;
+  const z = gateZ + 2;
+  for (const [offset, span, depth] of [[-16, 22, 6], [16, 22, 6], [-32, 10, 8], [32, 10, 8]]) {
+    const x = gateX + offset;
+    box("medieval2CurtainWall", x, 6, z, span, 12, depth, stone);
+    obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: span / 2, halfZ: depth / 2 });
+    for (let dx = -span / 2 + 0.9; dx < span / 2; dx += 2.5) {
+      box("medieval2Merlon", x + dx, 12.7, z - depth / 2 + 0.8, 1.55, 1.4, 1.6, stone);
+    }
+  }
+  box("medieval2Gatehouse", gateX, 9.6, z, 10.4, 6.4, 6, stone);
+  for (let i = -4; i <= 4; i++) {
+    const width = 0.87;
+    const x = i * width;
+    const height = 3.8 + Math.sqrt(16 - x * x);
+    box("medieval2GatePlank", gateX + x, height / 2, gateZ - 0.16, width - 0.025, height, 0.5, wood);
+  }
+  obstacles.push({ type: "box", center: new Vector3(gateX, 0, gateZ), halfX: 4, halfZ: 0.55 });
+  for (const offset of [-12, 12]) {
+    box("medieval2BannerBorder", gateX + offset, 6.4, z - 3.22, 3.1, 7.4, 0.15, gold);
+    box("medieval2Banner", gateX + offset, 6.4, z - 3.34, 2.75, 7.08, 0.14, blue);
+    box("medieval2BannerRod", gateX + offset, 10.1, z - 3.4, 3.8, 0.19, 0.21, wood);
+  }
+  for (const [x, y] of [[-41, 10], [-33, 6], [-28, 10.5], [-17, 11], [2, 11], [11, 9], [21, 6]]) {
+    for (let i = 0; i < 5; i++) {
+      const d = seeded(i, x + 45);
+      const ivy = MeshBuilder.CreateIcoSphere("medieval2WallIvy", { radius: 1.15 + d, subdivisions: 1 }, scene);
+      ivy.position.set(x + i * 0.55, y - i * (0.6 + d * 0.24), z - (x < -37 || x > 17 ? 4 : 3) - 0.1);
+      ivy.scaling.set(0.9, 0.7, 0.47);
+      ivy.material = leaves;
+    }
+  }
+}
+
 export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -149,5 +203,6 @@ export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBui
   const hazards = [...clearCentrePools(scene, built, result), ...frontPond(scene)];
   const obstacles = clearPondGround(scene, built, [...result.obstacles]);
   dirtPaths(scene);
+  castleFront(scene, obstacles);
   return { ...result, obstacles, hazards };
 }
