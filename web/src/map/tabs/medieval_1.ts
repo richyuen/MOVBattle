@@ -31,19 +31,32 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
   mesh.receiveShadows = true;
   for (let i = 0; i < points.length; i++) {
     const a = points[i], b = points[(i + 1) % points.length];
-    const cliff = MeshBuilder.CreateRibbon("medieval1CliffFace", {
-      pathArray: [
-        [a, Vector3.Lerp(a, b, 0.52), b],
-        [
-          new Vector3(a.x * 0.95, -19, a.z * 0.95),
-          new Vector3((a.x + b.x) * 0.48 + (i % 2 ? 1.4 : -1.4), -22, (a.z + b.z) * 0.48),
-          new Vector3(b.x * 0.95, -19, b.z * 0.95),
-        ],
-      ],
-      sideOrientation: Mesh.DOUBLESIDE,
-    }, scene);
-    cliff.convertToFlatShadedMesh();
-    cliff.material = stone;
+    const span = Vector3.Distance(a, b);
+    const count = Math.ceil(span / 5);
+    const nx = side * (a.z - b.z) / span, nz = side * (b.x - a.x) / span;
+    for (let j = 0; j < count; j++) {
+      const p = Vector3.Lerp(a, b, (j + 0.5) / count);
+      const width = span / count;
+      const upper = 6 + ((i * 3 + j * 5) % 7);
+      for (const [height, top, offset] of [[upper, 0, 0.35], [19 - upper, -upper, 1.65 + j % 3]]) {
+        const x = p.x + nx * offset, z = p.z + nz * offset;
+        const shaft = MeshBuilder.CreateCylinder("medieval1CliffColumn", {
+          height, diameterTop: width * 1.18, diameterBottom: width * 1.37, tessellation: 6,
+        }, scene);
+        shaft.scaling.z = 0.72;
+        shaft.rotation.y = Math.atan2(a.z - b.z, b.x - a.x);
+        shaft.position.set(x, top - height / 2, z);
+        shaft.material = stone;
+        shaft.convertToFlatShadedMesh();
+        const cap = MeshBuilder.CreateCylinder("medieval1TurfLedge", {
+          height: 0.72, diameterTop: width * 1.23, diameterBottom: width * 1.13, tessellation: 6,
+        }, scene);
+        cap.scaling.copyFrom(shaft.scaling);
+        cap.rotation.y = shaft.rotation.y;
+        cap.position.set(x, top - 0.36, z);
+        cap.material = grass;
+      }
+    }
   }
 }
 
@@ -74,8 +87,8 @@ export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBui
   grass.diffuseColor = new Color3(0.48, 0.65, 0.24);
   grass.emissiveColor = grass.diffuseColor.scale(0.1);
   const stone = new StandardMaterial("medieval1Cliff", scene);
-  stone.diffuseColor = new Color3(0.49, 0.47, 0.52);
-  stone.emissiveColor = stone.diffuseColor.scale(0.25);
+  stone.diffuseColor = new Color3(0.56, 0.55, 0.64);
+  stone.emissiveColor = stone.diffuseColor.scale(0.44);
   plateau(scene, -1, grass, stone);
   plateau(scene, 1, grass, stone);
 
