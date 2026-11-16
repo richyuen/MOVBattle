@@ -58,6 +58,23 @@ function clearFieldJunk(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
   return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
 }
 
+// The rest of the base's field dressing (565, named by a probe of the built set): the low dark dry-stone wall runs ("wallStone", the black
+// block row of the battle shot), navy boulder clusters ("boulder"), gold hay bales ("hayBale"), grass mounds ("hill"), stumps ("stump"),
+// and the two pits (a dark see-through box overlay each, with its hazard). TABS's arena floor is flat open ice: all of them go, and every
+// base collider standing inside 0.8 of the rim with them (the ice wall's own colliders are added after).
+const FIELD_DRESSING = new Set(["wallStone", "boulder", "hayBale", "hill", "stump", "campaign_hazard_box_pit"]);
+
+function clearFieldDressing(scene: Scene, built: Set<unknown>, result: MapBuildResult, obstacles: Obstacle[]): { obstacles: Obstacle[]; hazards: MapBuildResult["hazards"] } {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && FIELD_DRESSING.has(mesh.name)) mesh.setEnabled(false);
+  }
+  const inside = (x: number, z: number) => (x / 54) ** 2 + (z / 48) ** 2 < 0.8 ** 2;
+  return {
+    obstacles: obstacles.filter((o) => !inside(o.center.x, o.center.z)),
+    hazards: result.hazards.filter((h) => h.kind !== "pit"),
+  };
+}
+
 // Snow and cracked ice floor (564), spec read off the wiki shot: the arena floor is pale blue-white snow; over it lie big blotchy patches of
 // darker teal-blue ice (each 6-16 m across, ragged lobed outlines, about 45% of the floor, larger towards the middle), and thin white crack
 // lines (3-9 m, a few joined at angles) run across the ice. The base's autumn colours go: ground and grass materials turn to snow, the tuft
@@ -185,12 +202,13 @@ export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): Ma
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
-  const obstacles = clearFieldJunk(scene, built, clearTreeRing(scene, built, [...result.obstacles]));
+  const cleared = clearFieldDressing(scene, built, result, clearFieldJunk(scene, built, clearTreeRing(scene, built, [...result.obstacles])));
+  const obstacles = cleared.obstacles;
   snowAndIce(scene, built);
   iceWall(scene, obstacles);
   const placementZones = (result.placementZones ?? result.zones).map((zone) => {
     const x0 = Math.max(zone.center.x - zone.size.x / 2, -INSIDE_X), x1 = Math.min(zone.center.x + zone.size.x / 2, INSIDE_X);
     return { ...zone, center: new Vector3((x0 + x1) / 2, zone.center.y, zone.center.z), size: new Vector3(x1 - x0, zone.size.y, zone.size.z) };
   });
-  return { ...result, obstacles, placementZones };
+  return { ...result, obstacles, hazards: cleared.hazards, placementZones };
 }
