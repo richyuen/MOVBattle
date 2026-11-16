@@ -188,7 +188,7 @@ function nightSky(scene: Scene, built: Set<unknown>): () => void {
 
 /**
  * The evergreen grove (card Overview; wiki shot upper right): where Farmer 1 has its wheat, a cluster of dark snowy pines stands in the
- * back-right corner. Spec: pines on a jittered 5 m grid over x 15..40, z 18..40 (kept 4 m in from the rim), each 6.5-10 m tall: a short
+ * far bank, the houses' side, at its end away from the mill. Spec: pines on a jittered 5 m grid over x -47..-27, z 8..40 (kept 4 m in from the rim), each 6.5-10 m tall: a short
  * brown trunk under three stacked dark green cones, each cone wearing a white snow cap on its upper half and a white band along its rim.
  * Out of the fog; needles and bark stay in the glow pass so they read dark against the snow. A trunk collider (0.7 m) per pine.
  */
@@ -207,13 +207,16 @@ function pineGrove(scene: Scene): Obstacle[] {
   const greens: Mesh[] = [], whites: Mesh[] = [], trunks: Mesh[] = [];
   const obstacles: Obstacle[] = [];
   let k = 0;
-  // Dense grove (563): a tight 5 m jittered grid over x 15..40, z 18..40, no random gaps, so the pines stand as one dark mass
-  for (let x = 15; x <= 40; x += 5) {
-    for (let z = 18; z <= 40; z += 5) {
+  // Dense grove (563): a tight 5 m jittered grid, no random gaps, so the pines stand as one dark mass. Placed (564) on the houses' bank
+  // (x < 0, the far bank in the wiki shot) at its end away from the mill: x -47..-27, z 8..40, wrapping round behind and beside the
+  // houses, 7 m clear of each house and 6 m clear of the ice
+  for (let x = -47; x <= -27; x += 5) {
+    for (let z = 8; z <= 40; z += 5) {
       k++;
       const px = x + (seeded(k, 101) - 0.5) * 2.5, pz = z + (seeded(k, 102) - 0.5) * 2.5;
       // Inside the round outline (ellipse 54 x 48), 4 m in
       if ((px / 50) ** 2 + (pz / 44) ** 2 > 1) continue;
+      if (Math.hypot(px + 26, pz - 36) < 7 || Math.hypot(px + 11, pz - 39) < 7 || px > iceX(pz) - 6) continue;
       const h = 6.5 + seeded(k, 104) * 3.5, w = h * 0.46;
       const trunk = MeshBuilder.CreateCylinder("farmerSnowPineTrunk", { diameterTop: 0.3, diameterBottom: 0.45, height: h * 0.25, tessellation: 5 }, scene);
       trunk.position.set(px, h * 0.125, pz);
