@@ -416,36 +416,48 @@ function rimRocks(scene: Scene): Array<{ type: "cylinder"; center: Vector3; radi
 
 /**
  * Rubble at the mountain's foot (wiki shot; spooky.cave.png): loose boulders and stones edge the field all along the foot of the mountain,
- * thickest from the cave mouth toward the front. Spec: 34 rounded stones 0.8-2.6 m across scattered in the strip x 41.5..44.5 from z 40
- * to z -38 (skipping the cave mouth, |z - 6| < 3.5), bigger and denser toward the front, in the mountain's warm grey; plus 10 small pale
- * stones a little further out (x 39.5..41.5). Drawn only: they sit at the stage armies' edge (team 1 stands at x <= 40) and are knee high.
+ * thickest from the cave mouth toward the front. Spec (563): ~40 faceted boulders 1.4-3 m across on open sand 0-3 m out from the massif
+ * foot (footX) from z 38 to z -36 (skipping the cave mouth, |z - 6| < 3.5, and the shrine), denser toward the front, in the mountain's warm
+ * grey; plus ~18 pale bone-white flat stones 2.5-6 m out. Drawn only: knee high, outside the stage armies (x <= 24.4).
  */
 function footRubble(scene: Scene): void {
   const mat = new StandardMaterial("tribal2Rubble", scene);
   mat.diffuseColor = new Color3(0.6, 0.51, 0.45);
   mat.emissiveColor = new Color3(0.09, 0.075, 0.065);
   mat.specularColor = Color3.Black();
-  const stones: Mesh[] = [];
-  for (let i = 0; i < 44; i++) {
-    const near = i >= 34;
-    const t = seeded(i, 101);
-    // Front-weighted: the square pulls more stones toward z -38
-    const z = 40 - 78 * Math.sqrt(t);
-    if (Math.abs(z - CAVE.z) < 3.5) continue;
-    const front = (40 - z) / 78;
-    const r = near ? 0.25 + seeded(i, 102) * 0.2 : 0.4 + seeded(i, 102) * (0.5 + front * 0.4);
-    const x = near ? 39.5 + seeded(i, 103) * 2 : 41.5 + seeded(i, 103) * 3;
-    const stone = MeshBuilder.CreateIcoSphere("tribal2RubbleStone", { radius: r, subdivisions: 1 }, scene);
-    stone.scaling.set(1.2, 0.75, 1);
-    stone.rotation.set(seeded(i, 104), seeded(i, 105) * Math.PI, 0);
-    stone.position.set(x, r * 0.5, z);
+  const pale = new StandardMaterial("tribal2RubblePale", scene);
+  pale.diffuseColor = new Color3(0.92, 0.88, 0.8);
+  pale.emissiveColor = new Color3(0.3, 0.28, 0.25);
+  pale.specularColor = Color3.Black();
+  const stones: Mesh[] = [], pales: Mesh[] = [];
+  // Mid-size faceted boulders (dodecahedra, 1.4-3 m) along the massif foot (footX), 0-3 m out on open sand, front-weighted
+  for (let i = 0; i < 40; i++) {
+    const z = 38 - 74 * Math.sqrt(seeded(i, 101));
+    if (Math.abs(z - CAVE.z) < 3.5 || Math.hypot(footX(z) - SHRINE.x, z - SHRINE.z) < 6) continue;
+    const r = 0.7 + seeded(i, 102) * 0.8;
+    const stone = MeshBuilder.CreatePolyhedron("tribal2RubbleStone", { type: 2, size: r }, scene);
+    stone.scaling.set(1.15, 0.7 + seeded(i, 106) * 0.25, 1);
+    stone.rotation.set(seeded(i, 104), seeded(i, 105) * Math.PI, seeded(i, 107) * 0.4);
+    stone.position.set(footX(z) - 0.3 - seeded(i, 103) * 3, r * 0.45, z);
     stones.push(stone);
   }
-  const merged = Mesh.MergeMeshes(stones, true);
-  if (merged) {
-    merged.name = "tribal2Rubble";
+  // Pale bone-white stones a little further out (2.5-6 m from the foot)
+  for (let i = 0; i < 18; i++) {
+    const z = 34 - 66 * seeded(i, 111);
+    if (Math.abs(z - CAVE.z) < 3.5) continue;
+    const r = 0.3 + seeded(i, 112) * 0.35;
+    const stone = MeshBuilder.CreatePolyhedron("tribal2RubblePale", { type: 1, size: r }, scene);
+    stone.scaling.set(1.3, 0.6, 1);
+    stone.rotation.set(seeded(i, 114), seeded(i, 115) * Math.PI, 0);
+    stone.position.set(footX(z) - 2.5 - seeded(i, 113) * 3.5, r * 0.35, z);
+    pales.push(stone);
+  }
+  for (const [list, m, name] of [[stones, mat, "tribal2Rubble"], [pales, pale, "tribal2RubblePale"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
     merged.convertToFlatShadedMesh();
-    merged.material = mat;
+    merged.material = m;
     merged.receiveShadows = true;
     merged.isPickable = false;
   }
