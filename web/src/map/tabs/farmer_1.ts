@@ -3,6 +3,16 @@
 // Spec read off farm_1.png: the team centre line runs down the river, so the river follows x = 0 with a gentle bend, about 4 m wide, from
 // z = +48 (back rim) to z = -48 (front rim); the crossing is at the centre (z = 0), 8 m clear. The water kills like any water hazard; it stays
 // inside |x| < 4 so both team zones (|x| >= 5) stay dry. Built on campaign.introduction (base()).
+//
+// Look rebuild (562, [R] on criterion a; read off reference/maps/wiki/farmer_1.png):
+// - Watermill: plank-board walls (warm brown boards, dark timber battens and frame), each roof slope one blue-grey slate panel framed by
+//   timber beams (eave, ridge, both verges) with four rafters across it; the gable prism shows planks.
+// - Bridge: a cobbled mid-grey deck (rows of flattened cobbles 0.5 m apart following the hump), a 0.7 m stone parapet wall of 0.9 m blocks
+//   with a capping course on each side in place of the round curb, and staggered block courses standing proud on both side faces.
+// - Rim mounds: each base "hill" disc still on the island becomes a clump of 4-6 big faceted lumps (olive bush and warm-grey boulder) over
+//   the same footprint; the hill's collider stays as it was.
+// - Tilled strips: two blocks of raised dirt beds in front of the bridge, either side of the river (x -7..-21 and 7..19, z -8..-30), each bed
+//   0.9 m wide, 3.5 m long, 0.18 m high, in rows 1.8 m apart with a 1 m break; drawn only, blades under them cleared.
 import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { HazardRegion } from "../hazards";
@@ -137,7 +147,8 @@ function stoneBridge(scene: Scene): Obstacle[] {
     return m;
   };
   const stone = mk("farmer1BridgeStone", new Color3(0.6, 0.58, 0.55), 0.14);
-  const deckStone = mk("farmer1BridgeDeck", new Color3(0.68, 0.66, 0.62), 0.14);
+  const deckStone = mk("farmer1BridgeDeck", new Color3(0.46, 0.44, 0.41), 0.12);
+  const cobble = mk("farmer1BridgeCobble", new Color3(0.62, 0.6, 0.56), 0.14);
   const ring = mk("farmer1BridgeRing", new Color3(0.5, 0.48, 0.46), 0.12);
   const x0 = riverX(0), W = BRIDGE.width / 2;
   // The arch's underside: an elliptic opening over the water, below ground outside it
@@ -191,14 +202,58 @@ function stoneBridge(scene: Scene): Obstacle[] {
       block.rotation.z = ang;
       blocks.push(block);
     }
-    const path = xs.filter((dx) => Math.abs(dx) <= BRIDGE.land - 0.4).map((dx) => new Vector3(x0 + dx, deckTop(dx) + BRIDGE.curb * 0.7, side * (W - 0.2)));
-    const curb = MeshBuilder.CreateTube("farmer1BridgeCurb", { path, radius: BRIDGE.curb, tessellation: 7, cap: Mesh.CAP_ALL }, scene);
-    finish(curb, stone);
+    // Staggered block courses standing proud of the side face, between the arch and the deck
+    let row = 0;
+    for (let y = -0.1; y < BRIDGE.rise + 0.1; y += 0.34, row++) {
+      for (let dx = -BRIDGE.land + 0.6 + (row % 2) * 0.45; dx < BRIDGE.land - 0.6; dx += 0.9) {
+        // Clear of the deck edge above and of the voussoir ring round the opening
+        const floor = Math.abs(dx) < BRIDGE.arch + 0.5 ? Math.max(under(dx), BRIDGE.spring) + 0.62 : -0.18;
+        if (y > deckTop(dx) - 0.2 || y < floor) continue;
+        const course = MeshBuilder.CreateBox("farmer1BridgeCourse", { width: 0.82, height: 0.28, depth: 0.08 }, scene);
+        course.position.set(x0 + dx, y, side * (W + 0.03));
+        blocks.push(course);
+      }
+    }
   }
   const merged = Mesh.MergeMeshes(blocks, true);
   if (merged) {
     merged.name = "farmer1BridgeArches";
     finish(merged, ring);
+  }
+  // Stone parapets: a 0.7 m wall of 0.9 m blocks following the hump on each side, a wider capping course on top
+  const parapet: Mesh[] = [];
+  for (const side of [-1, 1]) {
+    for (let dx = -BRIDGE.land + 0.9; dx < BRIDGE.land - 0.9; dx += 0.9) {
+      const m = dx + 0.45, slope = Math.atan2(deckTop(dx + 0.9) - deckTop(dx), 0.9);
+      for (const [h, d, y] of [[0.62, 0.42, 0.31], [0.14, 0.56, 0.69]] as const) {
+        const b = MeshBuilder.CreateBox("farmer1BridgeParapet", { width: 0.93, height: h, depth: d }, scene);
+        b.position.set(x0 + m, deckTop(m) + y, side * (W - 0.21));
+        b.rotation.z = slope;
+        parapet.push(b);
+      }
+    }
+  }
+  const walls = Mesh.MergeMeshes(parapet, true);
+  if (walls) {
+    walls.name = "farmer1BridgeParapets";
+    finish(walls, stone);
+  }
+  // Cobbles: rows of flattened stones across the deck, every other row offset half a stone
+  const stones: Mesh[] = [];
+  let r = 0;
+  for (let dx = -BRIDGE.land + 0.5; dx < BRIDGE.land - 0.4; dx += 0.5, r++) {
+    for (let dz = -W + 0.7 + (r % 2) * 0.25; dz < W - 0.6; dz += 0.5) {
+      const c = MeshBuilder.CreateIcoSphere("farmer1BridgeCobble", { radius: 0.22, subdivisions: 1 }, scene);
+      c.scaling.set(1, 0.3, 1);
+      c.rotation.y = (r * 7 + dz * 13) % 3;
+      c.position.set(x0 + dx, deckTop(dx) + 0.04, dz);
+      stones.push(c);
+    }
+  }
+  const cobbles = Mesh.MergeMeshes(stones, true);
+  if (cobbles) {
+    cobbles.name = "farmer1BridgeCobbles";
+    finish(cobbles, cobble);
   }
   return [-1, 1].map((side) => ({
     type: "box" as const, center: new Vector3(x0, 0, side * (W - 0.1)), halfX: BRIDGE.span / 2, halfZ: 0.3,
@@ -223,12 +278,14 @@ function watermill(scene: Scene): Obstacle[] {
     m.specularColor = new Color3(0.03, 0.03, 0.03);
     return m;
   };
-  const boards = mat("farmer1MillBoards", new Color3(0.44, 0.48, 0.58), 0.12);
+  // Plank-board walls in warm brown under blue-grey slate roof panels (wiki shot, lower left)
+  const boards = mat("farmer1MillBoards", new Color3(0.6, 0.43, 0.25), 0.16);
   const timber = mat("farmer1MillTimber", new Color3(0.36, 0.23, 0.12), 0.15);
-  const planks = mat("farmer1MillPlanks", new Color3(0.62, 0.45, 0.26), 0.15);
+  const planks = mat("farmer1MillPlanks", new Color3(0.66, 0.5, 0.3), 0.15);
   const stone = mat("farmer1MillStone", new Color3(0.5, 0.45, 0.41), 0.1);
+  const slate = mat("farmer1MillSlate", new Color3(0.5, 0.56, 0.66), 0.22);
   const x0 = riverX(MILL.z);
-  const walls: Mesh[] = [], wood: Mesh[] = [], roofs: Mesh[] = [], stones: Mesh[] = [];
+  const walls: Mesh[] = [], wood: Mesh[] = [], roofs: Mesh[] = [], stones: Mesh[] = [], slates: Mesh[] = [];
   const obstacles: Obstacle[] = [];
   const box = (list: Mesh[], w: number, h: number, d: number, x: number, y: number, z: number) => {
     const b = MeshBuilder.CreateBox("farmer1MillPart", { width: w, height: h, depth: d }, scene);
@@ -263,11 +320,23 @@ function watermill(scene: Scene): Obstacle[] {
     walls.push(gable);
     const theta = Math.atan2(MILL.roof * (span / wu), half);
     const slope = Math.hypot(half, MILL.roof * (span / wu));
+    // A point s along the slope from the eave, lifted l off the roof plane
+    const onSlope = (s2: number, s: number, l: number): [number, number] => [
+      cx + s2 * (half - s * Math.cos(theta)) + s2 * l * Math.sin(theta),
+      top - MILL.roof * ((2 * MILL.eave) / wu) + s * Math.sin(theta) + l * Math.cos(theta),
+    ];
+    const roofLong = D + 2 * J + 1.6;
     for (const s2 of [-1, 1]) {
-      for (let j = 0; j < 7; j++) {
-        const s = ((j + 0.5) / 7) * slope;
-        const p = box(roofs, slope / 7 + 0.12, 0.2, D + 2 * J + 1.6, cx + s2 * (half - s * Math.cos(theta)), top - MILL.roof * ((2 * MILL.eave) / wu) + s * Math.sin(theta) + 0.12, z);
-        p.rotation.z = -s2 * theta;
+      // One slate panel per slope, then the timber frame round it: eave and ridge beams, both verges, four rafters across
+      const [px, py] = onSlope(s2, slope / 2, 0.12);
+      box(slates, slope, 0.22, roofLong, px, py, z).rotation.z = -s2 * theta;
+      for (const s of [0.2, slope - 0.2]) {
+        const [bx, by] = onSlope(s2, s, 0.3);
+        box(wood, 0.4, 0.3, roofLong + 0.2, bx, by, z).rotation.z = -s2 * theta;
+      }
+      for (const dz of [-roofLong / 2 + 0.2, -roofLong / 6, roofLong / 6, roofLong / 2 - 0.2]) {
+        const [bx, by] = onSlope(s2, slope / 2, 0.3);
+        box(wood, slope, 0.28, Math.abs(dz) > roofLong / 3 ? 0.42 : 0.3, bx, by, z + dz).rotation.z = -s2 * theta;
       }
     }
     obstacles.push({ type: "box", center: new Vector3(cx, 0, z), halfX: W / 2 + 0.2, halfZ: D / 2 + 0.2 });
@@ -297,7 +366,7 @@ function watermill(scene: Scene): Obstacle[] {
   axle.rotation.z = Math.PI / 2;
   axle.position.set(x0, cy, wz);
   wood.push(axle);
-  for (const [list, m, name] of [[walls, boards, "farmer1MillWalls"], [wood, timber, "farmer1MillWood"], [roofs, planks, "farmer1MillRoofs"], [stones, stone, "farmer1MillPlinth"]] as const) {
+  for (const [list, m, name] of [[walls, boards, "farmer1MillWalls"], [wood, timber, "farmer1MillWood"], [roofs, planks, "farmer1MillRoofs"], [stones, stone, "farmer1MillPlinth"], [slates, slate, "farmer1MillSlate"]] as const) {
     const merged = Mesh.MergeMeshes(list, true);
     if (!merged) continue;
     merged.name = name;
@@ -916,6 +985,105 @@ function clearWaterBlades(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+/**
+ * Olive clumps at the rim (wiki shot, left centre and bottom right): big faceted olive bushes heaped with warm-grey boulders, not smooth
+ * pale-lime discs. Each base "hill" still on the island is hidden and a clump of 4-6 lumps covers its footprint; its collider is kept.
+ */
+function oliveClumps(scene: Scene, built: Set<unknown>): void {
+  const mk = (name: string, c: Color3, glow: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(glow);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const bush: Mesh[] = [], rock: Mesh[] = [];
+  let k = 0;
+  for (const hill of scene.meshes.filter((m) => built.has(m) && m.name === "hill" && m.isEnabled())) {
+    const { x, z } = hill.position;
+    const rx = hill.scaling.x / 2, rz = hill.scaling.z / 2;
+    hill.setEnabled(false);
+    const n = 4 + (k % 3);
+    for (let i = 0; i < n; i++, k++) {
+      const a = (i / n) * Math.PI * 2 + wallSeed(k, 81);
+      const f = i === 0 ? 0 : 0.45 + wallSeed(k, 82) * 0.3;
+      const isRock = i % 3 === 2;
+      const r = Math.min(rx, rz) * (isRock ? 0.32 : 0.42 + wallSeed(k, 83) * 0.18) * (i === 0 ? 1.25 : 1);
+      const lump = MeshBuilder.CreateIcoSphere("farmer1Clump", { radius: Math.max(0.9, r), subdivisions: 1 }, scene);
+      lump.scaling.set(1 + wallSeed(k, 84) * 0.25, isRock ? 0.7 : 0.85, 1 + wallSeed(k, 85) * 0.25);
+      lump.rotation.y = wallSeed(k, 86) * Math.PI;
+      lump.position.set(x + Math.cos(a) * rx * f, Math.max(0.9, r) * (isRock ? 0.35 : 0.55), z + Math.sin(a) * rz * f);
+      (isRock ? rock : bush).push(lump);
+    }
+  }
+  for (const [list, m, name] of [
+    [bush, mk("farmer1ClumpBush", new Color3(0.4, 0.42, 0.15), 0.2), "farmer1ClumpBushes"],
+    [rock, mk("farmer1ClumpRock", new Color3(0.6, 0.53, 0.44), 0.14), "farmer1ClumpRocks"],
+  ] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
+/**
+ * Tilled strips (wiki shot, centre-left and centre-right): rows of raised dirt beds in front of the bridge on both banks. Drawn only; the
+ * base's grass blades rooted on a bed are collapsed so the beds read clean.
+ */
+const BEDS: Array<{ x0: number; x1: number; z0: number; z1: number }> = [
+  { x0: -21, x1: -7, z0: -30, z1: -8 },
+  { x0: 7, x1: 19, z0: -30, z1: -10 },
+];
+const BED = { wide: 0.9, long: 3.5, high: 0.18, row: 1.8, gap: 1 };
+
+function tilledStrips(scene: Scene, built: Set<unknown>): void {
+  const soil = new StandardMaterial("farmer1Bed", scene);
+  soil.diffuseColor = new Color3(0.62, 0.47, 0.27);
+  soil.emissiveColor = new Color3(0.12, 0.09, 0.05);
+  soil.specularColor = Color3.Black();
+  const beds: Mesh[] = [];
+  const spots: Array<[number, number]> = [];
+  BEDS.forEach((b, s) => {
+    for (let x = b.x0; x <= b.x1; x += BED.row) {
+      for (let z = b.z1 - BED.long / 2; z - BED.long / 2 >= b.z0; z -= BED.long + BED.gap) {
+        const k = Math.round(x * 7 + z * 3 + s * 11);
+        const zz = z + (wallSeed(k, 91) - 0.5) * 0.8;
+        // Keep clear of the river's bank strip
+        if (Math.abs(x - riverX(zz)) < RIVER.halfWidth + 2.5) continue;
+        const bed = MeshBuilder.CreateBox("farmer1Bed", { width: BED.wide, height: BED.high, depth: BED.long }, scene);
+        bed.position.set(x, BED.high / 2, zz);
+        bed.rotation.y = (wallSeed(k, 92) - 0.5) * 0.06;
+        beds.push(bed);
+        spots.push([x, zz]);
+      }
+    }
+  });
+  const merged = Mesh.MergeMeshes(beds, true);
+  if (merged) {
+    merged.name = "farmer1Beds";
+    merged.convertToFlatShadedMesh();
+    merged.material = soil;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  const onBed = (x: number, z: number) =>
+    spots.some(([bx, bz]) => Math.abs(x - bx) < BED.wide / 2 + 0.15 && Math.abs(z - bz) < BED.long / 2 + 0.15);
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !(mesh instanceof Mesh) || !mesh.name.startsWith("fieldBlades_")) continue;
+    const pos = mesh.getVerticesData("position");
+    if (!pos) continue;
+    for (let v = 0; v + 11 < pos.length; v += 12) {
+      if (!onBed(pos[v], pos[v + 2])) continue;
+      for (let c = 3; c < 12; c++) pos[v + c] = pos[v + (c % 3)];
+    }
+    mesh.setVerticesData("position", pos);
+  }
+}
+
 export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -939,5 +1107,8 @@ export function buildFarmer1(scene: Scene, base: () => MapBuildResult): MapBuild
   wheatStrips(scene);
   earthBowl(scene, built);
   clearWaterBlades(scene, built);
-  return { ...result, hazards, height: bridgeHeight, obstacles: roundIsland(scene, prior, scotsPines(scene, built, obstacles)) };
+  tilledStrips(scene, built);
+  const kept = roundIsland(scene, prior, scotsPines(scene, built, obstacles));
+  oliveClumps(scene, built);
+  return { ...result, hazards, height: bridgeHeight, obstacles: kept };
 }
