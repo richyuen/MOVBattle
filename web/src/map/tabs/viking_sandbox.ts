@@ -44,6 +44,20 @@ function clearTreeRing(scene: Scene, built: Set<unknown>, obstacles: Obstacle[])
   return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
 }
 
+// The base's field junk (Challenge Bluffs: two dark barricade slabs, the ruin block with its pillar, the ball-topped totem) goes with its
+// colliders: TABS's arena floor is flat open ice. Every one of those is a "<displayName>_box|_cyl|_totem_top" mesh; a collider goes when its
+// centre sits under a removed mesh.
+function clearFieldJunk(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (!/^Challenge Bluffs_(box|cyl|totem_top)$/.test(mesh.name)) continue;
+    gone.push([mesh.position.x, mesh.position.z]);
+    mesh.setEnabled(false);
+  }
+  return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+}
+
 function iceWall(scene: Scene, obstacles: Obstacle[]): void {
   const mk = (name: string, c: Color3, self: number) => {
     const m = new StandardMaterial(name, scene);
@@ -91,7 +105,7 @@ export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): Ma
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
-  const obstacles = clearTreeRing(scene, built, [...result.obstacles]);
+  const obstacles = clearFieldJunk(scene, built, clearTreeRing(scene, built, [...result.obstacles]));
   iceWall(scene, obstacles);
   const placementZones = (result.placementZones ?? result.zones).map((zone) => {
     const x0 = Math.max(zone.center.x - zone.size.x / 2, -INSIDE_X), x1 = Math.min(zone.center.x + zone.size.x / 2, INSIDE_X);
