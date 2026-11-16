@@ -68,7 +68,7 @@ function birchRing(scene: Scene, built: Set<unknown>, result: MapBuildResult): v
   const buried: Array<[number, number]> = [];
   trunks.forEach((trunk, i) => {
     const p = trunk.getAbsolutePosition();
-    if (p.x > FOOT_X - 2) {
+    if (p.x > FOOT_X - 2 || Math.hypot(p.x - SHRINE.x, p.z - SHRINE.z) < SHRINE.clear) {
       buried.push([p.x, p.z]);
       trunk.dispose();
       return;
@@ -354,6 +354,81 @@ function footRubble(scene: Scene): void {
   }
 }
 
+/**
+ * The stone dog shrine (card Overview; wiki shot, bottom right): where the mountain runs toward the front a small shrine stands at its foot,
+ * a pale stone platform with a gate of two posts and a lintel facing the field and two seated stone dogs guarding it. Spec: centre (43, -29)
+ * in front of the mountain's front blocks (stage armies stand at x <= 40, z >= -26); a two-step round platform 3.2 / 2.4 m in radius,
+ * 0.35 m a step; the gate 3.2 m wide, posts 2.6 m tall, a lintel 4.4 m long overhanging; each dog 2.2 m tall seated on a 0.7 m pedestal
+ * either side of the gate on the field side, facing the field; the ring birches within 8 m go so it shows from above. One collider (r 2.6).
+ */
+const SHRINE = { x: 43, z: -29, clear: 8 };
+
+function dogShrine(scene: Scene): { type: "cylinder"; center: Vector3; radius: number } {
+  const stone = new StandardMaterial("tribal2Shrine", scene);
+  stone.diffuseColor = new Color3(0.84, 0.78, 0.68);
+  stone.emissiveColor = new Color3(0.2, 0.18, 0.15);
+  stone.specularColor = Color3.Black();
+  const parts: Mesh[] = [];
+  const { x, z } = SHRINE;
+  // The gate faces the field: its axis points from the shrine toward the island centre
+  const face = Math.atan2(-z, -x);
+  const fx = Math.cos(face), fz = Math.sin(face), sx = -fz, sz = fx;
+  for (const [r, y] of [[3.2, 0.175], [2.4, 0.525]] as const) {
+    const step = MeshBuilder.CreateCylinder("tribal2ShrineStep", { diameter: r * 2, height: 0.35, tessellation: 10 }, scene);
+    step.position.set(x, y, z);
+    parts.push(step);
+  }
+  const yaw = -face + Math.PI / 2;
+  for (const s of [-1, 1]) {
+    const post = MeshBuilder.CreateBox("tribal2ShrinePost", { width: 0.45, height: 2.6, depth: 0.45 }, scene);
+    post.position.set(x + sx * s * 1.6, 0.7 + 1.3, z + sz * s * 1.6);
+    post.rotation.y = yaw;
+    parts.push(post);
+  }
+  for (const [w, h, y] of [[4.4, 0.35, 3.45], [3.6, 0.25, 3.05]] as const) {
+    const beam = MeshBuilder.CreateBox("tribal2ShrineLintel", { width: w, height: h, depth: 0.55 }, scene);
+    beam.position.set(x, y, z);
+    beam.rotation.y = yaw;
+    parts.push(beam);
+  }
+  // Two seated dogs on pedestals, either side of the gate, a step toward the field
+  for (const s of [-1, 1]) {
+    const dx = x + fx * 3.9 + sx * s * 2.2, dz = z + fz * 3.9 + sz * s * 2.2;
+    const at = (mesh: Mesh, f: number, side: number, y: number) => {
+      mesh.position.set(dx + fx * f + sx * side, y, dz + fz * f + sz * side);
+      mesh.rotation.y = yaw;
+      parts.push(mesh);
+    };
+    at(MeshBuilder.CreateBox("tribal2DogPedestal", { width: 1.3, height: 0.7, depth: 1.7 }, scene), 0, 0, 0.35);
+    // Haunches (low, back), chest (upright, front), head, snout, ears
+    const haunch = MeshBuilder.CreateIcoSphere("tribal2DogBody", { radius: 0.62, subdivisions: 1 }, scene);
+    haunch.scaling.set(0.95, 0.75, 1.15);
+    at(haunch, -0.3, 0, 1.15);
+    const chest = MeshBuilder.CreateIcoSphere("tribal2DogBody", { radius: 0.5, subdivisions: 1 }, scene);
+    chest.scaling.set(0.9, 1.4, 0.85);
+    at(chest, 0.25, 0, 1.75);
+    for (const leg of [-0.28, 0.28]) {
+      at(MeshBuilder.CreateBox("tribal2DogLeg", { width: 0.2, height: 0.9, depth: 0.22 }, scene), 0.55, leg, 1.15);
+    }
+    const head = MeshBuilder.CreateIcoSphere("tribal2DogHead", { radius: 0.42, subdivisions: 1 }, scene);
+    at(head, 0.45, 0, 2.55);
+    at(MeshBuilder.CreateBox("tribal2DogSnout", { width: 0.3, height: 0.26, depth: 0.42 }, scene), 0.85, 0, 2.47);
+    for (const ear of [-0.22, 0.22]) {
+      const e = MeshBuilder.CreateCylinder("tribal2DogEar", { diameterTop: 0, diameterBottom: 0.24, height: 0.34, tessellation: 4 }, scene);
+      at(e, 0.4, ear, 2.98);
+    }
+  }
+  const merged = Mesh.MergeMeshes(parts, true);
+  if (merged) {
+    merged.name = "tribal2Shrine";
+    merged.convertToFlatShadedMesh();
+    merged.material = stone;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  return { type: "cylinder", center: new Vector3(x, 0, z), radius: 2.6 };
+}
+
 export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -411,6 +486,7 @@ export function buildTribal2(scene: Scene, base: () => MapBuildResult): MapBuild
     ...result.obstacles,
     { type: "box" as const, center: new Vector3(FOOT_X + 6, 0, 3), halfX: 6, halfZ: 41 },
     ...rimRocks(scene),
+    dogShrine(scene),
   ];
   return { ...result, obstacles };
 }
