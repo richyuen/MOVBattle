@@ -170,6 +170,7 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
     for (let deg = 0; deg < 360; deg += STEP) {
       const k = t * 100 + deg / STEP;
       const d = deg + (t % 2) * (STEP / 2) + (seeded(k, 1) - 0.5) * 2;
+      if (Math.abs(d - 180) < 14) continue;
       const [x, z] = rimPoint(d, tier.at);
       const along = 8 + seeded(k, 2) * 3;
       const h = tier.h0 + seeded(k, 3) * (tier.h1 - tier.h0);
@@ -196,6 +197,39 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
     merged.receiveShadows = true;
     merged.isPickable = false;
   }
+  const gateX = -48;
+  const relief = mk("vikingSandboxGateRelief", new Color3(0.28, 0.62, 0.72), 0.45);
+  const gateBox = (w: number, h: number, d: number, x: number, y: number, z: number, mat: StandardMaterial) => {
+    const part = MeshBuilder.CreateBox("vikingSandboxGate", { width: w, height: h, depth: d }, scene);
+    part.position.set(x, y, z);
+    part.material = mat;
+    part.receiveShadows = true;
+    return part;
+  };
+  for (const z of [-9, 9]) {
+    gateBox(6.4, 18.7, 4.7, gateX, 9.35, z, ice);
+    gateBox(7.2, 1, 5.2, gateX, 18.9, z, snow);
+    gateBox(7, 1.5, 5.2, gateX, 0.75, z, snow);
+  }
+  gateBox(6, 2, 20, gateX, 17.3, 0, snow);
+  for (const z of [-3.45, 3.45]) {
+    gateBox(2.9, 16.4, 6.8, gateX - 1.05, 8.2, z, ice);
+    for (const y of [4, 11.1]) {
+      gateBox(0.25, 3.3, 3.3, gateX + 0.54, y, z, relief).rotation.x = Math.PI / 4;
+      gateBox(0.27, 2.66, 2.66, gateX + 0.62, y, z, ice).rotation.x = Math.PI / 4;
+    }
+  }
+  const links: Mesh[] = [];
+  for (let i = 0; i <= 30; i++) {
+    const t = i / 30;
+    const link = MeshBuilder.CreateTorus("vikingSandboxChainLink", { diameter: 0.88, thickness: 0.16, tessellation: 8 }, scene);
+    link.position.set(gateX + 2.7, 18.5 - 2.6 * 4 * t * (1 - t), -9 + 18 * t);
+    link.rotation.z = i % 2 === 0 ? Math.PI / 2 : 0;
+    links.push(link);
+  }
+  const chain = Mesh.MergeMeshes(links, true);
+  if (chain) chain.material = relief;
+  obstacles.push({ type: "box", center: new Vector3(gateX, 0, 0), halfX: 3.2, halfZ: 13 });
 }
 
 export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
