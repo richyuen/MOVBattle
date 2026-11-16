@@ -3,23 +3,6 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-558 | cce131b2 | map.tribal_1.a | approved
-558 | 78418c38 | map.tribal_2.a | approved
-558 | 2394adb1+f9f9f72a | map.tribal_sandbox.a | approved
-558 | 2d04d016+2acd436e | map.farmer_1.b | approved
-558 | 84bfd3eb | map.farmer_1.a | approved
-558 | d9949729 | map.farmer_2.a | approved
-558 | 2ec1ca47 | map.farmer_snow.b | approved
-558 | 5e406f86 | map.tribal_sandbox.b | approved
-558 | 110fbe0a | map.farmer_2.b | approved
-559 | be5d20e9+ecbd58a9 | map.tribal_1.a | approved
-559 | 8dfa1e8d | map.tribal_2.a | approved
-559 | 688e5790 | map.tribal_2.b | approved
-559 | 74f42750 | map.farmer_1.a | approved
-559 | 62c765fa | map.farmer_2.a | approved
-559 | 4cf35a90 | map.farmer_2.b | approved
-559 | 398e8db4+29cc3e5a | map.farmer_snow.a | approved
-559 | a566456e | map.tribal_sandbox.a | approved
 560 | cb6fa15d | map.tribal_1.a | approved
 560 | 57c3a0af | map.tribal_1.b | approved
 560 | f66ba3a2+8c0b9641+8a89fc24 | map.tribal_1.b | approved
@@ -53,9 +36,18 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 563 | 115b231d [R] | map.farmer_2.a | approved
 563 | 632026ad | map.viking_sandbox.a | approved
 563 | a295aa5a | map.ancient_sandbox.a | approved
+564 | 617a5f5a | map.viking_sandbox.b | approved
+564 | 78fc3163 | map.viking_sandbox.a | approved
+564 | d4443b87 | map.ancient_sandbox.b | approved
+564 | 288ca462 | map.ancient_sandbox.a | approved
+564 | 79991c9b | map.farmer_snow.a | approved
+564 | 140782a1 | map.farmer_snow.b | approved
+564 | 6d29e353 | map.tribal_2.a | approved
+564 | 140833c3 | map.tribal_2.a | approved
+564 | 8992d360 [R] | map.farmer_2.a | approved (CONFIRM failed a)
 
 ## Tuned values
-web/src/map/tabs/farmer_2.ts:wheatField stalk height | 0.5-0.7 m | 557 | approved | 1.0-1.3 m
+web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
 web/src/map/tabs/farmer_2.ts:SHEAVES z range, scale | z -36..-16, x1.5 | 558 | approved | z -44..-23, x1
 web/src/map/tabs/tribal_sandbox.ts:NOOKS centres | 10 m further in ((25.8,18.2) (34.1,-4.7) (20.9,-20.9) (4.2,23.2)) | 559 | approved | (34,24) (44,-6) (28,-28) (6,33)
 web/src/map/tabs/tribal_sandbox.ts:rockNooks boulder size | 4.5-7 m | 559 | approved | 3-5.5 m
@@ -70,4 +62,5 @@ web/src/map/tabs/farmer_1.ts:farmer1BankRock colour | (0.6,0.53,0.44) emissive (
 web/src/map/tabs/farmer_2.ts:farmer2UnderEarth colour | (0.5,0.4,0.27) self-lit 1.0 | 561 | approved | (0.44,0.36,0.25) self-lit 0.45
 web/src/map/tabs/farmer_2.ts:farmer2OliveLeaf / Dark | (0.62,0.56,0.19) x0.6, (0.5,0.46,0.15) x0.55 (oliveGrove) | 563 | approved | (0.5,0.47,0.16) x0.6, (0.4,0.39,0.12) x0.55; (0.45,0.42,0.14) x0.25
 web/src/map/tabs/farmer_2.ts:MEADOW | (0.6,0.54,0.18) | 563 | approved | (0.62,0.64,0.2)
-web/src/map/tabs/farmer_2.ts:farmer2Wheat colour | (0.95,0.8,0.32) self-lit 0.4 | 563 | approved (CONFIRM: too pale) | (0.78,0.55,0.16) emissive (0.26,0.17,0.04)
+web/src/map/tabs/farmer_2.ts:farmer2Wheat colour | (0.9,0.66,0.2) self-lit 0.3 | 564 | approved (CONFIRM: dull ochre) | (0.95,0.8,0.32) self-lit 0.4 (CONFIRM: too pale); (0.78,0.55,0.16) emissive (0.26,0.17,0.04)
+web/src/map/tabs/tribal_2.ts:tribal2Mountain colour | (0.6,0.5,0.4) emissive (0.1,0.075,0.05) | 564 | approved | (0.6,0.54,0.52) emissive (0.08,0.06,0.05)

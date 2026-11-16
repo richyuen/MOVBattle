@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 563   Batch: maps_1+maps_2   Consecutive empty: 0   Done: 2/99   Parked: 0
+Iteration: 564   Batch: maps_1+maps_2   Consecutive empty: 0   Done: 2/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<level>):
 # <id>
@@ -33,33 +33,35 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 563: maps_1+maps_2, 1 [R] + 7 [S]; BASE 96344955)
-- [S] map.farmer_snow.b blocker 6 snow hills tested at their radius (e6641d5a) APPROVE, struck 6
-- [S] map.farmer_snow.a blocker 5 dense pine grove in the glow pass (5ac61480) APPROVE, struck 5
-- [S] map.tribal_2.b blocker 1 massif over the right third (3524fafd) APPROVE, struck 1
-- [S] map.tribal_2.b blocker 4 rubble on the new foot (0b30e30a) APPROVE, struck 4
-- [S] map.tribal_sandbox.b blocker 2 cliff-block nooks with birches on top, new mechanism (74f9cb20) APPROVE, struck 2
-- [R] map.farmer_2.a blockers 1-4 look rebuild (115b231d) APPROVE, struck 1, 2, 4
-- [S] map.viking_sandbox.a blocker 2 own builder, three-tier ice wall (632026ad) APPROVE, struck 2
-- [S] map.ancient_sandbox.a blocker 4 own builder, terracotta cliffs (a295aa5a) APPROVE, struck 4
-- Skipped: tribal_sandbox.b1 (1.4x scale passes the capture frame; needs an evidence commit first)
-- CONFIRM: farmer_snow failed a, b; tribal_2 passed b, failed a; farmer_2 failed a -> no item done, CONFIRM lists replace a/b
-- 8/8, 10 struck
+## Focus (iter 564: maps_1+maps_2, 1 [R] + 8 [S]; BASE 5f4bd642)
+- [S] map.viking_sandbox.b blocker 4 base junk removed (617a5f5a) APPROVE, struck monolith clause of 4, and 2
+- [S] map.viking_sandbox.a blocker 1 snow floor + teal ice patches + cracks (78fc3163) APPROVE, struck 1
+- [S] map.ancient_sandbox.b blocker 5 base junk removed (d4443b87) APPROVE, struck monolith clause of 5
+- [S] map.ancient_sandbox.a blocker 5 blue sea, shallows, foam (288ca462) APPROVE, struck 5
+- [S] map.farmer_snow.a blocker 6 base slab + totem removed (79991c9b) APPROVE, struck 6
+- [S] map.farmer_snow.b blocker 1 pine grove on the houses' bank (140782a1) APPROVE, struck 1
+- [S] map.tribal_2.a blocker 1 massif as heaped faceted boulders, warm rock (6d29e353) APPROVE, struck 1, 2
+- [S] map.tribal_2.a blocker 4 pale stone clusters + bone sticks (140833c3) APPROVE, struck 4
+- [R] map.farmer_2.a blockers 1-3 grove groups, hedge, bush heaps, wheat (8992d360) APPROVE, critic struck 1-3 (PASS)
+- Skipped: tribal_sandbox.b1 (1.4x scale needs the 120 m camera radius clamp lifted for that map's top/island shots: evidence commit first)
+- CONFIRM: farmer_2 failed a (4th) -> stays open, plateau, CONFIRM 564 list replaces a
+- 9/9, 12 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.farmer_snow (e6641d5a) VERDICT: APPROVE CRITERION: map.farmer_snow.b PASS
-GAP: [S] map.farmer_snow (5ac61480) VERDICT: APPROVE CRITERION: map.farmer_snow.a PASS
-GAP: [S] map.tribal_2 (3524fafd) VERDICT: APPROVE CRITERION: map.tribal_2.b FAIL
-GAP: [S] map.tribal_2 (0b30e30a) VERDICT: APPROVE CRITERION: map.tribal_2.b PASS
-GAP: [S] map.tribal_sandbox (74f9cb20) VERDICT: APPROVE CRITERION: map.tribal_sandbox.b FAIL
-GAP: [R] map.farmer_2 (115b231d) VERDICT: APPROVE CRITERION: map.farmer_2.a FAIL
-GAP: [S] map.viking_sandbox (632026ad) VERDICT: APPROVE CRITERION: map.viking_sandbox.a FAIL
-GAP: [S] map.ancient_sandbox (a295aa5a) VERDICT: APPROVE CRITERION: map.ancient_sandbox.a FAIL
+GAP: [S] map.viking_sandbox (617a5f5a) VERDICT: APPROVE CRITERION: map.viking_sandbox.b FAIL
+GAP: [S] map.viking_sandbox (78fc3163) VERDICT: APPROVE CRITERION: map.viking_sandbox.a FAIL
+GAP: [S] map.ancient_sandbox (d4443b87) VERDICT: APPROVE CRITERION: map.ancient_sandbox.b FAIL
+GAP: [S] map.ancient_sandbox (288ca462) VERDICT: APPROVE CRITERION: map.ancient_sandbox.a FAIL
+GAP: [S] map.farmer_snow (79991c9b) VERDICT: APPROVE CRITERION: map.farmer_snow.a FAIL
+GAP: [S] map.farmer_snow (140782a1) VERDICT: APPROVE CRITERION: map.farmer_snow.b FAIL
+GAP: [S] map.tribal_2 (6d29e353) VERDICT: APPROVE CRITERION: map.tribal_2.a FAIL
+GAP: [S] map.tribal_2 (140833c3) VERDICT: APPROVE CRITERION: map.tribal_2.a FAIL
+GAP: [R] map.farmer_2 (8992d360) VERDICT: APPROVE CRITERION: map.farmer_2.a PASS
 REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- [R] slot: farmer_2.a (plateau, CONFIRM failed 560/561/563); spec from the three CONFIRM lists in its item file.
-- tribal_sandbox.b1 (field size) needs an evidence commit first: top/island poses frame about +-70 m, a 1.4x island reaches ~76 m.
-- maps_2 untouched builders: medieval_1, medieval_2, ancient_1, ancient_2, viking (base campaign.challenge/adventure/introduction: never edit bases). viking_sandbox and ancient_sandbox have builders now.
-- Critic 563: viking_sandbox wall also meets b blocker 2; strike it at the next b review. Stage armies on tribal_2 stand at x <= 24.4, |z| <= 9.9.
+- [R] slot: farmer_2.a (plateau, CONFIRM failed 560/561/563/564); spec from the CONFIRM lists in its item file (rim discs, pale cottage, straw-gold wheat, green alley strip).
+- tribal_sandbox.b1 needs an evidence commit first: cameraController upperRadiusLimit 120 clamps the top (135) and island (200) poses; lift it for that map's shots only, or every map's shots change.
+- maps_2 untouched builders: medieval_1, medieval_2, ancient_1, ancient_2, viking (base campaign.challenge/adventure/introduction: never edit bases). Starving from iter 567 if still untouched.
+- tribal_2 has one a blocker left (back-left rock ledge): striking it sends the item to CONFIRM.
 - Critic 562 aside still open: stage_fantasy_evil.raze_the_homestead_field.png pale grey rectangle behind the island; check at the maps_1 checkpoint.
