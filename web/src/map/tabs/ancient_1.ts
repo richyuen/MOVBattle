@@ -49,7 +49,45 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
       block.receiveShadows = true;
     }
   }
+  const plaster = new StandardMaterial("ancient1Whitewash", scene);
+  plaster.diffuseColor = new Color3(0.95, 0.92, 0.81);
+  plaster.emissiveColor = plaster.diffuseColor.scale(0.23);
+  const blue = new StandardMaterial("ancient1BlueTile", scene);
+  blue.diffuseColor = new Color3(0.26, 0.5, 0.78);
+  blue.emissiveColor = blue.diffuseColor.scale(0.26);
+  const box = (name: string, x: number, y: number, z: number, width: number, height: number, depth: number, material: StandardMaterial) => {
+    const part = MeshBuilder.CreateBox(name, { width, height, depth }, scene);
+    part.position.set(x, y, z);
+    part.material = material;
+    part.receiveShadows = true;
+  };
   const obstacles: MapBuildResult["obstacles"] = [];
+  for (const side of [-1, 1]) {
+    for (const [row, z] of [-21, 0, 21].entries()) {
+      const x = side * 15;
+      const depth = row === 1 ? 10.5 : 12.5;
+      const height = 2.8 + (row % 2) * 0.9;
+      box("ancient1House", x, height / 2, z, 12, height, depth, plaster);
+      box("ancient1RoofBand", x, height - 0.24, z, 12.3, 0.24, depth + 0.3, blue);
+      box("ancient1RoofTerrace", x, height, z, 12.6, 0.36, depth + 0.55, plaster);
+      const tx = x + side * 2.5, tz = z + (row === 1 ? -1.8 : 2.2);
+      box("ancient1UpperRoom", tx, height + 1.1, tz, 5.1, 2.2, 5, plaster);
+      box("ancient1UpperCoping", tx, height + 2.24, tz, 5.4, 0.27, 5.3, plaster);
+      if ((row + (side > 0 ? 1 : 0)) % 2 === 0) {
+        const dome = MeshBuilder.CreateSphere("ancient1BlueDome", { diameter: 5.1, segments: 8, slice: 0.5 }, scene);
+        dome.position.set(tx, height + 2.3, tz);
+        dome.material = blue;
+        dome.convertToFlatShadedMesh();
+      }
+      for (const dz of [-3, 0, 3]) box("ancient1BlueShutter", x - side * 6.03, 1.52, z + dz, 0.12, 1.1, 0.78, blue);
+      for (let i = 0; i < 8; i++) {
+        const rise = height * (i + 1) / 8;
+        box("ancient1RoofStep", x - side * (8.1 - 0.32 * i), rise / 2, z - depth * 0.32, 0.42, rise, 2.1, plaster);
+      }
+      obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 6, halfZ: depth / 2 });
+      obstacles.push({ type: "box", center: new Vector3(x - side * 7.1, 0, z - depth * 0.32), halfX: 1.25, halfZ: 1.05 });
+    }
+  }
   for (const z of [7, 13]) {
     const pier = MeshBuilder.CreateBox("ancient1ArchPier", { width: 1.6, height: 4.6, depth: 1.15 }, scene);
     pier.position.set(0, 2.3, z);
