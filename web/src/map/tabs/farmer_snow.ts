@@ -499,6 +499,90 @@ function snowBuildings(scene: Scene): Obstacle[] {
   return obstacles;
 }
 
+/**
+ * Festive lights (wiki farmer_snow.png): a string of warm yellow bulbs sags between the two back houses, bulbs outline the gable of the
+ * nearer house and of each mill half, another string sags across the gap between the mill ridges, and a lit Christmas tree stands
+ * between the houses. Spec: bulbs 0.22 m spheres 0.7 m apart, self-lit warm yellow, in the glow but out of the fog; the house string runs
+ * from house 1's right eave to house 2's left eave (5 m up, 1.4 m sag); the tree at (-18.5, 31): three stacked dark green cones 5.5 m in
+ * all on a short trunk, 18 bulbs spiralled over it, a gold star on top; one collider (1.2 m).
+ */
+function festiveLights(scene: Scene): Obstacle[] {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const bulbs: Mesh[] = [], wires: Mesh[] = [], greens: Mesh[] = [], star: Mesh[] = [];
+  const bulb = (p: Vector3, r = 0.22) => {
+    const b = MeshBuilder.CreateSphere("farmerSnowBulb", { diameter: r * 2, segments: 3 }, scene);
+    b.position.copyFrom(p);
+    bulbs.push(b);
+  };
+  // A string from a to b sagging by `sag` at its middle: a thin dark wire with bulbs hung along it
+  const string = (a: Vector3, b: Vector3, sag: number) => {
+    const n = Math.max(2, Math.round(Vector3.Distance(a, b) / 0.7));
+    const pts: Vector3[] = [];
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const p = Vector3.Lerp(a, b, t);
+      p.y -= sag * 4 * t * (1 - t);
+      pts.push(p);
+      if (i > 0 && i < n) bulb(p.add(new Vector3(0, -0.18, 0)));
+    }
+    wires.push(MeshBuilder.CreateTube("farmerSnowWire", { path: pts, radius: 0.04, tessellation: 4 }, scene));
+  };
+  const [h1, h2] = SNOW_HOUSES;
+  string(new Vector3(h1[0] + 3.6, 5, h1[1] - 2.6), new Vector3(h2[0] - 3.6, 5, h2[1] - 2.6), 1.4);
+  // House 2's field gable: eave, ridge, eave
+  const gable = (x: number, z: number, half: number, eave: number, ridge: number) => {
+    string(new Vector3(x - half, eave, z), new Vector3(x, ridge, z), 0.1);
+    string(new Vector3(x, ridge, z), new Vector3(x + half, eave, z), 0.1);
+  };
+  gable(h2[0], h2[1] - 3.4, 3.8, 5, 8.8);
+  const x0 = iceX(SNOW_MILL.z), off = SNOW_MILL.gap / 2 + SNOW_MILL.width / 2;
+  const millEave = SNOW_MILL.plinth + SNOW_MILL.wall, millRidge = millEave + SNOW_MILL.roof, millFace = SNOW_MILL.z - SNOW_MILL.depth / 2 - 0.5;
+  for (const side of [-1, 1]) gable(x0 + side * off, millFace, SNOW_MILL.width / 2, millEave, millRidge);
+  string(new Vector3(x0 - off, millRidge, millFace), new Vector3(x0 + off, millRidge, millFace), 1.6);
+  // The Christmas tree
+  const tx = -18.5, tz = 31;
+  const trunk = MeshBuilder.CreateCylinder("farmerSnowXmasTrunk", { diameter: 0.4, height: 0.8, tessellation: 6 }, scene);
+  trunk.position.set(tx, 0.4, tz);
+  wires.push(trunk);
+  for (let t = 0; t < 3; t++) {
+    const w = 3.4 * (1 - t * 0.28), h = 2.6 - t * 0.3, y = 0.6 + t * 1.45;
+    const cone = MeshBuilder.CreateCylinder("farmerSnowXmasCone", { diameterTop: 0, diameterBottom: w, height: h, tessellation: 8 }, scene);
+    cone.position.set(tx, y + h / 2, tz);
+    greens.push(cone);
+  }
+  for (let i = 0; i < 18; i++) {
+    const u = i / 18, y = 0.9 + u * 4.2, r = 1.6 * (1 - u * 0.85);
+    const a = u * Math.PI * 7;
+    bulb(new Vector3(tx + Math.cos(a) * r, y, tz + Math.sin(a) * r), 0.18);
+  }
+  const top = MeshBuilder.CreatePolyhedron("farmerSnowXmasStar", { type: 1, size: 0.35 }, scene);
+  top.position.set(tx, 6.3, tz);
+  star.push(top);
+  const glow = scene.getGlowLayerByName("glow");
+  for (const [list, m, name, glowing] of [
+    [bulbs, mk("farmerSnowBulb", new Color3(1, 0.78, 0.32), 1.6), "farmerSnowBulbs", true],
+    [star, mk("farmerSnowStar", new Color3(1, 0.85, 0.3), 1.4), "farmerSnowStar", true],
+    [wires, mk("farmerSnowWire", new Color3(0.12, 0.09, 0.07), 0.3), "farmerSnowWires", false],
+    [greens, mk("farmerSnowXmas", new Color3(0.06, 0.24, 0.13), 0.45), "farmerSnowXmasTree", false],
+  ] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.applyFog = false;
+    merged.isPickable = false;
+    if (!glowing) glow?.addExcludedMesh(merged);
+  }
+  return [{ type: "cylinder", center: new Vector3(tx, 0, tz), radius: 1.2 }];
+}
+
 export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -569,7 +653,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   const baseDispose = result.dispose;
   return {
     ...result,
-    obstacles: [...roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene)],
+    obstacles: [...roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene)],
     dispose: () => {
       restoreLights();
       baseDispose?.();
