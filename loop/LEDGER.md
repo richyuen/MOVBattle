@@ -45,6 +45,14 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 562 | 23817396+452f35d3 | map.farmer_snow.a | approved
 562 | e08c4278 | map.tribal_2.b | approved
 562 | 22bf0f3a | map.tribal_sandbox.b | approved
+563 | e6641d5a | map.farmer_snow.b | approved
+563 | 5ac61480 | map.farmer_snow.a | approved
+563 | 3524fafd | map.tribal_2.b | approved
+563 | 0b30e30a | map.tribal_2.b | approved
+563 | 74f9cb20 | map.tribal_sandbox.b | approved
+563 | 115b231d [R] | map.farmer_2.a | approved
+563 | 632026ad | map.viking_sandbox.a | approved
+563 | a295aa5a | map.ancient_sandbox.a | approved
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height | 0.5-0.7 m | 557 | approved | 1.0-1.3 m
@@ -60,4 +68,6 @@ web/src/map/tabs/farmer_2.ts:farmer2WallStone colour | (0.62,0.5,0.38) emissive 
 web/src/map/tabs/farmer_1.ts:RIVER bend, bendRate | 1.9, 0.1 | 561 | approved | 1.4, 0.075
 web/src/map/tabs/farmer_1.ts:farmer1BankRock colour | (0.6,0.53,0.44) emissive (0.12,0.1,0.08) | 561 | approved | (0.5,0.47,0.44) emissive (0.07,0.065,0.06)
 web/src/map/tabs/farmer_2.ts:farmer2UnderEarth colour | (0.5,0.4,0.27) self-lit 1.0 | 561 | approved | (0.44,0.36,0.25) self-lit 0.45
-web/src/map/tabs/farmer_2.ts:farmer2OliveLeaf / Dark | (0.5,0.47,0.16) x0.6, (0.4,0.39,0.12) x0.55 | 561 | approved | (0.45,0.42,0.14) x0.25, (0.34,0.34,0.1) x0.25
+web/src/map/tabs/farmer_2.ts:farmer2OliveLeaf / Dark | (0.62,0.56,0.19) x0.6, (0.5,0.46,0.15) x0.55 (oliveGrove) | 563 | approved | (0.5,0.47,0.16) x0.6, (0.4,0.39,0.12) x0.55; (0.45,0.42,0.14) x0.25
+web/src/map/tabs/farmer_2.ts:MEADOW | (0.6,0.54,0.18) | 563 | approved | (0.62,0.64,0.2)
+web/src/map/tabs/farmer_2.ts:farmer2Wheat colour | (0.95,0.8,0.32) self-lit 0.4 | 563 | approved (CONFIRM: too pale) | (0.78,0.55,0.16) emissive (0.26,0.17,0.04)
