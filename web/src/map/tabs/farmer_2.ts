@@ -113,8 +113,11 @@ const WHEAT = { x0: 5, x1: 45, z0: -29, z1: 21, step: 0.75 };
 
 function wheatField(scene: Scene): void {
   const gold = new StandardMaterial("farmer2Wheat", scene);
-  gold.diffuseColor = new Color3(1, 0.71, 0.24);
-  gold.emissiveColor = gold.diffuseColor.scale(0.14);
+  gold.disableLighting = true;
+  gold.emissiveColor = new Color3(1.1, 0.67, 0.23);
+  const stems = new StandardMaterial("farmer2WheatStems", scene);
+  stems.disableLighting = true;
+  stems.emissiveColor = new Color3(0.88, 0.51, 0.14);
   gold.specularColor = Color3.Black();
   // A straw floor under the tufts ([R] 565): from above the gaps between them showed the meadow and shadow as dark speckle
   const straw = new StandardMaterial("farmer2WheatFloor", scene);
@@ -138,7 +141,8 @@ function wheatField(scene: Scene): void {
   floor.material = straw;
   floor.receiveShadows = true;
   floor.isPickable = false;
-  const parts: Mesh[] = [];
+  const stalks: Mesh[] = [];
+  const ears: Mesh[] = [];
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2;
     const x = Math.cos(a), z = Math.sin(a);
@@ -154,14 +158,9 @@ function wheatField(scene: Scene): void {
     ear.position.y += 0.08;
     ear.scaling.set(0.55, 1.55, 0.55);
     ear.rotation.z = -0.29;
-    parts.push(stalk, ear);
+    stalks.push(stalk);
+    ears.push(ear);
   }
-  const tuft = Mesh.MergeMeshes(parts, true);
-  if (!tuft) return;
-  tuft.name = "farmer2WheatField";
-  tuft.convertToFlatShadedMesh();
-  tuft.material = gold;
-  tuft.isPickable = false;
   const cx = (WHEAT.x0 + WHEAT.x1) / 2, cz = (WHEAT.z0 + WHEAT.z1) / 2;
   const rx = (WHEAT.x1 - WHEAT.x0) / 2, rz = (WHEAT.z1 - WHEAT.z0) / 2;
   const matrices: number[] = [];
@@ -177,7 +176,17 @@ function wheatField(scene: Scene): void {
       m.copyToArray(matrices, matrices.length);
     }
   }
-  tuft.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
+  const placement = new Float32Array(matrices);
+  for (const [parts, mat, name] of [[stalks, stems, "farmer2WheatStems"], [ears, gold, "farmer2WheatHeads"]] as const) {
+    const tuft = Mesh.MergeMeshes(parts, true);
+    if (!tuft) continue;
+    tuft.name = name;
+    tuft.convertToFlatShadedMesh();
+    tuft.material = mat;
+    tuft.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(tuft);
+    tuft.thinInstanceSetBuffer("matrix", placement, 16);
+  }
 }
 
 /**
