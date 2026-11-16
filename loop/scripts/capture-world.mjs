@@ -105,6 +105,7 @@ const POSE = {
   top: { target: { x: 0, y: 0, z: 0 }, radius: 135, alpha: -Math.PI / 2, beta: 0.72 },
   ground: { target: { x: 12, y: 2, z: 0 }, radius: 42, alpha: Math.PI, beta: 1.38 },
 };
+const TRIBAL_SANDBOX_OVERVIEW = { island: 218, top: 176 };
 const frame = (page, p) => page.evaluate((q) => window.game.frameCamera(q.target, q.radius, q.alpha, q.beta, q.radiusLimit), p);
 
 /** Battle on to a result in 2 s steps; the state, the time, and anyone left standing in a hazard. */
@@ -131,7 +132,8 @@ async function mapScene(page, item) {
   if (checkOnly) { summary.items[item] = rec; return; }
   for (const pose of ["island", "top", "ground"]) {
     const view = POSE[pose];
-    await frame(page, item === "map.tribal_sandbox" && pose !== "ground" ? { ...view, radiusLimit: view.radius } : view);
+    const radius = item === "map.tribal_sandbox" ? TRIBAL_SANDBOX_OVERVIEW[pose] : undefined;
+    await frame(page, radius ? { ...view, radius, radiusLimit: radius } : view);
     await shot(page, `${p}${pose}`);
   }
   // Skirmish: 8 clubbers and 4 archers a side at each team's first zone centre, in two ranks
