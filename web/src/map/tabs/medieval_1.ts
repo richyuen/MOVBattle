@@ -50,8 +50,25 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
 export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
+  const detachedTrees: Vector3[] = [];
   for (const mesh of scene.meshes) {
-    if (!prior.has(mesh) && /^(ground$|centerGrass$|islandUnder|islandShelf|islandCliff|fieldBlades_)/.test(mesh.name)) mesh.setEnabled(false);
+    if (prior.has(mesh)) continue;
+    if (/^(ground$|centerGrass$|islandUnder|islandShelf|islandCliff|fieldBlades_|hazeTreeline|campaign_zone_)/.test(mesh.name)) mesh.setEnabled(false);
+    if (mesh.name !== "trunk") continue;
+    const { x, z } = mesh.position;
+    let onLand = false;
+    for (let i = 1; i < SHORE.length; i++) {
+      const [front, near, far] = SHORE[i - 1];
+      const [back, nextNear, nextFar] = SHORE[i];
+      if (z < front || z > back) continue;
+      const t = (z - front) / (back - front);
+      onLand = Math.abs(x) > near + (nextNear - near) * t && Math.abs(x) < far + (nextFar - far) * t;
+      break;
+    }
+    if (!onLand) {
+      detachedTrees.push(mesh.position.clone());
+      mesh.setEnabled(false);
+    }
   }
   const grass = new StandardMaterial("medieval1Meadow", scene);
   grass.diffuseColor = new Color3(0.48, 0.65, 0.24);
@@ -84,8 +101,15 @@ export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBui
       coping.material = stone;
     }
   }
-  const waterGap = (z: number, halfZ: number): MapBuildResult["hazards"][number] => ({
-    shape: "box", kind: "water", center: new Vector3(0, 0, z), halfX: 3.75, halfZ,
-  });
-  return { ...result, hazards: [waterGap(-23, 20), waterGap(22.5, 17.5)] };
+  const hazards: MapBuildResult["hazards"] = [];
+  for (const [front, back, halfX] of [[-45, -34, 9], [-34, -23, 7], [-23, -10, 5.5], [-10, -3, 4.5], [5, 18, 4.5], [18, 31, 6.8], [31, 42, 9.5]]) {
+    hazards.push({ shape: "box", kind: "water", center: new Vector3(0, 0, (front + back) / 2), halfX, halfZ: (back - front) / 2 });
+  }
+  const obstacles = result.obstacles.filter((o) => !detachedTrees.some((p) => Math.hypot(p.x - o.center.x, p.z - o.center.z) < 0.55));
+  const placementZones = result.zones.map((zone) => ({
+    ...zone,
+    center: new Vector3(Math.sign(zone.center.x) * 23, 0, 0),
+    size: new Vector3(36, zone.size.y, 62),
+  }));
+  return { ...result, obstacles, hazards, placementZones };
 }
