@@ -267,7 +267,7 @@ function outerRows(scene: Scene, plaster: StandardMaterial, blue: StandardMateri
 
 // Flagstones (574, wiki ancient_1.png: the whole town floor is one mid-grey paving split by thin white lines into large
 // irregular flagstones, streets included; no straight seam grid, no pale street strips). Spec: the straight seams and
-// the lime street strips go; the pavement turns a neutral mid grey (0.46, 0.45, 0.43); a jittered 6.75 x 6.9 m lattice
+// the lime street strips go; the pavement turns a matte neutral mid grey (0.27 code, no specular); a jittered 6.75 x 6.9 m lattice
 // of points (+-2.3 m, a diagonal in three cells of ten) joined to its right and lower neighbours by 0.16 m white lines (one merged mesh, out of the glow)
 // draws the flagstones over the whole slab inside the walls.
 function flagstones(scene: Scene): void {
@@ -276,8 +276,10 @@ function flagstones(scene: Scene): void {
   }
   const pavement = scene.getMaterialByName("ancient1Pavement");
   if (pavement instanceof StandardMaterial) {
-    pavement.diffuseColor = new Color3(0.46, 0.45, 0.43);
-    pavement.emissiveColor = pavement.diffuseColor.scale(0.16);
+    // Sunlit at 0.46 it rendered pale silver with a specular sheen (574 look): darker and matte
+    pavement.diffuseColor = new Color3(0.27, 0.27, 0.27);
+    pavement.emissiveColor = pavement.diffuseColor.scale(0.2);
+    pavement.specularColor = Color3.Black();
   }
   const white = new StandardMaterial("ancient1FlagstoneLine", scene);
   white.diffuseColor = new Color3(0.92, 0.91, 0.88);
