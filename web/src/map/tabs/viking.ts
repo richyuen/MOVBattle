@@ -10,7 +10,7 @@
 // ground; cracks on a jittered 13 m grid of nodes inside the lake, each node joined to its right and back neighbours by a band of two kinked
 // segments, a quarter of the joins left out so the cells are uneven; the base's autumn lawn and tuft colours turn to snow and its grass
 // tufts and blades go. All drawn only (flat), nothing in the way.
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 function seeded(i: number, seed: number): number {
@@ -453,6 +453,90 @@ function snowbankSheet(scene: Scene): void {
   sheet.isPickable = false;
 }
 
+// Bank face and shore rocks (574, wiki viking.png and ice_archers_only_almost.png: from above, the lake's raised shore
+// reads by its shaded blue-grey slope and a broken line of grey rocks with snow caps at its foot). Spec: a faceted sheet
+// over the ramp (lake edge + 0.3 m to + 6.5 m, 7 rings x 96 around) lying 4 cm over the bank, vertex-coloured from
+// white to a shaded blue-grey (0.36, 0.45, 0.6) by the ramp's steepness (darkest mid-slope, white where the bank fades
+// by the ship); 44 grey boulders (0.42, 0.44, 0.48), 1-2.3 m, flattened and faceted, each with a white snow cap, along
+// the shore at lake edge + 1.6 m seated on the bank height, none within 20 m of the ship or 10 m of the waterfall; a
+// 0.4x-size collider each (all outside the lake, clear of the stage armies at x 29..40, |z| <= 18).
+function bankFace(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const shade = new Color3(0.36, 0.45, 0.6);
+  const N = 96, R = 7;
+  const pos: number[] = [], col: number[] = [], idx: number[] = [];
+  for (let j = 0; j <= R; j++) {
+    for (let i = 0; i <= N; i++) {
+      const a = ((i % N) / N) * Math.PI * 2;
+      const r = lakeR(a) + 0.3 + (j / R) * 6.2;
+      const x = Math.cos(a) * r, z = Math.sin(a) * r;
+      const t = Math.min(1, Math.max(0, (r - lakeR(a) - BANK.inner) / BANK.ramp));
+      const fade = Math.min(1, Math.max(0, (Math.hypot(x - SHIP.x, z - SHIP.z) - 13) / 6));
+      const k = Math.min(1, 6 * t * (1 - t) * fade * 0.85 + (t > 0 && t < 0.15 ? 0.2 * fade : 0));
+      const c = Color3.Lerp(SNOW, shade, k);
+      pos.push(x, bankHeight(x, z) + 0.07, z);
+      col.push(c.r, c.g, c.b, 1);
+      if (j < R && i < N) {
+        const p = j * (N + 1) + i, q = p + N + 1;
+        idx.push(p, p + 1, q, p + 1, q + 1, q);
+      }
+    }
+  }
+  const sheet = new Mesh("vikingBankFace", scene);
+  const data = new VertexData();
+  data.positions = pos;
+  data.indices = idx;
+  data.colors = col;
+  const nrm: number[] = [];
+  VertexData.ComputeNormals(pos, idx, nrm);
+  data.normals = nrm;
+  data.applyToMesh(sheet);
+  sheet.convertToFlatShadedMesh();
+  const mat = new StandardMaterial("vikingBankFace", scene);
+  mat.diffuseColor = Color3.White();
+  mat.emissiveColor = SNOW_SHADE.scale(0.8);
+  mat.specularColor = new Color3(0.05, 0.05, 0.06);
+  mat.backFaceCulling = false;
+  sheet.material = mat;
+  sheet.receiveShadows = true;
+  sheet.isPickable = false;
+  const rockMat = new StandardMaterial("vikingShoreRock", scene);
+  rockMat.diffuseColor = new Color3(0.42, 0.44, 0.48);
+  rockMat.emissiveColor = new Color3(0.1, 0.11, 0.13);
+  rockMat.specularColor = Color3.Black();
+  const capMat = new StandardMaterial("vikingShoreRockSnow", scene);
+  capMat.diffuseColor = SNOW.clone();
+  capMat.emissiveColor = SNOW_SHADE.clone();
+  capMat.specularColor = Color3.Black();
+  const rocks: Mesh[] = [], caps: Mesh[] = [];
+  for (let n = 0; n < 44; n++) {
+    const a = ((n + seeded(n, 81) * 0.6) / 44) * Math.PI * 2;
+    const r = lakeR(a) + 1.6 + seeded(n, 82) * 0.8;
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (Math.hypot(x - SHIP.x, z - SHIP.z) < 20 || Math.hypot(x - FALL.x, z - 44) < 10) continue;
+    const s = 1 + seeded(n, 83) * 1.3;
+    const y = bankHeight(x, z);
+    const rock = MeshBuilder.CreateIcoSphere("vikingShoreRock", { radius: s / 2, subdivisions: 1, flat: true }, scene);
+    rock.scaling.set(1.2, 0.7, 1);
+    rock.rotation.y = seeded(n, 84) * Math.PI;
+    rock.position.set(x, y + s * 0.18, z);
+    rocks.push(rock);
+    const cap = MeshBuilder.CreateIcoSphere("vikingShoreRockSnow", { radius: s * 0.42, subdivisions: 1, flat: true }, scene);
+    cap.scaling.set(1.2, 0.35, 1);
+    cap.rotation.y = rock.rotation.y;
+    cap.position.set(x, y + s * 0.42, z);
+    caps.push(cap);
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: s * 0.4 });
+  }
+  for (const [list, m, name] of [[rocks, rockMat, "vikingShoreRocks"], [caps, capMat, "vikingShoreRockSnow"]] as const) {
+    const merged = Mesh.MergeMeshes([...list], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -472,6 +556,7 @@ export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildR
   frozenLake(scene);
   frozenShip(scene, result.obstacles);
   snowbankSheet(scene);
+  bankFace(scene, result.obstacles);
   icyUnderside(scene, built);
   frozenWaterfall(scene, result.obstacles);
   const restoreSky = winterHaze(scene, built);
