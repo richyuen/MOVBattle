@@ -251,6 +251,44 @@ function frozenShip(scene: Scene, obstacles: MapBuildResult["obstacles"]): void 
   obstacles.push({ type: "box", center: new Vector3(SHIP.x, 0, SHIP.z), halfX: SHIP.beam / 2 + 1.6, halfZ: SHIP.length / 2 + 1 });
 }
 
+// Winter haze (572, wiki shot viking.png): the sky is a pale cyan-white blizzard, not the base's warm beige; the far
+// pines fade into a thick pale cyan fog and big flakes hang in the air over the whole field. Spec: clear colour
+// (0.66,0.84,0.87), fog (0.76,0.89,0.91) at exp density 0.016, base clouds hidden; 320 unlit white flakes (0.07-0.17 m,
+// stretched 2x along the wind) seeded over 130 x 110 m from 0.8 to 26 m up. Returns the restore for dispose.
+function winterHaze(scene: Scene, built: Set<unknown>): () => void {
+  const oldClear = scene.clearColor.clone();
+  const oldFog = scene.fogColor.clone();
+  const oldDensity = scene.fogDensity;
+  scene.clearColor.set(0.66, 0.84, 0.87, 1);
+  scene.fogColor = new Color3(0.76, 0.89, 0.91);
+  scene.fogDensity = 0.016;
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && mesh.name === "cloud") mesh.setEnabled(false);
+  }
+  const flakes: Mesh[] = [];
+  for (let i = 0; i < 320; i++) {
+    const flake = MeshBuilder.CreateIcoSphere("vikingFlake", { radius: 0.07 + seeded(i, 310) * 0.1, subdivisions: 1 }, scene);
+    flake.position.set((seeded(i, 311) - 0.5) * 130, 0.8 + seeded(i, 312) * 25, (seeded(i, 313) - 0.5) * 110);
+    flake.scaling.set(2, 0.6, 1);
+    flake.rotation.y = 0.4;
+    flakes.push(flake);
+  }
+  const flurry = Mesh.MergeMeshes(flakes, true);
+  if (flurry) {
+    const mat = new StandardMaterial("vikingFlurry", scene);
+    mat.disableLighting = true;
+    mat.emissiveColor = new Color3(0.96, 0.99, 1);
+    flurry.material = mat;
+    flurry.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(flurry);
+  }
+  return () => {
+    scene.clearColor.copyFrom(oldClear);
+    scene.fogColor.copyFrom(oldFog);
+    scene.fogDensity = oldDensity;
+  };
+}
+
 export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -269,5 +307,6 @@ export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildR
   snowPines(scene, built, result.obstacles);
   frozenLake(scene);
   frozenShip(scene, result.obstacles);
-  return result;
+  const restoreSky = winterHaze(scene, built);
+  return { ...result, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
