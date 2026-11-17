@@ -357,6 +357,86 @@ function spiralMountain(scene: Scene, obstacles: Obstacle[]): void {
   obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: r0 + 1 });
 }
 
+// Edge dressing (572, wiki shot ancient_sandbox.png): the clearing is ringed by Greek houses and cypresses, not
+// autumn trees. Spec: the base's ring trees go (unparented trunks with their crowns and colliders). Five small
+// hamlets near the rim (left, right, back-right, front-left, front-right) of 1-2 whitewashed cube houses each
+// (5-6.5 m, 3.6-5 m high, some with an upper room), blue doors, window shutters and roof band, each fronted by a
+// low white wall with blue tile coping; slim cypress clusters (2-4 cones 4.5-7 m) beside every hamlet and at
+// eight more spots along the rim.
+function edgeVillage(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.name !== "trunk" || mesh.parent || !mesh.isEnabled()) continue;
+    gone.push([mesh.position.x, mesh.position.z]);
+    mesh.setEnabled(false);
+  }
+  const kept = obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const white = mk("ancientSandboxHouseWhite", new Color3(0.95, 0.94, 0.88), 0.24);
+  const blue = mk("ancientSandboxHouseBlue", new Color3(0.2, 0.4, 0.78), 0.26);
+  const leaves = mk("ancientSandboxCypress", new Color3(0.3, 0.48, 0.15), 0.18);
+  const box = (name: string, x: number, y: number, z: number, w: number, h: number, d: number, yaw: number, mat: StandardMaterial) => {
+    const b = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.rotation.y = yaw;
+    b.material = mat;
+    b.receiveShadows = true;
+    return b;
+  };
+  const cypresses = (x: number, z: number, n: number, k: number) => {
+    for (let j = 0; j < n; j++) {
+      const h = 4.5 + seeded(k * 5 + j, 91) * 2.5;
+      const px = x + (j - (n - 1) / 2) * 1.5, pz = z + (seeded(k * 5 + j, 92) - 0.5) * 1.6;
+      const cone = MeshBuilder.CreateCylinder("ancientSandboxCypressTree", { height: h, diameterTop: 0.1, diameterBottom: 1.3, tessellation: 7 }, scene);
+      cone.position.set(px, h / 2 + 0.3, pz);
+      cone.material = leaves;
+      kept.push({ type: "cylinder", center: new Vector3(px, 0, pz), radius: 0.55 });
+    }
+  };
+  // [x, z, yaw (house front faces the clearing), houses]
+  const hamlets: Array<[number, number, number, number]> = [
+    [-47, 4, -Math.PI / 2, 2], [47, -8, Math.PI / 2, 2], [41, 32, 0.9, 1], [-26, -42, Math.PI, 2], [22, -43, Math.PI, 1],
+  ];
+  hamlets.forEach(([hx, hz, yaw, count], k) => {
+    const c = Math.cos(yaw), s = Math.sin(yaw);
+    for (let i = 0; i < count; i++) {
+      const along = (i - (count - 1) / 2) * 7.5;
+      const x = hx + c * along, z = hz - s * along;
+      const w = 5 + seeded(k * 3 + i, 93) * 1.5, h = 3.6 + seeded(k * 3 + i, 94) * 1.4;
+      box("ancientSandboxHouse", x, h / 2, z, w, h, 5.4, yaw, white);
+      box("ancientSandboxHouseBand", x, h - 0.2, z, w + 0.2, 0.3, 5.6, yaw, blue);
+      box("ancientSandboxHouseParapet", x, h + 0.15, z, w + 0.35, 0.3, 5.75, yaw, white);
+      // Door and two shutters on the face toward the clearing (local -z).
+      const fx = x + s * -2.72, fz = z + c * -2.72;
+      box("ancientSandboxHouseDoor", fx, 1.05, fz, 1.1, 2.1, 0.12, yaw, blue);
+      for (const off of [-1.7, 1.7]) box("ancientSandboxHouseShutter", fx + c * off, 2.3, fz - s * off, 0.8, 0.9, 0.12, yaw, blue);
+      if (seeded(k * 3 + i, 95) > 0.4) {
+        box("ancientSandboxHouseUpper", x + c * 1, h + 1.25, z - s * 1, 3, 2.2, 3, yaw, white);
+        box("ancientSandboxHouseUpperBand", x + c * 1, h + 2.4, z - s * 1, 3.2, 0.25, 3.2, yaw, blue);
+      }
+      kept.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: w / 2 + 0.6 });
+    }
+    // Low wall with blue tile coping in front of the hamlet.
+    const wx = hx + s * -5.2, wz = hz + c * -5.2, length = count * 7.5 + 3;
+    box("ancientSandboxTileWall", wx, 0.55, wz, length, 1.1, 0.6, yaw, white);
+    box("ancientSandboxTileCoping", wx, 1.2, wz, length + 0.2, 0.22, 0.95, yaw, blue);
+    cypresses(hx + c * (length / 2 + 1.5), hz - s * (length / 2 + 1.5), 3, k);
+  });
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + 0.3;
+    const [rx, rz] = rimAt(a);
+    if (rz > 30 && Math.abs(rx) < 36) continue;
+    cypresses(rx * 0.86, rz * 0.86, 2 + (i % 3), 20 + i);
+  }
+  return kept;
+}
+
 export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -397,5 +477,6 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
   hillsideTerraces(scene, cleared.obstacles);
   ruins(scene, cleared.obstacles);
   spiralMountain(scene, cleared.obstacles);
-  return { ...result, obstacles: cleared.obstacles, hazards: cleared.hazards };
+  const obstacles = edgeVillage(scene, built, cleared.obstacles);
+  return { ...result, obstacles, hazards: cleared.hazards };
 }
