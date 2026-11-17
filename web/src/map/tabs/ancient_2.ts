@@ -11,7 +11,7 @@
 // every 9-10 m along each terrace front (none within 4 m of the stair), 5.6 m wide, 3 m to the eaves; the stair 6 m wide; statues 6 m tall
 // at x +-11, z 21.5. The base's ring trees and haze band standing in the footprint go with their colliders; one box collider per terrace-1
 // strip and one per statue. The stage armies (x 29..37, |z| <= 18) stand on the open field in front of it.
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -212,6 +212,58 @@ function fieldPaths(scene: Scene): void {
   });
 }
 
+// Lawn (571, wiki shot): the field is a bright yellow-green lawn with a soft mottled texture, and pink and
+// violet flower specks gather in drifts along the foot of the ring wall (thicker toward the front and
+// sides) with a few loose ones out in the field. The base's orange autumn floor and its blades go: the
+// floor is recoloured, low lawn clumps (two greens, under 0.25 m) mottle it, and the flower drifts are
+// clusters of small faceted heads 0.25-0.4 m across, kept off the paths and the temple terraces.
+function greenLawn(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (/^(fieldBlades_|fieldTufts_|grassTuft)/.test(mesh.name)) mesh.setEnabled(false);
+    if ((mesh.name === "ground" || mesh.name === "centerGrass") && mesh.material instanceof StandardMaterial) {
+      mesh.material.diffuseColor.set(0.55, 0.69, 0.21);
+      mesh.material.emissiveColor.set(0.15, 0.19, 0.05);
+    }
+  }
+  const onTerrace = (x: number, z: number) => z > TERRACES[0].front - 2.5 && Math.abs(x) < TERRACES[0].half + 2;
+  const onPath = (x: number, z: number) => Math.abs(x - 0.36 * Math.min(z, 0)) < 3.2 ||
+    (x < 0 && Math.abs(z - Math.max(-7, x * 0.25)) < 3.4) || (x > 0 && x < 40 && Math.abs(z + x * 0.82) < 3.6);
+  const instanced = (name: string, colour: Color3, glow: number, radius: number) => {
+    const mesh = MeshBuilder.CreateIcoSphere(name, { radius, subdivisions: 1, flat: true }, scene);
+    const mat = new StandardMaterial(name, scene);
+    mat.diffuseColor = colour;
+    mat.emissiveColor = colour.scale(glow);
+    mat.specularColor = Color3.Black();
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    return { mesh, m: [] as number[] };
+  };
+  const lawn = [instanced("ancient2LawnLight", new Color3(0.62, 0.76, 0.24), 0.3, 0.5), instanced("ancient2LawnDark", new Color3(0.42, 0.58, 0.17), 0.26, 0.5)];
+  const petals = [instanced("ancient2FlowerPink", new Color3(1, 0.42, 0.72), 0.5, 0.16), instanced("ancient2FlowerViolet", new Color3(0.52, 0.34, 1), 0.5, 0.16)];
+  for (let i = 0; i < 2600; i++) {
+    const a = seeded(i, 101) * Math.PI * 2, r = Math.sqrt(seeded(i, 102)) * (RIM.a - 2);
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (onTerrace(x, z) || onPath(x, z)) continue;
+    const w = 0.9 + seeded(i, 103) * 1.1;
+    lawn[seeded(i, 104) > 0.5 ? 1 : 0].m.push(...Matrix.Compose(new Vector3(w, 0.18 + seeded(i, 105) * 0.1, w), Quaternion.RotationAxis(Vector3.Up(), a), new Vector3(x, 0.04, z)).m);
+  }
+  for (let c = 0; c < 70; c++) {
+    const a = seeded(c, 111) * Math.PI * 2;
+    const r = c < 54 ? RIM.a - 3.5 - seeded(c, 112) * 7 : 8 + seeded(c, 112) * 34;
+    const cx = Math.cos(a) * r, cz = Math.sin(a) * r;
+    for (let k = 0; k < 16; k++) {
+      const d = seeded(c * 16 + k, 113) * 2.6, t = seeded(c * 16 + k, 114) * Math.PI * 2;
+      const x = cx + Math.cos(t) * d, z = cz + Math.sin(t) * d * 0.7;
+      if (onTerrace(x, z) || onPath(x, z) || Math.hypot(x, z) > RIM.a - 1.5) continue;
+      const s = 0.8 + seeded(c * 16 + k, 115) * 0.5;
+      petals[(c + k) % 3 === 0 ? 1 : 0].m.push(...Matrix.Compose(new Vector3(s, 0.6 * s, s), Quaternion.Identity(), new Vector3(x, 0.14 + seeded(k, c) * 0.12, z)).m);
+    }
+  }
+  for (const { mesh, m } of [...lawn, ...petals]) mesh.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
+}
+
 export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -227,6 +279,7 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
     (p.x / 54) ** 2 + (p.z / 48) ** 2 < 0.8 ** 2 && Math.hypot(center.x - p.x, center.z - p.z) < 3.4));
   result.hazards = result.hazards.filter((hazard) => hazard.kind !== "pit");
   const obstacles = clearFootprint(scene, built, roundIsland(scene, built, result.obstacles));
+  greenLawn(scene, built);
   fieldPaths(scene);
   templeComplex(scene, obstacles);
   return { ...result, obstacles };
