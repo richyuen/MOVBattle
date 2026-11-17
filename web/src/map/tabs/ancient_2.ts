@@ -330,6 +330,65 @@ function ringWall(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obs
   return kept;
 }
 
+// Earth drum underside (573, greek_ancient_2.png: under the wall the island is a round drum of brown earth with
+// near-vertical sides set with grey stones, rounding off underneath; no navy slab or dark spikes). Spec: the base's
+// islandUnder/islandShelf/islandCliff go; a 64-sided drum on the 51 m circle, 9 m of near-vertical
+// side (diameter 102 to 96) then a rounded base to a 30 m flat bottom 17 m down; warm brown (0.42,0.27,0.15) half
+// self-lit; 110 grey stones (flattened dodecahedra 1.2-2.6 m) sunk half into the side between 1 and 13 m down.
+function earthDrum(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && /^(islandUnder|islandShelf|islandCliff)/.test(mesh.name)) mesh.setEnabled(false);
+  }
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const earth = mk("ancient2DrumEarth", new Color3(0.42, 0.27, 0.15), 0.5);
+  const stoneMat = mk("ancient2DrumStone", new Color3(0.58, 0.58, 0.56), 0.45);
+  const profile: Array<[number, number]> = [[51, 0], [50.6, -4], [48, -9], [44, -12.5], [36, -15.5], [15, -17]];
+  const parts: Mesh[] = [];
+  for (let i = 0; i < profile.length - 1; i++) {
+    const [r0, y0] = profile[i], [r1, y1] = profile[i + 1];
+    const band = MeshBuilder.CreateCylinder("ancient2Drum", { diameterTop: r0 * 2, diameterBottom: r1 * 2, height: y0 - y1, tessellation: 64, cap: Mesh.NO_CAP }, scene);
+    band.position.y = (y0 + y1) / 2;
+    parts.push(band);
+  }
+  const bottom = MeshBuilder.CreateCylinder("ancient2Drum", { diameter: profile[profile.length - 1][0] * 2, height: 0.2, tessellation: 64 }, scene);
+  bottom.position.y = profile[profile.length - 1][1];
+  parts.push(bottom);
+  const drum = Mesh.MergeMeshes(parts, true);
+  if (drum) {
+    drum.name = "ancient2Drum";
+    drum.convertToFlatShadedMesh();
+    drum.material = earth;
+    drum.isPickable = false;
+  }
+  const stones: Mesh[] = [];
+  for (let k = 0; k < 110; k++) {
+    const a = seeded(k, 141) * Math.PI * 2;
+    const y = -1 - seeded(k, 142) * 12;
+    let j = 1;
+    while (j < profile.length - 1 && profile[j][1] > y) j++;
+    const [ra, ya] = profile[j - 1], [rb, yb] = profile[j];
+    const r = ra + (rb - ra) * ((y - ya) / (yb - ya));
+    const d = 1.2 + seeded(k, 143) * 1.4;
+    const stone = MeshBuilder.CreatePolyhedron("ancient2DrumStone", { type: 2, sizeX: d * 0.5, sizeY: d * 0.36, sizeZ: d * 0.5 }, scene);
+    stone.position.set(Math.cos(a) * r, y, Math.sin(a) * r);
+    stone.rotation.set(seeded(k, 144) * 0.6, seeded(k, 145) * Math.PI, 0);
+    stones.push(stone);
+  }
+  const studs = Mesh.MergeMeshes(stones, true);
+  if (studs) {
+    studs.name = "ancient2DrumStones";
+    studs.convertToFlatShadedMesh();
+    studs.material = stoneMat;
+    studs.isPickable = false;
+  }
+}
+
 export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -345,6 +404,7 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
     (p.x / 54) ** 2 + (p.z / 48) ** 2 < 0.8 ** 2 && Math.hypot(center.x - p.x, center.z - p.z) < 3.4));
   result.hazards = result.hazards.filter((hazard) => hazard.kind !== "pit");
   const obstacles = ringWall(scene, built, clearFootprint(scene, built, roundIsland(scene, built, result.obstacles)));
+  earthDrum(scene, built);
   greenLawn(scene, built);
   fieldPaths(scene);
   templeComplex(scene, obstacles);
