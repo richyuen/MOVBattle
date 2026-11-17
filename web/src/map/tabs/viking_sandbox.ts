@@ -107,52 +107,47 @@ function snowAndIce(scene: Scene, built: Set<unknown>): void {
   crackMat.diffuseColor = new Color3(0.9, 0.95, 1);
   crackMat.emissiveColor = new Color3(0.45, 0.5, 0.55);
   crackMat.specularColor = Color3.Black();
-  const patches: Mesh[] = [];
-  for (let i = 0; i < 46; i++) {
-    const a = seeded(i, 31) * Math.PI * 2;
-    const reach = Math.sqrt(seeded(i, 32)) * 0.78;
-    const [rx, rz] = rimPoint((a * 180) / Math.PI, reach);
-    const size = 6 + (1 - reach) * 6 + seeded(i, 33) * 4;
-    const p = MeshBuilder.CreateCylinder("vsIcePatch", { diameter: 1, height: 0.05, tessellation: 14 }, scene);
-    // A lobed ragged outline: each of the 14 rim directions pushed in or out by its own amount
-    const lobes = Array.from({ length: 14 }, (_, k) => 0.55 + seeded(i * 14 + k, 34) * 0.9);
-    const pos = p.getVerticesData("position")!;
-    for (let v = 0; v < pos.length; v += 3) {
-      const r = Math.hypot(pos[v], pos[v + 2]);
-      if (r < 1e-6) continue;
-      const ang = (Math.atan2(pos[v + 2], pos[v]) + Math.PI * 2) % (Math.PI * 2);
-      const f = lobes[Math.round((ang / (Math.PI * 2)) * 14) % 14];
-      pos[v] *= f;
-      pos[v + 2] *= f;
-    }
-    p.setVerticesData("position", pos);
-    p.scaling.set(size, 1, size * (0.6 + seeded(i, 35) * 0.5));
-    p.rotation.y = seeded(i, 36) * Math.PI;
-    p.position.set(rx, 0.025 + (i % 3) * 0.005, rz);
-    patches.push(p);
+  const edge = (angle: number) => 0.72 + 0.085 * Math.sin(angle * 5) + 0.09 * Math.sin(angle * 11) + 0.047 * Math.cos(angle * 23);
+  const ice = MeshBuilder.CreateCylinder("vikingSandboxIceSheet", { diameter: ARENA_RADIUS * 2, height: 0.045, tessellation: 96 }, scene);
+  const vertices = ice.getVerticesData("position")!;
+  for (let i = 0; i < vertices.length; i += 3) {
+    const reach = edge(Math.atan2(vertices[i + 2], vertices[i]));
+    vertices[i] *= reach;
+    vertices[i + 2] *= reach;
   }
+  ice.setVerticesData("position", vertices);
+  ice.refreshBoundingInfo();
+  ice.position.y = 0.015;
+  ice.material = iceMat;
+  ice.receiveShadows = true;
+  ice.isPickable = false;
   const cracks: Mesh[] = [];
+  const insideIce = (x: number, z: number) => Math.hypot(x, z) < ARENA_RADIUS * edge(Math.atan2(z, x)) - 0.8;
   for (let i = 0; i < 60; i++) {
     const a = seeded(i, 41) * Math.PI * 2;
-    const [x, z] = rimPoint((a * 180) / Math.PI, Math.sqrt(seeded(i, 42)) * 0.76);
+    const [x, z] = rimPoint((a * 180) / Math.PI, Math.sqrt(seeded(i, 42)) * 0.7);
+    if (!insideIce(x, z)) continue;
     let px = x, pz = z, yaw = seeded(i, 43) * Math.PI;
-    for (let s = 0; s < 2; s++) {
-      const len = 3 + seeded(i * 2 + s, 44) * 6;
-      const c = MeshBuilder.CreateBox("vsIceCrack", { width: len, height: 0.04, depth: 0.16 }, scene);
-      c.rotation.y = yaw;
-      const dx = Math.cos(yaw) * len / 2, dz = -Math.sin(yaw) * len / 2;
-      c.position.set(px + dx, 0.07, pz + dz);
+    for (let s = 0; s < 3; s++) {
+      const len = (s === 2 ? 2 : 4) + seeded(i * 3 + s, 44) * 5;
+      const heading = s === 2 ? yaw - 1.15 : yaw;
+      const dx = Math.cos(heading) * len / 2, dz = -Math.sin(heading) * len / 2;
+      if (!insideIce(px + dx * 2, pz + dz * 2)) continue;
+      const c = MeshBuilder.CreateBox("vsIceCrack", { width: len, height: 0.018, depth: s === 2 ? 0.065 : 0.11 }, scene);
+      c.rotation.y = heading;
+      c.position.set(px + dx, 0.043, pz + dz);
       cracks.push(c);
-      px += dx * 2;
-      pz += dz * 2;
+      if (s === 0) {
+        px += dx * 2;
+        pz += dz * 2;
+      }
       yaw += (seeded(i * 2 + s, 45) - 0.5) * 1.6;
     }
   }
-  for (const [list, m, name] of [[patches, iceMat, "vikingSandboxIcePatches"], [cracks, crackMat, "vikingSandboxIceCracks"]] as const) {
-    const merged = Mesh.MergeMeshes([...list], true);
-    if (!merged) continue;
-    merged.name = name;
-    merged.material = m;
+  const merged = Mesh.MergeMeshes(cracks, true);
+  if (merged) {
+    merged.name = "vikingSandboxIceCracks";
+    merged.material = crackMat;
     merged.receiveShadows = true;
     merged.isPickable = false;
   }
