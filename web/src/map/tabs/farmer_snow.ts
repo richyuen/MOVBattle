@@ -3,6 +3,9 @@
 // Spec: Farmer 1's river course (down x = 0 with a gentle bend, about 4 m wide, back rim to front rim) laid as a sheet of pale blue ice
 // level with the ground, in a frosted bank, with a few darker crack lines across it and a frozen icefall hanging off the front rim.
 // No hazard. Built on campaign.introduction (base()).
+// Night dressing spec: open cottage verge and navy mill bank, with only corner trees
+// and low clusters of angular snow-capped rocks. Blue directional light shapes the
+// snow while warm window and string lights provide local accents.
 import { Color3, Mesh, MeshBuilder, Space, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
@@ -20,8 +23,8 @@ function seeded(i: number, seed: number): number {
  * turn to snow, the grass blades and tufts go, and soft low drifts (0.3-0.6 m high, 2-6 m long, flattened) lie along the tree ring, at the
  * rim and in a few banks on the field, none of them in the way (drawn only).
  */
-const SNOW = new Color3(0.8, 0.85, 0.96);
-const SNOW_SHADE = new Color3(0.3, 0.34, 0.45);
+const SNOW = new Color3(0.57, 0.68, 0.96);
+const SNOW_SHADE = new Color3(0.035, 0.065, 0.17);
 
 function snowCover(scene: Scene, built: Set<unknown>): void {
   for (const name of ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"]) {
@@ -234,16 +237,17 @@ function nightSky(scene: Scene, built: Set<unknown>): () => void {
   const dir = scene.getLightByName("dir") as DirectionalLight | null;
   const saved = {
     hemi: hemi ? [hemi.intensity, hemi.diffuse.clone(), hemi.groundColor.clone()] as const : null,
-    dir: dir ? [dir.intensity, dir.diffuse.clone()] as const : null,
+    dir: dir ? [dir.intensity, dir.diffuse.clone(), dir.direction.clone()] as const : null,
   };
   if (hemi) {
-    hemi.intensity = 0.35;
-    hemi.diffuse = new Color3(0.45, 0.6, 1.3);
+    hemi.intensity = 0.22;
+    hemi.diffuse = new Color3(0.41, 0.57, 1.15);
     hemi.groundColor = new Color3(0.12, 0.16, 0.36);
   }
   if (dir) {
-    dir.intensity = 0.55;
-    dir.diffuse = new Color3(0.6, 0.72, 1.0);
+    dir.intensity = 0.78;
+    dir.diffuse = new Color3(0.52, 0.69, 1.18);
+    dir.direction.set(0.62, -0.55, -0.48);
   }
   const glow = scene.getGlowLayerByName("glow");
   const dots = (name: string, count: number, place: (i: number) => [number, number, number, number], c: Color3) => {
@@ -277,7 +281,7 @@ function nightSky(scene: Scene, built: Set<unknown>): () => void {
   }, new Color3(0.9, 0.92, 1.0));
   return () => {
     if (hemi && saved.hemi) [hemi.intensity, hemi.diffuse, hemi.groundColor] = [saved.hemi[0], saved.hemi[1], saved.hemi[2]];
-    if (dir && saved.dir) [dir.intensity, dir.diffuse] = [saved.dir[0], saved.dir[1]];
+    if (dir && saved.dir) [dir.intensity, dir.diffuse, dir.direction] = [saved.dir[0], saved.dir[1], saved.dir[2]];
   };
 }
 
@@ -385,9 +389,32 @@ function clearFieldJunk(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
   const gone: Array<[number, number]> = [];
   for (const mesh of scene.meshes) {
     if (!built.has(mesh)) continue;
-    if (!/^Introduction Grounds_(box|cyl|totem_top)$/.test(mesh.name)) continue;
-    gone.push([mesh.position.x, mesh.position.z]);
+    if (!/^(Introduction Grounds_(box|cyl|totem_top)$|ruin(Tower|Pillar|Rubble)|boulder$|wallStone$|pebble$)/.test(mesh.name)) continue;
+    if (mesh.isEnabled()) gone.push([mesh.position.x, mesh.position.z]);
     mesh.setEnabled(false);
+  }
+  const stone = new StandardMaterial("farmerSnowVergeRock", scene);
+  stone.diffuseColor = new Color3(0.18, 0.25, 0.42);
+  stone.specularColor = Color3.Black();
+  const snow = new StandardMaterial("farmerSnowVergeCap", scene);
+  snow.diffuseColor = SNOW;
+  snow.emissiveColor = SNOW_SHADE;
+  snow.specularColor = Color3.Black();
+  for (const [x, z] of [[-30, -22], [-19, -32], [13, -38], [37, -14], [34, 23], [-37, 13]]) {
+    for (let i = 0; i < 3; i++) {
+      const radius = 0.5 + seeded(x + i, z) * 0.9;
+      const rock = MeshBuilder.CreateIcoSphere("farmerSnowVergeRock", { radius, subdivisions: 1, flat: true }, scene);
+      rock.position.set(x + i * 1.35, radius * 0.12, z + seeded(i, z) * 1.8);
+      rock.scaling.set(1.24, 0.72, 0.87);
+      rock.rotation.y = i * 1.2;
+      rock.material = stone;
+      rock.receiveShadows = true;
+      const cap = rock.clone("farmerSnowVergeCap");
+      cap.position.y += radius * 0.55;
+      cap.scaling.set(1.04, 0.23, 0.76);
+      cap.material = snow;
+      cap.receiveShadows = true;
+    }
   }
   return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
 }
