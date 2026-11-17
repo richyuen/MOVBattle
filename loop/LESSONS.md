@@ -10,7 +10,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey.
 - Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum); by self-lit meshes the glow halo browns it: exclude those from the glow.
 - A world box refreshes only on render: computeWorldMatrix(true) before reading bounds in a per-tick step. bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent.
-- Flat pieces are closed slabs (a one-sided disc can face away).
+- Flat pieces are closed slabs (a one-sided disc can face away). execSync eats a caret: write sha~1.
 - glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh left out of the glow pass wears the glow of bright emissive ground behind it as a pale veil (farmer_snow mill read white, 562). Keep dark solids in the pass; exclude only bright/self-lit ones.
 
 - Lit thin-instance wheat can read gold from above and brown at ground level. Two unlit, glow-excluded instance meshes sharing one matrix buffer keep heads and stems distinct in both shots.
@@ -19,10 +19,9 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - capture-world.mjs boots like capture.mjs: mulberry32 0x4d4f5642 reseeded at every resetBattle, time only through advanceTime, setup renders at 1/8 size (__setupScale 8). It re-adds body.capture-mode before every shot (the game drops it on loads).
 - Never run a capture with a test --iter number: pruneOld keeps only summary.json for iterations older than 10 (guarded by STATE's Iteration); test into look/ (no --iter).
 - A capture wipes iter-N unless --add: save audit.md / critic.md after the last capture of the step, or rerun the judge after it. Step 5's capture of an audit iteration also wipes the audit files: run it with --add (555 lost audit.md/audit2.md this way).
-- A step-5 capture of 6 maps + 17 stages runs past the 10 min Bash cap: run it in the background (75 shots took ~12 min).
+- A step-5 capture (75-82 shots) takes ~12 min: run it in the background.
 - Map StandardMaterial greys read lavender-blue in the shots even at (0.6,0.54,0.52) (critic 555 on tribal rocks and farmer walls): a warm grey needs r well over b; check palette.png first.
 - Probes (loop/scripts/probes/) run from repo root; --build after source changes, --noglow for a swatch. They were written for units: read one before trusting it on a map.
-- execSync eats a caret: write sha~1.
 - In-page probe on the dev server (5173): `const B = await import('<the @babylonjs_core.js?v=... URL from performance.getEntriesByType("resource")>'); B.EngineStore.LastCreatedScene` gives the live scene (meshes, materials, multiPickWithRay) after game.loadMapForCapture(id).
 
 ## Maps and stages
@@ -38,7 +37,8 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - The translucent box framing farmer maps in the top shot is the base's placement guide (campaign_zone_overlay_*/campaign_zone_border_*, mapBuilder createPlacementGuides), a map mesh, not a capture overlay. Island underside = islandUnder + islandShelf + islandCliff (merged crags); farmer_1's earthBowl replaces them. MeshBuilder.CreatePolygon needs earcut (absent): fan a ribbon to a hub instead.
 - The island shot (capture-world island pose; ArcRotate upperRadiusLimit clamps it to radius 120, elevation ~16 deg) foreshortens the underside hard: an underside must be ~0.3-0.4 of the island width deep (tribal tiers 16/13/10 m) or it reads as a thin band; farmer_1's 22 m bowl shows only ~7 m (559).
 - A `*/` inside a doc comment (e.g. "overlay_*/border_*") closes it: tsc then fails with dozens of parse errors.
-- Round island (560): the base lawn ("ground", "centerGrass") and underside slabs follow islandRim (superellipse 54 x 48, power 3); remap their vertices radially by newR/oldR per angle. fieldBlades_* are plain vertex meshes (4 vertices per blade, not thin instances): collapse a quad past the rim onto its first vertex. hazeTreeline is one merged mesh on straight bands at z +-37..41 (position at origin): hide it whole. Base tree trunks are unparented; a disabled trunk must be skipped by any crown builder.
+- Round island (560): base lawn ("ground", "centerGrass") and underside slabs follow islandRim (superellipse 54 x 48, power 3); remap vertices radially by newR/oldR. fieldBlades_* are plain vertex meshes (4 per blade): collapse a quad past the rim onto its first vertex. hazeTreeline is one merged mesh: hide it whole. Base trunks are unparented (crowns are their children); skip disabled trunks.
+- Scene fog is linear and re-keyed every frame by main.ts (fogStart/End from the camera radius): a map's fogDensity does nothing. Draw haze instead (inside-facing translucent mist walls, viking 572).
 - Farmer base ring trees are oaks (mapBuilder oakRing: "canopy" disabled, crowns are "oakCrown" lumps on oakLeaves/oakLeavesDark): recolour those, not canopy (561). A raised drawn-only set piece (bridge hump) can carry units via MapBuildResult.height (farmer_1 bridgeHeight).
 - A ribbon's facing follows its path order: with backFaceCulling off a down-facing deck renders black; check the first normal after convertToFlatShadedMesh and flipFaces(true) when wrong (561). An underside facing away from the sun needs self-light ~1x its colour or it reads near black.
 - Read stage armies from the stage files, not from Notes: tribal_2's "team 1 at x <= 40" was really x <= 24.4 (563), which freed 15 m for the massif. The campaign.challenge base's placement zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones (centre/size) inside it.
@@ -48,6 +48,6 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Base field junk is "<displayName>_box|_cyl|_totem_top" meshes (mapBuilder addBoxObstacle/addCylinderObstacle/addTotem): hiding those on the campaign.challenge base cleared the ruin and totem but the critic still saw a dark block row in the battle shot (viking/ancient_sandbox 564); list the built set's names near the spot before claiming the slabs gone.
 - Turf caps on cliff columns flicker when their top faces share a plane with the cliff or meadow. Set the cap slightly below the meadow and the shaft top inside the cap (Medieval 1, 567).
 - The sandboxed shell blocks the capture's loopback calls to Vite: run captures with local network access.
-- Bushy grass: flattened subdivision-1 IcoSpheres (20 faces) as thin instances, overlapping on a ~0.8 m grid, read as fuzzy cover where leaf cards read as beige flags (medieval 571).
+- Bushy grass: flattened subdivision-1 IcoSpheres as thin instances on a ~0.8 m grid read as fuzzy cover; leaf cards read as beige flags (571).
 - Varied-height cliff buttresses can leave sky below continuous ledges. Back the ledges with a skirt down to the adjoining tier and check the ground shot.
-- Rooftops can hide a stage's entire army in a low camera. An elevated player-side diagonal keeps the formation visible on Ancient 1.
+- Rooftops can hide a stage's army in a low camera; an elevated player-side diagonal keeps it visible (Ancient 1).

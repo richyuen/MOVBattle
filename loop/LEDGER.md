@@ -3,17 +3,6 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-566 | 70777289+20b7df96 | map.medieval_1.b | approved
-566 | 29f15c87+fb977c70 | map.ancient_1.b | approved
-566 | 49d2750c | map.tribal_sandbox.b | approved
-566 | 1e5f5680+e6c89ac4 [R] | map.farmer_2.a | approved (CONFIRM passed)
-566 | ae2ad902 | map.farmer_snow.a | approved
-566 | 373e0c1c+c3ddcf73 | map.medieval_2.a | approved
-566 | 13fa8e2a | map.ancient_2.b | approved
-566 | 1e70afc3 | map.viking.b | approved
-566 | 9358dcce | map.ancient_sandbox.a | approved
-566 | b2df5dd6 | map.viking_sandbox.a | approved
-
 567 | db48feef | map.tribal_sandbox.b | approved
 567 | 03d00d50 | map.tribal_sandbox.a | approved
 567 | 96d8ba1d | map.tribal_sandbox.a | approved
@@ -61,6 +50,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 571 | 8699ce12 | map.ancient_sandbox.a | approve, struck a6
 571 | d5caaf8b | map.viking.b | approve, struck b3 and a4
 571 | c47c5fef [R] | map.viking_sandbox.a | approve, struck a1, a2; added a3
+572 | 2cf0d365 [R] | map.farmer_snow.a | approve, struck a1, a3 (CONFIRM failed a)
+572 | afbebfe0 | map.medieval_2.a | approve, struck a3 (CONFIRM failed a)
+572 | 17023fc0 | map.viking_sandbox.a | approve, struck a3 (CONFIRM failed a)
+572 | b49c9e06 | map.ancient_1.a | approve, struck a6
+572 | 86b2096b | map.ancient_1.b | approve, struck b2 (CONFIRM failed b)
+572 | 650af264 | map.ancient_1.a | approve, struck a4 (CONFIRM failed a)
+572 | ed751363 | map.ancient_2.a | approve, struck a3
+572 | 72b505d7 | map.ancient_sandbox.b | approve, struck b3 and a3
+572 | 30beeb4b+b35b008f | map.viking.a | approve, struck a3
+572 | 686f2456 | map.ancient_sandbox.a | approve, struck a2
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
@@ -120,3 +119,11 @@ web/src/map/tabs/ancient_1.ts:bayHeadland and hopliteStatue | 44 x 21 m shelf at
 web/src/map/tabs/ancient_sandbox.ts:ruins | 5 broken columns, 3 fallen with drums, 2 gateways, 12 fragments | 571 | approved, pieces slender | absent
 web/src/map/tabs/viking_sandbox.ts:snowAndIce floor (R) | ice to 0.8 R, 9.5 m plate crack grid, 9 snow tongues + 7 islands | 571 | approved, snow ~1/5 of ice (CONFIRM wants ~1/2) | 0.72 R sheet with 60 random cracks
 web/src/map/tabs/viking_sandbox.ts:iceWall ledges (R) | broken ledges 9-24 deg, depth 1.5-9 m, lift -2..+1.2, jutting columns in 3-7 deg breaks | 571 | approved, ledges thin floating plates | continuous shelves per tier
+web/src/map/tabs/farmer_snow.ts:snowRocksAndShade (R) | 9 slate clusters with pale caps (0.82,0.88,1.0) self-lit (0.36,0.42,0.62); drift blobs removed; navy shade plates 17x14 / 11x9 at (17,-33) alpha 0.35/0.3 | 572 | approved (CONFIRM failed a: field cobalt, no corner trees, black side band) | 70 flattened snow drift spheres
+web/src/map/tabs/medieval_2.ts:castleFootThicket | hedge domes every 2.3 m at z 22.5-23.7, oaks 7-10 m every 6.5 m at z 20-21.5, 5 subdiv-2 lobes | 572 | approved, struck a3 | absent
+web/src/map/tabs/viking_sandbox.ts:iceWall ledge caps | lip 2-3.2 m, ice body from lip down to tier below | 572 | approved, struck a3 | 1.4 m lip, no body
+web/src/map/tabs/viking.ts:winterHaze | clear (0.58,0.86,0.91), 320 flakes, mist walls r 46/53 alpha 0.22/0.4 | 572 | approved, struck a3; sky still dull, mist top edge hard | inherited beige sky
+web/src/map/tabs/ancient_1.ts:BANDS and STREETS | three bands x -24..24 (z -19/0/19, depth 14/16/14), streets z +-10 4 m wide | 572 | approved (CONFIRM failed b: reads as fused slab) | 2x3 blocks at x +-15
+web/src/map/tabs/ancient_1.ts:lighthouse and pebbledUnderside | 14 m octagonal tower at (-42,46); two slabs 7 m + 6 m inset, pebbles every 3.5 m | 572 | approved | absent; 11 m box slab
+web/src/map/tabs/ancient_2.ts:ringWall | 72 segments r 49.6, 1.5 m high, beige (0.78,0.68,0.5), 6 cypress clusters; ring trees removed | 572 | approved, struck a3 | autumn tree ring
+web/src/map/tabs/ancient_sandbox.ts:spiralMountain and edgeVillage | 32 m tower at (0,41) r 9-4.5, 2.5-turn ledge; 5 hamlets, 8 rim cypress clusters, ring trees removed | 572 | approved, struck a2, a3, b3 | absent; autumn ring
