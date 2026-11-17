@@ -8,7 +8,7 @@
 // (0.15, 0.35, 0.15) every other cone; beside each, two more pines 1.8-3.8 m along the ring and up to 2.5 m in or 1 m out (drawn
 // only) so the band reads dense; all merged
 // per material, in the glow pass (dark solids), receiving shadows.
-import { Color3, Mesh, MeshBuilder, StandardMaterial, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 function seeded(i: number, seed: number): number {
@@ -72,10 +72,54 @@ function pineForest(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+// Meadow (577, legacy.the_war.png and the wiki shot: the glade is a bright yellow-green meadow of tall soft grass,
+// shin-high, in lighter and darker swathes; no lilac floor and no red or blue tint across the halves). Spec: the base
+// floor ("ground", "centerGrass") recoloured (0.56, 0.64, 0.2), barely self-lit; the base's blades and tufts hidden; the
+// translucent team-zone slabs (campaign_zone_overlay_* / border_*) hidden; tall faceted grass clumps 0.8-1.4 m across and
+// 0.35-0.6 m high on a 1.1 m jittered grid inside the rim (superellipse 52 x 46, power 3), two yellow-greens (0.62, 0.72,
+// 0.2) and (0.48, 0.6, 0.15) chosen in broad swathes by a slow sine field; thin instances, receiving shadows.
+function meadow(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (/^(fieldBlades_|fieldTufts_|grassTuft|campaign_zone_overlay_|campaign_zone_border_)/.test(mesh.name)) mesh.setEnabled(false);
+    if ((mesh.name === "ground" || mesh.name === "centerGrass") && mesh.material instanceof StandardMaterial) {
+      mesh.material.diffuseColor.set(0.56, 0.64, 0.2);
+      mesh.material.emissiveColor.set(0.08, 0.09, 0.03);
+    }
+  }
+  const clump = (name: string, colour: Color3) => {
+    const mesh = MeshBuilder.CreateIcoSphere(name, { radius: 0.5, subdivisions: 1, flat: true }, scene);
+    const mat = new StandardMaterial(name, scene);
+    mat.diffuseColor = colour;
+    mat.emissiveColor = colour.scale(0.24);
+    mat.specularColor = Color3.Black();
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    return { mesh, m: [] as number[] };
+  };
+  const grass = [clump("legacyMeadowLight", new Color3(0.62, 0.72, 0.2)), clump("legacyMeadowDark", new Color3(0.48, 0.6, 0.15))];
+  let i = 0;
+  for (let z = -46; z < 46; z += 1.1) {
+    for (let x = -52; x < 52; x += 1.1) {
+      i += 1;
+      const jx = seeded(i, 41), jz = seeded(i, 43);
+      const px = x + (jx - 0.5) * 0.9, pz = z + (jz - 0.5) * 0.9;
+      if (Math.abs(px / 52) ** 3 + Math.abs(pz / 46) ** 3 > 1) continue;
+      const swathe = Math.sin(px * 0.08 + 0.7) * Math.cos(pz * 0.11 + 1.9) + Math.sin((px - pz) * 0.05) * 0.6;
+      const w = 0.8 + jx * 0.6, h = 0.35 + jz * 0.25;
+      const at = new Vector3(px, h * 0.35, pz);
+      grass[swathe + jz * 0.4 > 0.4 ? 1 : 0].m.push(...Matrix.Compose(new Vector3(w, h, w * (0.8 + jz * 0.3)), Quaternion.RotationAxis(Vector3.Up(), jx * 6.28), at).m);
+    }
+  }
+  for (const { mesh, m } of grass) mesh.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
+}
+
 export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   pineForest(scene, built);
+  meadow(scene, built);
   return result;
 }
