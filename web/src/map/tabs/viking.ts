@@ -417,10 +417,10 @@ function frozenWaterfall(scene: Scene, obstacles: MapBuildResult["obstacles"]): 
 
 // Raised snowbanks (573, reference/stages/introduction.ice_archers_only_almost.png: the lake sits in a hollow, its
 // shores rising as white snowbanks that carry the pine forest). Spec: the ground rises from the lake edge + 1 m to
-// 2.4 m over 5 m (smoothstep) and stays up to the rim, dropping back near the frozen ship (fade 13-19 m from it) so
+// 4.5 m (574; 2.4 m in 573) over 5 m (smoothstep) and stays up to the rim, dropping back near the frozen ship (fade 13-19 m from it) so
 // the hull stays seated; drawn as one faceted snow sheet over the bank (12 radial rings x 96 around), its outer edge
 // skirted down to the island top; the pines and the waterfall stand on it, and units are lifted by it (height).
-const BANK = { top: 2.4, inner: 1, ramp: 5 };
+const BANK = { top: 4.5, inner: 1, ramp: 5 };
 function bankHeight(x: number, z: number): number {
   const t = Math.min(1, Math.max(0, (Math.hypot(x, z) - lakeR(Math.atan2(z, x)) - BANK.inner) / BANK.ramp));
   const fade = Math.min(1, Math.max(0, (Math.hypot(x - SHIP.x, z - SHIP.z) - 13) / 6));
