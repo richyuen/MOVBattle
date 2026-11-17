@@ -533,6 +533,66 @@ function offshoreIslets(scene: Scene): void {
   }
 }
 
+// Front rim (574, probe: the dark brown boulder chain along the front edge of the island shot is the base's merged
+// "hazeTreeline"; greek_ancient_sandbox.png has open grass there with a few pale sandstone rocks, a broken ruin and
+// stone steps). Spec: hazeTreeline goes whole; five clusters of 2-4 pale sandstone boulders (flattened faceted ico
+// spheres 1.2-2.6 m, warm cream (0.86, 0.72, 0.5)) at 0.9 of the rim between 232 and 308 degrees, and two short
+// flights of four solid stone steps (3.2 m wide, 0.35 m risers) at 250 and 292 degrees, going down off the rim lip
+// onto the cliff top. One cylinder collider per boulder cluster (outside the placement zones, |z| > 35).
+function frontSandstone(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): void {
+  for (const mesh of scene.meshes) if (built.has(mesh) && mesh.name === "hazeTreeline") mesh.setEnabled(false);
+  const sand = new StandardMaterial("ancientSandboxSandstone", scene);
+  sand.diffuseColor = new Color3(0.86, 0.72, 0.5);
+  sand.emissiveColor = sand.diffuseColor.scale(0.24);
+  sand.specularColor = Color3.Black();
+  const stone = new StandardMaterial("ancientSandboxStepStone", scene);
+  stone.diffuseColor = new Color3(0.82, 0.76, 0.64);
+  stone.emissiveColor = stone.diffuseColor.scale(0.22);
+  stone.specularColor = Color3.Black();
+  const rocks: Mesh[] = [];
+  [234, 247, 266, 281, 304].forEach((deg, k) => {
+    const [rx, rz] = rimAt((deg * Math.PI) / 180);
+    const cx = rx * 0.9, cz = rz * 0.9;
+    const n = 2 + Math.floor(seeded(k, 601) * 3);
+    let reach = 0;
+    for (let i = 0; i < n; i++) {
+      const s = 1.2 + seeded(k * 5 + i, 602) * 1.4;
+      const a = seeded(k * 5 + i, 603) * Math.PI * 2, d = i === 0 ? 0 : 1.2 + seeded(k * 5 + i, 604) * 1.6;
+      const rock = MeshBuilder.CreateIcoSphere("ancientSandboxSandstoneRock", { radius: s / 2, subdivisions: 1, flat: true }, scene);
+      rock.scaling.set(1 + seeded(k * 5 + i, 605) * 0.4, 0.55 + seeded(k * 5 + i, 606) * 0.3, 1);
+      rock.rotation.set(seeded(k * 5 + i, 607) * 0.4, a, seeded(k * 5 + i, 608) * 0.3);
+      rock.position.set(cx + Math.cos(a) * d, s * 0.18, cz + Math.sin(a) * d);
+      rocks.push(rock);
+      reach = Math.max(reach, d + s * 0.6);
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: Math.min(3.5, reach) });
+  });
+  const merged = Mesh.MergeMeshes(rocks, true);
+  if (merged) {
+    merged.name = "ancientSandboxSandstone";
+    merged.convertToFlatShadedMesh();
+    merged.material = sand;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  for (const deg of [250, 292]) {
+    const ang = (deg * Math.PI) / 180;
+    const [rx, rz] = rimAt(ang);
+    const yaw = -ang + Math.PI / 2;
+    for (let s = 0; s < 4; s++) {
+      // Step s sits further out and lower: a solid flight going down off the lip onto the cliff top
+      const r = 0.995 + s * 0.014;
+      const top = -0.35 * s, h = 3 - 0.35 * s;
+      const step = MeshBuilder.CreateBox("ancientSandboxStep", { width: 3.2, height: h, depth: 0.75 }, scene);
+      step.position.set(rx * r, top - h / 2 + 0.02, rz * r);
+      step.rotation.y = yaw;
+      step.material = stone;
+      step.receiveShadows = true;
+      step.isPickable = false;
+    }
+  }
+}
+
 // Clear sky (574, greek_ancient_sandbox.png: a bright mid-blue sky with white puffy clouds, no beige haze). Spec: clear
 // colour (0.3, 0.6, 0.88), fog a pale sky blue (0.66, 0.8, 0.93) so the far range fades toward the horizon, the base
 // clouds kept white; both restored on dispose.
@@ -590,6 +650,7 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
   ruins(scene, cleared.obstacles);
   spiralMountain(scene, cleared.obstacles);
   const obstacles = edgeVillage(scene, built, cleared.obstacles);
+  frontSandstone(scene, built, obstacles);
   const restoreSky = clearSky(scene);
   return { ...result, dispose: () => { restoreSky(); result.dispose?.(); }, obstacles, hazards: cleared.hazards };
 }
