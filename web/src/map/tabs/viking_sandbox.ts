@@ -170,7 +170,7 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
       const d = deg + (t % 2) * (STEP / 2) + (seeded(k, 1) - 0.5) * 2;
       if (Math.abs(d - 180) < 14) continue;
       const [x, z] = rimPoint(d, tier.at);
-      const along = 5 + seeded(k, 2) * 9;
+      const along = 6.5 + seeded(k, 2) * 8.5;
       const h = tier.h0 + seeded(k, 3) * (tier.h1 - tier.h0);
       const yaw = -(d * Math.PI) / 180 - Math.PI / 2;
       const slab = MeshBuilder.CreateCylinder("vsIceBlock", { diameterTop: along * (0.66 + seeded(k, 4) * 0.52), diameterBottom: along, height: h, tessellation: 5 }, scene);
@@ -185,12 +185,13 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
       for (let angle = start; angle <= end; angle += 2) {
         const i = angle + t * 400;
         const y = tier.h1 - 0.1 + Math.sin(angle * 0.18) * 0.63 + seeded(i, 9) * 0.38;
-        const [ix, iz] = rimPoint(angle, tier.at - 0.05 - seeded(i, 7) * 0.028);
+        const [ix, iz] = rimPoint(angle, tier.at - 0.038 - seeded(i, 7) * 0.045);
         const [ox, oz] = rimPoint(angle, tier.at + 0.044 + seeded(i, 8) * 0.018);
         rows[0].push(new Vector3(ix * 1.014, y - 1.25, iz * 1.014));
         rows[1].push(new Vector3(ix, y - 0.1, iz));
         rows[2].push(new Vector3(ox, y + 0.24, oz));
-        rows[3].push(new Vector3(ox, y - 1.28, oz));
+        const foot = t === 0 ? -0.1 : TIERS[t - 1].h0 - 0.45;
+        rows[3].push(new Vector3(ox, foot, oz));
       }
       const shelf = MeshBuilder.CreateRibbon("vsIceShelf", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene);
       caps.push(shelf);
