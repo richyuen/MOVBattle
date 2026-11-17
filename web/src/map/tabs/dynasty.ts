@@ -116,9 +116,25 @@ function pagoda(scene: Scene): void {
   }
 }
 
+// Mint sky (577, dynasty.png and the wiki shot: the island floats in a soft pale mint-green haze, a few faint clouds, no
+// mountain range behind it). Spec: clear colour (0.68, 0.86, 0.74) and fog (0.76, 0.9, 0.8); the base's far range and
+// second slab (mountainBase/Cap/Root) hidden, its clouds kept; both colours restored on dispose.
+function mintSky(scene: Scene, built: Set<unknown>): () => void {
+  const oldClear = scene.clearColor.clone();
+  const oldFog = scene.fogColor.clone();
+  scene.clearColor.set(0.68, 0.86, 0.74, 1);
+  scene.fogColor = new Color3(0.76, 0.9, 0.8);
+  for (const mesh of scene.meshes) if (built.has(mesh) && mesh.name.startsWith("mountain")) mesh.setEnabled(false);
+  return () => {
+    scene.clearColor.copyFrom(oldClear);
+    scene.fogColor.copyFrom(oldFog);
+  };
+}
+
 export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
+  const restoreSky = mintSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   // The base's small pagoda (a root with its parts as children) and its collider
   // and any ring tree standing in the new pagoda's footprint, with their colliders
   const gone: Vector3[] = [];
@@ -133,5 +149,5 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   const obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 1));
   pagoda(scene);
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
-  return { ...result, obstacles };
+  return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
