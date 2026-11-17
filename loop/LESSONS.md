@@ -4,7 +4,6 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 
 ## Rendering (swiftshader + PBR + SSAO + ACES + glow)
 - PBR colours are linear: an sRGB target c needs ~c^2.2 as the code. Pick values off `output/loop/palette.png` (`capture.mjs --palette`).
-- SSAO greys a DOUBLESIDE ribbon's inward faces: build shells one-sided facing out (check flipFaces).
 - Flat colour that survives ACES: an "unlit" material's colour comes from its EMISSIVE only (baseColor alone renders black), excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
 - ACES lifts mid code values toward pale: an unlit plate keeps a deep value; lit timber wants (.2,.11,.055) with a small self-light.
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey.
@@ -12,7 +11,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - A world box refreshes only on render: computeWorldMatrix(true) before reading bounds in a per-tick step. bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent.
 - Flat pieces are closed slabs (a one-sided disc can face away). execSync eats a caret: write sha~1.
 - glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh left out of the glow pass wears the glow of bright emissive ground behind it as a pale veil (farmer_snow mill read white, 562). Keep dark solids in the pass; exclude only bright/self-lit ones.
-
+- CreateIcoSphere subdivisions 0 is falsy, so it becomes 4: a smooth navy ball (575). Use 1 for a faceted rock.
 - Lit thin-instance wheat can read gold from above and brown at ground level. Two unlit, glow-excluded instance meshes sharing one matrix buffer keep heads and stems distinct in both shots.
 
 ## Capture and probes
@@ -40,7 +39,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Round island (560): base lawn ("ground", "centerGrass") and underside slabs follow islandRim (superellipse 54 x 48, power 3); remap vertices radially by newR/oldR. fieldBlades_* are plain vertex meshes (4 per blade): collapse a quad past the rim onto its first vertex. hazeTreeline is one merged mesh: hide it whole. Base trunks are unparented (crowns are their children); skip disabled trunks.
 - Scene fog is linear and re-keyed every frame by main.ts (fogStart/End from the camera radius): a map's fogDensity does nothing. Draw haze instead (inside-facing translucent mist walls, viking 572).
 - Farmer base ring trees are oaks (mapBuilder oakRing: "canopy" disabled, crowns are "oakCrown" lumps on oakLeaves/oakLeavesDark): recolour those, not canopy (561). A raised drawn-only set piece (bridge hump) can carry units via MapBuildResult.height (farmer_1 bridgeHeight).
-- A ribbon's facing follows its path order: with backFaceCulling off a down-facing deck renders black; check the first normal after convertToFlatShadedMesh and flipFaces(true) when wrong (561; viking bankFace 574 went near black). An underside facing away from the sun needs self-light ~1x its colour or it reads near black.
+- A ribbon's facing follows its path order (SSAO greys a DOUBLESIDE one's inward faces): a down-facing deck renders black; check the first normal after convertToFlatShadedMesh and flipFaces(true) when wrong (561; viking bankFace 574 went near black). An underside facing away from the sun needs self-light ~1x its colour or it reads near black.
 - Read stage armies from the stage files, not from Notes: tribal_2's "team 1 at x <= 40" was really x <= 24.4 (563), which freed 15 m for the massif. The campaign.challenge base's placement zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones (centre/size) inside it.
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns / a palisade from the top shot (tribal_2 massif, viking_sandbox wall, 563 critic+CONFIRM): a rock mass wants heaped faceted boulders or tilted slabs with few flat tops.
 - Stage enemy positions are validated against the map's team-1 zone, hazards and obstacles (game.checkStage): a map change can misplace a stage's army (the checkpoint re-judges every stage on a finished map batch).
@@ -51,4 +50,4 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - The sandboxed shell blocks the capture's loopback calls to Vite: run captures with local network access.
 - Bushy grass: flattened subdivision-1 IcoSpheres as thin instances on a ~0.8 m grid read as fuzzy cover; leaf cards read as beige flags (571).
 - Varied-height cliff buttresses can leave sky below continuous ledges. Back the ledges with a skirt down to the adjoining tier and check the ground shot.
-- Rooftops can hide a stage's army in a low camera; an elevated player-side diagonal keeps it visible (Ancient 1).
+- Rooftops can hide a stage's army in a low camera; an elevated player-side diagonal shows it (Ancient 1).
