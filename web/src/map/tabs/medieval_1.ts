@@ -118,7 +118,10 @@ export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBui
       onLand = Math.abs(x) > near + (nextNear - near) * t && Math.abs(x) < far + (nextFar - far) * t;
       break;
     }
-    if (!onLand) {
+    // Leave only a few isolated trees beyond the ruins. The western plateau
+    // retains its continuous outer canopy and open battlefield by the bridge.
+    const rightBankBreak = x > 0 && !(x > 32 && (z < -21 || (z > 18 && z < 27)));
+    if (!onLand || rightBankBreak) {
       detachedTrees.push(mesh.position.clone());
       mesh.setEnabled(false);
     }
