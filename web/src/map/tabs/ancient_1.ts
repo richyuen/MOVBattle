@@ -549,7 +549,7 @@ function townDressing(scene: Scene): void {
     const cx = (min.x + max.x) / 2, cz = (min.z + max.z) / 2, half = (max.x - min.x) / 2;
     for (const faceZ of [min.z, max.z]) {
       const out = faceZ === min.z ? -1 : 1;
-      const nearStreet = STREETS.some((s) => Math.abs(faceZ - s) < STREET_WIDTH / 2 + 1);
+      const nearStreet = STREETS.some((s) => Math.abs(faceZ - s) < STREET_WIDTH / 2 + 4);
       const plazaFace = house.name === "ancient1OuterHouse" && Math.sign(cz) !== out;
       if (!nearStreet && !plazaFace) continue;
       for (const side of [-1, 1]) {
