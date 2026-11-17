@@ -91,6 +91,31 @@ function fieldBoulder(scene: Scene): Obstacle {
   return { type: "cylinder", center: new Vector3(x, 0, z), radius: 4.1 };
 }
 
+function snowyFurrows(scene: Scene): void {
+  const snow = new StandardMaterial("farmerSnowFurrowSnow", scene);
+  snow.diffuseColor = SNOW;
+  snow.emissiveColor = SNOW_SHADE.scale(0.7);
+  snow.specularColor = Color3.Black();
+  const parts: Mesh[] = [];
+  for (let row = 0; row < 6; row++) {
+    const z = -7.3 - row * 1.58;
+    for (const [x, length] of [[9.2, 5.2], [15.7, 6.1]]) {
+      const ridge = MeshBuilder.CreateIcoSphere("farmerSnowRaisedFurrow", { radius: 1, subdivisions: 2 }, scene);
+      ridge.scaling.set(length * (0.47 + 0.08 * seeded(row, 87)), 0.28 + 0.11 * seeded(row, 88), 0.55);
+      ridge.position.set(x - row * 0.3, 0.02, z + (x - 9.2) * 0.13);
+      ridge.rotation.y = -0.13;
+      parts.push(ridge);
+    }
+  }
+  const ridges = Mesh.MergeMeshes(parts, true);
+  if (ridges) {
+    ridges.name = "farmerSnowCropFurrows";
+    ridges.material = snow;
+    ridges.receiveShadows = true;
+    ridges.isPickable = false;
+  }
+}
+
 function snowyBridge(scene: Scene): Obstacle[] {
   const stone = new StandardMaterial("farmerSnowBridgeStone", scene);
   stone.diffuseColor = new Color3(0.56, 0.56, 0.6);
@@ -701,6 +726,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   };
   strip("farmerSnowBank", ICE.halfWidth + 0.8, 0.05, bank);
   strip("farmerSnowIce", ICE.halfWidth, 0.08, ice);
+  snowyFurrows(scene);
 
   // Cracks: thin dark slivers lying across the ice
   const cracks: Mesh[] = [];
