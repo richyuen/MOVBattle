@@ -21,10 +21,17 @@ function seeded(i: number, seed: number): number {
 }
 
 const RIM = { a: 51, b: 51, round: 2 };
+// Temple mound (575, wiki ancient_2.png and greek_ancient_2.png: the complex is a tall dense mound, terrace on terrace
+// of temples, stairs and green-topped walls climbing to a crowning temple that is the highest thing on the island).
+// Spec: four terraces (fronts 24/30/36/42, half-widths 42/33/23/13, tops 4/9/14.5/20 m) inside the old footprint;
+// temples on each front vary 4.6-6.6 m wide and alternate with paired free-standing columns; the moss strip along
+// each top is 2.4 m deep with clumps of faceted shrubs every ~5 m; the crowning temple (9 m) stands on a 2.2 m
+// podium on the top terrace (roof ridge ~31 m); the central stair climbs all four. Field edge and colliders unchanged.
 const TERRACES = [
-  { front: 24, half: 42, h: 3 },
-  { front: 30, half: 32, h: 6.5 },
-  { front: 36, half: 20, h: 10 },
+  { front: 24, half: 42, h: 4 },
+  { front: 30, half: 33, h: 9 },
+  { front: 36, half: 23, h: 14.5 },
+  { front: 42, half: 13, h: 20 },
 ];
 const STRIP = 6;
 const STAIR_HALF = 3;
@@ -134,7 +141,7 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
         : [[x0, x0 + STRIP]];
       for (const [a, b] of parts) {
         box("stone", b - a + 0.02, t.h, back - t.front, (a + b) / 2, t.h / 2, (t.front + back) / 2);
-        box("moss", b - a + 0.02, 0.25, 1.6, (a + b) / 2, t.h + 0.1, t.front + 0.9);
+        box("moss", b - a + 0.02, 0.25, 2.4, (a + b) / 2, t.h + 0.1, t.front + 1.3);
         // A shaded joint every strip so the retaining wall reads as courses of blocks
         box("shade", 0.18, t.h * 0.9, 0.1, a + 0.05, t.h / 2, t.front - 0.04);
       }
@@ -145,12 +152,31 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
     for (let x = -t.half + 5; x <= t.half - 5; x += 9.5, i++) {
       if (Math.abs(x) < STAIR_HALF + 4) continue;
       if (rimZ(Math.abs(x) + 3) * 0.95 - t.front < 8) continue;
-      temple(x, t.h, t.front + 4, 5.6, k * 20 + i);
+      temple(x, t.h, t.front + 4, 4.6 + seeded(k * 20 + i, 7) * 2, k * 20 + i);
+      // Paired free-standing columns between temples
+      const cx = x + 4.75;
+      if (cx < t.half - 2 && Math.abs(cx) > STAIR_HALF + 2) {
+        for (const dx of [-0.9, 0.9]) {
+          const col = MeshBuilder.CreateCylinder("ancient2Column", { diameter: 0.55, height: 4.2, tessellation: 8 }, scene);
+          col.position.set(cx + dx, t.h + 2.1, t.front + 1.2);
+          lists.pale.push(col);
+        }
+        box("pale", 2.6, 0.4, 0.8, cx, t.h + 4.4, t.front + 1.2);
+      }
+    }
+    // Overgrown shrub clumps along the terrace top
+    for (let x = -t.half + 2.5; x <= t.half - 2.5; x += 5 + seeded(k * 30 + i++, 9) * 1.5) {
+      if (Math.abs(x) < STAIR_HALF + 1) continue;
+      const shrub = MeshBuilder.CreateIcoSphere("ancient2Shrub", { radius: 0.9 + seeded(k * 40 + i, 11) * 0.6, subdivisions: 1 }, scene);
+      shrub.scaling.y = 0.75;
+      shrub.position.set(x, t.h + 0.6, t.front + 0.9);
+      lists.moss.push(shrub);
     }
   });
-  // The crowning temple at the back centre of the top terrace
-  const top = TERRACES[2];
-  temple(0, top.h, top.front + 6, 10, 99);
+  // The crowning temple on a podium at the back centre of the top terrace
+  const top = TERRACES[TERRACES.length - 1];
+  box("stone", 12, 2.2, 7.6, 0, top.h + 1.1, top.front + 3);
+  temple(0, top.h + 2.2, top.front + 3, 9, 99);
   // The stair: one step per 0.5 m of rise, from the field to the top terrace
   const rise = top.h, run = top.front + 2 - TERRACES[0].front;
   const steps = Math.round(rise / 0.5);
