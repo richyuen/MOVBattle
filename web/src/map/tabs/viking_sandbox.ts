@@ -107,7 +107,12 @@ function snowAndIce(scene: Scene, built: Set<unknown>): void {
   crackMat.diffuseColor = new Color3(0.9, 0.95, 1);
   crackMat.emissiveColor = new Color3(0.45, 0.5, 0.55);
   crackMat.specularColor = Color3.Black();
-  const edge = (angle: number) => 0.72 + 0.085 * Math.sin(angle * 5) + 0.09 * Math.sin(angle * 11) + 0.047 * Math.cos(angle * 23);
+  // [R] 571 floor spec (wiki shot, pirate.arrows_and_arrow.png; CONFIRM 568/569): the floor is NOT one blue
+  // patch inside a white ring. Blue ice reaches out to ~0.8 R, cut into polygon plates 7-12 m across by thin
+  // white cracks that join into closed cells; across it lie large irregular snow shapes: 9 tongues running in
+  // from the rim (14-24 m long, 5-10 m wide, lobed, reaching to ~0.3 R) and 7 snow islands (4-11 m) scattered
+  // over the middle, so the blue reads as broken fields between snow. Snow shapes sit above the ice and cracks.
+  const edge = (angle: number) => 0.8 + 0.05 * Math.sin(angle * 5) + 0.04 * Math.sin(angle * 11);
   const ice = MeshBuilder.CreateCylinder("vikingSandboxIceSheet", { diameter: ARENA_RADIUS * 2, height: 0.045, tessellation: 96 }, scene);
   const vertices = ice.getVerticesData("position")!;
   for (let i = 0; i < vertices.length; i += 3) {
@@ -123,26 +128,74 @@ function snowAndIce(scene: Scene, built: Set<unknown>): void {
   ice.isPickable = false;
   const cracks: Mesh[] = [];
   const insideIce = (x: number, z: number) => Math.hypot(x, z) < ARENA_RADIUS * edge(Math.atan2(z, x)) - 0.8;
-  for (let i = 0; i < 60; i++) {
-    const a = seeded(i, 41) * Math.PI * 2;
-    const [x, z] = rimPoint((a * 180) / Math.PI, Math.sqrt(seeded(i, 42)) * 0.7);
-    if (!insideIce(x, z)) continue;
-    let px = x, pz = z, yaw = seeded(i, 43) * Math.PI;
-    for (let s = 0; s < 3; s++) {
-      const len = (s === 2 ? 2 : 4) + seeded(i * 3 + s, 44) * 5;
-      const heading = s === 2 ? yaw - 1.15 : yaw;
-      const dx = Math.cos(heading) * len / 2, dz = -Math.sin(heading) * len / 2;
-      if (!insideIce(px + dx * 2, pz + dz * 2)) continue;
-      const c = MeshBuilder.CreateBox("vsIceCrack", { width: len, height: 0.018, depth: s === 2 ? 0.065 : 0.11 }, scene);
-      c.rotation.y = heading;
-      c.position.set(px + dx, 0.043, pz + dz);
+  // Plate network: jittered 9.5 m grid of nodes joined to right and back neighbours (a sixth left out) and
+  // one diagonal per cell, so the cracks close into uneven polygon plates.
+  const GRID = 9.5;
+  const span = Math.ceil(ARENA_RADIUS / GRID) + 1;
+  const node = (i: number, j: number): [number, number] => {
+    const k = (i + 20) * 61 + (j + 20);
+    return [i * GRID + (seeded(k, 61) - 0.5) * GRID * 0.7, j * GRID + (seeded(k, 62) - 0.5) * GRID * 0.7];
+  };
+  const crackLine = (a: [number, number], b: [number, number], k: number) => {
+    const [ax, az] = a, [bx, bz] = b;
+    const len = Math.hypot(bx - ax, bz - az);
+    const push = (seeded(k, 63) - 0.5) * len * 0.3;
+    const mx = (ax + bx) / 2 - ((bz - az) / len) * push, mz = (az + bz) / 2 + ((bx - ax) / len) * push;
+    for (const [px, pz, qx, qz] of [[ax, az, mx, mz], [mx, mz, bx, bz]]) {
+      if (!insideIce(px, pz) || !insideIce(qx, qz)) continue;
+      const l = Math.hypot(qx - px, qz - pz);
+      const c = MeshBuilder.CreateBox("vsIceCrack", { width: l + 0.1, height: 0.018, depth: 0.1 + seeded(k, 64) * 0.06 }, scene);
+      c.rotation.y = -Math.atan2(qz - pz, qx - px);
+      c.position.set((px + qx) / 2, 0.043, (pz + qz) / 2);
       cracks.push(c);
-      if (s === 0) {
-        px += dx * 2;
-        pz += dz * 2;
-      }
-      yaw += (seeded(i * 2 + s, 45) - 0.5) * 1.6;
     }
+  };
+  for (let i = -span; i <= span; i++) {
+    for (let j = -span; j <= span; j++) {
+      const k = (i + 20) * 61 + (j + 20);
+      if (seeded(k, 65) > 0.16) crackLine(node(i, j), node(i + 1, j), k * 3);
+      if (seeded(k, 66) > 0.16) crackLine(node(i, j), node(i, j + 1), k * 3 + 1);
+      if (seeded(k, 67) > 0.55) crackLine(node(i, j), node(i + 1, j + 1), k * 3 + 2);
+    }
+  }
+  // Snow tongues and islands: lobed discs, stretched and turned.
+  const snowMat = new StandardMaterial("vikingSandboxSnowDrift", scene);
+  snowMat.diffuseColor = SNOW.clone();
+  snowMat.emissiveColor = SNOW_SHADE.scale(1.25);
+  snowMat.specularColor = new Color3(0.04, 0.04, 0.05);
+  const drifts: Mesh[] = [];
+  const drift = (x: number, z: number, length: number, width: number, yaw: number, k: number) => {
+    const disc = MeshBuilder.CreateCylinder("vsSnowDrift", { diameter: 2, height: 0.05, tessellation: 40 }, scene);
+    const pos = disc.getVerticesData("position")!;
+    for (let v = 0; v < pos.length; v += 3) {
+      const a = Math.atan2(pos[v + 2], pos[v]);
+      if (Math.hypot(pos[v], pos[v + 2]) < 1e-6) continue;
+      const r = 1 + 0.22 * Math.sin(a * 3 + k) + 0.14 * Math.sin(a * 7 + k * 2.3) + 0.08 * Math.cos(a * 13 + k);
+      pos[v] *= r * length / 2;
+      pos[v + 2] *= r * width / 2;
+    }
+    disc.setVerticesData("position", pos);
+    disc.rotation.y = yaw;
+    disc.position.set(x, 0.07 + (k % 5) * 0.004, z);
+    drifts.push(disc);
+  };
+  for (let t = 0; t < 9; t++) {
+    const a = (t / 9) * Math.PI * 2 + seeded(t, 71) * 0.5;
+    const length = 14 + seeded(t, 72) * 10;
+    const r = ARENA_RADIUS * 0.8 - length * 0.42;
+    drift(Math.cos(a) * r, Math.sin(a) * r, length, 5 + seeded(t, 73) * 5, -a + (seeded(t, 74) - 0.5) * 0.5, t);
+  }
+  for (let s = 0; s < 7; s++) {
+    const a = seeded(s, 75) * Math.PI * 2, r = 6 + seeded(s, 76) * 24;
+    const size = 4 + seeded(s, 77) * 7;
+    drift(Math.cos(a) * r, Math.sin(a) * r, size * 1.4, size, seeded(s, 78) * Math.PI, s + 20);
+  }
+  const driftMesh = Mesh.MergeMeshes(drifts, true);
+  if (driftMesh) {
+    driftMesh.name = "vikingSandboxSnowDrifts";
+    driftMesh.material = snowMat;
+    driftMesh.receiveShadows = true;
+    driftMesh.isPickable = false;
   }
   const merged = Mesh.MergeMeshes(cracks, true);
   if (merged) {
@@ -180,21 +233,51 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
       blocks.push(slab);
       if (t === 0) obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 3.5 });
     }
-    for (const [start, end] of [[0, 164], [196, 360]]) {
+    // [R] 571 wall spec (wiki shot; CONFIRM 568/569): no continuous narrow snow band per tier. Each tier's
+    // snow is broken into separate ledges 9-24 degrees long, each with its own depth (1.5-6 m, a few broad
+    // 7-9 m shelves) and its own height (-2..+1.2 m off the tier top), tilted a little; between ledges a
+    // 3-7 degree break where a jutting ice column stands proud of the ledges (1.2-1.45x the tier height,
+    // pushed 1.5-3 m inward). The gate gap (164..196 deg) stays open.
+    let angle = (t * 7) % 11;
+    let n = 0;
+    while (angle < 360) {
+      n += 1;
+      const k = t * 1000 + n;
+      const arc = 9 + seeded(k, 11) * 15;
+      const end = Math.min(360, angle + arc);
+      const broad = t > 0 && seeded(k, 12) > 0.75;
+      const depth = (broad ? 7 + seeded(k, 13) * 2 : 1.5 + seeded(k, 13) * (t === 0 ? 2 : 4.5)) / ARENA_RADIUS;
+      const lipDrop = broad ? tier.h1 - TIERS[t - 1].h1 : 1.4;
+      const lift = -2 + seeded(k, 14) * 3.2;
+      const tilt = (seeded(k, 15) - 0.5) * 1.6;
       const rows: Vector3[][] = [[], [], [], []];
-      for (let angle = start; angle <= end; angle += 2) {
-        const i = angle + t * 400;
-        const y = tier.h1 - 0.1 + Math.sin(angle * 0.18) * 0.63 + seeded(i, 9) * 0.38;
-        const [ix, iz] = rimPoint(angle, tier.at - 0.038 - seeded(i, 7) * 0.045);
-        const [ox, oz] = rimPoint(angle, tier.at + 0.044 + seeded(i, 8) * 0.018);
-        rows[0].push(new Vector3(ix * 1.014, y - 1.25, iz * 1.014));
+      for (let a = angle; a <= end + 0.01; a += 2) {
+        if (a > 164 && a < 196) continue;
+        const f = (a - angle) / Math.max(1, end - angle);
+        const y = tier.h1 + lift + tilt * (f - 0.5) + seeded(k * 7 + a, 9) * 0.3;
+        const inner = tier.at - depth * (0.75 + 0.25 * Math.sin(f * Math.PI)) - seeded(k + a, 7) * 0.012;
+        const [ix, iz] = rimPoint(a, inner);
+        const [ox, oz] = rimPoint(a, tier.at + 0.05);
+        rows[0].push(new Vector3(ix * 1.012, y - lipDrop, iz * 1.012));
         rows[1].push(new Vector3(ix, y - 0.1, iz));
-        rows[2].push(new Vector3(ox, y + 0.24, oz));
+        rows[2].push(new Vector3(ox, y + 0.3, oz));
         const foot = t === 0 ? -0.1 : TIERS[t - 1].h0 - 0.45;
         rows[3].push(new Vector3(ox, foot, oz));
       }
-      const shelf = MeshBuilder.CreateRibbon("vsIceShelf", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene);
-      caps.push(shelf);
+      if (rows[0].length >= 2) caps.push(MeshBuilder.CreateRibbon("vsIceShelf", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene));
+      const gap = 3 + seeded(k, 16) * 4;
+      const colAngle = end + gap / 2;
+      if (colAngle < 360 && Math.abs(colAngle - 180) > 18) {
+        const h = tier.h1 * (1.2 + seeded(k, 17) * 0.25);
+        const [cx, cz] = rimPoint(colAngle, tier.at - (1.5 + seeded(k, 18) * 1.5) / ARENA_RADIUS);
+        const width = 3.2 + seeded(k, 19) * 2.4;
+        const column = MeshBuilder.CreateCylinder("vsIceColumn", { diameterTop: width * 0.55, diameterBottom: width, height: h, tessellation: 5 }, scene);
+        column.position.set(cx, h / 2 - 0.2, cz);
+        column.rotation.set((seeded(k, 20) - 0.5) * 0.18, seeded(k, 21) * Math.PI, (seeded(k, 22) - 0.5) * 0.18);
+        blocks.push(column);
+        if (t === 0) obstacles.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: width / 2 });
+      }
+      angle = end + gap;
     }
   });
   for (const [list, m, name] of [[blocks, ice, "vikingSandboxIceWall"], [caps, snow, "vikingSandboxIceSnow"]] as const) {
