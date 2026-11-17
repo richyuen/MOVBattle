@@ -429,7 +429,7 @@ function flagstones(scene: Scene): void {
   const pavement = scene.getMaterialByName("ancient1Pavement");
   if (pavement instanceof StandardMaterial) {
     // Sunlit at 0.46 it rendered pale silver with a specular sheen (574 look): darker and matte
-    pavement.diffuseColor = new Color3(0.27, 0.27, 0.27);
+    pavement.diffuseColor = new Color3(0.4, 0.4, 0.4);
     pavement.emissiveColor = pavement.diffuseColor.scale(0.2);
     pavement.specularColor = Color3.Black();
   }
