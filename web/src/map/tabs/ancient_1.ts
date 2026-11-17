@@ -63,6 +63,36 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   };
   const obstacles: MapBuildResult["obstacles"] = [];
   for (const side of [-1, 1]) {
+    box("ancient1CityWall", 0, 0.67, side * 35, 111, 1.34, 0.82, plaster);
+    box("ancient1CityWallCoping", 0, 1.38, side * 35, 111.3, 0.18, 1.02, blue);
+    box("ancient1CityWall", side * 55, 0.67, 0, 0.82, 1.34, 70, plaster);
+    box("ancient1CityWallCoping", side * 55, 1.38, 0, 1.02, 0.18, 70.3, blue);
+    obstacles.push(
+      { type: "box", center: new Vector3(0, 0, side * 35), halfX: 55.5, halfZ: 0.41 },
+      { type: "box", center: new Vector3(side * 55, 0, 0), halfX: 0.41, halfZ: 35 },
+    );
+  }
+  const foliage = new StandardMaterial("ancient1CypressLeaves", scene);
+  foliage.diffuseColor = new Color3(0.39, 0.56, 0.18);
+  foliage.emissiveColor = foliage.diffuseColor.scale(0.17);
+  for (const [x, z] of [[-51, -32], [-32, -32], [30, -32], [50, -32], [-50, 32], [-25, 32], [25, 32], [50, 32]]) {
+    const basin = MeshBuilder.CreateCylinder("ancient1CypressPlanter", { height: 0.5, diameter: 2.55, tessellation: 10 }, scene);
+    basin.scaling.x = 1.78;
+    basin.position.set(x, 0.25, z);
+    basin.material = plaster;
+    const soil = MeshBuilder.CreateCylinder("ancient1PlanterSoil", { height: 0.055, diameter: 2.29, tessellation: 10 }, scene);
+    soil.scaling.x = 1.78;
+    soil.position.set(x, 0.52, z);
+    soil.material = earth;
+    for (let i = -1; i <= 1; i++) {
+      const crown = MeshBuilder.CreateCylinder("ancient1Cypress", { height: 3.2 + (1 - Math.abs(i)) * 1.2, diameterTop: 0.1, diameterBottom: 1.27, tessellation: 6 }, scene);
+      crown.position.set(x + i * 1.1, i === 0 ? 2.69 : 2.08, z + i * 0.26);
+      crown.rotation.z = -i * 0.12;
+      crown.material = foliage;
+    }
+    obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 2.19, halfZ: 1.26 });
+  }
+  for (const side of [-1, 1]) {
     for (const [row, z] of [-21, 0, 21].entries()) {
       const x = side * 15;
       const depth = row === 1 ? 10.5 : 12.5;
