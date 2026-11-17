@@ -546,6 +546,20 @@ function crispRim(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+// Clear sky (575, greek_ancient_2.png: the island floats in a pale-to-mid blue sky with white puffy clouds, no beige
+// haze). Spec: clear colour (0.3, 0.6, 0.88), fog a pale sky blue (0.66, 0.8, 0.93), base clouds kept white; both
+// restored on dispose.
+function clearSky(scene: Scene): () => void {
+  const oldClear = scene.clearColor.clone();
+  const oldFog = scene.fogColor.clone();
+  scene.clearColor.set(0.3, 0.6, 0.88, 1);
+  scene.fogColor = new Color3(0.66, 0.8, 0.93);
+  return () => {
+    scene.clearColor.copyFrom(oldClear);
+    scene.fogColor.copyFrom(oldFog);
+  };
+}
+
 export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -568,5 +582,6 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
   gatePavilions(scene, obstacles);
   frontPropylon(scene, obstacles);
   crispRim(scene, built);
-  return { ...result, obstacles };
+  const restoreSky = clearSky(scene);
+  return { ...result, dispose: () => { restoreSky(); result.dispose?.(); }, obstacles };
 }
