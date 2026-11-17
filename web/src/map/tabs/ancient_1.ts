@@ -378,6 +378,45 @@ function cypressPlanters(scene: Scene, obstacles: MapBuildResult["obstacles"]): 
   }
 }
 
+// Parapet (575, wiki ancient_1.png: the town is edged by a solid low whitewashed parapet, as thick as a man and chest
+// high, flush with the island's edge, topped by a row of rounded blue tiles; not a thin rail). Spec: the 1.34 m wall
+// and its flat blue strip go; a 1.3 m thick plaster wall from 0.55 m below the pavement (its outer face covers the
+// slab edge) to 1.9 m, centred 0.24 m further out so its inner face stays at the colliders; a 0.18 m white cap 1.4 m
+// wide; on it a row of blue half-round tiles (0.5 m across, 0.6 m pitch, laid across the wall) on all four sides.
+// The colliders are unchanged.
+function parapetWall(scene: Scene): void {
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "ancient1CityWall" || mesh.name === "ancient1CityWallCoping") mesh.setEnabled(false);
+  }
+  const plaster = scene.getMaterialByName("ancient1Whitewash") as StandardMaterial;
+  const blue = scene.getMaterialByName("ancient1BlueTile") as StandardMaterial;
+  const walls: Mesh[] = [], tiles: Mesh[] = [];
+  const runs: Array<{ cx: number; cz: number; len: number; alongX: boolean }> = [
+    { cx: 0, cz: -35.24, len: 111.8, alongX: true }, { cx: 0, cz: 35.24, len: 111.8, alongX: true },
+    { cx: -55.24, cz: 0, len: 69.2, alongX: false }, { cx: 55.24, cz: 0, len: 69.2, alongX: false },
+  ];
+  for (const { cx, cz, len, alongX } of runs) {
+    const w = MeshBuilder.CreateBox("ancient1Parapet", { width: alongX ? len : 1.3, height: 2.45, depth: alongX ? 1.3 : len }, scene);
+    w.position.set(cx, 1.9 - 2.45 / 2, cz);
+    walls.push(w);
+    const cap = MeshBuilder.CreateBox("ancient1Parapet", { width: alongX ? len + 0.1 : 1.4, height: 0.18, depth: alongX ? 1.4 : len + 0.1 }, scene);
+    cap.position.set(cx, 1.99, cz);
+    walls.push(cap);
+    for (let t = -len / 2 + 0.3; t < len / 2 - 0.2; t += 0.6) {
+      const tile = MeshBuilder.CreateCylinder("ancient1ParapetTile", { diameter: 0.5, height: 1.3, tessellation: 6 }, scene);
+      // Laid across the wall: the axis along the wall's thickness, half sunk into the cap
+      if (alongX) tile.rotation.x = Math.PI / 2;
+      else tile.rotation.z = Math.PI / 2;
+      tile.position.set(alongX ? cx + t : cx, 2.08, alongX ? cz : cz + t);
+      tiles.push(tile);
+    }
+  }
+  const wall = Mesh.MergeMeshes(walls, true);
+  if (wall) { wall.name = "ancient1ParapetWall"; wall.material = plaster; wall.receiveShadows = true; wall.isPickable = false; }
+  const tile = Mesh.MergeMeshes(tiles, true);
+  if (tile) { tile.name = "ancient1ParapetTiles"; tile.material = blue; tile.receiveShadows = true; tile.isPickable = false; }
+}
+
 // Flagstones (574, wiki ancient_1.png: the whole town floor is one mid-grey paving split by thin white lines into large
 // irregular flagstones, streets included; no straight seam grid, no pale street strips). Spec: the straight seams and
 // the lime street strips go; the pavement turns a matte neutral mid grey (0.27 code, no specular); a jittered 6.75 x 6.9 m lattice
@@ -588,6 +627,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
     block.material = lime;
   }
   flagstones(scene);
+  parapetWall(scene);
   const restoreSky = clearSky(scene);
   return {
     ...result,
