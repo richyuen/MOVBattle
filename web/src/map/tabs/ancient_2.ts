@@ -95,10 +95,12 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
     m.specularColor = Color3.Black();
     return m;
   };
-  const stone = mk("ancient2Stone", new Color3(0.78, 0.69, 0.55), 0.3);
-  const pale = mk("ancient2Marble", new Color3(0.88, 0.83, 0.72), 0.32);
-  const moss = mk("ancient2Moss", new Color3(0.42, 0.6, 0.18), 0.3);
-  const shade = mk("ancient2Shade", new Color3(0.3, 0.26, 0.21), 0.3);
+  // The walls face the field and the low island camera, away from the sun: they carry their beige-grey in self-light
+  // (lit at 0.3 they read charcoal, critic 575)
+  const stone = mk("ancient2Stone", new Color3(0.74, 0.68, 0.57), 0.72);
+  const pale = mk("ancient2Marble", new Color3(0.86, 0.82, 0.72), 0.7);
+  const moss = mk("ancient2Moss", new Color3(0.42, 0.6, 0.18), 0.45);
+  const shade = mk("ancient2Shade", new Color3(0.42, 0.37, 0.3), 0.6);
   const lists: Record<"stone" | "pale" | "moss" | "shade", Mesh[]> = { stone: [], pale: [], moss: [], shade: [] };
   const box = (list: keyof typeof lists, w: number, h: number, d: number, x: number, y: number, z: number) => {
     const b = MeshBuilder.CreateBox("ancient2Part", { width: w, height: h, depth: d }, scene);
@@ -106,9 +108,11 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
     lists[list].push(b);
     return b;
   };
-  // A temple facing the field (-z): plinth, cella, a column row across the front, a gabled roof with its pediment
-  const temple = (x: number, y: number, z: number, w: number, k: number) => {
+  // A temple facing the field (-z): plinth, cella, a column row across the front, a gabled roof with its pediment.
+  // yaw turns the whole temple about its centre (0 faces the field, +-pi/2 faces along the terrace)
+  const temple = (x: number, y: number, z: number, w: number, k: number, yaw = 0) => {
     const d = w * 0.85, eave = w * 0.55;
+    const first = Object.values(lists).map((l) => l.length);
     box("stone", w + 0.6, 0.6, d + 0.6, x, y + 0.3, z);
     box("pale", w * 0.75, eave, d * 0.7, x, y + 0.6 + eave / 2, z + d * 0.12);
     const cols = w > 8 ? 6 : 4;
@@ -129,48 +133,98 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
     roof.scaling.set((w + 0.4) / 0.866, pitch / 0.75, 1);
     roof.position.set(x, y + 0.6 + eave + 0.4 + 0.25 * (pitch / 0.75), z);
     lists.stone.push(roof);
+    if (yaw === 0) return;
+    const cos = Math.cos(yaw), sin = Math.sin(yaw);
+    Object.values(lists).forEach((l, n) => {
+      for (let i = first[n]; i < l.length; i++) {
+        const p = l[i].position, dx = p.x - x, dz = p.z - z;
+        p.x = x + dx * cos + dz * sin;
+        p.z = z - dx * sin + dz * cos;
+        l[i].rotation.y += yaw;
+      }
+    });
   };
+  // Irregular mound (576, wiki ancient_2.png: not a mirrored grid but a tangle of stone blocks of mixed size climbing to
+  // the crowning temple, with stairs running up between them and temples facing every way). Spec: each terrace is cut
+  // into blocks 3.5-9 m wide (widths drawn left to right, so the two halves differ); behind terrace 1 every block's front
+  // steps 0-3.5 m back or forward and its top 0-3 m up or down; a block's top carries a 1.6-2.6 m moss lip and, on
+  // about two blocks in three, a temple 4.4-7 m wide, one in three of them turned side-on; the rest carry column pairs,
+  // a lintel or a broken drum. On terraces 2-4 two side stair flights 2.4 m wide (one each side, at different x) climb
+  // the face from the terrace below. Terrace 1's front edge and its box colliders stay as they were (the field's edge).
   TERRACES.forEach((t, k) => {
-    for (let x0 = -t.half; x0 < t.half; x0 += STRIP) {
-      const x = x0 + STRIP / 2;
-      const back = rimZ(Math.abs(x) + STRIP / 2) * 0.95;
-      if (back - t.front < 3) continue;
-      // The stair cuts through the middle strip of every terrace
-      const parts: Array<[number, number]> = Math.abs(x) < STAIR_HALF + STRIP / 2
-        ? [[x0, -STAIR_HALF], [STAIR_HALF, x0 + STRIP]].filter(([a, b]) => b - a > 0.2) as Array<[number, number]>
-        : [[x0, x0 + STRIP]];
-      for (const [a, b] of parts) {
-        box("stone", b - a + 0.02, t.h, back - t.front, (a + b) / 2, t.h / 2, (t.front + back) / 2);
-        box("moss", b - a + 0.02, 0.25, 2.4, (a + b) / 2, t.h + 0.1, t.front + 1.3);
-        // A shaded joint every strip so the retaining wall reads as courses of blocks
-        box("shade", 0.18, t.h * 0.9, 0.1, a + 0.05, t.h / 2, t.front - 0.04);
+    if (k === 0) {
+      for (let x0 = -t.half; x0 < t.half; x0 += STRIP) {
+        const x = x0 + STRIP / 2, back = rimZ(Math.abs(x) + STRIP / 2) * 0.95;
+        if (back - t.front >= 3) obstacles.push({ type: "box", center: new Vector3(x, 0, (t.front + back) / 2), halfX: STRIP / 2, halfZ: (back - t.front) / 2 });
       }
-      if (k === 0) obstacles.push({ type: "box", center: new Vector3(x, 0, (t.front + back) / 2), halfX: STRIP / 2, halfZ: (back - t.front) / 2 });
     }
-    // Temples along this terrace's front
-    let i = 0;
-    for (let x = -t.half + 5; x <= t.half - 5; x += 9.5, i++) {
-      if (Math.abs(x) < STAIR_HALF + 4) continue;
-      if (rimZ(Math.abs(x) + 3) * 0.95 - t.front < 8) continue;
-      temple(x, t.h, t.front + 4, 4.6 + seeded(k * 20 + i, 7) * 2, k * 20 + i);
-      // Paired free-standing columns between temples
-      const cx = x + 4.75;
-      if (cx < t.half - 2 && Math.abs(cx) > STAIR_HALF + 2) {
-        for (const dx of [-0.9, 0.9]) {
-          const col = MeshBuilder.CreateCylinder("ancient2Column", { diameter: 0.55, height: 4.2, tessellation: 8 }, scene);
-          col.position.set(cx + dx, t.h + 2.1, t.front + 1.2);
-          lists.pale.push(col);
+    let x0 = -t.half, i = 0;
+    while (x0 < t.half - 0.5) {
+      const seed = k * 50 + i;
+      let x1 = Math.min(t.half, x0 + 3.5 + seeded(seed, 21) * 5.5);
+      if (t.half - x1 < 2.5) x1 = t.half;
+      // The central stair keeps its slot
+      const pieces: Array<[number, number]> = x0 < STAIR_HALF && x1 > -STAIR_HALF
+        ? [[x0, -STAIR_HALF], [STAIR_HALF, x1]].filter(([a, b]) => b - a > 0.4) as Array<[number, number]>
+        : [[x0, x1]];
+      for (const [a, b] of pieces) {
+        const cx = (a + b) / 2, w = b - a;
+        const back = rimZ(Math.min(51, Math.max(Math.abs(a), Math.abs(b)))) * 0.95;
+        const front = k === 0 ? t.front : t.front + (seeded(seed, 22) - 0.4) * 3.5;
+        const h = k === 0 ? t.h + seeded(seed, 23) * 1.2 : t.h + (seeded(seed, 24) - 0.5) * 3;
+        if (back - front < 3) continue;
+        box("stone", w + 0.02, h, back - front, cx, h / 2, (front + back) / 2);
+        const lip = 1.6 + seeded(seed, 25);
+        box("moss", w + 0.02, 0.3, lip, cx, h + 0.12, front + lip / 2 + 0.1);
+        box("shade", 0.2, h * 0.92, 0.12, a + 0.08, h / 2, front - 0.05);
+        // A course line part way up the wall
+        box("shade", w * 0.96, 0.14, 0.1, cx, h * (0.45 + seeded(seed, 26) * 0.2), front - 0.05);
+        const room = back - front - lip;
+        const pick = seeded(seed, 27);
+        if (pick < 0.66 && w > 4.6 && room > 6) {
+          const tw = Math.min(w - 0.6, 4.4 + seeded(seed, 28) * 2.6);
+          const side = seeded(seed, 29) < 0.33;
+          temple(cx, h, front + lip + (side ? tw * 0.55 : tw * 0.45), tw, seed, side ? (cx < 0 ? -1 : 1) * Math.PI / 2 : 0);
+        } else if (pick < 0.85) {
+          for (const dx of [-0.9, 0.9]) {
+            const col = MeshBuilder.CreateCylinder("ancient2Column", { diameter: 0.55, height: 3.6 + seeded(seed, 30) * 1.4, tessellation: 8 }, scene);
+            col.position.set(cx + dx, h + col.getBoundingInfo().boundingBox.extendSize.y, front + 1.4);
+            lists.pale.push(col);
+          }
+          if (seeded(seed, 31) < 0.6) box("pale", 2.6, 0.4, 0.8, cx, h + 3.8, front + 1.4);
+        } else {
+          const drum = MeshBuilder.CreateCylinder("ancient2Drum", { diameter: 0.7, height: 1.4, tessellation: 8 }, scene);
+          drum.position.set(cx + 0.6, h + 0.7, front + 1.6);
+          lists.pale.push(drum);
+          const fallen = MeshBuilder.CreateCylinder("ancient2Drum", { diameter: 0.6, height: 2.6, tessellation: 8 }, scene);
+          fallen.rotation.z = Math.PI / 2;
+          fallen.position.set(cx - 0.8, h + 0.3, front + 2.4);
+          lists.pale.push(fallen);
         }
-        box("pale", 2.6, 0.4, 0.8, cx, t.h + 4.4, t.front + 1.2);
+        // Shrubs spill over the lip
+        for (let s = 0; s < Math.floor(w / 3); s++) {
+          const shrub = MeshBuilder.CreateIcoSphere("ancient2Shrub", { radius: 0.7 + seeded(seed * 7 + s, 11) * 0.7, subdivisions: 1 }, scene);
+          shrub.scaling.y = 0.75;
+          shrub.position.set(a + 1.2 + s * 3 + seeded(seed * 7 + s, 12) * 1.2, h + 0.5, front + 0.6 + seeded(seed * 7 + s, 13));
+          lists.moss.push(shrub);
+        }
       }
+      x0 = x1;
+      i++;
     }
-    // Overgrown shrub clumps along the terrace top
-    for (let x = -t.half + 2.5; x <= t.half - 2.5; x += 5 + seeded(k * 30 + i++, 9) * 1.5) {
-      if (Math.abs(x) < STAIR_HALF + 1) continue;
-      const shrub = MeshBuilder.CreateIcoSphere("ancient2Shrub", { radius: 0.9 + seeded(k * 40 + i, 11) * 0.6, subdivisions: 1 }, scene);
-      shrub.scaling.y = 0.75;
-      shrub.position.set(x, t.h + 0.6, t.front + 0.9);
-      lists.moss.push(shrub);
+    // Two side flights climb this terrace's face from the one below, at different x on each side
+    if (k > 0) {
+      const below = TERRACES[k - 1];
+      for (const sx of [-1, 1]) {
+        const x = sx * (STAIR_HALF + 4 + seeded(k * 9 + sx + 1, 32) * (t.half - STAIR_HALF - 8));
+        const rise = t.h - below.h + 1.5, run = Math.min(rise * 1.1, t.front - below.front - 0.8);
+        const n = Math.max(4, Math.round(rise / 0.55));
+        for (let s = 0; s < n; s++) {
+          const y = below.h + rise * (s + 1) / n;
+          const z0 = t.front - run + run * s / n;
+          box(s % 2 === 0 ? "pale" : "stone", 2.4, y - below.h, t.front + 1.5 - z0, x, below.h + (y - below.h) / 2, (z0 + t.front + 1.5) / 2);
+        }
+      }
     }
   });
   // The crowning temple on a podium at the back centre of the top terrace
