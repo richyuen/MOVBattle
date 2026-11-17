@@ -143,13 +143,14 @@ function snowPines(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult[
     obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.37 });
   }
   for (const [i, root] of roots.entries()) {
+    const lift = bankHeight(root.x, root.z);
     const height = 4.8 + seeded(i, 101) * 4.2;
     const width = height * (0.46 + seeded(i, 109) * 0.12);
     const trunk = MeshBuilder.CreateCylinder("vikingPineTrunk", { height: height * 0.74, diameter: width * 0.14, tessellation: 6 }, scene);
-    trunk.position.set(root.x, height * 0.37, root.z);
+    trunk.position.set(root.x, lift + height * 0.37, root.z);
     trunk.material = bark;
     for (let tier = 0; tier < 4; tier++) {
-      const y = height * (0.31 + tier * 0.155);
+      const y = lift + height * (0.31 + tier * 0.155);
       const w = width * (1 - tier * 0.21);
       const h = height * 0.43;
       const options = { height: h, diameterBottom: w, diameterTop: 0.045, tessellation: 7 };
@@ -305,6 +306,46 @@ function winterHaze(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
+const rimR = (a: number) => (Math.abs(Math.cos(a) / 54) ** 3 + Math.abs(Math.sin(a) / 48) ** 3) ** (-1 / 3);
+
+// Raised snowbanks (573, reference/stages/introduction.ice_archers_only_almost.png: the lake sits in a hollow, its
+// shores rising as white snowbanks that carry the pine forest). Spec: the ground rises from the lake edge + 1 m to
+// 2.4 m over 5 m (smoothstep) and stays up to the rim, dropping back near the frozen ship (fade 13-19 m from it) so
+// the hull stays seated; drawn as one faceted snow sheet over the bank (12 radial rings x 96 around), its outer edge
+// skirted down to the island top; the pines and the waterfall stand on it, and units are lifted by it (height).
+const BANK = { top: 2.4, inner: 1, ramp: 5 };
+function bankHeight(x: number, z: number): number {
+  const t = Math.min(1, Math.max(0, (Math.hypot(x, z) - lakeR(Math.atan2(z, x)) - BANK.inner) / BANK.ramp));
+  const fade = Math.min(1, Math.max(0, (Math.hypot(x - SHIP.x, z - SHIP.z) - 13) / 6));
+  return BANK.top * t * t * (3 - 2 * t) * fade;
+}
+
+function snowbankSheet(scene: Scene): void {
+  const mat = new StandardMaterial("vikingBank", scene);
+  mat.diffuseColor = SNOW.clone();
+  mat.emissiveColor = SNOW_SHADE.clone();
+  mat.specularColor = new Color3(0.05, 0.05, 0.06);
+  const N = 96, R = 12;
+  const paths: Vector3[][] = [];
+  for (let j = 0; j <= R; j++) {
+    const path: Vector3[] = [];
+    for (let i = 0; i <= N; i++) {
+      const a = ((i % N) / N) * Math.PI * 2;
+      const from = lakeR(a) + 0.3, to = rimR(a) - 0.2;
+      const r = from + (to - from) * (j / R) ** 1.3;
+      const x = Math.cos(a) * r, z = Math.sin(a) * r;
+      path.push(new Vector3(x, bankHeight(x, z) + 0.03, z));
+    }
+    paths.push(path);
+  }
+  paths.push(paths[R].map((p) => new Vector3(p.x * 1.004, -0.2, p.z * 1.004)));
+  const sheet = MeshBuilder.CreateRibbon("vikingBank", { pathArray: paths, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  sheet.convertToFlatShadedMesh();
+  sheet.material = mat;
+  sheet.receiveShadows = true;
+  sheet.isPickable = false;
+}
+
 export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -323,6 +364,7 @@ export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildR
   snowPines(scene, built, result.obstacles);
   frozenLake(scene);
   frozenShip(scene, result.obstacles);
+  snowbankSheet(scene);
   const restoreSky = winterHaze(scene, built);
-  return { ...result, dispose: () => { restoreSky(); result.dispose?.(); } };
+  return { ...result, height: bankHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
