@@ -154,9 +154,10 @@ async function mapScene(page, item) {
     window.advanceTime(5000);
     return ok;
   }, layout.zones);
-  await frame(page, POSE.ground);
+  // Ancient 1: the low pose sees only roofs; look down the south street (z -10) from behind the left half, raised
+  await frame(page, item === "map.ancient_1" ? { target: { x: 4, y: 1, z: -10 }, radius: 58, alpha: Math.PI, beta: 1.02 } : POSE.ground);
   await shot(page, `${p}battle`);
-  rec.skirmish = { placed, ...(await runToResult(page, 5000)) };
+  rec.skirmish ={ placed, ...(await runToResult(page, 5000)) };
   summary.items[item] = rec;
 }
 
