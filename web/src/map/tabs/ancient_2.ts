@@ -11,7 +11,7 @@
 // every 9-10 m along each terrace front (none within 4 m of the stair), 5.6 m wide, 3 m to the eaves; the stair 6 m wide; statues 6 m tall
 // at x +-11, z 21.5. The base's ring trees and haze band standing in the footprint go with their colliders; one box collider per terrace-1
 // strip and one per statue. The stage armies (x 29..37, |z| <= 18) stand on the open field in front of it.
-import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -388,7 +388,88 @@ function earthDrum(scene: Scene, built: Set<unknown>): void {
 // overhanging 0.4 m, two porch columns and a dark doorway facing the centre) and 250 degrees (gate: 8 m wide, 5 m
 // deep, 4.4 m walls, four columns, a pediment); backs against the wall (centre 2 m inside it); one 3.4 m
 // cylinder collider each (clear of the stage armies at x 29..37, |z| <= 18).
-const PAVILIONS: Array<{ deg: number; gate: boolean }> = [{ deg: 188, gate: false }, { deg: 250, gate: true }, { deg: 320, gate: false }];
+const PAVILIONS: Array<{ deg: number; gate: boolean }> = [{ deg: 188, gate: false }, { deg: 320, gate: false }];
+
+// Front propylon (574, greek_ancient_2.png: on the front centre line the ring wall opens through a gabled gate:
+// two plain side piers, four columns on each face, an architrave and a triangular pediment facing out, the field path
+// running straight through it). Spec: at 250 degrees, centred on the wall line (r 49), 8.4 m wide along the wall,
+// 5.4 m deep through it, a 0.35 m plinth; piers 0.9 m at the ends, columns 0.6 m at +-1.6 and +-2.75 m 0.4 m in from
+// each face, 4.4 m tall; 0.55 m architrave; a 2 m triangular pediment prism whose gable faces in and out; a pale
+// paving strip 2.6 m wide on the plinth continuing the path. The ring wall segments and cypresses in its span go;
+// the ring's colliders stay (the wall line stays closed to units), plus one 1 m collider per pier.
+function frontPropylon(scene: Scene, obstacles: Obstacle[]): void {
+  const deg = 250, a = (deg * Math.PI) / 180, Rg = 49;
+  const cx = Math.cos(a) * Rg, cz = Math.sin(a) * Rg;
+  const W = 8.4, D = 5.4, H = 4.4, P = 0.35;
+  for (const mesh of scene.meshes) {
+    if (!/^(ancient2RingWall|ancient2RingCoping|ancient2Cypress)$/.test(mesh.name)) continue;
+    const d = Math.hypot(mesh.position.x - cx, mesh.position.z - cz);
+    if (d > (mesh.name === "ancient2Cypress" ? 5.5 : W / 2 + 0.3)) continue;
+    mesh.setEnabled(false);
+    if (mesh.name !== "ancient2Cypress") continue;
+    const at = obstacles.findIndex((o) => Math.hypot(o.center.x - mesh.position.x, o.center.z - mesh.position.z) < 0.05);
+    if (at >= 0) obstacles.splice(at, 1);
+  }
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const plaster = mk("ancient2PropylonPlaster", new Color3(0.8, 0.7, 0.52), 0.26);
+  const pale = mk("ancient2PropylonPale", new Color3(0.9, 0.83, 0.68), 0.28);
+  const leaves = mk("ancient2PropylonCypress", new Color3(0.33, 0.5, 0.16), 0.18);
+  const root = new Mesh("ancient2PropylonRoot", scene);
+  root.position.set(cx, 0, cz);
+  // Local +z faces the field centre, local x runs along the wall
+  root.rotation.y = Math.PI / 2 - a + Math.PI;
+  const piece = (mesh: Mesh, mat: StandardMaterial, x: number, y: number, z: number) => {
+    mesh.parent = root;
+    mesh.position.set(x, y, z);
+    mesh.material = mat;
+    mesh.receiveShadows = true;
+    mesh.isPickable = false;
+    return mesh;
+  };
+  piece(MeshBuilder.CreateBox("ancient2PropylonPlinth", { width: W + 0.8, height: P, depth: D + 0.6 }, scene), pale, 0, P / 2, 0);
+  for (const side of [-1, 1]) {
+    piece(MeshBuilder.CreateBox("ancient2PropylonPier", { width: 0.9, height: H, depth: D }, scene), plaster, side * (W / 2 - 0.45), P + H / 2, 0);
+    for (const x of [1.6, 2.75]) {
+      for (const face of [-1, 1]) {
+        piece(MeshBuilder.CreateCylinder("ancient2PropylonColumn", { diameter: 0.6, height: H, tessellation: 10 }, scene), pale, side * x, P + H / 2, face * (D / 2 - 0.4));
+      }
+    }
+    const h = 5 + seeded(deg + side, 151) * 1.5;
+    piece(MeshBuilder.CreateCylinder("ancient2PropylonCypress", { height: h, diameterTop: 0.1, diameterBottom: 1.4, tessellation: 7 }, scene), leaves, side * (W / 2 + 1.4), h / 2 + 0.2, 1.4);
+    const px = cx + Math.cos(root.rotation.y) * side * (W / 2 - 0.45), pz = cz - Math.sin(root.rotation.y) * side * (W / 2 - 0.45);
+    obstacles.push({ type: "cylinder", center: new Vector3(px, 0, pz), radius: 1 });
+  }
+  piece(MeshBuilder.CreateBox("ancient2PropylonArchitrave", { width: W + 0.4, height: 0.55, depth: D + 0.4 }, scene), pale, 0, P + H + 0.27, 0);
+  const clay = scene.getMaterialByName("ancient2PathClay");
+  const paving = piece(MeshBuilder.CreateBox("ancient2PropylonPaving", { width: 2.6, height: 0.04, depth: D + 0.6 }, scene), pale, 0, P + 0.02, 0);
+  if (clay instanceof StandardMaterial) paving.material = clay;
+  // Pediment: a triangular prism, gable faces at local z +-hd, ridge along z
+  const hw = (W + 0.6) / 2, ph = 2, hd = (D + 0.6) / 2;
+  const A = [-hw, 0, hd], B = [hw, 0, hd], C = [0, ph, hd], Dv = [-hw, 0, -hd], E = [hw, 0, -hd], F = [0, ph, -hd];
+  const tris = [[A, B, C], [Dv, F, E], [A, C, F], [A, F, Dv], [B, E, F], [B, F, C], [A, Dv, E], [A, E, B]];
+  const positions: number[] = [], indices: number[] = [];
+  tris.forEach((t, i) => { for (const v of t) positions.push(...v); indices.push(i * 3, i * 3 + 1, i * 3 + 2); });
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  // Babylon's winding may face the first gable inward: flip every triangle if so
+  if (normals[2] < 0) {
+    for (let i = 0; i < indices.length; i += 3) [indices[i + 1], indices[i + 2]] = [indices[i + 2], indices[i + 1]];
+    VertexData.ComputeNormals(positions, indices, normals);
+  }
+  const prism = new Mesh("ancient2PropylonPediment", scene);
+  const data = new VertexData();
+  data.positions = positions;
+  data.indices = indices;
+  data.normals = normals;
+  data.applyToMesh(prism);
+  piece(prism, plaster, 0, P + H + 0.55, 0);
+}
 
 function gatePavilions(scene: Scene, obstacles: Obstacle[]): void {
   const mk = (name: string, c: Color3, self: number) => {
@@ -482,6 +563,7 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
   fieldPaths(scene);
   templeComplex(scene, obstacles);
   gatePavilions(scene, obstacles);
+  frontPropylon(scene, obstacles);
   crispRim(scene, built);
   return { ...result, obstacles };
 }
