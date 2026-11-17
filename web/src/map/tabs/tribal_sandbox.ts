@@ -346,9 +346,8 @@ function redShrubs(scene: Scene, built: Set<unknown>): void {
 
 /**
  * Raised rock tops at the rim (card Overview: "enemies can be hidden behind or on top of the mountains"; autumn_tribal_sandbox.png): broad
- * flat-topped mesas stand into the ring at the front-left, front-right and right, standing over the birch crowns. Spec: at 215, 300 and 335
- * degrees, 0.8 of the rim; each a six-sided block 13 m across at the foot, 11 m at its 10 m top, a flat cap slab 0.9 m thick and 12 m
- * across lying on it, and a 5 m step block on its field side; the warm grey of the cliffs (r well over b). The ring birches within 9 m go
+ * fractured crags stand into the ring at the front-left, front-right and right. Each has an offset, leaning summit
+ * rising above a fan of smaller inclined slabs. The ring birches within 9 m go
  * with their colliders; one 6 m collider per mesa.
  */
 const MESAS = [215, 300, 335];
@@ -365,16 +364,19 @@ function rimMesas(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obs
     const x = rx * 0.8, z = rz * 0.8;
     spots.push([x, z]);
     const l = Math.hypot(x, z);
-    const body = MeshBuilder.CreateCylinder("tsMesa", { diameterTop: 11, diameterBottom: 13, height: 10, tessellation: 6 }, scene);
-    body.position.set(x, 5, z);
-    body.rotation.y = seeded(i, 131) * Math.PI;
-    const cap = MeshBuilder.CreateCylinder("tsMesaCap", { diameterTop: 11.4, diameterBottom: 12, height: 0.9, tessellation: 7 }, scene);
-    cap.position.set(x + 0.3, 10.2, z - 0.2);
-    cap.rotation.set((seeded(i, 132) - 0.5) * 0.06, seeded(i, 133) * Math.PI, (seeded(i, 134) - 0.5) * 0.06);
-    const step = MeshBuilder.CreateCylinder("tsMesaStep", { diameterTop: 6.5, diameterBottom: 8, height: 5, tessellation: 5 }, scene);
-    step.position.set(x - (x / l) * 6, 2.5, z - (z / l) * 6);
-    step.rotation.y = seeded(i, 135) * Math.PI;
-    parts.push(body, cap, step);
+    const outward = Math.atan2(z, x);
+    for (let j = 0; j < 7; j++) {
+      const angle = outward + Math.PI + (j - 3) * 0.46;
+      const summit = j === 0;
+      const rockHeight = summit ? 10 : 3.5 + seeded(i * 7 + j, 131) * 4;
+      const block = MeshBuilder.CreatePolyhedron("tsMesaFracture", {
+        type: 2, sizeX: summit ? 6 : 3.4, sizeY: rockHeight * 0.63, sizeZ: summit ? 5.5 : 2.8,
+      }, scene);
+      const reach = summit ? 1.4 : 2.8 + j % 3;
+      block.position.set(x + Math.cos(angle) * reach, rockHeight * 0.46, z + Math.sin(angle) * reach);
+      block.rotation.set(0.29 * Math.sin(angle), angle, 0.37 * Math.cos(angle));
+      parts.push(block);
+    }
     obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 6 });
     obstacles.push({ type: "cylinder", center: new Vector3(x - (x / l) * 6, 0, z - (z / l) * 6), radius: 3.5 });
   });
