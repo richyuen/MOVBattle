@@ -641,6 +641,8 @@ function crispRim(scene: Scene, built: Set<unknown>): void {
 function openSkyline(scene: Scene, built: Set<unknown>): void {
   for (const mesh of scene.meshes) {
     if (built.has(mesh) && mesh.name.startsWith("mountain")) mesh.setEnabled(false);
+    // The base's translucent placement-guide slabs reach past the round rim (the pale sheet behind the island, critic 575)
+    if (built.has(mesh) && /^campaign_zone_(overlay|border)_/.test(mesh.name)) mesh.setEnabled(false);
   }
 }
 
