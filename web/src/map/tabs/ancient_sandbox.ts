@@ -533,6 +533,20 @@ function offshoreIslets(scene: Scene): void {
   }
 }
 
+// Clear sky (574, greek_ancient_sandbox.png: a bright mid-blue sky with white puffy clouds, no beige haze). Spec: clear
+// colour (0.3, 0.6, 0.88), fog a pale sky blue (0.66, 0.8, 0.93) so the far range fades toward the horizon, the base
+// clouds kept white; both restored on dispose.
+function clearSky(scene: Scene): () => void {
+  const oldClear = scene.clearColor.clone();
+  const oldFog = scene.fogColor.clone();
+  scene.clearColor.set(0.3, 0.6, 0.88, 1);
+  scene.fogColor = new Color3(0.66, 0.8, 0.93);
+  return () => {
+    scene.clearColor.copyFrom(oldClear);
+    scene.fogColor.copyFrom(oldFog);
+  };
+}
+
 export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -576,5 +590,6 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
   ruins(scene, cleared.obstacles);
   spiralMountain(scene, cleared.obstacles);
   const obstacles = edgeVillage(scene, built, cleared.obstacles);
-  return { ...result, obstacles, hazards: cleared.hazards };
+  const restoreSky = clearSky(scene);
+  return { ...result, dispose: () => { restoreSky(); result.dispose?.(); }, obstacles, hazards: cleared.hazards };
 }
