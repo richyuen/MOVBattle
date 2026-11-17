@@ -116,6 +116,53 @@ function snowyFurrows(scene: Scene): void {
   }
 }
 
+function winterCarts(scene: Scene): Obstacle[] {
+  const timber = new StandardMaterial("snowCartTimber", scene);
+  timber.diffuseColor = new Color3(0.28, 0.17, 0.12);
+  timber.emissiveColor = new Color3(0.055, 0.07, 0.11);
+  const frost = new StandardMaterial("snowCartFrost", scene);
+  frost.diffuseColor = SNOW;
+  frost.emissiveColor = SNOW_SHADE.scale(0.36);
+  const obstacles: Obstacle[] = [];
+  for (const [x, z, yaw] of [[11, -20, 0.55], [22, -12, -0.26], [17, -29, 0.2]]) {
+    const cart = z !== -29;
+    const at = (part: Mesh, dx: number, y: number, dz: number, mat = timber) => {
+      part.position.set(x + Math.cos(yaw) * dx + Math.sin(yaw) * dz, y, z - Math.sin(yaw) * dx + Math.cos(yaw) * dz);
+      part.rotation.y = yaw;
+      part.material = mat;
+      part.receiveShadows = true;
+      part.isPickable = false;
+      return part;
+    };
+    const plank = (w: number, h: number, d: number, dx: number, y: number, dz: number, mat = timber) =>
+      at(MeshBuilder.CreateBox("snowCartPlank", { width: w, height: h, depth: d }, scene), dx, y, dz, mat);
+    if (cart) {
+      plank(2.4, 0.22, 3.8, 0, 1.18, 0);
+      for (const dx of [-1.13, 1.13]) {
+        plank(0.16, 0.62, 3.8, dx, 1.5, 0);
+        plank(0.22, 0.09, 3.84, dx, 1.85, 0, frost);
+        plank(0.18, 0.16, 1.7, dx * 0.74, 1.03, 2.6);
+        for (const dz of [-1.13, 1.13]) {
+          const wheel = at(MeshBuilder.CreateCylinder("snowCartWheel", { diameter: 1.45, height: 0.22, tessellation: 10 }, scene), dx * 1.17, 0.73, dz);
+          wheel.rotate(Vector3.Forward(), Math.PI / 2, Space.LOCAL);
+        }
+      }
+      for (const dz of [-1.82, 1.82]) plank(2.4, 0.54, 0.16, 0, 1.46, dz);
+    }
+    for (let i = 0; i < 5; i++) {
+      const dx = (i % 3 - 1) * 0.49;
+      const y = (cart ? 1.51 : 0.25) + Math.floor(i / 3) * 0.37;
+      const dz = (seeded(i, 87) - 0.5) * 0.5;
+      const log = at(MeshBuilder.CreateCylinder("snowCartLog", { diameter: 0.52, height: 2.3, tessellation: 6 }, scene), dx, y, dz);
+      log.rotate(Vector3.Right(), Math.PI / 2, Space.LOCAL);
+      const cap = plank(0.39, 0.13, 1.75, dx, y + 0.25, dz - 0.08, frost);
+      cap.rotation.z = (i % 3 - 1) * 0.19;
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: cart ? 1.65 : 1.1 });
+  }
+  return obstacles;
+}
+
 function snowyBridge(scene: Scene): Obstacle[] {
   const stone = new StandardMaterial("farmerSnowBridgeStone", scene);
   stone.diffuseColor = new Color3(0.56, 0.56, 0.6);
@@ -767,7 +814,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   const baseDispose = result.dispose;
   return {
     ...result,
-    obstacles: [...clearFieldJunk(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles)), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene), fieldBoulder(scene)],
+    obstacles: [...clearFieldJunk(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles)), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene), fieldBoulder(scene), ...winterCarts(scene)],
     dispose: () => {
       restoreLights();
       baseDispose?.();
