@@ -9,7 +9,7 @@
 // water); pinkish dirt paths 3.4 m wide branch over the field (wiki shot): the main one from the castle gate (-10, 25) down the middle to
 // the front, two branches off it to the left rim and two to the right rim, each a polyline of straight runs with round joints, stopping a few
 // metres in from the rim. The stage armies (x 28..37, z -26..-6) stand on open meadow clear of the pond. All paths are drawn only (flat).
-import { Color3, Matrix, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import { clampToIsland, type MapBuildResult } from "../mapBuilder";
 
 function seeded(i: number, seed: number): number {
@@ -323,6 +323,68 @@ function castleOaks(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult
   return kept;
 }
 
+// Castle-foot thicket (572, wiki shot medieval_2.png): the wall base is hidden behind two more depths of woodland
+// behind the single oak row. Depth 3, against the curtain (z 21.5-23.5): a continuous hedge of rounded 1.6-2.6 m
+// bush domes. Depth 2 (z 19.5-21.5): big oaks 7-10 m tall every ~6.5 m with domed crowns of five overlapping
+// 2.6-3.4 m lobes, so their canopies touch and overlap the front row. Spans x -47..-15 and 9..45; the gate path
+// (x -14..-5) stays open. Lobes are subdivision-2 icospheres (rounded low-poly), two greens.
+function castleFootThicket(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const leafMat = (name: string, color: Color3) => {
+    const mat = new StandardMaterial(name, scene);
+    mat.diffuseColor = color;
+    mat.emissiveColor = color.scale(0.22);
+    mat.specularColor = Color3.Black();
+    return mat;
+  };
+  const bark = new StandardMaterial("medieval2ThicketBark", scene);
+  bark.diffuseColor = new Color3(0.34, 0.18, 0.1);
+  bark.emissiveColor = bark.diffuseColor.scale(0.16);
+  const tones = [leafMat("medieval2ThicketLeaf", new Color3(0.31, 0.47, 0.13)), leafMat("medieval2ThicketLeafDark", new Color3(0.2, 0.34, 0.09))];
+  const lobes = tones.map((mat, k) => {
+    const mesh = MeshBuilder.CreateIcoSphere(`medieval2ThicketLobe${k}`, { radius: 1, subdivisions: 2 }, scene);
+    mesh.convertToFlatShadedMesh();
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    return { mesh, matrices: [] as number[] };
+  });
+  let n = 0;
+  const lobe = (x: number, y: number, z: number, r: number, squash: number) => {
+    const tone = lobes[seeded(n, 71) < 0.55 ? 0 : 1];
+    const m = Matrix.Compose(new Vector3(r, r * squash, r), Quaternion.RotationYawPitchRoll(seeded(n, 72) * Math.PI * 2, 0, 0), new Vector3(x, y, z));
+    for (const v of m.asArray()) tone.matrices.push(v);
+    n += 1;
+  };
+  const spans: Array<[number, number]> = [[-47, -15], [9, 45]];
+  for (const [from, to] of spans) {
+    // Depth 3: hedge domes against the wall.
+    for (let x = from; x <= to; x += 2.3) {
+      const r = 1.6 + seeded(x * 3, 73) * 1.0;
+      lobe(x + seeded(x, 74) * 0.8, r * 0.55, 22.5 + seeded(x, 75) * 1.2, r, 0.8);
+    }
+    // Depth 2: big domed oaks.
+    for (let x = from + 2.5; x <= to - 1; x += 6.5) {
+      const i = Math.round(x * 7);
+      const tx = x + (seeded(i, 76) - 0.5) * 2;
+      const tz = 20 + seeded(i, 77) * 1.5;
+      const h = 7 + seeded(i, 78) * 3;
+      const trunk = MeshBuilder.CreateTube("medieval2ThicketTrunk", {
+        path: [new Vector3(tx, 0, tz), new Vector3(tx + 0.4, h * 0.45, tz - 0.2), new Vector3(tx - 0.2, h * 0.8, tz)],
+        tessellation: 7, cap: Mesh.CAP_ALL, radiusFunction: (index) => [0.8, 0.55, 0.35][index],
+      }, scene);
+      trunk.material = bark;
+      obstacles.push({ type: "cylinder", center: new Vector3(tx, 0, tz), radius: 0.9 });
+      const crownR = 2.6 + seeded(i, 79) * 0.8;
+      lobe(tx, h, tz, crownR * 1.15, 0.82);
+      for (let j = 0; j < 4; j++) {
+        const a = j * Math.PI / 2 + seeded(i, 80);
+        lobe(tx + Math.cos(a) * crownR * 0.95, h - 0.9 + (j % 2) * 0.7, tz + Math.sin(a) * crownR * 0.75, crownR * (0.85 + seeded(i + j, 81) * 0.2), 0.8);
+      }
+    }
+  }
+  for (const { mesh, matrices } of lobes) mesh.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
+}
+
 function cottagesAndFallenTower(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
   const masonry = new StandardMaterial("medieval2CottageStone", scene);
   masonry.diffuseColor = new Color3(0.55, 0.52, 0.49);
@@ -497,6 +559,7 @@ export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBui
   dirtPaths(scene);
   meadowGrass(scene, built);
   castleFront(scene, obstacles);
+  castleFootThicket(scene, obstacles);
   cottagesAndFallenTower(scene, obstacles);
   return { ...result, obstacles, hazards, zones: facingHalves(scene, built) };
 }
