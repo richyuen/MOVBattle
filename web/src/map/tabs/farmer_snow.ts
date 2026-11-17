@@ -9,12 +9,12 @@
 // [R] 573 night snow look, spec read off reference/maps/wiki/farmer_snow.png and farm_snow.png (CONFIRM 563/569/572 lists):
 // - Field: pale lavender-white, sRGB about (200,205,240) in the light and (130,140,215) in shade, clearly lighter than the navy sky.
 //   The moonlight (hemi + dir) is strongly blue (light r/b ~0.4), so the snow's diffuse is warmed to (0.72,0.66,0.58) to cancel it and
-//   a pale lavender self-light (0.3,0.32,0.5) carries the base tone: lit ~ (0.52,0.6,0.94), shade ~ (0.36,0.4,0.62) linear.
-//   The field meshes leave the glow pass (the self-light would halo the whole island).
+//   a pale lavender self-light (0.23,0.26,0.47) carries the base tone: lit ~ (0.45,0.54,0.91), shade ~ (0.29,0.34,0.6) linear.
+//   The field meshes and the snow lip leave the glow pass (the self-light would halo the whole island).
 // - Corner trees (cornerTrees): six tall faceted lollipop trees, 9-13 m, a thin dark trunk under two or three stacked flat-shaded
 //   teardrop lobes (dark navy-green), each lobe wearing a pale snow cap over its upper third. Behind the mill (19,-41), by the cottages
 //   (-5,42), on the far rim beside the pine grove (-47,-8), (-40,-22), and on the other rim (44,14), (36,30). One 0.6 m trunk collider each.
-// - Side band (navyBowl): a slate-blue face (0.06,0.085,0.22) self-lit 1.0 instead of near-black, a proud 2.8 m snow lip (scale 1.02),
+// - Side band (navyBowl): a slate-blue face (0.085,0.115,0.29) self-lit 1.0 instead of near-black, a proud 2.8 m snow lip (scale 1.02),
 //   and about 150 snow-capped slate stones (0.16,0.22,0.46) 1.8-3.6 m across set in its upper 20 m.
 import { Color3, Mesh, MeshBuilder, Space, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
@@ -34,7 +34,7 @@ function seeded(i: number, seed: number): number {
  * rim and in a few banks on the field, none of them in the way (drawn only).
  */
 const SNOW = new Color3(0.72, 0.66, 0.58);
-const SNOW_SHADE = new Color3(0.3, 0.32, 0.5);
+const SNOW_SHADE = new Color3(0.23, 0.26, 0.47);
 
 function snowCover(scene: Scene, built: Set<unknown>): void {
   const names = ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"];
@@ -540,7 +540,7 @@ function navyBowl(scene: Scene, built: Set<unknown>): void {
   const lip = mk("farmerSnowUnderLip", SNOW.scale(0.9), 0.3);
   lip.emissiveColor = SNOW_SHADE.scale(1.25);
   // The moonlight and the night haze lift a lit navy toward lavender: the earth is a deep blue lit mostly by itself, out of the fog
-  const earth = mk("farmerSnowUnderEarth", new Color3(0.06, 0.085, 0.22), 1.0);
+  const earth = mk("farmerSnowUnderEarth", new Color3(0.085, 0.115, 0.29), 1.0);
   const stoneMat = mk("farmerSnowUnderStone", new Color3(0.16, 0.22, 0.46), 0.7);
   const capMat = mk("farmerSnowUnderCap", SNOW, 0.4);
   capMat.emissiveColor = SNOW_SHADE.clone();
@@ -562,6 +562,7 @@ function navyBowl(scene: Scene, built: Set<unknown>): void {
       band.material = lip;
       band.name = "farmerSnowBowlLip";
       band.isPickable = false;
+      scene.getGlowLayerByName("glow")?.addExcludedMesh(band);
     } else bands.push(band);
   }
   const bowl = Mesh.MergeMeshes(bands, true);
