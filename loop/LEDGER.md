@@ -3,13 +3,6 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-562 | 170c7a00 [R] | map.farmer_1.a | approved
-562 | 317a5b85 | map.tribal_2.a | approved
-562 | e9d95cfa | map.farmer_snow.b | approved
-562 | d7b02859 | map.farmer_snow.a | approved
-562 | 23817396+452f35d3 | map.farmer_snow.a | approved
-562 | e08c4278 | map.tribal_2.b | approved
-562 | 22bf0f3a | map.tribal_sandbox.b | approved
 563 | e6641d5a | map.farmer_snow.b | approved
 563 | 5ac61480 | map.farmer_snow.a | approved
 563 | 3524fafd | map.tribal_2.b | approved
@@ -56,6 +49,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 567 | e2665129 | map.viking_sandbox.a | approved
 567 | 98b4b52f | map.ancient_2.b | approved
 567 | b64c0a48 | map.medieval_2.a | approved
+568 | 45084eee | map.tribal_sandbox.a | approved, struck a1
+568 | ee8ea992 | map.tribal_sandbox.a | approved, struck a2
+568 | d8ff6642 | map.tribal_sandbox.a | approved, struck a3
+568 | 0c5f8a08 | map.farmer_snow.a | approved, struck a3
+568 | a7c6dc9f | map.farmer_snow.a | approved, struck a4
+568 | da540cdb | map.viking_sandbox.a | approved, struck a5
+568 | 3da0c3ba | map.viking_sandbox.b | approved, struck b1
+568 | 7b27f51b | map.medieval_1.a | approved, struck a4
+568 | 6d892fbe | map.medieval_2.a | approved, struck a4
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
@@ -82,3 +84,9 @@ web/src/map/tabs/tribal_sandbox.ts:CLIFFS | six staggered sectors with grove bre
 web/src/map/tabs/tribal_sandbox.ts:rockNooks profile and crowns | faceted masses and tilted slabs; five crowns per nook at several heights | 567 | approved (a failed CONFIRM) | stacked flat blocks; two high crowns per nook
 web/src/map/tabs/farmer_snow.ts:SNOW_MILL tower and wheel | 5.4 × 5.8 m tower above 4.8 m balcony deck; 10 m wheel angled pi/7 | 567 | approved | full-width gables over 1.2 m plinth; 8 m wheel along river
 web/src/map/tabs/medieval_1.ts:plateau cliff tiers | pale grey-lilac columns, shelf heights 6–12 m below turf | 567 | approved | continuous dark ribbon face
+web/src/map/tabs/tribal_sandbox.ts:BIRCH_CROWNS and trunk stretch | stronger red, orange and yellow with 0.78 emissive scale; stretch varies 1.45–3 | 568 | approved | diffuse and emissive x0.55; constant 1.5
+web/src/map/tabs/tribal_sandbox.ts:rimMesas fractures and openSky skyline | seven leaning polyhedra per crag; low outcrops along CLIFFS | 568 | approved | flat stacked mesas and five 17–26 m spires
+web/src/map/tabs/farmer_snow.ts:fieldBoulder and snowyFurrows | boulder cluster (30,-28) with asymmetric caps; six paired ridges beside bridge | 568 | approved | absent
+web/src/map/tabs/viking_sandbox.ts:ARENA_RADIUS and iceBody | 51 m circular floor and tiered shell to 28 m below with hanging shards | 568 | approved | 54 × 48 ellipse inside rectangular base slab
+web/src/map/tabs/medieval_1.ts:rightBankRuins footprint | three crenellated runs and broken pillars on +x bank | 568 | approved | inherited meadow ruins
+web/src/map/tabs/medieval_2.ts:cottagesAndFallenTower footprint | two broken gables and a collapsed tower at front-right | 568 | approved | absent
