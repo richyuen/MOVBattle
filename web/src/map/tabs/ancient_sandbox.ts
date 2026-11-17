@@ -8,7 +8,7 @@
 // every 5 degrees along the base rim (superellipse 54 x 48, power 3), 7-10 m along it and 4 m deep, 10-14 m tall, its outer face at the rim,
 // alternate facets set 0.6 m out; a closing floor slab at -12 m following the rim at 0.97 (the sea will meet it). Terracotta linear
 // (0.72, 0.32, 0.17), half self-lit since the faces look away from the sun; the floor a darker brown. Drawn only (outside the field).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -649,6 +649,57 @@ function hazySea(scene: Scene): void {
   }
 }
 
+// Olive meadow (575, wiki ancient_sandbox.png: the clearing is a yellow-olive grass with a soft bushy mottle, darker
+// olive patches in broad swathes, not a flat saturated green). Spec: floor and blade materials yellow-olive
+// (0.6,0.6,0.2), blades 0.8x; low faceted clumps (flattened icosahedra 1-1.8 m across, 0.2-0.35 m tall) on a 1.1 m
+// jittered grid over the island inside 0.95 of the rim, two olives (0.56,0.57,0.19) and (0.45,0.48,0.15) chosen in
+// swathes by a slow sine field, skipped on the clay paths and inside the hills and the spiral mountain; thin instances.
+function oliveMeadow(scene: Scene, trails: number[][][]): void {
+  const onTrail = (x: number, z: number) => trails.some((t) => t.some(([x1, z1], k) => {
+    if (k === 0) return false;
+    const [x0, z0] = t[k - 1];
+    const dx = x1 - x0, dz = z1 - z0;
+    const u = Math.max(0, Math.min(1, ((x - x0) * dx + (z - z0) * dz) / (dx * dx + dz * dz)));
+    return Math.hypot(x - x0 - dx * u, z - z0 - dz * u) < 2.2;
+  }));
+  const olive = new Color3(0.6, 0.6, 0.2);
+  for (const name of ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"]) {
+    const mat = scene.getMaterialByName(name);
+    if (!(mat instanceof StandardMaterial)) continue;
+    mat.diffuseColor = olive.scale(name.startsWith("grassBlade") ? 0.8 : 1);
+    mat.emissiveColor = mat.diffuseColor.scale(0.13);
+  }
+  const tones = [new Color3(0.56, 0.57, 0.19), new Color3(0.45, 0.48, 0.15)].map((c, i) => {
+    const mesh = MeshBuilder.CreateIcoSphere(`ancientSandboxMeadow${i}`, { radius: 0.5, subdivisions: 1, flat: true }, scene);
+    const mat = new StandardMaterial(`ancientSandboxMeadow${i}`, scene);
+    mat.diffuseColor = c;
+    mat.emissiveColor = c.scale(0.25);
+    mat.specularColor = Color3.Black();
+    mesh.material = mat;
+    mesh.receiveShadows = true;
+    mesh.isPickable = false;
+    return { mesh, m: [] as number[] };
+  });
+  const blocked: Array<[number, number, number]> = [[-24, 36, 14], [23, 36, 15], [SPIRAL.x, SPIRAL.z, 10]];
+  let i = 0;
+  for (let z = -46; z < 46; z += 1.1) {
+    for (let x = -52; x < 52; x += 1.1) {
+      i += 1;
+      const jx = seeded(i, 141), jz = seeded(i, 143);
+      const px = x + (jx - 0.5) * 0.9, pz = z + (jz - 0.5) * 0.9;
+      if (Math.abs(px / (RIM.a * 0.95)) ** 3 + Math.abs(pz / (RIM.b * 0.95)) ** 3 > 1) continue;
+      if (blocked.some(([bx, bz, r]) => Math.hypot(px - bx, pz - bz) < r) || onTrail(px, pz)) continue;
+      const swathe = Math.sin(px * 0.09 + 0.7) * Math.cos(pz * 0.11 - 0.3) + Math.sin((px - pz) * 0.05) * 0.6;
+      if (swathe > 0.9 && jx > 0.5) continue;
+      const w = 1 + jx * 0.8, h = 0.2 + jz * 0.15;
+      const tone = tones[swathe + jz * 0.4 > 0.45 ? 1 : 0];
+      const mat = Matrix.Scaling(w, h, w * (0.8 + jz * 0.3)).multiply(Matrix.RotationY(jx * 6.28)).multiply(Matrix.Translation(px, h * 0.3 + 0.03, pz));
+      tone.m.push(...mat.m);
+    }
+  }
+  for (const { mesh, m } of tones) mesh.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
+}
+
 // Clouds off the island (575, greek_ancient_sandbox.png: the clouds float in the sky around and behind the island;
 // nothing white stands between the viewer and the cliffs). The base's ring clouds on the front side (z < -30: low
 // banks 12-40 m up, 70-100 m out, between the island shot's camera at z ~-112 and the island) cover its lower right.
@@ -716,6 +767,7 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
       segment.isPickable = false;
     }
   }
+  oliveMeadow(scene, trails);
   hillsideTerraces(scene, cleared.obstacles);
   ruins(scene, cleared.obstacles);
   spiralMountain(scene, cleared.obstacles);
