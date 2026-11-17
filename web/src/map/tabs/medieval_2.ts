@@ -432,37 +432,189 @@ function cottagesAndFallenTower(scene: Scene, obstacles: MapBuildResult["obstacl
   }
 }
 
+// Island dressing rebuild (575 [R], criterion a, from both CONFIRM lists 569 and 572, read off meadow_medieval_2.png and
+// wiki medieval_2.png). Spec:
+// 1. Underside (replaces the smooth pale earthen bowl): under the turf a dark earth band 3.2 m deep (warm brown
+//    (0.27,0.17,0.1), self-lit 0.6x), then a faceted grey rock body tapering to a blunt point 34 m down (~0.31 of the 108 m
+//    island width, so it reads deep in the island shot): rings at 0.985/0.93/0.8/0.6/0.33/0.05 of the rim at -3.2/-9/-16/
+//    -23/-29/-34 m, 48 vertices round with 6% radial and +-1.2 m vertical jitter, flat-shaded, warm grey (0.5,0.47,0.44)
+//    to (0.37,0.35,0.34) (r over b), self-lit 0.7x; 70 faceted boulders 3-7 m (icosahedra) set half into the rock face
+//    break up the profile.
+// 2. Vine: one brown tube (0.42,0.25,0.13), 1.1 m radius at the root tapering to 0.3 m, rooted at the keep's front-right
+//    foot and coiling 2.75 turns up the keep (r 5.3 to 23 m, round the parapet at r 5.6, the turret at r 3.4, the spire
+//    narrowing r 3 to 1.2) to 37 m, its tip curling out; a second strand arches from the keep foot over the left curtain
+//    (top 13.5 m at x -20) down into the castle-foot thicket. Leaf tufts every few metres along both. Drawn only.
+// 3. Side tree ring: dense round bushy oaks down both side rims from the castle (z 17) to the pond (z -32): two staggered
+//    rows at 0.97 and 0.89 of the rim every ~3.4 m, 5-8 m tall, crowns of 3-4 overlapping faceted lumps 2.2-3.2 m, two
+//    greens; none within 2.6 m of a path or 3 m of an existing oak; a 0.8 m collider each (all outside the stage armies,
+//    x <= 37). The pond, halves and paths stay as they are.
 function earthenBowl(scene: Scene, built: Set<unknown>): void {
   for (const mesh of scene.meshes) {
     if (built.has(mesh) && /^island(Under|Shelf|Cliff)/.test(mesh.name)) mesh.setEnabled(false);
   }
+  const N = 48;
   const tiers = [
-    { scale: 1, height: -0.07, color: [0.49, 0.44, 0.38] },
-    { scale: 0.99, height: -6.2, color: [0.49, 0.44, 0.38] },
-    { scale: 0.90, height: -11.6, color: [0.45, 0.37, 0.31] },
-    { scale: 0.73, height: -17.4, color: [0.40, 0.33, 0.29] },
-    { scale: 0.50, height: -21, color: [0.35, 0.29, 0.26] },
-    { scale: 0.01, height: -23, color: [0.35, 0.29, 0.26] },
+    { scale: 1, height: -0.07, color: [0.27, 0.17, 0.1], self: 0.6 },
+    { scale: 0.995, height: -3.2, color: [0.27, 0.17, 0.1], self: 0.6 },
+    { scale: 0.985, height: -3.4, color: [0.5, 0.47, 0.44], self: 0.7 },
+    { scale: 0.93, height: -9, color: [0.5, 0.47, 0.44], self: 0.7 },
+    { scale: 0.8, height: -16, color: [0.46, 0.43, 0.41], self: 0.7 },
+    { scale: 0.6, height: -23, color: [0.42, 0.4, 0.38], self: 0.7 },
+    { scale: 0.33, height: -29, color: [0.39, 0.37, 0.36], self: 0.7 },
+    { scale: 0.05, height: -34, color: [0.37, 0.35, 0.34], self: 0.7 },
   ];
-  const rings = tiers.map(({ scale, height }, row) => Array.from({ length: 64 }, (_, i) => {
-    const angle = i * Math.PI / 32;
-    const [x, z] = clampToIsland(Math.cos(angle) * 100, Math.sin(angle) * 100);
-    const jagged = 1 + (seeded(i, 50 + row) - 0.5) * (row === 0 ? 0 : 0.026);
-    return new Vector3(x * scale * jagged, height + (row ? Math.sin(angle * 5) * 0.8 : 0), z * scale * jagged);
+  const rim = (angle: number) => clampToIsland(Math.cos(angle) * 100, Math.sin(angle) * 100);
+  const rings = tiers.map(({ scale, height }, row) => Array.from({ length: N }, (_, i) => {
+    const angle = (i / N) * Math.PI * 2;
+    const [x, z] = rim(angle);
+    const jag = row < 2 ? 1 : 1 + (seeded(i, 50 + row) - 0.5) * 0.12;
+    const dy = row < 3 ? 0 : (seeded(i, 70 + row) - 0.5) * 2.4;
+    return new Vector3(x * scale * jag, height + dy, z * scale * jag);
   }));
   for (let row = 1; row < rings.length; row++) {
     const [r, g, b] = tiers[row].color;
-    const earth = new StandardMaterial("medieval2Earth", scene);
-    earth.diffuseColor = new Color3(r, g, b);
-    earth.emissiveColor = earth.diffuseColor.scale(0.83);
-    earth.specularColor = Color3.Black();
+    const mat = new StandardMaterial(row <= 1 ? "medieval2EarthBand" : "medieval2UnderRock", scene);
+    mat.diffuseColor = new Color3(r, g, b);
+    mat.emissiveColor = mat.diffuseColor.scale(tiers[row].self);
+    mat.specularColor = Color3.Black();
     const band = MeshBuilder.CreateRibbon("medieval2BowlBand", {
       pathArray: [rings[row - 1], rings[row]], closePath: true, sideOrientation: Mesh.DOUBLESIDE,
     }, scene);
-    band.material = earth;
+    band.material = mat;
     band.isPickable = false;
     band.convertToFlatShadedMesh();
   }
+  const rockMat = new StandardMaterial("medieval2UnderBoulder", scene);
+  rockMat.diffuseColor = new Color3(0.48, 0.45, 0.43);
+  rockMat.emissiveColor = rockMat.diffuseColor.scale(0.65);
+  rockMat.specularColor = Color3.Black();
+  const boulders: Mesh[] = [];
+  for (let i = 0; i < 70; i++) {
+    const angle = (i / 70) * Math.PI * 2 + seeded(i, 81) * 0.08;
+    const t = 0.1 + seeded(i, 83) * 0.75;
+    // Interpolate the rock body's radius fraction and depth at this height
+    const f = t * (tiers.length - 3) + 2;
+    const k = Math.min(tiers.length - 2, Math.floor(f)), u = f - k;
+    const scale = tiers[k].scale * (1 - u) + tiers[k + 1].scale * u;
+    const y = tiers[k].height * (1 - u) + tiers[k + 1].height * u;
+    const [x, z] = rim(angle);
+    const size = 1.5 + seeded(i, 85) * 2;
+    const rock = MeshBuilder.CreateIcoSphere("medieval2UnderBoulder", { radius: size, subdivisions: 0, flat: true }, scene);
+    rock.scaling.set(1, 0.7 + seeded(i, 87) * 0.5, 1);
+    rock.rotation.set(seeded(i, 89) * 3, seeded(i, 91) * 3, 0);
+    rock.position.set(x * scale, y, z * scale);
+    boulders.push(rock);
+  }
+  const merged = Mesh.MergeMeshes(boulders, true);
+  if (merged) { merged.material = rockMat; merged.isPickable = false; }
+}
+
+function keepVine(scene: Scene): void {
+  const bark = new StandardMaterial("medieval2Vine", scene);
+  bark.diffuseColor = new Color3(0.42, 0.25, 0.13);
+  bark.emissiveColor = bark.diffuseColor.scale(0.35);
+  bark.specularColor = Color3.Black();
+  const leaf = new StandardMaterial("medieval2VineLeaf", scene);
+  leaf.diffuseColor = new Color3(0.3, 0.48, 0.14);
+  leaf.emissiveColor = leaf.diffuseColor.scale(0.25);
+  leaf.specularColor = Color3.Black();
+  const cx = GATE[0], cz = GATE[1] + 8.5;
+  const coil: Vector3[] = [];
+  const S = 90, turns = 2.75, start = -Math.PI / 2 + 0.6;
+  for (let s = 0; s <= S; s++) {
+    const t = s / S;
+    const y = t * 37;
+    let r = 5.3;
+    if (y > 21.5 && y <= 24.5) r = 5.6;
+    else if (y > 24.5 && y <= 29.5) r = 3.4;
+    else if (y > 29.5) r = 3 - (y - 29.5) / 7.5 * 1.8;
+    const a = start + t * turns * Math.PI * 2;
+    coil.push(new Vector3(cx + Math.cos(a) * r, y, cz + Math.sin(a) * r));
+  }
+  // The tip curls out and down
+  const last = coil[coil.length - 1];
+  const a1 = start + turns * Math.PI * 2;
+  coil.push(new Vector3(last.x + Math.cos(a1) * 1.6, 38.2, last.z + Math.sin(a1) * 1.6));
+  coil.push(new Vector3(last.x + Math.cos(a1 + 0.9) * 2.6, 37.4, last.z + Math.sin(a1 + 0.9) * 2.6));
+  const arch = [
+    new Vector3(cx + 3.5, 0.3, cz - 4.2), new Vector3(cx - 1, 5, cz - 5), new Vector3(cx - 6, 10.5, cz - 6),
+    new Vector3(cx - 10, 13.5, cz - 6.8), new Vector3(cx - 15, 11.5, cz - 8.6), new Vector3(cx - 19, 6.5, cz - 10.6),
+    new Vector3(cx - 22, 1.5, cz - 12),
+  ];
+  const strands: Array<[Vector3[], number]> = [[coil, 1.1], [arch, 0.8]];
+  const leaves: Mesh[] = [];
+  for (const [path, r0] of strands) {
+    const n = path.length;
+    const tube = MeshBuilder.CreateTube("medieval2Vine", {
+      path, tessellation: 8, cap: Mesh.CAP_ALL, radiusFunction: (i) => r0 - (r0 - 0.3) * (i / (n - 1)),
+    }, scene);
+    tube.material = bark;
+    tube.isPickable = false;
+    tube.receiveShadows = true;
+    for (let i = 4; i < n - 1; i += path === coil ? 7 : 2) {
+      const tuft = MeshBuilder.CreateIcoSphere("medieval2VineLeaf", { radius: 0.9 + seeded(i, 95) * 0.6, subdivisions: 0, flat: true }, scene);
+      tuft.position.copyFrom(path[i]).addInPlace(new Vector3(0, 0.6, 0));
+      tuft.rotation.y = seeded(i, 97) * 3;
+      leaves.push(tuft);
+    }
+  }
+  const merged = Mesh.MergeMeshes(leaves, true);
+  if (merged) { merged.material = leaf; merged.isPickable = false; }
+}
+
+function sideTreeRing(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const bark = new StandardMaterial("medieval2RimBark", scene);
+  bark.diffuseColor = new Color3(0.36, 0.19, 0.11);
+  bark.emissiveColor = bark.diffuseColor.scale(0.16);
+  const greens = [new Color3(0.31, 0.46, 0.13), new Color3(0.4, 0.55, 0.16)].map((c, i) => {
+    const m = new StandardMaterial(`medieval2RimLeaves${i}`, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(0.23);
+    m.specularColor = Color3.Black();
+    return m;
+  });
+  const nearPath = (x: number, z: number) => PATHS.some((route) => route.some(([ex, ez], i) => {
+    if (i === 0) return false;
+    const [sx, sz] = route[i - 1];
+    const dx = ex - sx, dz = ez - sz;
+    const t = Math.max(0, Math.min(1, ((x - sx) * dx + (z - sz) * dz) / (dx * dx + dz * dz)));
+    return Math.hypot(x - sx - dx * t, z - sz - dz * t) < PATH_WIDTH / 2 + 2.6;
+  }));
+  const existing = obstacles.filter((o) => o.type === "cylinder").map((o) => o.center);
+  const trunks: Mesh[] = [], crowns: Mesh[][] = [[], []];
+  let k = 0;
+  for (const side of [-1, 1]) {
+    for (const [row, frac] of [[0, 0.97], [1, 0.89]] as const) {
+      for (let z = 17 - row * 1.7; z > -32; z -= 3.4) {
+        k += 1;
+        const zz = z + (seeded(k, 131) - 0.5) * 1.2;
+        // The rim's x at this z (island superellipse 54 x 48, power 3)
+        const x = side * 54 * Math.cbrt(Math.max(0, 1 - Math.abs(zz / 48) ** 3)) * frac;
+        if (nearPath(x, zz) || existing.some((p) => Math.hypot(p.x - x, p.z - zz) < 3)) continue;
+        const h = 5 + seeded(k, 133) * 3;
+        const trunk = MeshBuilder.CreateCylinder("medieval2RimTrunk", { height: h * 0.6, diameterTop: 0.45, diameterBottom: 0.8, tessellation: 6 }, scene);
+        trunk.position.set(x, h * 0.3, zz);
+        trunks.push(trunk);
+        const lumps = 3 + Math.round(seeded(k, 135));
+        for (let j = 0; j < lumps; j++) {
+          const ang = j * Math.PI * 2 / lumps + k;
+          const rad = 2.2 + seeded(k * 5 + j, 137) * 1;
+          const lump = MeshBuilder.CreateIcoSphere("medieval2RimCrown", { radius: rad, subdivisions: 1, flat: true }, scene);
+          lump.position.set(x + Math.cos(ang) * 1.3, h * 0.72 + (j % 2) * 0.9, zz + Math.sin(ang) * 1.3);
+          lump.scaling.y = 0.8;
+          crowns[(k + j) % 2].push(lump);
+        }
+        obstacles.push({ type: "cylinder", center: new Vector3(x, 0, zz), radius: 0.8 });
+        existing.push(new Vector3(x, 0, zz));
+      }
+    }
+  }
+  const t = Mesh.MergeMeshes(trunks, true);
+  if (t) { t.material = bark; t.isPickable = false; }
+  crowns.forEach((list, i) => {
+    const m = Mesh.MergeMeshes(list, true);
+    if (m) { m.material = greens[i]; m.isPickable = false; m.receiveShadows = true; }
+  });
 }
 
 function facingHalves(scene: Scene, built: Set<unknown>): MapBuildResult["zones"] {
@@ -560,6 +712,8 @@ export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBui
   meadowGrass(scene, built);
   castleFront(scene, obstacles);
   castleFootThicket(scene, obstacles);
+  keepVine(scene);
   cottagesAndFallenTower(scene, obstacles);
+  sideTreeRing(scene, obstacles);
   return { ...result, obstacles, hazards, zones: facingHalves(scene, built) };
 }
