@@ -487,6 +487,52 @@ function outerTerraces(scene: Scene): void {
   });
 }
 
+// Offshore islets (573, card Overview: "a few smaller islands off in the distance"): five small terracotta rock islands standing out of the
+// sea 75-150 m from the centre, each a tapered faceted drum 5-10 m across rising 4-9 m above the water, a grass cap on top and two to four
+// dark cypress spires. Drawn only.
+const ISLETS: Array<[number, number, number, number]> = [[-105, 70, 9, 7], [-150, 12, 6, 5], [118, 92, 7, 6], [152, 36, 10, 9], [78, 138, 5, 4]];
+
+function offshoreIslets(scene: Scene): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const rockMat = mk("ancientSandboxIsletRock", new Color3(0.72, 0.32, 0.17), 0.5);
+  const grassMat = mk("ancientSandboxIsletGrass", new Color3(0.51, 0.66, 0.23), 0.2);
+  const treeMat = mk("ancientSandboxIsletCypress", new Color3(0.07, 0.22, 0.08), 0.2);
+  const rocks: Mesh[] = [], caps: Mesh[] = [], trees: Mesh[] = [];
+  ISLETS.forEach(([x, z, wide, tall], k) => {
+    const rock = MeshBuilder.CreateCylinder("ancientSandboxIslet", { diameterTop: wide * 0.8, diameterBottom: wide * 1.15, height: tall + 1, tessellation: 7 }, scene);
+    rock.position.set(x, SEA_Y + (tall + 1) / 2 - 0.5, z);
+    rock.rotation.y = seeded(k, 511) * Math.PI;
+    rocks.push(rock);
+    const cap = MeshBuilder.CreateCylinder("ancientSandboxIsletCap", { diameter: wide * 0.84, height: 0.5, tessellation: 7 }, scene);
+    cap.position.set(x, SEA_Y + tall + 0.2, z);
+    cap.rotation.y = rock.rotation.y;
+    caps.push(cap);
+    const n = 2 + Math.floor(seeded(k, 512) * 3);
+    for (let i = 0; i < n; i++) {
+      const a = seeded(k * 7 + i, 513) * Math.PI * 2, d = seeded(k * 7 + i, 514) * wide * 0.28;
+      const h = 4 + seeded(k * 7 + i, 515) * 3;
+      const tree = MeshBuilder.CreateCylinder("ancientSandboxIsletCypress", { diameterTop: 0, diameterBottom: 1.3, height: h, tessellation: 6 }, scene);
+      tree.position.set(x + Math.cos(a) * d, SEA_Y + tall + 0.4 + h / 2, z + Math.sin(a) * d);
+      trees.push(tree);
+    }
+  });
+  for (const [list, mat, name] of [[rocks, rockMat, "ancientSandboxIslets"], [caps, grassMat, "ancientSandboxIsletCaps"], [trees, treeMat, "ancientSandboxIsletCypresses"]] as const) {
+    const merged = Mesh.MergeMeshes([...list], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.applyFog = false;
+    merged.isPickable = false;
+  }
+}
+
 export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -494,6 +540,7 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
   terracottaCliffs(scene, built);
   sea(scene);
   outerTerraces(scene);
+  offshoreIslets(scene);
   const cleared = clearFieldDressing(scene, built, result, clearFieldJunk(scene, built, [...result.obstacles]));
   const lawn = new Color3(0.51, 0.66, 0.23);
   for (const name of ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"]) {
