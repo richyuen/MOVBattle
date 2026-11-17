@@ -131,6 +131,41 @@ function hopliteStatue(scene: Scene): void {
   boss.material = marble;
 }
 
+// Lighthouse (572, greek_ancient_1.png): a slim white octagonal tower stands on the rocks at the back-left corner
+// of the headland, left of the statue. Spec: 2 m rock plinth, octagonal shaft 14 m tapering 4.2 -> 3.2 m, a blue
+// band two thirds up, a gallery ring, an 8-post lantern with a blue cap. Drawn only.
+function lighthouse(scene: Scene): void {
+  const white = new StandardMaterial("ancient1LighthouseWhite", scene);
+  white.diffuseColor = new Color3(0.95, 0.93, 0.86);
+  white.emissiveColor = white.diffuseColor.scale(0.24);
+  const blue = new StandardMaterial("ancient1LighthouseBlue", scene);
+  blue.diffuseColor = new Color3(0.2, 0.42, 0.78);
+  blue.emissiveColor = blue.diffuseColor.scale(0.26);
+  const glass = new StandardMaterial("ancient1LighthouseLamp", scene);
+  glass.diffuseColor = new Color3(0.98, 0.86, 0.45);
+  glass.emissiveColor = new Color3(0.7, 0.55, 0.2);
+  const x = -42, z = 46, base = -0.6;
+  const cyl = (name: string, y: number, h: number, top: number, bottom: number, mat: StandardMaterial, tess = 8) => {
+    const m = MeshBuilder.CreateCylinder(name, { height: h, diameterTop: top, diameterBottom: bottom, tessellation: tess }, scene);
+    m.position.set(x, y + h / 2, z);
+    m.material = mat;
+    m.receiveShadows = true;
+    return m;
+  };
+  cyl("ancient1LighthousePlinth", base, 2, 5.6, 6.4, white);
+  cyl("ancient1LighthouseShaft", base + 2, 14, 3.2, 4.2, white);
+  cyl("ancient1LighthouseBand", base + 10.5, 1, 3.6, 3.7, blue);
+  cyl("ancient1LighthouseGallery", base + 16, 0.5, 4.8, 4.8, white);
+  cyl("ancient1LighthouseLamp", base + 16.5, 2.2, 2.2, 2.2, glass);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const post = MeshBuilder.CreateBox("ancient1LighthousePost", { width: 0.25, height: 2.2, depth: 0.25 }, scene);
+    post.position.set(x + Math.cos(a) * 1.35, base + 17.6, z + Math.sin(a) * 1.35);
+    post.material = white;
+  }
+  cyl("ancient1LighthouseCap", base + 18.7, 2.2, 0, 3.4, blue);
+}
+
 export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -151,6 +186,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   slab.material = earth;
   bayHeadland(scene, earth);
   hopliteStatue(scene);
+  lighthouse(scene);
   const pavement = MeshBuilder.CreateBox("ancient1Pavement", { width: LENGTH, height: 0.55, depth: WIDTH }, scene);
   pavement.position.y = -0.275;
   pavement.material = stone;
