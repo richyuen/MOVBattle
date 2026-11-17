@@ -1,4 +1,4 @@
-import { Color3, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene, type ShadowGenerator } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene, type ShadowGenerator } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 // The placement reference shows two grassy cliff shelves, a deep front inlet, and a narrow bridge.
@@ -8,6 +8,60 @@ const SHORE = [
 ] as const;
 const BRIDGE_Z = 1;
 const BRIDGE_DEPTH = 8;
+
+function meadowDressing(scene: Scene): void {
+  const leaf = new StandardMaterial("medieval1MeadowLeaves", scene);
+  leaf.diffuseColor = new Color3(0.42, 0.67, 0.23);
+  leaf.emissiveColor = leaf.diffuseColor.scale(0.18);
+  leaf.backFaceCulling = false;
+  const data = new VertexData();
+  data.positions = [-0.32, 0, 0, 0.32, 0, 0, -0.16, 0.41, 0, 0, 0.23, 0, 0.20, 0.38, 0,
+    0, 0, -0.32, 0, 0, 0.32, 0, 0.38, -0.2, 0, 0.24, 0, 0, 0.41, 0.16];
+  data.indices = [0, 2, 3, 0, 3, 1, 1, 3, 4, 5, 7, 8, 5, 8, 6, 6, 8, 9];
+  data.normals = [];
+  VertexData.ComputeNormals(data.positions, data.indices, data.normals);
+  const tuft = new Mesh("medieval1MeadowTuft", scene);
+  data.applyToMesh(tuft);
+  tuft.material = leaf;
+  const blossom = MeshBuilder.CreateCylinder("medieval1OrangeBlossom", { height: 0.075, diameter: 0.24, tessellation: 5 }, scene);
+  const petal = new StandardMaterial("medieval1OrangePetals", scene);
+  petal.diffuseColor = new Color3(1, 0.42, 0.1);
+  petal.emissiveColor = petal.diffuseColor.scale(0.37);
+  blossom.material = petal;
+  const grassMatrices: number[] = [];
+  const flowerMatrices: number[] = [];
+  for (let row = 1; row < SHORE.length; row++) {
+    const [front, near, far] = SHORE[row - 1];
+    const [back, nextNear, nextFar] = SHORE[row];
+    for (let z = front + 0.7; z < back; z += 0.95) {
+      const fraction = (z - front) / (back - front);
+      const inside = near + (nextNear - near) * fraction;
+      const outside = far + (nextFar - far) * fraction;
+      for (let x = inside + 0.65; x < outside - 0.65; x += 0.95) {
+        for (const side of [-1, 1]) {
+          const seed = Math.sin(x * 12.73 + z * 31.19 + side) * 43758.54;
+          const jitter = seed - Math.floor(seed);
+          const patch = Math.sin(x * 0.29 + z * 0.11) * Math.cos(z * 0.24);
+          if (jitter < (1 - patch) * 0.22) continue;
+          const scale = 0.8 + jitter * 0.7;
+          const p = new Vector3(side * (x + (jitter - 0.5) * 0.65), 0.01, z + (jitter - 0.5) * 0.55);
+          const rotation = Quaternion.RotationAxis(Vector3.Up(), jitter * Math.PI * 2);
+          grassMatrices.push(...Matrix.Compose(new Vector3(scale, scale, scale), rotation, p).m);
+          if (jitter > 0.968 && patch > -0.1) {
+            p.y = 0.22 * scale;
+            flowerMatrices.push(...Matrix.Compose(new Vector3(scale, scale, scale), rotation, p).m);
+          }
+        }
+      }
+    }
+  }
+  tuft.thinInstanceSetBuffer("matrix", new Float32Array(grassMatrices), 16);
+  blossom.thinInstanceSetBuffer("matrix", new Float32Array(flowerMatrices), 16);
+  tuft.receiveShadows = true;
+  blossom.receiveShadows = true;
+  tuft.isPickable = false;
+  blossom.isPickable = false;
+}
 
 function landfallRamp(scene: Scene, grass: StandardMaterial, stone: StandardMaterial): void {
   // The western ledge descends along the inlet to the door underneath the bridge.
@@ -235,6 +289,7 @@ export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBui
   stone.emissiveColor = stone.diffuseColor.scale(0.44);
   plateau(scene, -1, grass, stone);
   plateau(scene, 1, grass, stone);
+  meadowDressing(scene);
   landfallRamp(scene, grass, stone);
 
   const sea = MeshBuilder.CreateCylinder("medieval1Sea", { diameter: 260, height: 0.15, tessellation: 64 }, scene);
