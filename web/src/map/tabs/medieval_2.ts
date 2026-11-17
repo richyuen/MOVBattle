@@ -453,15 +453,16 @@ function earthenBowl(scene: Scene, built: Set<unknown>): void {
     if (built.has(mesh) && /^island(Under|Shelf|Cliff)/.test(mesh.name)) mesh.setEnabled(false);
   }
   const N = 48;
+  const glow = scene.getGlowLayerByName("glow");
   const tiers = [
     { scale: 1, height: -0.07, color: [0.27, 0.17, 0.1], self: 0.6 },
     { scale: 0.995, height: -3.2, color: [0.27, 0.17, 0.1], self: 0.6 },
-    { scale: 0.985, height: -3.4, color: [0.5, 0.47, 0.44], self: 0.7 },
-    { scale: 0.93, height: -9, color: [0.5, 0.47, 0.44], self: 0.7 },
-    { scale: 0.8, height: -16, color: [0.46, 0.43, 0.41], self: 0.7 },
-    { scale: 0.6, height: -23, color: [0.42, 0.4, 0.38], self: 0.7 },
-    { scale: 0.33, height: -29, color: [0.39, 0.37, 0.36], self: 0.7 },
-    { scale: 0.05, height: -34, color: [0.37, 0.35, 0.34], self: 0.7 },
+    { scale: 0.985, height: -3.4, color: [0.44, 0.41, 0.38], self: 0.6 },
+    { scale: 0.93, height: -9, color: [0.44, 0.41, 0.38], self: 0.6 },
+    { scale: 0.8, height: -16, color: [0.41, 0.38, 0.36], self: 0.6 },
+    { scale: 0.6, height: -23, color: [0.38, 0.36, 0.34], self: 0.6 },
+    { scale: 0.33, height: -29, color: [0.35, 0.33, 0.32], self: 0.6 },
+    { scale: 0.05, height: -34, color: [0.33, 0.31, 0.3], self: 0.6 },
   ];
   const rim = (angle: number) => clampToIsland(Math.cos(angle) * 100, Math.sin(angle) * 100);
   const rings = tiers.map(({ scale, height }, row) => Array.from({ length: N }, (_, i) => {
@@ -483,10 +484,11 @@ function earthenBowl(scene: Scene, built: Set<unknown>): void {
     band.material = mat;
     band.isPickable = false;
     band.convertToFlatShadedMesh();
+    glow?.addExcludedMesh(band);
   }
   const rockMat = new StandardMaterial("medieval2UnderBoulder", scene);
-  rockMat.diffuseColor = new Color3(0.48, 0.45, 0.43);
-  rockMat.emissiveColor = rockMat.diffuseColor.scale(0.65);
+  rockMat.diffuseColor = new Color3(0.42, 0.39, 0.36);
+  rockMat.emissiveColor = new Color3(0.36, 0.33, 0.3);
   rockMat.specularColor = Color3.Black();
   const boulders: Mesh[] = [];
   for (let i = 0; i < 70; i++) {
@@ -506,7 +508,7 @@ function earthenBowl(scene: Scene, built: Set<unknown>): void {
     boulders.push(rock);
   }
   const merged = Mesh.MergeMeshes(boulders, true);
-  if (merged) { merged.material = rockMat; merged.isPickable = false; }
+  if (merged) { merged.material = rockMat; merged.isPickable = false; glow?.addExcludedMesh(merged); }
 }
 
 function keepVine(scene: Scene): void {
@@ -541,7 +543,7 @@ function keepVine(scene: Scene): void {
     new Vector3(cx - 10, 13.5, cz - 6.8), new Vector3(cx - 15, 11.5, cz - 8.6), new Vector3(cx - 19, 6.5, cz - 10.6),
     new Vector3(cx - 22, 1.5, cz - 12),
   ];
-  const strands: Array<[Vector3[], number]> = [[coil, 1.1], [arch, 0.8]];
+  const strands: Array<[Vector3[], number]> = [[coil, 1.5], [arch, 1.0]];
   const leaves: Mesh[] = [];
   for (const [path, r0] of strands) {
     const n = path.length;
