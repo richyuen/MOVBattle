@@ -6,6 +6,16 @@
 // Night dressing spec: open cottage verge and navy mill bank, with only corner trees
 // and low clusters of angular snow-capped rocks. Blue directional light shapes the
 // snow while warm window and string lights provide local accents.
+// [R] 573 night snow look, spec read off reference/maps/wiki/farmer_snow.png and farm_snow.png (CONFIRM 563/569/572 lists):
+// - Field: pale lavender-white, sRGB about (200,205,240) in the light and (130,140,215) in shade, clearly lighter than the navy sky.
+//   The moonlight (hemi + dir) is strongly blue (light r/b ~0.4), so the snow's diffuse is warmed to (0.72,0.66,0.58) to cancel it and
+//   a pale lavender self-light (0.3,0.32,0.5) carries the base tone: lit ~ (0.52,0.6,0.94), shade ~ (0.36,0.4,0.62) linear.
+//   The field meshes leave the glow pass (the self-light would halo the whole island).
+// - Corner trees (cornerTrees): six tall faceted lollipop trees, 9-13 m, a thin dark trunk under two or three stacked flat-shaded
+//   teardrop lobes (dark navy-green), each lobe wearing a pale snow cap over its upper third. Behind the mill (19,-41), by the cottages
+//   (-5,42), on the far rim beside the pine grove (-47,-8), (-40,-22), and on the other rim (44,14), (36,30). One 0.6 m trunk collider each.
+// - Side band (navyBowl): a slate-blue face (0.06,0.085,0.22) self-lit 1.0 instead of near-black, a proud 2.8 m snow lip (scale 1.02),
+//   and about 150 snow-capped slate stones (0.16,0.22,0.46) 1.8-3.6 m across set in its upper 20 m.
 import { Color3, Mesh, MeshBuilder, Space, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
@@ -23,19 +33,22 @@ function seeded(i: number, seed: number): number {
  * turn to snow, the grass blades and tufts go, and soft low drifts (0.3-0.6 m high, 2-6 m long, flattened) lie along the tree ring, at the
  * rim and in a few banks on the field, none of them in the way (drawn only).
  */
-const SNOW = new Color3(0.57, 0.68, 0.96);
-const SNOW_SHADE = new Color3(0.035, 0.065, 0.17);
+const SNOW = new Color3(0.72, 0.66, 0.58);
+const SNOW_SHADE = new Color3(0.3, 0.32, 0.5);
 
 function snowCover(scene: Scene, built: Set<unknown>): void {
-  for (const name of ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"]) {
+  const names = ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"];
+  for (const name of names) {
     const m = scene.getMaterialByName(name) as StandardMaterial | null;
     if (!m) continue;
     m.diffuseColor = SNOW.clone();
     m.emissiveColor = SNOW_SHADE.clone();
     m.specularColor = new Color3(0.05, 0.05, 0.06);
   }
+  const glow = scene.getGlowLayerByName("glow");
   for (const mesh of scene.meshes) {
     if (!built.has(mesh)) continue;
+    if (mesh.material && names.includes(mesh.material.name)) glow?.addExcludedMesh(mesh as Mesh);
     if (mesh.name.startsWith("fieldBlades_") || mesh.name === "grassTuft" || mesh.name === "centerGrass" || mesh.name === "flowerDot") mesh.setEnabled(false);
   }
 }
@@ -423,7 +436,7 @@ function pineGrove(scene: Scene): Obstacle[] {
  * shows; scale 1, .98, .94, .86, .72, .52, .28, .04); about 80 flattened stones 1.4-3.2 m across sunk half into its face between 3 and
  * 26 m down, each with a flat snow cap on its top.
  */
-const BOWL: Array<[number, number]> = [[1, -0.02], [1, -2], [0.98, -6], [0.94, -12], [0.86, -18], [0.72, -24], [0.52, -29], [0.28, -32.5], [0.04, -34]];
+const BOWL: Array<[number, number]> = [[1.02, 0.04], [1.02, -2.8], [0.98, -6], [0.94, -12], [0.86, -18], [0.72, -24], [0.52, -29], [0.28, -32.5], [0.04, -34]];
 
 function islandOutline(a: number): [number, number] {
   const c = Math.cos(a), s = Math.sin(a);
@@ -525,10 +538,12 @@ function navyBowl(scene: Scene, built: Set<unknown>): void {
     return m;
   };
   const lip = mk("farmerSnowUnderLip", SNOW.scale(0.9), 0.3);
+  lip.emissiveColor = SNOW_SHADE.scale(1.25);
   // The moonlight and the night haze lift a lit navy toward lavender: the earth is a deep blue lit mostly by itself, out of the fog
-  const earth = mk("farmerSnowUnderEarth", new Color3(0.035, 0.05, 0.16), 0.9);
-  const stoneMat = mk("farmerSnowUnderStone", new Color3(0.2, 0.24, 0.4), 0.45);
+  const earth = mk("farmerSnowUnderEarth", new Color3(0.06, 0.085, 0.22), 1.0);
+  const stoneMat = mk("farmerSnowUnderStone", new Color3(0.16, 0.22, 0.46), 0.7);
   const capMat = mk("farmerSnowUnderCap", SNOW, 0.4);
+  capMat.emissiveColor = SNOW_SHADE.clone();
   const bands: Mesh[] = [];
   for (let i = 0; i < BOWL.length - 1; i++) {
     const [s0, y0] = BOWL[i], [s1, y1] = BOWL[i + 1];
@@ -560,15 +575,15 @@ function navyBowl(scene: Scene, built: Set<unknown>): void {
   }
   // Stones set into the face, flattened along the outward direction, each with a snow cap on its top
   const stones: Mesh[] = [], caps: Mesh[] = [];
-  for (let k = 0; k < 80; k++) {
+  for (let k = 0; k < 150; k++) {
     const a = seeded(k, 91) * Math.PI * 2;
-    const y = -3 - seeded(k, 92) * 23;
+    const y = -3.6 - seeded(k, 92) * 17;
     let j = 1;
     while (j < BOWL.length - 1 && BOWL[j][1] > y) j++;
     const [sa, ya] = BOWL[j - 1], [sb, yb] = BOWL[j];
     const s = sa + (sb - sa) * ((y - ya) / (yb - ya));
     const [ox, oz] = islandOutline(a);
-    const d = 1.4 + seeded(k, 93) * 1.8;
+    const d = 1.8 + seeded(k, 93) * 1.8;
     const stone = MeshBuilder.CreateBox("farmerSnowUnderStone", { width: d * 1.3, height: d * 0.7, depth: d * 0.5 }, scene);
     stone.rotation.set(0, Math.PI / 2 - a, (seeded(k, 94) - 0.5) * 0.3);
     stone.position.set(ox * s, y, oz * s);
@@ -821,6 +836,57 @@ function festiveLights(scene: Scene): Obstacle[] {
   return [{ type: "cylinder", center: new Vector3(tx, 0, tz), radius: 1.2 }];
 }
 
+// Corner trees ([R] 573 spec at the head of this file): tall faceted lollipop trees with snow-capped lobes at the island's corners.
+const CORNER_TREES: Array<[number, number]> = [[19, -41], [-5, 42], [-47, -8], [-40, -22], [44, 14], [36, 30]];
+
+function cornerTrees(scene: Scene): Obstacle[] {
+  const mk = (name: string, c: Color3, e: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = e;
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const bark = mk("farmerSnowCornerBark", new Color3(0.1, 0.09, 0.12), new Color3(0.03, 0.03, 0.06));
+  const leaf = mk("farmerSnowCornerLeaf", new Color3(0.07, 0.11, 0.16), new Color3(0.02, 0.04, 0.09));
+  const cap = mk("farmerSnowCornerCap", new Color3(0.82, 0.86, 1.0), new Color3(0.36, 0.4, 0.6));
+  const trunks: Mesh[] = [], lobes: Mesh[] = [], caps: Mesh[] = [];
+  const obstacles: Obstacle[] = [];
+  CORNER_TREES.forEach(([x, z], k) => {
+    const height = 9 + seeded(k, 131) * 4;
+    const trunk = MeshBuilder.CreateCylinder("farmerSnowCornerTrunk", { diameterTop: 0.35, diameterBottom: 0.7, height, tessellation: 6 }, scene);
+    trunk.position.set(x, height / 2, z);
+    trunk.rotation.z = (seeded(k, 132) - 0.5) * 0.08;
+    trunks.push(trunk);
+    const count = 2 + (seeded(k, 133) > 0.45 ? 1 : 0);
+    for (let j = 0; j < count; j++) {
+      const r = (count === 3 ? [2.6, 2.1, 1.5] : [2.8, 1.9])[j] * (0.9 + seeded(k * 5 + j, 134) * 0.25);
+      // Lobes stack up the trunk top: the first round its end, each next one 2.6 m higher and smaller
+      const y = height - 2.2 + j * 2.6;
+      const ox = (seeded(k * 5 + j, 135) - 0.5) * 1.6, oz = (seeded(k * 5 + j, 136) - 0.5) * 1.6;
+      const lobe = MeshBuilder.CreatePolyhedron("farmerSnowCornerLobe", { type: 2, sizeX: r, sizeY: r * 1.3, sizeZ: r * 0.9 }, scene);
+      lobe.position.set(x + ox, y, z + oz);
+      lobe.rotation.set((seeded(k * 5 + j, 137) - 0.5) * 0.3, seeded(k * 5 + j, 138) * Math.PI, 0);
+      lobes.push(lobe);
+      const top = MeshBuilder.CreatePolyhedron("farmerSnowCornerCap", { type: 2, sizeX: r * 0.82, sizeY: r * 0.35, sizeZ: r * 0.74 }, scene);
+      top.position.set(x + ox, y + r * 1.0, z + oz);
+      top.rotation.copyFrom(lobe.rotation);
+      caps.push(top);
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.6 });
+  });
+  for (const [list, mat, name] of [[trunks, bark, "farmerSnowCornerTrunks"], [lobes, leaf, "farmerSnowCornerLobes"], [caps, cap, "farmerSnowCornerCaps"]] as const) {
+    const merged = Mesh.MergeMeshes([...list], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  return obstacles;
+}
+
 export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -899,7 +965,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   const baseDispose = result.dispose;
   return {
     ...result,
-    obstacles: [...clearFieldJunk(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles)), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene), fieldBoulder(scene), ...winterCarts(scene), ...snowRocksAndShade(scene)],
+    obstacles: [...clearFieldJunk(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles)), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene), fieldBoulder(scene), ...winterCarts(scene), ...snowRocksAndShade(scene), ...cornerTrees(scene)],
     dispose: () => {
       restoreLights();
       baseDispose?.();
