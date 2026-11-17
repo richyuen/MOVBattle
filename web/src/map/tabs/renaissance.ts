@@ -101,8 +101,113 @@ function dogesPalace(scene: Scene): void {
   }
 }
 
+// Rectangular piazza (577, wiki renaissance.png and renaissance_town.png: the square is a rectangle; along each side runs one
+// straight unbroken frontage of tall Venetian houses, ochre, salmon pink, cream and straw, three to five storeys, some with an
+// orange hipped roof and some with a crenellated parapet, a dark ground arcade, rows of tall windows and stone balconies; the
+// back frontage meets the palace; the near side stays low). Spec: the base's oval townhouse ring (the merged "townRing" meshes,
+// its near wall too) is hidden; straight rows with their fronts on x = -44 and x = +44 (6 m deep, z -28..24) and on z = 31 beside
+// the palace (7 m deep, |x| 18..40), corner blocks 7 x 7 m at (+-44.5, 28); houses 7.5-10.5 m wide along the row, storey 3.2 m;
+// a straight low cream wall with a stone cap along z = -30.5 for |x| <= 44. All inside the rim (superellipse 54 x 48, power 3).
+// One box collider per row and corner; the placement zones end at |x| 43, in front of the side rows.
+function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  for (const mesh of scene.meshes) if (built.has(mesh) && mesh.name === "townRing") mesh.setEnabled(false);
+  const mk = (name: string, c: Color3, self = 0.42) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c.scale(1 - self);
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const walls = [new Color3(0.93, 0.7, 0.42), new Color3(0.9, 0.58, 0.52), new Color3(0.95, 0.88, 0.74), new Color3(0.95, 0.8, 0.52)].map((c, i) => mk(`renaissanceRowWall${i}`, c));
+  const mats = { roof: mk("renaissanceRowRoof", new Color3(0.84, 0.42, 0.26)), stone: mk("renaissanceRowStone", new Color3(0.92, 0.89, 0.82)), dark: mk("renaissanceRowDark", new Color3(0.3, 0.24, 0.24), 0.2) };
+  const parts = new Map<StandardMaterial, Mesh[]>();
+  let k = 0;
+  const r = (n: number) => Math.abs((Math.sin(k * 23.117 + n * 41.37) * 31337.77) % 1);
+  // A row: its front line runs along `axis` from `from` to `to` at `line`; `inward` points from the front into the square
+  type Row = { axis: "x" | "z"; line: number; from: number; to: number; inward: number; deep: number };
+  const put = (mat: StandardMaterial, row: Row, along: number, high: number, through: number, u: number, y: number, back: number) => {
+    const across = row.line - row.inward * back;
+    const b = row.axis === "z"
+      ? MeshBuilder.CreateBox("renaissanceRowPart", { width: through, height: high, depth: along }, scene)
+      : MeshBuilder.CreateBox("renaissanceRowPart", { width: along, height: high, depth: through }, scene);
+    if (row.axis === "z") b.position.set(across, y, u);
+    else b.position.set(u, y, across);
+    (parts.get(mat) ?? parts.set(mat, []).get(mat)!).push(b);
+  };
+  const house = (row: Row, u: number, wide: number) => {
+    k++;
+    const floors = 3 + Math.round(r(2) * 2), tall = floors * 3.2;
+    const D = row.deep;
+    put(walls[Math.floor(r(3) * walls.length) % walls.length], row, wide, tall + 1, D, u, (tall - 1) / 2, D / 2);
+    put(mats.stone, row, wide * 1.02, 0.4, D * 1.04, u, tall + 0.2, D / 2);
+    if (r(4) < 0.5) {
+      // an orange hipped roof
+      put(mats.roof, row, wide * 0.96, 1.2, D * 0.9, u, tall + 1, D / 2);
+      put(mats.roof, row, wide * 0.6, 0.9, D * 0.5, u, tall + 2, D / 2);
+    } else {
+      // a crenellated parapet along the front
+      for (let m = -wide / 2 + 0.5; m <= wide / 2 - 0.4; m += 1.4) put(mats.stone, row, 0.6, 0.9, 0.5, u + m, tall + 0.85, 0.3);
+    }
+    const arches = Math.max(2, Math.floor(wide / 2.6));
+    for (let i = 0; i < arches; i++) put(mats.dark, row, 1.5, 2.4, 0.2, u + (i + 0.5 - arches / 2) * (wide / arches), 1.2, -0.05);
+    const panes = Math.max(2, Math.floor(wide / 2.4));
+    for (let f = 1; f < floors; f++) {
+      for (let i = 0; i < panes; i++) put(mats.dark, row, 0.8, 1.5, 0.16, u + (i + 0.5 - panes / 2) * (wide / panes), f * 3.2 + 1.4, -0.03);
+    }
+    if (r(5) < 0.55) {
+      put(mats.stone, row, wide * 0.55, 0.2, 0.9, u, 3.8, -0.45);
+      put(mats.stone, row, wide * 0.55, 0.75, 0.12, u, 4.25, -0.85);
+    }
+  };
+  const rows: Row[] = [
+    { axis: "z", line: -44, from: -28, to: 24, inward: 1, deep: 6 },
+    { axis: "z", line: 44, from: -28, to: 24, inward: -1, deep: 6 },
+    { axis: "x", line: 31, from: -40, to: -18, inward: -1, deep: 7 },
+    { axis: "x", line: 31, from: 18, to: 40, inward: -1, deep: 7 },
+  ];
+  for (const row of rows) {
+    let u = row.from;
+    while (row.to - u > 4) {
+      k++;
+      const wide = Math.min(7.5 + r(1) * 3, row.to - u);
+      house(row, u + wide / 2, wide);
+      u += wide;
+    }
+    const mid = (row.from + row.to) / 2, half = (row.to - row.from) / 2, centre = row.line - row.inward * row.deep / 2;
+    result.obstacles.push(row.axis === "z"
+      ? { type: "box", center: new Vector3(centre, 0, mid), halfX: row.deep / 2, halfZ: half }
+      : { type: "box", center: new Vector3(mid, 0, centre), halfX: half, halfZ: row.deep / 2 });
+  }
+  for (const sx of [-1, 1]) {
+    house({ axis: "z", line: sx * 41, from: 24.5, to: 31.5, inward: -sx, deep: 7 }, 28, 7);
+    result.obstacles.push({ type: "box", center: new Vector3(sx * 44.5, 0, 28), halfX: 3.5, halfZ: 3.5 });
+  }
+  // The near side: a straight low wall with a stone cap
+  const front: Row = { axis: "x", line: -30.5, from: -44, to: 44, inward: 1, deep: 1.4 };
+  put(walls[2], front, 88, 3.2, 1.4, 0, 0.6, 0);
+  put(mats.stone, front, 88.4, 0.35, 1.8, 0, 2.35, 0);
+  const glow = scene.getGlowLayerByName("glow");
+  for (const [mat, group] of parts) {
+    const merged = Mesh.MergeMeshes(group, true);
+    if (!merged) continue;
+    merged.name = "renaissancePiazza";
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+  result.placementZones = (result.placementZones ?? result.zones).map((zone) => {
+    const inner = Math.min(Math.abs(zone.center.x) - zone.size.x / 2, 43), outer = Math.min(Math.abs(zone.center.x) + zone.size.x / 2, 43);
+    const sx = Math.sign(zone.center.x) || 1;
+    return { ...zone, center: new Vector3(sx * (inner + outer) / 2, zone.center.y, zone.center.z), size: new Vector3(outer - inner, zone.size.y, zone.size.z) };
+  });
+}
+
 export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapBuildResult {
+  const prior = new Set(scene.meshes);
   const result = base();
+  rectangularPiazza(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   dogesPalace(scene);
   const obstacles = [...result.obstacles, { type: "box" as const, center: new Vector3(0, 0, PALACE.z + PALACE.deep / 2), halfX: PALACE.wide / 2, halfZ: PALACE.deep / 2 }];
   return { ...result, obstacles };
