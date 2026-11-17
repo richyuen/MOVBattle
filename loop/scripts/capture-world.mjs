@@ -154,8 +154,17 @@ async function mapScene(page, item) {
     window.advanceTime(5000);
     return ok;
   }, layout.zones);
-  // Ancient 1: the low pose sees only roofs; look down the south street (z -10) from behind the left half, raised
-  await frame(page, item === "map.ancient_1" ? { target: { x: 4, y: 1, z: -10 }, radius: 58, alpha: Math.PI, beta: 1.02 } : POSE.ground);
+  // Ancient 1: the low pose sees only roofs; frame the player army's box from an elevated player-side diagonal (574)
+  let battleView = POSE.ground;
+  if (item === "map.ancient_1") {
+    const box = await page.evaluate(() => {
+      const us = window.game.listLiveUnits().filter((u) => u.team === 0);
+      const xs = us.map((u) => u.position.x), zs = us.map((u) => u.position.z);
+      return { cx: (Math.min(...xs) + Math.max(...xs)) / 2, cz: (Math.min(...zs) + Math.max(...zs)) / 2, w: Math.max(...zs) - Math.min(...zs), d: Math.max(...xs) - Math.min(...xs) };
+    });
+    battleView = { target: { x: box.cx, y: 1, z: box.cz }, radius: Math.max(24, Math.max(box.w, box.d) * 0.9 + 10), alpha: Math.PI + 0.42, beta: 0.85 };
+  }
+  await frame(page, battleView);
   await shot(page, `${p}battle`);
   rec.skirmish ={ placed, ...(await runToResult(page, 5000)) };
   summary.items[item] = rec;
