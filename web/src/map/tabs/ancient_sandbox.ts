@@ -289,6 +289,74 @@ function ruins(scene: Scene, obstacles: Obstacle[]): void {
   }
 }
 
+// Spiral mountain (572, card Overview + greek_ancient_sandbox.png): on the north centreline, between the two
+// terrace hills at the back rim, a tall terracotta rock tower rises ~32 m, tapering from a 9 m to a 4.5 m radius
+// in eight faceted drums turned against each other, with a green-topped ledge winding up it 2.5 turns and a
+// small columned shrine on the summit. Collider at the foot.
+const SPIRAL = { x: 0, z: 41, height: 32, r0: 9, r1: 4.5 };
+function spiralMountain(scene: Scene, obstacles: Obstacle[]): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const rock = mk("ancientSandboxSpiralRock", new Color3(0.62, 0.33, 0.22), 0.2);
+  const turf = mk("ancientSandboxSpiralTurf", new Color3(0.5, 0.64, 0.25), 0.15);
+  const lime = mk("ancientSandboxSpiralShrine", new Color3(0.86, 0.82, 0.68), 0.2);
+  const { x, z, height, r0, r1 } = SPIRAL;
+  const radiusAt = (y: number) => r0 + (r1 - r0) * (y / height);
+  const drums: Mesh[] = [];
+  const sections = 8;
+  for (let i = 0; i < sections; i++) {
+    const y0 = (i / sections) * height, y1 = ((i + 1) / sections) * height;
+    const drum = MeshBuilder.CreateCylinder("ancientSandboxSpiralDrum", {
+      height: y1 - y0 + 0.4, diameterBottom: radiusAt(y0) * 2, diameterTop: radiusAt(y1) * 2 * 0.94, tessellation: 7,
+    }, scene);
+    drum.position.set(x + (seeded(i, 81) - 0.5) * 0.8, (y0 + y1) / 2, z + (seeded(i, 82) - 0.5) * 0.8);
+    drum.rotation.y = seeded(i, 83) * Math.PI;
+    drums.push(drum);
+  }
+  const ledges: Mesh[] = [], lips: Mesh[] = [];
+  const turns = 2.5, steps = 80;
+  for (let s = 0; s < steps; s++) {
+    const f = s / steps;
+    const a = f * turns * Math.PI * 2 - Math.PI / 2;
+    const y = 1.5 + f * (height - 4);
+    const r = radiusAt(y) + 1.1;
+    const block = MeshBuilder.CreateBox("ancientSandboxSpiralLedge", { width: 2.4, height: 1.2, depth: 2.6 }, scene);
+    block.position.set(x + Math.cos(a) * r, y - 0.6, z + Math.sin(a) * r);
+    block.rotation.y = -a;
+    lips.push(block);
+    const grass = MeshBuilder.CreateBox("ancientSandboxSpiralGrass", { width: 2.5, height: 0.2, depth: 2.7 }, scene);
+    grass.position.set(block.position.x, y + 0.08, block.position.z);
+    grass.rotation.y = -a;
+    ledges.push(grass);
+  }
+  for (const [list, mat, name] of [[[...drums, ...lips], rock, "ancientSandboxSpiralMountain"], [ledges, turf, "ancientSandboxSpiralPath"]] as const) {
+    const merged = Mesh.MergeMeshes([...list], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = true;
+  }
+  const cap = MeshBuilder.CreateCylinder("ancientSandboxSpiralSummit", { height: 0.4, diameter: r1 * 2 * 0.95, tessellation: 7 }, scene);
+  cap.position.set(x, height + 0.2, z);
+  cap.material = turf;
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const column = MeshBuilder.CreateCylinder("ancientSandboxSpiralColumn", { height: 3, diameter: 0.45, tessellation: 7 }, scene);
+    column.position.set(x + Math.cos(a) * 2, height + 1.9, z + Math.sin(a) * 2);
+    column.material = lime;
+  }
+  const roof = MeshBuilder.CreateCylinder("ancientSandboxSpiralRoof", { height: 0.5, diameter: 5.2, tessellation: 12 }, scene);
+  roof.position.set(x, height + 3.6, z);
+  roof.material = lime;
+  obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: r0 + 1 });
+}
+
 export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -328,5 +396,6 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
   }
   hillsideTerraces(scene, cleared.obstacles);
   ruins(scene, cleared.obstacles);
+  spiralMountain(scene, cleared.obstacles);
   return { ...result, obstacles: cleared.obstacles, hazards: cleared.hazards };
 }
