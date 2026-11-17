@@ -7,6 +7,72 @@ const LENGTH = 112;
 const WIDTH = 72;
 const BLOCK_LENGTH = 18;
 
+function seeded(i: number, seed: number): number {
+  const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
+  return raw - Math.floor(raw);
+}
+
+// Statue corner (571, wiki shot and greek_ancient_1.png): beyond the back wall on the left half the island
+// runs on as a rocky headland. A blue bay (about 30 x 9 m, lobed) lies between the city wall and the rocks,
+// rimmed by heaped brown boulders with moss on top; behind it a raised rock outcrop (about 16 m across,
+// 3-4 m high) carries the statue. All of it is outside the walled field: drawn only, no colliders.
+export const HEADLAND = { x: -21, z: 49, outcrop: 8 };
+function bayHeadland(scene: Scene, earth: StandardMaterial): void {
+  const rock = new StandardMaterial("ancient1HeadlandRock", scene);
+  rock.diffuseColor = new Color3(0.55, 0.27, 0.18);
+  rock.emissiveColor = rock.diffuseColor.scale(0.22);
+  const moss = new StandardMaterial("ancient1HeadlandMoss", scene);
+  moss.diffuseColor = new Color3(0.45, 0.58, 0.2);
+  moss.emissiveColor = moss.diffuseColor.scale(0.2);
+  const sea = new StandardMaterial("ancient1BayWater", scene);
+  sea.diffuseColor = new Color3(0.09, 0.27, 0.78);
+  sea.emissiveColor = new Color3(0.04, 0.12, 0.42);
+  sea.specularColor = new Color3(0.3, 0.35, 0.45);
+  const shelf = MeshBuilder.CreateBox("ancient1HeadlandSlab", { width: 44, height: 10, depth: 21 }, scene);
+  shelf.position.set(-22, -6.4, 46.5);
+  shelf.material = earth;
+  const bay = MeshBuilder.CreateDisc("ancient1Bay", { radius: 1, tessellation: 28 }, scene);
+  bay.rotation.x = Math.PI / 2;
+  bay.scaling.set(16, 5.2, 1);
+  bay.position.set(-22, -1.05, 41.6);
+  bay.material = sea;
+  const shallows = MeshBuilder.CreateDisc("ancient1BayShallows", { radius: 1, tessellation: 28 }, scene);
+  shallows.rotation.x = Math.PI / 2;
+  shallows.scaling.set(17.4, 6.3, 1);
+  shallows.position.set(-22, -1.1, 41.4);
+  shallows.material = sea;
+  const boulder = (name: string, x: number, y: number, z: number, r: number, i: number) => {
+    const b = MeshBuilder.CreateIcoSphere(name, { radius: r, subdivisions: 1, flat: true }, scene);
+    b.position.set(x, y, z);
+    b.scaling.set(1 + seeded(i, 3) * 0.4, 0.62 + seeded(i, 4) * 0.3, 1 + seeded(i, 5) * 0.3);
+    b.rotation.y = seeded(i, 6) * Math.PI;
+    b.material = rock;
+    b.receiveShadows = true;
+    if (seeded(i, 7) > 0.45) {
+      const cap = MeshBuilder.CreateIcoSphere("ancient1HeadlandMossCap", { radius: r * 0.72, subdivisions: 1, flat: true }, scene);
+      cap.position.set(x, y + r * 0.42, z);
+      cap.scaling.set(b.scaling.x, 0.28, b.scaling.z);
+      cap.material = moss;
+    }
+  };
+  // The bay rim: heaped boulders along its left, right and back shores (the wall is its front shore).
+  for (let i = 0; i < 22; i++) {
+    const a = Math.PI * (0.02 + 0.96 * i / 21);
+    const x = -22 - Math.cos(a) * (17.5 + seeded(i, 1) * 1.5);
+    const z = 41.4 + Math.sin(a) * (6.6 + seeded(i, 2) * 1.2);
+    boulder("ancient1BayBoulder", x, -0.7, z, 1.4 + seeded(i, 8) * 1.1, i);
+  }
+  // The outcrop under the statue: a heaped mound of boulders rising to about 4 m.
+  for (let i = 0; i < 18; i++) {
+    const a = i * 2.39996, d = Math.sqrt(i / 18) * HEADLAND.outcrop;
+    const x = HEADLAND.x + Math.cos(a) * d, z = HEADLAND.z + Math.sin(a) * d * 0.7;
+    boulder("ancient1OutcropRock", x, 2.6 - d * 0.32, z, 2.4 + seeded(i, 9) * 1.4, i + 40);
+  }
+  for (const [x, z, r] of [[-38, 50, 2.4], [-6, 50, 2.6], [-41, 44, 1.8], [-3, 44, 1.9]] as const) {
+    boulder("ancient1HeadlandRock", x, -0.3, z, r, Math.round(x * z));
+  }
+}
+
 export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -25,6 +91,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   const slab = MeshBuilder.CreateBox("ancient1RectangularIsland", { width: LENGTH + 1.5, height: 11, depth: WIDTH + 1.5 }, scene);
   slab.position.y = -6.05;
   slab.material = earth;
+  bayHeadland(scene, earth);
   const pavement = MeshBuilder.CreateBox("ancient1Pavement", { width: LENGTH, height: 0.55, depth: WIDTH }, scene);
   pavement.position.y = -0.275;
   pavement.material = stone;
