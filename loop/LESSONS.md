@@ -7,10 +7,9 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Flat colour that survives ACES: an "unlit" material's colour comes from its EMISSIVE only (baseColor alone renders black), excluded from the glow layer (glow.addExcludedMesh). A saturated red needs emissive r > 1 and b near 0.
 - ACES lifts mid code values toward pale: an unlit plate keeps a deep value; lit timber wants (.2,.11,.055) with a small self-light.
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey.
-- Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1 (unlit/smooth reads plum); by self-lit meshes the glow halo browns it: exclude those from the glow.
 - A world box refreshes only on render: computeWorldMatrix(true) before reading bounds in a per-tick step. bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent.
 - Flat pieces are closed slabs (a one-sided disc can face away). execSync eats a caret: write sha~1.
-- glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh left out of the glow pass wears the glow of bright emissive ground behind it as a pale veil (farmer_snow mill read white, 562). Keep dark solids in the pass; exclude only bright/self-lit ones.
+- glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh left out of the pass wears the glow behind it as a pale veil (farmer_snow mill, 562). Keep dark solids in the pass; exclude bright/self-lit ones. Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1.
 - CreateIcoSphere subdivisions 0 is falsy, so it becomes 4: a smooth navy ball (575). Use 1 for a faceted rock.
 - Lit thin-instance wheat can read gold from above and brown at ground level. Two unlit, glow-excluded instance meshes sharing one matrix buffer keep heads and stems distinct in both shots.
 
@@ -51,3 +50,4 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Bushy grass: flattened subdivision-1 IcoSpheres as thin instances on a ~0.8 m grid read as fuzzy cover; leaf cards read as beige flags (571).
 - Varied-height cliff buttresses can leave sky below continuous ledges. Back the ledges with a skirt down to the adjoining tier and check the ground shot.
 - Rooftops can hide a stage's army in a low camera; an elevated player-side diagonal shows it (Ancient 1).
+- Base props: roots `<displayName>_<kind>` with child parts, collider at root x,z. Faces toward the island camera want self-light ~0.7.

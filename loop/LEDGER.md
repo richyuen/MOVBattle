@@ -3,20 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-571 | 10 commits (medieval_1, medieval_2 x3, ancient_2, ancient_1 x2, ancient_sandbox, viking, viking_sandbox R) | all approve
 572 | 10 commits (farmer_snow R, medieval_2, viking_sandbox, ancient_1 x3, ancient_2, ancient_sandbox x2, viking) | all approve; CONFIRM failed fs, m2, vs, a1
 573 | 10 commits (farmer_snow R: D; viking x3; ancient_sandbox x2; ancient_2 x3, one dropped; ancient_1) | 9 approve
 574 | 10 commits (ancient_2 x2: b PASS; ancient_sandbox x3; ancient_1 x3; viking reject; viking_sandbox R: D) | 9 approve
-575 | f625c54e+cfcf192a+a551c647 | map.viking.b | approve, struck b2 (b PASS; D)
-575 | 894c4560+214cd90a+32646705 [R] | map.medieval_2.a | approve, struck a1-a3 (CONFIRM passed: D)
-575 | 01f55292 | map.ancient_2.a | approve, struck a1
-575 | 68327b4c | map.ancient_2.a | approve, struck a2
-575 | 07ed1f71 | map.ancient_2.a | approve, no strike (grid, charcoal walls)
-575 | 463f1de9 | map.ancient_sandbox.a | approve, struck a4
-575 | 80685728+74532b9b | map.ancient_sandbox.a | approve, struck a2 (CONFIRM passed: D)
-575 | 8b0caf9f | map.ancient_1.b | approve, struck b4 (b PASS)
-575 | dc064a4b | map.ancient_1.a | approve, struck a5
-575 | fb150da1 | map.ancient_1.a | approve, struck a4
+575 | 10 commits (viking: D; medieval_2 R: D; ancient_2 x3; ancient_sandbox x2: D; ancient_1 x3) | all approve, 14 struck
+576 | 64ace4bb+e33791bf | map.ancient_1.a | approve, struck a6 (CONFIRM: D)
+576 | af69f862 | map.ancient_2.a | approve, no strike (grid clause cleared)
+576 | acd31ea9 | map.ancient_2.a | approve, struck a4
+576 | 83a6bd2f, 4dd2d342, 341586e1, ea5d9883, 68a1fa37 | dynasty.a, spooky_1.a, legacy.a, wild_west.a, renaissance.a | all approve, struck a1, a2, a1, a1, a2
+576 | 40a26f12 | map.pirate.b | approve, struck b1
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
@@ -34,7 +29,7 @@ web/src/map/tabs/farmer_1.ts:farmer1BankRock colour | (0.6,0.53,0.44) emissive (
 web/src/map/tabs/farmer_2.ts:farmer2UnderEarth colour | (0.5,0.4,0.27) self-lit 1.0 | 561 | approved | (0.44,0.36,0.25) self-lit 0.45
 web/src/map/tabs/farmer_2.ts:farmer2OliveLeaf / Dark | (0.62,0.56,0.19) x0.6, (0.5,0.46,0.15) x0.55 (oliveGrove) | 563 | approved | (0.5,0.47,0.16) x0.6, (0.4,0.39,0.12) x0.55; (0.45,0.42,0.14) x0.25
 web/src/map/tabs/farmer_2.ts:MEADOW | (0.6,0.54,0.18) | 563 | approved | (0.62,0.64,0.2)
-web/src/map/tabs/farmer_2.ts:farmer2Wheat colour | unlit heads (1.1,0.67,0.23), stems (0.88,0.51,0.14), out of glow; floor (0.94,0.58,0.17) x0.145 | 566 | approved | (1,0.8,0.3) self-lit 0.35 + straw floor (0.92,0.72,0.3) x0.3; (0.9,0.66,0.2) self-lit 0.3 (CONFIRM: dull ochre); (0.95,0.8,0.32) self-lit 0.4 (CONFIRM: too pale); (0.78,0.55,0.16) emissive (0.26,0.17,0.04)
+web/src/map/tabs/farmer_2.ts:farmer2Wheat colour | unlit heads (1.1,0.67,0.23), stems (0.88,0.51,0.14), out of glow; floor (0.94,0.58,0.17) x0.145 | 566 | approved | 4 lit golds (dull ochre or too pale)
 web/src/map/tabs/farmer_2.ts:farmer2HousePlank / Frame / Roof | (0.88,0.74,0.52) x0.32, (0.56,0.43,0.28) x0.25, (0.74,0.65,0.5) x0.3 | 565 | approved | (0.6,0.44,0.26) x0.18, (0.26,0.15,0.08) x0.15, (0.36,0.23,0.13) x0.15
 web/src/map/tabs/tribal_2.ts:tribal2Mountain colour | (0.6,0.5,0.4) emissive (0.1,0.075,0.05) | 564 | approved | (0.6,0.54,0.52) emissive (0.08,0.06,0.05)
 web/src/map/tabs/tribal_sandbox.ts:spread | 1.45x horizontal geometry/nav/collisions | 566 | approved | 1x
@@ -60,7 +55,7 @@ web/src/map/tabs/medieval_2.ts:castleFront silhouette | stepped curtain runs bet
 web/src/map/tabs/medieval_2.ts:castleOaks groves | 17 oaks with scale 0.7-1.5, 3-7 lobes, wall-foot band z 17-21 | 571 | approved, blocker 3 stands | 11 equal 4-lobe oaks
 web/src/map/tabs/medieval_1.ts:rightBankBreak | west ring retained, only outer corner groups remain on east | 569 | approved | tree ring on both banks
 web/src/map/tabs/medieval_1.ts:gnarledOaks profile | kinked tapering trunks with four irregular crown lobes | 569 | approved | inherited trunks and crowns
-web/src/map/tabs/farmer_snow.ts:SNOW and SNOW_SHADE (R) | warm diffuse (0.72,0.66,0.58), self-light (0.23,0.26,0.47), field+lip out of glow; band (0.085,0.115,0.29), 150 stones; 6 corner trees | 573 | approved, D | (0.57,0.68,0.96)/(0.035,0.065,0.17) cobalt; (0.8,0.85,0.96)/(0.3,0.34,0.45)
+web/src/map/tabs/farmer_snow.ts:SNOW and SNOW_SHADE (R) | warm diffuse (0.72,0.66,0.58), self-light (0.23,0.26,0.47), out of glow | 573 | approved, D | cobalt; pale blue
 web/src/map/tabs/farmer_snow.ts:nightSky hemi and dir | intensities 0.22 and 0.78, diagonal directional light (0.62,-0.55,-0.48) | 570 | approved, localized shadows still too narrow | 0.35 and 0.55, inherited direction
 web/src/map/tabs/medieval_1.ts:landfallRamp | 3.25 m wide, (-7.4,-0.18,-18) to (-1.9,-5.8,-4) | 570 | approved | absent
 web/src/map/tabs/medieval_1.ts:meadowDressing | flattened ico clumps 1.1-2 m, two greens (0.5,0.74,0.22)/(0.33,0.56,0.16), 0.8 m grid in swathes, orange heads | 571 | approved, a PASS | two crossed leaf cards per tuft, 0.95 m grid; flat grass
@@ -71,12 +66,12 @@ web/src/map/tabs/ancient_2.ts:RIM | 51 m circle, power 2 | 570 | approved, proje
 web/src/map/tabs/ancient_sandbox.ts:hillsideTerraces | two three-tier hills at (-24,36) and (23,36), 10 and 13 m high | 570 | approved | absent
 web/src/map/tabs/viking.ts:snowPines | four tiers, heights 4.8–9 m | 570 | approved | inherited broadleaf ring
 web/src/map/tabs/viking.ts:frozenShip | 22 m hull at (-39,13) yaw 0.18, list 0.1, 13 m mast, ice collar | 571 | approved, small and half hidden | absent
-web/src/map/tabs/ancient_2.ts:greenLawn | floor (0.55,0.69,0.21), 2600 lawn clumps, 70 flower drifts mostly by the rim | 571 | approved | orange autumn floor
+web/src/map/tabs/ancient_2.ts:greenLawn | floor (0.6,0.63,0.22); clumps on 1.1 m grid, olives (0.58,0.62,0.21)/(0.46,0.52,0.16) in sine swathes; 70 flower drifts | 576 | approved | (0.55,0.69,0.21) + 2600 random lime clumps; orange autumn floor
 web/src/map/tabs/ancient_1.ts:bayHeadland and hopliteStatue | 44 x 21 m shelf at (-22,46.5), bay 32 x 10 m, outcrop (-21,49), statue 13 m + 21 m spear | 571 | approved, headland a box pad, statue small | absent
 web/src/map/tabs/ancient_sandbox.ts:ruins | 5 broken columns, 3 fallen with drums, 2 gateways, 12 fragments | 571 | approved, pieces slender | absent
 web/src/map/tabs/viking_sandbox.ts:snowAndIce floor (R) | ice to 0.8 R, 9.5 m plate crack grid, 9 snow tongues + 7 islands | 571 | approved, snow ~1/5 of ice (CONFIRM wants ~1/2) | 0.72 R sheet with 60 random cracks
 web/src/map/tabs/viking_sandbox.ts:iceWall ledges (R) | broken ledges 9-24 deg, depth 1.5-9 m, lift -2..+1.2, jutting columns in 3-7 deg breaks | 571 | approved, ledges thin floating plates | continuous shelves per tier
-web/src/map/tabs/farmer_snow.ts:snowRocksAndShade (R) | 9 slate clusters with pale caps (0.82,0.88,1.0) self-lit (0.36,0.42,0.62); drift blobs removed; navy shade plates 17x14 / 11x9 at (17,-33) alpha 0.35/0.3 | 572 | approved (CONFIRM failed a: field cobalt, no corner trees, black side band) | 70 flattened snow drift spheres
+web/src/map/tabs/farmer_snow.ts:snowRocksAndShade (R) | 9 slate clusters, pale caps; navy shade plates at (17,-33) | 572 | approved | 70 snow drift spheres
 web/src/map/tabs/medieval_2.ts:castleFootThicket | hedge domes every 2.3 m at z 22.5-23.7, oaks 7-10 m every 6.5 m at z 20-21.5, 5 subdiv-2 lobes | 572 | approved, struck a3 | absent
 web/src/map/tabs/viking_sandbox.ts:iceWall ledge caps | lip 2-3.2 m, ice body from lip down to tier below | 572 | approved, struck a3 | 1.4 m lip, no body
 web/src/map/tabs/viking.ts:winterHaze | clear (0.58,0.86,0.91), 320 flakes, mist walls r 46/53 alpha 0.22/0.4 | 572 | approved, struck a3; sky still dull, mist top edge hard | inherited beige sky
@@ -88,12 +83,19 @@ web/src/map/tabs/ancient_2.ts:crispRim and frontPropylon | floor trimmed to r 50
 web/src/map/tabs/ancient_sandbox.ts:clearSky, frontSandstone, hazySea | clear (0.3,0.6,0.88) fog (0.66,0.8,0.93); 5 sandstone clusters + 2 step flights, hazeTreeline hidden; vertex-graded sea (0.3,0.55,0.76)->(0.66,0.8,0.93) | 574 | approved, struck a1 a3 a5 | beige; dark boulder chain; royal-blue disc
 web/src/map/tabs/ancient_1.ts:outerRows, houses, flagstones | 2 houses per long-wall row end x 28.5..52; 9.8 m houses with 2.2 m alleys; jittered white lines | 574 | approved | bands only; fused slab; seam grid
 web/src/map/tabs/ancient_1.ts:flagstones pavement diffuse | 0.4 matte (P 575, fallout of e03012d5) | 575 | approved | 0.27 (574, a7 too dark); 0.46 lit silver sheen; (0.53,0.56,0.62)
+web/src/map/tabs/ancient_1.ts:townDressing | 3-5 roof pieces (pots, olives, pink blossom) per terrace; 2-4 lane pieces x2 per street face within 6 m of a street | 576 | approved, D | absent
+web/src/map/tabs/dynasty.ts:pagoda | (17,37), platform 17x17x3, storeys 11/7.5 m, roofs 19/13 m frustums | 576 | approved | base pagoda (0,29) scale 0.9
+web/src/map/tabs/spooky_1.ts:nightSky | clear/fog (0.035,0.05,0.13); hemi 0.3, dir 0.65; moon, 300 stars | 576 | approved | grey day sky, mountains
+web/src/map/tabs/legacy.ts:pineForest | pine 9-14 m per ring trunk + 2 beside, (0.1,0.27,0.12)/(0.15,0.35,0.15) | 576 | approved, too saturated | round leafy ring
+web/src/map/tabs/wild_west.ts:town | 5 back (z 35.5) + 2 front-right (z -35.5) false fronts, board (0.36,0.41,0.53) self-lit 0.5 | 576 | approved, too cornflower | 2 base boxes
+web/src/map/tabs/pirate.ts:galleons | 30 m hulls at z +-37 along x, 3 gangplanks each | 576 | approved, sterns cream | base ships at (+-20,20)
+web/src/map/tabs/renaissance.ts:dogesPalace | 36 x 21 m facade, front z 31 | 576 | approved | absent
 web/src/map/tabs/ancient_1.ts:harbourBay, cypressPlanters, parapetWall | L bay on shelves x -67..-55.6 / -67..-44; 7 x 1.1 m planters, 4 cypress 5.5-7.5 m; 1.3 x 2.45 m parapet + blue tiles | 575 | approved | pond on headland; round basins, 3-4 m cones; 1.34 m wall + flat strip
 web/src/map/tabs/viking.ts:shoreLip | 84 faceted snow slabs lakeR -0.4..+1.8, 1.8-3.3 m long, self-lit 0.28; 16 grey rocks | 575 | approved | absent (574 bankFace sheet rejected)
 web/src/map/tabs/medieval_2.ts:earthenBowl, keepVine, sideTreeRing (R) | earth band 3.2 m then grey rock to -34 m + 70 boulders; vine r 1.5 coiling 2.75 turns to 37 m + arch strand; 2 oak rows 0.97/0.89 rim z 17..-32 | 575 | approved | pale bowl to -23 m; absent; absent
-web/src/map/tabs/ancient_2.ts:clearSky, openSkyline, TERRACES | clear (0.3,0.6,0.88); mountain* hidden; 4 terraces to 20 m + podium temple | 575 | approved | beige; range shown; 3 terraces to 10 m
+web/src/map/tabs/ancient_2.ts:clearSky, openSkyline, TERRACES | clear (0.3,0.6,0.88); mountain* and campaign_zone_* hidden (P 576); 4 terraces of 3.5-9 m blocks, fronts +-1.75 m, tops +-1.5 m, side flights; walls self-lit 0.72 | 576 | approved | beige; range shown; mirrored 6 m strips self-lit 0.3 (575); 3 terraces to 10 m
 web/src/map/tabs/ancient_sandbox.ts:cloudsBehind, oliveMeadow | front ring clouds z mirrored; floor+shelves (0.6,0.6,0.2), clumps 1.1 m grid | 575 | approved | clouds in front; (0.51,0.66,0.23) flat
-web/src/map/tabs/viking_sandbox.ts:runeGate, rimCrystals, floor (R) | gate 24 x 21 m steel-teal (0.24,0.5,0.64), towers 25 m; columns 0.94-1.02 tier; crystals at 28/50 deg; ice 0.72 R, 12+12 drifts 0.25 m | 574 | approved, D | 18.7 m pillars; columns 1.2-1.45x; 5 rim peaks; ice 0.8 R, 9+7 drifts
+web/src/map/tabs/viking_sandbox.ts:runeGate, rimCrystals, floor (R) | gate 24 x 21 m steel-teal, towers 25 m; ice 0.72 R | 574 | approved, D | 18.7 m pillars; ice 0.8 R
 web/src/map/tabs/ancient_sandbox.ts:SHELVES and ISLETS | 10 lobes 9-25 m out, tops -2.5..-7; 5 islets 75-150 m out | 573 | approved, b PASS | absent
 web/src/map/tabs/ancient_2.ts:earthDrum and PAVILIONS | drum r 51 to -17 m, 110 stones; pavilions at 188/250/320 deg | 573 | approved, a PASS | navy slab; absent
 web/src/map/tabs/ancient_1.ts:clearSky | clear (0.3,0.6,0.88), fog (0.66,0.8,0.93) | 573 | approved | inherited beige
