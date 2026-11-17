@@ -344,6 +344,57 @@ function facingHalves(scene: Scene, built: Set<unknown>): MapBuildResult["zones"
   ];
 }
 
+function meadowGrass(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (/^(fieldBlades_|fieldTufts_|grassTuft)/.test(mesh.name)) mesh.setEnabled(false);
+    if ((mesh.name === "ground" || mesh.name === "centerGrass") && mesh.material instanceof StandardMaterial) {
+      mesh.material.diffuseColor.set(0.53, 0.66, 0.25);
+      mesh.material.emissiveColor.set(0.13, 0.16, 0.054);
+    }
+  }
+  const nearPath = (x: number, z: number) => PATHS.some((route) => route.some(([endX, endZ], i) => {
+    if (i === 0) return false;
+    const [startX, startZ] = route[i - 1];
+    const dx = endX - startX, dz = endZ - startZ;
+    const t = Math.max(0, Math.min(1, ((x - startX) * dx + (z - startZ) * dz) / (dx * dx + dz * dz)));
+    return Math.hypot(x - startX - dx * t, z - startZ - dz * t) < PATH_WIDTH * 0.54;
+  }));
+  const positions: number[] = [], indices: number[] = [], colors: number[] = [];
+  const dark = new Color3(0.36, 0.48, 0.17);
+  const light = new Color3(0.69, 0.78, 0.29);
+  for (let i = 0; i < 6100; i++) {
+    const x = (seeded(i, 70) - 0.5) * 104, z = (seeded(i, 71) - 0.5) * 92;
+    if (Math.abs(x / 52) ** 3 + Math.abs(z / 46) ** 3 > 1 || nearPath(x, z)) continue;
+    if (((x - POND.x) / (POND.rx + 1.5)) ** 2 + ((z - POND.z) / (POND.rz + 1.4)) ** 2 < 1) continue;
+    const width = 0.11 + seeded(i, 72) * 0.17;
+    const height = 0.12 + seeded(i, 73) * 0.29;
+    const tone = Color3.Lerp(dark, light, seeded(i, 74));
+    const yaw = seeded(i, 75) * Math.PI;
+    for (const angle of [yaw, yaw + Math.PI / 2]) {
+      const dx = Math.cos(angle) * width, dz = Math.sin(angle) * width;
+      const n = positions.length / 3;
+      positions.push(x - dx, 0.06, z - dz, x + dx, 0.06, z + dz, x + dx * 0.65, height, z - dz * 0.65);
+      indices.push(n, n + 1, n + 2);
+      for (let vertex = 0; vertex < 3; vertex++) colors.push(tone.r, tone.g, tone.b, 1);
+    }
+  }
+  const normals: number[] = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  const data = new VertexData();
+  Object.assign(data, { positions, indices, normals, colors });
+  const meadow = new Mesh("medieval2MeadowGrass", scene);
+  data.applyToMesh(meadow);
+  const grass = new StandardMaterial("medieval2GrassBlades", scene);
+  grass.diffuseColor = new Color3(0.73, 0.81, 0.49);
+  grass.emissiveColor = new Color3(0.18, 0.21, 0.073);
+  grass.backFaceCulling = false;
+  grass.specularColor = Color3.Black();
+  meadow.material = grass;
+  meadow.receiveShadows = true;
+  meadow.isPickable = false;
+}
+
 export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -352,6 +403,7 @@ export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBui
   const obstacles = castleOaks(scene, built, clearPondGround(scene, built, [...result.obstacles]));
   earthenBowl(scene, built);
   dirtPaths(scene);
+  meadowGrass(scene, built);
   castleFront(scene, obstacles);
   cottagesAndFallenTower(scene, obstacles);
   return { ...result, obstacles, hazards, zones: facingHalves(scene, built) };
