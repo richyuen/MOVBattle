@@ -20,7 +20,7 @@ function seeded(i: number, seed: number): number {
   return raw - Math.floor(raw);
 }
 
-const RIM = { a: 54, b: 48, round: 3 };
+const RIM = { a: 51, b: 51, round: 2 };
 const TERRACES = [
   { front: 24, half: 42, h: 3 },
   { front: 30, half: 32, h: 6.5 },
@@ -30,7 +30,7 @@ const STRIP = 6;
 const STAIR_HALF = 3;
 const STATUES: Array<[number, number]> = [[-11, 21.5], [11, 21.5]];
 
-/** The rim's z at the back for a given x (superellipse 54 x 48, power 3) */
+/** The room available behind each temple terrace follows the circular island. */
 function rimZ(x: number): number {
   const t = 1 - Math.abs(x / RIM.a) ** RIM.round;
   return t <= 0 ? 0 : RIM.b * t ** (1 / RIM.round);
@@ -49,6 +49,35 @@ function clearFootprint(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
     }
   }
   return obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+}
+
+function roundIsland(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const detached: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || !(mesh instanceof Mesh)) continue;
+    if (/^(ground$|centerGrass$|islandUnder|islandShelf|islandCliff)/.test(mesh.name)) {
+      const positions = mesh.getVerticesData("position");
+      if (!positions) continue;
+      for (let i = 0; i < positions.length; i += 3) {
+        const x = positions[i], z = positions[i + 2];
+        const radial = Math.hypot(x, z);
+        if (radial < 0.001) continue;
+        const oldFraction = Math.cbrt(Math.abs(x / 54) ** 3 + Math.abs(z / 48) ** 3);
+        const scale = RIM.a * oldFraction / radial;
+        positions[i] *= scale;
+        positions[i + 2] *= scale;
+      }
+      mesh.updateVerticesData("position", positions, true);
+    } else if (/^(fieldBlades_|fieldTufts_)/.test(mesh.name)) {
+      // The old range of these merged meshes crosses the new circular edge.
+      mesh.setEnabled(false);
+    } else if (!mesh.parent && /^(trunk|boulder|wallStone|pebble|hill)$/.test(mesh.name) &&
+      Math.hypot(mesh.position.x, mesh.position.z) > RIM.a - 2) {
+      detached.push(mesh.position.clone());
+      mesh.setEnabled(false);
+    }
+  }
+  return obstacles.filter(({ center }) => !detached.some((p) => Math.hypot(p.x - center.x, p.z - center.z) < 0.55));
 }
 
 function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
@@ -197,7 +226,7 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
   result.obstacles = result.obstacles.filter(({ center }) => !removed.some((p) =>
     (p.x / 54) ** 2 + (p.z / 48) ** 2 < 0.8 ** 2 && Math.hypot(center.x - p.x, center.z - p.z) < 3.4));
   result.hazards = result.hazards.filter((hazard) => hazard.kind !== "pit");
-  const obstacles = clearFootprint(scene, built, [...result.obstacles]);
+  const obstacles = clearFootprint(scene, built, roundIsland(scene, built, result.obstacles));
   fieldPaths(scene);
   templeComplex(scene, obstacles);
   return { ...result, obstacles };
