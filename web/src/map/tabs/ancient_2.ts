@@ -546,6 +546,15 @@ function crispRim(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+// Open skyline (575, greek_ancient_2.png: nothing stands behind the island; the temple mound is the only mass
+// against the sky). Spec: the base's far ridge range and its second floating slab (mountainBase, mountainCap,
+// mountainRoot) are hidden; the clouds stay.
+function openSkyline(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && mesh.name.startsWith("mountain")) mesh.setEnabled(false);
+  }
+}
+
 // Clear sky (575, greek_ancient_2.png: the island floats in a pale-to-mid blue sky with white puffy clouds, no beige
 // haze). Spec: clear colour (0.3, 0.6, 0.88), fog a pale sky blue (0.66, 0.8, 0.93), base clouds kept white; both
 // restored on dispose.
@@ -576,6 +585,7 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
   result.hazards = result.hazards.filter((hazard) => hazard.kind !== "pit");
   const obstacles = ringWall(scene, built, clearFootprint(scene, built, roundIsland(scene, built, result.obstacles)));
   earthDrum(scene, built);
+  openSkyline(scene, built);
   greenLawn(scene, built);
   fieldPaths(scene);
   templeComplex(scene, obstacles);
