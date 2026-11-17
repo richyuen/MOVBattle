@@ -220,6 +220,51 @@ function clearSky(scene: Scene): () => void {
   };
 }
 
+// Outer rows (574, wiki ancient_1.png: the house rows run most of the rectangle's length, the plazas at the ends are
+// small). The armies' zones (|x| 25..55, |z| <= 20; stage enemies at x 29..40.5, |z| <= 18) must stay open, so the
+// rows run on along the long walls instead. Spec: past each end of the front and back bands (x 28.5..52 on both
+// sides), two flat-roofed whitewashed houses per row, 11 m along the wall, 10 m deep (|z| 21.5..31.5), 3-4.4 m
+// walls with a blue roof band, a parapet terrace, one upper room, blue shutters and a blue door on the plaza face and a
+// stair flight up the plaza end; the inner cypress planters step to the wall lane (|z| 33.3) beside them. One box
+// collider per house and per stair.
+function outerRows(scene: Scene, plaster: StandardMaterial, blue: StandardMaterial, obstacles: MapBuildResult["obstacles"]): void {
+  const box = (name: string, x: number, y: number, z: number, width: number, height: number, depth: number, material: StandardMaterial) => {
+    const part = MeshBuilder.CreateBox(name, { width, height, depth }, scene);
+    part.position.set(x, y, z);
+    part.material = material;
+    part.receiveShadows = true;
+  };
+  let k = 0;
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      for (const [x0, x1] of [[28.5, 39.5], [41, 52]]) {
+        const x = sx * (x0 + x1) / 2, w = x1 - x0, z = sz * 26.5, d = 10;
+        const h = 3 + seeded(k, 41) * 1.4;
+        box("ancient1OuterHouse", x, h / 2, z, w, h, d, plaster);
+        box("ancient1RoofBand", x, h - 0.24, z, w + 0.3, 0.24, d + 0.3, blue);
+        box("ancient1RoofTerrace", x, h, z, w + 0.4, 0.36, d + 0.4, plaster);
+        const ux = x + sx * (seeded(k, 42) - 0.5) * 3, uz = z + sz * 1.5;
+        box("ancient1UpperRoom", ux, h + 1.1, uz, 4.6, 2.2, 4.4, plaster);
+        box("ancient1UpperCoping", ux, h + 2.24, uz, 4.9, 0.27, 4.7, plaster);
+        // The plaza face looks toward the field's centre line (z 0)
+        const face = z - sz * (d / 2 + 0.03);
+        for (const dx of [-3.2, 3.2]) box("ancient1BlueShutter", x + dx, 1.52, face, 0.78, 1.1, 0.12, blue);
+        box("ancient1BlueDoor", x, 1.05, face, 1.3, 2.1, 0.14, blue);
+        obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: w / 2, halfZ: d / 2 });
+        if (x0 === 28.5) {
+          // A stair flight climbs the inner end of the row, rising away from the bands
+          for (let i = 0; i < 8; i++) {
+            const rise = h * (i + 1) / 8;
+            box("ancient1RoofStep", sx * (x0 - 2.4 + 0.3 * i), rise / 2, z + sz * 2, 0.4, rise, 2.1, plaster);
+          }
+          obstacles.push({ type: "box", center: new Vector3(sx * (x0 - 1.2), 0, z + sz * 2), halfX: 1.25, halfZ: 1.05 });
+        }
+        k++;
+      }
+    }
+  }
+}
+
 export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -287,7 +332,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   const foliage = new StandardMaterial("ancient1CypressLeaves", scene);
   foliage.diffuseColor = new Color3(0.39, 0.56, 0.18);
   foliage.emissiveColor = foliage.diffuseColor.scale(0.17);
-  for (const [x, z] of [[-51, -32], [-32, -32], [30, -32], [50, -32], [-50, 32], [-25, 32], [25, 32], [50, 32]]) {
+  for (const [x, z] of [[-51, -33.3], [-32, -33.3], [30, -33.3], [50, -33.3], [-50, 33.3], [-25, 33.3], [25, 33.3], [50, 33.3]]) {
     const basin = MeshBuilder.CreateCylinder("ancient1CypressPlanter", { height: 0.5, diameter: 2.55, tessellation: 10 }, scene);
     basin.scaling.x = 1.78;
     basin.position.set(x, 0.25, z);
@@ -304,6 +349,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
     }
     obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 2.19, halfZ: 1.26 });
   }
+  outerRows(scene, plaster, blue, obstacles);
   const houseWidth = (BLOCK_SPAN * 2) / 4;
   BANDS.forEach(([z, depth], row) => {
     for (let col = 0; col < 4; col++) {
