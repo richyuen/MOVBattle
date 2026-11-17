@@ -122,9 +122,20 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
   }
 }
 
+// Open street (577, wild_west.leading_cacti.png and the wiki shot: the middle of the main street is clear dirt between the
+// two rows; nothing stands in it). Spec: the base's dark barricade box at the field centre (0, 0) and its collider go.
+function openStreet(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const atCentre = (x: number, z: number) => Math.hypot(x, z) < 0.5;
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && mesh.name === "Wild West Flats_box" && atCentre(mesh.position.x, mesh.position.z)) mesh.setEnabled(false);
+  }
+  result.obstacles = result.obstacles.filter(({ center }) => !atCentre(center.x, center.z));
+}
+
 export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
+  openStreet(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   // The base's two box houses (two boxes each) and their colliders
   const houses = [[4, -16], [6, 16]];
   for (const mesh of scene.meshes) {
