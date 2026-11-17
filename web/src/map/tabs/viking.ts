@@ -167,6 +167,90 @@ function snowPines(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult[
   }
 }
 
+// Frozen ship (571, card Overview: "to the left, there is a pirate ship that is frozen in ice"): a wooden
+// ship locked into the lake by the left shore, listing a little, its hull sunk to the waterline in heaped
+// pale ice, snow on its deck, one mast with a yard and a torn pale sail. Spec: hull 22 m long, 6.4 m beam,
+// 3.4 m from the ice to the rail, bow and stern rising 1.6 m; centred (-39, 13) with its length along z
+// (yaw 0.18); mast 13 m. One box collider over the hull.
+const SHIP = { x: -39, z: 13, yaw: 0.18, length: 22, beam: 6.4 };
+function frozenShip(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const wood = new StandardMaterial("vikingShipWood", scene);
+  wood.diffuseColor = new Color3(0.36, 0.2, 0.11);
+  wood.emissiveColor = wood.diffuseColor.scale(0.25);
+  wood.backFaceCulling = false;
+  const snow = new StandardMaterial("vikingShipSnow", scene);
+  snow.diffuseColor = SNOW.clone();
+  snow.emissiveColor = SNOW_SHADE.clone();
+  const iceMat = new StandardMaterial("vikingShipIce", scene);
+  iceMat.diffuseColor = new Color3(0.62, 0.84, 0.95);
+  iceMat.emissiveColor = iceMat.diffuseColor.scale(0.35);
+  const sailMat = new StandardMaterial("vikingShipSail", scene);
+  sailMat.diffuseColor = new Color3(0.84, 0.8, 0.7);
+  sailMat.emissiveColor = sailMat.diffuseColor.scale(0.25);
+  sailMat.backFaceCulling = false;
+  const root = new Mesh("vikingShip", scene);
+  root.position.set(SHIP.x, 0, SHIP.z);
+  root.rotation.set(0, SHIP.yaw, 0.1);
+  const sections: Vector3[][] = [];
+  for (let s = 0; s <= 16; s++) {
+    const t = s / 16;
+    const z = (t - 0.5) * SHIP.length;
+    const w = (SHIP.beam / 2) * Math.sin(Math.PI * Math.min(0.999, Math.max(0.001, t))) ** 0.55;
+    const sheer = 1.6 * (2 * t - 1) ** 4;
+    const path: Vector3[] = [];
+    for (let k = 0; k <= 8; k++) {
+      const theta = Math.PI + (Math.PI * k) / 8;
+      path.push(new Vector3(w * Math.cos(theta), 2.6 + sheer + 4 * Math.sin(theta) * (0.4 + 0.6 * Math.sin(Math.PI * t)), z));
+    }
+    sections.push(path);
+  }
+  const hull = MeshBuilder.CreateRibbon("vikingShipHull", { pathArray: sections, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  hull.parent = root;
+  hull.material = wood;
+  hull.convertToFlatShadedMesh();
+  for (const side of [-1, 1]) {
+    const rail = MeshBuilder.CreateBox("vikingShipRail", { width: 0.28, height: 0.3, depth: SHIP.length * 0.78 }, scene);
+    rail.parent = root;
+    rail.position.set(side * SHIP.beam * 0.49, 2.75, 0);
+    rail.material = wood;
+  }
+  const deck = MeshBuilder.CreateBox("vikingShipDeckSnow", { width: SHIP.beam * 0.86, height: 0.3, depth: SHIP.length * 0.74 }, scene);
+  deck.parent = root;
+  deck.position.y = 2.2;
+  deck.material = snow;
+  const mast = MeshBuilder.CreateCylinder("vikingShipMast", { height: 13, diameter: 0.45, tessellation: 8 }, scene);
+  mast.parent = root;
+  mast.position.set(0, 2.2 + 6.5, -1);
+  mast.material = wood;
+  const yard = MeshBuilder.CreateCylinder("vikingShipYard", { height: 8, diameter: 0.28, tessellation: 6 }, scene);
+  yard.parent = root;
+  yard.rotation.z = Math.PI / 2 + 0.12;
+  yard.position.set(0, 13.2, -1);
+  yard.material = wood;
+  const sail = MeshBuilder.CreateBox("vikingShipSail", { width: 7, height: 5.2, depth: 0.08 }, scene);
+  sail.parent = root;
+  sail.position.set(0.2, 10.4, -0.85);
+  sail.rotation.set(0.12, 0, 0.12);
+  sail.material = sailMat;
+  for (const [z, h] of [[-SHIP.length / 2 - 0.4, 4.6], [SHIP.length / 2 + 0.4, 4.2]]) {
+    const post = MeshBuilder.CreateCylinder("vikingShipStem", { height: h, diameterTop: 0.25, diameterBottom: 0.6, tessellation: 6 }, scene);
+    post.parent = root;
+    post.position.set(0, 3.2 + h / 3, z);
+    post.rotation.x = z < 0 ? -0.35 : 0.35;
+    post.material = wood;
+  }
+  // The ice collar the hull is locked in.
+  for (let i = 0; i < 20; i++) {
+    const a = (i / 20) * Math.PI * 2;
+    const lump = MeshBuilder.CreateIcoSphere("vikingShipIce", { radius: 1.3 + seeded(i, 141) * 1.1, subdivisions: 1, flat: true }, scene);
+    lump.parent = root;
+    lump.position.set(Math.cos(a) * (SHIP.beam / 2 + 0.6), 0.25, Math.sin(a) * (SHIP.length / 2 + 0.4));
+    lump.scaling.y = 0.45 + seeded(i, 142) * 0.3;
+    lump.material = iceMat;
+  }
+  obstacles.push({ type: "box", center: new Vector3(SHIP.x, 0, SHIP.z), halfX: SHIP.beam / 2 + 1.6, halfZ: SHIP.length / 2 + 1 });
+}
+
 export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -184,5 +268,6 @@ export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildR
   snowBanks(scene, built);
   snowPines(scene, built, result.obstacles);
   frozenLake(scene);
+  frozenShip(scene, result.obstacles);
   return result;
 }
