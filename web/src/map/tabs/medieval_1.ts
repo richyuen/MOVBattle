@@ -1,4 +1,4 @@
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene, type ShadowGenerator } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 // The placement reference shows two grassy cliff shelves, a deep front inlet, and a narrow bridge.
@@ -96,10 +96,70 @@ function rightBankRuins(scene: Scene, stone: StandardMaterial, obstacles: MapBui
   }
 }
 
+function gnarledOaks(scene: Scene, feet: readonly Vector3[]): void {
+  const bark = new StandardMaterial("medieval1OakBark", scene);
+  bark.diffuseColor = new Color3(0.32, 0.17, 0.11);
+  bark.emissiveColor = bark.diffuseColor.scale(0.2);
+  const foliage = new StandardMaterial("medieval1OakCrown", scene);
+  foliage.diffuseColor = new Color3(0.49, 0.62, 0.23);
+  foliage.emissiveColor = foliage.diffuseColor.scale(0.26);
+  const darkFoliage = foliage.clone("medieval1OakCrownShade");
+  darkFoliage.diffuseColor.scaleInPlace(0.77);
+  darkFoliage.emissiveColor.scaleInPlace(0.77);
+  const trunks: Mesh[] = [], crowns: Mesh[] = [], smallCrowns: Mesh[] = [];
+  const stem = (foot: Vector3, tip: Vector3, diameter: number, taper: number) => {
+    const axis = tip.subtract(foot);
+    const limb = MeshBuilder.CreateCylinder("medieval1OakLimb", {
+      height: axis.length() + diameter * 0.16, diameterBottom: diameter, diameterTop: diameter * taper, tessellation: 6,
+    }, scene);
+    limb.position = foot.add(tip).scale(0.5);
+    const up = Vector3.Up();
+    const direction = axis.normalize();
+    const cross = Vector3.Cross(up, direction);
+    limb.rotationQuaternion = cross.lengthSquared() < 1e-6 ? Quaternion.Identity()
+      : Quaternion.RotationAxis(cross.normalize(), Math.acos(Vector3.Dot(up, direction)));
+    trunks.push(limb);
+  };
+  feet.forEach((foot, i) => {
+    const yaw = i * 2.39996;
+    const offset = (angle: number, reach: number, y: number) =>
+      new Vector3(foot.x + Math.cos(angle) * reach, y, foot.z + Math.sin(angle) * reach);
+    const scale = 0.9 + (i % 5) * 0.13;
+    const elbow = offset(yaw, 1.4 * scale, 2.3 * scale);
+    const fork = offset(yaw + 0.48, 2.1 * scale, 4.5 * scale);
+    stem(offset(0, 0, -0.35), elbow, 1.52 * scale, 0.7);
+    stem(elbow, fork, 1.07 * scale, 0.64);
+    for (let n = 0; n < 4; n++) {
+      const angle = yaw + n * 1.65;
+      const reach = scale * (n === 0 ? 2.4 : 3.3 + 0.35 * (n % 2));
+      const tip = offset(angle, reach, scale * (n === 0 ? 6.7 : 5.2 + (n % 2) * 0.75));
+      stem(fork, tip, (n === 0 ? 0.74 : 0.49) * scale, 0.43);
+      const crown = MeshBuilder.CreateIcoSphere("medieval1OakLobe", {
+        radius: scale * (n === 0 ? 2.25 : 1.3 + 0.16 * n), subdivisions: 1,
+      }, scene);
+      crown.position = tip.add(new Vector3(0, 0.45, 0));
+      crown.scaling.y = 0.74 + 0.05 * (n % 3);
+      crown.rotation.y = angle;
+      (n % 2 === 0 ? crowns : smallCrowns).push(crown);
+    }
+  });
+  const shadows = scene.getLightByName("dir")?.getShadowGenerator() as ShadowGenerator | null | undefined;
+  for (const [parts, material] of [[trunks, bark], [crowns, foliage], [smallCrowns, darkFoliage]] as const) {
+    const grove = Mesh.MergeMeshes(parts, true);
+    if (!grove) continue;
+    grove.name = material.name;
+    grove.material = material;
+    grove.isPickable = false;
+    grove.receiveShadows = true;
+    shadows?.addShadowCaster(grove);
+  }
+}
+
 export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const detachedTrees: Vector3[] = [];
+  const oakFeet: Vector3[] = [];
   for (const mesh of scene.meshes) {
     if (prior.has(mesh)) continue;
     if (/^(ground$|centerGrass$|islandUnder|islandShelf|islandCliff|fieldBlades_|hazeTreeline|campaign_zone_)/.test(mesh.name)) mesh.setEnabled(false);
@@ -124,8 +184,12 @@ export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBui
     if (!onLand || rightBankBreak) {
       detachedTrees.push(mesh.position.clone());
       mesh.setEnabled(false);
+    } else {
+      oakFeet.push(mesh.position.clone());
+      mesh.setEnabled(false);
     }
   }
+  gnarledOaks(scene, oakFeet);
   const grass = new StandardMaterial("medieval1Meadow", scene);
   grass.diffuseColor = new Color3(0.48, 0.65, 0.24);
   grass.emissiveColor = grass.diffuseColor.scale(0.1);
