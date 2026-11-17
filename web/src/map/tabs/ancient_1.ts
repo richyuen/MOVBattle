@@ -350,17 +350,38 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
     obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 2.19, halfZ: 1.26 });
   }
   outerRows(scene, plaster, blue, obstacles);
+  // Separate houses (574, wiki ancient_1.png: each band is a run of distinct whitewashed houses, not one slab). Spec:
+  // four houses per band, 9.8 m wide with 2.2 m alleys between them, each 1-3.5 m shallower than the band and set
+  // toward one street, its own roof band and parapet terrace (no shared roof), a blue door and two shutters on each
+  // street face; a 1.5 m stair flight in every alley climbs from the street side onto the lower neighbour's roof.
   const houseWidth = (BLOCK_SPAN * 2) / 4;
-  BANDS.forEach(([z, depth], row) => {
+  const ALLEY = 2.2;
+  BANDS.forEach(([bandZ, bandDepth], row) => {
+    const heights: number[] = [];
+    for (let col = 0; col < 4; col++) heights.push(2.8 + seeded(row * 4 + col, 31) * 1.6);
+    for (let col = 0; col < 3; col++) {
+      const x = -BLOCK_SPAN + houseWidth * (col + 1);
+      const top = Math.min(heights[col], heights[col + 1]);
+      // The x 0 alley meets the arch piers on the back street (z 7.6 and 12.4): its stairs start on the other side
+      const toward = col === 1 ? (row === 2 ? 1 : -1) : (col + row) % 2 === 0 ? 1 : -1;
+      const z0 = bandZ + toward * (bandDepth / 2 - 0.2);
+      for (let i = 0; i < 7; i++) {
+        const rise = top * (i + 1) / 7;
+        box("ancient1AlleyStep", x, rise / 2, z0 - toward * (0.25 + 0.5 * i), 1.5, rise, 0.5, plaster);
+      }
+      obstacles.push({ type: "box", center: new Vector3(x, 0, z0 - toward * 1.85), halfX: 0.75, halfZ: 1.85 });
+    }
     for (let col = 0; col < 4; col++) {
-      const x = -BLOCK_SPAN + houseWidth * (col + 0.5);
       const k = row * 4 + col;
-      const height = 2.8 + seeded(k, 31) * 1.6;
-      const w = houseWidth - 0.3;
+      const height = heights[col];
+      const x = -BLOCK_SPAN + houseWidth * (col + 0.5);
+      const w = houseWidth - ALLEY;
+      const depth = bandDepth - 1 - seeded(k, 34) * 2.5;
+      const z = bandZ + (seeded(k, 35) < 0.5 ? -1 : 1) * (bandDepth - depth) / 2;
       box("ancient1House", x, height / 2, z, w, height, depth, plaster);
-      box("ancient1RoofBand", x, height - 0.24, z, w + 0.3, 0.24, depth + 0.3, blue);
-      box("ancient1RoofTerrace", x, height, z, w + 0.5, 0.36, depth + 0.5, plaster);
-      const tx = x + (seeded(k, 32) - 0.5) * 4, tz = z + (seeded(k, 33) - 0.5) * (depth - 6);
+      box("ancient1RoofBand", x, height - 0.24, z, w + 0.2, 0.24, depth + 0.2, blue);
+      box("ancient1RoofTerrace", x, height, z, w + 0.3, 0.36, depth + 0.3, plaster);
+      const tx = x + (seeded(k, 32) - 0.5) * 3, tz = z + (seeded(k, 33) - 0.5) * (depth - 6);
       box("ancient1UpperRoom", tx, height + 1.1, tz, 5.1, 2.2, 5, plaster);
       box("ancient1UpperCoping", tx, height + 2.24, tz, 5.4, 0.27, 5.3, plaster);
       if (k % 3 !== 1) {
@@ -372,18 +393,20 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
       // Blue shutters on the street fronts.
       for (const face of [-1, 1]) {
         if ((row === 0 && face < 0) || (row === 2 && face > 0)) continue;
-        for (const dx of [-3, 0, 3]) box("ancient1BlueShutter", x + dx, 1.52, z + face * (depth / 2 + 0.03), 0.78, 1.1, 0.12, blue);
+        for (const dx of [-3, 3]) box("ancient1BlueShutter", x + dx, 1.52, z + face * (depth / 2 + 0.03), 0.78, 1.1, 0.12, blue);
+        box("ancient1BlueDoor", x, 1.05, z + face * (depth / 2 + 0.04), 1.3, 2.1, 0.14, blue);
       }
       // Roof stairs climb the plaza ends of each band.
       if (col === 0 || col === 3) {
         const side = col === 0 ? -1 : 1;
+        const end = BLOCK_SPAN - ALLEY / 2;
         for (let i = 0; i < 8; i++) {
           const rise = height * (i + 1) / 8;
-          box("ancient1RoofStep", side * (BLOCK_SPAN + 2.3 - 0.32 * i), rise / 2, z - depth * 0.3, 0.42, rise, 2.1, plaster);
+          box("ancient1RoofStep", side * (end + 2.3 - 0.32 * i), rise / 2, z - depth * 0.3, 0.42, rise, 2.1, plaster);
         }
-        obstacles.push({ type: "box", center: new Vector3(side * (BLOCK_SPAN + 1.2), 0, z - depth * 0.3), halfX: 1.25, halfZ: 1.05 });
+        obstacles.push({ type: "box", center: new Vector3(side * (end + 1.2), 0, z - depth * 0.3), halfX: 1.25, halfZ: 1.05 });
       }
-      obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: houseWidth / 2, halfZ: depth / 2 });
+      obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: w / 2, halfZ: depth / 2 });
     }
   });
   for (const z of [STREETS[1] - STREET_WIDTH / 2 - 0.4, STREETS[1] + STREET_WIDTH / 2 + 0.4]) {
