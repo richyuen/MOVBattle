@@ -32,8 +32,10 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     gold: mk("pirateGalleonGold", new Color3(0.95, 0.72, 0.25), 0.5),
     sail: mk("pirateGalleonSail", new Color3(0.96, 0.93, 0.85), 0.55),
     iron: mk("pirateGalleonIron", new Color3(0.2, 0.2, 0.24), 0.35),
+    // Stern castles in dark timber: their sunlit tops read cream in the hull brown (577)
+    stern: mk("pirateGalleonStern", new Color3(0.2, 0.11, 0.055), 0.3),
   };
-  const parts: Record<keyof typeof mats, Mesh[]> = { hull: [], dark: [], deck: [], gold: [], sail: [], iron: [] };
+  const parts: Record<keyof typeof mats, Mesh[]> = { hull: [], dark: [], deck: [], gold: [], sail: [], iron: [], stern: [] };
   for (const { z: Z, bow } of SHIPS) {
     // u: along the hull toward the bow; v: across, toward the beach (+v points at z 0)
     const toBeach = -Math.sign(Z);
@@ -60,9 +62,9 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     for (const s of [-1, 1]) box("hull", LONG * 0.78, 0.9, 0.3, -LONG * 0.05, top + 0.55, s * BEAM * 0.47);
     // Stern castle in two tiers with gold rims and dark windows on its back
     const sternU = -LONG * 0.45 + 4;
-    box("hull", 8, 2, BEAM * 1.02, sternU, top + 1, 0);
+    box("stern", 8, 2, BEAM * 1.02, sternU, top + 1, 0);
     box("gold", 8.2, 0.25, BEAM * 1.06, sternU, top + 2.05, 0);
-    box("hull", 5.5, 1.4, BEAM * 0.9, sternU - 1, top + 2.75, 0);
+    box("stern", 5.5, 1.4, BEAM * 0.9, sternU - 1, top + 2.75, 0);
     box("gold", 5.7, 0.25, BEAM * 0.94, sternU - 1, top + 3.5, 0);
     for (let w = -1; w <= 1; w++) box("dark", 0.1, 0.9, 1.2, sternU - 4.05, top + 1.1, w * 2.2);
     for (const s of [-1, 1]) {
