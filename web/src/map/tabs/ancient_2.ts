@@ -438,6 +438,30 @@ function gatePavilions(scene: Scene, obstacles: Obstacle[]): void {
   }
 }
 
+// Crisp disc edge (574, probe: no base shelf survives past r 51; the wide soft lime apron outside the wall in the top
+// shot is the glow layer blooming the self-lit lawn past the rim). Spec: the floor, its lawn clumps and flower drifts
+// leave the glow pass, and the floor discs are trimmed to the wall's outer face (r 50.3) so the drum's brown rim, not
+// a band of grass, meets the wall: the island reads as one hard-edged circular disc.
+function crispRim(scene: Scene, built: Set<unknown>): void {
+  const glow = scene.getGlowLayerByName("glow");
+  const lawn = /^(ground|centerGrass|ancient2Lawn|ancient2Flower|ancient2FieldPath)/;
+  for (const mesh of scene.meshes) {
+    if (!lawn.test(mesh.name) || !(mesh instanceof Mesh)) continue;
+    glow?.addExcludedMesh(mesh);
+    if (!built.has(mesh) || (mesh.name !== "ground" && mesh.name !== "centerGrass")) continue;
+    const positions = mesh.getVerticesData("position");
+    if (!positions) continue;
+    for (let i = 0; i < positions.length; i += 3) {
+      const r = Math.hypot(positions[i], positions[i + 2]);
+      if (r <= RIM.a - 0.7) continue;
+      positions[i] *= (RIM.a - 0.7) / r;
+      positions[i + 2] *= (RIM.a - 0.7) / r;
+    }
+    mesh.updateVerticesData("position", positions, true);
+    mesh.refreshBoundingInfo();
+  }
+}
+
 export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -458,5 +482,6 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
   fieldPaths(scene);
   templeComplex(scene, obstacles);
   gatePavilions(scene, obstacles);
+  crispRim(scene, built);
   return { ...result, obstacles };
 }
