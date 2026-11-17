@@ -1,4 +1,4 @@
-import { Color3, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 // The placement reference shows a long rectangular slab. Two four-metre streets run along it
@@ -166,6 +166,46 @@ function lighthouse(scene: Scene): void {
   cyl("ancient1LighthouseCap", base + 18.7, 2.2, 0, 3.4, blue);
 }
 
+// Underside (572, greek_ancient_1.png): two stacked brown earth slabs, the upper one the island's full footprint
+// (7 m deep), the lower one inset ~7 m on every side (6 m deep) with a dark step between, both faces studded
+// with grey pebbles (flattened faceted stones 0.5-1.3 m, ~3.5 m apart, half sunk into the face).
+function pebbledUnderside(scene: Scene, earth: StandardMaterial): void {
+  const tiers: Array<{ w: number; d: number; top: number; h: number }> = [
+    { w: LENGTH + 1.5, d: WIDTH + 1.5, top: -0.55, h: 7 },
+    { w: LENGTH - 13, d: WIDTH - 12, top: -7.55, h: 6 },
+  ];
+  const stone = new StandardMaterial("ancient1Pebble", scene);
+  stone.diffuseColor = new Color3(0.56, 0.55, 0.53);
+  stone.emissiveColor = stone.diffuseColor.scale(0.22);
+  const pebble = MeshBuilder.CreateIcoSphere("ancient1Pebbles", { radius: 1, subdivisions: 1 }, scene);
+  pebble.convertToFlatShadedMesh();
+  pebble.material = stone;
+  pebble.isPickable = false;
+  const matrices: number[] = [];
+  let n = 0;
+  tiers.forEach(({ w, d, top, h }, t) => {
+    const slab = MeshBuilder.CreateBox(t === 0 ? "ancient1RectangularIsland" : "ancient1LowerSlab", { width: w, height: h, depth: d }, scene);
+    slab.position.y = top - h / 2;
+    slab.material = earth;
+    slab.receiveShadows = true;
+    // Faces: [half extent along the face, outward axis, offset]
+    for (const [along, axisX, half] of [[w / 2, false, d / 2], [w / 2, false, -d / 2], [d / 2, true, w / 2], [d / 2, true, -w / 2]] as const) {
+      for (let s = -along + 1.5; s < along - 1; s += 3.5) {
+        n += 1;
+        if (seeded(n, 41) < 0.25) continue;
+        const r = 0.5 + seeded(n, 42) * 0.8;
+        const y = top - 1 - seeded(n, 43) * (h - 2);
+        const jitter = (seeded(n, 44) - 0.5) * 1.6;
+        const pos = axisX ? new Vector3(half, y, s + jitter) : new Vector3(s + jitter, y, half);
+        const scale = axisX ? new Vector3(0.45 * r, 0.7 * r, r) : new Vector3(r, 0.7 * r, 0.45 * r);
+        const m = Matrix.Compose(scale, Quaternion.RotationYawPitchRoll(seeded(n, 45) * 3, 0, seeded(n, 46) - 0.5), pos);
+        matrices.push(...m.asArray());
+      }
+    }
+  });
+  pebble.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
+}
+
 export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -181,9 +221,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   const lime = new StandardMaterial("ancient1Limestone", scene);
   lime.diffuseColor = new Color3(0.84, 0.81, 0.7);
   lime.emissiveColor = lime.diffuseColor.scale(0.13);
-  const slab = MeshBuilder.CreateBox("ancient1RectangularIsland", { width: LENGTH + 1.5, height: 11, depth: WIDTH + 1.5 }, scene);
-  slab.position.y = -6.05;
-  slab.material = earth;
+  pebbledUnderside(scene, earth);
   bayHeadland(scene, earth);
   hopliteStatue(scene);
   lighthouse(scene);
