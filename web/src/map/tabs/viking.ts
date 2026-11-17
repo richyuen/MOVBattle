@@ -306,7 +306,46 @@ function winterHaze(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
+// Icy underside (573, reference/maps/winter_viking.png: under the snow the island is a rounded white-blue ice
+// bowl, no dark rock or stalactites). Spec: the base's islandUnder/islandShelf/islandCliff go; a faceted bowl
+// follows the island rim (superellipse 54 x 48, power 3) down to a rounded point 26 m below (scale 1, 1, .97,
+// .9, .78, .6, .36, .08 at 0, -2, -6, -11, -16, -20, -23, -26 m), each ring's vertices pushed in and out by up
+// to 1.6 m for low-poly facets; pale ice (0.6,0.8,0.92) self-lit 0.55, under a 2 m snow band at the top.
+const UNDER: Array<[number, number]> = [[1, 0], [1, -2], [0.97, -6], [0.9, -11], [0.78, -16], [0.6, -20], [0.36, -23], [0.08, -26]];
 const rimR = (a: number) => (Math.abs(Math.cos(a) / 54) ** 3 + Math.abs(Math.sin(a) / 48) ** 3) ** (-1 / 3);
+
+function icyUnderside(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && ["islandUnder", "islandShelf", "islandCliff"].includes(mesh.name)) mesh.setEnabled(false);
+  }
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = new Color3(0.12, 0.14, 0.16);
+    return m;
+  };
+  const ice = mk("vikingUnderIce", new Color3(0.6, 0.8, 0.92), 0.55);
+  const snow = mk("vikingUnderSnow", SNOW, 0.5);
+  const N = 40;
+  const rings = UNDER.map(([s, y], j) => {
+    const ring: Vector3[] = [];
+    for (let i = 0; i <= N; i++) {
+      const a = ((i % N) / N) * Math.PI * 2;
+      const jag = j === 0 || j === 1 ? 0 : (seeded((i % N) + j * 53, 401) - 0.5) * 3.2;
+      const r = rimR(a) * s + jag;
+      ring.push(new Vector3(Math.cos(a) * r, y + (j > 1 ? (seeded((i % N) + j * 53, 402) - 0.5) * 1.2 : 0), Math.sin(a) * r));
+    }
+    return ring;
+  });
+  for (const [name, paths, mat] of [["vikingUnderSnow", rings.slice(0, 2), snow], ["vikingUnderIce", rings.slice(1), ice]] as const) {
+    const mesh = MeshBuilder.CreateRibbon(name, { pathArray: paths, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    mesh.convertToFlatShadedMesh();
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.applyFog = false;
+  }
+}
 
 // Raised snowbanks (573, reference/stages/introduction.ice_archers_only_almost.png: the lake sits in a hollow, its
 // shores rising as white snowbanks that carry the pine forest). Spec: the ground rises from the lake edge + 1 m to
@@ -365,6 +404,7 @@ export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildR
   frozenLake(scene);
   frozenShip(scene, result.obstacles);
   snowbankSheet(scene);
+  icyUnderside(scene, built);
   const restoreSky = winterHaze(scene, built);
   return { ...result, height: bankHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
