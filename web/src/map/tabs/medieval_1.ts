@@ -11,8 +11,8 @@ const BRIDGE_DEPTH = 8;
 
 function meadowDressing(scene: Scene): void {
   const leaf = new StandardMaterial("medieval1MeadowLeaves", scene);
-  leaf.diffuseColor = new Color3(0.42, 0.67, 0.23);
-  leaf.emissiveColor = leaf.diffuseColor.scale(0.18);
+  leaf.diffuseColor = new Color3(0.64, 0.77, 0.32);
+  leaf.emissiveColor = leaf.diffuseColor.scale(0.39);
   leaf.backFaceCulling = false;
   const data = new VertexData();
   data.positions = [-0.32, 0, 0, 0.32, 0, 0, -0.16, 0.41, 0, 0, 0.23, 0, 0.20, 0.38, 0,
@@ -43,8 +43,9 @@ function meadowDressing(scene: Scene): void {
           const jitter = seed - Math.floor(seed);
           const patch = Math.sin(x * 0.29 + z * 0.11) * Math.cos(z * 0.24);
           if (jitter < (1 - patch) * 0.22) continue;
-          const scale = 0.8 + jitter * 0.7;
-          const p = new Vector3(side * (x + (jitter - 0.5) * 0.65), 0.01, z + (jitter - 0.5) * 0.55);
+          const scale = 0.46 + jitter * 0.78;
+          const offset = Math.sin(x * 39.2 + z * 78.5 + side) * 2971.3;
+          const p = new Vector3(side * (x + (jitter - 0.5) * 1.12), 0.01, z + (offset - Math.floor(offset) - 0.5) * 1.08);
           const rotation = Quaternion.RotationAxis(Vector3.Up(), jitter * Math.PI * 2);
           grassMatrices.push(...Matrix.Compose(new Vector3(scale, scale, scale), rotation, p).m);
           if (jitter > 0.968 && patch > -0.1) {
