@@ -247,7 +247,11 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
       const end = Math.min(360, angle + arc);
       const broad = t > 0 && seeded(k, 12) > 0.75;
       const depth = (broad ? 7 + seeded(k, 13) * 2 : 1.5 + seeded(k, 13) * (t === 0 ? 2 : 4.5)) / ARENA_RADIUS;
-      const lipDrop = broad ? tier.h1 - TIERS[t - 1].h1 : 1.4;
+      // 572: each ledge is a thick faceted snow cap (2-3.2 m lip) on an ice body that drops from the cap's
+      // inner lip to the tier below (or the floor), so no ledge hangs as a plate partway up the columns.
+      const lipDrop = broad ? tier.h1 - TIERS[t - 1].h1 : 2 + seeded(k, 23) * 1.2;
+      const body: Vector3[][] = [[], []];
+      const rest = t === 0 ? -0.1 : TIERS[t - 1].h1 - 0.6;
       const lift = -2 + seeded(k, 14) * 3.2;
       const tilt = (seeded(k, 15) - 0.5) * 1.6;
       const rows: Vector3[][] = [[], [], [], []];
@@ -258,13 +262,17 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
         const inner = tier.at - depth * (0.75 + 0.25 * Math.sin(f * Math.PI)) - seeded(k + a, 7) * 0.012;
         const [ix, iz] = rimPoint(a, inner);
         const [ox, oz] = rimPoint(a, tier.at + 0.05);
-        rows[0].push(new Vector3(ix * 1.012, y - lipDrop, iz * 1.012));
+        const lipY = y - lipDrop + (seeded(k * 5 + a, 24) - 0.5) * 0.8;
+        rows[0].push(new Vector3(ix * 1.012, lipY, iz * 1.012));
+        body[0].push(new Vector3(ix * 1.014, lipY + 0.2, iz * 1.014));
+        body[1].push(new Vector3(ix * 1.03, Math.min(rest, lipY), iz * 1.03));
         rows[1].push(new Vector3(ix, y - 0.1, iz));
         rows[2].push(new Vector3(ox, y + 0.3, oz));
         const foot = t === 0 ? -0.1 : TIERS[t - 1].h0 - 0.45;
         rows[3].push(new Vector3(ox, foot, oz));
       }
       if (rows[0].length >= 2) caps.push(MeshBuilder.CreateRibbon("vsIceShelf", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene));
+      if (body[0].length >= 2) blocks.push(MeshBuilder.CreateRibbon("vsIceLedgeBody", { pathArray: body, sideOrientation: Mesh.DOUBLESIDE }, scene));
       const gap = 3 + seeded(k, 16) * 4;
       const colAngle = end + gap / 2;
       if (colAngle < 360 && Math.abs(colAngle - 180) > 18) {
