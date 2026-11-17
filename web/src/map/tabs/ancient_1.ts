@@ -468,6 +468,115 @@ function flagstones(scene: Scene): void {
   scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
 }
 
+// Town dressing (576, wiki ancient_1.png: the roofs and lanes are cluttered, not bare). On the roof terraces stand
+// terracotta pots with green tops, round olive bushes and small pink-blossom trees; along the house fronts that face
+// the streets and the plazas sit huddles of pots, amphorae, barrels and crates against the walls. Spec: on every
+// house and outer-house roof terrace 3-5 pieces, inset 0.9 m from the parapet and clear of the upper room (0.6 m);
+// pots 0.6-0.8 m with a 0.35 m green ball, olive bushes 0.7-1.05 m faceted balls, blossom trees a 1.1 m trunk under a
+// 0.9-1.25 m pink crown; along each street or plaza face two clusters of 2-4 pieces (pot, amphora, barrel, crate),
+// 0.45 m off the wall, never within 1.3 m of the door. Drawn only (no colliders): the 4 m streets keep their width.
+function townDressing(scene: Scene): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    clay: mk("ancient1Terracotta", new Color3(0.72, 0.34, 0.17), 0.3),
+    leaf: mk("ancient1OliveBush", new Color3(0.47, 0.6, 0.2), 0.28),
+    pink: mk("ancient1Blossom", new Color3(1, 0.52, 0.76), 0.45),
+    wood: mk("ancient1Barrel", new Color3(0.5, 0.31, 0.16), 0.3),
+    crate: mk("ancient1Crate", new Color3(0.7, 0.53, 0.32), 0.3),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { clay: [], leaf: [], pink: [], wood: [], crate: [] };
+  const put = (list: keyof typeof mats, mesh: Mesh, x: number, y: number, z: number) => {
+    mesh.position.set(x, y, z);
+    parts[list].push(mesh);
+  };
+  let k = 0;
+  const pot = (x: number, y: number, z: number, s: number) => {
+    put("clay", MeshBuilder.CreateCylinder("ancient1Pot", { height: 0.7 * s, diameterTop: 0.62 * s, diameterBottom: 0.42 * s, tessellation: 7 }, scene), x, y + 0.35 * s, z);
+    put("leaf", MeshBuilder.CreateIcoSphere("ancient1PotPlant", { radius: 0.38 * s, subdivisions: 1 }, scene), x, y + 0.85 * s, z);
+  };
+  const piece = (kind: number, x: number, y: number, z: number) => {
+    const s = 0.85 + seeded(k++, 51) * 0.3;
+    if (kind === 0) pot(x, y, z, s);
+    else if (kind === 1) {
+      const bush = MeshBuilder.CreateIcoSphere("ancient1Olive", { radius: 0.7 * s + 0.2, subdivisions: 1 }, scene);
+      bush.scaling.y = 0.8;
+      put("leaf", bush, x, y + 0.55 * s, z);
+    } else if (kind === 2) {
+      put("wood", MeshBuilder.CreateCylinder("ancient1BlossomTrunk", { height: 1.2, diameter: 0.2, tessellation: 5 }, scene), x, y + 0.6, z);
+      const crown = MeshBuilder.CreateIcoSphere("ancient1BlossomCrown", { radius: 0.9 * s + 0.15, subdivisions: 1 }, scene);
+      crown.scaling.y = 0.85;
+      put("pink", crown, x, y + 1.55, z);
+    } else if (kind === 3) {
+      const amphora = MeshBuilder.CreateCylinder("ancient1Amphora", { height: 1.0 * s, diameterTop: 0.22 * s, diameterBottom: 0.3 * s, tessellation: 7 }, scene);
+      put("clay", amphora, x, y + 0.5 * s, z);
+      put("clay", MeshBuilder.CreateIcoSphere("ancient1AmphoraBelly", { radius: 0.34 * s, subdivisions: 1 }, scene), x, y + 0.42 * s, z);
+    } else if (kind === 4) {
+      put("wood", MeshBuilder.CreateCylinder("ancient1Cask", { height: 0.95 * s, diameter: 0.72 * s, tessellation: 9 }, scene), x, y + 0.475 * s, z);
+    } else {
+      const crate = MeshBuilder.CreateBox("ancient1CrateBox", { size: 0.75 * s }, scene);
+      crate.rotation.y = seeded(k, 52) * 0.6;
+      put("crate", crate, x, y + 0.375 * s, z);
+    }
+  };
+  const boxOf = (mesh: { computeWorldMatrix(force: boolean): unknown; getBoundingInfo(): { boundingBox: { minimumWorld: Vector3; maximumWorld: Vector3 } } }) => {
+    mesh.computeWorldMatrix(true);
+    const b = mesh.getBoundingInfo().boundingBox;
+    return { min: b.minimumWorld.clone(), max: b.maximumWorld.clone() };
+  };
+  const rooms = scene.meshes.filter((m) => m.name === "ancient1UpperRoom" && m.isEnabled()).map((m) => boxOf(m));
+  // Roof terraces
+  scene.meshes.filter((m) => m.name === "ancient1RoofTerrace" && m.isEnabled()).forEach((roof, r) => {
+    const { min, max } = boxOf(roof);
+    const count = 3 + Math.floor(seeded(r, 53) * 3);
+    let placed = 0;
+    for (let tries = 0; tries < 24 && placed < count; tries++) {
+      const x = min.x + 0.9 + seeded(r * 31 + tries, 54) * (max.x - min.x - 1.8);
+      const z = min.z + 0.9 + seeded(r * 31 + tries, 55) * (max.z - min.z - 1.8);
+      if (rooms.some((b) => x > b.min.x - 0.6 && x < b.max.x + 0.6 && z > b.min.z - 0.6 && z < b.max.z + 0.6)) continue;
+      piece(placed === 0 ? 2 : Math.floor(seeded(r * 31 + tries, 56) * 2), x, max.y, z);
+      placed++;
+    }
+  });
+  // Lane clutter against the street and plaza faces
+  scene.meshes.filter((m) => (m.name === "ancient1House" || m.name === "ancient1OuterHouse") && m.isEnabled()).forEach((house, h) => {
+    const { min, max } = boxOf(house);
+    const cx = (min.x + max.x) / 2, cz = (min.z + max.z) / 2, half = (max.x - min.x) / 2;
+    for (const faceZ of [min.z, max.z]) {
+      const out = faceZ === min.z ? -1 : 1;
+      const nearStreet = STREETS.some((s) => Math.abs(faceZ - s) < STREET_WIDTH / 2 + 1);
+      const plazaFace = house.name === "ancient1OuterHouse" && Math.sign(cz) !== out;
+      if (!nearStreet && !plazaFace) continue;
+      for (const side of [-1, 1]) {
+        const n = 2 + Math.floor(seeded(h * 7 + side + 3, 57) * 3);
+        let x = cx + side * (1.4 + seeded(h * 5 + side + 2, 58) * (half - 3.2));
+        for (let i = 0; i < n; i++) {
+          const kind = [0, 3, 4, 5][Math.floor(seeded(h * 13 + i * 3 + side, 59) * 4)];
+          piece(kind, x, 0, faceZ + out * (0.45 + seeded(h * 11 + i, 60) * 0.25));
+          x += side * (0.8 + seeded(h * 17 + i, 61) * 0.3);
+          if (Math.abs(x - cx) > half - 0.4) break;
+        }
+      }
+    }
+  });
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true);
+    if (!merged) continue;
+    merged.name = `ancient1Dressing_${key}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+}
+
 export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -628,6 +737,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   }
   flagstones(scene);
   parapetWall(scene);
+  townDressing(scene);
   const restoreSky = clearSky(scene);
   return {
     ...result,
