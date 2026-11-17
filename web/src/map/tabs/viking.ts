@@ -487,7 +487,7 @@ function shoreLip(scene: Scene): void {
       const rr = lakeR(a) + 0.2 + seeded(i, 215) * 0.6;
       const rx = Math.cos(a + 0.02) * rr, rz = Math.sin(a + 0.02) * rr;
       const s = 1 + seeded(i, 217) * 1.2;
-      const stone = MeshBuilder.CreateIcoSphere("vikingShoreRock", { radius: 1, subdivisions: 0, flat: true }, scene);
+      const stone = MeshBuilder.CreateIcoSphere("vikingShoreRock", { radius: 1, subdivisions: 1, flat: true }, scene);
       stone.scaling.set(s, s * 0.6, s * 0.85);
       stone.rotation.y = seeded(i, 219) * Math.PI;
       stone.position.set(rx, bankHeight(rx, rz) * 0.5 + s * 0.15, rz);
