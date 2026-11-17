@@ -302,8 +302,8 @@ function greenLawn(scene: Scene, built: Set<unknown>): void {
     if (!built.has(mesh)) continue;
     if (/^(fieldBlades_|fieldTufts_|grassTuft)/.test(mesh.name)) mesh.setEnabled(false);
     if ((mesh.name === "ground" || mesh.name === "centerGrass") && mesh.material instanceof StandardMaterial) {
-      mesh.material.diffuseColor.set(0.55, 0.69, 0.21);
-      mesh.material.emissiveColor.set(0.15, 0.19, 0.05);
+      mesh.material.diffuseColor.set(0.6, 0.63, 0.22);
+      mesh.material.emissiveColor.set(0.08, 0.085, 0.03);
     }
   }
   const onTerrace = (x: number, z: number) => z > TERRACES[0].front - 2.5 && Math.abs(x) < TERRACES[0].half + 2;
@@ -320,14 +320,23 @@ function greenLawn(scene: Scene, built: Set<unknown>): void {
     mesh.receiveShadows = true;
     return { mesh, m: [] as number[] };
   };
-  const lawn = [instanced("ancient2LawnLight", new Color3(0.62, 0.76, 0.24), 0.3, 0.5), instanced("ancient2LawnDark", new Color3(0.42, 0.58, 0.17), 0.26, 0.5)];
+  // Olive meadow (576, renaissance_vs_ancient_2.png and the wiki shot: a muted yellow-green, not lime). Spec: floor
+  // (0.6,0.63,0.22) barely self-lit; low faceted clumps 1-1.8 m across on a 1.1 m jittered grid inside the wall, two
+  // olives (0.58,0.62,0.21) and (0.46,0.52,0.16) chosen in broad swathes by a slow sine field, thinned where it peaks.
+  const lawn = [instanced("ancient2LawnLight", new Color3(0.58, 0.62, 0.21), 0.24, 0.5), instanced("ancient2LawnDark", new Color3(0.46, 0.52, 0.16), 0.22, 0.5)];
   const petals = [instanced("ancient2FlowerPink", new Color3(1, 0.42, 0.72), 0.5, 0.16), instanced("ancient2FlowerViolet", new Color3(0.52, 0.34, 1), 0.5, 0.16)];
-  for (let i = 0; i < 2600; i++) {
-    const a = seeded(i, 101) * Math.PI * 2, r = Math.sqrt(seeded(i, 102)) * (RIM.a - 2);
-    const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    if (onTerrace(x, z) || onPath(x, z)) continue;
-    const w = 0.9 + seeded(i, 103) * 1.1;
-    lawn[seeded(i, 104) > 0.5 ? 1 : 0].m.push(...Matrix.Compose(new Vector3(w, 0.18 + seeded(i, 105) * 0.1, w), Quaternion.RotationAxis(Vector3.Up(), a), new Vector3(x, 0.04, z)).m);
+  let i = 0;
+  for (let z = -RIM.b; z < RIM.b; z += 1.1) {
+    for (let x = -RIM.a; x < RIM.a; x += 1.1) {
+      i += 1;
+      const jx = seeded(i, 103), jz = seeded(i, 105);
+      const px = x + (jx - 0.5) * 0.9, pz = z + (jz - 0.5) * 0.9;
+      if (Math.hypot(px, pz) > RIM.a - 2 || onTerrace(px, pz) || onPath(px, pz)) continue;
+      const swathe = Math.sin(px * 0.085 + 1.3) * Math.cos(pz * 0.1 + 0.4) + Math.sin((px + pz) * 0.045) * 0.6;
+      if (swathe > 0.9 && jx > 0.5) continue;
+      const w = 1 + jx * 0.8, h = 0.2 + jz * 0.15;
+      lawn[swathe + jz * 0.4 > 0.45 ? 1 : 0].m.push(...Matrix.Compose(new Vector3(w, h, w * (0.8 + jz * 0.3)), Quaternion.RotationAxis(Vector3.Up(), jx * 6.28), new Vector3(px, h * 0.3 + 0.03, pz)).m);
+    }
   }
   for (let c = 0; c < 70; c++) {
     const a = seeded(c, 111) * Math.PI * 2;
