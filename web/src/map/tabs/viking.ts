@@ -253,14 +253,14 @@ function frozenShip(scene: Scene, obstacles: MapBuildResult["obstacles"]): void 
 
 // Winter haze (572, wiki shot viking.png): the sky is a pale cyan-white blizzard, not the base's warm beige; the far
 // pines fade into a thick pale cyan fog and big flakes hang in the air over the whole field. Spec: clear colour
-// (0.66,0.84,0.87), fog (0.76,0.89,0.91) at exp density 0.016, base clouds hidden; 320 unlit white flakes (0.07-0.17 m,
+// (0.58,0.86,0.91), fog (0.7,0.9,0.93), two drawn mist walls, base clouds hidden; 320 unlit white flakes (0.07-0.17 m,
 // stretched 2x along the wind) seeded over 130 x 110 m from 0.8 to 26 m up. Returns the restore for dispose.
 function winterHaze(scene: Scene, built: Set<unknown>): () => void {
   const oldClear = scene.clearColor.clone();
   const oldFog = scene.fogColor.clone();
   const oldDensity = scene.fogDensity;
-  scene.clearColor.set(0.66, 0.84, 0.87, 1);
-  scene.fogColor = new Color3(0.76, 0.89, 0.91);
+  scene.clearColor.set(0.58, 0.86, 0.91, 1);
+  scene.fogColor = new Color3(0.7, 0.9, 0.93);
   scene.fogDensity = 0.016;
   for (const mesh of scene.meshes) {
     if (built.has(mesh) && mesh.name === "cloud") mesh.setEnabled(false);
@@ -281,6 +281,22 @@ function winterHaze(scene: Scene, built: Set<unknown>): () => void {
     flurry.material = mat;
     flurry.isPickable = false;
     scene.getGlowLayerByName("glow")?.addExcludedMesh(flurry);
+  }
+  // The scene fog is linear and re-keyed every frame by main.ts, so the blizzard haze is drawn: two inside-facing
+  // translucent mist walls (radii 46 and 53, on the island's 54 x 48 ellipse) veil the far pines toward the sky.
+  for (const [r, alpha] of [[46, 0.22], [53, 0.4]] as const) {
+    const wall = MeshBuilder.CreateCylinder("vikingMistWall", { diameter: r * 2, height: 24, tessellation: 48, cap: Mesh.NO_CAP, sideOrientation: Mesh.BACKSIDE }, scene);
+    wall.scaling.z = 48 / 54;
+    wall.position.y = 10;
+    const mat = new StandardMaterial("vikingMist", scene);
+    mat.disableLighting = true;
+    mat.emissiveColor = new Color3(0.72, 0.9, 0.93);
+    mat.alpha = alpha;
+    mat.backFaceCulling = true;
+    wall.material = mat;
+    wall.isPickable = false;
+    wall.applyFog = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(wall);
   }
   return () => {
     scene.clearColor.copyFrom(oldClear);
