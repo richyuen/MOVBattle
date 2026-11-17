@@ -1,0 +1,148 @@
+// TABS "Wild West" (wild west map): a round desert island, a western town of false-front wooden buildings along the back and front
+// right of a wide dirt street, a stepped red mesa with cacti on the back left, red rock arches, a white chapel in the back right
+// corner, under an orange sunset (reference/maps/wiki/wild_west.png, reference/maps/western.png; card loop/cards/maps/wild_west.md).
+// Built on campaign.wild_west (base(); never edit the base, dress its build here).
+//
+// Town (576, wiki wild_west.png: the street is lined by two-storey clapboard buildings painted slate blue-grey, each with a tall false
+// front whose top is stepped or arched, white trim, pale lit windows in two rows, a flat blue roof, a covered porch on posts along the
+// street with a balcony rail over it on some, and a sign board across the false front). Spec: a back row of five buildings along z 31..40
+// (x -27..27, 9-10.5 m wide with 1.4 m alleys) and a front-right row of three along z -31..-40 (x 1..27), all facing the street (z 0);
+// bodies 6-7.5 m high, false fronts 1.6-2.6 m above the roof; porch 2.4 m deep, roof at 3.4 m on five posts; a balcony rail on the
+// porch roof on every other building; windows 1 x 1.4 m, four per floor; sign board 5.5 x 1.1 m under the false-front top. The base's
+// two black boxes (houses at (4,-16) and (6,16)) go with their colliders; one box collider per building plus its porch. Both armies'
+// zones (|x| 27..61, |z| 9..27) and the stage armies (x 28.6..35.5, z -25..-11) stay clear.
+import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import type { MapBuildResult } from "../mapBuilder";
+import type { Obstacle } from "../obstacles";
+
+function seeded(i: number, seed: number): number {
+  const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
+  return raw - Math.floor(raw);
+}
+
+const ROWS: Array<{ z: number; face: number; from: number; to: number }> = [
+  { z: 35.5, face: -1, from: -27, to: 27 },
+  { z: -35.5, face: 1, from: 1, to: 27 },
+];
+const DEPTH = 9;
+const ALLEY = 1.4;
+
+function town(scene: Scene, obstacles: Obstacle[]): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    board: mk("wildWestBoard", new Color3(0.36, 0.41, 0.53), 0.5),
+    boardAlt: mk("wildWestBoardAlt", new Color3(0.5, 0.46, 0.44), 0.5),
+    seam: mk("wildWestSeam", new Color3(0.2, 0.22, 0.3), 0.45),
+    trim: mk("wildWestTrim", new Color3(0.9, 0.87, 0.8), 0.5),
+    roof: mk("wildWestRoof", new Color3(0.27, 0.36, 0.62), 0.5),
+    window: mk("wildWestWindow", new Color3(0.85, 0.93, 1), 0.85),
+    plank: mk("wildWestPlank", new Color3(0.55, 0.38, 0.24), 0.45),
+    sign: mk("wildWestSign", new Color3(0.3, 0.22, 0.17), 0.45),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { board: [], boardAlt: [], seam: [], trim: [], roof: [], window: [], plank: [], sign: [] };
+  let k = 0;
+  for (const row of ROWS) {
+    const count = Math.round((row.to - row.from + ALLEY) / (9.8 + ALLEY));
+    const each = (row.to - row.from - ALLEY * (count - 1)) / count;
+    for (let i = 0; i < count; i++, k++) {
+      const w = each - seeded(k, 1) * 0.8;
+      const cx = row.from + i * (each + ALLEY) + each / 2;
+      const h = 6 + seeded(k, 2) * 1.5;
+      const f = row.face;
+      // In local terms: u along the street (x), v toward the street (f * -z offset from the row line)
+      const at = (u: number, v: number) => [cx + u, row.z + f * v] as const;
+      const box = (key: keyof typeof mats, bw: number, bh: number, bd: number, u: number, y: number, v: number) => {
+        const b = MeshBuilder.CreateBox("wildWestPart", { width: bw, height: bh, depth: bd }, scene);
+        const [x, z] = at(u, v);
+        b.position.set(x, y, z);
+        parts[key].push(b);
+      };
+      const wall = seeded(k, 3) < 0.7 ? "board" : "boardAlt";
+      const front = DEPTH / 2;
+      box(wall, w, h, DEPTH, 0, h / 2, 0);
+      // Clapboard: thin dark seams across the street face
+      for (let y = 0.7; y < h - 0.3; y += 0.55) box("seam", w + 0.02, 0.06, 0.05, 0, y, front + 0.02);
+      box("roof", w + 0.3, 0.35, DEPTH + 0.3, 0, h + 0.17, 0);
+      // False front: a taller board wall at the street face, its top stepped or arched, white trim round it
+      const rise = 1.6 + seeded(k, 4) * 1;
+      box(wall, w, rise, 0.4, 0, h + rise / 2, front - 0.2);
+      if (seeded(k, 5) < 0.5) {
+        box(wall, w * 0.5, 0.9, 0.4, 0, h + rise + 0.45, front - 0.2);
+        box("trim", w * 0.54, 0.22, 0.55, 0, h + rise + 0.95, front - 0.2);
+      } else {
+        // A disc whose lower half sinks into the false front: its upper half reads as the arched top
+        const arch = MeshBuilder.CreateCylinder("wildWestArch", { diameter: w * 0.55, height: 0.38, tessellation: 16 }, scene);
+        arch.rotation.x = Math.PI / 2;
+        const [x, z] = at(0, front - 0.2);
+        arch.position.set(x, h + rise, z);
+        parts[wall].push(arch);
+      }
+      box("trim", w + 0.3, 0.22, 0.55, 0, h + rise, front - 0.2);
+      for (const s of [-1, 1]) box("trim", 0.25, h + rise, 0.5, s * w / 2, (h + rise) / 2, front - 0.15);
+      // Sign board under the false-front top
+      box("sign", Math.min(5.5, w - 1.5), 1.1, 0.12, 0, h + rise * 0.45, front + 0.05);
+      box("trim", Math.min(5.5, w - 1.5) + 0.2, 0.12, 0.14, 0, h + rise * 0.45 + 0.6, front + 0.05);
+      // Two rows of windows (lower row beside the door)
+      for (const [y, us] of [[1.9, [-w * 0.36, -w * 0.18, w * 0.18, w * 0.36]], [h - 2, [-w * 0.36, -w * 0.12, w * 0.12, w * 0.36]]] as const) {
+        for (const u of us) {
+          box("window", 1, 1.4, 0.08, u, y, front + 0.06);
+          box("trim", 1.2, 0.14, 0.12, u, y + 0.78, front + 0.07);
+        }
+      }
+      box("seam", 1.4, 2.4, 0.08, 0, 1.2, front + 0.06);
+      // Porch: deck, posts and a roof along the street; a balcony rail on every other one
+      const pd = 2.4;
+      box("plank", w, 0.3, pd, 0, 0.15, front + pd / 2);
+      for (let p = 0; p < 5; p++) box("plank", 0.22, 3.4, 0.22, -w / 2 + 0.3 + p * (w - 0.6) / 4, 1.7, front + pd - 0.2);
+      box("roof", w + 0.2, 0.22, pd + 0.2, 0, 3.5, front + pd / 2);
+      if (k % 2 === 0) {
+        box("trim", w, 0.12, 0.12, 0, 4.4, front + pd - 0.1);
+        for (let p = 0; p <= 12; p++) box("trim", 0.08, 0.8, 0.08, -w / 2 + p * w / 12, 4, front + pd - 0.1);
+      }
+      const [ox, oz] = at(0, pd / 2);
+      obstacles.push({ type: "box", center: new Vector3(ox, 0, oz), halfX: w / 2, halfZ: (DEPTH + pd) / 2 });
+    }
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true);
+    if (!merged) continue;
+    merged.name = `wildWestTown_${key}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    if (key !== "window") glow?.addExcludedMesh(merged);
+  }
+}
+
+export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuildResult {
+  const prior = new Set(scene.meshes);
+  const result = base();
+  // The base's two box houses (two boxes each) and their colliders
+  const houses = [[4, -16], [6, 16]];
+  for (const mesh of scene.meshes) {
+    if (prior.has(mesh) || mesh.name !== "Wild West Flats_box") continue;
+    if (houses.some(([x, z]) => Math.hypot(mesh.position.x - x, mesh.position.z - z) < 0.5)) mesh.setEnabled(false);
+  }
+  const obstacles = result.obstacles.filter(({ center }) => !houses.some(([x, z]) => Math.hypot(center.x - x, center.z - z) < 0.5));
+  // Anything else of the base standing where the buildings go (ring trees, cacti) goes with its collider
+  const gone: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (prior.has(mesh) || mesh.parent || !mesh.isEnabled() || !/^(trunk|Wild West Flats_)/.test(mesh.name)) continue;
+    const p = mesh.position;
+    if (ROWS.some((r) => p.x > r.from - 1 && p.x < r.to + 1 && Math.abs(p.z - r.z) < DEPTH / 2 + 3.5)) {
+      gone.push(p.clone());
+      mesh.setEnabled(false);
+    }
+  }
+  const kept = obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
+  town(scene, kept);
+  return { ...result, obstacles: kept };
+}
