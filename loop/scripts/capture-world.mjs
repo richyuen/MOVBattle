@@ -173,7 +173,15 @@ async function stageScene(page, item) {
     const xs = us.map((u) => u.position.x), zs = us.map((u) => u.position.z);
     return { cx: (Math.min(...xs) + Math.max(...xs)) / 2, cz: (Math.min(...zs) + Math.max(...zs)) / 2, w: Math.max(...zs) - Math.min(...zs), d: Math.max(...xs) - Math.min(...xs) };
   });
-  await frame(page, { target: { x: box.cx, y: 1, z: box.cz }, radius: Math.max(16, Math.max(box.w, box.d) * 1.25 + 8), alpha: Math.PI, beta: 1.2 });
+  // Ancient 1's rooftop rooms can occlude the enemy from the player's side.
+  // Stay on that side, using an elevated diagonal over the central street.
+  const city = st.map === "ancient_1";
+  await frame(page, {
+    target: { x: box.cx, y: 1, z: box.cz },
+    radius: Math.max(16, Math.max(box.w, box.d) * 1.25 + 8),
+    alpha: city ? Math.PI + 0.42 : Math.PI,
+    beta: city ? 0.77 : 1.2,
+  });
   await shot(page, `${p}army`);
   await frame(page, POSE.top);
   await shot(page, `${p}field`);
