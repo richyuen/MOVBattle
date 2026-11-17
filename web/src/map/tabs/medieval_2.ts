@@ -10,8 +10,7 @@
 // the front, two branches off it to the left rim and two to the right rim, each a polyline of straight runs with round joints, stopping a few
 // metres in from the rim. The stage armies (x 28..37, z -26..-6) stand on open meadow clear of the pond. All paths are drawn only (flat).
 import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
-import type { MapBuildResult } from "../mapBuilder";
-import { clampToIsland } from "../mapBuilder";
+import { clampToIsland, type MapBuildResult } from "../mapBuilder";
 
 function seeded(i: number, seed: number): number {
   const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
@@ -327,6 +326,24 @@ function earthenBowl(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+function facingHalves(scene: Scene, built: Set<unknown>): MapBuildResult["zones"] {
+  for (const mesh of [...scene.meshes]) {
+    if (built.has(mesh) && mesh.name.startsWith("campaign_zone_")) mesh.dispose();
+  }
+  const separation = new StandardMaterial("medieval2TeamDivide", scene);
+  separation.diffuseColor = new Color3(0.77, 0.38, 0.27);
+  separation.emissiveColor = separation.diffuseColor.scale(0.42);
+  separation.alpha = 0.64;
+  const line = MeshBuilder.CreateGround("campaign_zone_medieval2_divide", { width: 0.12, height: 64 }, scene);
+  line.position.y = 0.12;
+  line.material = separation;
+  line.isPickable = false;
+  return [
+    { team: 0, center: new Vector3(-24, 0, 0), size: new Vector3(48, 100, 64) },
+    { team: 1, center: new Vector3(24, 0, 0), size: new Vector3(48, 100, 64) },
+  ];
+}
+
 export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -337,5 +354,5 @@ export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBui
   dirtPaths(scene);
   castleFront(scene, obstacles);
   cottagesAndFallenTower(scene, obstacles);
-  return { ...result, obstacles, hazards };
+  return { ...result, obstacles, hazards, zones: facingHalves(scene, built) };
 }
