@@ -246,6 +246,53 @@ function castleOaks(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult
   return kept;
 }
 
+function cottagesAndFallenTower(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const masonry = new StandardMaterial("medieval2CottageStone", scene);
+  masonry.diffuseColor = new Color3(0.55, 0.52, 0.49);
+  masonry.emissiveColor = masonry.diffuseColor.scale(0.24);
+  const roof = new StandardMaterial("medieval2RedTiles", scene);
+  roof.diffuseColor = new Color3(0.78, 0.22, 0.16);
+  roof.emissiveColor = roof.diffuseColor.scale(0.22);
+  const tile = (name: string, material: StandardMaterial, x: number, y: number, z: number, width: number, height: number, depth: number): Mesh => {
+    const mesh = MeshBuilder.CreateBox(name, { width, height, depth }, scene);
+    mesh.position.set(x, y, z);
+    mesh.material = material;
+    mesh.receiveShadows = true;
+    return mesh;
+  };
+  for (const [x, z, wall] of [[33, -37, 2.2], [46, -26, 1.55]]) {
+    tile("medieval2CottageBack", masonry, x, wall / 2, z - 2.35, 5.2, wall, 0.85);
+    tile("medieval2CottageSide", masonry, x - 2.15, wall / 2, z, 0.84, wall, 4.6);
+    tile("medieval2CottageStump", masonry, x + 2.25, 0.64, z - 1.6, 0.9, 1.28, 2.12);
+    for (let row = 0; row < 5; row++) {
+      for (const side of [-1, 1]) {
+        if (side > 0 && row > 1) continue;
+        const fallen = side > 0;
+        const panel = tile("medieval2BrokenRoofCourse", roof, x + side * (fallen ? 2.65 : 1.37),
+          fallen ? 0.8 + row * 0.31 : wall + 1.03, z - 2.42 + row * 0.96, 3.25, 0.31, 1.08);
+        panel.rotation.z = -side * (fallen ? 0.34 : 0.63);
+        panel.rotation.y = fallen ? 0.19 : 0;
+      }
+    }
+    obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 2.45, halfZ: 2.4 });
+  }
+  for (let i = 0; i < 3; i++) {
+    const drum = MeshBuilder.CreateCylinder("medieval2FallenTowerDrum", { diameter: 2.7 + i * 0.17, height: 2.28, tessellation: 8 }, scene);
+    drum.rotation.set(Math.PI / 2, 0.24, 0.16);
+    drum.position.set(19 + i * 1.1, 1.15, -38.6 + i * 1.86);
+    drum.material = masonry;
+  }
+  const spire = MeshBuilder.CreateCylinder("medieval2FallenTowerRoof", {
+    diameterTop: 0.24, diameterBottom: 3.75, height: 4.8, tessellation: 8,
+  }, scene);
+  spire.position.set(22.9, 1.2, -31.9);
+  spire.rotation.set(1.54, 0.39, -0.27);
+  spire.material = roof;
+  for (const [x, z] of [[19, -38.6], [20.1, -36.74], [21.2, -34.88], [22.9, -31.9]]) {
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.4 });
+  }
+}
+
 export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -254,5 +301,6 @@ export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBui
   const obstacles = castleOaks(scene, built, clearPondGround(scene, built, [...result.obstacles]));
   dirtPaths(scene);
   castleFront(scene, obstacles);
+  cottagesAndFallenTower(scene, obstacles);
   return { ...result, obstacles, hazards };
 }
