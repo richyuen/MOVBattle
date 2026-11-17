@@ -9,58 +9,68 @@ const SHORE = [
 const BRIDGE_Z = 1;
 const BRIDGE_DEPTH = 8;
 
+// Bushy meadow: the TABS field is a fuzzy carpet of low faceted grass clumps that
+// overlap into soft contiguous swathes (two greens), broken by a few bare lanes,
+// with orange flower heads scattered on top. Clumps are flattened icosahedra
+// 1.1-2.0 m across and at most 0.5 m tall so armies standing in them stay visible.
 function meadowDressing(scene: Scene): void {
-  const leaf = new StandardMaterial("medieval1MeadowLeaves", scene);
-  leaf.diffuseColor = new Color3(0.64, 0.77, 0.32);
-  leaf.emissiveColor = leaf.diffuseColor.scale(0.39);
-  leaf.backFaceCulling = false;
-  const data = new VertexData();
-  data.positions = [-0.32, 0, 0, 0.32, 0, 0, -0.16, 0.41, 0, 0, 0.23, 0, 0.20, 0.38, 0,
-    0, 0, -0.32, 0, 0, 0.32, 0, 0.38, -0.2, 0, 0.24, 0, 0, 0.41, 0.16];
-  data.indices = [0, 2, 3, 0, 3, 1, 1, 3, 4, 5, 7, 8, 5, 8, 6, 6, 8, 9];
-  data.normals = [];
-  VertexData.ComputeNormals(data.positions, data.indices, data.normals);
-  const tuft = new Mesh("medieval1MeadowTuft", scene);
-  data.applyToMesh(tuft);
-  tuft.material = leaf;
-  const blossom = MeshBuilder.CreateCylinder("medieval1OrangeBlossom", { height: 0.075, diameter: 0.24, tessellation: 5 }, scene);
+  const tones: [string, Color3, number][] = [
+    ["medieval1MeadowClumpLight", new Color3(0.5, 0.74, 0.22), 0.34],
+    ["medieval1MeadowClumpDark", new Color3(0.33, 0.56, 0.16), 0.3],
+  ];
+  const clumps = tones.map(([name, colour, glow]) => {
+    const mesh = MeshBuilder.CreateIcoSphere(name, { radius: 0.5, subdivisions: 1, flat: true }, scene);
+    const mat = new StandardMaterial(name, scene);
+    mat.diffuseColor = colour;
+    mat.emissiveColor = colour.scale(glow);
+    mat.specularColor = new Color3(0.04, 0.05, 0.02);
+    mesh.material = mat;
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    return { mesh, matrices: [] as number[] };
+  });
+  const blossom = MeshBuilder.CreateIcoSphere("medieval1OrangeBlossom", { radius: 0.12, subdivisions: 1, flat: true }, scene);
   const petal = new StandardMaterial("medieval1OrangePetals", scene);
   petal.diffuseColor = new Color3(1, 0.42, 0.1);
-  petal.emissiveColor = petal.diffuseColor.scale(0.37);
+  petal.emissiveColor = petal.diffuseColor.scale(0.45);
   blossom.material = petal;
-  const grassMatrices: number[] = [];
   const flowerMatrices: number[] = [];
+  const hash = (a: number, b: number) => {
+    const s = Math.sin(a * 12.73 + b * 31.19) * 43758.54;
+    return s - Math.floor(s);
+  };
   for (let row = 1; row < SHORE.length; row++) {
     const [front, near, far] = SHORE[row - 1];
     const [back, nextNear, nextFar] = SHORE[row];
-    for (let z = front + 0.7; z < back; z += 0.95) {
+    for (let z = front + 0.6; z < back; z += 0.8) {
       const fraction = (z - front) / (back - front);
       const inside = near + (nextNear - near) * fraction;
       const outside = far + (nextFar - far) * fraction;
-      for (let x = inside + 0.65; x < outside - 0.65; x += 0.95) {
+      for (let x = inside + 0.7; x < outside - 0.7; x += 0.8) {
         for (const side of [-1, 1]) {
-          const seed = Math.sin(x * 12.73 + z * 31.19 + side) * 43758.54;
-          const jitter = seed - Math.floor(seed);
-          const patch = Math.sin(x * 0.29 + z * 0.11) * Math.cos(z * 0.24);
-          if (jitter < (1 - patch) * 0.22) continue;
-          const scale = 0.46 + jitter * 0.78;
-          const offset = Math.sin(x * 39.2 + z * 78.5 + side) * 2971.3;
-          const p = new Vector3(side * (x + (jitter - 0.5) * 1.12), 0.01, z + (offset - Math.floor(offset) - 0.5) * 1.08);
-          const rotation = Quaternion.RotationAxis(Vector3.Up(), jitter * Math.PI * 2);
-          grassMatrices.push(...Matrix.Compose(new Vector3(scale, scale, scale), rotation, p).m);
-          if (jitter > 0.968 && patch > -0.1) {
-            p.y = 0.22 * scale;
-            flowerMatrices.push(...Matrix.Compose(new Vector3(scale, scale, scale), rotation, p).m);
+          const j = hash(x + side * 3.1, z);
+          const k = hash(z - side * 1.7, x);
+          // Swathes: a smooth field decides dense cover; bare winding lanes stay open.
+          const swathe = Math.sin(x * 0.21 + z * 0.13 + side) + Math.cos(z * 0.17 - x * 0.09) * 0.8;
+          if (swathe < -0.55) continue;
+          if (swathe < 0.1 && j < 0.55) continue;
+          const width = 1.1 + j * 0.9;
+          const height = 0.32 + k * 0.18;
+          const p = new Vector3(side * (x + (j - 0.5) * 0.7), height * 0.32, z + (k - 0.5) * 0.7);
+          const rotation = Quaternion.RotationAxis(Vector3.Up(), j * Math.PI * 2);
+          const tone = clumps[(k + swathe * 0.25) > 0.62 ? 1 : 0];
+          tone.matrices.push(...Matrix.Compose(new Vector3(width, height, width * (0.8 + k * 0.3)), rotation, p).m);
+          if (j > 0.955 && swathe > 0) {
+            const q = new Vector3(p.x + (k - 0.5) * 0.5, height * 0.78, p.z);
+            flowerMatrices.push(...Matrix.Compose(new Vector3(1, 0.7, 1), rotation, q).m);
           }
         }
       }
     }
   }
-  tuft.thinInstanceSetBuffer("matrix", new Float32Array(grassMatrices), 16);
+  for (const { mesh, matrices } of clumps) mesh.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
   blossom.thinInstanceSetBuffer("matrix", new Float32Array(flowerMatrices), 16);
-  tuft.receiveShadows = true;
   blossom.receiveShadows = true;
-  tuft.isPickable = false;
   blossom.isPickable = false;
 }
 
