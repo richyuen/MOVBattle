@@ -437,12 +437,63 @@ function edgeVillage(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): 
   return kept;
 }
 
+// Outer cliff terraces (573, greek_ancient_sandbox.png: the island is very large and irregular, its edge stepping down in lower green
+// shelves and jutting headlands, each with its own sheer terracotta face into the sea). Spec: eight lobes past the base rim, each a band of
+// grass 8-22 m out from the rim over 26-60 degrees, shaped as a ragged bump (reach ~ sin^0.6 with +-15% facet jag per 4 degrees), its top
+// at -2.5 to -7 m (two lobes carry a second, lower step further out), its outer face a sheer flat-shaded terracotta wall down into the sea at
+// -11.5 m. Drawn only (past the rim, nothing walks there).
+const SHELVES: Array<{ deg: number; span: number; reach: number; top: number }> = [
+  { deg: 200, span: 48, reach: 16, top: -3 }, { deg: 205, span: 30, reach: 24, top: -6.5 },
+  { deg: 245, span: 40, reach: 13, top: -4.5 }, { deg: 290, span: 26, reach: 10, top: -2.5 },
+  { deg: 325, span: 52, reach: 18, top: -5 }, { deg: 340, span: 28, reach: 25, top: -7 },
+  { deg: 20, span: 44, reach: 14, top: -3.5 }, { deg: 150, span: 60, reach: 12, top: -4 },
+  { deg: 110, span: 34, reach: 9, top: -2.5 }, { deg: 60, span: 30, reach: 11, top: -5.5 },
+];
+
+function outerTerraces(scene: Scene): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const grass = mk("ancientSandboxShelfGrass", new Color3(0.51, 0.66, 0.23), 0.18);
+  const rock = mk("ancientSandboxShelfCliff", new Color3(0.72, 0.32, 0.17), 0.5);
+  SHELVES.forEach(({ deg, span, reach, top }, n) => {
+    const steps = Math.max(8, Math.round(span / 4));
+    const inner: Vector3[] = [], outer: Vector3[] = [], foot: Vector3[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const a = ((deg - span / 2 + span * t) * Math.PI) / 180;
+      const [rx, rz] = rimAt(a);
+      const r = Math.hypot(rx, rz);
+      const jag = i === 0 || i === steps ? 1 : 0.85 + seeded(n * 31 + i, 501) * 0.3;
+      const out = r + 0.5 + reach * Math.sin(Math.PI * t) ** 0.6 * jag;
+      inner.push(new Vector3((rx / r) * (r - 2), top, (rz / r) * (r - 2)));
+      outer.push(new Vector3((rx / r) * out, top, (rz / r) * out));
+      foot.push(new Vector3((rx / r) * (out + 0.8), SEA_Y - 0.5, (rz / r) * (out + 0.8)));
+    }
+    const lawn = MeshBuilder.CreateRibbon("ancientSandboxShelf", { pathArray: [inner, outer], sideOrientation: Mesh.DOUBLESIDE }, scene);
+    lawn.convertToFlatShadedMesh();
+    lawn.material = grass;
+    lawn.receiveShadows = true;
+    lawn.isPickable = false;
+    const face = MeshBuilder.CreateRibbon("ancientSandboxShelfCliff", { pathArray: [outer, foot], sideOrientation: Mesh.DOUBLESIDE }, scene);
+    face.convertToFlatShadedMesh();
+    face.material = rock;
+    face.applyFog = false;
+    face.isPickable = false;
+  });
+}
+
 export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   terracottaCliffs(scene, built);
   sea(scene);
+  outerTerraces(scene);
   const cleared = clearFieldDressing(scene, built, result, clearFieldJunk(scene, built, [...result.obstacles]));
   const lawn = new Color3(0.51, 0.66, 0.23);
   for (const name of ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"]) {
