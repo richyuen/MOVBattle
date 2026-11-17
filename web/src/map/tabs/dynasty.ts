@@ -131,10 +131,57 @@ function mintSky(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
+// Square island (577, dynasty.png: a square island with straight sides and tight corners, its near-left corner cut away in
+// a square notch where the cliff steps in; the wiki shot shows the same square field framed by the outer path). Spec: the
+// base floor and underside ("ground", "centerGrass", islandUnder/Shelf/Cliff) are remapped radially from the base's rounded
+// rectangle (superellipse 54 x 48, power 3) to a squarer one (same half sizes, power 8), then every vertex inside the notch
+// (x < -36 and z < -30) is pushed to the nearer notch edge; the shapes are re-uploaded as fresh buffers (static base
+// buffers). Ring trees and props left standing in the notch go with their colliders; the translucent team-zone slabs
+// (reaching past the rim) are hidden; the player's front zone is clipped to z >= -30 so nobody is placed over the notch.
+const NOTCH = { x: -36, z: -30 };
+function squareIsland(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const gone: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (/^campaign_zone_(overlay|border)_/.test(mesh.name)) mesh.setEnabled(false);
+    if (!mesh.parent && /^(trunk|Dynasty Garden_)/.test(mesh.name) && mesh.position.x < NOTCH.x + 1 && mesh.position.z < NOTCH.z + 1) {
+      gone.push(mesh.position.clone());
+      mesh.setEnabled(false);
+    }
+    if (!(mesh instanceof Mesh) || !/^(ground$|centerGrass$|islandUnder|islandShelf|islandCliff)/.test(mesh.name)) continue;
+    const positions = mesh.getVerticesData("position");
+    if (!positions) continue;
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = positions[i], z = positions[i + 2];
+      const radial = Math.hypot(x, z);
+      if (radial < 0.001) continue;
+      const fraction = Math.cbrt(Math.abs(x / 54) ** 3 + Math.abs(z / 48) ** 3);
+      const cx = x / radial, cz = z / radial;
+      const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
+      let nx = cx * fraction * reach, nz = cz * fraction * reach;
+      if (nx < NOTCH.x && nz < NOTCH.z) {
+        if (NOTCH.x - nx < NOTCH.z - nz) nx = NOTCH.x;
+        else nz = NOTCH.z;
+      }
+      positions[i] = nx;
+      positions[i + 2] = nz;
+    }
+    mesh.setVerticesData("position", positions, false);
+    mesh.refreshBoundingInfo();
+  }
+  result.obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
+  result.placementZones = (result.placementZones ?? result.zones).map((zone) => {
+    const low = zone.center.z - zone.size.z / 2, high = zone.center.z + zone.size.z / 2;
+    if (zone.center.x > 0 || low >= NOTCH.z) return zone;
+    return { ...zone, center: new Vector3(zone.center.x, zone.center.y, (NOTCH.z + high) / 2), size: new Vector3(zone.size.x, zone.size.y, high - NOTCH.z) };
+  });
+}
+
 export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const restoreSky = mintSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+  squareIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   // The base's small pagoda (a root with its parts as children) and its collider
   // and any ring tree standing in the new pagoda's footprint, with their colliders
   const gone: Vector3[] = [];
