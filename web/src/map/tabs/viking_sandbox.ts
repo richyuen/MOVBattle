@@ -281,6 +281,33 @@ function iceBody(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+function rimPeaks(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && /^mountain(Base|Cap|Root)/.test(mesh.name)) mesh.setEnabled(false);
+  }
+  const glacier = new StandardMaterial("vikingSandboxRimGlacier", scene);
+  glacier.diffuseColor = new Color3(0.42, 0.72, 0.85);
+  glacier.emissiveColor = glacier.diffuseColor.scale(0.34);
+  const snow = scene.getMaterialByName("vikingSandboxSnow");
+  for (const [axis, prominence] of [[11, 13], [63, 8], [113, 16], [246, 12], [310, 17]]) {
+    for (let i = -1; i <= 1; i++) {
+      const angle = axis + i * 5;
+      const [x, z] = rimPoint(angle, 0.98 + i * 0.015);
+      const height = prominence - Math.abs(i) * 4;
+      const width = 7 + seeded(axis + i, 76) * 4;
+      const peak = MeshBuilder.CreateCylinder("vikingSandboxRimPeak", {
+        height, diameterTop: width * 0.16, diameterBottom: width, tessellation: 4, subdivisions: 2,
+      }, scene);
+      peak.position.set(x, 14 + height / 2, z);
+      peak.rotation.set(0.12 + i * 0.14, angle * Math.PI / 180, i * 0.13);
+      peak.scaling.z = 0.7;
+      peak.convertToFlatShadedMesh();
+      peak.material = i === 1 ? snow : glacier;
+      peak.isPickable = false;
+    }
+  }
+}
+
 export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -290,6 +317,7 @@ export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): Ma
   snowAndIce(scene, built);
   iceBody(scene, built);
   iceWall(scene, obstacles);
+  rimPeaks(scene, built);
   const oldClear = scene.clearColor.clone();
   const oldFog = scene.fogColor.clone();
   const oldDensity = scene.fogDensity;
