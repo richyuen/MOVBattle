@@ -68,6 +68,29 @@ function snowCover(scene: Scene, built: Set<unknown>): void {
  */
 const BRIDGE = { span: 10, width: 6, rise: 1.1, parapet: 0.7 };
 
+function fieldBoulder(scene: Scene): Obstacle {
+  const stone = new StandardMaterial("farmerSnowFieldStone", scene);
+  stone.diffuseColor = new Color3(0.19, 0.22, 0.32);
+  stone.emissiveColor = new Color3(0.04, 0.055, 0.09);
+  stone.specularColor = Color3.Black();
+  const snow = new StandardMaterial("farmerSnowBoulderCap", scene);
+  snow.diffuseColor = SNOW;
+  snow.emissiveColor = SNOW_SHADE.scale(0.65);
+  snow.specularColor = Color3.Black();
+  const x = 30, z = -28;
+  for (const [dx, dz, width, height, yaw] of [[0, 0, 8.2, 6, 0.3], [-4.6, -1.5, 4.3, 3, 0.8], [3.8, 2, 3.9, 3.5, -0.35]]) {
+    const rock = MeshBuilder.CreatePolyhedron("farmerSnowFieldBoulder", { type: 2, sizeX: width * 0.61, sizeY: height * 0.66, sizeZ: width * 0.54 }, scene);
+    rock.position.set(x + dx, height * 0.39, z + dz);
+    rock.rotation.set(0.14, yaw, -0.16);
+    rock.material = stone;
+    const cap = MeshBuilder.CreatePolyhedron("farmerSnowFieldBoulderCap", { type: 2, sizeX: width * 0.52, sizeY: height * 0.19, sizeZ: width * 0.51 }, scene);
+    cap.position.set(x + dx + width * 0.08, height * 0.83, z + dz - width * 0.05);
+    cap.rotation.copyFrom(rock.rotation);
+    cap.material = snow;
+  }
+  return { type: "cylinder", center: new Vector3(x, 0, z), radius: 4.1 };
+}
+
 function snowyBridge(scene: Scene): Obstacle[] {
   const stone = new StandardMaterial("farmerSnowBridgeStone", scene);
   stone.diffuseColor = new Color3(0.56, 0.56, 0.6);
@@ -718,7 +741,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   const baseDispose = result.dispose;
   return {
     ...result,
-    obstacles: [...clearFieldJunk(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles)), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene)],
+    obstacles: [...clearFieldJunk(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles)), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene), fieldBoulder(scene)],
     dispose: () => {
       restoreLights();
       baseDispose?.();
