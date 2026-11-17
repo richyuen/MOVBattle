@@ -206,6 +206,20 @@ function pebbledUnderside(scene: Scene, earth: StandardMaterial): void {
   pebble.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
 }
 
+// Clear sky (573, greek_ancient_1.png: a clean mid-blue sky with big white clouds, no beige haze). Spec: clear
+// colour (0.3, 0.6, 0.88), fog a pale sky blue (0.66, 0.8, 0.93) so the distance fades toward the horizon, the
+// base clouds kept white; both restored on dispose.
+function clearSky(scene: Scene): () => void {
+  const oldClear = scene.clearColor.clone();
+  const oldFog = scene.fogColor.clone();
+  scene.clearColor.set(0.3, 0.6, 0.88, 1);
+  scene.fogColor = new Color3(0.66, 0.8, 0.93);
+  return () => {
+    scene.clearColor.copyFrom(oldClear);
+    scene.fogColor.copyFrom(oldFog);
+  };
+}
+
 export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -338,8 +352,10 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
     block.rotation.x = -angle;
     block.material = lime;
   }
+  const restoreSky = clearSky(scene);
   return {
     ...result,
+    dispose: () => { restoreSky(); result.dispose?.(); },
     zones: result.zones.map((zone) => ({ ...zone, center: new Vector3(Math.sign(zone.center.x) * 40, 0, 0), size: new Vector3(30, zone.size.y, 40) })),
     obstacles,
     hazards: [],
