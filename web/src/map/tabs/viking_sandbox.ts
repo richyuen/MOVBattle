@@ -2,10 +2,7 @@
 // side (reference/maps/wiki/viking_sandbox.png, reference/maps/winter_viking_sandbox.png). Built on campaign.challenge (base(); the base is
 // shared with four other maps: never edit it, dress its build here).
 //
-// Ice wall (563), spec read off the wiki shot: the wall rings the whole field as three stepped tiers of faceted ice blocks, each tier a run of
-// leaning upright slabs with flat snowy tops, the lowest tier nearest the field: tier 1 at 0.86 of the circular island rim, 5-7 m
-// high, tier 2 at 0.93 9-12 m, tier 3 at 0.99 14-18 m; a slab every 6 degrees per tier, 8-11 m along the rim and 5 m deep, turned along it;
-// each slab carries a thin white snow slab on its top. Pale cyan ice (r well under g and b), the snow near white, both a little self-lit.
+// Ice wall: three stepped tiers of leaning ice buttresses, each joined at the top by long fractured snow shelves.
 // The base's autumn tree ring (every "trunk" with its canopy, the haze band) goes with its colliders; one 3.5 m collider per tier-1 slab;
 // placement stays inside the wall (placementZones clipped to |x| <= 44). The stage army (pirate.arrows_and_arrow) stands at x 29..36, |z| <= 10.
 import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
@@ -178,20 +175,30 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
       const d = deg + (t % 2) * (STEP / 2) + (seeded(k, 1) - 0.5) * 2;
       if (Math.abs(d - 180) < 14) continue;
       const [x, z] = rimPoint(d, tier.at);
-      const along = 8 + seeded(k, 2) * 3;
+      const along = 5 + seeded(k, 2) * 9;
       const h = tier.h0 + seeded(k, 3) * (tier.h1 - tier.h0);
       const yaw = -(d * Math.PI) / 180 - Math.PI / 2;
-      const slab = MeshBuilder.CreateCylinder("vsIceBlock", { diameterTop: along * 0.8, diameterBottom: along, height: h, tessellation: 5 }, scene);
-      slab.scaling.z = 5 / along;
-      slab.rotation.set((seeded(k, 4) - 0.5) * 0.08, yaw + (seeded(k, 5) - 0.5) * 0.3, (seeded(k, 6) - 0.5) * 0.08);
+      const slab = MeshBuilder.CreateCylinder("vsIceBlock", { diameterTop: along * (0.66 + seeded(k, 4) * 0.52), diameterBottom: along, height: h, tessellation: 5 }, scene);
+      slab.scaling.z = (4 + seeded(k, 5) * 2) / along;
+      slab.rotation.set((seeded(k, 4) - 0.5) * 0.16, yaw + (seeded(k, 5) - 0.5) * 0.3, (seeded(k, 6) - 0.5) * 0.27);
       slab.position.set(x, h / 2 - 0.2, z);
       blocks.push(slab);
-      const cap = MeshBuilder.CreateCylinder("vsIceSnow", { diameterTop: along * 0.72, diameterBottom: along * 0.8, height: 0.5, tessellation: 5 }, scene);
-      cap.scaling.z = 4.6 / along;
-      cap.rotation.set(0, slab.rotation.y, 0);
-      cap.position.set(x, h - 0.05, z);
-      caps.push(cap);
       if (t === 0) obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 3.5 });
+    }
+    for (const [start, end] of [[0, 164], [196, 360]]) {
+      const rows: Vector3[][] = [[], [], [], []];
+      for (let angle = start; angle <= end; angle += 2) {
+        const i = angle + t * 400;
+        const y = tier.h1 - 0.1 + Math.sin(angle * 0.18) * 0.63 + seeded(i, 9) * 0.38;
+        const [ix, iz] = rimPoint(angle, tier.at - 0.05 - seeded(i, 7) * 0.028);
+        const [ox, oz] = rimPoint(angle, tier.at + 0.044 + seeded(i, 8) * 0.018);
+        rows[0].push(new Vector3(ix * 1.014, y - 1.25, iz * 1.014));
+        rows[1].push(new Vector3(ix, y - 0.1, iz));
+        rows[2].push(new Vector3(ox, y + 0.24, oz));
+        rows[3].push(new Vector3(ox, y - 1.28, oz));
+      }
+      const shelf = MeshBuilder.CreateRibbon("vsIceShelf", { pathArray: rows, sideOrientation: Mesh.DOUBLESIDE }, scene);
+      caps.push(shelf);
     }
   });
   for (const [list, m, name] of [[blocks, ice, "vikingSandboxIceWall"], [caps, snow, "vikingSandboxIceSnow"]] as const) {
