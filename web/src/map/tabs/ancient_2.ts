@@ -519,10 +519,11 @@ function gatePavilions(scene: Scene, obstacles: Obstacle[]): void {
   }
 }
 
-// Crisp disc edge (574, probe: no base shelf survives past r 51; the wide soft lime apron outside the wall in the top
-// shot is the glow layer blooming the self-lit lawn past the rim). Spec: the floor, its lawn clumps and flower drifts
-// leave the glow pass, and the floor discs are trimmed to the wall's outer face (r 50.3) so the drum's brown rim, not
-// a band of grass, meets the wall: the island reads as one hard-edged circular disc.
+// Crisp disc edge (574, probe: rays find nothing past r 51 yet the top shot draws a lime apron out to the old 54 x 48
+// rounded rectangle: the base floor's GPU buffer never took roundIsland's remap). Spec: the floor discs ("ground",
+// "centerGrass") are trimmed to the wall's outer face (r 50.3) and re-uploaded as fresh buffers so the drum's brown rim,
+// not a band of grass, meets the wall; the floor, lawn clumps and flower drifts also leave the glow pass. The island
+// reads as one hard-edged circular disc.
 function crispRim(scene: Scene, built: Set<unknown>): void {
   const glow = scene.getGlowLayerByName("glow");
   const lawn = /^(ground|centerGrass|ancient2Lawn|ancient2Flower|ancient2FieldPath)/;
@@ -538,7 +539,9 @@ function crispRim(scene: Scene, built: Set<unknown>): void {
       positions[i] *= (RIM.a - 0.7) / r;
       positions[i + 2] *= (RIM.a - 0.7) / r;
     }
-    mesh.updateVerticesData("position", positions, true);
+    // The base floor's buffers are static: updateVerticesData changes only the CPU copy (picking saw the circle while the
+    // GPU still drew the old 54 x 48 rounded rectangle, 573/574), so the positions are set as a fresh buffer
+    mesh.setVerticesData("position", positions, false);
     mesh.refreshBoundingInfo();
   }
 }
