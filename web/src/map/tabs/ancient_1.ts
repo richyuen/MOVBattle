@@ -321,6 +321,63 @@ function outerRows(scene: Scene, plaster: StandardMaterial, blue: StandardMateri
   }
 }
 
+// Cypress planters (575, wiki ancient_1.png: along the wall, at the town's corners and plaza ends, stand long raised
+// white planter boxes with a blue rim, each carrying a cluster of 3-5 tall dark cypresses that tower over the wall).
+// Spec: the eight small round basins and their 3-4 m cones go (with their colliders); in their places, boxes 7 x 1.1 x 2.4 m
+// (along the wall), plaster with a blue coping and dark soil, centred 0.3 m further in (|z| 33); in each, four
+// cypresses 5.5-7.5 m tall, 1.5 m across, seven-sided, dark green (0.2,0.42,0.12) with a lighter tip band; one box
+// collider per planter (clear of the outer houses at |z| <= 31.5 and the armies' zones).
+function cypressPlanters(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const spots: Array<[number, number]> = [];
+  for (const mesh of [...scene.meshes]) {
+    if (mesh.name === "ancient1CypressPlanter") spots.push([mesh.position.x, mesh.position.z]);
+    if (/^ancient1(CypressPlanter|PlanterSoil|Cypress)$/.test(mesh.name)) mesh.setEnabled(false);
+  }
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
+    if (spots.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.1)) obstacles.splice(i, 1);
+  }
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const plaster = mk("ancient1PlanterBox", new Color3(0.95, 0.92, 0.81), 0.23);
+  const blue = mk("ancient1PlanterRim", new Color3(0.26, 0.5, 0.78), 0.26);
+  const soil = mk("ancient1PlanterEarth", new Color3(0.3, 0.19, 0.12), 0.2);
+  const dark = mk("ancient1CypressDark", new Color3(0.2, 0.42, 0.12), 0.2);
+  const parts: Record<"plaster" | "blue" | "soil" | "dark", Mesh[]> = { plaster: [], blue: [], soil: [], dark: [] };
+  spots.forEach(([x, z0], k) => {
+    const z = Math.sign(z0) * 33;
+    const box = (key: keyof typeof parts, w: number, h: number, d: number, y: number) => {
+      const b = MeshBuilder.CreateBox("ancient1Planter", { width: w, height: h, depth: d }, scene);
+      b.position.set(x, y, z);
+      parts[key].push(b);
+    };
+    box("plaster", 7, 1.1, 2.4, 0.55);
+    box("blue", 7.2, 0.16, 2.6, 1.18);
+    box("soil", 6.4, 0.06, 1.8, 1.24);
+    for (let i = 0; i < 4; i++) {
+      const h = 5.5 + seeded(k * 4 + i, 171) * 2;
+      const tree = MeshBuilder.CreateCylinder("ancient1PlanterCypress", { height: h, diameterTop: 0.12, diameterBottom: 1.5, tessellation: 7 }, scene);
+      tree.position.set(x - 2.4 + i * 1.6 + (seeded(k * 4 + i, 173) - 0.5) * 0.4, 1.2 + h / 2, z + (seeded(k * 4 + i, 175) - 0.5) * 0.5);
+      tree.rotation.z = (seeded(k * 4 + i, 177) - 0.5) * 0.08;
+      parts.dark.push(tree);
+    }
+    obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 3.5, halfZ: 1.2 });
+  });
+  for (const [key, mat] of [["plaster", plaster], ["blue", blue], ["soil", soil], ["dark", dark]] as const) {
+    const m = Mesh.MergeMeshes(parts[key], true);
+    if (!m) continue;
+    m.name = `ancient1Planters_${key}`;
+    m.material = mat;
+    m.receiveShadows = true;
+    m.isPickable = false;
+  }
+}
+
 // Flagstones (574, wiki ancient_1.png: the whole town floor is one mid-grey paving split by thin white lines into large
 // irregular flagstones, streets included; no straight seam grid, no pale street strips). Spec: the straight seams and
 // the lime street strips go; the pavement turns a matte neutral mid grey (0.27 code, no specular); a jittered 6.75 x 6.9 m lattice
@@ -458,6 +515,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
     obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 2.19, halfZ: 1.26 });
   }
   outerRows(scene, plaster, blue, obstacles);
+  cypressPlanters(scene, obstacles);
   // Separate houses (574, wiki ancient_1.png: each band is a run of distinct whitewashed houses, not one slab). Spec:
   // four houses per band, 9.8 m wide with 2.2 m alleys between them, each 1-3.5 m shallower than the band and set
   // toward one street, its own roof band and parapet terrace (no shared roof), a blue door and two shutters on each
