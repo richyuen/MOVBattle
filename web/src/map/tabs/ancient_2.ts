@@ -264,6 +264,64 @@ function greenLawn(scene: Scene, built: Set<unknown>): void {
   for (const { mesh, m } of [...lawn, ...petals]) mesh.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
 }
 
+// Ring wall (572, wiki shot ancient_2.png): the field is walled in by a low beige plastered wall following the round
+// rim all the way round (the complex stands inside it), not a ring of autumn trees. Spec: the base's ring trees go
+// (every unparented trunk left, with its crown children and colliders); 72 wall segments on radius 49.6, 1.5 m
+// high, 1.1 m thick, with a paler 1.4 m coping and slightly offset joints; colliders every 2.4 m. Cypress
+// clusters (2-3 slim cones 4-6 m) stand inside the wall at six spots.
+function ringWall(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
+  const gone: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.name !== "trunk" || mesh.parent || !mesh.isEnabled()) continue;
+    gone.push([mesh.position.x, mesh.position.z]);
+    mesh.setEnabled(false);
+  }
+  const kept = obstacles.filter((o) => !gone.some(([x, z]) => Math.hypot(o.center.x - x, o.center.z - z) < 0.5));
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const plaster = mk("ancient2RingPlaster", new Color3(0.78, 0.68, 0.5), 0.24);
+  const coping = mk("ancient2RingCoping", new Color3(0.88, 0.8, 0.64), 0.26);
+  const leaves = mk("ancient2Cypress", new Color3(0.33, 0.5, 0.16), 0.18);
+  const R = RIM.a - 1.4;
+  const count = 72;
+  const segLength = (2 * Math.PI * R) / count + 0.15;
+  for (let i = 0; i < count; i++) {
+    const a = (i / count) * Math.PI * 2;
+    const h = 1.5 + (seeded(i, 61) - 0.5) * 0.12;
+    const wall = MeshBuilder.CreateBox("ancient2RingWall", { width: segLength, height: h, depth: 1.1 }, scene);
+    wall.position.set(Math.cos(a) * R, h / 2, Math.sin(a) * R);
+    wall.rotation.y = -a + Math.PI / 2;
+    wall.material = plaster;
+    wall.receiveShadows = true;
+    const cap = MeshBuilder.CreateBox("ancient2RingCoping", { width: segLength, height: 0.16, depth: 1.4 }, scene);
+    cap.position.set(wall.position.x, h + 0.08, wall.position.z);
+    cap.rotation.y = wall.rotation.y;
+    cap.material = coping;
+  }
+  for (let s = 0; s < 2 * Math.PI * R; s += 2.4) {
+    const a = s / R;
+    kept.push({ type: "cylinder", center: new Vector3(Math.cos(a) * R, 0, Math.sin(a) * R), radius: 1.2 });
+  }
+  for (const [deg, n] of [[200, 3], [160, 2], [250, 3], [290, 2], [330, 3], [20, 2]] as const) {
+    const a = (deg * Math.PI) / 180;
+    for (let j = 0; j < n; j++) {
+      const r = R - 2.2 - (j % 2) * 1.3;
+      const off = (j - (n - 1) / 2) * 1.6 / R;
+      const h = 4 + seeded(deg + j, 62) * 2;
+      const cone = MeshBuilder.CreateCylinder("ancient2Cypress", { height: h, diameterTop: 0.1, diameterBottom: 1.4, tessellation: 7 }, scene);
+      cone.position.set(Math.cos(a + off) * r, h / 2 + 0.3, Math.sin(a + off) * r);
+      cone.material = leaves;
+      kept.push({ type: "cylinder", center: new Vector3(cone.position.x, 0, cone.position.z), radius: 0.6 });
+    }
+  }
+  return kept;
+}
+
 export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -278,7 +336,7 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
   result.obstacles = result.obstacles.filter(({ center }) => !removed.some((p) =>
     (p.x / 54) ** 2 + (p.z / 48) ** 2 < 0.8 ** 2 && Math.hypot(center.x - p.x, center.z - p.z) < 3.4));
   result.hazards = result.hazards.filter((hazard) => hazard.kind !== "pit");
-  const obstacles = clearFootprint(scene, built, roundIsland(scene, built, result.obstacles));
+  const obstacles = ringWall(scene, built, clearFootprint(scene, built, roundIsland(scene, built, result.obstacles)));
   greenLawn(scene, built);
   fieldPaths(scene);
   templeComplex(scene, obstacles);
