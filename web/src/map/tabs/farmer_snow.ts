@@ -389,7 +389,7 @@ function clearFieldJunk(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
   const gone: Array<[number, number]> = [];
   for (const mesh of scene.meshes) {
     if (!built.has(mesh)) continue;
-    if (!/^(Introduction Grounds_(box|cyl|totem_top)$|ruin(Tower|Pillar|Rubble)|boulder$|wallStone$|pebble$)/.test(mesh.name)) continue;
+    if (!/^(Introduction Grounds_(box|cyl|totem_top|tree_trunk|tree_canopy)$|ruin(Tower|Pillar|Rubble)|boulder$|wallStone$|pebble$)/.test(mesh.name)) continue;
     if (mesh.isEnabled()) gone.push([mesh.position.x, mesh.position.z]);
     mesh.setEnabled(false);
   }
