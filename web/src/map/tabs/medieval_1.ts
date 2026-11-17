@@ -65,33 +65,35 @@ function meadowDressing(scene: Scene): void {
 
 function landfallRamp(scene: Scene, grass: StandardMaterial, stone: StandardMaterial): void {
   // The western ledge descends along the inlet to the door underneath the bridge.
-  const start = new Vector3(-7.7, -0.18, -19.5);
-  const end = new Vector3(-2.7, -5.8, -3.5);
+  const start = new Vector3(-7.4, -0.18, -18);
+  const end = new Vector3(-1.9, -5.8, -4);
   const delta = end.subtract(start);
-  const ramp = MeshBuilder.CreateBox("medieval1LandfallRamp", { width: 2.9, height: 0.5, depth: delta.length() }, scene);
+  const ramp = MeshBuilder.CreateBox("medieval1LandfallRamp", { width: 3.25, height: 0.75, depth: delta.length() }, scene);
   ramp.position.copyFrom(Vector3.Center(start, end));
-  ramp.rotationQuaternion = Quaternion.FromLookDirectionLH(delta.normalize(), Vector3.Up());
+  ramp.rotationQuaternion = Quaternion.RotationYawPitchRoll(
+    Math.atan2(delta.x, delta.z), Math.atan2(-delta.y, Math.hypot(delta.x, delta.z)), 0,
+  );
   ramp.material = grass;
   ramp.receiveShadows = true;
   const landing = MeshBuilder.CreateBox("medieval1LandfallLanding", { width: 4.2, height: 0.7, depth: 4.4 }, scene);
-  landing.position.set(-2.8, -6, -1.6);
+  landing.position.set(-1.95, -6, -1.6);
   landing.material = stone;
   const doorStone = new StandardMaterial("medieval1LandfallDoor", scene);
   doorStone.diffuseColor = new Color3(0.18, 0.21, 0.31);
   doorStone.emissiveColor = doorStone.diffuseColor.scale(0.28);
   const door = MeshBuilder.CreateBox("medieval1LandfallDoor", { width: 2.15, height: 3.15, depth: 0.22 }, scene);
-  door.position.set(-2.8, -4.05, 0.36);
+  door.position.set(-1.95, -4.05, -2.67);
   door.material = doorStone;
-  for (const x of [-4.1, -1.5]) {
+  for (const x of [-3.25, -0.65]) {
     const pier = MeshBuilder.CreateBox("medieval1LandfallJamb", { width: 0.46, height: 3.5, depth: 0.58 }, scene);
-    pier.position.set(x, -4.03, 0.32);
+    pier.position.set(x, -4.03, -2.71);
     pier.material = stone;
   }
   const lintel = MeshBuilder.CreateBox("medieval1LandfallLintel", { width: 3.06, height: 0.55, depth: 0.63 }, scene);
-  lintel.position.set(-2.8, -2.2, 0.32);
+  lintel.position.set(-1.95, -2.2, -2.71);
   lintel.material = stone;
   const emblem = MeshBuilder.CreateBox("medieval1LandfallEmblem", { width: 0.56, height: 0.56, depth: 0.1 }, scene);
-  emblem.position.set(-2.8, -3.75, 0.21);
+  emblem.position.set(-1.95, -3.75, -2.82);
   emblem.rotation.z = Math.PI / 4;
   emblem.material = stone;
 }
