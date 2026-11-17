@@ -58,16 +58,24 @@ function roundIsland(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): 
     if (/^(ground$|centerGrass$|islandUnder|islandShelf|islandCliff)/.test(mesh.name)) {
       const positions = mesh.getVerticesData("position");
       if (!positions) continue;
+      // Remap in world space (573): the base slabs are scaled meshes, so their local radii are not metres and a
+      // local remap left the old 54 x 48 shelf projecting past the wall. Each vertex keeps its fraction of the old
+      // superellipse (54 x 48, power 3) and lands at that fraction of the 51 m circle.
+      const world = mesh.computeWorldMatrix(true);
+      const inverse = world.clone().invert();
       for (let i = 0; i < positions.length; i += 3) {
-        const x = positions[i], z = positions[i + 2];
-        const radial = Math.hypot(x, z);
+        const p = Vector3.TransformCoordinates(new Vector3(positions[i], positions[i + 1], positions[i + 2]), world);
+        const radial = Math.hypot(p.x, p.z);
         if (radial < 0.001) continue;
-        const oldFraction = Math.cbrt(Math.abs(x / 54) ** 3 + Math.abs(z / 48) ** 3);
+        const oldFraction = Math.cbrt(Math.abs(p.x / 54) ** 3 + Math.abs(p.z / 48) ** 3);
         const scale = RIM.a * oldFraction / radial;
-        positions[i] *= scale;
-        positions[i + 2] *= scale;
+        const back = Vector3.TransformCoordinates(new Vector3(p.x * scale, p.y, p.z * scale), inverse);
+        positions[i] = back.x;
+        positions[i + 1] = back.y;
+        positions[i + 2] = back.z;
       }
       mesh.updateVerticesData("position", positions, true);
+      mesh.refreshBoundingInfo();
     } else if (/^(fieldBlades_|fieldTufts_)/.test(mesh.name)) {
       // The old range of these merged meshes crosses the new circular edge.
       mesh.setEnabled(false);
