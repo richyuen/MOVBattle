@@ -83,19 +83,18 @@ function backCliffs(scene: Scene, obstacles: Obstacle[]): void {
  * as olive hedges) takes the red and orange too. Crowns are lit by their own colour and kept out of fog, glow and the canopy haze.
  */
 const BIRCH_CROWNS: Array<[string, Color3]> = [
-  ["tribalSandboxCrownRed", new Color3(0.72, 0.12, 0.05)],
-  ["tribalSandboxCrownOrange", new Color3(0.82, 0.3, 0.05)],
-  ["tribalSandboxCrownRed2", new Color3(0.66, 0.16, 0.06)],
-  ["tribalSandboxCrownOrange2", new Color3(0.78, 0.38, 0.07)],
-  ["tribalSandboxCrownYellow", new Color3(0.7, 0.55, 0.08)],
+  ["tribalSandboxCrownRed", new Color3(1, 0.22, 0.12)],
+  ["tribalSandboxCrownOrange", new Color3(1, 0.42, 0.1)],
+  ["tribalSandboxCrownRed2", new Color3(0.88, 0.16, 0.1)],
+  ["tribalSandboxCrownOrange2", new Color3(1, 0.55, 0.13)],
+  ["tribalSandboxCrownYellow", new Color3(1, 0.9, 0.3)],
 ];
-const BIRCH_STRETCH = 1.5;
 
 function birchRing(scene: Scene, built: Set<unknown>): void {
   const crowns = BIRCH_CROWNS.map(([name, c]) => {
     const m = new StandardMaterial(name, scene);
     m.diffuseColor = c.scale(0.55);
-    m.emissiveColor = c.scale(0.55);
+    m.emissiveColor = c.scale(0.78);
     m.specularColor = Color3.Black();
     return m;
   });
@@ -108,13 +107,14 @@ function birchRing(scene: Scene, built: Set<unknown>): void {
   trunks.forEach((trunk, i) => {
     for (const child of trunk.getChildMeshes()) if (child.name === "canopy") child.dispose();
     const h = trunk.getBoundingInfo().boundingBox.extendSize.y * 2;
-    trunk.scaling.set(0.7, BIRCH_STRETCH, 0.7);
-    trunk.position.y = (h * BIRCH_STRETCH) / 2 - 0.15;
+    const stretch = 1.45 + seeded(i, 25) * 1.55;
+    trunk.scaling.set(0.53, stretch, 0.53);
+    trunk.position.y = (h * stretch) / 2 - 0.15;
     trunk.material = bark;
     trunk.computeWorldMatrix(true);
     const top = Vector3.TransformCoordinates(new Vector3(0, h / 2, 0), trunk.getWorldMatrix());
     const r = 1.4 + seeded(i, 21) * 0.8 + h * 0.1;
-    const ball = MeshBuilder.CreateIcoSphere("tribalSandboxCrown", { radius: r, subdivisions: 1 }, scene);
+    const ball = MeshBuilder.CreateIcoSphere("tribalSandboxCrown", { radius: r, subdivisions: 2 }, scene);
     ball.scaling.y = 1.08;
     ball.rotation.y = seeded(i, 22) * Math.PI;
     ball.position.set(top.x, top.y + r * 0.7, top.z);
@@ -124,9 +124,8 @@ function birchRing(scene: Scene, built: Set<unknown>): void {
     ball.isPickable = false;
     glow?.addExcludedMesh(ball);
   });
-  scene.meshes.filter((m) => built.has(m) && m.name === "hazeTreeline").forEach((m, i) => {
-    m.material = crowns[i % 2 === 0 ? 0 : 1];
-    m.applyFog = false;
+  scene.meshes.filter((m) => built.has(m) && m.name === "hazeTreeline").forEach((m) => {
+    m.setEnabled(false);
   });
 }
 
@@ -189,15 +188,15 @@ function rockNooks(scene: Scene, obstacles: Obstacle[]): void {
     for (let t = 0; t < tops.length; t++) {
       const k = n * 10 + t;
       const [x, z, y0] = tops[t];
-      const h = 1.4 + seeded(k, 59) * 2.6;
+      const h = 2.9 + seeded(k, 59) * 4.4;
       const trunk = MeshBuilder.CreateCylinder("tsNookBirch", { diameterTop: 0.22, diameterBottom: 0.32, height: h, tessellation: 5 }, scene);
       trunk.position.set(x, y0 + h / 2, z);
       if (bark) trunk.material = bark;
       trunk.isPickable = false;
       const r = 2.3 + seeded(k, 60) * 1.1;
-      const ball = MeshBuilder.CreateIcoSphere("tsNookCrown", { radius: r, subdivisions: 1 }, scene);
+      const ball = MeshBuilder.CreateIcoSphere("tsNookCrown", { radius: r, subdivisions: 2 }, scene);
       ball.scaling.y = 1.08;
-      ball.position.set(x, y0 + h + r * 0.35, z);
+      ball.position.set(x, y0 + h + r * 0.68, z);
       ball.convertToFlatShadedMesh();
       if (crowns.length) ball.material = crowns[(t + n) % crowns.length];
       ball.applyFog = false;
