@@ -1,4 +1,4 @@
-import { Color3, Matrix, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 // The placement reference shows a long rectangular slab. Two four-metre streets run along it
@@ -265,6 +265,55 @@ function outerRows(scene: Scene, plaster: StandardMaterial, blue: StandardMateri
   }
 }
 
+// Flagstones (574, wiki ancient_1.png: the whole town floor is one mid-grey paving split by thin white lines into large
+// irregular flagstones, streets included; no straight seam grid, no pale street strips). Spec: the straight seams and
+// the lime street strips go; the pavement turns a neutral mid grey (0.46, 0.45, 0.43); a jittered 6.75 x 6.9 m lattice
+// of points (+-2.3 m, a diagonal in three cells of ten) joined to its right and lower neighbours by 0.16 m white lines (one merged mesh, out of the glow)
+// draws the flagstones over the whole slab inside the walls.
+function flagstones(scene: Scene): void {
+  for (const name of ["ancient1LongSeam", "ancient1CrossSeam", "ancient1StreetPaving"]) {
+    for (const mesh of scene.meshes.filter((m) => m.name === name)) mesh.setEnabled(false);
+  }
+  const pavement = scene.getMaterialByName("ancient1Pavement");
+  if (pavement instanceof StandardMaterial) {
+    pavement.diffuseColor = new Color3(0.46, 0.45, 0.43);
+    pavement.emissiveColor = pavement.diffuseColor.scale(0.16);
+  }
+  const white = new StandardMaterial("ancient1FlagstoneLine", scene);
+  white.diffuseColor = new Color3(0.92, 0.91, 0.88);
+  white.emissiveColor = white.diffuseColor.scale(0.3);
+  white.specularColor = Color3.Black();
+  const nx = 16, nz = 10, x0 = -54, z0 = -34.5;
+  const pt = (i: number, j: number): [number, number] => {
+    const edgeX = i === 0 || i === nx, edgeZ = j === 0 || j === nz;
+    const jx = edgeX ? 0 : (seeded(i * 31 + j, 71) - 0.5) * 4.6, jz = edgeZ ? 0 : (seeded(i * 31 + j, 72) - 0.5) * 4.6;
+    return [Math.min(54, x0 + i * (108 / nx) + jx), Math.min(34.5, z0 + j * (69 / nz) + jz)];
+  };
+  const lines: Mesh[] = [];
+  const seg = (a: [number, number], b: [number, number]) => {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const line = MeshBuilder.CreateBox("ancient1FlagstoneLine", { width: len + 0.16, height: 0.03, depth: 0.16 }, scene);
+    line.position.set((a[0] + b[0]) / 2, 0.015, (a[1] + b[1]) / 2);
+    line.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]);
+    lines.push(line);
+  };
+  for (let i = 0; i <= nx; i++) {
+    for (let j = 0; j <= nz; j++) {
+      if (i < nx && j > 0 && j < nz) seg(pt(i, j), pt(i + 1, j));
+      if (j < nz && i > 0 && i < nx) seg(pt(i, j), pt(i, j + 1));
+      // A diagonal in some cells breaks the lattice into irregular slabs
+      if (i < nx && j < nz && seeded(i * 17 + j, 73) < 0.3) seg(pt(i, j), pt(i + 1, j + 1));
+    }
+  }
+  const merged = Mesh.MergeMeshes(lines, true);
+  if (!merged) return;
+  merged.name = "ancient1Flagstones";
+  merged.material = white;
+  merged.isPickable = false;
+  merged.receiveShadows = true;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
+}
+
 export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -421,6 +470,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
     block.rotation.x = -angle;
     block.material = lime;
   }
+  flagstones(scene);
   const restoreSky = clearSky(scene);
   return {
     ...result,
