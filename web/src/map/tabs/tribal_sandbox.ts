@@ -259,33 +259,33 @@ function plainBoulders(scene: Scene, built: Set<unknown>, obstacles: Obstacle[])
  * no ridge range. The base's range and its floating roots (mountainBase/Cap/Root) go; clouds stay. Spec: five faceted stacks 6-9 m across
  * and 16-26 m above the lawn, rising out of the haze below the island, 64-80 m out behind the back and back-right rim, leaning a little.
  */
-const SPIRES: Array<[number, number, number, number]> = [[-28, 66, 7, 18], [-6, 74, 8, 26], [14, 70, 6.5, 21], [36, 64, 9, 17], [58, 46, 7.5, 23]];
-
 function openSky(scene: Scene, built: Set<unknown>): void {
   for (const mesh of scene.meshes) {
     if (built.has(mesh) && mesh.name.startsWith("mountain")) mesh.setEnabled(false);
   }
-  const stone = new StandardMaterial("tribalSandboxSpire", scene);
+  const stone = new StandardMaterial("tribalSandboxRimOutcrop", scene);
   stone.diffuseColor = new Color3(0.6, 0.55, 0.52);
   stone.emissiveColor = new Color3(0.12, 0.11, 0.11);
   stone.specularColor = Color3.Black();
   const parts: Mesh[] = [];
-  SPIRES.forEach(([x, z, w, h], i) => {
-    const depth = 30;
-    const spire = MeshBuilder.CreateCylinder("tsSpire", { diameterTop: w * 0.6, diameterBottom: w, height: h + depth, tessellation: 5 }, scene);
-    spire.position.set(x, (h - depth) / 2, z);
-    spire.rotation.set((seeded(i, 81) - 0.5) * 0.12, seeded(i, 82) * Math.PI, (seeded(i, 83) - 0.5) * 0.12);
-    const tip = MeshBuilder.CreateCylinder("tsSpireTip", { diameterTop: w * 0.2, diameterBottom: w * 0.55, height: w * 0.6, tessellation: 5 }, scene);
-    tip.position.set(x + (seeded(i, 84) - 0.5) * 0.6, h + w * 0.25, z);
-    tip.rotation.y = seeded(i, 85) * Math.PI;
-    parts.push(spire, tip);
-  });
-  const spires = Mesh.MergeMeshes(parts, true);
-  if (spires) {
-    spires.name = "tribalSandboxSpires";
-    spires.convertToFlatShadedMesh();
-    spires.material = stone;
-    spires.isPickable = false;
+  for (const [from, to] of CLIFFS) {
+    for (let deg = from; deg <= to; deg += 6) {
+      const [x, z] = rimPoint(deg);
+      const width = 4 + seeded(deg, 81) * 2;
+      const block = MeshBuilder.CreatePolyhedron("tsRimOutcrop", {
+        type: 2, sizeX: width, sizeY: 3.5 + seeded(deg, 83) * 2, sizeZ: width * 0.85,
+      }, scene);
+      block.position.set(x * 1.005, -1.4, z * 1.005);
+      block.rotation.set(0.24, seeded(deg, 82) * Math.PI, -0.19);
+      parts.push(block);
+    }
+  }
+  const outcrops = Mesh.MergeMeshes(parts, true);
+  if (outcrops) {
+    outcrops.name = "tribalSandboxRimOutcrops";
+    outcrops.convertToFlatShadedMesh();
+    outcrops.material = stone;
+    outcrops.isPickable = false;
   }
 }
 
