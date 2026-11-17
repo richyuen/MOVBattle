@@ -169,14 +169,75 @@ function castleFront(scene: Scene, obstacles: MapBuildResult["obstacles"]): void
   };
   const [gateX, gateZ] = GATE;
   const z = gateZ + 2;
-  for (const [offset, span, depth] of [[-16, 22, 6], [16, 22, 6], [-32, 10, 8], [32, 10, 8]]) {
-    const x = gateX + offset;
-    box("medieval2CurtainWall", x, 6, z, span, 12, depth, stone);
-    obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: span / 2, halfZ: depth / 2 });
-    for (let dx = -span / 2 + 0.9; dx < span / 2; dx += 2.5) {
-      box("medieval2Merlon", x + dx, 12.7, z - depth / 2 + 0.8, 1.55, 1.4, 1.6, stone);
+  // Silhouette (571, meadow_medieval_2.png): no single straight curtain. Short curtain runs step forward
+  // toward both ends so the front reads as a rounded arc, each joint is a round drum tower with a ring
+  // of merlons, and a tall round keep behind the gate carries the highest blue spire, with smaller
+  // spires on the inner drums. Towers sit at gate offsets 6.5, 18, 29, 37 (z set back by TOWER_DZ).
+  const roof = material("medieval2SpireSlate", new Color3(0.13, 0.2, 0.62));
+  const towerAt: Array<[number, number, number, number, boolean]> = [
+    // offset, radius, height, z shift, spire
+    [6.5, 2.7, 15.5, 0, false], [18, 3.1, 14, -0.8, true], [29, 2.9, 13.4, -2.4, false], [37, 2.6, 12.6, -4.6, true],
+  ];
+  const runs: Array<[number, number, number]> = [[6.5, 18, 0], [18, 29, -1.6], [29, 37, -3.6]];
+  const ringMerlons = (cx: number, cy: number, cz: number, radius: number) => {
+    const count = Math.max(8, Math.round(radius * 3.2));
+    for (let i = 0; i < count; i += 1) {
+      const angle = (i / count) * Math.PI * 2;
+      const merlon = box("medieval2Merlon", cx + Math.cos(angle) * (radius - 0.35), cy, cz + Math.sin(angle) * (radius - 0.35), 0.95, 1.3, 0.7, stone);
+      merlon.rotation.y = -angle + Math.PI / 2;
+    }
+  };
+  const spire = (cx: number, base: number, cz: number, radius: number, height: number) => {
+    const cone = MeshBuilder.CreateCylinder("medieval2Spire", { diameterTop: 0, diameterBottom: radius * 2, height, tessellation: 10 }, scene);
+    cone.position.set(cx, base + height / 2, cz);
+    cone.material = roof;
+  };
+  for (const side of [-1, 1]) {
+    for (const [from, to, dz] of runs) {
+      const span = to - from;
+      const x = gateX + side * (from + span / 2);
+      const depth = 5.6;
+      box("medieval2CurtainWall", x, 5.6, z + dz, span, 11.2, depth, stone);
+      obstacles.push({ type: "box", center: new Vector3(x, 0, z + dz), halfX: span / 2, halfZ: depth / 2 });
+      for (let dx = -span / 2 + 1.2; dx < span / 2 - 0.6; dx += 2.4) {
+        box("medieval2Merlon", x + dx, 11.85, z + dz - depth / 2 + 0.7, 1.4, 1.3, 1.4, stone);
+      }
+    }
+    for (const [offset, radius, height, dz, hasSpire] of towerAt) {
+      const x = gateX + side * offset;
+      const drum = MeshBuilder.CreateCylinder("medieval2DrumTower", { diameter: radius * 2, height, tessellation: 14 }, scene);
+      drum.position.set(x, height / 2, z + dz - 0.6);
+      drum.material = stone;
+      drum.receiveShadows = true;
+      const parapet = MeshBuilder.CreateCylinder("medieval2DrumParapet", { diameter: radius * 2 + 0.7, height: 0.9, tessellation: 14 }, scene);
+      parapet.position.set(x, height - 0.2, z + dz - 0.6);
+      parapet.material = stone;
+      ringMerlons(x, height + 0.85, z + dz - 0.6, radius + 0.35);
+      if (hasSpire) spire(x, height + 0.3, z + dz - 0.6, radius + 0.5, radius * 3.1);
+      obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z + dz - 0.6), radius: radius + 0.2 });
     }
   }
+  // The keep: a tall round tower behind the gatehouse, banded, with an upper turret and the tallest spire.
+  const keepZ = z + 6.5;
+  const keep = MeshBuilder.CreateCylinder("medieval2Keep", { diameter: 8.4, height: 23, tessellation: 16 }, scene);
+  keep.position.set(gateX, 11.5, keepZ);
+  keep.material = stone;
+  keep.receiveShadows = true;
+  const keepBand = MeshBuilder.CreateCylinder("medieval2KeepParapet", { diameter: 9.4, height: 1.1, tessellation: 16 }, scene);
+  keepBand.position.set(gateX, 22.6, keepZ);
+  keepBand.material = stone;
+  ringMerlons(gateX, 23.7, keepZ, 4.7);
+  const turret = MeshBuilder.CreateCylinder("medieval2KeepTurret", { diameter: 5.2, height: 6.5, tessellation: 14 }, scene);
+  turret.position.set(gateX, 26.2, keepZ);
+  turret.material = stone;
+  spire(gateX, 29.3, keepZ, 3.4, 11.5);
+  for (const side of [-1, 1]) {
+    const pinnacle = MeshBuilder.CreateCylinder("medieval2KeepPinnacle", { diameter: 2, height: 4.2, tessellation: 10 }, scene);
+    pinnacle.position.set(gateX + side * 3.8, 25.4, keepZ - 1.4);
+    pinnacle.material = stone;
+    spire(gateX + side * 3.8, 27.4, keepZ - 1.4, 1.3, 4.4);
+  }
+  obstacles.push({ type: "cylinder", center: new Vector3(gateX, 0, keepZ), radius: 4.4 });
   box("medieval2Gatehouse", gateX, 10.4, z, 10.4, 4.8, 6, stone);
   for (const x of [-4.5, 4.5]) {
     box("medieval2GateJamb", gateX + x, 4.05, gateZ - 0.17, 1.35, 8.1, 0.62, stone);
@@ -198,7 +259,9 @@ function castleFront(scene: Scene, obstacles: MapBuildResult["obstacles"]): void
     for (let i = 0; i < 5; i++) {
       const d = seeded(i, x + 45);
       const ivy = MeshBuilder.CreateIcoSphere("medieval2WallIvy", { radius: 1.15 + d, subdivisions: 1 }, scene);
-      ivy.position.set(x + i * 0.55, y - i * (0.6 + d * 0.24), z - (x < -37 || x > 17 ? 4 : 3) - 0.1);
+      const offset = Math.abs(x + i * 0.55 - gateX);
+      const shift = offset > 29 ? -3.6 : offset > 18 ? -1.6 : 0;
+      ivy.position.set(x + i * 0.55, Math.min(10.5, y - i * (0.6 + d * 0.24)), z + shift - 2.8 - 0.1);
       ivy.scaling.set(0.9, 0.7, 0.47);
       ivy.material = leaves;
     }
