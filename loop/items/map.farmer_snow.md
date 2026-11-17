@@ -1,12 +1,12 @@
 # map.farmer_snow
 Status: open   Audited: 555 (AUDIT x2), 563 (CONFIRM: passed none; failed a, b), 569 (CONFIRM: passed b; failed a)   Done: -
 ## Verdicts
-a FAIL (0 since 569; plateau): 1. Dark spheres scattered across the snow in map_farmer_snow_top.png — TABS: faceted, snow-capped field rocks (ref: reference/maps/wiki/farmer_snow.png). 2. A freestanding stone tower on the far bank in map_farmer_snow_top.png — TABS: an open snowy verge beyond the decorated cottages (ref: reference/maps/wiki/farmer_snow.png). 3. Flat chalk-white light across the island in map_farmer_snow_island.png — TABS: a blue-lit night field with deep blue shadow across the mill bank (ref: reference/maps/farm_snow.png).
+a FAIL (570: struck 2; plateau): 1. Dark spheres scattered across the snow in map_farmer_snow_top.png — TABS: faceted, snow-capped field rocks (ref: reference/maps/wiki/farmer_snow.png). 3. Flat chalk-white light across the island in map_farmer_snow_island.png — TABS: a blue-lit night field with deep blue shadow across the mill bank (ref: reference/maps/farm_snow.png).
 b PASS (569: CONFIRM)
-c PASS (569 judge)
+c PASS (570 judge)
 
 ## Ranked gaps
-1. [R] a — rebuild inherited field dressing and night lighting from both CONFIRM lists (563 and 569) — ref: reference/maps/wiki/farmer_snow.png and reference/maps/farm_snow.png — ours: map_farmer_snow_top.png and map_farmer_snow_island.png
+1. [R] a — rock caps and broad mill-bank shadow — blockers 1 and 3: rebuild snow coverage over the rock facets and use broader localized shadow across the mill bank — ref: reference/maps/wiki/farmer_snow.png, reference/maps/farm_snow.png — ours: map_farmer_snow_top.png, map_farmer_snow_island.png
 
 ## Attempts (iter | gap | criterion | verdict)
 555-559 | river, snow cover, bridge, night sky, grove, navy bowl, stones | a, b | 6 APPROVE, struck a1, a2, a6, b1, b2, b4, b6
@@ -19,8 +19,10 @@ c PASS (569 judge)
 568 | [S] front snow-capped boulder (0c5f8a08) | a3 | APPROVE, struck a3
 568 | [S] snowy bridge-side furrows (a7c6dc9f) | a4 | APPROVE, struck a4
 569 | [S] snowy carts and log piles (6ddcdd19) | a5 | APPROVE, struck a5
+570 | [R] winter lighting and field dressing (1371524f+24937b53) | a | APPROVE, struck a2
 
 ## Rejected (last 4)
 
+
 ## Notes (max 3 lines)
-- Sandbox map. Both CONFIRM lists remain in output/loop/iter-563/confirm.md and output/loop/iter-569/confirm.md.
+- Sandbox map. The 570 rebuild removed inherited trees and tower dressing. The top shot still needs clearly pale caps and the island shot needs broader shadow across the mill bank.

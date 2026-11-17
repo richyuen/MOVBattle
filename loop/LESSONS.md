@@ -49,3 +49,4 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Turf caps on cliff columns flicker when their top faces share a plane with the cliff or meadow. Set the cap slightly below the meadow and the shaft top inside the cap (Medieval 1, 567).
 - The restricted shell can build the web app while blocking the capture script’s requests to Vite on loopback. Run the existing capture with local network access when preview cannot answer.
 - Varied-height cliff buttresses can leave sky below continuous ledges. Back the ledges with a skirt down to the adjoining tier and check the ground shot.
+- Rooftops can hide a stage's entire army in a low camera. An elevated player-side diagonal keeps the formation visible on Ancient 1.

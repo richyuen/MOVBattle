@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 569   Batch: maps_1+maps_2   Consecutive empty: 0   Done: 5/99   Parked: 0
+Iteration: 570   Batch: maps_1+maps_2   Consecutive empty: 0   Done: 5/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<level>):
 # <id>
@@ -17,7 +17,7 @@ Marks below: one per criterion a b c (+ pass, - fail, ? unscored); map a look, b
 
 ## Scoreboard (a b c as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox +++ D | farmer_1 +++ D | farmer_2 +++ D | farmer_snow -++ o
-maps_2: medieval_1 --+ o | medieval_2 --+ o | ancient_1 --+ o | ancient_2 --+ o | ancient_sandbox --+ o | viking --+ o | viking_sandbox -++ o
+maps_2: medieval_1 -++ o | medieval_2 -++ o | ancient_1 --+ o | ancient_2 --+ o | ancient_sandbox --+ o | viking --+ o | viking_sandbox -++ o
 maps_3: dynasty ??? q | renaissance ??? q | pirate ??? q | spooky_1 ??? q | spooky_2 ??? q | wild_west ??? q | legacy ??? q
 maps_4: fantasy_good ??? q | fantasy_evil ??? q | simulation ??? q | bridge ??? q | hill ??? q | corridor ??? q | defend_the_castle ??? q | high_ground ??? q | low_ground ??? q
 stages_introduction: clubs ??? q | army ??? q | hay_and_pitchforks ??? q | basic_formation ??? q | ice_archers_only_almost ??? q | longships ??? q
@@ -33,51 +33,55 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 569: maps_1+maps_2, 9 [S]; BASE 1ff34f15)
-- [S] map.farmer_snow.a blocker 5 snowy carts and log piles (6ddcdd19) APPROVE, struck a5
-- [S] map.viking_sandbox.a blocker 1 fractured ice shelves (eb3c33ae+16dc5699) APPROVE, struck a1
-- [S] map.viking_sandbox.a blocker 2 continuous cracked ice sheet (b5799593) APPROVE, struck a2
-- [S] map.viking_sandbox.a blocker 3 rim-rooted ice peaks (2be8528a) APPROVE, struck a3
-- [S] map.medieval_2.a blocker 3 rounded earthen bowl (489d2940) APPROVE, struck a3
-- [S] map.medieval_2.b blocker 4 opposing deployment halves (41c29446) APPROVE, struck b4
-- [S] map.medieval_2.a blocker 5 green meadow with low grass (8c56cdf8) APPROVE, struck a5
-- [S] map.medieval_1.b blocker 4 woodland concentrated on the left (18cc0f35) APPROVE, struck b4
-- [S] map.medieval_1.a blocker 3 gnarled oak trunks and pale crowns (cdefcfc1) APPROVE, struck a3
-- 9/9, 9 struck
+## Focus (iter 570: maps_1+maps_2, 9 [S] + 1 [R]; BASE 06b627f1)
+- [R] map.farmer_snow.a blocker 1–3 winter lighting and field dressing (1371524f+24937b53) APPROVE, struck a2
+- [S] map.medieval_1.a blocker 5 inherited monolith removal (48dacf98+59b30f57) APPROVE, struck a5
+- [S] map.medieval_1.b blocker 5 inlet ramp and landfall door (9767224d+8b7cf263+7094ea34) APPROVE, struck b5
+- [S] map.medieval_1.a blocker 6 meadow tufts and orange flowers (2980c8ce+ca101d74) APPROVE
+- [S] map.medieval_2.b blocker 1 front pond to the island lip (4e079a16) APPROVE, struck b1
+- [S] map.medieval_2.a blocker 2 open sky behind the castle (4df6e5f8) APPROVE, struck a2
+- [S] map.ancient_1.a blocker 3 white perimeter and cypress planters (1a2024e4) APPROVE, struck a3
+- [S] map.ancient_2.b blocker 1 circular temple island outline (18a7b03b) APPROVE
+- [S] map.ancient_sandbox.b blocker 2 stepped rear temple hills (c8566daa) APPROVE, struck b2
+- [S] map.viking.a blocker 2 layered snow pines (23af4ed0) APPROVE, struck a2
+- 10/10, 8 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.farmer_snow (6ddcdd19)
+GAP: [R] map.farmer_snow (1371524f+24937b53)
 VERDICT: APPROVE
-CRITERION: map.farmer_snow.a PASS   (previous: FAIL)
-GAP: [S] map.viking_sandbox (eb3c33ae+16dc5699)
-VERDICT: APPROVE
-CRITERION: map.viking_sandbox.a FAIL   (previous: FAIL)
-GAP: [S] map.viking_sandbox (b5799593)
-VERDICT: APPROVE
-CRITERION: map.viking_sandbox.a FAIL   (previous: FAIL)
-GAP: [S] map.viking_sandbox (2be8528a)
-VERDICT: APPROVE
-CRITERION: map.viking_sandbox.a PASS   (previous: FAIL)
-GAP: [S] map.medieval_2 (489d2940)
-VERDICT: APPROVE
-CRITERION: map.medieval_2.a FAIL   (previous: FAIL)
-GAP: [S] map.medieval_2 (41c29446)
-VERDICT: APPROVE
-CRITERION: map.medieval_2.b PASS   (previous: FAIL)
-GAP: [S] map.medieval_2 (8c56cdf8)
-VERDICT: APPROVE
-CRITERION: map.medieval_2.a PASS   (previous: FAIL)
-GAP: [S] map.medieval_1 (18cc0f35)
-VERDICT: APPROVE
-CRITERION: map.medieval_1.b FAIL   (previous: FAIL)
-GAP: [S] map.medieval_1 (cdefcfc1)
+CRITERION: map.farmer_snow.a FAIL   (previous: FAIL)
+GAP: [S] map.medieval_1 (48dacf98+59b30f57)
 VERDICT: APPROVE
 CRITERION: map.medieval_1.a FAIL   (previous: FAIL)
-REGRESSIONS: none. All 4 map c and 18 stage a/c script criteria PASS.
+GAP: [S] map.medieval_1 (9767224d+8b7cf263+7094ea34)
+VERDICT: APPROVE
+CRITERION: map.medieval_1.b PASS   (previous: FAIL)
+GAP: [S] map.medieval_1 (2980c8ce+ca101d74)
+VERDICT: APPROVE
+CRITERION: map.medieval_1.a FAIL   (previous: FAIL)
+GAP: [S] map.medieval_2 (4e079a16)
+VERDICT: APPROVE
+CRITERION: map.medieval_2.b PASS   (previous: FAIL)
+GAP: [S] map.medieval_2 (4df6e5f8)
+VERDICT: APPROVE
+CRITERION: map.medieval_2.a FAIL   (previous: FAIL)
+GAP: [S] map.ancient_1 (1a2024e4)
+VERDICT: APPROVE
+CRITERION: map.ancient_1.a FAIL   (previous: FAIL)
+GAP: [S] map.ancient_2 (18a7b03b)
+VERDICT: APPROVE
+CRITERION: map.ancient_2.b FAIL   (previous: FAIL)
+GAP: [S] map.ancient_sandbox (c8566daa)
+VERDICT: APPROVE
+CRITERION: map.ancient_sandbox.b FAIL   (previous: FAIL)
+GAP: [S] map.viking (23af4ed0)
+VERDICT: APPROVE
+CRITERION: map.viking.a FAIL   (previous: FAIL)
+REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 569 capture produced 43 shots, 0 page errors, 0 console errors, and 22/22 script checks passed.
-- Farmer Snow and Viking Sandbox each failed appearance in a second CONFIRM and enter plateau. Farmer Snow takes the next rebuild slot as the earlier repeat failure.
-- Medieval 2 passed gap review but CONFIRM reopened appearance and the front pond layout. Medieval 1 still needs field dressing and the bridge ramp.
-- Before Ancient 1 stage formation review, re-aim army shots obscured by buildings, especially adventure.final_destination_wheelbarrow.
+- 570 capture produced 94 shots with zero page or console errors. All 51 script checks passed across seven maps and 22 stages.
+- Farmer Snow’s rebuild cleared the tower. Snow-cap contrast and broad mill-bank shadows remain; Viking Sandbox takes the next rebuild slot.
+- Medieval 1 and Medieval 2 cleared their layout blockers. Their appearances remain open, so the early CONFIRM did not apply.
+- The higher player-side army camera exposes all four Ancient 1 formations, including the Wheelbarrow.
 - The pale rectangle in stage_fantasy_evil.raze_the_homestead_field.png remains an open note from 562.
