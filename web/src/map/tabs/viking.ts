@@ -116,6 +116,57 @@ function frozenLake(scene: Scene): void {
   }
 }
 
+function snowPines(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult["obstacles"]): void {
+  const needles = new StandardMaterial("vikingPineNeedles", scene);
+  needles.diffuseColor = new Color3(0.075, 0.31, 0.33);
+  needles.emissiveColor = needles.diffuseColor.scale(0.18);
+  const snow = new StandardMaterial("vikingPineSnow", scene);
+  snow.diffuseColor = new Color3(0.79, 0.86, 0.94);
+  snow.emissiveColor = snow.diffuseColor.scale(0.21);
+  const bark = new StandardMaterial("vikingPineBark", scene);
+  bark.diffuseColor = new Color3(0.16, 0.15, 0.15);
+  const feet: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (/^(hazeTreeline|oakCrown|oakBole)/.test(mesh.name)) mesh.setEnabled(false);
+    if (mesh.name !== "trunk" || mesh.parent || !mesh.isEnabled()) continue;
+    feet.push(mesh.position.clone());
+    mesh.setEnabled(false);
+  }
+  const roots = feet.map(({ x, z }) => new Vector3(x, 0, z));
+  for (let i = 0; i < 40; i++) {
+    const angle = 2 * Math.PI * (i + seeded(i, 49) * 0.7) / 40;
+    const x = Math.cos(angle) * (47 + seeded(i, 78) * 3);
+    const z = Math.sin(angle) * (41 + seeded(i, 83) * 3);
+    if (inLake(x, z, 1) || roots.some((p) => Math.hypot(x - p.x, z - p.z) < 2.55)) continue;
+    roots.push(new Vector3(x, 0, z));
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.37 });
+  }
+  for (const [i, root] of roots.entries()) {
+    const height = 4.8 + seeded(i, 101) * 4.2;
+    const width = height * (0.46 + seeded(i, 109) * 0.12);
+    const trunk = MeshBuilder.CreateCylinder("vikingPineTrunk", { height: height * 0.74, diameter: width * 0.14, tessellation: 6 }, scene);
+    trunk.position.set(root.x, height * 0.37, root.z);
+    trunk.material = bark;
+    for (let tier = 0; tier < 4; tier++) {
+      const y = height * (0.31 + tier * 0.155);
+      const w = width * (1 - tier * 0.21);
+      const h = height * 0.43;
+      const options = { height: h, diameterBottom: w, diameterTop: 0.045, tessellation: 7 };
+      const bough = MeshBuilder.CreateCylinder("vikingPineBough", options, scene);
+      bough.position.set(root.x, y, root.z);
+      bough.rotation.y = seeded(i * 4 + tier, 119) * Math.PI;
+      bough.material = needles;
+      const cap = MeshBuilder.CreateCylinder("vikingPineSnowTier", {
+        ...options, height: h * 0.83, diameterBottom: w * 0.94,
+      }, scene);
+      cap.position.set(root.x, y + h * 0.105, root.z);
+      cap.rotation.y = bough.rotation.y;
+      cap.material = snow;
+    }
+  }
+}
+
 export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -131,6 +182,7 @@ export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildR
     (p.x / 54) ** 2 + (p.z / 48) ** 2 < 0.8 ** 2 && Math.hypot(center.x - p.x, center.z - p.z) < 3.4));
   result.hazards = result.hazards.filter((hazard) => hazard.kind !== "pit");
   snowBanks(scene, built);
+  snowPines(scene, built, result.obstacles);
   frozenLake(scene);
   return result;
 }
