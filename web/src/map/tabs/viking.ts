@@ -463,7 +463,7 @@ function snowbankSheet(scene: Scene): void {
 function shoreLip(scene: Scene): void {
   const snow = new StandardMaterial("vikingShoreSnow", scene);
   snow.diffuseColor = new Color3(0.86, 0.9, 0.97);
-  snow.emissiveColor = new Color3(0.86, 0.9, 0.97).scale(0.45);
+  snow.emissiveColor = new Color3(0.86, 0.9, 0.97).scale(0.28);
   snow.specularColor = Color3.Black();
   const rock = new StandardMaterial("vikingShoreRock", scene);
   rock.diffuseColor = new Color3(0.34, 0.35, 0.39);
@@ -473,11 +473,11 @@ function shoreLip(scene: Scene): void {
   const N = 84;
   for (let i = 0; i < N; i++) {
     const a = ((i + seeded(i, 201) * 0.6) / N) * Math.PI * 2;
-    const r = lakeR(a) + 0.6 + seeded(i, 203) * 2.2;
+    const r = lakeR(a) - 0.4 + seeded(i, 203) * 2.2;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (Math.hypot(x - SHIP.x, z - SHIP.z) < 9 || (Math.abs(x - FALL.x) < 9 && z > 30)) continue;
     const slab = MeshBuilder.CreateIcoSphere("vikingShoreSlab", { radius: 1, subdivisions: 1, flat: true }, scene);
-    slab.scaling.set(1.3 + seeded(i, 205) * 1.3, 0.9 + seeded(i, 207) * 0.8, 0.8 + seeded(i, 209) * 0.6);
+    slab.scaling.set(1.8 + seeded(i, 205) * 1.5, 1.4 + seeded(i, 207) * 1.1, 1.1 + seeded(i, 209) * 0.7);
     slab.rotation.set(0, -a + Math.PI / 2 + (seeded(i, 211) - 0.5) * 0.4, 0);
     slab.position.set(x, bankHeight(x, z) * 0.7, z);
     // Tilt toward the lake: a roll about the shore tangent
