@@ -596,13 +596,13 @@ function frontSandstone(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
 // Hazy sea (574, greek_ancient_sandbox.png: near the cliffs the water is a soft mid blue that greys and pales outward
 // until it melts into a white-blue mist at the horizon; the far islets are muted grey-brown rocks with dull green tops,
 // half lost in the haze). Spec: the flat self-lit royal-blue disc goes; a 900 m unlit disc of 48 rings x 96 sectors
-// carries vertex colours from blue-grey (0.17, 0.38, 0.57) at the rim through (0.36, 0.55, 0.7) at 120 m to the fog's
+// carries vertex colours from soft blue (0.3, 0.55, 0.76) at the rim through (0.47, 0.66, 0.82) at 120 m to the fog's
 // pale sky blue (0.66, 0.8, 0.93) from 260 m out, out of fog and glow; islet rock (0.5, 0.38, 0.32) and caps
-// (0.36, 0.47, 0.22) mixed 35% toward that haze.
+// (0.36, 0.47, 0.22) mixed 35% toward that haze, the islets out of the glow (no white halo).
 function hazySea(scene: Scene): void {
   scene.getMeshByName("ancientSandboxSea")?.setEnabled(false);
   const rings = 48, sectors = 96, inner = 40, outer = 450;
-  const near = new Color3(0.17, 0.38, 0.57), mid = new Color3(0.36, 0.55, 0.7), far = new Color3(0.66, 0.8, 0.93);
+  const near = new Color3(0.3, 0.55, 0.76), mid = new Color3(0.47, 0.66, 0.82), far = new Color3(0.66, 0.8, 0.93);
   const pos: number[] = [], col: number[] = [], nrm: number[] = [], idx: number[] = [];
   for (let i = 0; i <= rings; i++) {
     const r = i === 0 ? 0 : inner * (outer / inner) ** ((i - 1) / (rings - 1));
@@ -643,6 +643,10 @@ function hazySea(scene: Scene): void {
   };
   mute("ancientSandboxIsletRock", new Color3(0.5, 0.38, 0.32));
   mute("ancientSandboxIsletGrass", new Color3(0.36, 0.47, 0.22));
+  for (const name of ["ancientSandboxIslets", "ancientSandboxIsletCaps", "ancientSandboxIsletCypresses"]) {
+    const islet = scene.getMeshByName(name);
+    if (islet) scene.getGlowLayerByName("glow")?.addExcludedMesh(islet as Mesh);
+  }
 }
 
 // Clear sky (574, greek_ancient_sandbox.png: a bright mid-blue sky with white puffy clouds, no beige haze). Spec: clear
