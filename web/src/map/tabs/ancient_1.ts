@@ -73,6 +73,57 @@ function bayHeadland(scene: Scene, earth: StandardMaterial): void {
   }
 }
 
+// Hoplite statue (571, greek_ancient_1.png): a giant pale stone warrior on a stepped plinth atop the
+// outcrop, facing the field, a spear upright in his right hand rising well above his head and a big round
+// shield on his left arm. Spec: plinth 8 / 6 m square in two steps to 7 m above the base; figure 13 m to
+// the crest; spear 21 m; shield 6.4 m across.
+function hopliteStatue(scene: Scene): void {
+  const marble = new StandardMaterial("ancient1StatueMarble", scene);
+  marble.diffuseColor = new Color3(0.86, 0.84, 0.76);
+  marble.emissiveColor = marble.diffuseColor.scale(0.2);
+  const { x, z } = HEADLAND;
+  const part = (name: string, px: number, py: number, pz: number, w: number, h: number, d: number) => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(x + px, py, z + pz);
+    m.material = marble;
+    m.receiveShadows = true;
+    return m;
+  };
+  part("ancient1StatuePlinth", 0, 4.1, 0, 8, 1.8, 8);
+  part("ancient1StatuePlinth", 0, 5.9, 0, 6, 1.8, 6);
+  const foot = 6.8;
+  for (const side of [-1, 1]) {
+    part("ancient1StatueLeg", side * 0.95, foot + 2.3, 0, 1.15, 4.6, 1.25).rotation.z = side * 0.06;
+  }
+  part("ancient1StatueSkirt", 0, foot + 5, 0, 3.3, 1.6, 2.1);
+  part("ancient1StatueTorso", 0, foot + 7.2, 0, 3.1, 3, 1.9);
+  part("ancient1StatueShoulders", 0, foot + 8.9, 0, 4.4, 0.9, 1.9);
+  part("ancient1StatueNeck", 0, foot + 9.6, 0, 0.8, 0.6, 0.8);
+  const head = MeshBuilder.CreateIcoSphere("ancient1StatueHelmet", { radius: 0.95, subdivisions: 1, flat: true }, scene);
+  head.position.set(x, foot + 10.5, z);
+  head.scaling.y = 1.15;
+  head.material = marble;
+  part("ancient1StatueCrest", 0, foot + 11.5, 0.25, 0.35, 1.0, 2.4);
+  // Right arm down to the spear, left arm forward behind the shield.
+  part("ancient1StatueArm", 2.5, foot + 7.6, 0, 0.9, 2.8, 0.9).rotation.z = 0.15;
+  part("ancient1StatueArm", -2.4, foot + 7.8, -0.6, 0.9, 2.6, 0.9).rotation.x = -0.5;
+  const spear = MeshBuilder.CreateCylinder("ancient1StatueSpear", { diameter: 0.34, height: 21, tessellation: 8 }, scene);
+  spear.position.set(x + 3, foot + 6.5, z - 0.3);
+  spear.material = marble;
+  const tip = MeshBuilder.CreateCylinder("ancient1StatueSpearTip", { diameterTop: 0, diameterBottom: 0.7, height: 1.6, tessellation: 6 }, scene);
+  tip.position.set(x + 3, foot + 17.8, z - 0.3);
+  tip.material = marble;
+  const shield = MeshBuilder.CreateCylinder("ancient1StatueShield", { diameter: 6.4, height: 0.45, tessellation: 20 }, scene);
+  shield.rotation.x = Math.PI / 2;
+  shield.rotation.y = 0.35;
+  shield.position.set(x - 2.9, foot + 6.9, z - 1.5);
+  shield.material = marble;
+  const boss = MeshBuilder.CreateCylinder("ancient1StatueShieldRim", { diameter: 5.2, height: 0.3, tessellation: 20 }, scene);
+  boss.rotation.copyFrom(shield.rotation);
+  boss.position.set(x - 3.0, foot + 6.9, z - 1.8);
+  boss.material = marble;
+}
+
 export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -92,6 +143,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   slab.position.y = -6.05;
   slab.material = earth;
   bayHeadland(scene, earth);
+  hopliteStatue(scene);
   const pavement = MeshBuilder.CreateBox("ancient1Pavement", { width: LENGTH, height: 0.55, depth: WIDTH }, scene);
   pavement.position.y = -0.275;
   pavement.material = stone;
