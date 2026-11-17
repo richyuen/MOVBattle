@@ -80,6 +80,62 @@ function bayHeadland(scene: Scene, earth: StandardMaterial): void {
   }
 }
 
+// Harbour bay (575, wiki ancient_1.png: a wide blue bay wraps the town's back-left corner, running along the left end
+// wall and between the back wall and the statue headland, rimmed by red-brown rocks; it is part of the island, not a pond
+// on a detached slab). Spec: two earth shelves extend the island (left: x -67..-55.6, z 4..58; back-left: x -67..-44,
+// z 35.6..58), tops 1.4 m below the pavement, sides 10 m deep like the headland's; on them an L of water 0.4 m below
+// the pavement top: a 9 m channel along the left wall (x -64.5..-55.6, z 7..50) joined to a 20 x 19 m basin west of the
+// headland (x -64.5..-44, z 35.6..55) that meets the old bay; lobed with heaped rock boulders (moss on some) along the
+// outer shores and the channel's south end. Drawn only: the city wall already closes the town (its colliders stay).
+function harbourBay(scene: Scene, earth: StandardMaterial): void {
+  const sea = scene.getMaterialByName("ancient1BayWater") as StandardMaterial;
+  const rock = scene.getMaterialByName("ancient1HeadlandRock") as StandardMaterial;
+  const moss = scene.getMaterialByName("ancient1HeadlandMoss") as StandardMaterial;
+  for (const [x0, x1, z0, z1] of [[-67, -55.6, 4, 58], [-67, -44, 35.6, 58]]) {
+    const shelf = MeshBuilder.CreateBox("ancient1HarbourShelf", { width: x1 - x0, height: 10, depth: z1 - z0 }, scene);
+    shelf.position.set((x0 + x1) / 2, -6.4, (z0 + z1) / 2);
+    shelf.material = earth;
+    shelf.receiveShadows = true;
+  }
+  const water: Mesh[] = [];
+  for (const [x0, x1, z0, z1] of [[-64.5, -55.6, 7, 50], [-64.5, -44, 35.6, 55], [-46, -36, 36.5, 45]]) {
+    const w = MeshBuilder.CreateBox("ancient1HarbourWater", { width: x1 - x0, height: 0.1, depth: z1 - z0 }, scene);
+    w.position.set((x0 + x1) / 2, -0.45, (z0 + z1) / 2);
+    water.push(w);
+  }
+  // Lobes: round pools on the corners and along the outer shore soften the box outline
+  for (const [x, z, r] of [[-60, 8, 4.4], [-60, 50, 5.4], [-54, 54, 5.6], [-62.5, 22, 3], [-62.5, 36, 3.2], [-47, 52, 4]]) {
+    const lobe = MeshBuilder.CreateCylinder("ancient1HarbourWater", { diameter: r * 2, height: 0.1, tessellation: 16 }, scene);
+    lobe.position.set(x, -0.44, z);
+    water.push(lobe);
+  }
+  const merged = Mesh.MergeMeshes(water, true);
+  if (merged) { merged.material = sea; merged.isPickable = false; merged.receiveShadows = true; }
+  const rocks: Mesh[] = [], caps: Mesh[] = [];
+  const shore: Array<[number, number]> = [];
+  for (let z = 6; z <= 56; z += 2.6) shore.push([-65.6, z]);
+  for (let x = -63; x <= -45; x += 2.6) shore.push([x, 57]);
+  for (let x = -63; x <= -57; x += 2.4) shore.push([x, 5.4]);
+  shore.forEach(([x, z], i) => {
+    const r = 1.3 + seeded(i, 151) * 1.1;
+    const b = MeshBuilder.CreateIcoSphere("ancient1HarbourRock", { radius: r, subdivisions: 1, flat: true }, scene);
+    b.position.set(x + (seeded(i, 153) - 0.5) * 1.2, -0.6, z);
+    b.scaling.set(1 + seeded(i, 155) * 0.4, 0.62 + seeded(i, 157) * 0.3, 1 + seeded(i, 159) * 0.3);
+    b.rotation.y = seeded(i, 161) * Math.PI;
+    rocks.push(b);
+    if (seeded(i, 163) > 0.5) {
+      const cap = MeshBuilder.CreateIcoSphere("ancient1HarbourMoss", { radius: r * 0.72, subdivisions: 1, flat: true }, scene);
+      cap.position.set(b.position.x, -0.6 + r * 0.42, z);
+      cap.scaling.set(b.scaling.x, 0.28, b.scaling.z);
+      caps.push(cap);
+    }
+  });
+  for (const [list, mat] of [[rocks, rock], [caps, moss]] as const) {
+    const m = Mesh.MergeMeshes(list as Mesh[], true);
+    if (m) { m.material = mat; m.receiveShadows = true; m.isPickable = false; }
+  }
+}
+
 // Hoplite statue (571, greek_ancient_1.png): a giant pale stone warrior on a stepped plinth atop the
 // outcrop, facing the field, a spear upright in his right hand rising well above his head and a big round
 // shield on his left arm. Spec: plinth 8 / 6 m square in two steps to 7 m above the base; figure 13 m to
@@ -335,6 +391,7 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   bayHeadland(scene, earth);
   hopliteStatue(scene);
   lighthouse(scene);
+  harbourBay(scene, earth);
   const pavement = MeshBuilder.CreateBox("ancient1Pavement", { width: LENGTH, height: 0.55, depth: WIDTH }, scene);
   pavement.position.y = -0.275;
   pavement.material = stone;
