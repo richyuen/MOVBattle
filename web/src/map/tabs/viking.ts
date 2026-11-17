@@ -143,6 +143,8 @@ function snowPines(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult[
     obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.37 });
   }
   for (const [i, root] of roots.entries()) {
+    // Pines stand on the raised snowbank (bankHeight); none where the waterfall outcrop stands
+    if (Math.abs(root.x - FALL.x) < 10.5 && root.z > 39.5) continue;
     const lift = bankHeight(root.x, root.z);
     const height = 4.8 + seeded(i, 101) * 4.2;
     const width = height * (0.46 + seeded(i, 109) * 0.12);
@@ -347,6 +349,72 @@ function icyUnderside(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+// Frozen waterfall (573, card Overview: "a frozen waterfall around the top area of the map"): at the back of the
+// lake (+z, the top of the top shot) a craggy outcrop of snow-capped grey-blue rock 12-14 m high stands on the bank
+// among the pines, and a broad cascade of pale ice pours from a notch near its top down four steps into a frozen
+// plunge pool on the lake edge, hung with icicles. Spec: outcrop of 8 faceted rocks over x -9..9, z 41..47 on the
+// bank (lifted by bankHeight); cascade 6-8 m wide in four tilted slabs from 12 m down to the pool at (0, 35), pool
+// 13 x 8 m. One box collider over the outcrop (no stage army stands past z 18).
+const FALL = { x: 0, z: 44, pool: 35 };
+function frozenWaterfall(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = new Color3(0.2, 0.22, 0.25);
+    return m;
+  };
+  const rockMat = mk("vikingFallRock", new Color3(0.3, 0.36, 0.44), 0.2);
+  const capMat = mk("vikingFallSnow", SNOW, 0.35);
+  const iceMat = mk("vikingFallIce", new Color3(0.62, 0.9, 0.98), 0.5);
+  const lift = bankHeight(FALL.x, FALL.z);
+  const rocks: Mesh[] = [], caps: Mesh[] = [], ice: Mesh[] = [];
+  const crag: Array<[number, number, number, number]> = [
+    [-6.5, 45, 4.2, 9], [-3, 46.2, 4, 13], [3.2, 46, 4.2, 12.5], [6.8, 44.8, 4, 8.5], [-8.6, 42.6, 3, 5], [8.8, 42.4, 3.2, 5.5], [-4.6, 42.6, 3, 6.5], [4.8, 42.4, 3, 6],
+  ];
+  crag.forEach(([x, z, w, h], k) => {
+    const rock = MeshBuilder.CreatePolyhedron("vikingFallRock", { type: 2, sizeX: w * 0.6, sizeY: h * 0.55, sizeZ: w * 0.55 }, scene);
+    rock.position.set(x, lift + h * 0.45, z);
+    rock.rotation.set((seeded(k, 411) - 0.5) * 0.3, seeded(k, 412) * Math.PI, (seeded(k, 413) - 0.5) * 0.3);
+    rocks.push(rock);
+    const cap = MeshBuilder.CreatePolyhedron("vikingFallSnow", { type: 2, sizeX: w * 0.55, sizeY: h * 0.13, sizeZ: w * 0.5 }, scene);
+    cap.position.set(x, lift + h * 0.45 + h * 0.43, z);
+    cap.rotation.copyFrom(rock.rotation);
+    caps.push(cap);
+  });
+  // Cascade: four tilted slabs stepping from the notch (12 m) to the pool, each wider than the one above
+  const steps: Array<[number, number, number, number]> = [[12, 43.4, 9.5, 5.6], [9.5, 41.6, 6.6, 6.4], [6.6, 39.6, 3.6, 7.2], [3.6, 37.4, 0.4, 8]];
+  steps.forEach(([top, zFrom, bottom, wide], k) => {
+    const yTop = lift + top, yBot = k === steps.length - 1 ? bottom : lift + bottom;
+    const zTo = k === steps.length - 1 ? FALL.pool + 2 : steps[k + 1][1];
+    const len = Math.hypot(yTop - yBot, zFrom - zTo);
+    const slab = MeshBuilder.CreateBox("vikingFallIce", { width: wide, height: 0.9, depth: len }, scene);
+    slab.position.set(FALL.x, (yTop + yBot) / 2, (zFrom + zTo) / 2);
+    slab.rotation.x = -Math.atan2(yTop - yBot, zFrom - zTo);
+    ice.push(slab);
+    for (let i = 0; i < 5; i++) {
+      const long = 1.2 + seeded(k * 5 + i, 414) * 2.2;
+      const icicle = MeshBuilder.CreateCylinder("vikingFallIce", { diameterTop: 0.55, diameterBottom: 0.04, height: long, tessellation: 5 }, scene);
+      icicle.position.set(FALL.x - wide / 2 + 0.6 + i * ((wide - 1.2) / 4), yBot - long / 2 + 0.3, zTo + 0.4);
+      ice.push(icicle);
+    }
+  });
+  const pool = MeshBuilder.CreateCylinder("vikingFallIce", { diameter: 13, height: 0.3, tessellation: 9 }, scene);
+  pool.scaling.z = 8 / 13;
+  pool.position.set(FALL.x, 0.12, FALL.pool);
+  ice.push(pool);
+  for (const [list, mat, name] of [[rocks, rockMat, "vikingFallRocks"], [caps, capMat, "vikingFallSnow"], [ice, iceMat, "vikingFallIce"]] as const) {
+    const merged = Mesh.MergeMeshes([...list], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  obstacles.push({ type: "box", center: new Vector3(FALL.x, 0, 44.5), halfX: 9.5, halfZ: 3 });
+}
+
 // Raised snowbanks (573, reference/stages/introduction.ice_archers_only_almost.png: the lake sits in a hollow, its
 // shores rising as white snowbanks that carry the pine forest). Spec: the ground rises from the lake edge + 1 m to
 // 2.4 m over 5 m (smoothstep) and stays up to the rim, dropping back near the frozen ship (fade 13-19 m from it) so
@@ -405,6 +473,7 @@ export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildR
   frozenShip(scene, result.obstacles);
   snowbankSheet(scene);
   icyUnderside(scene, built);
+  frozenWaterfall(scene, result.obstacles);
   const restoreSky = winterHaze(scene, built);
   return { ...result, height: bankHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
