@@ -5,6 +5,18 @@
 // Ice wall: three stepped tiers of leaning ice buttresses, each joined at the top by long fractured snow shelves.
 // The base's autumn tree ring (every "trunk" with its canopy, the haze band) goes with its colliders; one 3.5 m collider per tier-1 slab;
 // placement stays inside the wall (placementZones clipped to |x| <= 44). The stage army (pirate.arrows_and_arrow) stands at x 29..36, |z| <= 10.
+//
+// [R] 574 rebuild of look a (CONFIRM 571/572/573 lists; wiki viking_sandbox.png, winter_viking_sandbox.png), three mechanisms:
+// - Skyline: the wall's top is level stepped terraces with a flat snowy top. The free-standing rim peaks go; the jutting ice columns stop
+//   flush with their tier (0.94-1.02 of its top, not 1.2-1.45x). Only one side (right-back, 18-58 deg) carries two big crystal clusters:
+//   5-6 leaning hexagonal prisms each, 6-12 m, deep cyan, rooted on the top tier.
+// - Gate: the left wall's gap (166-194 deg) is closed by a great carved gate readable from above: two leaves 12 m wide, 21 m tall, 3 m
+//   thick at x -47 in a darker steel-teal ice (0.24, 0.5, 0.64) against the white wall, each leaf carrying a 2 x 3 grid of square spiral
+//   rune panels (three nested pale frames); 7 m flanking towers 25 m tall with four ice spikes each; a lintel beam with a row of spikes;
+//   heavy chains (0.36 m links) drooping from each tower top out to the wall crest beside it and a third across the lintel.
+// - Floor balance: about half the floor is snow. The blue ice sheet reaches only 0.72 R (a broad snow band under the walls), and over the
+//   ice lie 12 snow tongues from the band (18-30 m long, 8-14 m wide) and 12 snow islands (6-14 m) with a 0.25 m raised lip, the cracks under
+//   them.
 import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
@@ -112,7 +124,7 @@ function snowAndIce(scene: Scene, built: Set<unknown>): void {
   // white cracks that join into closed cells; across it lie large irregular snow shapes: 9 tongues running in
   // from the rim (14-24 m long, 5-10 m wide, lobed, reaching to ~0.3 R) and 7 snow islands (4-11 m) scattered
   // over the middle, so the blue reads as broken fields between snow. Snow shapes sit above the ice and cracks.
-  const edge = (angle: number) => 0.8 + 0.05 * Math.sin(angle * 5) + 0.04 * Math.sin(angle * 11);
+  const edge = (angle: number) => 0.72 + 0.05 * Math.sin(angle * 5) + 0.04 * Math.sin(angle * 11);
   const ice = MeshBuilder.CreateCylinder("vikingSandboxIceSheet", { diameter: ARENA_RADIUS * 2, height: 0.045, tessellation: 96 }, scene);
   const vertices = ice.getVerticesData("position")!;
   for (let i = 0; i < vertices.length; i += 3) {
@@ -165,7 +177,7 @@ function snowAndIce(scene: Scene, built: Set<unknown>): void {
   snowMat.specularColor = new Color3(0.04, 0.04, 0.05);
   const drifts: Mesh[] = [];
   const drift = (x: number, z: number, length: number, width: number, yaw: number, k: number) => {
-    const disc = MeshBuilder.CreateCylinder("vsSnowDrift", { diameter: 2, height: 0.05, tessellation: 40 }, scene);
+    const disc = MeshBuilder.CreateCylinder("vsSnowDrift", { diameter: 2, height: 0.25, tessellation: 40 }, scene);
     const pos = disc.getVerticesData("position")!;
     for (let v = 0; v < pos.length; v += 3) {
       const a = Math.atan2(pos[v + 2], pos[v]);
@@ -176,18 +188,18 @@ function snowAndIce(scene: Scene, built: Set<unknown>): void {
     }
     disc.setVerticesData("position", pos);
     disc.rotation.y = yaw;
-    disc.position.set(x, 0.07 + (k % 5) * 0.004, z);
+    disc.position.set(x, 0.08 + (k % 5) * 0.004, z);
     drifts.push(disc);
   };
-  for (let t = 0; t < 9; t++) {
-    const a = (t / 9) * Math.PI * 2 + seeded(t, 71) * 0.5;
-    const length = 14 + seeded(t, 72) * 10;
-    const r = ARENA_RADIUS * 0.8 - length * 0.42;
-    drift(Math.cos(a) * r, Math.sin(a) * r, length, 5 + seeded(t, 73) * 5, -a + (seeded(t, 74) - 0.5) * 0.5, t);
+  for (let t = 0; t < 12; t++) {
+    const a = (t / 12) * Math.PI * 2 + seeded(t, 71) * 0.4;
+    const length = 18 + seeded(t, 72) * 12;
+    const r = ARENA_RADIUS * 0.74 - length * 0.4;
+    drift(Math.cos(a) * r, Math.sin(a) * r, length, 8 + seeded(t, 73) * 6, -a + (seeded(t, 74) - 0.5) * 0.5, t);
   }
-  for (let s = 0; s < 7; s++) {
-    const a = seeded(s, 75) * Math.PI * 2, r = 6 + seeded(s, 76) * 24;
-    const size = 4 + seeded(s, 77) * 7;
+  for (let s = 0; s < 12; s++) {
+    const a = seeded(s, 75) * Math.PI * 2, r = 4 + seeded(s, 76) * 24;
+    const size = 6 + seeded(s, 77) * 8;
     drift(Math.cos(a) * r, Math.sin(a) * r, size * 1.4, size, seeded(s, 78) * Math.PI, s + 20);
   }
   const driftMesh = Mesh.MergeMeshes(drifts, true);
@@ -276,7 +288,7 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
       const gap = 3 + seeded(k, 16) * 4;
       const colAngle = end + gap / 2;
       if (colAngle < 360 && Math.abs(colAngle - 180) > 18) {
-        const h = tier.h1 * (1.2 + seeded(k, 17) * 0.25);
+        const h = tier.h1 * (0.94 + seeded(k, 17) * 0.08);
         const [cx, cz] = rimPoint(colAngle, tier.at - (1.5 + seeded(k, 18) * 1.5) / ARENA_RADIUS);
         const width = 3.2 + seeded(k, 19) * 2.4;
         const column = MeshBuilder.CreateCylinder("vsIceColumn", { diameterTop: width * 0.55, diameterBottom: width, height: h, tessellation: 5 }, scene);
@@ -297,39 +309,88 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
     merged.receiveShadows = true;
     merged.isPickable = false;
   }
-  const gateX = -48;
-  const relief = mk("vikingSandboxGateRelief", new Color3(0.28, 0.62, 0.72), 0.45);
-  const gateBox = (w: number, h: number, d: number, x: number, y: number, z: number, mat: StandardMaterial) => {
+  runeGate(scene, snow, obstacles);
+}
+
+// The great gate (574 [R], spec at the head of the file).
+function runeGate(scene: Scene, snow: StandardMaterial, obstacles: Obstacle[]): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = new Color3(0.12, 0.14, 0.16);
+    return m;
+  };
+  const steel = mk("vikingSandboxGateSteel", new Color3(0.24, 0.5, 0.64), 0.3);
+  const relief = mk("vikingSandboxGateRelief", new Color3(0.72, 0.9, 0.96), 0.4);
+  const chainMat = mk("vikingSandboxGateChain", new Color3(0.2, 0.36, 0.46), 0.3);
+  const X = -47;
+  const parts: Mesh[] = [], reliefs: Mesh[] = [], chains: Mesh[] = [];
+  const box = (list: Mesh[], w: number, h: number, d: number, x: number, y: number, z: number) => {
     const part = MeshBuilder.CreateBox("vikingSandboxGate", { width: w, height: h, depth: d }, scene);
     part.position.set(x, y, z);
-    part.material = mat;
-    part.receiveShadows = true;
+    list.push(part);
     return part;
   };
-  for (const z of [-9, 9]) {
-    gateBox(6.4, 18.7, 4.7, gateX, 9.35, z, ice);
-    gateBox(7.2, 1, 5.2, gateX, 18.9, z, snow);
-    gateBox(7, 1.5, 5.2, gateX, 0.75, z, snow);
-  }
-  gateBox(6, 2, 20, gateX, 17.3, 0, snow);
-  for (const z of [-3.45, 3.45]) {
-    gateBox(2.9, 16.4, 6.8, gateX - 1.05, 8.2, z, ice);
-    for (const y of [4, 11.1]) {
-      gateBox(0.25, 3.3, 3.3, gateX + 0.54, y, z, relief).rotation.x = Math.PI / 4;
-      gateBox(0.27, 2.66, 2.66, gateX + 0.62, y, z, ice).rotation.x = Math.PI / 4;
+  const spike = (list: Mesh[], x: number, y: number, z: number, h: number, w: number) => {
+    const s = MeshBuilder.CreateCylinder("vikingSandboxGateSpike", { height: h, diameterTop: 0, diameterBottom: w, tessellation: 4 }, scene);
+    s.position.set(x, y + h / 2, z);
+    list.push(s);
+  };
+  // Two leaves, z -12..0 and 0..12, with a 2 x 3 grid of square spiral rune panels on the arena face
+  for (const side of [-1, 1]) {
+    box(parts, 3, 21, 11.8, X, 10.5, side * 6);
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 2; c++) {
+        const y = 4 + r * 6.2, z = side * (3 + c * 5.8);
+        for (let ring = 0; ring < 3; ring++) {
+          const s = 4.2 - ring * 1.3, fx = X + 1.55 + ring * 0.12;
+          // A square frame of four bars: the nested frames read as a spiral rune
+          box(reliefs, 0.2, 0.32, s, fx, y + s / 2, z);
+          box(reliefs, 0.2, 0.32, s, fx, y - s / 2, z);
+          box(reliefs, 0.2, s, 0.32, fx, y, z + s / 2);
+          box(reliefs, 0.2, s * (ring === 2 ? 0.5 : 1), 0.32, fx, y - (ring === 2 ? s / 4 : 0), z - s / 2);
+        }
+      }
     }
+    // Flanking tower with a spiked crown
+    const tz = side * 15.5;
+    box(parts, 7, 25, 7, X - 0.5, 12.5, tz);
+    box(parts, 7.8, 1.2, 7.8, X - 0.5, 25.4, tz);
+    for (const [dx, dz] of [[-2.2, -2.2], [-2.2, 2.2], [2.2, -2.2], [2.2, 2.2]]) spike(parts, X - 0.5 + dx, 26, tz + dz, 4.5, 1.8);
   }
-  const links: Mesh[] = [];
-  for (let i = 0; i <= 30; i++) {
-    const t = i / 30;
-    const link = MeshBuilder.CreateTorus("vikingSandboxChainLink", { diameter: 0.88, thickness: 0.16, tessellation: 8 }, scene);
-    link.position.set(gateX + 2.7, 18.5 - 2.6 * 4 * t * (1 - t), -9 + 18 * t);
-    link.rotation.z = i % 2 === 0 ? Math.PI / 2 : 0;
-    links.push(link);
+  // Lintel with a row of spikes over the leaves
+  box(parts, 4, 2.4, 25, X, 22.2, 0);
+  for (let z = -10; z <= 10; z += 2.5) spike(parts, X, 23.4, z, 2.6 + (Math.abs(z) < 2 ? 1.6 : 0), 1.1);
+  // Chains: tower top to the wall crest beside it, and one across the lintel
+  const hang = (from: Vector3, to: Vector3, sag: number, n: number) => {
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const link = MeshBuilder.CreateTorus("vikingSandboxChainLink", { diameter: 1.2, thickness: 0.36, tessellation: 8 }, scene);
+      link.position.set(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t - sag * 4 * t * (1 - t), from.z + (to.z - from.z) * t);
+      link.rotation.set(i % 2 === 0 ? Math.PI / 2 : 0, Math.atan2(to.x - from.x, to.z - from.z), 0);
+      chains.push(link);
+    }
+  };
+  for (const side of [-1, 1]) {
+    const crest = Math.atan2(side * 30, -42);
+    hang(new Vector3(X, 24.5, side * 15.5), new Vector3(Math.cos(crest) * 49, 18, Math.sin(crest) * 49), 4, 26);
   }
-  const chain = Mesh.MergeMeshes(links, true);
-  if (chain) chain.material = relief;
-  obstacles.push({ type: "box", center: new Vector3(gateX, 0, 0), halfX: 3.2, halfZ: 13 });
+  hang(new Vector3(X + 2.2, 21.5, -12), new Vector3(X + 2.2, 21.5, 12), 3.2, 30);
+  for (const [list, m, name] of [[parts, steel, "vikingSandboxGateBody"], [reliefs, relief, "vikingSandboxGateRunes"], [chains, chainMat, "vikingSandboxGateChains"]] as const) {
+    const merged = Mesh.MergeMeshes([...list], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  // Snow on the lintel top
+  const lintelSnow = MeshBuilder.CreateBox("vikingSandboxGateSnow", { width: 4.3, height: 0.5, depth: 25.4 }, scene);
+  lintelSnow.position.set(X, 23.6, 0);
+  lintelSnow.material = snow;
+  obstacles.push({ type: "box", center: new Vector3(X, 0, 0), halfX: 3.5, halfZ: 19 });
 }
 
 function iceBody(scene: Scene, built: Set<unknown>): void {
@@ -377,26 +438,31 @@ function rimPeaks(scene: Scene, built: Set<unknown>): void {
   for (const mesh of scene.meshes) {
     if (built.has(mesh) && /^mountain(Base|Cap|Root)/.test(mesh.name)) mesh.setEnabled(false);
   }
-  const glacier = new StandardMaterial("vikingSandboxRimGlacier", scene);
-  glacier.diffuseColor = new Color3(0.42, 0.72, 0.85);
-  glacier.emissiveColor = glacier.diffuseColor.scale(0.34);
-  const snow = scene.getMaterialByName("vikingSandboxSnow");
-  for (const [axis, prominence] of [[11, 13], [63, 8], [113, 16], [246, 12], [310, 17]]) {
-    for (let i = -1; i <= 1; i++) {
-      const angle = axis + i * 5;
-      const [x, z] = rimPoint(angle, 0.98 + i * 0.015);
-      const height = prominence - Math.abs(i) * 4;
-      const width = 7 + seeded(axis + i, 76) * 4;
-      const peak = MeshBuilder.CreateCylinder("vikingSandboxRimPeak", {
-        height, diameterTop: width * 0.16, diameterBottom: width, tessellation: 4, subdivisions: 2,
-      }, scene);
-      peak.position.set(x, 14 + height / 2, z);
-      peak.rotation.set(0.12 + i * 0.14, angle * Math.PI / 180, i * 0.13);
-      peak.scaling.z = 0.7;
-      peak.convertToFlatShadedMesh();
-      peak.material = i === 1 ? snow : glacier;
-      peak.isPickable = false;
+  // [R] 574: no rim peaks; two crystal clusters on the right-back side only (spec at the head of the file)
+  const crystal = new StandardMaterial("vikingSandboxRimCrystal", scene);
+  crystal.diffuseColor = new Color3(0.2, 0.58, 0.8);
+  crystal.emissiveColor = crystal.diffuseColor.scale(0.4);
+  crystal.specularColor = new Color3(0.2, 0.22, 0.25);
+  const prisms: Mesh[] = [];
+  for (const [axis, count] of [[28, 6], [50, 5]]) {
+    const [cx, cz] = rimPoint(axis, 1.02);
+    for (let i = 0; i < count; i++) {
+      const k = axis * 10 + i;
+      const h = 6 + seeded(k, 77) * 6;
+      const w = 2.2 + seeded(k, 78) * 1.8;
+      const prism = MeshBuilder.CreateCylinder("vikingSandboxRimCrystal", { height: h, diameterTop: w * 0.35, diameterBottom: w, tessellation: 6 }, scene);
+      const a = seeded(k, 79) * Math.PI * 2, d = i === 0 ? 0 : 1.5 + seeded(k, 80) * 3;
+      prism.position.set(cx + Math.cos(a) * d, 17 + h / 2 - 0.6, cz + Math.sin(a) * d);
+      prism.rotation.set(Math.cos(a) * 0.35 * (i === 0 ? 0.2 : 1), seeded(k, 81) * Math.PI, Math.sin(a) * 0.35 * (i === 0 ? 0.2 : 1));
+      prisms.push(prism);
     }
+  }
+  const merged = Mesh.MergeMeshes(prisms, true);
+  if (merged) {
+    merged.name = "vikingSandboxRimCrystals";
+    merged.convertToFlatShadedMesh();
+    merged.material = crystal;
+    merged.isPickable = false;
   }
 }
 
