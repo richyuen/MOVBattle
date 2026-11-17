@@ -389,6 +389,63 @@ function earthDrum(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+// Gate pavilions (573, wiki ancient_2.png and greek_ancient_2.png): where the field paths reach the ring wall,
+// small beige pavilions stand set into it: a flat-roofed cella on the left and front-right, and on the front
+// centre line a larger columned gate with a gabled pediment, each flanked by a pair of cypresses. Spec: at the
+// path ends, angles 188, 320 (cellas: 6.5 m wide along the wall, 4.5 m deep, 3.6 m walls, a 0.45 m roof slab
+// overhanging 0.4 m, two porch columns and a dark doorway facing the centre) and 250 degrees (gate: 8 m wide, 5 m
+// deep, 4.4 m walls, four columns, a pediment); backs against the wall (centre 2 m inside it); one 3.4 m
+// cylinder collider each (clear of the stage armies at x 29..37, |z| <= 18).
+const PAVILIONS: Array<{ deg: number; gate: boolean }> = [{ deg: 188, gate: false }, { deg: 250, gate: true }, { deg: 320, gate: false }];
+
+function gatePavilions(scene: Scene, obstacles: Obstacle[]): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const plaster = mk("ancient2PavilionPlaster", new Color3(0.8, 0.7, 0.52), 0.26);
+  const pale = mk("ancient2PavilionPale", new Color3(0.9, 0.83, 0.68), 0.28);
+  const dark = mk("ancient2PavilionDoor", new Color3(0.16, 0.12, 0.09), 0.2);
+  const leaves = mk("ancient2PavilionCypress", new Color3(0.33, 0.5, 0.16), 0.18);
+  const R = RIM.a - 1.4 - 2;
+  for (const { deg, gate } of PAVILIONS) {
+    const a = (deg * Math.PI) / 180;
+    const root = new Mesh("ancient2PavilionRoot", scene);
+    root.position.set(Math.cos(a) * R, 0, Math.sin(a) * R);
+    // Local +z faces the field centre, local x runs along the wall
+    root.rotation.y = Math.PI / 2 - a + Math.PI;
+    const W = gate ? 8 : 6.5, D = gate ? 5 : 4.5, H = gate ? 4.4 : 3.6;
+    const piece = (mesh: Mesh, mat: StandardMaterial, x: number, y: number, z: number) => {
+      mesh.parent = root;
+      mesh.position.set(x, y, z);
+      mesh.material = mat;
+      mesh.receiveShadows = true;
+      mesh.isPickable = false;
+      return mesh;
+    };
+    piece(MeshBuilder.CreateBox("ancient2Pavilion", { width: W, height: H, depth: D - 1.6 }, scene), plaster, 0, H / 2, -0.8);
+    piece(MeshBuilder.CreateBox("ancient2PavilionPlinth", { width: W + 0.6, height: 0.35, depth: D + 0.6 }, scene), pale, 0, 0.17, 0);
+    piece(MeshBuilder.CreateBox("ancient2PavilionRoof", { width: W + 0.8, height: 0.45, depth: D + 0.8 }, scene), pale, 0, H + 0.22, 0);
+    piece(MeshBuilder.CreateBox("ancient2PavilionDoor", { width: gate ? 2.4 : 1.6, height: gate ? 3.2 : 2.4, depth: 0.12 }, scene), dark, 0, (gate ? 3.2 : 2.4) / 2 + 0.35, -0.8 + (D - 1.6) / 2 + 0.05);
+    const cols = gate ? [-3.1, -1.4, 1.4, 3.1] : [-1.9, 1.9];
+    for (const x of cols) {
+      piece(MeshBuilder.CreateCylinder("ancient2PavilionColumn", { diameter: 0.55, height: H - 0.35, tessellation: 8 }, scene), pale, x, 0.35 + (H - 0.35) / 2, D / 2 - 0.4);
+    }
+    if (gate) {
+      const gable = piece(MeshBuilder.CreateBox("ancient2PavilionPediment", { width: W + 0.6, height: 2.6, depth: 2.6 }, scene), plaster, 0, H + 0.45, 0);
+      gable.rotation.x = Math.PI / 4;
+    }
+    for (const side of [-1, 1]) {
+      const h = 4.5 + seeded(deg + side, 151) * 1.5;
+      piece(MeshBuilder.CreateCylinder("ancient2PavilionCypress", { height: h, diameterTop: 0.1, diameterBottom: 1.4, tessellation: 7 }, scene), leaves, side * (W / 2 + 1.3), h / 2 + 0.2, 0.6);
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(root.position.x, 0, root.position.z), radius: 3.4 });
+  }
+}
+
 export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -408,5 +465,6 @@ export function buildAncient2(scene: Scene, base: () => MapBuildResult): MapBuil
   greenLawn(scene, built);
   fieldPaths(scene);
   templeComplex(scene, obstacles);
+  gatePavilions(scene, obstacles);
   return { ...result, obstacles };
 }
