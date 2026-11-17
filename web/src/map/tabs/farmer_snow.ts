@@ -38,31 +38,89 @@ function snowCover(scene: Scene, built: Set<unknown>): void {
     if (!built.has(mesh)) continue;
     if (mesh.name.startsWith("fieldBlades_") || mesh.name === "grassTuft" || mesh.name === "centerGrass" || mesh.name === "flowerDot") mesh.setEnabled(false);
   }
-  const drift = new StandardMaterial("farmerSnowDrift", scene);
-  drift.diffuseColor = SNOW.clone();
-  drift.emissiveColor = SNOW_SHADE.clone();
-  drift.specularColor = new Color3(0.08, 0.08, 0.1);
-  const parts: Mesh[] = [];
-  for (let i = 0; i < 70; i++) {
-    const ring = i < 56;
-    const a = seeded(i, 11) * Math.PI * 2;
-    const band = ring ? 0.78 + seeded(i, 12) * 0.2 : 0.2 + seeded(i, 12) * 0.45;
-    const x = Math.cos(a) * 50 * band, z = Math.sin(a) * 42 * band;
-    if (Math.abs(x - iceX(z)) < ICE.halfWidth + 2.5) continue;
-    const len = 2 + seeded(i, 13) * 4;
-    const d = MeshBuilder.CreateIcoSphere("farmerSnowDrift", { radius: 1, subdivisions: 2 }, scene);
-    d.scaling.set(len, 0.3 + seeded(i, 14) * 0.3, len * (0.4 + seeded(i, 15) * 0.3));
-    d.rotation.y = -a + Math.PI / 2 + (seeded(i, 16) - 0.5) * 0.6;
-    d.position.set(x, 0, z);
-    parts.push(d);
+}
+
+/**
+ * [R] 572 field rocks and mill-bank shade, spec read off reference/maps/wiki/farmer_snow.png and farm_snow.png:
+ * - No smooth snow blobs on the field (the 70 flattened drift spheres read as dark spheres from above): they go.
+ * - Field rocks are angular dark slate stones (faceted polyhedra, navy-grey) in 9 low clusters of 2-4 stones,
+ *   0.9-2.2 m high, each stone wearing a thick pale snow cap (a flattened polyhedron covering ~80% of its top,
+ *   near-white, self-lit so it reads paler than the blue field). Clusters sit by the rim and at the field edges,
+ *   clear of the ice, the houses, the grove, the mill, the carts and the furrows; one collider per cluster.
+ *   The big front boulder's caps take the same pale snow.
+ * - Mill bank: the broad dark-blue shadow the mill throws over its bank (TABS: the whole bank round the mill is in
+ *   deep blue shade). The dir light's shadow is narrow, so it is drawn: two lobed translucent navy plates on the
+ *   ground (outer 17 x 14 m at 0.35 alpha, inner 11 x 9 m at 0.3 more) centred down-light of the mill at
+ *   (17, -33), on the +x bank only (they stop 1 m short of the ice). Unlit, out of the glow, no colliders.
+ */
+function snowRocksAndShade(scene: Scene): Obstacle[] {
+  const stone = new StandardMaterial("farmerSnowSlate", scene);
+  stone.diffuseColor = new Color3(0.16, 0.19, 0.3);
+  stone.emissiveColor = new Color3(0.035, 0.05, 0.1);
+  stone.specularColor = Color3.Black();
+  const cap = new StandardMaterial("farmerSnowRockCap", scene);
+  cap.diffuseColor = new Color3(0.82, 0.88, 1.0);
+  cap.emissiveColor = new Color3(0.36, 0.42, 0.62);
+  cap.specularColor = Color3.Black();
+  const boulderCap = scene.getMaterialByName("farmerSnowBoulderCap") as StandardMaterial | null;
+  if (boulderCap) {
+    boulderCap.diffuseColor = cap.diffuseColor.clone();
+    boulderCap.emissiveColor = cap.emissiveColor.clone();
   }
-  const drifts = Mesh.MergeMeshes(parts, true);
-  if (drifts) {
-    drifts.name = "farmerSnowDrifts";
-    drifts.material = drift;
-    drifts.receiveShadows = true;
-    drifts.isPickable = false;
+  const clusters: Array<[number, number, number]> = [
+    [-14, -31, 3], [-31, -14, 4], [-24, -40, 2], [-40, -2, 3], [24, 9, 3], [37, 5, 2], [12, 26, 3], [32, 24, 4], [-6, 24, 2],
+  ];
+  const obstacles: Obstacle[] = [];
+  const rocks: Mesh[] = [], caps: Mesh[] = [];
+  clusters.forEach(([cx, cz, n], k) => {
+    for (let j = 0; j < n; j++) {
+      const i = k * 7 + j;
+      const a = seeded(i, 101) * Math.PI * 2, d = j === 0 ? 0 : 1.4 + seeded(i, 102) * 1.2;
+      const x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+      const w = (j === 0 ? 2.6 : 1.5) + seeded(i, 103) * 1.1;
+      const h = (j === 0 ? 1.6 : 0.9) + seeded(i, 104) * 0.6;
+      const rock = MeshBuilder.CreatePolyhedron("farmerSnowFieldRock", { type: 2, sizeX: w * 0.6, sizeY: h * 0.66, sizeZ: w * 0.52 }, scene);
+      rock.position.set(x, h * 0.36, z);
+      rock.rotation.set((seeded(i, 105) - 0.5) * 0.4, seeded(i, 106) * Math.PI, (seeded(i, 107) - 0.5) * 0.4);
+      rocks.push(rock);
+      const top = MeshBuilder.CreatePolyhedron("farmerSnowFieldRockCap", { type: 2, sizeX: w * 0.53, sizeY: h * 0.24, sizeZ: w * 0.47 }, scene);
+      top.position.set(x, h * 0.36 + h * 0.5, z);
+      top.rotation.copyFrom(rock.rotation);
+      caps.push(top);
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: n > 2 ? 2.8 : 2.2 });
+  });
+  for (const [list, mat, name] of [[rocks, stone, "farmerSnowFieldRocks"], [caps, cap, "farmerSnowFieldRockCaps"]] as const) {
+    const merged = Mesh.MergeMeshes([...list], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
   }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const [rx, rz, alpha, y] of [[17, 14, 0.35, 0.035], [11, 9, 0.3, 0.04]] as const) {
+    const cx = 17, cz = -33;
+    const outline: Vector3[] = [];
+    for (let i = 0; i <= 28; i++) {
+      const a = (i / 28) * Math.PI * 2;
+      const wob = 1 + (seeded(i % 28, 111 + rx) - 0.5) * 0.18;
+      let x = cx + Math.cos(a) * rx * wob;
+      const z = cz + Math.sin(a) * rz * wob;
+      x = Math.max(x, iceX(z) + ICE.halfWidth + 1.8);
+      outline.push(new Vector3(x, y, z));
+    }
+    const centre = outline.map(() => new Vector3(cx, y, cz));
+    const plate = MeshBuilder.CreateRibbon("farmerSnowMillShade", { pathArray: [centre, outline], sideOrientation: Mesh.DOUBLESIDE }, scene);
+    const m = new StandardMaterial("farmerSnowMillShade", scene);
+    m.disableLighting = true;
+    m.emissiveColor = new Color3(0.01, 0.02, 0.08);
+    m.alpha = alpha;
+    plate.material = m;
+    plate.isPickable = false;
+    glow?.addExcludedMesh(plate);
+  }
+  return obstacles;
 }
 
 /**
@@ -841,7 +899,7 @@ export function buildFarmerSnow(scene: Scene, base: () => MapBuildResult): MapBu
   const baseDispose = result.dispose;
   return {
     ...result,
-    obstacles: [...clearFieldJunk(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles)), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene), fieldBoulder(scene), ...winterCarts(scene)],
+    obstacles: [...clearFieldJunk(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), roundSnowIsland(scene, new Set(scene.meshes.filter((m) => !prior.has(m))), result.obstacles)), ...snowyBridge(scene), ...pineGrove(scene), ...snowBuildings(scene), ...festiveLights(scene), fieldBoulder(scene), ...winterCarts(scene), ...snowRocksAndShade(scene)],
     dispose: () => {
       restoreLights();
       baseDispose?.();
