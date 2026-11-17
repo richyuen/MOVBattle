@@ -3,34 +3,7 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-568 | 45084eee | map.tribal_sandbox.a | approved, struck a1
-568 | ee8ea992 | map.tribal_sandbox.a | approved, struck a2
-568 | d8ff6642 | map.tribal_sandbox.a | approved, struck a3
-568 | 0c5f8a08 | map.farmer_snow.a | approved, struck a3
-568 | a7c6dc9f | map.farmer_snow.a | approved, struck a4
-568 | da540cdb | map.viking_sandbox.a | approved, struck a5
-568 | 3da0c3ba | map.viking_sandbox.b | approved, struck b1
-568 | 7b27f51b | map.medieval_1.a | approved, struck a4
-568 | 6d892fbe | map.medieval_2.a | approved, struck a4
-569 | 6ddcdd19 | map.farmer_snow.a | approve, struck a5
-569 | eb3c33ae+16dc5699 | map.viking_sandbox.a | approve, struck a1
-569 | b5799593 | map.viking_sandbox.a | approve, struck a2
-569 | 2be8528a | map.viking_sandbox.a | approve, struck a3
-569 | 489d2940 | map.medieval_2.a | approve, struck a3
-569 | 41c29446 | map.medieval_2.b | approve, struck b4
-569 | 8c56cdf8 | map.medieval_2.a | approve, struck a5
-569 | 18cc0f35 | map.medieval_1.b | approve, struck b4
-569 | cdefcfc1 | map.medieval_1.a | approve, struck a3
-570 | 1371524f+24937b53 [R] | map.farmer_snow.a | approve, struck a2
-570 | 48dacf98+59b30f57 | map.medieval_1.a | approve, struck a5
-570 | 9767224d+8b7cf263+7094ea34 | map.medieval_1.b | approve, struck b5
-570 | 2980c8ce+ca101d74 | map.medieval_1.a | approve
-570 | 4e079a16 | map.medieval_2.b | approve, struck b1
-570 | 4df6e5f8 | map.medieval_2.a | approve, struck a2
-570 | 1a2024e4 | map.ancient_1.a | approve, struck a3
-570 | 18a7b03b | map.ancient_2.b | approve
-570 | c8566daa | map.ancient_sandbox.b | approve, struck b2
-570 | 23af4ed0 | map.viking.a | approve, struck a2
+570 | 10 commits (farmer_snow R, medieval_1 x3, medieval_2 x2, ancient_1, ancient_2, ancient_sandbox, viking) | all approve, struck fs a2, m1 a5 b5, m2 b1 a2, a1 a3, as b2, v a2
 571 | 2c30c0f9 | map.medieval_1.a | approve, struck a6 (a PASS; CONFIRM passed)
 571 | b3ebd6d4 | map.medieval_2.a | approve, struck a1
 571 | c12b2649 | map.medieval_2.a | approve
@@ -61,6 +34,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 573 | cc91f4d4 | map.ancient_2.a | approve, struck a4
 573 | 0f5ada56 | map.ancient_2.a | approve, struck a5
 573 | 61adfc2c | map.ancient_1.a | approve, struck a1
+574 | 4f1be279+bff14f83 | map.ancient_2.b | approve, struck b1
+574 | 15c6c224 | map.ancient_2.b | approve, struck b4 (b PASS; CONFIRM passed b, failed a)
+574 | a472ad38 | map.ancient_sandbox.a | approve, struck a1
+574 | ae0499eb | map.ancient_sandbox.a | approve, struck a3
+574 | 452ef25d+7ac51041 | map.ancient_sandbox.a | approve, struck a5
+574 | 536b4f76 | map.ancient_1.b | approve, struck b1, b3, b5
+574 | 422bf815 | map.ancient_1.a | approve, struck a3 and b2
+574 | e03012d5+e3d80f84 | map.ancient_1.a | approve, struck a2; added a7
+574 | fdb5043b | map.viking.b | reject (bank face near black; reverted)
+574 | ef7ca1e5 [R] | map.viking_sandbox.a | approve, struck a1-a3 (CONFIRM passed: D)
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
@@ -127,7 +110,11 @@ web/src/map/tabs/viking.ts:winterHaze | clear (0.58,0.86,0.91), 320 flakes, mist
 web/src/map/tabs/ancient_1.ts:BANDS and STREETS | three bands x -24..24 (z -19/0/19, depth 14/16/14), streets z +-10 4 m wide | 572 | approved (CONFIRM failed b: reads as fused slab) | 2x3 blocks at x +-15
 web/src/map/tabs/ancient_1.ts:lighthouse and pebbledUnderside | 14 m octagonal tower at (-42,46); two slabs 7 m + 6 m inset, pebbles every 3.5 m | 572 | approved | absent; 11 m box slab
 web/src/map/tabs/ancient_2.ts:ringWall | 72 segments r 49.6, 1.5 m high, beige (0.78,0.68,0.5), 6 cypress clusters; ring trees removed | 572 | approved, struck a3 | autumn tree ring
-web/src/map/tabs/viking.ts:BANK, UNDER, FALL | bank 2.4 m smoothstep over 5 m past lake edge (height field); ice bowl to -26 m; crag+cascade at (0,44) | 573 | approved; bank unseen from top | absent
+web/src/map/tabs/viking.ts:BANK, UNDER, FALL | bank 2.4 m smoothstep over 5 m past lake edge (height field); ice bowl to -26 m; crag+cascade at (0,44) | 574 | top 4.5 m rejected (P 574, attempts 1); 2.4 kept | absent
+web/src/map/tabs/ancient_2.ts:crispRim and frontPropylon | floor trimmed to r 50.3 via setVerticesData, lawn out of glow; propylon 8.4 x 5.4 m at 250 deg, r 49 | 574 | approved, b PASS | apron; solid gabled box
+web/src/map/tabs/ancient_sandbox.ts:clearSky, frontSandstone, hazySea | clear (0.3,0.6,0.88) fog (0.66,0.8,0.93); 5 sandstone clusters + 2 step flights, hazeTreeline hidden; vertex-graded sea (0.3,0.55,0.76)->(0.66,0.8,0.93) | 574 | approved, struck a1 a3 a5 | beige; dark boulder chain; royal-blue disc
+web/src/map/tabs/ancient_1.ts:outerRows, houses, flagstones | 2 houses per long-wall row end x 28.5..52; 9.8 m houses with 2.2 m alleys; pavement 0.27 matte + jittered white lines | 574 | approved; pavement too dark (a7) | bands only; fused slab; (0.53,0.56,0.62) + seam grid
+web/src/map/tabs/viking_sandbox.ts:runeGate, rimCrystals, floor (R) | gate 24 x 21 m steel-teal (0.24,0.5,0.64), towers 25 m; columns 0.94-1.02 tier; crystals at 28/50 deg; ice 0.72 R, 12+12 drifts 0.25 m | 574 | approved, D | 18.7 m pillars; columns 1.2-1.45x; 5 rim peaks; ice 0.8 R, 9+7 drifts
 web/src/map/tabs/ancient_sandbox.ts:SHELVES and ISLETS | 10 lobes 9-25 m out, tops -2.5..-7; 5 islets 75-150 m out | 573 | approved, b PASS | absent
 web/src/map/tabs/ancient_2.ts:earthDrum and PAVILIONS | drum r 51 to -17 m, 110 stones; pavilions at 188/250/320 deg | 573 | approved, a PASS | navy slab; absent
 web/src/map/tabs/ancient_1.ts:clearSky | clear (0.3,0.6,0.88), fog (0.66,0.8,0.93) | 573 | approved | inherited beige
