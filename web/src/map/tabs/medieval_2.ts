@@ -404,6 +404,11 @@ export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBui
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && mesh.name.startsWith("mountain")) mesh.setEnabled(false);
+  }
+  scene.clearColor.set(0.66, 0.84, 0.87, 1);
+  scene.fogColor.set(0.68, 0.84, 0.87);
   const hazards = [...clearCentrePools(scene, built, result), ...frontPond(scene)];
   const obstacles = castleOaks(scene, built, clearPondGround(scene, built, [...result.obstacles]));
   earthenBowl(scene, built);
