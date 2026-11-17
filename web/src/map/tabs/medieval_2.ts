@@ -11,6 +11,7 @@
 // metres in from the rim. The stage armies (x 28..37, z -26..-6) stand on open meadow clear of the pond. All paths are drawn only (flat).
 import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
+import { clampToIsland } from "../mapBuilder";
 
 function seeded(i: number, seed: number): number {
   const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
@@ -293,12 +294,46 @@ function cottagesAndFallenTower(scene: Scene, obstacles: MapBuildResult["obstacl
   }
 }
 
+function earthenBowl(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && /^island(Under|Shelf|Cliff)/.test(mesh.name)) mesh.setEnabled(false);
+  }
+  const tiers = [
+    { scale: 1, height: -0.07, color: [0.49, 0.44, 0.38] },
+    { scale: 0.99, height: -6.2, color: [0.49, 0.44, 0.38] },
+    { scale: 0.90, height: -11.6, color: [0.45, 0.37, 0.31] },
+    { scale: 0.73, height: -17.4, color: [0.40, 0.33, 0.29] },
+    { scale: 0.50, height: -21, color: [0.35, 0.29, 0.26] },
+    { scale: 0.01, height: -23, color: [0.35, 0.29, 0.26] },
+  ];
+  const rings = tiers.map(({ scale, height }, row) => Array.from({ length: 64 }, (_, i) => {
+    const angle = i * Math.PI / 32;
+    const [x, z] = clampToIsland(Math.cos(angle) * 100, Math.sin(angle) * 100);
+    const jagged = 1 + (seeded(i, 50 + row) - 0.5) * (row === 0 ? 0 : 0.026);
+    return new Vector3(x * scale * jagged, height + (row ? Math.sin(angle * 5) * 0.8 : 0), z * scale * jagged);
+  }));
+  for (let row = 1; row < rings.length; row++) {
+    const [r, g, b] = tiers[row].color;
+    const earth = new StandardMaterial("medieval2Earth", scene);
+    earth.diffuseColor = new Color3(r, g, b);
+    earth.emissiveColor = earth.diffuseColor.scale(0.83);
+    earth.specularColor = Color3.Black();
+    const band = MeshBuilder.CreateRibbon("medieval2BowlBand", {
+      pathArray: [rings[row - 1], rings[row]], closePath: true, sideOrientation: Mesh.DOUBLESIDE,
+    }, scene);
+    band.material = earth;
+    band.isPickable = false;
+    band.convertToFlatShadedMesh();
+  }
+}
+
 export function buildMedieval2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   const hazards = [...clearCentrePools(scene, built, result), ...frontPond(scene)];
   const obstacles = castleOaks(scene, built, clearPondGround(scene, built, [...result.obstacles]));
+  earthenBowl(scene, built);
   dirtPaths(scene);
   castleFront(scene, obstacles);
   cottagesAndFallenTower(scene, obstacles);
