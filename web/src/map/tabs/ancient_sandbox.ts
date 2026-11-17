@@ -593,6 +593,58 @@ function frontSandstone(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
   }
 }
 
+// Hazy sea (574, greek_ancient_sandbox.png: near the cliffs the water is a soft mid blue that greys and pales outward
+// until it melts into a white-blue mist at the horizon; the far islets are muted grey-brown rocks with dull green tops,
+// half lost in the haze). Spec: the flat self-lit royal-blue disc goes; a 900 m unlit disc of 48 rings x 96 sectors
+// carries vertex colours from blue-grey (0.17, 0.38, 0.57) at the rim through (0.36, 0.55, 0.7) at 120 m to the fog's
+// pale sky blue (0.66, 0.8, 0.93) from 260 m out, out of fog and glow; islet rock (0.5, 0.38, 0.32) and caps
+// (0.36, 0.47, 0.22) mixed 35% toward that haze.
+function hazySea(scene: Scene): void {
+  scene.getMeshByName("ancientSandboxSea")?.setEnabled(false);
+  const rings = 48, sectors = 96, inner = 40, outer = 450;
+  const near = new Color3(0.17, 0.38, 0.57), mid = new Color3(0.36, 0.55, 0.7), far = new Color3(0.66, 0.8, 0.93);
+  const pos: number[] = [], col: number[] = [], nrm: number[] = [], idx: number[] = [];
+  for (let i = 0; i <= rings; i++) {
+    const r = i === 0 ? 0 : inner * (outer / inner) ** ((i - 1) / (rings - 1));
+    const c = r < 120 ? Color3.Lerp(near, mid, Math.max(0, r - 50) / 70) : Color3.Lerp(mid, far, Math.min(1, (r - 120) / 140));
+    for (let k = 0; k <= sectors; k++) {
+      const a = (k / sectors) * Math.PI * 2;
+      pos.push(Math.cos(a) * r, SEA_Y, Math.sin(a) * r);
+      col.push(c.r, c.g, c.b, 1);
+      nrm.push(0, 1, 0);
+      if (i < rings && k < sectors) {
+        const p = i * (sectors + 1) + k, q = p + sectors + 1;
+        idx.push(p, q, p + 1, p + 1, q, q + 1);
+      }
+    }
+  }
+  const mesh = new Mesh("ancientSandboxHazySea", scene);
+  const data = new VertexData();
+  data.positions = pos;
+  data.indices = idx;
+  data.normals = nrm;
+  data.colors = col;
+  data.applyToMesh(mesh);
+  const mat = new StandardMaterial("ancientSandboxHazySeaMat", scene);
+  mat.disableLighting = true;
+  mat.diffuseColor = Color3.White();
+  mat.emissiveColor = Color3.White();
+  mat.specularColor = Color3.Black();
+  mat.backFaceCulling = false;
+  mesh.material = mat;
+  mesh.applyFog = false;
+  mesh.isPickable = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(mesh);
+  const mute = (name: string, c: Color3) => {
+    const m = scene.getMaterialByName(name);
+    if (!(m instanceof StandardMaterial)) return;
+    m.diffuseColor = Color3.Lerp(c, far, 0.35);
+    m.emissiveColor = m.diffuseColor.scale(0.45);
+  };
+  mute("ancientSandboxIsletRock", new Color3(0.5, 0.38, 0.32));
+  mute("ancientSandboxIsletGrass", new Color3(0.36, 0.47, 0.22));
+}
+
 // Clear sky (574, greek_ancient_sandbox.png: a bright mid-blue sky with white puffy clouds, no beige haze). Spec: clear
 // colour (0.3, 0.6, 0.88), fog a pale sky blue (0.66, 0.8, 0.93) so the far range fades toward the horizon, the base
 // clouds kept white; both restored on dispose.
@@ -651,6 +703,7 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
   spiralMountain(scene, cleared.obstacles);
   const obstacles = edgeVillage(scene, built, cleared.obstacles);
   frontSandstone(scene, built, obstacles);
+  hazySea(scene);
   const restoreSky = clearSky(scene);
   return { ...result, dispose: () => { restoreSky(); result.dispose?.(); }, obstacles, hazards: cleared.hazards };
 }
