@@ -16,9 +16,9 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 ## Capture and probes
 - capture-world.mjs boots like capture.mjs: mulberry32 0x4d4f5642 reseeded at every resetBattle, time only through advanceTime, setup renders at 1/8 size (__setupScale 8). It re-adds body.capture-mode before every shot (the game drops it on loads).
 - Never run a capture with a test --iter number: pruneOld keeps only summary.json for iterations older than 10 (guarded by STATE's Iteration); test into look/ (no --iter).
-- A capture wipes iter-N unless --add: save audit.md / critic.md after the last capture of the step, or rerun the judge after it. Step 5's capture of an audit iteration also wipes the audit files: run it with --add (555 lost audit.md/audit2.md this way).
-- A step-5 capture (75-82 shots) takes ~12 min: run it in the background.
-- Map StandardMaterial greys read lavender-blue in the shots even at (0.6,0.54,0.52) (critic 555 on tribal rocks and farmer walls): a warm grey needs r well over b; check palette.png first.
+- A capture wipes iter-N unless --add: save audit/critic files after the step's last capture; an audit iteration's step 5 runs with --add (555). A step-5 capture (~80 shots) takes ~12 min: background it.
+- Map greys read lavender-blue even at (0.6,0.54,0.52) (555): a warm grey needs r well over b; check palette.png.
+- A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
 - Probes (loop/scripts/probes/) run from repo root; --build after source changes, --noglow for a swatch. They were written for units: read one before trusting it on a map.
 - In-page probe on the dev server (5173): `const B = await import('<the @babylonjs_core.js?v=... URL from performance.getEntriesByType("resource")>'); B.EngineStore.LastCreatedScene` gives the live scene (meshes, materials, multiPickWithRay) after game.loadMapForCapture(id).
 
