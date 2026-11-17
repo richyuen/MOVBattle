@@ -8,7 +8,7 @@
 // every 5 degrees along the base rim (superellipse 54 x 48, power 3), 7-10 m along it and 4 m deep, 10-14 m tall, its outer face at the rim,
 // alternate facets set 0.6 m out; a closing floor slab at -12 m following the rim at 0.97 (the sea will meet it). Terracotta linear
 // (0.72, 0.32, 0.17), half self-lit since the faces look away from the sun; the floor a darker brown. Drawn only (outside the field).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, VertexData, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -165,6 +165,57 @@ function clearFieldDressing(scene: Scene, built: Set<unknown>, result: MapBuildR
   };
 }
 
+function hillsideTerraces(scene: Scene, obstacles: Obstacle[]): void {
+  const makeMaterial = (name: string, color: Color3) => {
+    const material = new StandardMaterial(name, scene);
+    material.diffuseColor = color;
+    material.emissiveColor = color.scale(0.15);
+    return material;
+  };
+  const earth = makeMaterial("ancientSandboxTerraceEarth", new Color3(0.49, 0.30, 0.23));
+  const turf = makeMaterial("ancientSandboxTerraceTurf", new Color3(0.5, 0.64, 0.25));
+  const lime = makeMaterial("ancientSandboxTerraceLime", new Color3(0.84, 0.8, 0.65));
+  const tile = makeMaterial("ancientSandboxTerraceTile", new Color3(0.28, 0.42, 0.6));
+  for (const [x, z, radius, height] of [[-24, 36, 12, 10], [23, 36, 13, 13]]) {
+    for (let tier = 0; tier < 3; tier++) {
+      const r = radius * (1 - tier * 0.23);
+      const h = height / 3;
+      const pz = z + tier * 1.5;
+      const mound = MeshBuilder.CreateCylinder("ancientSandboxTerraceCliff", { height: h, diameterTop: r * 1.72, diameterBottom: r * 2, tessellation: 8 }, scene);
+      mound.position.set(x + tier * 0.55, (tier + 0.5) * h, pz);
+      mound.scaling.z = 0.8;
+      mound.rotation.y = Math.PI / 8;
+      mound.material = earth;
+      const cap = MeshBuilder.CreateCylinder("ancientSandboxTerraceLawn", { height: 0.36, diameterTop: r * 1.76, diameterBottom: r * 1.72, tessellation: 8 }, scene);
+      cap.position.set(mound.position.x, (tier + 1) * h, pz);
+      cap.scaling.z = 0.8;
+      cap.rotation.y = mound.rotation.y;
+      cap.material = turf;
+      for (let step = 0; step < 7; step++) {
+        const top = tier * h + h * (step + 1) / 7;
+        const stair = MeshBuilder.CreateBox("ancientSandboxTerraceStep", { width: 3.4, height: 0.56, depth: 0.59 }, scene);
+        stair.position.set(x - 2.7, top - 0.27, pz - r * 0.75 + (step - 3) * 0.51);
+        stair.material = lime;
+      }
+    }
+    const temple = MeshBuilder.CreateBox("ancientSandboxTerraceTemple", { width: 4.9, height: 2.5, depth: 4.4 }, scene);
+    temple.position.set(x + 1.3, height + 1.4, z + 3.2);
+    temple.material = lime;
+    for (const dx of [-1.85, -0.63, 0.63, 1.85]) {
+      const column = MeshBuilder.CreateCylinder("ancientSandboxTempleColumn", { height: 2.65, diameter: 0.47, tessellation: 7 }, scene);
+      column.position.set(temple.position.x + dx, height + 1.5, z + 0.42);
+      column.material = lime;
+    }
+    const roof = MeshBuilder.CreateCylinder("ancientSandboxTemplePediment", { height: 5.4, diameter: 6.35, tessellation: 3 }, scene);
+    roof.rotation.set(Math.PI / 2, 0, 0);
+    roof.scaling.x = 0.89;
+    roof.scaling.z = 0.25;
+    roof.position.set(temple.position.x, height + 3.2, z + 2.7);
+    roof.material = tile;
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: radius * 0.79 });
+  }
+}
+
 export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -202,5 +253,6 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
       segment.isPickable = false;
     }
   }
+  hillsideTerraces(scene, cleared.obstacles);
   return { ...result, obstacles: cleared.obstacles, hazards: cleared.hazards };
 }
