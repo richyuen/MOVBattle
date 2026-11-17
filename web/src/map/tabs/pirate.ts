@@ -133,9 +133,22 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
   }
 }
 
+// No lagoon (577, pirate_beach.png and the wiki shot: the sand runs unbroken from the middle of the beach to the galleons'
+// gangplanks; there is no water band across the field, the turquoise is only the sea round the rim). Spec: the base's two
+// lagoon water hazards (boxes at z +-24 across |x| <= 22) go from the hazard list, and their drawn shore and water sheets
+// (campaign_hazard_sea_shore / _water at those spots) are hidden, leaving the beach's sand under them.
+function drainLagoon(scene: Scene, built: Set<unknown>, result: MapBuildResult): MapBuildResult["hazards"] {
+  const lagoon = (z: number) => Math.abs(Math.abs(z) - 24) < 0.5;
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && /^campaign_hazard_sea_(shore|water)$/.test(mesh.name) && lagoon(mesh.position.z)) mesh.setEnabled(false);
+  }
+  return result.hazards.filter((h) => !(h.kind === "water" && h.shape === "box" && lagoon(h.center.z)));
+}
+
 export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
+  const hazards = drainLagoon(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   // The base's ships (roots with their parts as children) and the two plank bridges between them
   const bridges = [[-6, 20], [6, 20]];
   const gone: Vector3[] = [];
@@ -152,5 +165,5 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   }
   const obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
   galleons(scene, obstacles);
-  return { ...result, obstacles };
+  return { ...result, obstacles, hazards };
 }
