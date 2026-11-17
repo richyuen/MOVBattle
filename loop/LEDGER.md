@@ -3,14 +3,6 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-563 | e6641d5a | map.farmer_snow.b | approved
-563 | 5ac61480 | map.farmer_snow.a | approved
-563 | 3524fafd | map.tribal_2.b | approved
-563 | 0b30e30a | map.tribal_2.b | approved
-563 | 74f9cb20 | map.tribal_sandbox.b | approved
-563 | 115b231d [R] | map.farmer_2.a | approved
-563 | 632026ad | map.viking_sandbox.a | approved
-563 | a295aa5a | map.ancient_sandbox.a | approved
 564 | 617a5f5a | map.viking_sandbox.b | approved
 564 | 78fc3163 | map.viking_sandbox.a | approved
 564 | d4443b87 | map.ancient_sandbox.b | approved
@@ -58,6 +50,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 568 | 3da0c3ba | map.viking_sandbox.b | approved, struck b1
 568 | 7b27f51b | map.medieval_1.a | approved, struck a4
 568 | 6d892fbe | map.medieval_2.a | approved, struck a4
+569 | 6ddcdd19 | map.farmer_snow.a | approve, struck a5
+569 | eb3c33ae+16dc5699 | map.viking_sandbox.a | approve, struck a1
+569 | b5799593 | map.viking_sandbox.a | approve, struck a2
+569 | 2be8528a | map.viking_sandbox.a | approve, struck a3
+569 | 489d2940 | map.medieval_2.a | approve, struck a3
+569 | 41c29446 | map.medieval_2.b | approve, struck b4
+569 | 8c56cdf8 | map.medieval_2.a | approve, struck a5
+569 | 18cc0f35 | map.medieval_1.b | approve, struck b4
+569 | cdefcfc1 | map.medieval_1.a | approve, struck a3
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
@@ -90,3 +91,12 @@ web/src/map/tabs/farmer_snow.ts:fieldBoulder and snowyFurrows | boulder cluster 
 web/src/map/tabs/viking_sandbox.ts:ARENA_RADIUS and iceBody | 51 m circular floor and tiered shell to 28 m below with hanging shards | 568 | approved | 54 × 48 ellipse inside rectangular base slab
 web/src/map/tabs/medieval_1.ts:rightBankRuins footprint | three crenellated runs and broken pillars on +x bank | 568 | approved | inherited meadow ruins
 web/src/map/tabs/medieval_2.ts:cottagesAndFallenTower footprint | two broken gables and a collapsed tower at front-right | 568 | approved | absent
+web/src/map/tabs/farmer_snow.ts:winterCarts footprints | two carts at (11,-20), (22,-12) and log pile at (17,-29) | 569 | approved | absent
+web/src/map/tabs/viking_sandbox.ts:iceWall shelves | irregular joined shelves with backing to the preceding tier | 569 | approved (CONFIRM failed a) | individual flat caps
+web/src/map/tabs/viking_sandbox.ts:snowAndIce floor | connected 0.72-radius sheet with lobed edge and branching cracks | 569 | approved (CONFIRM failed a) | scattered slabs
+web/src/map/tabs/viking_sandbox.ts:rimPeaks | five groups rooted at outer tier | 569 | approved | detached inherited range
+web/src/map/tabs/medieval_2.ts:earthenBowl profile | six rings to 23 m depth | 569 | approved | navy slab and stalactites
+web/src/map/tabs/medieval_2.ts:facingHalves | centres x ±24 with 48 × 64 m halves | 569 | approved | four 40 × 28 m pads
+web/src/map/tabs/medieval_2.ts:meadowGrass palette and blades | green floor (0.53,0.66,0.25), up to 6100 tufts outside paths | 569 | approved (CONFIRM failed a) | inherited olive floor and blades
+web/src/map/tabs/medieval_1.ts:rightBankBreak | west ring retained, only outer corner groups remain on east | 569 | approved | tree ring on both banks
+web/src/map/tabs/medieval_1.ts:gnarledOaks profile | kinked tapering trunks with four irregular crown lobes | 569 | approved | inherited trunks and crowns

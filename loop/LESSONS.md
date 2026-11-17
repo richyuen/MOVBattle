@@ -48,3 +48,4 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Base field junk is "<displayName>_box|_cyl|_totem_top" meshes (mapBuilder addBoxObstacle/addCylinderObstacle/addTotem): hiding those on the campaign.challenge base cleared the ruin and totem but the critic still saw a dark block row in the battle shot (viking/ancient_sandbox 564); list the built set's names near the spot before claiming the slabs gone.
 - Turf caps on cliff columns flicker when their top faces share a plane with the cliff or meadow. Set the cap slightly below the meadow and the shaft top inside the cap (Medieval 1, 567).
 - The restricted shell can build the web app while blocking the capture script’s requests to Vite on loopback. Run the existing capture with local network access when preview cannot answer.
+- Varied-height cliff buttresses can leave sky below continuous ledges. Back the ledges with a skirt down to the adjoining tier and check the ground shot.

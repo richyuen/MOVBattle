@@ -1,12 +1,12 @@
 # map.farmer_snow
-Status: open   Audited: 555 (AUDIT x2), 563 (CONFIRM: passed none; failed a, b)   Done: -
+Status: open   Audited: 555 (AUDIT x2), 563 (CONFIRM: passed none; failed a, b), 569 (CONFIRM: passed b; failed a)   Done: -
 ## Verdicts
-a FAIL (568: struck 3, 4): 5. Snowy wooden carts and wagons missing in map_farmer_snow_ground.png — TABS: two snow-laden carts and log piles on the near field (ref: reference/maps/wiki/farmer_snow.png)
-b PASS (565: struck 2; critic only, CONFIRM it when the item would be done)
-c PASS (568 judge)
+a FAIL (0 since 569; plateau): 1. Dark spheres scattered across the snow in map_farmer_snow_top.png — TABS: faceted, snow-capped field rocks (ref: reference/maps/wiki/farmer_snow.png). 2. A freestanding stone tower on the far bank in map_farmer_snow_top.png — TABS: an open snowy verge beyond the decorated cottages (ref: reference/maps/wiki/farmer_snow.png). 3. Flat chalk-white light across the island in map_farmer_snow_island.png — TABS: a blue-lit night field with deep blue shadow across the mill bank (ref: reference/maps/farm_snow.png).
+b PASS (569: CONFIRM)
+c PASS (569 judge)
 
 ## Ranked gaps
-1. [S] a — blocker 5: group snow-laden cart frames and log piles near the mill bank — ref: reference/maps/wiki/farmer_snow.png — ours: map_farmer_snow_ground.png
+1. [R] a — rebuild inherited field dressing and night lighting from both CONFIRM lists (563 and 569) — ref: reference/maps/wiki/farmer_snow.png and reference/maps/farm_snow.png — ours: map_farmer_snow_top.png and map_farmer_snow_island.png
 
 ## Attempts (iter | gap | criterion | verdict)
 555-559 | river, snow cover, bridge, night sky, grove, navy bowl, stones | a, b | 6 APPROVE, struck a1, a2, a6, b1, b2, b4, b6
@@ -18,9 +18,9 @@ c PASS (568 judge)
 567 | [S] blue watermill towers and balconies (d32c689e+cd4783d7) | a2 | APPROVE struck a2
 568 | [S] front snow-capped boulder (0c5f8a08) | a3 | APPROVE, struck a3
 568 | [S] snowy bridge-side furrows (a7c6dc9f) | a4 | APPROVE, struck a4
+569 | [S] snowy carts and log piles (6ddcdd19) | a5 | APPROVE, struck a5
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Sandbox map. Ice course, bridge, houses at (-26,36),(-11,39), and the paired mill towers are in the map builder.
-- Inherited dark sphere and pale ruins remain visible in the top shot.
+- Sandbox map. Both CONFIRM lists remain in output/loop/iter-563/confirm.md and output/loop/iter-569/confirm.md.
