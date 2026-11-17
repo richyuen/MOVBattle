@@ -5,7 +5,14 @@ import type { MapBuildResult } from "../mapBuilder";
 // between low blocks, with a cross street and an open plaza around each end of the building rows.
 const LENGTH = 112;
 const WIDTH = 72;
-const BLOCK_LENGTH = 18;
+// Streets (572, card Overview + greek_ancient_1.png): the houses stand in three continuous bands across the middle
+// of the city (front z -26..-12, middle -8..8, back 12..26, each x -24..24 in four joined houses), so two narrow
+// 4 m streets at z -10 and +10 run side to side between them and open onto the side plazas at both ends; the
+// arch spans the back street at x 0. The armies' plazas (|x| >= 25) stay open.
+const STREETS = [-10, 10];
+const STREET_WIDTH = 4;
+const BLOCK_SPAN = 24;
+const BANDS: Array<[number, number]> = [[-19, 14], [0, 16], [19, 14]];
 
 function seeded(i: number, seed: number): number {
   const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
@@ -160,13 +167,11 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
     seam.material = lime;
     seam.isPickable = false;
   }
-  for (const x of [-15, 15]) {
-    for (const [z, depth] of [[-21, 18], [0, 16], [21, 18]]) {
-      const block = MeshBuilder.CreateBox("ancient1StreetBlock", { width: BLOCK_LENGTH, height: 0.22, depth }, scene);
-      block.position.set(x, 0.07, z);
-      block.material = lime;
-      block.receiveShadows = true;
-    }
+  for (const z of STREETS) {
+    const street = MeshBuilder.CreateBox("ancient1StreetPaving", { width: BLOCK_SPAN * 2 + 4, height: 0.05, depth: STREET_WIDTH }, scene);
+    street.position.set(0, 0.02, z);
+    street.material = lime;
+    street.receiveShadows = true;
   }
   const plaster = new StandardMaterial("ancient1Whitewash", scene);
   plaster.diffuseColor = new Color3(0.95, 0.92, 0.81);
@@ -211,42 +216,51 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
     }
     obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 2.19, halfZ: 1.26 });
   }
-  for (const side of [-1, 1]) {
-    for (const [row, z] of [-21, 0, 21].entries()) {
-      const x = side * 15;
-      const depth = row === 1 ? 10.5 : 12.5;
-      const height = 2.8 + (row % 2) * 0.9;
-      box("ancient1House", x, height / 2, z, 12, height, depth, plaster);
-      box("ancient1RoofBand", x, height - 0.24, z, 12.3, 0.24, depth + 0.3, blue);
-      box("ancient1RoofTerrace", x, height, z, 12.6, 0.36, depth + 0.55, plaster);
-      const tx = x + side * 2.5, tz = z + (row === 1 ? -1.8 : 2.2);
+  const houseWidth = (BLOCK_SPAN * 2) / 4;
+  BANDS.forEach(([z, depth], row) => {
+    for (let col = 0; col < 4; col++) {
+      const x = -BLOCK_SPAN + houseWidth * (col + 0.5);
+      const k = row * 4 + col;
+      const height = 2.8 + seeded(k, 31) * 1.6;
+      const w = houseWidth - 0.3;
+      box("ancient1House", x, height / 2, z, w, height, depth, plaster);
+      box("ancient1RoofBand", x, height - 0.24, z, w + 0.3, 0.24, depth + 0.3, blue);
+      box("ancient1RoofTerrace", x, height, z, w + 0.5, 0.36, depth + 0.5, plaster);
+      const tx = x + (seeded(k, 32) - 0.5) * 4, tz = z + (seeded(k, 33) - 0.5) * (depth - 6);
       box("ancient1UpperRoom", tx, height + 1.1, tz, 5.1, 2.2, 5, plaster);
       box("ancient1UpperCoping", tx, height + 2.24, tz, 5.4, 0.27, 5.3, plaster);
-      if ((row + (side > 0 ? 1 : 0)) % 2 === 0) {
+      if (k % 3 !== 1) {
         const dome = MeshBuilder.CreateSphere("ancient1BlueDome", { diameter: 5.1, segments: 8, slice: 0.5 }, scene);
         dome.position.set(tx, height + 2.3, tz);
         dome.material = blue;
         dome.convertToFlatShadedMesh();
       }
-      for (const dz of [-3, 0, 3]) box("ancient1BlueShutter", x - side * 6.03, 1.52, z + dz, 0.12, 1.1, 0.78, blue);
-      for (let i = 0; i < 8; i++) {
-        const rise = height * (i + 1) / 8;
-        box("ancient1RoofStep", x - side * (8.1 - 0.32 * i), rise / 2, z - depth * 0.32, 0.42, rise, 2.1, plaster);
+      // Blue shutters on the street fronts.
+      for (const face of [-1, 1]) {
+        if ((row === 0 && face < 0) || (row === 2 && face > 0)) continue;
+        for (const dx of [-3, 0, 3]) box("ancient1BlueShutter", x + dx, 1.52, z + face * (depth / 2 + 0.03), 0.78, 1.1, 0.12, blue);
       }
-      obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 6, halfZ: depth / 2 });
-      obstacles.push({ type: "box", center: new Vector3(x - side * 7.1, 0, z - depth * 0.32), halfX: 1.25, halfZ: 1.05 });
+      // Roof stairs climb the plaza ends of each band.
+      if (col === 0 || col === 3) {
+        const side = col === 0 ? -1 : 1;
+        for (let i = 0; i < 8; i++) {
+          const rise = height * (i + 1) / 8;
+          box("ancient1RoofStep", side * (BLOCK_SPAN + 2.3 - 0.32 * i), rise / 2, z - depth * 0.3, 0.42, rise, 2.1, plaster);
+        }
+        obstacles.push({ type: "box", center: new Vector3(side * (BLOCK_SPAN + 1.2), 0, z - depth * 0.3), halfX: 1.25, halfZ: 1.05 });
+      }
+      obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: houseWidth / 2, halfZ: depth / 2 });
     }
-  }
-  for (const z of [7, 13]) {
+  });
+  for (const z of [STREETS[1] - STREET_WIDTH / 2 - 0.4, STREETS[1] + STREET_WIDTH / 2 + 0.4]) {
     const pier = MeshBuilder.CreateBox("ancient1ArchPier", { width: 1.6, height: 4.6, depth: 1.15 }, scene);
     pier.position.set(0, 2.3, z);
     pier.material = lime;
-    obstacles.push({ type: "box", center: new Vector3(0, 0, z), halfX: 0.8, halfZ: 0.575 });
   }
   for (let i = 0; i <= 8; i++) {
     const angle = Math.PI * i / 8;
     const block = MeshBuilder.CreateBox("ancient1ArchStone", { width: 1.6, height: 0.8, depth: 1.3 }, scene);
-    block.position.set(0, 4.2 + Math.sin(angle) * 3, 10 + Math.cos(angle) * 3);
+    block.position.set(0, 4.2 + Math.sin(angle) * 2.6, STREETS[1] + Math.cos(angle) * 2.6);
     block.rotation.x = -angle;
     block.material = lime;
   }
