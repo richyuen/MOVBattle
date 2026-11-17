@@ -3,15 +3,6 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-565 | 6278850c | map.viking_sandbox.b | approved
-565 | b149e156 | map.ancient_sandbox.b | approved
-565 | e503d93f | map.tribal_2.a | approved
-565 | ca008f0d | map.farmer_snow.b | approved
-565 | 4d8db327 | map.viking.a | approved
-565 | 61b2ec07+4e086afe | map.medieval_2.b | approved
-565 | b364ac2a | map.ancient_2.a | approved
-565 | b84ba5a1 [R] | map.farmer_2.a | approved (CONFIRM passed a; critic kept blocker 3)
-
 566 | 70777289+20b7df96 | map.medieval_1.b | approved
 566 | 29f15c87+fb977c70 | map.ancient_1.b | approved
 566 | 49d2750c | map.tribal_sandbox.b | approved
@@ -60,6 +51,16 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 570 | 18a7b03b | map.ancient_2.b | approve
 570 | c8566daa | map.ancient_sandbox.b | approve, struck b2
 570 | 23af4ed0 | map.viking.a | approve, struck a2
+571 | 2c30c0f9 | map.medieval_1.a | approve, struck a6 (a PASS; CONFIRM passed)
+571 | b3ebd6d4 | map.medieval_2.a | approve, struck a1
+571 | c12b2649 | map.medieval_2.a | approve
+571 | a1735190 | map.medieval_2.a | approve, struck a4
+571 | b70ca30a | map.ancient_2.a | approve, struck a1
+571 | f162a716 | map.ancient_1.b | approve, struck b4
+571 | 11ef65f1 | map.ancient_1.a | approve, struck a5
+571 | 8699ce12 | map.ancient_sandbox.a | approve, struck a6
+571 | d5caaf8b | map.viking.b | approve, struck b3 and a4
+571 | c47c5fef [R] | map.viking_sandbox.a | approve, struck a1, a2; added a3
 
 ## Tuned values
 web/src/map/tabs/farmer_2.ts:wheatField stalk height, step | 0.65-0.8 m, 0.75 m | 564 | approved | 0.5-0.7 m, 0.9 m; 1.0-1.3 m
@@ -98,16 +99,24 @@ web/src/map/tabs/viking_sandbox.ts:snowAndIce floor | connected 0.72-radius shee
 web/src/map/tabs/viking_sandbox.ts:rimPeaks | five groups rooted at outer tier | 569 | approved | detached inherited range
 web/src/map/tabs/medieval_2.ts:earthenBowl profile | six rings to 23 m depth | 569 | approved | navy slab and stalactites
 web/src/map/tabs/medieval_2.ts:facingHalves | centres x ±24 with 48 × 64 m halves | 569 | approved | four 40 × 28 m pads
-web/src/map/tabs/medieval_2.ts:meadowGrass palette and blades | green floor (0.53,0.66,0.25), up to 6100 tufts outside paths | 569 | approved (CONFIRM failed a) | inherited olive floor and blades
+web/src/map/tabs/medieval_2.ts:meadowGrass palette and blades | ico clump swathes on 0.85 m grid, 2.4 m lawn lanes by paths, glades | 571 | approved, struck a4 | 6100 blade tufts (569); inherited olive floor and blades
+web/src/map/tabs/medieval_2.ts:castleFront silhouette | stepped curtain runs between drum towers at gate offsets 6.5/18/29/37, round keep 23 m + spire to ~41 m | 571 | approved, struck a1 | four straight 12 m curtain boxes
+web/src/map/tabs/medieval_2.ts:castleOaks groves | 17 oaks with scale 0.7-1.5, 3-7 lobes, wall-foot band z 17-21 | 571 | approved, blocker 3 stands | 11 equal 4-lobe oaks
 web/src/map/tabs/medieval_1.ts:rightBankBreak | west ring retained, only outer corner groups remain on east | 569 | approved | tree ring on both banks
 web/src/map/tabs/medieval_1.ts:gnarledOaks profile | kinked tapering trunks with four irregular crown lobes | 569 | approved | inherited trunks and crowns
 web/src/map/tabs/farmer_snow.ts:SNOW and SNOW_SHADE | (0.57,0.68,0.96) and (0.035,0.065,0.17) | 570 | approved, caps still dim | (0.8,0.85,0.96) and (0.3,0.34,0.45)
 web/src/map/tabs/farmer_snow.ts:nightSky hemi and dir | intensities 0.22 and 0.78, diagonal directional light (0.62,-0.55,-0.48) | 570 | approved, localized shadows still too narrow | 0.35 and 0.55, inherited direction
 web/src/map/tabs/medieval_1.ts:landfallRamp | 3.25 m wide, (-7.4,-0.18,-18) to (-1.9,-5.8,-4) | 570 | approved | absent
-web/src/map/tabs/medieval_1.ts:meadowDressing | two crossed leaf cards per tuft, 0.95 m jittered grid with scattered orange flowers | 570 | approved, blocker remains | flat grass
+web/src/map/tabs/medieval_1.ts:meadowDressing | flattened ico clumps 1.1-2 m, two greens (0.5,0.74,0.22)/(0.33,0.56,0.16), 0.8 m grid in swathes, orange heads | 571 | approved, a PASS | two crossed leaf cards per tuft, 0.95 m grid; flat grass
 web/src/map/tabs/medieval_2.ts:POND frontage | radii 31 by 10 m clipped to rim, seven hazards | 570 | approved | radii 19 by 7 m, three hazards
 web/src/map/tabs/medieval_2.ts:clearColor and fogColor | (0.66,0.84,0.87) and (0.68,0.84,0.87), mountains hidden | 570 | approved | inherited sky and backdrop
 web/src/map/tabs/ancient_1.ts:city wall and cypress planters | 1.34 m plaster perimeter, eight planters | 570 | approved | absent
 web/src/map/tabs/ancient_2.ts:RIM | 51 m circle, power 2 | 570 | approved, projecting shelf still visible | superellipse 54 by 48 m, power 3
 web/src/map/tabs/ancient_sandbox.ts:hillsideTerraces | two three-tier hills at (-24,36) and (23,36), 10 and 13 m high | 570 | approved | absent
 web/src/map/tabs/viking.ts:snowPines | four tiers, heights 4.8–9 m | 570 | approved | inherited broadleaf ring
+web/src/map/tabs/viking.ts:frozenShip | 22 m hull at (-39,13) yaw 0.18, list 0.1, 13 m mast, ice collar | 571 | approved, small and half hidden | absent
+web/src/map/tabs/ancient_2.ts:greenLawn | floor (0.55,0.69,0.21), 2600 lawn clumps, 70 flower drifts mostly by the rim | 571 | approved | orange autumn floor
+web/src/map/tabs/ancient_1.ts:bayHeadland and hopliteStatue | 44 x 21 m shelf at (-22,46.5), bay 32 x 10 m, outcrop (-21,49), statue 13 m + 21 m spear | 571 | approved, headland a box pad, statue small | absent
+web/src/map/tabs/ancient_sandbox.ts:ruins | 5 broken columns, 3 fallen with drums, 2 gateways, 12 fragments | 571 | approved, pieces slender | absent
+web/src/map/tabs/viking_sandbox.ts:snowAndIce floor (R) | ice to 0.8 R, 9.5 m plate crack grid, 9 snow tongues + 7 islands | 571 | approved, snow ~1/5 of ice (CONFIRM wants ~1/2) | 0.72 R sheet with 60 random cracks
+web/src/map/tabs/viking_sandbox.ts:iceWall ledges (R) | broken ledges 9-24 deg, depth 1.5-9 m, lift -2..+1.2, jutting columns in 3-7 deg breaks | 571 | approved, ledges thin floating plates | continuous shelves per tier
