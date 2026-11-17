@@ -17,8 +17,7 @@ function seeded(i: number, seed: number): number {
   return raw - Math.floor(raw);
 }
 
-const POND = { x: -6, z: -39, rx: 19, rz: 7, lobes: 20 };
-const POND_HAZARDS: Array<[number, number]> = [[-18, -39], [-6, -39], [6, -39]];
+const POND = { x: -6, z: -39, rx: 31, rz: 10, lobes: 20 };
 const PATH_WIDTH = 3.4;
 const GATE: [number, number] = [-10, 25];
 const PATHS: Array<Array<[number, number]>> = [
@@ -101,16 +100,22 @@ function frontPond(scene: Scene): MapBuildResult["hazards"] {
   for (let i = 0; i < POND.lobes * 3; i++) {
     const a = (i / (POND.lobes * 3)) * Math.PI * 2;
     const pull = 0.88 + seeded(Math.floor(i / 3), 5) * 0.12;
-    outline.push([Math.cos(a) * POND.rx * pull, Math.sin(a) * POND.rz * pull]);
+    const [x, z] = clampToIsland(POND.x + Math.cos(a) * POND.rx * pull, POND.z + Math.sin(a) * POND.rz * pull);
+    outline.push([x - POND.x, z - POND.z]);
   }
   const grown = (f: number, add: number) => outline.map(([x, z]): [number, number] => {
     const d = Math.hypot(x, z) || 1;
-    return [x * f + (x / d) * add, z * f + (z / d) * add];
+    const [edgeX, edgeZ] = clampToIsland(POND.x + x * f + (x / d) * add, POND.z + z * f + (z / d) * add);
+    return [edgeX - POND.x, edgeZ - POND.z];
   });
   flatDisc(scene, "medieval2PondShore", grown(1, 1.6), POND.x, POND.z, 0.05, mk("medieval2PondShoreMat", new Color3(0.74, 0.86, 0.68), 0.35));
   flatDisc(scene, "medieval2PondWater", outline, POND.x, POND.z, 0.065, mk("medieval2PondWaterMat", new Color3(0.26, 0.78, 0.66), 0.4));
   flatDisc(scene, "medieval2PondDeep", grown(0.6, 0), POND.x, POND.z, 0.075, mk("medieval2PondDeepMat", new Color3(0.1, 0.56, 0.56), 0.4));
-  return POND_HAZARDS.map(([x, z]) => ({ kind: "water" as const, shape: "cylinder" as const, center: new Vector3(x, 0, z), radius: 5 }));
+  return [-28, -20, -12, -4, 4, 12, 20].map((x) => ({
+    kind: "water" as const, shape: "cylinder" as const,
+    center: new Vector3(x, 0, x < -20 || x > 14 ? -41 : -40),
+    radius: x < -20 || x > 14 ? 4.5 : 6.4,
+  }));
 }
 
 function dirtPaths(scene: Scene): void {
