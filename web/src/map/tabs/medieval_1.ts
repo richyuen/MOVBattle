@@ -60,6 +60,42 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
   }
 }
 
+function rightBankRuins(scene: Scene, stone: StandardMaterial, obstacles: MapBuildResult["obstacles"]): void {
+  const terracotta = new StandardMaterial("medieval1RuinedCoping", scene);
+  terracotta.diffuseColor = new Color3(0.76, 0.38, 0.17);
+  terracotta.emissiveColor = terracotta.diffuseColor.scale(0.23);
+  const block = (name: string, x: number, y: number, z: number, width: number, height: number, depth: number, material: StandardMaterial): Mesh => {
+    const piece = MeshBuilder.CreateBox(name, { width, height, depth }, scene);
+    piece.position.set(x, y, z);
+    piece.material = material;
+    piece.receiveShadows = true;
+    return piece;
+  };
+  for (const [x, start, count] of [[12, -29, 5], [10.5, 14, 6], [24, 31, 4]]) {
+    for (let i = 0; i < count; i++) {
+      const z = start + i * 3, height = 1.4 + ((i * 7 + count) % 5) * 0.43;
+      const foot = block("medieval1BrokenWall", x + (i % 2) * 0.45, height / 2, z, 1.5, height, 3.08, stone);
+      foot.rotation.y = (i % 3 - 1) * 0.08;
+      if (i % 3 !== 1) block("medieval1Merlon", x, height + 0.4, z - 0.38, 1.62, 0.8, 1.28, stone);
+      obstacles.push({ type: "box", center: new Vector3(x, 0, z), halfX: 0.74, halfZ: 1.5 });
+    }
+  }
+  for (const [x, z, courses] of [[12.6, 18, 8], [15.4, -27.7, 5], [31.8, 32, 4]]) {
+    for (let i = 0; i < courses; i++) {
+      const shaft = block("medieval1PillarCourse", x + i * 0.09, i * 1.04 + 0.52, z, 1.72, 1.06, 1.82, stone);
+      shaft.rotation.y = i * 0.055;
+    }
+    if (courses === 8) {
+      block("medieval1PillarCapital", x + 0.63, 8.45, z, 3.5, 0.54, 2.55, stone);
+      for (const dz of [-0.77, 0.75]) {
+        const shard = block("medieval1OrangeCoping", x + 0.54, 8.79, z + dz, 3.25, 0.44, 1.15, terracotta);
+        shard.rotation.z = dz * 0.11;
+      }
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.2 });
+  }
+}
+
 export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -67,6 +103,10 @@ export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBui
   for (const mesh of scene.meshes) {
     if (prior.has(mesh)) continue;
     if (/^(ground$|centerGrass$|islandUnder|islandShelf|islandCliff|fieldBlades_|hazeTreeline|campaign_zone_)/.test(mesh.name)) mesh.setEnabled(false);
+    if (/^ruin(Tower|Pillar|Rubble)/.test(mesh.name)) {
+      if (/^ruin(TowerPlinth|PillarPlinth|Rubble)/.test(mesh.name)) detachedTrees.push(mesh.position.clone());
+      mesh.setEnabled(false);
+    }
     if (mesh.name !== "trunk") continue;
     const { x, z } = mesh.position;
     let onLand = false;
@@ -119,6 +159,7 @@ export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBui
     hazards.push({ shape: "box", kind: "water", center: new Vector3(0, 0, (front + back) / 2), halfX, halfZ: (back - front) / 2 });
   }
   const obstacles = result.obstacles.filter((o) => !detachedTrees.some((p) => Math.hypot(p.x - o.center.x, p.z - o.center.z) < 0.55));
+  rightBankRuins(scene, stone, obstacles);
   const placementZones = result.zones.map((zone) => ({
     ...zone,
     center: new Vector3(Math.sign(zone.center.x) * 23, 0, 0),
