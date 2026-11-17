@@ -282,10 +282,17 @@ function castleOaks(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult
   const leaves = new StandardMaterial("medieval2OakLeaves", scene);
   leaves.diffuseColor = new Color3(0.31, 0.46, 0.13);
   leaves.emissiveColor = leaves.diffuseColor.scale(0.23);
-  const groves = [[-29, 24], [-40, 29], [-24, 32], [9, 28], [14, 35], [28, 36], [43, 28], [41, -30], [46, -19], [-40, -30], [-45, -24]];
-  groves.forEach(([x, z], i) => {
-    const h = 5.5 + seeded(i, 51) * 3.5;
-    const lean = (i % 2 ? 1 : -1) * (1.1 + seeded(i, 52));
+  // Castle foot (571, wiki shot): broad layered oaks crowd the base of the wall on both sides of the gate,
+  // big multi-lobed canopies at the left foot and right foot with smaller oaks nearer the gate; a few stand
+  // behind the curtain and at the corners. [x, z, scale]; the gate path (x -10..-6) stays clear.
+  const groves: Array<[number, number, number]> = [
+    [-30, 19, 1.5], [-39, 17, 1.4], [-46, 12, 1.2], [-22, 20.5, 1.05], [-16, 18.5, 0.7], [-1, 19.5, 0.75],
+    [5, 21, 0.95], [16, 20.8, 1.3], [36, 25, 1.4], [44, 22, 1.0],
+    [-24, 32, 1.0], [14, 35, 1.0], [28, 36, 1.0], [41, -30, 1.0], [46, -19, 1.0], [-40, -30, 1.0], [-45, -24, 1.0],
+  ];
+  groves.forEach(([x, z, s], i) => {
+    const h = (5.5 + seeded(i, 51) * 3.5) * Math.min(1.25, s);
+    const lean = (i % 2 ? 1 : -1) * (1.1 + seeded(i, 52)) * s;
     const origin = new Vector3(x, 0, z);
     const fork = new Vector3(x + lean * 0.55, h * 0.63, z - 0.5);
     const crown = new Vector3(x + lean, h, z + 0.6);
@@ -294,15 +301,17 @@ function castleOaks(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult
       path, tessellation: 7, cap: Mesh.CAP_ALL, radiusFunction: (index) => [0.75, 0.61, 0.4, 0.18][index],
     }, scene);
     trunk.material = bark;
-    for (let j = 0; j < 4; j++) {
-      const angle = j * Math.PI / 2 + i;
-      const tip = crown.add(new Vector3(2.1 * Math.cos(angle), -0.75 + (j % 2) * 0.85, 2.1 * Math.sin(angle)));
+    const lobes = s > 1.2 ? 7 : s < 0.9 ? 3 : 5;
+    for (let j = 0; j < lobes; j++) {
+      const angle = j * Math.PI * 2 / lobes + i;
+      const reach = 2.1 * s * (j === lobes - 1 && lobes > 4 ? 0.3 : 1);
+      const tip = crown.add(new Vector3(reach * Math.cos(angle), (-0.75 + (j % 2) * 0.85) * s + (j === lobes - 1 && lobes > 4 ? 1.6 * s : 0), reach * Math.sin(angle)));
       const branch = MeshBuilder.CreateTube("medieval2OakBranch", {
         path: [fork, Vector3.Lerp(fork, tip, 0.58).add(new Vector3(0, -0.65, 0)), tip], tessellation: 6,
         radiusFunction: (index) => [0.35, 0.22, 0.09][index],
       }, scene);
       branch.material = bark;
-      const clump = MeshBuilder.CreateIcoSphere("medieval2OakCrown", { radius: 2.1 + seeded(i * 4 + j, 53) * 0.9, subdivisions: 1 }, scene);
+      const clump = MeshBuilder.CreateIcoSphere("medieval2OakCrown", { radius: (2.1 + seeded(i * 4 + j, 53) * 0.9) * s, subdivisions: 1 }, scene);
       clump.position.copyFrom(tip);
       clump.scaling.y = 0.77;
       clump.material = leaves;
