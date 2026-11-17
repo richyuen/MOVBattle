@@ -649,6 +649,19 @@ function hazySea(scene: Scene): void {
   }
 }
 
+// Clouds off the island (575, greek_ancient_sandbox.png: the clouds float in the sky around and behind the island;
+// nothing white stands between the viewer and the cliffs). The base's ring clouds on the front side (z < -30: low
+// banks 12-40 m up, 70-100 m out, between the island shot's camera at z ~-112 and the island) cover its lower right.
+// Spec: each such cloud is mirrored to the back of the ring (z -> -z, same x and height), so the count and the sky
+// stay; the cliffs and front shelves are unobstructed.
+function cloudsBehind(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.name !== "cloud" || mesh.position.z > -30) continue;
+    mesh.position.z = -mesh.position.z;
+    mesh.rotation.y = Math.PI - mesh.rotation.y;
+  }
+}
+
 // Clear sky (574, greek_ancient_sandbox.png: a bright mid-blue sky with white puffy clouds, no beige haze). Spec: clear
 // colour (0.3, 0.6, 0.88), fog a pale sky blue (0.66, 0.8, 0.93) so the far range fades toward the horizon, the base
 // clouds kept white; both restored on dispose.
@@ -671,6 +684,7 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
   sea(scene);
   outerTerraces(scene);
   offshoreIslets(scene);
+  cloudsBehind(scene, built);
   const cleared = clearFieldDressing(scene, built, result, clearFieldJunk(scene, built, [...result.obstacles]));
   const lawn = new Color3(0.51, 0.66, 0.23);
   for (const name of ["groundMat", "grass", "dryGrass", "grassBladeDark", "grassBladeLight"]) {
