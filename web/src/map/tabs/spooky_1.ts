@@ -80,10 +80,34 @@ function nightSky(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
+// Night grass (577, wiki spooky_1.png: the grass is a dark navy-grey under the blue night, its tufts a shade lighter where
+// the moon catches them; no red or blue tint across the two halves). Spec: the translucent team-zone slabs
+// (campaign_zone_overlay_* / border_*, the maroon and blue sheets reaching past the island) hidden; the floor ("ground",
+// "centerGrass") navy-grey (0.2, 0.24, 0.38) with a cold self-light (0.05, 0.06, 0.11); the base's grass blades and tufts
+// recoloured a lighter blue-grey (0.26, 0.31, 0.46), self-lit (0.06, 0.07, 0.12), so they read in the dark.
+function nightGrass(scene: Scene, built: Set<unknown>): void {
+  const floor = new StandardMaterial("spooky1NightFloor", scene);
+  floor.diffuseColor = new Color3(0.2, 0.24, 0.38);
+  floor.emissiveColor = new Color3(0.05, 0.06, 0.11);
+  floor.specularColor = Color3.Black();
+  const blades = new StandardMaterial("spooky1NightBlades", scene);
+  blades.diffuseColor = new Color3(0.26, 0.31, 0.46);
+  blades.emissiveColor = new Color3(0.06, 0.07, 0.12);
+  blades.specularColor = Color3.Black();
+  blades.backFaceCulling = false;
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh)) continue;
+    if (/^campaign_zone_(overlay|border)_/.test(mesh.name)) mesh.setEnabled(false);
+    else if (mesh.name === "ground" || mesh.name === "centerGrass") mesh.material = floor;
+    else if (/^(fieldBlades_|fieldTufts_|grassTuft)/.test(mesh.name)) mesh.material = blades;
+  }
+}
+
 export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  nightGrass(scene, built);
   const restore = nightSky(scene, built);
   return { ...result, dispose: () => { restore(); result.dispose?.(); } };
 }
