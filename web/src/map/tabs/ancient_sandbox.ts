@@ -216,6 +216,79 @@ function hillsideTerraces(scene: Scene, obstacles: Obstacle[]): void {
   }
 }
 
+// Ruins (571, wiki shot): around the open clearing stand isolated pieces of a ruined classical site in pale
+// limestone: broken fluted columns of uneven height (3-6 m) in small groups with drums lying at their feet,
+// whole columns fallen flat in the grass, and two ruined gateways (a post-and-lintel arch still standing
+// with a lintel block fallen beside it, and one whose lintel leans down from a single post). Spec: groups at
+// the back-left, front-left, front-centre, front-right and right edges of the clearing, clear of the trails
+// and the terrace hills; standing pieces get colliders, lying pieces are knee-high and get small ones.
+function ruins(scene: Scene, obstacles: Obstacle[]): void {
+  const lime = new StandardMaterial("ancientSandboxRuinStone", scene);
+  lime.diffuseColor = new Color3(0.86, 0.8, 0.66);
+  lime.emissiveColor = lime.diffuseColor.scale(0.18);
+  const column = (x: number, z: number, height: number, i: number) => {
+    const shaft = MeshBuilder.CreateCylinder("ancientSandboxRuinColumn", { height, diameterTop: 0.95, diameterBottom: 1.1, tessellation: 10 }, scene);
+    shaft.position.set(x, height / 2 + 0.35, z);
+    shaft.material = lime;
+    shaft.receiveShadows = true;
+    const plinth = MeshBuilder.CreateBox("ancientSandboxRuinPlinth", { width: 1.6, height: 0.5, depth: 1.6 }, scene);
+    plinth.position.set(x, 0.25, z);
+    plinth.material = lime;
+    const broken = MeshBuilder.CreateCylinder("ancientSandboxRuinBreak", { height: 0.5, diameterTop: 0.5, diameterBottom: 0.95, tessellation: 7 }, scene);
+    broken.position.set(x + 0.15, height + 0.55, z);
+    broken.rotation.z = 0.35 * (seeded(i, 21) - 0.5);
+    broken.material = lime;
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.85 });
+  };
+  const fallen = (x: number, z: number, length: number, yaw: number, i: number) => {
+    const shaft = MeshBuilder.CreateCylinder("ancientSandboxRuinFallen", { height: length, diameter: 1.05, tessellation: 10 }, scene);
+    shaft.rotation.set(0, yaw, Math.PI / 2);
+    shaft.position.set(x, 0.5, z);
+    shaft.material = lime;
+    shaft.receiveShadows = true;
+    for (let k = 0; k < 2; k++) {
+      const drum = MeshBuilder.CreateCylinder("ancientSandboxRuinDrum", { height: 0.8, diameter: 1.05, tessellation: 10 }, scene);
+      const d = length / 2 + 1 + k * 1.3;
+      drum.position.set(x + Math.cos(-yaw) * d, 0.52, z + Math.sin(-yaw) * d);
+      drum.rotation.set(0.2 * k, yaw + 0.6 * seeded(i, k), Math.PI / 2 - 0.3 * k);
+      drum.material = lime;
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.0 });
+  };
+  const block = (x: number, y: number, z: number, w: number, h: number, d: number, rx: number, rz: number) => {
+    const b = MeshBuilder.CreateBox("ancientSandboxRuinBlock", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.rotation.set(rx, 0, rz);
+    b.material = lime;
+    b.receiveShadows = true;
+    return b;
+  };
+  // Back-left colonnade remnant and front-left pair.
+  column(-36, 22, 5.2, 1); column(-32.5, 24.5, 3.1, 2); column(-39, 18.5, 4.1, 3);
+  fallen(-31, 19, 6.5, 0.5, 4);
+  column(-40, -28, 4.6, 5); column(-36, -32, 2.6, 6);
+  fallen(-14, -38, 7.5, 0.1, 7);
+  fallen(10, -40, 5.5, -0.4, 8);
+  // Front-right gateway: two posts with a lintel, one lintel block fallen at its foot.
+  for (const dx of [-2.6, 2.6]) {
+    block(31 + dx, 3.1, -33, 1.3, 6.2, 1.3, 0, 0);
+    obstacles.push({ type: "box", center: new Vector3(31 + dx, 0, -33), halfX: 0.7, halfZ: 0.7 });
+  }
+  block(31, 6.6, -33, 7.4, 1.0, 1.5, 0, 0);
+  block(35.5, 0.55, -30.5, 4.2, 1.0, 1.4, 0.1, 0.12).rotation.y = 0.7;
+  // Right edge: a single post with its lintel leaning down onto the grass.
+  block(45, 3, 21, 1.3, 6, 1.3, 0, 0);
+  block(42.4, 3.1, 21.3, 6.4, 1.0, 1.4, 0, -0.8);
+  obstacles.push({ type: "box", center: new Vector3(44, 0, 21), halfX: 2, halfZ: 0.8 });
+  // Scattered fragments.
+  for (let i = 0; i < 12; i++) {
+    const a = seeded(i, 31) * Math.PI * 2;
+    const [rx, rz] = rimAt(a);
+    const f = 0.7 + seeded(i, 32) * 0.12;
+    block(rx * f, 0.25, rz * f, 0.9 + seeded(i, 33), 0.5, 0.7 + seeded(i, 34) * 0.6, 0, 0.2 * seeded(i, 35)).rotation.y = a;
+  }
+}
+
 export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -254,5 +327,6 @@ export function buildAncientSandbox(scene: Scene, base: () => MapBuildResult): M
     }
   }
   hillsideTerraces(scene, cleared.obstacles);
+  ruins(scene, cleared.obstacles);
   return { ...result, obstacles: cleared.obstacles, hazards: cleared.hazards };
 }
