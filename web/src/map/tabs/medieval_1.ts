@@ -250,7 +250,8 @@ export function buildMedieval1(scene: Scene, base: () => MapBuildResult): MapBui
   for (const mesh of scene.meshes) {
     if (prior.has(mesh)) continue;
     if (/^(ground$|centerGrass$|islandUnder|islandShelf|islandCliff|fieldBlades_|hazeTreeline|campaign_zone_)/.test(mesh.name)) mesh.setEnabled(false);
-    if (/^Introduction Grounds_(cyl|totem_top)$/.test(mesh.name)) {
+    if (/^Introduction Grounds_(box|totem_top|tree_canopy)$/.test(mesh.name) ||
+      (mesh.name === "Introduction Grounds_cyl" && Math.abs(mesh.position.x - 22) < 0.1)) {
       detachedTrees.push(mesh.position.clone());
       mesh.setEnabled(false);
     }
