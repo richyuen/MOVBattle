@@ -232,6 +232,47 @@ function iceWall(scene: Scene, obstacles: Obstacle[]): void {
   obstacles.push({ type: "box", center: new Vector3(gateX, 0, 0), halfX: 3.2, halfZ: 13 });
 }
 
+function iceBody(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && /^island(Under|Shelf|Cliff)/.test(mesh.name)) mesh.setEnabled(false);
+  }
+  const ice = new StandardMaterial("vikingSandboxGlacier", scene);
+  ice.diffuseColor = new Color3(0.63, 0.88, 0.95);
+  ice.emissiveColor = ice.diffuseColor.scale(0.62);
+  ice.specularColor = Color3.Black();
+  const crystal = new StandardMaterial("vikingSandboxCrystal", scene);
+  crystal.diffuseColor = new Color3(0.21, 0.62, 0.82);
+  crystal.emissiveColor = crystal.diffuseColor.scale(0.54);
+  crystal.specularColor = Color3.Black();
+  const rings = [[-0.12, 1.03], [-8, 0.98], [-18, 0.82], [-26, 0.52], [-28, 0]];
+  const pathArray = rings.map(([y, scale], tier) => Array.from({ length: 61 }, (_, i) => {
+    const k = i % 60;
+    const [x, z] = rimPoint(k * 6 + tier * 2.3, scale * (1 + 0.035 * (seeded(k, 311) - 0.5)));
+    return new Vector3(x, y - (tier === 0 || scale === 0 ? 0 : seeded(k, 312) * 2.5), z);
+  }));
+  const body = MeshBuilder.CreateRibbon("vikingSandboxIceBody", { pathArray, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  body.convertToFlatShadedMesh();
+  body.material = ice;
+  body.isPickable = false;
+  const facets: Mesh[] = [];
+  for (let i = 0; i < 25; i++) {
+    const [x, z] = rimPoint(i * (360 / 25) + seeded(i, 315) * 7, 0.9 + seeded(i, 316) * 0.06);
+    const height = 4 + seeded(i, 317) * 7;
+    const shard = MeshBuilder.CreateCylinder("vikingSandboxIceShard", {
+      height, diameterTop: 3.8 + seeded(i, 318) * 3, diameterBottom: 0.25, tessellation: 4,
+    }, scene);
+    shard.position.set(x, -8 - height / 2, z);
+    shard.rotation.set(0.45 * Math.sin(i * 2), i * 0.77, 0.42 * Math.cos(i * 2));
+    facets.push(shard);
+  }
+  const shards = Mesh.MergeMeshes(facets, true);
+  if (shards) {
+    shards.convertToFlatShadedMesh();
+    shards.material = crystal;
+    shards.isPickable = false;
+  }
+}
+
 export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -239,6 +280,7 @@ export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): Ma
   const cleared = clearFieldDressing(scene, built, result, clearFieldJunk(scene, built, clearTreeRing(scene, built, [...result.obstacles])));
   const obstacles = cleared.obstacles;
   snowAndIce(scene, built);
+  iceBody(scene, built);
   iceWall(scene, obstacles);
   const oldClear = scene.clearColor.clone();
   const oldFog = scene.fogColor.clone();
