@@ -132,6 +132,92 @@ function openStreet(scene: Scene, built: Set<unknown>, result: MapBuildResult): 
   result.obstacles = result.obstacles.filter(({ center }) => !atCentre(center.x, center.z));
 }
 
+// Desert rim (577, western.png and the wiki shot: no leafy trees round the edge; the rim carries tall green saguaro cacti with one
+// or two upturned arms, grey-brown dead trees with a few bare limbs, and low red sandstone mesas stepping up in faceted tiers with
+// paler bands). Spec: every base ring tree (an unparented "trunk" with its crown as children) goes, its collider kept; in its place
+// a saguaro 3-5.5 m tall (column 0.75 m, rounded top, 1-2 arms 1-1.6 m up) for about 60% of them, else a dead tree 4-6 m with
+// three limbs; mesas of three stacked 7-sided tiers (radius 4.5/3.4/2.2 m, 3/2.6/2 m high) at the back left (-36, 32), front left
+// (-30, -36) and front right (38, -32), outside both zones (|z| <= 27) and the town rows, one cylinder collider each.
+function desertRim(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    cactus: mk("wildWestSaguaro", new Color3(0.26, 0.46, 0.2), 0.35),
+    wood: mk("wildWestDeadWood", new Color3(0.42, 0.33, 0.25), 0.35),
+    rock: mk("wildWestMesa", new Color3(0.72, 0.33, 0.18), 0.45),
+    band: mk("wildWestMesaBand", new Color3(0.86, 0.52, 0.32), 0.45),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { cactus: [], wood: [], rock: [], band: [] };
+  const spots: Array<[number, number]> = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.name !== "trunk" || mesh.parent || !mesh.isEnabled()) continue;
+    spots.push([mesh.position.x, mesh.position.z]);
+    mesh.setEnabled(false);
+  }
+  const limb = (k: keyof typeof mats, x: number, y: number, z: number, len: number, d: number, tiltX: number, tiltZ: number) => {
+    const c = MeshBuilder.CreateCylinder("wildWestRimPart", { height: len, diameterTop: d * 0.8, diameterBottom: d, tessellation: 7 }, scene);
+    c.rotation.set(tiltX, 0, tiltZ);
+    c.position.set(x, y, z);
+    parts[k].push(c);
+  };
+  spots.forEach(([x, z], i) => {
+    const tall = seeded(i, 51);
+    if (seeded(i, 52) < 0.6) {
+      const h = 3 + tall * 2.5;
+      limb("cactus", x, h / 2, z, h, 0.75, 0, 0);
+      const top = MeshBuilder.CreateIcoSphere("wildWestRimPart", { radius: 0.36, subdivisions: 1 }, scene);
+      top.position.set(x, h, z);
+      parts.cactus.push(top);
+      const arms = seeded(i, 53) < 0.5 ? 1 : 2;
+      for (let a = 0; a < arms; a++) {
+        const side = a ? -1 : 1, ang = seeded(i, 54) * Math.PI;
+        const ox = Math.cos(ang) * side, oz = Math.sin(ang) * side;
+        const y = h * (0.35 + seeded(i + a, 55) * 0.2), up = 1 + seeded(i + a, 56) * 0.6;
+        limb("cactus", x + ox * 0.55, y, z + oz * 0.55, 1.1, 0.5, Math.PI / 2 * oz, -Math.PI / 2 * ox);
+        limb("cactus", x + ox * 1.05, y + up / 2, z + oz * 1.05, up, 0.5, 0, 0);
+      }
+    } else {
+      const h = 4 + tall * 2;
+      limb("wood", x, h / 2, z, h, 0.45, 0, 0);
+      for (let b = 0; b < 3; b++) {
+        const ang = b * 2.1 + seeded(i, 57) * 6.28, len = 1.6 + seeded(i + b, 58) * 1.2;
+        limb("wood", x + Math.cos(ang) * len * 0.3, h * (0.6 + b * 0.12), z + Math.sin(ang) * len * 0.3, len, 0.2, Math.sin(ang) * 0.8, -Math.cos(ang) * 0.8);
+      }
+    }
+  });
+  for (const [mx, mz] of [[-36, 32], [-30, -36], [38, -32]]) {
+    let y = 0;
+    for (const [rad, h] of [[4.5, 3], [3.4, 2.6], [2.2, 2]]) {
+      const tier = MeshBuilder.CreateCylinder("wildWestRimPart", { height: h, diameterTop: rad * 1.7, diameterBottom: rad * 2, tessellation: 7 }, scene);
+      tier.rotation.y = rad;
+      tier.position.set(mx + (rad - 4.5) * 0.3, y + h / 2, mz);
+      parts.rock.push(tier);
+      const band = MeshBuilder.CreateCylinder("wildWestRimPart", { height: 0.35, diameter: rad * 1.95, tessellation: 7 }, scene);
+      band.rotation.y = rad;
+      band.position.set(mx + (rad - 4.5) * 0.3, y + h * 0.55, mz);
+      parts.band.push(band);
+      y += h;
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(mx, 0, mz), radius: 4.5 });
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true);
+    if (!merged) continue;
+    merged.name = `wildWestRim_${key}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+}
+
 export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -155,5 +241,6 @@ export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuil
   }
   const kept = obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
   town(scene, kept);
+  desertRim(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), kept);
   return { ...result, obstacles: kept };
 }
