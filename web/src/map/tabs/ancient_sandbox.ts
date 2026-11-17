@@ -669,6 +669,13 @@ function oliveMeadow(scene: Scene, trails: number[][][]): void {
     mat.diffuseColor = olive.scale(name.startsWith("grassBlade") ? 0.8 : 1);
     mat.emissiveColor = mat.diffuseColor.scale(0.13);
   }
+  // The outer shelves and islet caps carry the same olive, so the island reads as one meadow
+  for (const name of ["ancientSandboxShelfGrass", "ancientSandboxIsletGrass"]) {
+    const mat = scene.getMaterialByName(name);
+    if (!(mat instanceof StandardMaterial)) continue;
+    mat.diffuseColor = olive.clone();
+    mat.emissiveColor = olive.scale(0.18);
+  }
   const tones = [new Color3(0.56, 0.57, 0.19), new Color3(0.45, 0.48, 0.15)].map((c, i) => {
     const mesh = MeshBuilder.CreateIcoSphere(`ancientSandboxMeadow${i}`, { radius: 0.5, subdivisions: 1, flat: true }, scene);
     const mat = new StandardMaterial(`ancientSandboxMeadow${i}`, scene);
