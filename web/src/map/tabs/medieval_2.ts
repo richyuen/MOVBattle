@@ -488,7 +488,7 @@ function earthenBowl(scene: Scene, built: Set<unknown>): void {
   }
   const rockMat = new StandardMaterial("medieval2UnderBoulder", scene);
   rockMat.diffuseColor = new Color3(0.42, 0.39, 0.36);
-  rockMat.emissiveColor = new Color3(0.36, 0.33, 0.3);
+  rockMat.emissiveColor = new Color3(0.42, 0.39, 0.36);
   rockMat.specularColor = Color3.Black();
   const boulders: Mesh[] = [];
   for (let i = 0; i < 70; i++) {
@@ -501,7 +501,7 @@ function earthenBowl(scene: Scene, built: Set<unknown>): void {
     const y = tiers[k].height * (1 - u) + tiers[k + 1].height * u;
     const [x, z] = rim(angle);
     const size = 1.5 + seeded(i, 85) * 2;
-    const rock = MeshBuilder.CreateIcoSphere("medieval2UnderBoulder", { radius: size, subdivisions: 0, flat: true }, scene);
+    const rock = MeshBuilder.CreateIcoSphere("medieval2UnderBoulder", { radius: size, subdivisions: 1, flat: true }, scene);
     rock.scaling.set(1, 0.7 + seeded(i, 87) * 0.5, 1);
     rock.rotation.set(seeded(i, 89) * 3, seeded(i, 91) * 3, 0);
     rock.position.set(x * scale, y, z * scale);
@@ -554,7 +554,7 @@ function keepVine(scene: Scene): void {
     tube.isPickable = false;
     tube.receiveShadows = true;
     for (let i = 4; i < n - 1; i += path === coil ? 7 : 2) {
-      const tuft = MeshBuilder.CreateIcoSphere("medieval2VineLeaf", { radius: 0.9 + seeded(i, 95) * 0.6, subdivisions: 0, flat: true }, scene);
+      const tuft = MeshBuilder.CreateIcoSphere("medieval2VineLeaf", { radius: 0.9 + seeded(i, 95) * 0.6, subdivisions: 1, flat: true }, scene);
       tuft.position.copyFrom(path[i]).addInPlace(new Vector3(0, 0.6, 0));
       tuft.rotation.y = seeded(i, 97) * 3;
       leaves.push(tuft);
