@@ -3,7 +3,7 @@
 // shared with four other maps: never edit it, dress its build here).
 //
 // Ice wall (563), spec read off the wiki shot: the wall rings the whole field as three stepped tiers of faceted ice blocks, each tier a run of
-// leaning upright slabs with flat snowy tops, the lowest tier nearest the field: tier 1 at 0.86 of the island rim (ellipse 54 x 48) 5-7 m
+// leaning upright slabs with flat snowy tops, the lowest tier nearest the field: tier 1 at 0.86 of the circular island rim, 5-7 m
 // high, tier 2 at 0.93 9-12 m, tier 3 at 0.99 14-18 m; a slab every 6 degrees per tier, 8-11 m along the rim and 5 m deep, turned along it;
 // each slab carries a thin white snow slab on its top. Pale cyan ice (r well under g and b), the snow near white, both a little self-lit.
 // The base's autumn tree ring (every "trunk" with its canopy, the haze band) goes with its colliders; one 3.5 m collider per tier-1 slab;
@@ -24,11 +24,11 @@ const TIERS = [
 ];
 const STEP = 6;
 const INSIDE_X = 44;
+const ARENA_RADIUS = 51;
 
 function rimPoint(deg: number, f: number): [number, number] {
-  const a = (deg * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a);
-  const r = ((c / 54) ** 2 + (s / 48) ** 2) ** -0.5 * f;
-  return [c * r, s * r];
+  const a = (deg * Math.PI) / 180;
+  return [Math.cos(a) * ARENA_RADIUS * f, Math.sin(a) * ARENA_RADIUS * f];
 }
 
 function clearTreeRing(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): Obstacle[] {
@@ -94,8 +94,14 @@ function snowAndIce(scene: Scene, built: Set<unknown>): void {
   for (const mesh of scene.meshes) {
     if (!built.has(mesh)) continue;
     const n = mesh.name;
-    if (n.startsWith("fieldBlades_") || n.startsWith("fieldTufts_") || n === "grassTuft" || n === "centerGrass" || n === "flowerDot") mesh.setEnabled(false);
+    if (n === "ground" || n.startsWith("campaign_zone_") || n.startsWith("fieldBlades_") || n.startsWith("fieldTufts_") || n === "grassTuft" || n === "centerGrass" || n === "flowerDot") mesh.setEnabled(false);
   }
+  const ground = MeshBuilder.CreateCylinder("vikingSandboxCircularFloor", {
+    diameter: ARENA_RADIUS * 2, height: 0.16, tessellation: 96,
+  }, scene);
+  ground.position.y = -0.08;
+  ground.material = scene.getMaterialByName("groundMat");
+  ground.receiveShadows = true;
   const iceMat = new StandardMaterial("vikingSandboxFloorIce", scene);
   iceMat.diffuseColor = ICE_PATCH;
   iceMat.emissiveColor = ICE_PATCH.scale(0.4);
