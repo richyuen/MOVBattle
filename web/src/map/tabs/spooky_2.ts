@@ -364,8 +364,10 @@ function blackTrees(scene: Scene, built: Set<unknown>): void {
 // Thorn thickets (587, card Overview "giant thorns blocking the pathways on the left and right sides"; reference/maps/wiki/
 // spooky_2.png: black tangles of thick thorny vines heaped across the side paths, taller than a man, their limbs arching and
 // curling out with hooked spikes). Spec: one thicket on each side path, across the loop path at x -44 and x 44 between the fog
-// channels (z -7..7); each is 26 seeded vines rising from a 6 x 12 m footprint, every vine five tapering segments (0.7 m at
-// the root to 0.15 m) that bend 25-45 degrees per joint around a turning axis, so they arch up to 3.5-5.5 m and curl over;
+// channels (z -7..7); each is 30 seeded vines rising from a 7 x 14 m footprint, every vine six tapering segments (0.95 m at
+// the root to 0.15 m), 7-10 m of vine leaning out only 3-14 degrees at the root and bending 12-22 degrees per joint around a
+// turning axis, so they stand 5-7 m high before they curl over (587.4b: 25-45 degree bends kept the first heap under 3 m,
+// lost in the tree ring);
 // a hooked cone spike 0.5-0.8 m off every other joint. Near-black (0.03, 0.03, 0.05), barely self-lit, merged (32-bit), in the
 // glow pass (dark solid). A box collider 3 x 6 m half size blocks each path.
 function thornThickets(scene: Scene, result: MapBuildResult): void {
@@ -386,16 +388,16 @@ function thornThickets(scene: Scene, result: MapBuildResult): void {
   let k = 0;
   for (const side of [-1, 1]) {
     const cx = side * 44;
-    for (let v = 0; v < 26; v++, k++) {
-      let p = new Vector3(cx + (hash(k, 1) - 0.5) * 6, 0, (hash(k, 2) - 0.5) * 12);
+    for (let v = 0; v < 30; v++, k++) {
+      let p = new Vector3(cx + (hash(k, 1) - 0.5) * 7, 0, (hash(k, 2) - 0.5) * 14);
       let yaw = hash(k, 3) * 6.28;
-      let tilt = 0.15 + hash(k, 4) * 0.35;
+      let tilt = 0.05 + hash(k, 4) * 0.2;
       const turn = (hash(k, 5) < 0.5 ? -1 : 1) * (0.5 + hash(k, 6) * 0.6);
-      const total = 3.5 + hash(k, 7) * 2;
-      for (let s = 0; s < 5; s++) {
-        const len = total / 5 * (1.3 - s * 0.12);
+      const total = 7 + hash(k, 7) * 3;
+      for (let s = 0; s < 6; s++) {
+        const len = total / 6 * (1.3 - s * 0.1);
         const dir = new Vector3(Math.sin(tilt) * Math.cos(yaw), Math.cos(tilt), Math.sin(tilt) * Math.sin(yaw));
-        const d0 = 0.7 - s * 0.13, d1 = 0.7 - (s + 1) * 0.11;
+        const d0 = 0.95 - s * 0.14, d1 = Math.max(0.12, 0.95 - (s + 1) * 0.14);
         piece(p, dir, len, d0, d1, "spooky2ThornVine");
         p = p.add(dir.scale(len * 0.95));
         if (s % 2 === 1) {
@@ -403,11 +405,11 @@ function thornThickets(scene: Scene, result: MapBuildResult): void {
           const sd = new Vector3(Math.cos(sy) * 0.8, 0.6, Math.sin(sy) * 0.8).normalize();
           piece(p, sd, 0.5 + hash(k + s, 9) * 0.3, d1 * 0.9, 0.02, "spooky2ThornSpike");
         }
-        tilt += 0.45 + hash(k + s, 10) * 0.35;
+        tilt += 0.2 + hash(k + s, 10) * 0.18;
         yaw += turn * 0.5;
       }
     }
-    result.obstacles.push({ type: "box", center: new Vector3(cx, 0, 0), halfX: 3, halfZ: 6 });
+    result.obstacles.push({ type: "box", center: new Vector3(cx, 0, 0), halfX: 3.5, halfZ: 7 });
   }
   const merged = Mesh.MergeMeshes(parts, true, true);
   if (!merged) return;
