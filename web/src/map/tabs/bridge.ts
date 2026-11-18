@@ -10,7 +10,7 @@
 // line crosses the bridge only.
 import type { Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
-import { bareField, centreLine, gridBlock, voidAround, zonesOn, type Rect } from "./simKit";
+import { bareField, centreLine, gridBlock, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
 
 const DEPTH = 400;
 const BLOCK: Rect = { x0: 18, x1: 64, z0: -25, z1: 25 };
@@ -26,5 +26,7 @@ export function buildBridge(scene: Scene, base: () => MapBuildResult): MapBuildR
   centreLine(scene, SPAN.z0, SPAN.z1);
   const hazards = [...kept, ...voidAround([left, SPAN, BLOCK], { x0: -90, x1: 90, z0: -60, z1: 60 })];
   const placementZones = zonesOn([{ ...left, team: 0 }, { ...BLOCK, team: 1 }]);
-  return { ...result, hazards, placementZones };
+  // Pale haze (588, blocker a3; wiki bridge.png: pale cyan haze all round, the pillars fading into it): the simulation sky
+  const restoreSky = paleSky(scene);
+  return { ...result, hazards, placementZones, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
