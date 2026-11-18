@@ -353,7 +353,7 @@ function paleBlueSky(scene: Scene): () => void {
   const material = new StandardMaterial("legacyValleySky", scene);
   material.disableLighting = true;
   material.diffuseColor = Color3.Black();
-  material.emissiveColor.set(0.2, 0.55, 0.65);
+  material.emissiveColor.set(0.65, 0.88, 0.95);
   material.fogEnabled = false;
   backdrop.material = material;
   backdrop.infiniteDistance = true;
