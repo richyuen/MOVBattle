@@ -10,7 +10,7 @@
 // sunk), centred at x 0 and z +-37 along x, bows to +x (the far one) and -x (the near one); stern castle 8 m long in two tiers to
 // 3.4 m above the deck; masts 17/20/15 m with two yards each; three gangplanks 1.6 m wide from the deck edge (z +-33) down to the sand
 // at z +-27; a row of six cannons on each deck facing the beach. One box collider per hull (outside both armies' zones, |z| <= 29).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -197,5 +197,33 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   const obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
   galleons(scene, obstacles);
   sandIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+  hourglassBeach(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles, hazards };
+}
+
+// Pirate wiki: the broad foreground beach pinches before widening beneath the
+// mountain. The ships lie along z +/-37; keep all authored armies on dry sand.
+function hourglassBeach(scene: Scene, built: Set<unknown>): void {
+  const ground = scene.meshes.find(m => built.has(m) && m.name === "ground");
+  const sand = ground?.material ?? scene.getMaterialByName("pirateSandDrum");
+  for(const m of scene.meshes) if(built.has(m) && /^(ground$|centerGrass$|pirateSandDrum$|pirateSandBelly$|campaign_zone_)/.test(m.name)) m.setEnabled(false);
+  const outline: Array<[number,number]> = [];
+  const stations = [[-58,7],[-51,24],[-38,32],[-23,30],[-7,25],[9,21],[23,24],[38,31],[49,28],[56,10]];
+  for(const [x,w] of stations) outline.push([x,-w]);
+  for(const [x,w] of [...stations].reverse()) outline.push([x,w]);
+  const positions = [0,0.03,0], indices: number[] = [];
+  for(const [x,z] of outline) positions.push(x,0.03,z);
+  const n=outline.length;
+  for(let i=0;i<n;i++) indices.push(0,1+(i+1)%n,1+i);
+  // Two tapering shore courses follow the same outline rather than leaving the
+  // former oval sand drum projecting past the new waterline.
+  for(const [scale,y] of [[0.9,-6],[0.45,-18]]) for(const [x,z] of outline) positions.push(x*scale,y,z*scale);
+  for(let ring=0;ring<2;ring++) for(let i=0;i<n;i++) {
+    const a=1+ring*n+i,b=1+ring*n+(i+1)%n,c=a+n,d=b+n;
+    indices.push(a,b,c,b,d,c);
+  }
+  const normals: number[]=[];VertexData.ComputeNormals(positions,indices,normals);
+  const data=new VertexData();data.positions=positions;data.indices=indices;data.normals=normals;
+  const beach=new Mesh("pirateHourglassBeach",scene);data.applyToMesh(beach);beach.material=sand;
+  beach.convertToFlatShadedMesh();beach.receiveShadows=true;
 }
