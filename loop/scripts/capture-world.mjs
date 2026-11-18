@@ -193,7 +193,7 @@ async function mapScene(page, item) {
     const edge = await page.evaluate(() => {
       for (let ms = 0; ms <= 5000; ms += 20) {
         const u = window.game.listLiveUnits().find(q => q.team === 1 && q.definition.id === "medieval.archer" && q.position.x > 27.5 && q.position.x < 28.1 && Math.abs(q.position.z) < 4.6);
-        if (u) return { id: u.id, ms };
+        if (u) return { id: u.runtimeId, ms };
         window.advanceTime(20);
       }
       return { id: null, ms: 5020 };
@@ -204,7 +204,7 @@ async function mapScene(page, item) {
       await shot(page, `${p}gate_before`);
       const crossingMs = await page.evaluate(id => {
         for (let ms = 0; ms <= 1000; ms += 20) {
-          const u = window.game.listLiveUnits().find(q => q.id === id);
+          const u = window.game.listLiveUnits().find(q => q.runtimeId === id);
           if (u && u.position.x <= 27.5) return ms;
           window.advanceTime(20);
         }
