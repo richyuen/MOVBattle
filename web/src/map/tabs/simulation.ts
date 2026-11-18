@@ -45,9 +45,12 @@ function gridFloor(scene: Scene): void {
 }
 
 // Empty centre (587, blocker a2; reference/maps/simulation.png: nothing stands on the plane but the red line). Spec: the base's
-// kept centre disc ("centerGrass", a darker grey lawn disc at the origin) is hidden; the line runs uninterrupted through it.
-function emptyCentre(scene: Scene): void {
-  for (const mesh of scene.meshes) if (mesh.name === "centerGrass") mesh.setEnabled(false);
+// kept centre lawn disc ("centerGrass") is hidden, and (587.7b) so is the grey disc the shots showed: campaign.simulation's
+// void hazard, a cylinder 8 m round at the origin drawn as campaign_hazard_cyl_void; TABS's plane has no hole, so the hazard
+// leaves the list with its overlay and the line runs uninterrupted.
+function emptyCentre(scene: Scene, result: MapBuildResult): MapBuildResult["hazards"] {
+  for (const mesh of scene.meshes) if (mesh.name === "centerGrass" || mesh.name === "campaign_hazard_cyl_void") mesh.setEnabled(false);
+  return result.hazards.filter((h) => !(h.kind === "void" && h.shape === "cylinder" && Math.hypot(h.center.x, h.center.z) < 1));
 }
 
 // Pale sky (587, blocker a3; wiki simulation.png: a clear pale cyan-blue sky overhead fading to a white haze at the horizon,
@@ -94,7 +97,7 @@ function paleSky(scene: Scene): () => void {
 export function buildSimulation(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const result = base();
   gridFloor(scene);
-  emptyCentre(scene);
+  const hazards = emptyCentre(scene, result);
   const restoreSky = paleSky(scene);
-  return { ...result, dispose: () => { restoreSky(); result.dispose?.(); } };
+  return { ...result, hazards, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
