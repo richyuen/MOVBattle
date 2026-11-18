@@ -378,11 +378,43 @@ export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapB
   dogesPalace(scene);
   coveredBridge(scene);
   frontCanal(scene);
+  stoneBase(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   creamPavement(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   // The circular object in the reference battle is a unit: the piazza itself has no fountain.
   for(const m of scene.meshes) if(!prior.has(m)&&m.name.startsWith("plazaFountain")) m.setEnabled(false);
   const obstacles = [...result.obstacles.filter(o=>!(o.type==="cylinder"&&Math.hypot(o.center.x,o.center.z)<0.1&&o.radius===3.5)), { type: "box" as const, center: new Vector3(0, 0, PALACE.z + ARCADE + (PALACE.deep - ARCADE) / 2), halfX: PALACE.wide / 2, halfZ: (PALACE.deep - ARCADE) / 2 }];
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Stone base (585, renaissance_town.png: the city block stands on a plain pale stone plinth with straight sides, square to the
+// piazza, no dark hanging crags). Spec: the base underside (islandUnder, islandShelf, islandCliff) hidden; a cream stone block
+// 106 x 98 m (x +-53, z +-49, just outside the oval floor's rim) 9 m deep with a 0.6 m cornice band at its top, under it a
+// second block inset 3 m on every side, 7 m deep, and a third inset 7 m, 5 m deep, so the base steps in below; faces flat
+// shaded, self-lit 0.5 so the sides facing away from the sun stay pale, out of the glow.
+function stoneBase(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) if (built.has(mesh) && /^(islandUnder|islandShelf|islandCliff)/.test(mesh.name)) mesh.setEnabled(false);
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const stone = mk("renaissanceBaseStone", new Color3(0.86, 0.81, 0.72), 0.5);
+  const band = mk("renaissanceBaseBand", new Color3(0.95, 0.92, 0.86), 0.55);
+  const glow = scene.getGlowLayerByName("glow");
+  const block = (mat: StandardMaterial, w: number, d: number, h: number, top: number) => {
+    const b = MeshBuilder.CreateBox("renaissanceStoneBase", { width: w, height: h, depth: d }, scene);
+    b.position.y = top - h / 2;
+    b.material = mat;
+    b.receiveShadows = true;
+    b.isPickable = false;
+    glow?.addExcludedMesh(b);
+  };
+  block(band, 107, 99, 0.6, -0.08);
+  block(stone, 106, 98, 9, -0.6);
+  block(stone, 100, 92, 7, -9.6);
+  block(stone, 92, 84, 5, -16.6);
 }
 
 // Haze sky (585, renaissance_town.png: the city floats in a bright white-blue haze with soft clouds, no mountain range).
