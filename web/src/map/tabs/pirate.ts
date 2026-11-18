@@ -279,7 +279,7 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   const obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
   galleons(scene, obstacles);
   sandIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
-  hourglassBeach(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+  hourglassBeach(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), obstacles);
   bellMountain(scene, obstacles);
   openShore(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   const baseHeight = result.height;
@@ -341,12 +341,34 @@ function openShore(scene: Scene, built: Set<unknown>): void {
 
 // Pirate wiki: the broad foreground beach pinches before widening beneath the
 // mountain. The ships lie along z +/-37; keep all authored armies on dry sand.
-function hourglassBeach(scene: Scene, built: Set<unknown>): void {
+// Bare outline (587, blocker b3: the hourglass still read as a broad oval with a pale rectangle on it). The base's own sand
+// oval (sandSpit, sandWet, seaShore, 57 x 52 m) lay over the hourglass beach at the same height, and its sand-coloured field
+// blades (fieldBlades_*, |x| < 50, |z| < 44) drew a pale rectangle over the middle; the base waterfall (Pirate Cove_waterfall,
+// a translucent blue sheet at x 58) floated off the right rim. Spec: all of them hidden, so the hourglass (waist 21 m at x 9,
+// 32 m at the back flanks) is the only sand and the turquoise shallows show round its waist; every base palm, bush or prop
+// root left standing off the new sand (|z| past the outline's half width + 1 m) goes with its collider.
+function hourglassBeach(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): void {
   const ground = scene.meshes.find(m => built.has(m) && m.name === "ground");
   const sand = ground?.material ?? scene.getMaterialByName("pirateSandDrum");
-  for(const m of scene.meshes) if(built.has(m) && /^(ground$|centerGrass$|pirateSandDrum$|pirateSandBelly$|campaign_zone_)/.test(m.name)) m.setEnabled(false);
+  for(const m of scene.meshes) if(built.has(m) && /^(ground$|centerGrass$|pirateSandDrum$|pirateSandBelly$|campaign_zone_|sandSpit$|sandWet$|seaShore$|fieldBlades_|grassTuft|Pirate Cove_waterfall$)/.test(m.name)) m.setEnabled(false);
   const outline: Array<[number,number]> = [];
   const stations = [[-58,7],[-51,24],[-38,32],[-23,30],[-7,25],[9,21],[23,24],[38,31],[49,28],[56,10]];
+  const halfAt = (x: number) => {
+    for (let i = 0; i < stations.length - 1; i++) {
+      const [xa, wa] = stations[i], [xb, wb] = stations[i + 1];
+      if (x >= xa && x <= xb) return wa + (wb - wa) * (x - xa) / (xb - xa);
+    }
+    return 0;
+  };
+  for (const m of scene.meshes) {
+    if (!built.has(m) || m.parent || !m.isEnabled() || !/^(trunk$|bush$|Pirate Cove_)/.test(m.name)) continue;
+    const { x, z } = m.position;
+    if (Math.abs(z) <= halfAt(x) + 1) continue;
+    m.setEnabled(false);
+    for (let o = obstacles.length - 1; o >= 0; o--) {
+      if (Math.hypot(obstacles[o].center.x - x, obstacles[o].center.z - z) < 0.6) obstacles.splice(o, 1);
+    }
+  }
   for(const [x,w] of stations) outline.push([x,-w]);
   for(const [x,w] of [...stations].reverse()) outline.push([x,w]);
   const positions = [0,0.1,0], indices: number[] = [];
