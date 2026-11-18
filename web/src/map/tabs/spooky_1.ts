@@ -57,8 +57,8 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
   data.applyToMesh(mesh);
   mesh.material = grass;
   mesh.receiveShadows = true;
-  // Rock-mass cliffs (583 rebuild, spec at the head of the bank rebuild below): a dark skirt wall under the whole outline, and
-  // in front of it three stepped tiers of heaped rocks per 4.2 m station.
+  // Stepped rock masses (584 rebuild, spec at the head of the cliff rebuild below): a dark skirt wall under the whole outline;
+  // in front of it few large masses in four kinds: cliff blocks, buttresses, a projecting lower shelf and hanging roots.
   const rocks: Mesh[] = [];
   const skirtPositions: number[] = [];
   const skirtIndices: number[] = [];
@@ -67,33 +67,59 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
     const a = points[i], b = points[(i + 1) % points.length];
     const span = Vector3.Distance(a, b);
     const at = skirtPositions.length / 3;
-    skirtPositions.push(a.x, -0.05, a.z, b.x, -0.05, b.z, b.x, -20, b.z, a.x, -20, a.z);
+    skirtPositions.push(a.x, -0.05, a.z, b.x, -0.05, b.z, b.x, -24, b.z, a.x, -24, a.z);
     skirtIndices.push(at, at + 1, at + 2, at, at + 2, at + 3);
-    const count = Math.ceil(span / 4.2);
     const nx = side * (a.z - b.z) / span, nz = side * (b.x - a.x) / span;
+    const tx = (b.x - a.x) / span, tz = (b.z - a.z) / span;
     const yaw = Math.atan2(a.z - b.z, b.x - a.x);
-    for (let j = 0; j < count; j++) {
-      const p = Vector3.Lerp(a, b, (j + 0.5) / count);
+    // The ravine's own faces (the first SHORE.length - 1 edges) carry cliff blocks only: the fog hides what is below
+    const ravine = i < SHORE.length - 1;
+    // A mass whose face stands `proud` metres outside the outline at distance `mid` along the edge, its top at `top`
+    const mass = (shape: "block" | "boulder" | "root", w: number, h: number, d: number, mid: number, proud: number, top: number, turn: number, tip: number) => {
+      const rock = shape === "boulder"
+        ? MeshBuilder.CreateIcoSphere("spooky1CliffRock", { radius: 0.5, subdivisions: 1 }, scene)
+        : MeshBuilder.CreateCylinder("spooky1CliffRock", { height: 1, diameterTop: 1, diameterBottom: shape === "root" ? 0.3 : 0.82, tessellation: shape === "root" ? 5 : 6 }, scene);
+      rock.scaling.set(w, h, d);
+      rock.rotation.set(tip, yaw + turn, -tip * 0.7);
+      const off = proud - d / 2;
+      rock.position.set(a.x + tx * mid + nx * off, top - h / 2, a.z + tz * mid + nz * off);
+      rocks.push(rock);
+    };
+    const inRecess = (mid: number) => {
       // Leave the recessed secret passage open before the cliff rocks merge.
-      if (side < 0 && p.x > -17 && p.z > -25 && p.z < 7) continue;
-      const width = span / count;
-      for (let tier = 0; tier < 3; tier++) {
-        n++;
-        const r = (s: number) => seeded(n, 400 + s);
-        const h = [6.5, 8, 8.5][tier] + r(1) * 3.5;
-        const w = width * (1.2 + r(2) * 0.7);
-        const d = [3.4, 5, 4.4][tier] + r(3) * 2.2;
-        const out = [0.4, 2.6, 1.1][tier] + r(4) * 1.7;
-        const top = [-0.75, -4.4, -10.5][tier] - r(5) * [0.9, 2.6, 2.8][tier];
-        const along = (r(6) - 0.5) * width * 0.6;
-        const rock = r(7) < 0.55
-          ? MeshBuilder.CreateIcoSphere("spooky1CliffRock", { radius: 0.5, subdivisions: 1 }, scene)
-          : MeshBuilder.CreateCylinder("spooky1CliffRock", { height: 1, diameterTop: 0.6 + r(8) * 0.3, diameterBottom: 1, tessellation: 5 }, scene);
-        rock.scaling.set(w, h, d);
-        rock.rotation.set((r(9) - 0.5) * 0.3, yaw + (r(10) - 0.5) * 0.8, (r(11) - 0.5) * 0.3);
-        rock.position.set(p.x + nx * out + ((b.x - a.x) / span) * along, top - h / 2, p.z + nz * out + ((b.z - a.z) / span) * along);
-        rocks.push(rock);
+      const x = a.x + tx * mid, z = a.z + tz * mid;
+      return side < 0 && x > -17 && z > -25 && z < 7;
+    };
+    // Cliff blocks, 7-12 m of edge each (a remainder under 4 m joins the last)
+    for (let from = 0; from < span - 0.01;) {
+      n++;
+      const r = (s: number) => seeded(n, 500 + s);
+      let len = 7 + r(1) * 5;
+      if (span - from - len < 4) len = span - from;
+      const mid = from + len / 2;
+      from += len;
+      if (inRecess(mid)) continue;
+      mass(r(2) < 0.3 ? "boulder" : "block", len * (1.12 + r(3) * 0.2), 8 + r(4) * 6, 6 + r(5) * 4, mid, (ravine ? 0.2 : 0.4) + r(6) * (ravine ? 0.9 : 2.2), -0.2 - r(7) * 0.5, (r(8) - 0.5) * 0.5, (r(9) - 0.5) * 0.12);
+      // A buttress stepping out below the block on about two stations in three
+      if (!ravine && r(10) < 0.66) mass(r(11) < 0.5 ? "boulder" : "block", len * (0.55 + r(12) * 0.4), 7 + r(13) * 4, 6 + r(14) * 3, mid + (r(15) - 0.5) * len * 0.4, 2.8 + r(16) * 3, -3.4 - r(17) * 4.2, (r(18) - 0.5) * 0.9, (r(19) - 0.5) * 0.25);
+    }
+    if (ravine) continue;
+    // Lower shelf and the roots hanging under it, 11-16 m of edge each
+    for (let from = 0; from < span - 0.01;) {
+      n++;
+      const r = (s: number) => seeded(n, 540 + s);
+      let len = 11 + r(1) * 5;
+      if (span - from - len < 6) len = span - from;
+      const mid = from + len / 2;
+      from += len;
+      const shelfTop = -10.5 - r(2) * 3.5, shelfH = 6 + r(3) * 3, proud = 7 + r(4) * 6;
+      mass("block", len * (1.2 + r(5) * 0.2), shelfH, proud + 6 + r(6) * 4, mid, proud, shelfTop, (r(7) - 0.5) * 0.4, (r(8) - 0.5) * 0.06);
+      for (let k = 0; k < 2; k++) {
+        const s = 2.4 + r(9 + k) * 2.4;
+        mass("boulder", s * 1.3, s, s * 1.1, mid + (r(11 + k) - 0.5) * len * 0.8, proud - 1 - r(13 + k) * (proud - 3), shelfTop + s * 0.72, r(15 + k) * 3, (r(17 + k) - 0.5) * 0.4);
       }
+      const rootH = 5 + r(19) * 13;
+      mass("root", len * (0.85 + r(20) * 0.25), rootH, 9 + r(21) * 6, mid + (r(22) - 0.5) * 3, proud - 1.5 - r(23) * 3, shelfTop - shelfH + 1.2, (r(24) - 0.5) * 0.7, (r(25) - 0.5) * 0.1);
     }
   }
   const skirt = new Mesh("spooky1CliffSkirt", scene);
@@ -140,7 +166,8 @@ function fogChasm(scene: Scene, built: Set<unknown>, result: MapBuildResult): Ma
   plateau(scene, -1, grass, stone);
   plateau(scene, 1, grass, stone);
   const glow = scene.getGlowLayerByName("glow");
-  const fog = mk("spooky1Fog", Color3.Black(), new Color3(0.42, 0.48, 0.78), 0.32);
+  // 584: a dim mist, no brighter than the turf beside it (it was the brightest band of the map and washed the cliffs pale)
+  const fog = mk("spooky1Fog", Color3.Black(), new Color3(0.1, 0.125, 0.26), 0.34);
   fog.disableLighting = true;
   fog.backFaceCulling = false;
   for (const y of [-1.5, -4.5, -8]) {
@@ -473,25 +500,53 @@ export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuild
 //   -0.75..-1.65, -4.4..-7 and -10.5..-13.3 m, standing 0.4-2.1, 2.6-4.3 and 1.1-2.8 m out, turned up to 23 degrees and
 //   tipped up to 9, so the face is broken and stepped and the underside ends at uneven depths (-17..-25 m). Stone is a
 //   darker navy (0.22, 0.25, 0.4), barely self-lit, so the cliff no longer glows white.
+//
+// Cliff rebuild (584, replaces 583's three even rock tiers and flattened tussocks; references reference/maps/spooky_1.png for
+// the island's build and reference/maps/wiki/spooky_1.png for the turf). Spec, read off the placement view:
+// - Each plateau's face is a few big blocks, not a row: about ten along a side, each 7-12 m of edge, 8-14 m high and 6-10 m
+//   deep, mostly six-sided blocks a little narrower at the foot (three in ten a faceted boulder), their faces 0.4-2.6 m
+//   proud of the grass edge (0.2-1.1 m on the ravine's faces), turned up to 14 degrees, tops 0.2-0.7 m under the turf.
+// - On two stations in three of the outer faces a buttress steps out below the block: 4-11 m wide, top 3.4-7.6 m down,
+//   2.8-5.8 m proud.
+// - Under the outer faces a lower shelf rings the plateau, as the view's broad base tier: flat-topped masses every 11-16 m,
+//   tops 10.5-14 m down, 6-9 m thick, standing 7-13 m proud of the outline, two loose boulders 2.4-4.8 m on each.
+// - Under each shelf mass hangs a tapering root 5-18 m deep, so the underside ends anywhere between -20 and -40 m.
+// - The skirt wall behind them drops to -24 m. The ravine's faces carry blocks only; the descent's recess stays open.
+// - Turf: soft blade tufts, not lumps: fans of six thin blades with up-facing normals (the Legacy meadow's tuft), 0.28-0.5 m
+//   high and 0.9-1.4 m across on a 0.8 m grid over seven cells in ten, two blue-greys a shade paler than the floor.
+// - Fog: three sheets of dim mist (0.1, 0.125, 0.26), no brighter than the turf.
 function duskyMeadow(scene: Scene): void {
-  const tones = [[0.17, 0.21, 0.35], [0.21, 0.26, 0.42]] as const;
+  const tones = [[0.19, 0.24, 0.4], [0.25, 0.31, 0.5]] as const;
   const matrices: number[][] = [[], []];
   let i = 0;
-  for (let x = -52; x <= 52; x += 0.95) for (let z = -42; z <= 39; z += 0.95) {
+  for (let x = -52; x <= 52; x += 0.8) for (let z = -42; z <= 39; z += 0.8) {
     i++;
     const px = x + (seeded(i, 301) - 0.5) * 0.7, pz = z + (seeded(i, 302) - 0.5) * 0.7;
     if (!onPlateau(px, pz) || (px > -16 && px < -6 && pz > -26 && pz < 2)) continue;
     const drift = Math.sin(px * 0.21 + pz * 0.09) + Math.sin(pz * 0.27 - px * 0.13 + 1.7);
-    if (drift + (seeded(i, 307) - 0.5) * 0.9 < 0.05) continue;
-    const h = 0.14 + seeded(i, 303) * 0.12;
-    matrices[seeded(i, 308) < 0.6 ? 0 : 1].push(...Matrix.Compose(new Vector3(0.9 + seeded(i, 304) * 0.8, h * 2, 0.8 + seeded(i, 305) * 0.7), Quaternion.RotationAxis(Vector3.Up(), seeded(i, 306) * 6.28), new Vector3(px, h * 0.25, pz)).m);
+    if (drift + (seeded(i, 307) - 0.5) * 1.6 < -0.75) continue;
+    const w = 0.9 + seeded(i, 304) * 0.5, h = 0.28 + seeded(i, 303) * 0.22;
+    matrices[drift + seeded(i, 308) * 0.8 > 0.5 ? 1 : 0].push(...Matrix.Compose(new Vector3(w, h, w), Quaternion.RotationAxis(Vector3.Up(), seeded(i, 306) * 6.28), new Vector3(px, 0.01, pz)).m);
   }
+  const positions: number[] = [], indices: number[] = [], normals: number[] = [];
+  for (let b = 0; b < 6; b++) {
+    const a = b * 1.047 + (b % 2) * 0.4, lean = 0.3 + (b % 3) * 0.2, cx = Math.cos(a), cz = Math.sin(a);
+    positions.push(cx * 0.1 - cz * 0.07, 0, cz * 0.1 + cx * 0.07, cx * 0.1 + cz * 0.07, 0, cz * 0.1 - cx * 0.07, cx * (0.1 + lean), 0.7 + (b % 2) * 0.3, cz * (0.1 + lean));
+    indices.push(b * 3, b * 3 + 1, b * 3 + 2);
+    normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
+  }
+  const fan = new VertexData();
+  fan.positions = positions;
+  fan.indices = indices;
+  fan.normals = normals;
   for (const [t, tone] of tones.entries()) {
     const mat = new StandardMaterial(`spooky1DuskyGrass${t}`, scene);
     mat.diffuseColor.set(tone[0], tone[1], tone[2]);
     mat.emissiveColor.set(tone[0] * 0.25, tone[1] * 0.25, tone[2] * 0.25);
     mat.specularColor = Color3.Black();
-    const tuft = MeshBuilder.CreateIcoSphere("spooky1DuskyTufts", { radius: 0.5, subdivisions: 1 }, scene);
+    mat.backFaceCulling = false;
+    const tuft = new Mesh("spooky1DuskyTufts", scene);
+    fan.applyToMesh(tuft);
     tuft.material = mat;
     tuft.receiveShadows = true;
     tuft.isPickable = false;
