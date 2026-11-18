@@ -654,8 +654,8 @@ function rockMass(scene: Scene, built: Set<unknown>): void {
 // tilted blocks climbs well above the deck round the foot of a giant leaning spire, chains hanging off its ledges; the 596
 // slate spire alone read as a black shard on the void). Spec: 26 faceted boulders of unequal size (r 3-8 m, stretched 1.3-2.4
 // tall, tilted up to .35 rad) heaped in three rising tiers over x 22..56, z 42..62 (outside the rim, so no colliders): tier
-// tops 8, 18, 30 m above the deck, the tallest nearest the spire (36, 40); grey-teal (.2,.26,.32) self .55, no shadows
-// received, kept in the glow pass (dark solid, LESSONS); the spire stone re-lit the same; four chains of 1.3 m links drop
+// tops 8, 18, 30 m above the deck, the tallest nearest the spire (36, 40); grey-teal (.2,.26,.32) self .35, no shadows
+// received, out of the glow pass (597.2b: in it the crag bloomed into a cloud); the spire stone re-lit the same; four chains of 1.3 m links drop
 // 7-12 m off the front ledges.
 function backdropCrag(scene: Scene): void {
   let seed = 0x2c4a;
@@ -699,7 +699,7 @@ function backdropCrag(scene: Scene): void {
   });
   const rock = new StandardMaterial("voidCrag", scene);
   rock.diffuseColor = new Color3(0.2, 0.26, 0.32);
-  rock.emissiveColor = rock.diffuseColor.scale(0.55);
+  rock.emissiveColor = rock.diffuseColor.scale(0.35);
   rock.specularColor = Color3.Black();
   const iron = new StandardMaterial("voidCragChain", scene);
   iron.diffuseColor = new Color3(0.3, 0.33, 0.37);
@@ -713,6 +713,8 @@ function backdropCrag(scene: Scene): void {
     merged.material = mat;
     merged.receiveShadows = false;
     merged.isPickable = false;
+    // 597.2b: in the glow pass the lit crag bloomed into a blurred cloud on the void
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
   }
   const spire = scene.getMeshByName("voidStatue_spire");
   if (spire) { spire.material = rock; spire.receiveShadows = false; }
