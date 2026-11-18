@@ -370,29 +370,6 @@ function deadTrees(scene: Scene, built: Set<unknown>): void {
   merged.isPickable = false;
 }
 
-// Left chasm descent: a 4 m wide, 19 m long ramp from the left bank to a broken doorway below the bridge.
-// Drawn only, outside the fighting plateau; its outer parapet follows the descending surface.
-function secretDescent(scene: Scene): void {
-  const stone = new StandardMaterial("spooky1RampStone",scene);
-  stone.diffuseColor.set(0.22,0.25,0.38); stone.emissiveColor.set(0.07,0.08,0.14); stone.specularColor=Color3.Black();
-  const dark = new StandardMaterial("spooky1BrokenDoor",scene);
-  dark.diffuseColor.set(0.015,0.018,0.04); dark.emissiveColor.set(0.006,0.008,0.02);
-  const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=stone)=>{
-    const m=MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},scene);
-    m.position.set(x,y,z);m.material=mat;m.isPickable=false;return m;
-  };
-  // A descent alongside the near face of the left plateau, visible from the top and front.
-  for(let i=0;i<19;i++) {
-    const z=-22+i, y=-0.3-i*0.32;
-    box("spooky1SecretRamp",4,0.42,1.1,-7.8,y,z);
-    box("spooky1RampParapet",0.5,1.1,1.1,-5.8,y+0.55,z);
-  }
-  box("spooky1DoorRecess",4.5,4,0.2,-7.8,-5.2,-2.35,dark);
-  for(const x of [-10.2,-5.4]) box("spooky1BrokenJamb",0.65,4.5,0.8,x,-5.1,-2.4);
-  box("spooky1BrokenLintel",2.1,0.6,0.8,-9.6,-2.9,-2.4).rotation.z=0.12;
-  box("spooky1FallenDoor",1.7,0.25,2.5,-7.8,-6.1,-4,dark).rotation.y=0.4;
-}
-
 // Rim offerings: ribbed orange lanterns with lit eyes/mouths, beside irregular groups of ivory candles.
 function rimOfferings(scene: Scene): void {
   const material = (name: string, c: Color3, self: number) => {
@@ -440,6 +417,5 @@ export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuild
   const restore = nightSky(scene, built);
   graveyard(scene, built, result);
   rimOfferings(scene);
-  secretDescent(scene);
   return { ...result, dispose: () => { restore(); result.dispose?.(); } };
 }
