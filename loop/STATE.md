@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 589   Batch: maps_3+maps_4   Consecutive empty: 0   Done: 17/99   Parked: 0
+Iteration: 590   Batch: maps_3+maps_4   Consecutive empty: 0   Done: 17/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<id>):
 # <id>
@@ -33,46 +33,42 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 589: maps_4, 7 [S] + 1 [P]; BASE 00cf09ce; evidence 00cf09ce + cc5ef659 re-aimed map_hill_ground)
-- [S] map.bridge.b blocker 2 (07d52058) APPROVE, struck b2 (b PASS)
-- [S] map.hill.b blocker 1 (90341a4e) APPROVE, struck b1 (b PASS); re-audit struck a1
-- [S] map.high_ground.b blocker 1 (41f10807) APPROVE, struck b1, a1, a3
-- [S] map.defend_the_castle.b blocker 1 (f2467ab3) APPROVE, struck b1, b4, a1, a3
-- [S] map.high_ground.a blocker 2 (2177a9ad) APPROVE, struck a2
-- [S] map.defend_the_castle.a blocker 2 (57155431) APPROVE, struck a2
-- [P] map.bridge.a blocker 3, simKit sky (8d4fd3bc) APPROVE, struck bridge a3, corridor a4, low_ground a4, castle a4; added teal-zenith a5 on six kit maps
-- [S] map.hill.a blocker 3 (de48f83f) REJECT, reverted (5093c46c)
-- 7/8, 15 struck
+## Focus (iter 590: maps_3+maps_4, 6 [S] + 1 [P]; BASE 1f0bfe7b)
+- [S] map.hill.a blocker 3, simKit cloudBanks (e8ee5a82) APPROVE, struck a3
+- [S] map.defend_the_castle.b blocker 2, three ramps + chasms (5f1ae860) APPROVE, struck b2
+- [P] map.simulation.a blocker 3, paleSky (c576c21c + 519e11df) APPROVE, no strike
+- [S] map.high_ground.b blocker 3, wall ramps (b1715d8e) APPROVE, struck b3
+- [S] map.spooky_2.a blocker 6, rock skirt (19067a56 + bb704a1c) APPROVE, struck a6
+- [S] map.high_ground.a blocker 4, clouds (bbb9869d) APPROVE, struck a4
+- [S] map.fantasy_evil.a blocker 1, own builder + void sky (9bfb373f) APPROVE, struck a1
+- 7/7, 6 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.bridge (07d52058)
+GAP: [S] map.hill (e8ee5a82)
 VERDICT: APPROVE
-CRITERION: map.bridge.b PASS   (previous: FAIL)
-GAP: [S] map.hill (90341a4e)
-VERDICT: APPROVE
-CRITERION: map.hill.b PASS   (previous: FAIL)
-GAP: [S] map.high_ground (41f10807)
-VERDICT: APPROVE
-CRITERION: map.high_ground.b FAIL   (previous: FAIL)
-GAP: [S] map.defend_the_castle (f2467ab3)
+CRITERION: map.hill.a FAIL   (previous: FAIL)
+GAP: [S] map.defend_the_castle (5f1ae860)
 VERDICT: APPROVE
 CRITERION: map.defend_the_castle.b FAIL   (previous: FAIL)
-GAP: [S] map.high_ground (2177a9ad)
+GAP: [P] map.simulation (c576c21c + 519e11df)
+VERDICT: APPROVE
+CRITERION: map.simulation.a FAIL   (previous: FAIL)
+GAP: [S] map.high_ground (b1715d8e)
+VERDICT: APPROVE
+CRITERION: map.high_ground.b FAIL   (previous: FAIL)
+GAP: [S] map.spooky_2 (19067a56 + bb704a1c)
+VERDICT: APPROVE
+CRITERION: map.spooky_2.a FAIL   (previous: FAIL)
+GAP: [S] map.high_ground (bbb9869d)
 VERDICT: APPROVE
 CRITERION: map.high_ground.a FAIL   (previous: FAIL)
-GAP: [S] map.defend_the_castle (57155431)
+GAP: [S] map.fantasy_evil (9bfb373f)
 VERDICT: APPROVE
-CRITERION: map.defend_the_castle.a FAIL   (previous: FAIL)
-GAP: [P] map.bridge (8d4fd3bc)
-VERDICT: APPROVE
-CRITERION: map.bridge.a FAIL   (previous: FAIL)
-GAP: [S] map.hill (de48f83f)
-VERDICT: REJECT
-CRITERION: map.hill.a FAIL   (previous: FAIL)
+CRITERION: map.fantasy_evil.a FAIL   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 589: 20/20 script criteria PASS, 0 page errors. One [P] (kit paleSky blue (.38,.68,.76) -> (.55,.78,.92), fallout of fdee4e69, to 591) is the last a blocker of corridor and low_ground and bridge: then CONFIRM them (early CONFIRM 589 unused: bridge b would fail, blocks not square: output/loop/iter-589/confirm.md).
-- Hill clouds: retry inside the far clip (z 180-250), disposed with the map; high_ground reuses the helper.
-- Dynasty: a 2nd CONFIRM fail makes a/b plateau. Spooky_2 a4 starves at 590; pirate b3 at 592; fantasy_good, fantasy_evil (no builder yet) starve at 592.
-- Next [S] candidates: high_ground b3 wall ramps, b2 units on walls; castle b2 three ramps, b3 split ground (watch c); dynasty b1 pagoda, a2 cobble loop (widen perimeterFlagstones).
+- 590: 20/20 script criteria PASS, 0 page errors; no item would-be-done, no CONFIRM. Critic: the kit/simulation sky spheres are unlit and fog-free but ACES still darkens the blue to teal: one [S] taking the sky sphere out of image processing (simKit paleSky) clears a5 on six kit maps (then CONFIRM bridge, corridor, low_ground); simulation.ts a3 needs the same as its own [S].
+- Starving at 592: fantasy_good a, b (no builder yet), fantasy_evil b; pirate b3 (2 attempts) starves at 592.
+- Dynasty: a2 cobble loop not attempted (path at x+-46 z+-35 sits under the ring trees: clear them or move it); a 2nd CONFIRM fail makes a/b plateau.
+- Next [S]: kit sky out of image processing; castle b3 lower platforms (extend chasm to x -60); high_ground b2 units on walls; spooky_2 a3 thickets, a5 trees; fantasy_evil basalt floor and rock ring.

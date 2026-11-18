@@ -3,6 +3,11 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+590 | e8ee5a82, bbb9869d | map.hill.a3, map.high_ground.a4 | approve, struck both (simKit cloudBanks in the island band)
+590 | 5f1ae860 | map.defend_the_castle.b2 | approve, struck b2
+590 | b1715d8e | map.high_ground.b3 | approve, struck b3
+590 | 19067a56 (+bb704a1c) | map.spooky_2.a6 | approve, struck a6
+590 | 9bfb373f | map.fantasy_evil.a1 | approve, struck a1
 589 | 07d52058 | map.bridge.b2 | approve, struck b2 (critic b PASS; early CONFIRM unused would fail b: blocks not square)
 589 | 90341a4e | map.hill.b1 | approve, struck b1 (b PASS); evidence 00cf09ce+cc5ef659 re-aimed ground, a1 struck
 589 | de48f83f | map.hill.a3 | reject, reverted 5093c46c (clouds z 450-540 never rendered)
@@ -29,13 +34,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 585 | 26b8a6d7, 8f023e21 | map.pirate.a6, a4 | approve, struck a6, a4
 585 | 6ad3b2cd | map.spooky_2.a4 | approve, no strike (mound lost in dark)
 585 | 45cc5ae9 | map.spooky_2.b2 | approve, stair clause struck
-584 | 40f76430 | map.wild_west.b2 | approve, struck b2; CONFIRM b PASS
-584 | 397ce937, 5deb40d9, 86d685ef | map.wild_west.a2 | approve, struck a2; CONFIRM a FAIL (second) -> plateau
-584 | 09c46949, 83d01f33 | map.spooky_2.b3 | approve, struck b3
-584 | 9944d480 | map.legacy.a2 | approve, struck a2; CONFIRM a PASS -> D
-584 | 012614f9 [R] | map.spooky_1.a2,4 | approve, struck a4; CONFIRM a PASS, critic a FAIL
-584 | 5395195a | map.pirate.a2 | approve, struck a2
-584 | 96f80159 | map.spooky_2.a4 | approve, no strike (near edge; TABS far edge)
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584): rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
@@ -48,7 +46,12 @@ web/src/map/tabs/spooky_2.ts:thornThickets | x +-44, 30 vines 7-10 m, 6 segments
 web/src/map/tabs/spooky_2.ts:darkTorii | (-40,33), posts 7.2 m 5.6 apart, kasagi 9.6 m swept, stone (.2,.21,.28) self .35, 6 m clearing | 587 | approve, struck a7 | absent
 web/src/map/tabs/simulation.ts:gridFloor | 5 m tile 512 px, base (228,222,212), 1 m lines (190,186,182) 2 px, 5 m (172,168,165) 3 px, self (.18,.17,.16); base "ground" hidden | 587 | approve, struck a1, a4 | base lilac lawn
 web/src/map/tabs/simulation.ts:emptyCentre | centerGrass hidden, centre void hazard (r 8) and its overlay removed | 587 | approve, struck a2 | void disc at origin
-web/src/map/tabs/simulation.ts:paleSky | backdrop sphere blue (.38,.68,.76) to haze (.86,.9,.9) smoothstep over up .57, fog = haze, dome off | 588 | [P] 1 rejected (blue (.62,.86,.93) span .4: paler, not cyan; island shot sees only haze); value kept | grey skyDome
+web/src/map/tabs/simulation.ts:paleSky | blue (.68,.9,1), haze (.74,.93,.97), span .15 | 590 | [P] 2 approve, no strike (renders muted grey-teal: numbers exhausted, next is [S] out of image processing) | 588: blue (.38,.68,.76) haze (.86,.9,.9) span .57; 588 [P] (.62,.86,.93) span .4 rejected; grey skyDome
+web/src/map/tabs/simKit.ts:cloudBanks (hill, high_ground) | banks [x,y,z,w] at z 200-240, y -22..-12, w 120-190; puffs scale (1.2,.62,.45), crown row; vertex colours (.8,.87,.93) -> white, unlit, out of glow | 590 | approve, struck hill a3, high_ground a4 (read flat light grey) | 589: z 450-540 y 40-80 (out of frame)
+web/src/map/tabs/defend_the_castle.ts:chasms | x -22..14 at |z| 6..14, 26..30, -40 m, box colliders | 590 | approve, struck b2 | one full-width ramp
+web/src/map/tabs/high_ground.ts:wallRamps | x 48 -> 36 at |z| 8..17, rise 7 m (height field) | 590 | approve, struck b3 (no side colliders) | absent
+web/src/map/tabs/spooky_2.ts:rockSkirt | 4 courses icosphere boulders r 3-6.5 (x1.25 front corners), tops -0.3-6k, diffuse (.3,.34,.48) self (.07,.08,.11), out of glow; base underside hidden | 590 | approve, struck a6 (reads royal blue, even band) | base stalactite slab
+web/src/map/tabs/fantasy_evil.ts:voidSky | dome, cloud*, mountain* hidden; clear/fog (.02,.012,.035) | 590 | approve, struck a1 | base mauve daylight sky
 web/src/map/tabs/simKit.ts:paleSky (every kit map) | blue (.38,.68,.76), haze (.74,.93,.97), span .15 | 589 | [P] approve, struck island grey bands (bridge a3, corridor a4, low_ground a4, castle a4); added teal zenith in every _ground (blue too dark/green low) | 588: haze (.86,.9,.9) span .57 (neutral grey); base grey skyDome
 web/src/map/tabs/high_ground.ts:sheet and gate | sheet x -60..48 |z|<=22, ramp -24..10 to 12 m; walls x 28..36 |z| 5..20 +7 m, bar |z|<=5 +4.5..7 | 589 | approve, struck b1, a1-a3 | bare plane
 web/src/map/tabs/defend_the_castle.ts:castle | sheet x -60..64 |z|<=30, ramp -22..14 to 10 m; castle x 36..64 walls 3 m top 18, gate 8 m, terrace x 54+ top 14, stair, merlons 1.2 m / 3 m; pillars 3x3 at (29,+-12) top 21 | 589 | approve, struck b1, b4, a1-a4 | bare plane
