@@ -318,6 +318,7 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   courtApproaches(scene,result);
   terraceBranches(scene,result);
   perimeterFlagstones(scene,result);
+  canalSpurs(scene, result);
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
@@ -473,5 +474,60 @@ function lawnTerraces(scene: Scene, built: Set<unknown>, result: MapBuildResult)
   result.height=(x,z)=>{
     const b=blocks.find(b=>Math.abs(x-b.x)<b.w/2&&Math.abs(z-b.z)<b.d/2);
     return b?b.h+0.12:oldHeight?.(x,z)??0;
+  };
+}
+
+// Canal spurs (583, wiki dynasty.png: the water is a network, each long canal sending an arm out between the lawns so the
+// field is cut into separate raised terraces with stone banks). Spec: four spurs in a pinwheel, one per quadrant, at
+// x 34 and -17 (back) and -34 and 17 (front); each leaves its long canal at |z| 17.6 and runs 9.4 m out to |z| 27 through
+// the outer lawn, 4.4 m of turquoise water between stone banks as high as the lawn. The outer lawn block (its retaining
+// box and turf) is cut in two across the spur, the canal wall and the edge flagstones opened at its mouth, and the last
+// 3 m (|z| 27..30) stay a dry stone crossing between the two terraces. Water hazard under each spur; the ground there is
+// drawn at water level.
+const SPURS = [[34, 1], [-17, 1], [-34, -1], [17, -1]] as const;
+function canalSpurs(scene: Scene, result: MapBuildResult): void {
+  const water = scene.getMaterialByName("dynastyCanalTurquoise")!;
+  const stone = scene.getMaterialByName("dynastyLawnStone")!;
+  const glow = scene.getGlowLayerByName("glow");
+  const put = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat = stone) => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z);
+    m.material = mat;
+    m.receiveShadows = true;
+    glow?.addExcludedMesh(m);
+  };
+  // Open a box that runs along x around the spur: the box keeps one side, a clone takes the other.
+  const splitX = (m: Mesh, xs: number, gap: number) => {
+    const w = m.getBoundingInfo().boundingBox.extendSize.x * 2;
+    const lo = m.position.x - w / 2, hi = m.position.x + w / 2;
+    const other = m.clone(m.name);
+    m.scaling.x = (xs - gap - lo) / w;
+    m.position.x = (lo + xs - gap) / 2;
+    other.scaling.x = (hi - xs - gap) / w;
+    other.position.x = (hi + xs + gap) / 2;
+  };
+  const HALF = 2.6, NEAR = 17.6, FAR = 27;
+  for (const [xs, sz] of SPURS) {
+    let top = 1.4;
+    for (const m of [...scene.meshes]) {
+      if (!(m instanceof Mesh) || m.position.z * sz < 16 || Math.sign(m.position.x) !== Math.sign(xs)) continue;
+      if (m.name === "dynastyLawnFlagstone") {
+        if (Math.abs(m.position.x - xs) < HALF + 0.7 && Math.abs(m.position.z) < FAR) m.dispose();
+      } else if (m.name === "dynastyLawnRetaining" && Math.abs(m.position.z) > 20) {
+        top = m.position.y * 2;
+        splitX(m, xs, HALF);
+      } else if (m.name === "dynastyLawnTurf" && Math.abs(m.position.z) > 20) splitX(m, xs, HALF + 0.3);
+      else if (m.name === "dynastyCanalWall" && Math.abs(Math.abs(m.position.z) - 17) < 0.2) splitX(m, xs, HALF - 0.4);
+    }
+    const len = FAR - NEAR, zc = sz * (NEAR + FAR) / 2;
+    put("dynastySpurWater", HALF * 2 - 0.8, 0.1, len + 1.4, xs, 0.15, zc - sz * 0.7, water);
+    for (const s of [-1, 1]) put("dynastySpurBank", 0.45, top + 0.3, len, xs + s * (HALF - 0.2), (top + 0.3) / 2, zc);
+    put("dynastySpurCrossing", HALF * 2 + 0.6, top + 0.2, 3, xs, (top + 0.2) / 2, sz * (FAR + 1.5));
+    result.hazards.push({ shape: "box", kind: "water", center: new Vector3(xs, 0, zc), halfX: HALF - 0.6, halfZ: len / 2 });
+  }
+  const oldHeight = result.height;
+  result.height = (x, z) => {
+    for (const [xs, sz] of SPURS) if (Math.abs(x - xs) < HALF - 0.4 && z * sz > NEAR && z * sz < FAR) return 0;
+    return oldHeight?.(x, z) ?? 0;
   };
 }
