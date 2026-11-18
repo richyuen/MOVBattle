@@ -1,19 +1,19 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 579   Batch: maps_2+maps_3   Consecutive empty: 0   Done: 12/99   Parked: 0
+Iteration: 580   Batch: maps_2+maps_3   Consecutive empty: 0   Done: 12/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
-<!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<level>):
+<!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<id>):
 # <id>
 Status: open|done|parked   Audited: <N> (AUDIT x2)[, <N> (CONFIRM: passed a; failed b)]   Done: <N>
 ## Verdicts
-a FAIL (0 since <N>): 1. <blocker verbatim> 2. ...      (or: a PASS (<N>: struck n; CONFIRM <N>); script criteria: c PASS (<N> judge) / c FAIL (<N> judge): <reasons>)
+a FAIL (0 since <N>): 1. <blocker verbatim> 2. ... (or a PASS (<N>: struck n; CONFIRM <N>))
 b ...
-c ...
+c PASS (<N> judge) / c FAIL (<N> judge): <reasons>
 ## Ranked gaps
 1. [S] <id>.<letter> <gap> — blocker <n>: <mechanism> — ref: <file> — ours: <png>
 ## Attempts (iter | gap | criterion | verdict)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-Marks below: one per criterion a b c (+ pass, - fail, ? unscored); map a look, b layout, c play; stage a army, b formation, c battle. -->
+Marks: one per criterion a b c (+ pass, - fail, ? unscored); map a look, b layout, c play; stage a army, b formation, c battle. -->
 
 ## Scoreboard (a b c as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox +++ D | farmer_1 +++ D | farmer_2 +++ D | farmer_snow +++ D
@@ -33,46 +33,51 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-
-## Focus (iter 579: maps_2+maps_3, 9 [S]; BASE a0eab91a)
-- [S] map.spooky_1.a blocker 4 (41ea07bb) APPROVE, struck a4; a PASS, awaiting CONFIRM when b closes
-- [S] map.spooky_1.b blocker 5 (cf4fcec1) DROPPED, hidden by cliff; reverted 9957f674
-- [S] map.spooky_2.a blocker 2 (d8e18d58) APPROVE, struck a2
-- [S] map.spooky_2.b blocker 3 (ca88f7b3, 6d6941ac, ac19ef0d) DROPPED after two follow-ups; reverted daa2da54, 2a571893, fc6bf11f
-- [S] map.spooky_2.a blocker 1 (b20691d0) APPROVE, struck a1
-- [S] map.dynasty.a blocker 2 (d888588d, b326fec0) APPROVE, struck a2
-- [S] map.dynasty.b blocker 6 (6fce1036) APPROVE, struck b6
-- [S] map.legacy.b blocker 4 (0167e0b6) APPROVE, struck b1, b4
-- [S] map.legacy.a blocker 6 (2f5b6c6f) APPROVE, struck a6
-- 7/9, 8 struck
+## Focus (iter 580: maps_2+maps_3, 9 [S]; BASE 6193aede)
+- [S] map.wild_west.a blocker 5 (07b08bd1) APPROVE, struck a5
+- [S] map.wild_west.b blocker 2 (514d0cf8) APPROVE, struck b2
+- [S] map.wild_west.a blocker 6 (cd907413) APPROVE, struck a6
+- [S] map.legacy.b blocker 2 (f5d5ce85) APPROVE, struck b2
+- [S] map.legacy.a blocker 4 (bfb1c703) APPROVE, struck a4
+- [S] map.legacy.a blocker 5 (9a3f5024, 2fc231cb) APPROVE, struck a5
+- [S] map.renaissance.b blocker 2 (eae680b0) APPROVE, struck b2
+- [S] map.renaissance.a blocker 3 (304cb24f) APPROVE, no strike
+- [S] map.renaissance.b blocker 5 (19ca5178) APPROVE, struck b5
+- 9/9, 8 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.spooky_1 (41ea07bb)
+GAP: [S] map.wild_west.a blocker 5 (07b08bd1)
 VERDICT: APPROVE
-CRITERION: map.spooky_1.a PASS   (previous: FAIL)
-GAP: [S] map.spooky_2 (d8e18d58)
+CRITERION: map.wild_west.a FAIL (previous: FAIL)
+GAP: [S] map.wild_west.b blocker 2 (514d0cf8)
 VERDICT: APPROVE
-CRITERION: map.spooky_2.a FAIL   (previous: FAIL)
-GAP: [S] map.spooky_2 (b20691d0)
+CRITERION: map.wild_west.b FAIL (previous: FAIL)
+GAP: [S] map.wild_west.a blocker 6 (cd907413)
 VERDICT: APPROVE
-CRITERION: map.spooky_2.a FAIL   (previous: FAIL)
-GAP: [S] map.dynasty (d888588d, follow-up b326fec0)
+CRITERION: map.wild_west.a FAIL (previous: FAIL)
+GAP: [S] map.legacy.b blocker 2 (f5d5ce85)
 VERDICT: APPROVE
-CRITERION: map.dynasty.a FAIL   (previous: FAIL)
-GAP: [S] map.dynasty (6fce1036)
+CRITERION: map.legacy.b FAIL (previous: FAIL)
+GAP: [S] map.legacy.a blocker 4 (bfb1c703)
 VERDICT: APPROVE
-CRITERION: map.dynasty.b FAIL   (previous: FAIL)
-GAP: [S] map.legacy (0167e0b6)
+CRITERION: map.legacy.a FAIL (previous: FAIL)
+GAP: [S] map.legacy.a blocker 5 (9a3f5024, follow-up 2fc231cb)
 VERDICT: APPROVE
-CRITERION: map.legacy.b FAIL   (previous: FAIL)
-GAP: [S] map.legacy (2f5b6c6f)
+CRITERION: map.legacy.a FAIL (previous: FAIL)
+GAP: [S] map.renaissance.b blocker 2 (eae680b0)
 VERDICT: APPROVE
-CRITERION: map.legacy.a FAIL   (previous: FAIL)
-REGRESSIONS: none. All four map c criteria and all twelve dependent stages' a/c criteria PASS in judge.json; no attributed visual regression on a previously passed criterion is visible.
+CRITERION: map.renaissance.b FAIL (previous: FAIL)
+GAP: [S] map.renaissance.a blocker 3 (304cb24f)
+VERDICT: APPROVE
+CRITERION: map.renaissance.a FAIL (previous: FAIL)
+GAP: [S] map.renaissance.b blocker 5 (19ca5178)
+VERDICT: APPROVE
+CRITERION: map.renaissance.b FAIL (previous: FAIL)
+REGRESSIONS: none. All 48 final PNGs were inspected; no regression attributable to these commits was identified in the twelve dependent stages.
 
 ## Notes for next iteration (max 5 lines)
-- 579: 52 final shots, zero page/console errors, all 28 script checks PASS. Two --add notes record clean re-shoots. No item proposed done; no CONFIRM or checkpoint due.
-- Spooky 1: a PASS; b5 ramp remains. 579 ramp dropped (cliff hid it); next attempt must carve a recess and show the descent in its named shot.
-- Spooky 2: grate dropped after two follow-ups (ember stayed black); validate its light in a small look before rebuilding. Night sky/turf approved.
-- Ancient 2 a3 has 2 attempts, last 576: it starves at 581 (then picked as its ranked [S]). maps_2 remains until it closes.
-- Next gaps: critic.md in iter-579. LESSONS remains near its cap; merge before adding.
+- 580: 48 final shots; zero page/console errors; all 27 script criteria PASS. One --add note records the Legacy refresh. No item proposed done; no CONFIRM or checkpoint due.
+- Legacy now has only a7 sky and b3 broad glade; Wild West has a3 arches and b1/b4 streets/outline. Neither is done.
+- Renaissance a3 remains: paving paler but cool-grey and continuously seamed; cream checker uncleared. Canal and open centre struck b2/b5.
+- Ancient 2 a3 last attempted 576: it starves at 581 and must be picked then despite its 2 attempts. Spooky 1 b5 ramp remains; carve the recess first.
+- Critic ranked gaps: output/loop/iter-580/critic.md. LESSONS near cap; merge before adding. Pirate b last attempted 577 (starves 582); a last 578 (583).

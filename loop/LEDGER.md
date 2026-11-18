@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+580 | 07b08bd1 | map.wild_west.a5 | approve, struck a5
+580 | 514d0cf8 | map.wild_west.b2 | approve, struck b2
+580 | cd907413 | map.wild_west.a6 | approve, struck a6
+580 | f5d5ce85 | map.legacy.b2 | approve, struck b2
+580 | bfb1c703 | map.legacy.a4 | approve, struck a4
+580 | 9a3f5024, 2fc231cb | map.legacy.a5 | approve, struck a5
+580 | eae680b0 | map.renaissance.b2 | approve, struck b2
+580 | 304cb24f | map.renaissance.a3 | approve, no strike
+580 | 19ca5178 | map.renaissance.b5 | approve, struck b5
 579 | 41ea07bb | map.spooky_1.a | approve, struck a4
 579 | cf4fcec1 (revert 9957f674) | map.spooky_1.b | dropped: hidden by cliff
 579 | d8e18d58, b20691d0 | map.spooky_2.a | approve, struck a2, a1
@@ -11,7 +20,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 579 | 6fce1036 | map.dynasty.b | approve, struck b6
 579 | 0167e0b6 | map.legacy.b | approve, struck b1, b4
 579 | 2f5b6c6f | map.legacy.a | approve, struck a6
-574 | 10 commits (ancient_2 x2: b PASS; ancient_sandbox x3; ancient_1 x3; viking reject; viking_sandbox R: D) | 9 approve
 575 | 10 commits (viking: D; medieval_2 R: D; ancient_2 x3; ancient_sandbox x2: D; ancient_1 x3) | all approve, 14 struck
 576 | 10 commits (ancient_1 x2: D; ancient_2 x2 + P; dynasty, spooky_1, legacy, wild_west, renaissance a; pirate b) | all approve, 9 struck
 577 | 6141b061 | map.pirate.b | approve
@@ -32,6 +40,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox: 556-576 rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
 
 ## Tuned values
+web/src/map/tabs/wild_west.ts:chapel | (39,35), 7x11 m nave, 8 m wall, 18.5 m steeple | 580 | approve | absent
+web/src/map/tabs/wild_west.ts:mesaRidge | five overlapping three-tier hexagonal terraces, x -43..-19, z 43..46.2 | 580 | approve | three isolated small mesas (kept)
+web/src/map/tabs/wild_west.ts:sandstoneBase | 111/106 m diameters, 9 m deep, 20 facets, sandstone (.65,.46,.28) | 580 | approve | stalactite underside
+web/src/map/tabs/legacy.ts:valleyFloor | 290 m diameter, top -0.25, muted green (.4,.46,.19) | 580 | approve | floating underside
+web/src/map/tabs/legacy.ts:snowMountains | 22 overlapping five-sided peaks, r 98..110, h 27..49 m, snow caps upper 28% | 580 | approve | detached inherited mountain range
+web/src/map/tabs/legacy.ts:sandstoneRuin | broken walls x33..43 z25..32, dead trees, pine clearing x28..51 z19..42 | 580 | approve | absent
+web/src/map/tabs/renaissance.ts:frontCanal | 86x5 m green water at z -27.4, quays z -24.7/-30.1, crossings x +-26 | 580 | approve | pale paving behind front houses
+web/src/map/tabs/renaissance.ts:creamPavement | 3 m close-set slabs, .035 m joints, three cream tones, zone slabs hidden | 580 | approve, no strike | base blue-grey paving with .28 m grout
+web/src/map/tabs/renaissance.ts:openPiazza | fountain meshes and origin radius3.5 collider removed | 580 | approve | fountain at origin
 web/src/map/tabs/spooky_1.ts:rimOfferings | 12 lantern clusters, 6 candles each; orange (0.45,0.09,0.008), flame (1,0.42,0.1) self 2 | 579 | approve | absent
 web/src/map/tabs/spooky_2.ts:nightSky and nightTurf | navy (0.025,0.04,0.12), hemi 0.3 dir 0.65; turf (0.09,0.12,0.21), stone (0.17,0.21,0.31), cone tufts | 579 | approve | day sky, maroon/green floor, pale kerbs
 web/src/map/tabs/spooky_2.ts:gratedCourt | absent (reverted) | 579 | dropped, ember bed stayed black | 14 m court, 7 m grate, 30 bars, four flights
