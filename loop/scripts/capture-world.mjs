@@ -144,6 +144,17 @@ async function mapScene(page, item) {
     await shot(page, `${p}arcade`);
     await page.evaluate(() => { window.game.resetBattle(); window.advanceTime(50); });
   }
+  // Pirate: the galleon decks (fighting ground in TABS) lie past the placement zones, so the skirmish never reaches them; a
+  // shot from the beach at the +z galleon with eight clubbers standing on its deck and two on a gangplank, then a reset (587)
+  if (item === "map.pirate") {
+    await page.evaluate(() => {
+      for (const [x, z] of [[-10, 36], [-6, 38], [-2, 36], [2, 38], [6, 36], [10, 38], [-4, 39.5], [4, 34.5], [0, 30], [0, 26]]) window.game.spawnUnit("tribal.clubber", 1, { x, z });
+      window.advanceTime(50);
+    });
+    await frame(page, { target: { x: 0, y: 4, z: 36 }, radius: 30, alpha: -Math.PI / 2 - 0.3, beta: 1.2 });
+    await shot(page, `${p}deck`);
+    await page.evaluate(() => { window.game.resetBattle(); window.advanceTime(50); });
+  }
   // Skirmish: 8 clubbers and 4 archers a side at each team's first zone centre, in two ranks
   const placed = await page.evaluate((zones) => {
     let ok = 0;
