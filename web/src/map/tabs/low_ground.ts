@@ -38,8 +38,6 @@ function bankShade(scene: Scene): void {
   mat.emissiveTexture = grid;
   mat.emissiveColor = new Color3(target.r / base.r, target.g / base.g, target.b / base.b);
   mat.zOffset = -2;
-  // 591.5c: fog-free, or the linear scene fog pulls the banks to the pale haze (rendered (224,224,223), lighter than the flats)
-  mat.fogEnabled = false;
   for (const s of [-1, 1]) {
     const bank = terrainMesh(scene, "lowGroundBank", (x, z) => height(x, z) + 0.03, {
       width: TROUGH.bank - TROUGH.floor,
