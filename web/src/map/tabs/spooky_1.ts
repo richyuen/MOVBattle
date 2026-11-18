@@ -7,7 +7,7 @@
 // mountain* range and clouds hidden; the hemispheric light at 0.3 with a blue sky (0.42, 0.52, 1.1) and dark ground (0.1, 0.1, 0.25),
 // the directional moonlight 0.65 pale blue from the front left; a moon 14 m across at 175 m high in the back left with a faint halo; 300
 // star specks on a 170-200 m dome; all unlit, out of fog and glow. The lights are put back on dispose (a build does not reset them).
-import { Color3, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 // Fog chasm (577, spooky_1.png: the island is Medieval 1's, two raised plateaus of stacked rock columns split front to back by a
@@ -418,11 +418,31 @@ export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuild
   nightGrass(scene, built);
   deadTrees(scene, built);
   const result = fogChasm(scene, built, base0);
+  duskyMeadow(scene);
   const restore = nightSky(scene, built);
   graveyard(scene, built, result);
   rimOfferings(scene);
   leftDescent(scene, result);
   return { ...result, dispose: () => { restore(); result.dispose?.(); } };
+}
+
+// Dense short, faceted grass on both banks (spooky.bone). Thin instances keep
+// the cover inexpensive; the ravine, bridge and recessed descent stay bare.
+function duskyMeadow(scene: Scene): void {
+  const mat = new StandardMaterial("spooky1DuskyGrass",scene);
+  mat.diffuseColor.set(0.2,0.24,0.38);mat.emissiveColor.set(0.05,0.06,0.11);mat.specularColor=Color3.Black();
+  const tuft = MeshBuilder.CreateIcoSphere("spooky1DuskyTufts",{radius:0.5,subdivisions:1},scene);
+  tuft.material=mat;tuft.receiveShadows=true;tuft.isPickable=false;
+  const matrices: number[]=[];
+  let i=0;
+  for(let x=-52;x<=52;x+=0.78) for(let z=-42;z<=39;z+=0.78) {
+    i++;
+    const px=x+(seeded(i,301)-0.5)*0.5,pz=z+(seeded(i,302)-0.5)*0.5;
+    if(!onPlateau(px,pz) || (px>-16&&px<-6&&pz>-26&&pz<2)) continue;
+    const h=0.32+seeded(i,303)*0.3;
+    matrices.push(...Matrix.Compose(new Vector3(0.7+seeded(i,304)*0.4,h*2,0.6+seeded(i,305)*0.35),Quaternion.RotationAxis(Vector3.Up(),seeded(i,306)*6.28),new Vector3(px,h*0.4,pz)).m);
+  }
+  tuft.thinInstanceSetBuffer("matrix",new Float32Array(matrices),16);
 }
 
 // A walled descent in a recess on the left bank, ending at the broken room beneath the bridge.
