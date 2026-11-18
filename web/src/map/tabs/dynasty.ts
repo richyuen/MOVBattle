@@ -10,7 +10,7 @@
 // 19 m at the eaves, 4 m high, corner tips 2 m curling up; storey 2 7.5 m square, 3.8 m high, 8 columns; roof 2 13 m, 3.2 m high; finial
 // 3.5 m. The base's small pagoda at (0, 29) goes with its collider; one box collider for the platform (outside both armies' zones,
 // which end at |x| 29 / z 32 and leave x 8..26 free behind the courtyard).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 const PAGODA = { x: 17, z: 37 };
@@ -400,27 +400,56 @@ function terraceBranches(scene: Scene, result: MapBuildResult): void {
 
 // A continuous walkable flagstone loop frames the outer lawn (wiki Dynasty).
 // Follow the corner notch and rise onto the existing canal bridges at x +/-44.
+// Cobble loop (592, blocker a2; wiki dynasty.png: a wide pale-grey cobblestone path, about a man's height and a half across,
+// runs right round the field just inside the cherry ring, its corners rounded, its stones irregular rounded cobbles with
+// darker joints; the 582 loop was three rows of 0.82 m dark slate flagstones under the trees and never read from the top).
+// Spec: the same route pulled ~5 m in from under the ring (corners x 0.88; at x 0.95 the trees still stood on it), rounded by three Chaikin passes, laid as one ribbon
+// 5 m wide sampled every ~1 m, each vertex riding the terraces' drawn height (at least 0.22 m) + 8 cm; a 512 px tile per 4 m
+// of jittered cobbles ~0.45 m, stone (176,180,182) varied +-12 on joints (112,118,124); uvs in metres along and across.
 function perimeterFlagstones(scene: Scene, result: MapBuildResult): void {
-  const stone=scene.getMaterialByName("dynastyLawnStone")!;
-  const parts: Mesh[]=[];
-  const corners=[[-32,-26],[-32,-35],[41,-35],[46,-29],[46,30],[39,35],[-39,35],[-46,29],[-46,-26],[-32,-26]];
-  const oldHeight=result.height;
-  const pathHeight=(x:number,z:number)=>{
-    // Leave the pagoda's raised platform alone.
-    const h=oldHeight?.(x,z)??0;
-    return Math.max(0.22,h);
-  };
-  for(let e=1;e<corners.length;e++) {
-    const [ax,az]=corners[e-1],[bx,bz]=corners[e],len=Math.hypot(bx-ax,bz-az),n=Math.ceil(len/1.15),yaw=Math.atan2(bz-az,bx-ax);
-    for(let i=0;i<n;i++)for(let row=-1;row<=1;row++) {
-      const t=(i+0.5)/n,off=row*0.9;
-      const x=ax+(bx-ax)*t-Math.sin(yaw)*off,z=az+(bz-az)*t+Math.cos(yaw)*off;
-      const p=MeshBuilder.CreateBox("dynastyPerimeterFlagstone",{width:len/n-0.08,height:0.16,depth:0.82},scene);
-      p.position.set(x,pathHeight(x,z)+0.06,z);p.rotation.y=-yaw+(i%3-1)*0.035;parts.push(p);
-    }
+  const route=[[-32,-26],[-32,-35],[41,-35],[46,-29],[46,30],[39,35],[-39,35],[-46,29],[-46,-26]].map(([x,z])=>[x*0.88,z*0.88] as [number,number]);
+  let pts=route;
+  for(let pass=0;pass<3;pass++){
+    const next:Array<[number,number]>=[];
+    for(let i=0;i<pts.length;i++){const [ax,az]=pts[i],[bx,bz]=pts[(i+1)%pts.length];next.push([ax*.75+bx*.25,az*.75+bz*.25],[ax*.25+bx*.75,az*.25+bz*.75]);}
+    pts=next;
   }
-  const merged=Mesh.MergeMeshes(parts,true);
-  if(merged){merged.name="dynastyPerimeterLoop";merged.material=stone;merged.receiveShadows=true;scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);}
+  // resample to ~1 m so the ribbon follows the terraces' heights
+  const dense:Array<[number,number]>=[];
+  for(let i=0;i<pts.length;i++){const [ax,az]=pts[i],[bx,bz]=pts[(i+1)%pts.length],n=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az)));for(let k=0;k<n;k++)dense.push([ax+(bx-ax)*k/n,az+(bz-az)*k/n]);}
+  dense.push(dense[0]);
+  const oldHeight=result.height;
+  const pathHeight=(x:number,z:number)=>Math.max(0.22,oldHeight?.(x,z)??0)+0.08;
+  const half=2.5,left:Vector3[]=[],right:Vector3[]=[],along:number[]=[];
+  let run=0;
+  for(let i=0;i<dense.length;i++){
+    const [px,pz]=dense[i],[ax,az]=dense[Math.max(0,i-1)],[bx,bz]=dense[Math.min(dense.length-1,i+1)];
+    const l=Math.hypot(bx-ax,bz-az)||1,nx=-(bz-az)/l,nz=(bx-ax)/l;
+    if(i>0)run+=Math.hypot(px-dense[i-1][0],pz-dense[i-1][1]);
+    along.push(run);
+    const lx=px+nx*half,lz=pz+nz*half,rx=px-nx*half,rz=pz-nz*half;
+    left.push(new Vector3(lx,pathHeight(lx,lz),lz));right.push(new Vector3(rx,pathHeight(rx,rz),rz));
+  }
+  const ribbon=MeshBuilder.CreateRibbon("dynastyPerimeterLoop",{pathArray:[left,right]},scene);
+  const uv:number[]=[];
+  for(const v of [0,1])for(let i=0;i<dense.length;i++)uv.push(along[i]/4,v*2*half/4);
+  ribbon.setVerticesData("uv",uv);
+  if((ribbon.getVerticesData("normal")??[])[1]<0)ribbon.flipFaces(true);
+  const px=512,tex=new DynamicTexture("dynastyCobble_tex",{width:px,height:px},scene,true,Texture.TRILINEAR_SAMPLINGMODE);
+  const ctx=tex.getContext();
+  ctx.fillStyle="rgb(112,118,124)";ctx.fillRect(0,0,px,px);
+  let seed=0x3d1a;const rnd=()=>((seed=(seed*1103515245+12345)&0x7fffffff)/0x7fffffff);
+  const cell=px/9;
+  for(let j=-1;j<=9;j++)for(let i=-1;i<=9;i++){
+    const cx=(i+.5+(rnd()-.5)*.35)*cell,cy=(j+.5+(rnd()-.5)*.35)*cell,r=cell*(.4+rnd()*.06),v=Math.round((rnd()-.5)*24);
+    ctx.fillStyle=`rgb(${176+v},${180+v},${182+v})`;
+    for(const [ox,oy] of [[0,0],[px,0],[-px,0],[0,px],[0,-px]]){ctx.beginPath();ctx.arc(cx+ox,cy+oy,r,0,Math.PI*2);ctx.fill();}
+  }
+  tex.update(true);tex.wrapU=Texture.WRAP_ADDRESSMODE;tex.wrapV=Texture.WRAP_ADDRESSMODE;tex.anisotropicFilteringLevel=16;
+  const mat=new StandardMaterial("dynastyCobble",scene);
+  mat.diffuseTexture=tex;mat.diffuseColor=Color3.White();mat.emissiveColor=new Color3(0.16,0.17,0.18);mat.specularColor=Color3.Black();
+  ribbon.material=mat;ribbon.receiveShadows=true;ribbon.isPickable=false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(ribbon);
 }
 
 // Four separate stone bridge/stair approaches over the water ring around the square courtyard.
