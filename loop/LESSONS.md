@@ -12,7 +12,9 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh out of the pass wears the glow behind it as a pale see-through veil (farmer_snow 562; wild_west town, pirate hulls 586). Keep dark solids in; exclude bright/self-lit ones.
 - CreateIcoSphere subdivisions 0 is falsy, so it becomes 4: a smooth navy ball (575). Use 1 for a faceted rock.
 - Lit thin-instance wheat reads gold above, brown low: two unlit glow-excluded instance meshes sharing one matrix buffer.
-- Image processing is a full-frame post-process (no mesh leaves it): a StandardMaterial code c renders as contrast(gamma(ACES(1.05*c^2.2))); code white -> (210,210,210). simKit untoned(r,g,b) inverts it (codes a little over 1 survive, HDR): skies/clouds hit their sRGB targets (591); an unlit textured sheet missed its target (low_ground 591): sample before trusting it.
+- Image processing is a full-frame post-process: code c renders contrast(gamma(ACES(1.05*c^2.2))), white -> (210,210,210); simKit untoned() inverts it for skies/clouds (591); an unlit textured sheet missed its target (591).
+- Sun dir (-.52,-.669,-.53) lights +x-facing slopes; a -x-facing one goes lilac. Bend its flat-shaded normals (after gridUVs) to one shared normal, not an unlit sheet (592).
+- A pit below y 0 is lidded by the base slab (islandUnder/islandShelf, y -0.02): hide them (592).
 
 ## Capture and probes
 - capture-world.mjs boots like capture.mjs: mulberry32 0x4d4f5642 reseeded at every resetBattle, time only through advanceTime, setup renders at 1/8 size (__setupScale 8). It re-adds body.capture-mode before every shot (the game drops it on loads).
@@ -48,7 +50,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
 - Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
-- Run captures unsandboxed. A CONFIRM can fail on set pieces no list named (585, 588). Island cam ~(0,33,-113) pitched -.37: its sky band is elevations -.2..+.03, so backdrop scenery at z~200 sits at y -25..35 (590 clouds; 589's at y 40-80 never showed); sky span <.2 puts zenith blue in ground shots.
+- Run captures unsandboxed. A CONFIRM can fail on set pieces no list named (585, 588, 592). Island cam's sky band: backdrop at z~200 must sit at y -25..35 (590).
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six thin blades with up-facing normals read as grass (legacy 583); flattened IcoSpheres read fuzzy from afar but as paving stones from a stage's low camera (spooky_1 583), upright ones as stones; leaf cards as beige flags (571).
 - Mesh.MergeMeshes returns null past 65536 vertices (parts stay unmerged, default white) unless 32-bit: (parts, true, true) (582).

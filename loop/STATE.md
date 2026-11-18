@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 591   Batch: maps_3+maps_4   Consecutive empty: 0   Done: 21/99   Parked: 0
+Iteration: 592   Batch: maps_3+maps_4   Consecutive empty: 0   Done: 23/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<id>):
 # <id>
@@ -18,8 +18,8 @@ Marks: one per criterion a b c (+ pass, - fail, ? unscored); map a look, b layou
 ## Scoreboard (a b c as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox +++ D | farmer_1 +++ D | farmer_2 +++ D | farmer_snow +++ D
 maps_2: medieval_1 +++ D | medieval_2 +++ D | ancient_1 +++ D | ancient_2 +++ D | ancient_sandbox +++ D | viking +++ D | viking_sandbox +++ D
-maps_3: dynasty --+ o | renaissance +++ D | pirate +-+ o | spooky_1 +++ D | spooky_2 --+ o | wild_west +++ D | legacy +++ D
-maps_4: fantasy_good --+ o | fantasy_evil --+ o | simulation +++ D | bridge +++ D | hill +++ D | corridor +++ D | defend_the_castle --+ o | high_ground +-+ o | low_ground -++ o
+maps_3: dynasty --+ o | renaissance +++ D | pirate --+ o | spooky_1 +++ D | spooky_2 --+ o | wild_west +++ D | legacy +++ D
+maps_4: fantasy_good --+ o | fantasy_evil --+ o | simulation +++ D | bridge +++ D | hill +++ D | corridor +++ D | defend_the_castle +++ D | high_ground --+ o | low_ground +++ D
 stages_introduction: clubs ??? q | army ??? q | hay_and_pitchforks ??? q | basic_formation ??? q | ice_archers_only_almost ??? q | longships ??? q
 stages_adventure: tree_tribe ??? q | the_tiniest_attack ??? q | sneaky_tribe ??? q | tree_mammoths ??? q | final_destination_wheelbarrow ??? q | a_fierce_rider ??? q
 stages_challenge: ice_archer_and_friends ??? q | knights_and_priests ??? q | a_warm_welcome ??? q | zeus ??? q | twin_lords ??? q | big_brawl ??? q
@@ -33,39 +33,50 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 591: maps_3+maps_4, 7 [S]; BASE b6e9d2f4)
-- [S] map.hill.a blocker 4, kit sky + clouds untoned (eadae3e9) APPROVE, struck hill a4 + a5 on bridge, corridor, low_ground, castle, high_ground
-- [S] map.simulation.a blocker 3, sky untoned (dd6f6429) APPROVE, struck a3
-- [S] map.defend_the_castle.b blocker 3, front platforms (e417622a) APPROVE, struck b3
-- [S] map.high_ground.b blocker 2, standable wall tops (7abd9cdd, evidence 336cbba3) APPROVE, no strike
-- [S] map.low_ground.a bank tone (c8082cb0 + 51f659a2 + f37f2aeb) dropped, reverted (lighter than the flats)
-- [S] map.fantasy_evil.a blocker 2, basalt floor (15ca3a31) APPROVE, struck a2
-- [S] map.fantasy_good.a blocker 1, own builder + marble deck (21913c7f) APPROVE, struck a1
-- 6/7, 11 struck; CONFIRM: hill, bridge, corridor, simulation -> D; low_ground failed a (lilac bank); defend_the_castle failed a (merlons), b (chasms read as steps)
+## Focus (iter 592: maps_3+maps_4, 9 [S]; BASE 51fa27b6)
+- [S] map.low_ground.a blocker 1, bank lighting normals (52bed45f) APPROVE, struck a1
+- [S] map.defend_the_castle.b blocker 1, V chasms (9dcd3891) APPROVE, struck b1
+- [S] map.defend_the_castle.a blocker 1, plain stepped walls (395d7f38) APPROVE, struck a1
+- [S] map.pirate.b blocker 3, spit taper (af385087) APPROVE, struck b3
+- [S] map.fantasy_good.b blocker 2, sunken pits (e1ab8d1b + feb60ff9) APPROVE, struck b2, b6
+- [S] map.fantasy_evil.b blocker 1, block plateau (0ee4c12c) APPROVE, struck b1
+- [S] map.high_ground.b blocker 2, wall zones (60051560) APPROVE, no strike
+- [S] map.spooky_2.b blocker 1, cobble loop (4bbcf13d) APPROVE, struck loop clause
+- [S] map.dynasty.a blocker 2, cobble loop (66229760) APPROVE, no strike
+- 9/9, 9 struck; CONFIRM: low_ground, defend_the_castle -> D; pirate failed a, b (new lists); high_ground failed a (gate block), passed b
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.hill (eadae3e9)
+GAP: [S] map.low_ground (52bed45f)
 VERDICT: APPROVE
-CRITERION: map.hill.a PASS   (previous: FAIL)
-GAP: [S] map.simulation (dd6f6429)
-VERDICT: APPROVE
-CRITERION: map.simulation.a PASS   (previous: FAIL)
-GAP: [S] map.defend_the_castle (e417622a)
+CRITERION: map.low_ground.a PASS   (previous: FAIL)
+GAP: [S] map.defend_the_castle (9dcd3891)
 VERDICT: APPROVE
 CRITERION: map.defend_the_castle.b PASS   (previous: FAIL)
-GAP: [S] map.high_ground (7abd9cdd)
+GAP: [S] map.defend_the_castle (395d7f38)
+VERDICT: APPROVE
+CRITERION: map.defend_the_castle.a PASS   (previous: FAIL)
+GAP: [S] map.pirate (af385087)
+VERDICT: APPROVE
+CRITERION: map.pirate.b PASS   (previous: FAIL)
+GAP: [S] map.fantasy_good (e1ab8d1b + feb60ff9)
+VERDICT: APPROVE
+CRITERION: map.fantasy_good.b FAIL   (previous: FAIL)
+GAP: [S] map.fantasy_evil (0ee4c12c)
+VERDICT: APPROVE
+CRITERION: map.fantasy_evil.b FAIL   (previous: FAIL)
+GAP: [S] map.high_ground (60051560)
 VERDICT: APPROVE
 CRITERION: map.high_ground.b FAIL   (previous: FAIL)
-GAP: [S] map.fantasy_evil (15ca3a31)
+GAP: [S] map.spooky_2 (4bbcf13d)
 VERDICT: APPROVE
-CRITERION: map.fantasy_evil.a FAIL   (previous: FAIL)
-GAP: [S] map.fantasy_good (21913c7f)
+CRITERION: map.spooky_2.b FAIL   (previous: FAIL)
+GAP: [S] map.dynasty (66229760)
 VERDICT: APPROVE
-CRITERION: map.fantasy_good.a FAIL   (previous: FAIL)
+CRITERION: map.dynasty.a FAIL   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 591: 23/23 script criteria PASS, 0 page errors. simKit untoned() (inverse of the post-process chain) now drives every sim-family sky; use it for any colour that must hit an sRGB target.
-- Starving at 592: fantasy_good b (pits), fantasy_evil b (plateau), pirate b3 (spit, 2 attempts: starvation pick). Dynasty a2 cobble loop still unattempted.
-- low_ground a and defend_the_castle a/b hold CONFIRM lists: a 2nd CONFIRM fail on any makes it plateau. high_ground: a PASS (CONFIRM pending), b2 next: bar plateau + zones on both walls and bar.
-- Next [S]: fantasy_good parapets/pits/towers; fantasy_evil rock ring, plateau, green rims; castle wide V chasms, plain walls; spooky_2 a5 trees, a3 thickets.
+- 592: 36/36 script criteria PASS, 0 page errors. Thumbs re-rendered for low_ground, defend_the_castle.
+- Starving at 593: pirate a (CONFIRM list: hulls, rim; last a attempt 586). dynasty b starves at 594. high_ground b2 has 2 attempts: evidence first (0 s placement battle shot), then only its starvation pick or an [R].
+- pirate a/b and high_ground a hold first CONFIRM lists: a 2nd CONFIRM fail makes the criterion plateau.
+- Next [S]: fantasy_good plinth, towers, parapets; fantasy_evil chasms + two flights, rock ring, shrine; spooky_2 terraces, thickets; dynasty ring trees off the loop, pagoda; high_ground taller gate block; pirate dark curved hulls, ships per team.

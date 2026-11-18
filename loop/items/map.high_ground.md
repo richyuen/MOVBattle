@@ -1,21 +1,22 @@
 # map.high_ground
-Status: open   Audited: 587 (AUDIT x2)   Done: -
+Status: open   Audited: 587 (AUDIT x2), 592 (CONFIRM: passed b; failed a)   Done: -
 ## Verdicts
-a PASS (591: struck 5; CONFIRM pending)
-b FAIL (590: struck 3): 2. Placement only on the flat ground in map_high_ground_battle — TABS: catapults stand on the wall tops and archers on the bar (ref: wiki/high_ground.png)
-c PASS (591 judge)
+a FAIL (0 since 592, CONFIRM list): 1. gatehouse silhouette in map_high_ground_ground.png: the wall top runs at one flat height over the gate opening — TABS: the gate is a taller central block (the bar) standing clearly above two lower side walls, with units on top of it (ref: reference/maps/wiki/high_ground.png)
+b FAIL (590: struck 3; CONFIRM 592 passed b, critic fails it): 2. Placement only on the flat ground in map_high_ground_battle — TABS: catapults stand on the wall tops and archers on the bar (ref: wiki/high_ground.png)
+c PASS (592 judge)
 
 ## Ranked gaps
-1. [S] b defenders on walls and bar — blocker 2: bar top (|z|<=5, x 28..36) a plateau at wall height, team-1 zones over both wall tops and the bar filled first by the skirmish; then a battle pose from the ramp foot as wiki high_ground.png — ref: wiki/high_ground.png — ours: map_high_ground_battle.png
+1. [S] a gatehouse — blocker 1: bar raised into a taller central gate block (top above the 7 m walls) over the opening, standable top — ref: wiki/high_ground.png — ours: map_high_ground_ground.png
+2. evidence first for b2 (critic 592): map_high_ground_battle is 5 s in, defenders have left the walls; re-aim to a 0 s placement shot. b2 has 2 attempts (591, 592 approved, no strike): starvation pick or [R] only.
 
 ## Attempts (iter | gap | criterion | verdict)
-591 | [S] wall tops standable (height plateaus, face + ramp-side colliders, right wall-top zone) 7abd9cdd; evidence battle pose 336cbba3 | b2 | APPROVE, no strike (one unit on one wall, edge-on) (attempt 1)
-591 | [S] kit sky untoned eadae3e9 (via map.hill) | a5 | APPROVE, struck a5 (a PASS)
-590 | [S] wall ramps b1715d8e; kit cloud banks bbb9869d | b3, a4 | APPROVE, struck b3, a4
-589 | [S] flat, ramp, 12 m platform 41f10807; gate walls + bar 2177a9ad | b1, a2 | APPROVE, struck b1, a1-a3
+592 | [S] team-1 wall zones x 28..48 over both walls and ramps 60051560 | b2 | APPROVE, no strike (3 units on a wall at 5 s) (attempt 2); CONFIRM failed a, passed b
+591 | [S] wall tops standable 7abd9cdd; evidence pose 336cbba3 | b2 | APPROVE, no strike (attempt 1)
+591 | [S] kit sky untoned eadae3e9 | a5 | APPROVE, struck a5
+589-590 | [S] flat/ramp/platform 41f10807; gate walls + bar 2177a9ad; wall ramps b1715d8e; clouds bbb9869d | b1, b3, a1-a4 | APPROVE, struck all
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Builder tabs/high_ground.ts: sheet step 1 m, x -60..48 |z|<=22; gate walls x 28..36 |z| 5..20 top 19 m (standable), bar |z|<=5 4.5..7 up; wall ramps x 36..48 |z| 8..17. Zones: team 1 right wall top first, then x>1. Stage: simulation.catapult_castle.
-- Battle pose: POSE_OVERRIDE battle target (24,12,8) r 58 alpha pi+.35 beta .95.
+- Builder tabs/high_ground.ts: sheet step 1 m, x -60..48 |z|<=22; gate walls x 28..36 |z| 5..20 top 19 m (standable), bar |z|<=5 4.5..7 up; wall ramps x 36..48. Zones: team 1 right wall (x 28..48 z 5..20) first, left wall, then x>1. Stage: simulation.catapult_castle.
+- A standable bar top needs the gate closed (single-valued height field). A 2nd CONFIRM fail on a makes it plateau.

@@ -1,22 +1,23 @@
 # map.pirate
-Status: open   Audited: 576 (AUDIT x2)   Done: -
+Status: open   Audited: 576 (AUDIT x2), 592 (CONFIRM: passed none; failed a, b)   Done: -
 ## Verdicts
-a PASS (586: struck 1, 5; CONFIRM pending)
-b FAIL (587: struck 5): 3. beach outline in map_pirate_top — TABS: an hourglass sand spit narrowing toward the back mountain, not a rectangle (ref: reference/maps/wiki/pirate.png)
-c PASS (587 judge)
+a FAIL (0 since 592, CONFIRM list): 1. ship hulls in map_pirate_deck.png and map_pirate_top.png are bright orange-tan — TABS: dark chocolate-brown planked hulls with gold/ochre trim (ref: reference/maps/wiki/pirate.png) 2. ship hull shape in map_pirate_deck.png is a flat-sided box with a square stern block — TABS: a curved, tapering galleon hull with a high ornate stern castle and rows of stern windows (ref: reference/maps/wiki/pirate.png) 3. the island's outer rim in map_pirate_island.png is a bare turquoise water disk with no visible slab side — TABS: the round island is closed by an outer sand-and-grass beach ring with palms, and the slab shows its sandy side (ref: reference/maps/pirate_beach.png)
+b FAIL (0 since 592, CONFIRM list; critic 592 struck b3): 1. ship placement in map_pirate_top.png puts both ships on the north and south shores, each straddling the centre line — TABS: one ship moored on each team's side of the sand, red by one ship and blue by the other (ref: reference/maps/wiki/pirate.png, reference/maps/pirate_beach.png) 2. no team-1 ship deck to place on in stage_pirate.x_marks_the_spot_field.png; the enemy stands on open sand at the right end — TABS: the enemy army stands on its own ship's deck and gangplanks (ref: reference/stages/pirate.x_marks_the_spot.png, reference/stages/spooky.plunder.png)
+c PASS (592 judge)
 
 ## Ranked gaps
-1. [S] b spit outline — blocker 3 (2 attempts: starvation 592): taper the hourglass stations at both x ends to a rounded point (half width 7 -> 2 m over the last 10 m), back end under the bell mountain (critic 587 NEXT) — ref: wiki/pirate.png — ours: map_pirate_top.png
-2. [P] a ripple tone — fallout of 05e50f52 (eligible to 589): ripple emissive (0.2, 0.13, 0.05) -> (0.06, 0.04, 0.01) — ours: map_pirate_ground.png
+1. [S] a hulls — blockers 1-2: dark chocolate hull (.2,.11,.055) small self-light, curved tapering courses, high stern castle with windows (LESSONS: lit timber) — ref: wiki/pirate.png — ours: map_pirate_deck.png
+2. [S] b ships per team — blocker 1: each galleon moored beside one team's half (x -/+), gangplanks onto its own sand — ref: wiki/pirate.png — ours: map_pirate_top.png
+3. [S] a outer beach ring — blocker 3: sand-and-grass ring with palms closing the lagoon, sandy slab side — ref: pirate_beach.png — ours: map_pirate_island.png
+4. [P] b palm prune (critic 592 fallout of af385087, to 595): re-run the outline + 1 m prune on the tapered stations — ours: map_pirate_top.png
 
 ## Attempts (iter | gap | criterion | verdict)
-587 | [S] standable decks 22ba62eb (+ evidence fc94485f map_pirate_deck) | b5 | APPROVE, struck b5
-587 | [S] hourglass bared (base oval, blades, waterfall hidden) 4ace43d4 | b3 | APPROVE, no strike (attempts 2 on b3)
-576-586 | [S] galleons (rebuilt 586), lagoon, sand island, bell mountain, beach, gangplanks, shore, tropic sky, golden sand; [P] stern 577 rejected | a, b | all [S] approved, struck a1-a6, b1, b2, b4
+592 | [S] spit tapers to rounded points (stations -61..61) af385087 | b3 | APPROVE, struck b3 (critic b PASS); CONFIRM failed a, b (new lists)
+587 | [S] standable decks 22ba62eb; hourglass bared 4ace43d4 | b5, b3 | APPROVE, struck b5
+576-586 | [S] galleons (rebuilt 586), lagoon, sand island, bell mountain, beach, gangplanks, shore, sky, golden sand | a, b | struck a1-a6, b1, b2, b4
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Stages: pirate.x_marks_the_spot, a_rival_captain, spooky.plunder (x29..41.4, |z|<=9.9). Mountain (34,38), collider r 10.5. Decks y 3.6 (deckHeight), rails split at plank mouths.
-- 587 early CONFIRM unused (b still FAIL) but would fail a and b: hulls caramel and boxy (TABS dark brown-black, curved, gilded transom), no sand drum under the beach, sky steel-teal (TABS pale), ships rotated 90 deg (TABS: each behind one army's half), spit outline. Report: output/loop/iter-587/confirm.md.
-- Critic 587 fallout: batteries are loose barrels, TABS carriages at rail ports.
+- Stages: pirate.x_marks_the_spot, a_rival_captain, spooky.plunder (x29..41.4, |z|<=9.9). Mountain (34,38) r 10.5. Decks y 3.6, rails split at plank mouths. Spit stations in hourglassBeach.
+- A 2nd CONFIRM fail on a or b makes it plateau. Moving ships per team also moves the stage armies' decks (b2).

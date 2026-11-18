@@ -1,22 +1,20 @@
 # map.defend_the_castle
-Status: open   Audited: 587 (AUDIT x2), 591 (CONFIRM: passed none; failed a, b)   Done: -
+Status: done   Audited: 587 (AUDIT x2), 591 (CONFIRM: passed none; failed a, b), 592 (CONFIRM: passed a, b)   Done: 592
 ## Verdicts
-a FAIL (0 since 591, CONFIRM list; critic 591 struck a5): 1. merlon rows (square crenellations) along every castle wall top in map_defend_the_castle_ground.png and _island.png — TABS: the castle walls are thick plain grey-box blocks with flat tops and stepped notches, no crenellations anywhere (ref: reference/maps/wiki/defend_the_castle.png, reference/stages/simulation.siege.thumb.png)
-b FAIL (0 since 591, CONFIRM list; critic 591 struck b3): 1. the three approach paths in map_defend_the_castle_top.png are flat strips divided only by narrow step faces on one slab top — TABS: three separate ramps climb to the castle plateau as ridges with wide, deep V-shaped chasms between them dropping into the fog (ref: reference/maps/wiki/defend_the_castle.png, card Overview "three platforms and paths that lead up to the castle")
-c PASS (591 judge)
+a PASS (592: struck 1; CONFIRM 592)
+b PASS (592: struck 1; CONFIRM 592)
+c PASS (592 judge)
 
 ## Ranked gaps
-1. [S] b chasms — blocker 1: wide V chasms (8-12 m at the top, narrowing as they drop) between the three ramps and front platforms, dark faces in the fog; the drop must read from the top shot (castleHeight lanes widened, V profile) — ref: wiki/defend_the_castle.png — ours: map_defend_the_castle_top.png
-2. [S] a plain walls — blocker 1: merlons removed; wall tops flat with stepped notches as the wiki's courtyard blocks — ref: wiki/defend_the_castle.png — ours: map_defend_the_castle_ground.png
 
 ## Attempts (iter | gap | criterion | verdict)
-591 | [S] front platforms: gaps |z| 8..14 and 26..30 to x -60, three team-0 zones e417622a | b3 | APPROVE, struck b3 (critic b PASS); CONFIRM failed a, b
-591 | [S] kit sky untoned eadae3e9 (via map.hill) | a5 | APPROVE, struck a5
-590 | [S] three 12 m ramps split by 40 m chasms 5f1ae860 | b2 | APPROVE, struck b2
-589 | [S] castle block f2467ab3; archer pillars 57155431 | b1, a2 | APPROVE, struck b1, b4, a1-a3
+592 | [S] V chasms: lanes 11 m / front gaps 7 m, V to -40 m, sheet step 1 m 9dcd3891 | b1 | APPROVE, struck b1 (b PASS)
+592 | [S] merlons removed, plain stepped wall runs 18/15 m 395d7f38 | a1 | APPROVE, struck a1 (a PASS); CONFIRM passed a, b -> D
+591 | [S] front platforms e417622a; kit sky eadae3e9 | b3, a5 | APPROVE, struck b3, a5
+589-590 | [S] castle block f2467ab3; archer pillars 57155431; three ramps 5f1ae860 | b1, b2, a2 | APPROVE, struck b1, b2, b4, a1-a3
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Builder tabs/defend_the_castle.ts on simKit: sheet x -60..64 |z|<=30; chasms on the approach |z| 6..14, 26..30; front gaps |z| 8..14, 26..30 to x -60. Stages: simulation.siege, legacy.siege.
-- A 2nd CONFIRM fail on a or b makes it plateau.
+- Builder tabs/defend_the_castle.ts on simKit: sheet x -60..64 |z|<=30 step 1; V lanes |z| 5..16 and 26..30 on the approach, front gaps |z| 8..15; team-0 zones |z|<=8, 15..26. Stages: simulation.siege, legacy.siege.
+- Critic 592: faint dark-blue blobs on the right V wall in stage_simulation.siege_army (check if units); back stair faint from the top.
