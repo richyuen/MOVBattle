@@ -5,6 +5,7 @@ import type { Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { TabsMapId } from "../tabsMaps";
 import { buildHill } from "./hill";
+import { buildBridge } from "./bridge";
 import { buildFarmer1 } from "./farmer_1";
 import { buildFarmer2 } from "./farmer_2";
 import { buildTribal2 } from "./tribal_2";
@@ -32,6 +33,7 @@ export type TabsMapBuilder = (scene: Scene, base: () => MapBuildResult) => MapBu
 
 export const TABS_MAP_BUILDERS: Partial<Record<TabsMapId, TabsMapBuilder>> = {
   hill: buildHill,
+  bridge: buildBridge,
   viking: buildViking,
   farmer_1: buildFarmer1,
   farmer_2: buildFarmer2,
