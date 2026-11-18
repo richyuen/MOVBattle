@@ -3,7 +3,14 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
-573 | 10 commits (farmer_snow R: D; viking x3; ancient_sandbox x2; ancient_2 x3, one dropped; ancient_1) | 9 approve
+579 | 41ea07bb | map.spooky_1.a | approve, struck a4
+579 | cf4fcec1 (revert 9957f674) | map.spooky_1.b | dropped: hidden by cliff
+579 | d8e18d58, b20691d0 | map.spooky_2.a | approve, struck a2, a1
+579 | ca88f7b3 (+6d6941ac, ac19ef0d; reverted fc6bf11f) | map.spooky_2.b | dropped: grate unlit after two follow-ups
+579 | d888588d (+b326fec0) | map.dynasty.a | approve, struck a2
+579 | 6fce1036 | map.dynasty.b | approve, struck b6
+579 | 0167e0b6 | map.legacy.b | approve, struck b1, b4
+579 | 2f5b6c6f | map.legacy.a | approve, struck a6
 574 | 10 commits (ancient_2 x2: b PASS; ancient_sandbox x3; ancient_1 x3; viking reject; viking_sandbox R: D) | 9 approve
 575 | 10 commits (viking: D; medieval_2 R: D; ancient_2 x3; ancient_sandbox x2: D; ancient_1 x3) | all approve, 14 struck
 576 | 10 commits (ancient_1 x2: D; ancient_2 x2 + P; dynasty, spooky_1, legacy, wild_west, renaissance a; pirate b) | all approve, 9 struck
@@ -25,6 +32,13 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox: 556-576 rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
 
 ## Tuned values
+web/src/map/tabs/spooky_1.ts:rimOfferings | 12 lantern clusters, 6 candles each; orange (0.45,0.09,0.008), flame (1,0.42,0.1) self 2 | 579 | approve | absent
+web/src/map/tabs/spooky_2.ts:nightSky and nightTurf | navy (0.025,0.04,0.12), hemi 0.3 dir 0.65; turf (0.09,0.12,0.21), stone (0.17,0.21,0.31), cone tufts | 579 | approve | day sky, maroon/green floor, pale kerbs
+web/src/map/tabs/spooky_2.ts:gratedCourt | absent (reverted) | 579 | dropped, ember bed stayed black | 14 m court, 7 m grate, 30 bars, four flights
+web/src/map/tabs/dynasty.ts:gardenCanals | 92 x 10 m stone-lined turquoise sheets with lily pads | 579 | approve | grey-olive overlays
+web/src/map/tabs/dynasty.ts:rimTorii | (-43,28), (40,-33), yaw 0, post colliders moved | 579 | approve | (-17,25), yaw 0.35
+web/src/map/tabs/legacy.ts:churchyard | 30 headstones x +-(13..24.2), z 24/28/32, winding 2.4 m approach | 579 | approve | absent
+web/src/map/tabs/legacy.ts:tentCamps | six 3.8 m ridge tents per side x +-(35/41), z -14/-4/6 | 579 | approve | absent
 web/src/map/tabs/ancient_2.ts:RIM | 51 m circle, power 2 | 570 | approved, projecting shelf still visible | superellipse 54 by 48 m, power 3
 web/src/map/tabs/ancient_2.ts:greenLawn | floor (0.6,0.63,0.22); clumps on 1.1 m grid, olives (0.58,0.62,0.21)/(0.46,0.52,0.16) in sine swathes; 70 flower drifts | 576 | approved | (0.55,0.69,0.21) + 2600 random lime clumps; orange autumn floor
 web/src/map/tabs/ancient_2.ts:ringWall | 72 segments r 49.6, 1.5 m high, beige (0.78,0.68,0.5), 6 cypress clusters; ring trees removed | 572 | approved, struck a3 | autumn tree ring
