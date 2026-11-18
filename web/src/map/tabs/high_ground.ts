@@ -87,7 +87,16 @@ export function buildHighGround(scene: Scene, base: () => MapBuildResult): MapBu
   const obstacles = [...result.obstacles, ...gateWalls(scene)];
   centreLine(scene, SHEET.z0, SHEET.z1, highGroundHeight(0, 0));
   const hazards = [...kept, ...voidAround([SHEET], { x0: -90, x1: 90, z0: -60, z1: 60 })];
-  const placementZones = zonesOn([{ ...SHEET, x1: -1, team: 0 }, { x0: 28, x1: 36, z0: 5, z1: 20, team: 1 }, { ...SHEET, x0: 1, team: 1 }]);
+  // Defenders on the walls (592, blocker b2; wiki high_ground.png: the defenders' line stands up on both gate walls). The
+  // team-1 zones over the walls now run from the wall front (x 28) back over each wall ramp to the platform's back edge (x 48),
+  // so a rank placed at a zone's centre less 6 m and 2 m (the skirmish's two ranks) stands on the wall top (x 32) and the ramp
+  // head (x 36), not on the flat before the wall; the right wall's zone first, the left wall's second.
+  const placementZones = zonesOn([
+    { ...SHEET, x1: -1, team: 0 },
+    { x0: 28, x1: 48, z0: 5, z1: 20, team: 1 },
+    { x0: 28, x1: 48, z0: -20, z1: -5, team: 1 },
+    { ...SHEET, x0: 1, team: 1 },
+  ]);
   const restoreSky = paleSky(scene);
   // Clouds (590, blocker a4; wiki high_ground.png: large heaped white clouds left and right behind the platform): kit banks at
   // z 200-230 inside the island shot's sky band, as on Hill.
