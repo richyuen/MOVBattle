@@ -370,6 +370,43 @@ function deadTrees(scene: Scene, built: Set<unknown>): void {
   merged.isPickable = false;
 }
 
+// Rim offerings: ribbed orange lanterns with lit eyes/mouths, beside irregular groups of ivory candles.
+function rimOfferings(scene: Scene): void {
+  const material = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c; m.emissiveColor = c.scale(self); m.specularColor = Color3.Black();
+    return m;
+  };
+  const orange = material("spooky1Pumpkin", new Color3(0.45, 0.09, 0.008), 0.5);
+  const lit = material("spooky1LanternLight", new Color3(1, 0.42, 0.1), 2);
+  const wax = material("spooky1Wax", new Color3(0.8, 0.7, 0.46), 0.6);
+  const stalk = material("spooky1Stalk", new Color3(0.07, 0.09, 0.03), 0.2);
+  const finish = (m: Mesh, mat: StandardMaterial, x: number, y: number, z: number) => {
+    m.position.set(x, y, z); m.material = mat; m.isPickable = false;
+  };
+  const spots = [[-22,-34],[-37,-23],[-45,-10],[-42,19],[-26,32],[-9,8],[9,8],[35,-27],[46,-10],[42,15],[28,33],[12,-18]];
+  for (const [i, [x,z]] of spots.entries()) {
+    const r = 0.85 + seeded(i, 91) * 0.5;
+    const body = MeshBuilder.CreateSphere("spooky1JackOLantern", { diameter: r * 2, segments: 12 }, scene);
+    body.scaling.y = 0.8; finish(body, orange, x, r * 0.8, z);
+    for (const dx of [-0.33,0.33]) {
+      const eye = MeshBuilder.CreateCylinder("spooky1PumpkinEye", { height: 0.08, diameter: r * 0.43, tessellation: 3 }, scene);
+      eye.rotation.x = Math.PI / 2; finish(eye, lit, x + dx * r, r * 1.04, z - r * 0.85);
+    }
+    const mouth = MeshBuilder.CreateBox("spooky1PumpkinSmile", { width: r * 0.9, height: r * 0.2, depth: 0.08 }, scene);
+    finish(mouth, lit, x, r * 0.55, z - r * 0.91);
+    const stem = MeshBuilder.CreateCylinder("spooky1PumpkinStem", { height: 0.4, diameter: 0.22, tessellation: 5 }, scene);
+    finish(stem, stalk, x, r * 1.6 + 0.1, z);
+    for (let j=0;j<6;j++) {
+      const cx=x+1.5+(j%3)*0.38, cz=z+Math.floor(j/3)*0.55, h=0.45+seeded(i*6+j,92)*0.7;
+      const candle=MeshBuilder.CreateCylinder("spooky1Candle",{height:h,diameter:0.18,tessellation:6},scene);
+      finish(candle,wax,cx,h/2,cz);
+      const flame=MeshBuilder.CreateSphere("spooky1CandleFlame",{diameter:0.17,segments:6},scene);
+      flame.scaling.y=1.7; finish(flame,lit,cx,h+0.12,cz);
+    }
+  }
+}
+
 export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const base0 = base();
@@ -379,5 +416,6 @@ export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuild
   const result = fogChasm(scene, built, base0);
   const restore = nightSky(scene, built);
   graveyard(scene, built, result);
+  rimOfferings(scene);
   return { ...result, dispose: () => { restore(); result.dispose?.(); } };
 }
