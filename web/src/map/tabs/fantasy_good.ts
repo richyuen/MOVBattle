@@ -263,11 +263,49 @@ function openCentre(scene: Scene, built: Set<unknown>, result: MapBuildResult, s
   return { ...result, obstacles };
 }
 
+// Parapets (593, blocker a2; wiki fantasy_good.png: no trees close the field; its deck edges are lined by low white parapet walls
+// crenellated in gold, a row of square gold merlons standing on a white wall). Spec: every base ring tree (an unparented
+// "trunk" with its crown children) is hidden and its collider dropped; along all four deck edges, on the gold kerb, a white
+// wall 0.8 m thick and 1.2 m high, then gold merlons 1.2 m wide, 0.8 m deep, 0.7 m high every 2.4 m. Drawn only (the base
+// zones reach past the deck edge; the island's hazards are unchanged).
+function parapets(scene: Scene, built: Set<unknown>, result: MapBuildResult, stone: StandardMaterial, gold: StandardMaterial): MapBuildResult {
+  const gone: Array<{ x: number; z: number }> = [];
+  for (const m of scene.meshes) {
+    if (!built.has(m) || m.parent || m.name !== "trunk" || !m.isEnabled()) continue;
+    m.computeWorldMatrix(true);
+    const c = m.getBoundingInfo().boundingBox.centerWorld;
+    gone.push({ x: c.x, z: c.z });
+    m.setEnabled(false);
+  }
+  const obstacles = result.obstacles.filter((o) => !gone.some((g) => Math.hypot(o.center.x - g.x, o.center.z - g.z) < 0.6));
+  const t = 0.8, h = 1.2, mw = 1.2, mh = 0.7, pitch = 2.4, inset = DECK.kerbW / 2;
+  const walls: Mesh[] = [], merlons: Mesh[] = [];
+  const box = (into: Mesh[], w: number, hh: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("heavenParapetPart", { width: w, height: hh, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.bakeCurrentTransformIntoVertices();
+    into.push(b);
+  };
+  for (const s of [-1, 1]) {
+    const z = s * (DECK.z - inset), x = s * (DECK.x - inset);
+    box(walls, 2 * DECK.x, h, t, 0, h / 2, z);
+    box(walls, t, h, 2 * DECK.z, x, h / 2, 0);
+    for (let u = -DECK.x + pitch / 2; u <= DECK.x - pitch / 2 + 1e-6; u += pitch) box(merlons, mw, mh, t, u, h + mh / 2, z);
+    for (let u = -DECK.z + pitch / 2; u <= DECK.z - pitch / 2 + 1e-6; u += pitch) box(merlons, t, mh, mw, x, h + mh / 2, u);
+  }
+  const wall = Mesh.MergeMeshes(walls, true, true);
+  if (wall) { wall.name = "heavenParapet"; wall.material = stone; wall.receiveShadows = true; }
+  const merl = Mesh.MergeMeshes(merlons, true, true);
+  if (merl) { merl.name = "heavenMerlons"; merl.material = gold; merl.receiveShadows = true; }
+  return { ...result, obstacles };
+}
+
 export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   const { stone, gold } = marbleDeck(scene, built);
   const opened = openCentre(scene, built, result, stone, gold);
-  return pits(scene, built, opened, stone, gold);
+  const walled = parapets(scene, built, opened, stone, gold);
+  return pits(scene, built, walled, stone, gold);
 }
