@@ -11,13 +11,15 @@ export const STAGES: TabsStageDef[] = [
     budget: 600,
     playerUnits: { units: ["tribal.clubber","tribal.protector","tribal.spear_thrower"] },
     // 598 (blocker b2; clubs.thumb.png: the six stand just in front of the tree trunks at the far rim, the treeline close behind)
+    // 598 (blocker b1; clubs.png: a loose gathering, uneven gaps and depths; the left pair (+z, seen from the player) set back,
+    // the right ones forward)
     enemy: [
-      ["tribal.clubber", 39, -4.5],
-      ["tribal.clubber", 39, -2.7],
-      ["tribal.clubber", 39, -0.9],
-      ["tribal.clubber", 39, 0.9],
-      ["tribal.clubber", 39, 2.7],
-      ["tribal.clubber", 39, 4.5],
+      ["tribal.clubber", 37.4, -5.9],
+      ["tribal.clubber", 38.3, -3.1],
+      ["tribal.clubber", 38.9, -0.6],
+      ["tribal.clubber", 38.6, 1.3],
+      ["tribal.clubber", 40.2, 4.0],
+      ["tribal.clubber", 40.8, 6.3],
     ],
   },
   {
