@@ -592,10 +592,12 @@ function rockSkirt(scene: Scene, built: Set<unknown>): void {
   merged.name = "spooky2RockSkirt";
   const mat = new StandardMaterial("spooky2Rock", scene);
   mat.diffuseColor = new Color3(0.3, 0.34, 0.48);
-  mat.emissiveColor = new Color3(0.165, 0.187, 0.264);
+  mat.emissiveColor = new Color3(0.07, 0.08, 0.11);
   mat.specularColor = Color3.Black();
   merged.material = mat;
   merged.receiveShadows = false;
+  // 590b: in the glow pass its self-light bloomed the skirt near white; out of it, with a dimmer self-light, it stays blue-grey
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
   merged.isPickable = false;
 }
 
