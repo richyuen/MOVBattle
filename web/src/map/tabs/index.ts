@@ -25,6 +25,7 @@ import { buildWildWest } from "./wild_west";
 import { buildPirate } from "./pirate";
 import { buildRenaissance } from "./renaissance";
 import { buildSpooky2 } from "./spooky_2";
+import { buildSimulation } from "./simulation";
 
 // Ground height is visual only (../terrain.ts): return `height` in the MapBuildResult and shape the ground with terrainMesh(); hill.ts is the example.
 export type TabsMapBuilder = (scene: Scene, base: () => MapBuildResult) => MapBuildResult;
@@ -51,4 +52,5 @@ export const TABS_MAP_BUILDERS: Partial<Record<TabsMapId, TabsMapBuilder>> = {
   pirate: buildPirate,
   renaissance: buildRenaissance,
   spooky_2: buildSpooky2,
+  simulation: buildSimulation,
 };
