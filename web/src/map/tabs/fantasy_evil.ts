@@ -321,10 +321,10 @@ function shrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): Pick
 // high; chest 2.8 x 2 x 1.7 m; a faceted head r 0.85 with two back-swept horns 1.8 m; arms raised outward to wrist manacles at
 // 12 m; two wings of three ragged slabs each (7.5 / 6 / 4.5 m long, 0.25 m thick) fanned up and out behind the shoulders. Rock
 // spire at (36, 40): a five-sided shaft 40 m long, 14 m across at the foot to 1.5 m, leaning 0.3 rad toward the field (-x) and
-// 0.12 rad toward the front, foot sunk 6 m; two shards 18 and 12 m beside it. Chains of oval links (torus 1 m, 0.22 m thick,
+// 0.12 rad toward the front, foot sunk 6 m; two shards 18 and 12 m beside it. Chains of oval links (torus 1.3 m, 0.34 m thick,
 // stretched 1.35x, every other link turned 90 degrees) from each wrist to a point 20 and 26 m up the spire, sagging 3.5 m.
 // Statue and spire grey-teal stone (.26,.31,.33) self (.05,.06,.065), lighter than the floor so they read on the void; spire
-// (.2,.24,.27); chains (.12,.13,.15); flat shaded, in the glow pass. Colliders: pedestal box, spire cylinder r 6.5.
+// (.2,.24,.27); chains (.12,.13,.15); flat shaded, out of the glow pass. Colliders: pedestal box, spire cylinder r 6.5.
 const STATUE = { x: 8, z: 26 };
 const SPIRE = { x: 36, z: 40 };
 function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
@@ -338,7 +338,7 @@ function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): vo
   const mats = {
     statue: mk("voidStatueStone", new Color3(0.26, 0.31, 0.33), 0.2),
     spire: mk("voidSpireRock", new Color3(0.2, 0.24, 0.27), 0.2),
-    chain: mk("voidStatueChain", new Color3(0.12, 0.13, 0.15), 0.25),
+    chain: mk("voidStatueChain", new Color3(0.22, 0.24, 0.27), 0.25),
   };
   const parts: Record<keyof typeof mats, Mesh[]> = { statue: [], spire: [], chain: [] };
   const put = (k: keyof typeof mats, m: Mesh) => { m.bakeCurrentTransformIntoVertices(); parts[k].push(m); };
@@ -393,10 +393,10 @@ function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): vo
     const axis = Vector3.TransformNormal(new Vector3(0, 1, 0), Matrix.RotationYawPitchRoll(0.4, -0.12, 0.3));
     return new Vector3(SPIRE.x, -6, SPIRE.z).add(axis.scale(up + 6));
   };
-  const link = MeshBuilder.CreateTorus("voidChainLink", { diameter: 1, thickness: 0.22, tessellation: 8 }, scene);
+  const link = MeshBuilder.CreateTorus("voidChainLink", { diameter: 1.3, thickness: 0.34, tessellation: 8 }, scene);
   for (const [s, up] of [[-1, 20], [1, 26]] as const) {
     const a = new Vector3(X + s * 3.5, foot + 10.4, Z), b = onSpire(up);
-    const n = Math.ceil(Vector3.Distance(a, b) / 0.78);
+    const n = Math.ceil(Vector3.Distance(a, b) / 1.0);
     for (let i = 0; i <= n; i++) {
       const t = i / n, p = Vector3.Lerp(a, b, t);
       p.y -= Math.sin(t * Math.PI) * 3.5;
@@ -421,6 +421,8 @@ function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): vo
     merged.material = mats[key];
     merged.receiveShadows = true;
     merged.isPickable = false;
+    // 594.3b: in the glow pass the pale stone bloomed into a see-through ghost against the black void; nothing glows behind it
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
   }
 }
 
