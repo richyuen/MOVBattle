@@ -11,6 +11,13 @@
 // porch roof on every other building; windows 1 x 1.4 m, four per floor; sign board 5.5 x 1.1 m under the false-front top. The base's
 // two black boxes (houses at (4,-16) and (6,16)) go with their colliders; one box collider per building plus its porch. Both armies'
 // zones (|x| 27..61, |z| 9..27) and the stage armies (x 28.6..35.5, z -25..-11) stay clear.
+//
+// [R] 586 near block and sky (western.png, wiki wild_west.png, wild_west.bullets_and_chains.png). Spec: the near-side buildings
+// (rim row z -38, inner rank z -23.5) stand as solid dark slate-blue timber blocks under slate-blue roofs, as crisp as the far
+// row: their dark materials stay in the glow pass (only panes and trim leave it) so the sand's self-light glow no longer veils
+// them; every back wall, the face the island camera sees, carries clapboard seams 0.55 m apart, two shuttered windows a floor
+// (1.4 x 1.9 m frames) and a back door. The sky is a peach-orange sunset (unlit backdrop sphere, shared dome off) lightening
+// to cream-yellow within ~40 deg of the sun and a little toward the horizon.
 import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
@@ -119,6 +126,16 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
           box("trim", 1.7, 0.16, 0.3, u, y - 1.1, front + 0.12);
         }
       }
+      // Boarded back wall (586 [R]): the rear face, seen from the island and top cameras over the near block, carries the
+      // same clapboard seams, two shuttered windows per floor and a dark back door, so it reads as a timber wall, not a box
+      for (let y = 0.7; y < h - 0.3; y += 0.55) box("seam", w + 0.02, 0.06, 0.05, 0, y, -front - 0.02);
+      for (const [y, us] of [[2.2, [-w * 0.3, w * 0.3]], [h - 2.3, [-w * 0.3, w * 0.3]]] as const) {
+        for (const u of us) {
+          box("trim", 1.4, 1.9, 0.1, u, y, -front - 0.05);
+          box("sign", 1.1, 1.6, 0.1, u, y, -front - 0.08);
+        }
+      }
+      box("sign", 1.3, 2.4, 0.1, 0, 1.2, -front - 0.06);
       box("seam", 1.6, 2.8, 0.08, 0, 1.4, front + 0.06);
       box("trim", 2, 0.2, 0.14, 0, 2.9, front + 0.07);
       // Corner pilasters and a cornice under the false front give each front its own frame
@@ -149,7 +166,9 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
     merged.material = mats[key];
     merged.receiveShadows = true;
     merged.isPickable = false;
-    glow?.addExcludedMesh(merged);
+    // Dark solids stay in the glow pass so they occlude the glow behind them (an excluded dark mesh wears it as a pale
+    // veil: the near block read see-through at 584); only the bright panes and trim leave it
+    if (key === "window" || key === "trim") glow?.addExcludedMesh(merged);
   }
 }
 
@@ -294,7 +313,38 @@ function sunsetSky(scene: Scene, built: Set<unknown>): () => void {
   };
   disc("wildWestSun", 22, new Color3(1, 0.97, 0.86), 1, 0);
   disc("wildWestSunHalo", 44, new Color3(1, 0.85, 0.6), 0.3, 6);
+  // Sunset backdrop (586 [R]): the shared sky dome covers clearColor and drew a drab grey-tan; in its place an unlit,
+  // fog-free backdrop sphere whose vertex colours run from peach-orange (1, 0.55, 0.28) to cream-yellow (1, 0.9, 0.6)
+  // toward the sun (palette: unlit orange/tan/yellow rows), a touch paler at the horizon; put back on dispose.
+  const dome = scene.getMeshByName("skyDome"), domeOn = dome?.isEnabled();
+  dome?.setEnabled(false);
+  const backdrop = MeshBuilder.CreateSphere("wildWestSunsetSky", { diameter: 1800, segments: 24, sideOrientation: Mesh.BACKSIDE }, scene);
+  const sunward = toward.scale(-1);
+  const pos = backdrop.getVerticesData("position") ?? [];
+  const cols: number[] = [];
+  const peach = new Color3(1, 0.55, 0.28), cream = new Color3(1, 0.9, 0.6);
+  for (let i = 0; i < pos.length; i += 3) {
+    const d = new Vector3(pos[i], pos[i + 1], pos[i + 2]).normalize();
+    const sun = Math.max(0, Vector3.Dot(d, sunward));
+    const horizon = 1 - Math.min(1, Math.abs(d.y) * 2.2);
+    const t = Math.min(1, sun ** 3 * 0.9 + horizon * 0.25);
+    cols.push(peach.r + (cream.r - peach.r) * t, peach.g + (cream.g - peach.g) * t, peach.b + (cream.b - peach.b) * t, 1);
+  }
+  backdrop.setVerticesData("color", cols);
+  const skyMat = new StandardMaterial("wildWestSunsetSky", scene);
+  skyMat.disableLighting = true;
+  // Unlit: the colour is emissive x vertex colour (diffuse needs lights)
+  skyMat.diffuseColor = Color3.Black();
+  skyMat.emissiveColor = Color3.White();
+  skyMat.specularColor = Color3.Black();
+  skyMat.fogEnabled = false;
+  backdrop.material = skyMat;
+  backdrop.infiniteDistance = true;
+  backdrop.applyFog = false;
+  backdrop.isPickable = false;
+  glow?.addExcludedMesh(backdrop);
   return () => {
+    dome?.setEnabled(domeOn ?? true);
     scene.clearColor.copyFrom(oldClear);
     scene.fogColor.copyFrom(oldFog);
     if (hemi && saved.hemi) [hemi.intensity, hemi.diffuse, hemi.groundColor] = [saved.hemi[0], saved.hemi[1], saved.hemi[2]];
