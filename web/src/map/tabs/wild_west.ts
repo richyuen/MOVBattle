@@ -345,8 +345,33 @@ export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuil
   town(scene, kept);
   chapel(scene, kept);
   mesaRidge(scene);
+  sandstoneArches(scene,kept);
   sandstoneBase(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   desertRim(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), kept);
   const restoreSky = sunsetSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles: kept, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Tall angular red-rock arches and narrow spires punctuate the cactus rim (western.png).
+// Rear arch at (0,45), front-left at (-35,-31); piers and lintels remain outside army footprints.
+function sandstoneArches(scene: Scene, obstacles: Obstacle[]): void {
+  const rock=new StandardMaterial("westArchRed",scene);
+  rock.diffuseColor.set(0.4,0.14,0.075);rock.emissiveColor.set(0.12,0.04,0.02);
+  const put=(x:number,z:number,h:number,w:number,y:number,lean:number)=>{
+    const m=MeshBuilder.CreateCylinder("westArchRock",{height:h,diameterBottom:w,diameterTop:w*0.67,tessellation:5},scene);
+    m.position.set(x,y,z);m.rotation.z=lean;m.material=rock;m.convertToFlatShadedMesh();return m;
+  };
+  for(const [x,z,h,yaw] of [[0,45,16,0],[-35,-31,12,0.55]]) {
+    for(const s of [-1,1]) {
+      const px=x+s*3.5*Math.cos(yaw),pz=z+s*3.5*Math.sin(yaw);
+      put(px,pz,h,3.7,h/2,-s*0.09);
+      obstacles.push({type:"cylinder",center:new Vector3(px,0,pz),radius:2});
+    }
+    const lintel=MeshBuilder.CreateBox("westArchLintel",{width:11,height:2.3,depth:3.8},scene);
+    lintel.position.set(x,h-0.2,z);lintel.rotation.set(0.09,yaw,-0.1);lintel.material=rock;
+  }
+  for(const [x,z,h] of [[44,-27,21],[47,-22,13],[-48,18,15]]) {
+    put(x,z,h,4.2,h/2,0.08);
+    obstacles.push({type:"cylinder",center:new Vector3(x,0,z),radius:2.1});
+  }
 }
