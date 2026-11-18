@@ -547,6 +547,58 @@ function channelBridges(scene: Scene): (x: number, z: number) => number {
   };
 }
 
+// Rock skirt (590, blocker a6; reference/maps/spooky_2.png: under the square island's edge hang heaped blue-grey boulders,
+// large and of unequal size, swelling into big masses under the front corners; no smooth slab, no stalactites). Spec: the base
+// underside (islandUnder/Shelf/Cliff) is hidden; round the squared outline (power 8, 54 x 48, notch at x > 36, z > 30) stand
+// three courses of faceted icosphere boulders (subdivisions 1): course k with its tops at -0.3 - 6k m, inset 1 + 5k m, radii
+// 3-6.5 m shrinking down, spaced ~4-8 m with seeded jitter; under the front corners (z < 0, |x| > 30) larger, with a fourth
+// course 18 m down. Tops stay under the floor's edge (y 0). Lit blue-grey (.3,.34,.48) with self-light .55 of it, no shadows received, one 32-bit merge.
+function rockSkirt(scene: Scene, built: Set<unknown>): void {
+  for (const m of scene.meshes) if (built.has(m) && /^(islandUnder|islandShelf|islandCliff)/.test(m.name)) m.setEnabled(false);
+  let seed = 0x5b2;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const edge = (a: number) => {
+    const cx = Math.cos(a), cz = Math.sin(a);
+    const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
+    let x = cx * reach, z = cz * reach;
+    if (x > NOTCH.x && z > NOTCH.z) { if (x - NOTCH.x < z - NOTCH.z) x = NOTCH.x; else z = NOTCH.z; }
+    return { x, z };
+  };
+  const rocks: Mesh[] = [];
+  const rock = (x: number, top: number, z: number, r: number) => {
+    const m = MeshBuilder.CreateIcoSphere("spooky2Rock", { radius: r, subdivisions: 1, flat: true }, scene);
+    const sy = 0.75 + rnd() * 0.35;
+    m.scaling.set(1 + rnd() * 0.35, sy, 1 + rnd() * 0.35);
+    m.rotation.set(0, rnd() * Math.PI, 0);
+    m.position.set(x, top - r * sy * 1.05, z);
+    m.bakeCurrentTransformIntoVertices();
+    rocks.push(m);
+  };
+  const steps = 96;
+  for (let k = 0; k < 4; k++) {
+    for (let i = 0; i < steps; i++) {
+      const p = edge((i + rnd() * 0.5) / steps * Math.PI * 2);
+      const corner = p.z < 0 && Math.abs(p.x) > 30;
+      if (k === 3 && !corner) continue;
+      if (k > 0 && i % 2 === 1 && !corner) continue;
+      const len = Math.hypot(p.x, p.z), inset = 1 + 5 * k + (corner ? -1.5 : 0);
+      const r = (6.5 - k * 1.1) * (0.6 + rnd() * 0.4) * (corner ? 1.25 : 1);
+      const s = (len - inset) / len;
+      rock(p.x * s, -0.3 - 6 * k, p.z * s, r);
+    }
+  }
+  const merged = Mesh.MergeMeshes(rocks, true, true);
+  if (!merged) return;
+  merged.name = "spooky2RockSkirt";
+  const mat = new StandardMaterial("spooky2Rock", scene);
+  mat.diffuseColor = new Color3(0.3, 0.34, 0.48);
+  mat.emissiveColor = new Color3(0.165, 0.187, 0.264);
+  mat.specularColor = Color3.Black();
+  merged.material = mat;
+  merged.receiveShadows = false;
+  merged.isPickable = false;
+}
+
 // Night void and cold moonlight, no daylight range/clouds. Restore shared lights when changing maps.
 function nightSky(scene: Scene, built: Set<unknown>): () => void {
   const clear=scene.clearColor.clone(), fog=scene.fogColor.clone();
@@ -576,6 +628,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   blackTrees(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   thornThickets(scene, result);
   darkTorii(scene, result);
+  rockSkirt(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
 
   result.height = channelBridges(scene);
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
