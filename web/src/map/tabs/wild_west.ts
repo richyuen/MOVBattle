@@ -279,7 +279,7 @@ function sandstoneBase(scene: Scene, built: Set<unknown>): void {
   const sand=new StandardMaterial("westSandstoneBase",scene);
   sand.diffuseColor.set(0.65,0.46,0.28);sand.emissiveColor.set(0.3,0.21,0.13);sand.specularColor=Color3.Black();
   const slab=MeshBuilder.CreateCylinder("westSandstoneDrum",{height:9,diameterTop:111,diameterBottom:106,tessellation:20},scene);
-  slab.position.y=-4.7;slab.scaling.z=0.91;slab.material=sand;slab.convertToFlatShadedMesh();
+  slab.position.y=-4.7;slab.material=sand;slab.convertToFlatShadedMesh();
 }
 
 // Long overlapping polygonal terraces behind the left rear town row, as in the wiki overview.
@@ -350,8 +350,25 @@ export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuil
   sandstoneArches(scene,kept);
   sandstoneBase(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   desertRim(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), kept);
+  roundPlaza(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   const restoreSky = sunsetSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles: kept, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Round sand plaza: remap the inherited superellipse to the circular sandstone drum.
+function roundPlaza(scene: Scene, built: Set<unknown>): void {
+  for(const m of scene.meshes) {
+    if(!built.has(m)) continue;
+    if(/^campaign_zone_(overlay|border)_/.test(m.name)) m.setEnabled(false);
+    if(!(m instanceof Mesh)||!/^(ground$|centerGrass$)/.test(m.name)) continue;
+    const p=m.getVerticesData("position");if(!p)continue;
+    for(let i=0;i<p.length;i+=3) {
+      const x=p[i],z=p[i+2],r=Math.hypot(x,z);if(r<0.001)continue;
+      const fraction=Math.cbrt(Math.abs(x/54)**3+Math.abs(z/48)**3);
+      p[i]=x/r*55*fraction;p[i+2]=z/r*55*fraction;
+    }
+    m.setVerticesData("position",p,false);m.refreshBoundingInfo();
+  }
 }
 
 // Tall angular red-rock arches and narrow spires punctuate the cactus rim (western.png).
