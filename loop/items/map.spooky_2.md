@@ -23,4 +23,4 @@ c PASS (587 judge)
 
 ## Notes (max 3 lines)
 - Stages: spooky.war, wild_west.spooky_army, fantasy_good.vicious_terror. Stone bridges x +-30; thickets at x +-44 (collider 3.5 x 7); torii (-40,33).
-- Base "hill" mounds (red discs, 4) are parented: their position and bounds read 0 at build time; computeWorldMatrix(true) before the bounds test. The torii's mound (-40,30) still shows. a4 starvation 590.
+- Base "hill" mounds (red discs, 4): a position and a bounds test both missed them at build time (cause unverified; probe parent/position); hiding by name worked on spooky_1. The torii's mound (-40,30) still shows. a4 starvation 590.

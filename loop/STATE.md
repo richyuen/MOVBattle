@@ -18,7 +18,7 @@ Marks: one per criterion a b c (+ pass, - fail, ? unscored); map a look, b layou
 ## Scoreboard (a b c as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox +++ D | farmer_1 +++ D | farmer_2 +++ D | farmer_snow +++ D
 maps_2: medieval_1 +++ D | medieval_2 +++ D | ancient_1 +++ D | ancient_2 +++ D | ancient_sandbox +++ D | viking +++ D | viking_sandbox +++ D
-maps_3: dynasty +-+ o | renaissance +++ D | pirate --+ o | spooky_1 +++ D | spooky_2 --+ o | wild_west +++ D | legacy +++ D
+maps_3: dynasty +-+ o | renaissance +++ D | pirate +-+ o | spooky_1 +++ D | spooky_2 --+ o | wild_west +++ D | legacy +++ D
 maps_4: fantasy_good --+ o | fantasy_evil --+ o | simulation -++ o | bridge --+ o | hill --+ o | corridor --+ o | defend_the_castle --+ o | high_ground --+ o | low_ground --+ o
 stages_introduction: clubs ??? q | army ??? q | hay_and_pitchforks ??? q | basic_formation ??? q | ice_archers_only_almost ??? q | longships ??? q
 stages_adventure: tree_tribe ??? q | the_tiniest_attack ??? q | sneaky_tribe ??? q | tree_mammoths ??? q | final_destination_wheelbarrow ??? q | a_fierce_rider ??? q
@@ -36,7 +36,7 @@ stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_
 ## Focus (iter 587: maps_3+maps_4 (tail overlap, maps_4 audited), 1 [R] + 7 [S]; BASE 8a9d2327)
 - [R] map.spooky_1.a blockers 1-3 (7542093c + 80297d4f) APPROVE, struck a1, a2, a3; CONFIRM a PASS -> D
 - [S] map.pirate.b blocker 5 (22ba62eb; evidence fc94485f map_pirate_deck) APPROVE, struck b5
-- [S] map.pirate.b blocker 3 (4ace43d4) APPROVE, no strike; CONFIRM failed pirate a, b (fresh lists)
+- [S] map.pirate.b blocker 3 (4ace43d4) APPROVE, no strike; early CONFIRM unused (b still FAIL)
 - [S] map.spooky_2.a blocker 3 (cb026095 + 858d6a2e + 95f26b5d) APPROVE, no strike
 - [S] map.spooky_2.a blocker 7 (76101bad + 7189ff78 + 9ad673bd) APPROVE, struck a7
 - [S] map.simulation.a blocker 1 (b23e942c) APPROVE, struck a1, a4
@@ -73,7 +73,7 @@ REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
 - 587: maps_4 audited (output/loop/iter-587/audit.md, audit2.md): all 9 maps c PASS; simulation b PASS; the five plane maps (bridge, corridor, defend_the_castle, high_ground, low_ground) have no builder and render the bare simulation plane; fantasy_good/evil are the old meadow ovals.
-- 587 step 5: 26/26 script criteria PASS, zero page errors; spooky_1 D (CONFIRM passed a, b). Pirate CONFIRM (first) failed a and b: ships rotated 90 deg from TABS (each should sit behind one army), hull colour/shape, missing sand drum, sky tone.
+- 587 step 5: 26/26 script criteria PASS, zero page errors; spooky_1 D (CONFIRM passed a, b). Pirate's early CONFIRM unused (b still FAIL) but would fail a and b (ships rotated 90 deg, hulls, sand drum, sky): see its Notes.
 - Eligible [P] (fallout within 3 iterations): simulation paleSky hue (bafe8f20), spooky_2 thorn heaps (cb026095). Simulation a has one blocker left: its [P] could finish it, then CONFIRM.
-- Spooky_2: the base "hill" mound under the torii still shows (bounds test read 0: computeWorldMatrix first); all four mounds are red discs.
-- Unpickable: dynasty b3 until 588 (starvation), spooky_2 a4 (starvation 590), pirate b3 (2 attempts; its outline blocker is now CONFIRM b2).
+- Spooky_2: the base "hill" mound under the torii still shows (the bounds test missed it, cause unverified: probe its parent/position; hiding by name worked on spooky_1); all four mounds are red discs.
+- Unpickable: dynasty b3 until 588 (starvation), spooky_2 a4 (starvation 590), pirate b3 (2 attempts; starvation 592). Pirate [P] ripple tone eligible to 589.

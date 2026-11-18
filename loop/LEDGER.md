@@ -4,7 +4,7 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
 587 | 7542093c (+80297d4f) [R] | map.spooky_1.a1-3 | approve, struck a1, a2, a3; CONFIRM a PASS -> D
-587 | 22ba62eb (+evidence fc94485f), 4ace43d4 | map.pirate.b5, b3 | approve, struck b5; b3 no strike; CONFIRM failed a, b (fresh lists)
+587 | 22ba62eb (+evidence fc94485f), 4ace43d4 | map.pirate.b5, b3 | approve, struck b5; b3 no strike; early CONFIRM unused (b FAIL)
 587 | cb026095 (+858d6a2e, 95f26b5d) | map.spooky_2.a3 | approve, no strike (thickets not legible from the top)
 587 | 76101bad (+7189ff78, 9ad673bd) | map.spooky_2.a7 | approve, struck a7
 587 | b23e942c, 9fed27e5 (+40c4de96), bafe8f20 | map.simulation.a1, a2, a3 | approve, struck a1, a4, a2, a5
