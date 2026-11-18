@@ -550,6 +550,45 @@ function viaductUnderside(scene: Scene, built: Set<unknown>, stone: StandardMate
   void stone;
 }
 
+// Side islets (595, blocker b5; card Overview, heaven_good.png top left: small floating islands drift beside the main deck, each
+// a little paved white platform with a gold kerb on a hanging cone of pale basalt, a teal tree or a white spire on it). Spec:
+// five islets 9-15 m across beside the deck (x -74 z 18, x -70 z -26, x 76 z -12, x 70 z 30, x -20 z 64 behind), tops 2-9 m
+// above or below the deck, each an eight-sided marble slab 1.2 m thick with a gold kerb, a basalt cone under it 0.9 of its
+// width reaching 0.9 of its width down, flat shaded; a teal tree (two crowns) on three, a white spire on two. Drawn only.
+function sideIslets(scene: Scene, stone: StandardMaterial, gold: StandardMaterial): void {
+  const basalt = new StandardMaterial("heavenIsletBasalt", scene);
+  basalt.diffuseColor = new Color3(0.62, 0.66, 0.72);
+  basalt.emissiveColor = new Color3(0.62, 0.66, 0.72).scale(0.25);
+  basalt.specularColor = Color3.Black();
+  const leaf = new StandardMaterial("heavenIsletLeaf", scene);
+  leaf.diffuseColor = new Color3(0.2, 0.62, 0.58);
+  leaf.emissiveColor = new Color3(0.06, 0.2, 0.19);
+  leaf.specularColor = Color3.Black();
+  const parts: { slab: Mesh[]; kerb: Mesh[]; rock: Mesh[]; leaf: Mesh[] } = { slab: [], kerb: [], rock: [], leaf: [] };
+  const put = (k: keyof typeof parts, m: Mesh, x: number, y: number, z: number) => { m.position.set(x, y, z); m.bakeCurrentTransformIntoVertices(); parts[k].push(m); };
+  for (const [x, y, z, w, tree] of [[-74, 4, 18, 13, 1], [-70, -7, -26, 10, 0], [76, 6, -12, 15, 1], [70, -4, 30, 9, 0], [-20, 9, 64, 12, 1]] as const) {
+    put("slab", MeshBuilder.CreateCylinder("heavenIslet", { diameter: w, height: 1.2, tessellation: 8 }, scene), x, y - 0.6, z);
+    put("kerb", MeshBuilder.CreateCylinder("heavenIsletKerb", { diameter: w + 0.4, height: 0.35, tessellation: 8 }, scene), x, y - 1.25, z);
+    put("rock", MeshBuilder.CreateCylinder("heavenIsletCone", { diameterTop: w * 0.9, diameterBottom: w * 0.12, height: w * 0.9, tessellation: 7 }, scene), x, y - 1.4 - w * 0.45, z);
+    if (tree) {
+      put("rock", MeshBuilder.CreateCylinder("heavenIsletTrunk", { diameterTop: 0.35, diameterBottom: 0.6, height: 4, tessellation: 5 }, scene), x, y + 2, z);
+      put("leaf", MeshBuilder.CreateIcoSphere("heavenIsletCrown", { radius: 2.4, subdivisions: 1 }, scene), x, y + 4.6, z);
+      put("leaf", MeshBuilder.CreateIcoSphere("heavenIsletCrown", { radius: 1.7, subdivisions: 1 }, scene), x + 1.6, y + 3.4, z - 1);
+    } else {
+      put("slab", MeshBuilder.CreateCylinder("heavenIsletSpire", { diameterTop: 0, diameterBottom: 1.6, height: 9, tessellation: 4 }, scene), x, y + 4.5, z);
+    }
+  }
+  const mats = { slab: stone, kerb: gold, rock: basalt, leaf };
+  for (const k of Object.keys(parts) as Array<keyof typeof parts>) {
+    const merged = Mesh.MergeMeshes(parts[k], true, true);
+    if (!merged) continue;
+    merged.name = `heavenIslets_${k}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[k];
+    merged.isPickable = false;
+  }
+}
+
 export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -557,6 +596,7 @@ export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapB
   const restoreSky = heavenSky(scene, built);
   const { stone, gold } = marbleDeck(scene, built);
   viaductUnderside(scene, built, stone);
+  sideIslets(scene, stone, gold);
   const opened = openCentre(scene, built, result, stone, gold);
   const walled = parapets(scene, built, opened, stone, gold);
   const done = gateTowers(scene, pits(scene, built, walled, stone, gold), stone, gold);
