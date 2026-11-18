@@ -26,7 +26,7 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     return m;
   };
   const mats = {
-    hull: mk("pirateGalleonHull", new Color3(0.45, 0.26, 0.13), 0.42),
+    hull: mk("pirateGalleonHull", new Color3(0.36, 0.21, 0.1), 0.45),
     dark: mk("pirateGalleonDark", new Color3(0.18, 0.11, 0.07), 0.35),
     deck: mk("pirateGalleonDeck", new Color3(0.72, 0.55, 0.34), 0.42),
     gold: mk("pirateGalleonGold", new Color3(0.95, 0.72, 0.25), 0.5),
@@ -47,28 +47,65 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
       return m;
     };
     const top = HULL - SINK;
-    // Hull: a main body, a narrower lower body (the hull rounding in), the bow a diamond prow
-    box("hull", LONG * 0.8, HULL, BEAM, -LONG * 0.05, top - HULL / 2, 0);
-    box("hull", LONG * 0.7, HULL * 0.5, BEAM * 1.06, -LONG * 0.05, top - HULL * 0.3, 0);
+    // A rod between two world points (rigging, shrouds)
+    const rod = (k: keyof typeof mats, a: Vector3, b: Vector3, d: number) => {
+      const span = b.subtract(a);
+      const c = MeshBuilder.CreateCylinder("pirateGalleonRod", { height: span.length(), diameter: d, tessellation: 4 }, scene);
+      c.rotationQuaternion = Quaternion.Identity();
+      Quaternion.FromUnitVectorsToRef(Vector3.Up(), span.normalize(), c.rotationQuaternion);
+      c.position = a.add(span.scale(0.5));
+      parts[k].push(c);
+    };
+    const world = (u: number, y: number, v: number) => { const [x, z] = at(u, v); return new Vector3(x, y, z); };
+    // Galleon rebuild (586, wiki pirate.png: deep dark-brown planked hulls that round in toward the keel, gold rails along the
+    // sheer, a raised forecastle, a tall stern castle in three tiers with rows of gold-framed stern windows, three tall masts
+    // with shrouds, three yards each and long white sails furled along every yard, tied with dark gaskets). Spec: the hull in
+    // four stacked courses narrowing from the full beam at the deck to 0.62 of it at the keel; dark strakes every 0.6 m on
+    // both sides; gold rails only along the sheer edges (no full-width slabs); forecastle 6 m long, 1.4 m high at the bow;
+    // stern castle tiers 8/6/4.2 m long rising 2.2/1.8/1.4 m, gold edge rails, four then three gold-framed windows on the stern
+    // face; masts 19/23/17 m, yards at 0.4/0.62/0.82 of the height spanning 13/10.5/7.5 m, furled rolls 1.15 m thick with four
+    // gaskets; three shrouds a side per mast from the deck edge to 0.8 of its height. Deck, cannons, gangplanks and the hull's
+    // collider are as before.
+    for (let t = 0; t < 4; t++) {
+      const f = (t + 1) / 4, h = HULL / 4;
+      box("hull", LONG * 0.8 * (0.82 + 0.18 * f), h + 0.02, BEAM * (0.62 + 0.38 * f), -LONG * 0.05, top - HULL + h * (t + 0.5), 0);
+    }
     const prow = BEAM / Math.SQRT2;
-    box("hull", prow, HULL * 1.1, prow, LONG * 0.35, top - HULL * 0.45, 0, Math.PI / 4);
-    // Gold bands and a row of gun ports along the beach side
-    box("gold", LONG * 0.81, 0.35, BEAM * 1.08, -LONG * 0.05, top - 0.25, 0);
-    box("gold", LONG * 0.74, 0.25, BEAM * 1.1, -LONG * 0.05, top - 2.1, 0);
-    for (let g = 0; g < 7; g++) box("dark", 0.9, 0.8, 0.1, -LONG * 0.36 + g * 3.6, top - 1.2, BEAM / 2 + 0.3);
+    box("hull", prow, HULL * 0.75, prow, LONG * 0.35, top - HULL * 0.3, 0, Math.PI / 4);
+    for (let y = top - 0.6; y > top - HULL + 0.9; y -= 0.6) {
+      const f = 1 - (top - y) / HULL * 0.38;
+      box("dark", LONG * 0.8 * (0.82 + 0.18 * f), 0.07, BEAM * (0.62 + 0.38 * f) + 0.06, -LONG * 0.05, y, 0);
+    }
+    for (const s of [-1, 1]) {
+      box("gold", LONG * 0.8, 0.28, 0.14, -LONG * 0.05, top + 1.02, s * (BEAM / 2 + 0.02));
+      box("gold", LONG * 0.74, 0.22, 0.12, -LONG * 0.05, top - 1.9, s * (BEAM * 0.47 + 0.08));
+    }
+    for (let g = 0; g < 7; g++) box("dark", 0.9, 0.8, 0.1, -LONG * 0.36 + g * 3.6, top - 1.2, BEAM / 2 + 0.04);
     box("deck", LONG * 0.78, 0.2, BEAM * 0.9, -LONG * 0.05, top + 0.1, 0);
     for (const s of [-1, 1]) box("hull", LONG * 0.78, 0.9, 0.3, -LONG * 0.05, top + 0.55, s * BEAM * 0.47);
-    // Stern castle in two tiers with gold rims and dark windows on its back
+    // Forecastle at the bow
+    const foreU = LONG * 0.27;
+    box("hull", 6, 1.4, BEAM * 0.94, foreU, top + 0.7, 0);
+    for (const s of [-1, 1]) box("gold", 6.1, 0.2, 0.14, foreU, top + 1.45, s * BEAM * 0.47);
+    // Stern castle in three tiers with gold edge rails and gold-framed windows on its stern face
     const sternU = -LONG * 0.45 + 4;
-    box("hull", 8, 2, BEAM * 1.02, sternU, top + 1, 0);
-    box("gold", 8.2, 0.25, BEAM * 1.06, sternU, top + 2.05, 0);
-    box("hull", 5.5, 1.4, BEAM * 0.9, sternU - 1, top + 2.75, 0);
-    box("gold", 5.7, 0.25, BEAM * 0.94, sternU - 1, top + 3.5, 0);
-    for (let w = -1; w <= 1; w++) box("dark", 0.1, 0.9, 1.2, sternU - 4.05, top + 1.1, w * 2.2);
+    let base = top;
+    for (const [len, rise, wins] of [[8, 2.2, 4], [6, 1.8, 3], [4.2, 1.4, 0]] as const) {
+      const cu = sternU - 4 + len / 2, beam = BEAM * (1.02 - (8 - len) * 0.025);
+      box("hull", len, rise, beam, cu, base + rise / 2, 0);
+      for (const s of [-1, 1]) box("gold", len + 0.1, 0.2, 0.14, cu, base + rise + 0.05, s * beam / 2);
+      box("gold", 0.14, 0.2, beam, sternU - 4.03, base + rise + 0.05, 0);
+      for (let w = 0; w < wins; w++) {
+        const v = (w + 0.5 - wins / 2) * (beam / wins);
+        box("gold", 0.08, rise * 0.62, 1.25, sternU - 4.04, base + rise * 0.5, v);
+        box("dark", 0.1, rise * 0.48, 0.95, sternU - 4.07, base + rise * 0.5, v);
+      }
+      base += rise;
+    }
     for (const s of [-1, 1]) {
       const lamp = MeshBuilder.CreateCylinder("pirateGalleonLamp", { diameter: 0.6, height: 1, tessellation: 6 }, scene);
       const [x, z] = at(sternU - 3.8, s * BEAM * 0.4);
-      lamp.position.set(x, top + 4.2, z);
+      lamp.position.set(x, base + 0.6, z);
       parts.gold.push(lamp);
     }
     // Bowsprit
@@ -78,19 +115,21 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     sprit.position.set(sx, top + 2.2, sz);
     parts.dark.push(sprit);
     // Masts with yards, furled sails along each yard and a crow's nest
-    for (const [u, tall] of [[LONG * 0.22, 17], [-LONG * 0.03, 20], [-LONG * 0.27, 15]] as const) {
-      const mast = MeshBuilder.CreateCylinder("pirateGalleonMast", { height: tall, diameterTop: 0.25, diameterBottom: 0.55, tessellation: 7 }, scene);
+    for (const [u, tall] of [[LONG * 0.22, 19], [-LONG * 0.03, 23], [-LONG * 0.27, 17]] as const) {
+      const mast = MeshBuilder.CreateCylinder("pirateGalleonMast", { height: tall, diameterTop: 0.28, diameterBottom: 0.6, tessellation: 7 }, scene);
       const [mx, mz] = at(u, 0);
       mast.position.set(mx, top + tall / 2, mz);
       parts.dark.push(mast);
-      for (const [f, span] of [[0.45, 9.5], [0.75, 7]] as const) {
+      for (const [f, span] of [[0.4, 13], [0.62, 10.5], [0.82, 7.5]] as const) {
         const y = top + tall * f;
-        box("dark", 0.25, 0.25, span, u, y, 0);
-        const roll = MeshBuilder.CreateCylinder("pirateGalleonSail", { height: span * 0.94, diameter: 0.85, tessellation: 7 }, scene);
+        box("dark", 0.28, 0.28, span, u, y, 0);
+        const roll = MeshBuilder.CreateCylinder("pirateGalleonSail", { height: span * 0.92, diameter: 1.15, tessellation: 8 }, scene);
         roll.rotation.x = Math.PI / 2;
-        roll.position.set(mx, y - 0.5, mz);
+        roll.position.set(mx, y - 0.62, mz);
         parts.sail.push(roll);
+        for (let g = 0; g < 4; g++) box("dark", 1.25, 1.25, 0.18, u, y - 0.62, (g - 1.5) * span * 0.24);
       }
+      for (const s of [-1, 1]) for (const du of [-1.4, 0, 1.4]) rod("dark", world(u + du, top + 0.9, s * BEAM * 0.47), world(u, top + tall * 0.8, 0), 0.07);
       const nest = MeshBuilder.CreateCylinder("pirateGalleonNest", { height: 0.9, diameter: 1.8, tessellation: 8 }, scene);
       nest.position.set(mx, top + tall * 0.88, mz);
       parts.hull.push(nest);
