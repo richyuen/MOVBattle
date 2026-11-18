@@ -160,11 +160,10 @@ function gratedCourt(scene: Scene): void {
       box(0.8,0.15*(4-i),4.8,s*(7.4+i*0.8),0.075*(4-i),0,stone);
     }
   }
-  const ember=box(7,0.08,7,0,0.72,0,fire);
-  ember.applyFog=false;scene.getGlowLayerByName("glow")?.addExcludedMesh(ember);
+  box(7,0.08,7,0,0.39,0,fire);
   for(let i=-7;i<=7;i++) {
-    box(0.15,0.2,7,i*0.48,0.9,0,iron);
-    box(7,0.2,0.15,0,0.91,i*0.48,iron);
+    box(0.15,0.2,7,i*0.48,0.58,0,iron);
+    box(7,0.2,0.15,0,0.59,i*0.48,iron);
   }
   const merged=Mesh.MergeMeshes(parts,true);
   if(merged) {merged.material=stone;merged.name="spooky2CourtStonework";merged.receiveShadows=true;}
