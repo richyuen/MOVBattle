@@ -13,7 +13,7 @@
 // +-12, 10 m deep, walkable as there): a navy channel bed, three stacked pale-blue fog sheets (alpha 0.3, y 0.25/0.8/1.4) and
 // blue-grey stone kerbs 0.5 m high along both banks with gaps at x 0 and x +-44 where the paths cross. The outer loop path is
 // 3.5 m of blue-grey flagstone at x +-44 / z +-38, stepping in round the notch (x 32, z 26).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene, type HemisphericLight, type DirectionalLight } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene, type HemisphericLight, type DirectionalLight } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 const NOTCH = { x: 36, z: 30 };
@@ -192,6 +192,116 @@ function gratedCourt(scene: Scene, result: MapBuildResult): void {
   }
 }
 
+// Pumpkin shrine (584, wiki spooky_2.png: where Dynasty's pagoda stood there is a rocky mound crowned by one huge
+// jack-o-lantern, its carved face lit from inside, small lit pumpkins heaped round it and black dead trees leaning over
+// it). Spec: at the pagoda's corner after the half turn, (-17, -38): a mound of nine dark boulders 13 m across and 3 m
+// high; on it a ribbed orange pumpkin 4.6 m across with a stem, triangle eyes and a toothed mouth in unlit flame colour
+// facing the field (+z) and a second face toward the near rim; nine pumpkins 0.9-1.5 m with lit faces round its foot;
+// three black trees 7-9.5 m in three bent sections with four limbs each. Base props and ring trees within 8 m go with their
+// colliders; one cylinder collider, radius 6.5 (outside both zones).
+function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const AT = { x: -17, z: -38 };
+  const gone: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.parent || !mesh.isEnabled() || !/^(trunk|Spooky Graveyard_)/.test(mesh.name)) continue;
+    if (Math.hypot(mesh.position.x - AT.x, mesh.position.z - AT.z) > 8) continue;
+    gone.push(mesh.position.clone());
+    mesh.setEnabled(false);
+  }
+  result.obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
+  result.obstacles.push({ type: "cylinder", center: new Vector3(AT.x, 0, AT.z), radius: 6.5 });
+  const mk = (name: string, c: Color3, self: Color3, unlit = false) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = unlit ? Color3.Black() : c;
+    m.emissiveColor = self;
+    m.specularColor = Color3.Black();
+    m.disableLighting = unlit;
+    return m;
+  };
+  const mats = {
+    rock: mk("spooky2ShrineRock", new Color3(0.2, 0.23, 0.36), new Color3(0.05, 0.06, 0.1)),
+    pumpkin: mk("spooky2ShrinePumpkin", new Color3(0.9, 0.32, 0.05), new Color3(0.45, 0.09, 0.008)),
+    flame: mk("spooky2ShrineFlame", Color3.Black(), new Color3(2, 0.84, 0.2), true),
+    bark: mk("spooky2ShrineBark", new Color3(0.035, 0.035, 0.055), new Color3(0.01, 0.01, 0.018)),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { rock: [], pumpkin: [], flame: [], bark: [] };
+  const rnd = (i: number, s: number) => {
+    const raw = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453;
+    return raw - Math.floor(raw);
+  };
+  for (let i = 0; i < 9; i++) {
+    const a = i * 0.7 + 0.3, r = i ? 2.2 + rnd(i, 1) * 2.6 : 0;
+    const rock = MeshBuilder.CreateIcoSphere("spooky2ShrinePart", { radius: 0.5, subdivisions: 1 }, scene);
+    rock.scaling.set(i ? 4.5 + rnd(i, 2) * 2.5 : 9, i ? 2.6 + rnd(i, 3) * 2 : 6, i ? 4 + rnd(i, 4) * 2.5 : 9);
+    rock.rotation.set(rnd(i, 5) * 0.4, rnd(i, 6) * 6.28, rnd(i, 7) * 0.4);
+    rock.position.set(AT.x + Math.cos(a) * r, i ? 0.6 : 0.2, AT.z + Math.sin(a) * r);
+    parts.rock.push(rock);
+  }
+  // A jack-o-lantern: a ribbed squashed ball, a stem, and a face of flame-coloured cut-outs toward `yaw`
+  const lantern = (x: number, y: number, z: number, size: number, yaws: number[]) => {
+    const body = MeshBuilder.CreateSphere("spooky2ShrinePart", { diameter: size, segments: 5 }, scene);
+    body.scaling.y = 0.82;
+    body.position.set(x, y, z);
+    parts.pumpkin.push(body);
+    const stem = MeshBuilder.CreateCylinder("spooky2ShrinePart", { height: size * 0.22, diameterTop: size * 0.07, diameterBottom: size * 0.13, tessellation: 5 }, scene);
+    stem.position.set(x, y + size * 0.46, z);
+    parts.bark.push(stem);
+    for (const yaw of yaws) {
+      const fx = Math.sin(yaw), fz = Math.cos(yaw);
+      const cut = (w: number, h: number, u: number, v: number, eye: boolean) => {
+        const c = eye
+          ? MeshBuilder.CreateCylinder("spooky2ShrinePart", { height: size * 0.1, diameter: w * size, tessellation: 3 }, scene)
+          : MeshBuilder.CreateBox("spooky2ShrinePart", { width: w * size, height: h * size, depth: size * 0.1 }, scene);
+        if (eye) c.rotation.set(Math.PI / 2, yaw, 0);
+        else c.rotation.y = yaw;
+        const out = size * 0.45 * Math.sqrt(Math.max(0.2, 1 - (u * u + v * v) * 4));
+        c.position.set(x + fx * out + fz * u * size, y + v * size * 0.82, z + fz * out - fx * u * size);
+        parts.flame.push(c);
+      };
+      cut(0.22, 0, -0.17, 0.12, true);
+      cut(0.22, 0, 0.17, 0.12, true);
+      cut(0.5, 0.11, 0, -0.14, false);
+      for (const t of [-0.15, 0, 0.15]) cut(0.09, 0.09, t, -0.07, false);
+    }
+  };
+  lantern(AT.x, 5, AT.z, 4.6, [0, Math.PI]);
+  for (let i = 0; i < 9; i++) {
+    const a = i * 0.698 + 0.2, r = 3.4 + rnd(i, 11) * 2.4, size = 0.9 + rnd(i, 12) * 0.6;
+    lantern(AT.x + Math.cos(a) * r, 1.5 + rnd(i, 13) * 0.9 - (r - 3.4) * 0.35, AT.z + Math.sin(a) * r, size, [rnd(i, 14) * 6.28]);
+  }
+  const up = Vector3.Up();
+  [[-5.2, 1.5, 9.5, 0.9], [5.4, -1.2, 8, 2.6], [1, 5, 7, 4.4]].forEach(([dx, dz, tall, lean], t) => {
+    let at = new Vector3(AT.x + dx, 0.4, AT.z + dz);
+    for (let s = 0; s < 3; s++) {
+      const tilt = 0.1 + s * 0.22, bend = lean + s * 1.1;
+      const dir = new Vector3(Math.sin(tilt) * Math.cos(bend), Math.cos(tilt), Math.sin(tilt) * Math.sin(bend));
+      const seg = MeshBuilder.CreateCylinder("spooky2ShrinePart", { height: tall / 3 + 0.2, diameterBottom: 1.1 - s * 0.3, diameterTop: 0.8 - s * 0.3, tessellation: 6 }, scene);
+      seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, dir, new Quaternion());
+      seg.position = at.add(dir.scale(tall / 6));
+      parts.bark.push(seg);
+      at = at.add(dir.scale(tall / 3));
+      for (let b = 0; b < (s ? 2 : 0); b++) {
+        const la = bend + 1.6 + b * 2.7 + t, len = 2.2 + rnd(t * 7 + s * 2 + b, 21) * 1.8;
+        const ld = new Vector3(Math.cos(la) * 0.75, 0.66, Math.sin(la) * 0.75).normalize();
+        const limb = MeshBuilder.CreateCylinder("spooky2ShrinePart", { height: len, diameterBottom: 0.34, diameterTop: 0.06, tessellation: 5 }, scene);
+        limb.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, ld, new Quaternion());
+        limb.position = at.add(ld.scale(len / 2));
+        parts.bark.push(limb);
+      }
+    }
+  });
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true, true);
+    if (!merged) continue;
+    merged.name = `spooky2Shrine_${key}`;
+    if (key !== "flame") merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.isPickable = false;
+    if (key === "flame") merged.applyFog = false;
+    else merged.receiveShadows = key === "rock";
+  }
+}
+
 // Night void and cold moonlight, no daylight range/clouds. Restore shared lights when changing maps.
 function nightSky(scene: Scene, built: Set<unknown>): () => void {
   const clear=scene.clearColor.clone(), fog=scene.fogColor.clone();
@@ -217,6 +327,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   fogChannels(scene);
   nightTurf(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   gratedCourt(scene, result);
+  pumpkinShrine(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return {...result,dispose:()=>{restore();result.dispose?.();}};
 }
