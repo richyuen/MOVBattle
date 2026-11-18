@@ -309,6 +309,58 @@ function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult
 // 1.4 m, a 0.6 m parapet each side, a pier under each end and a dark arch opening under the middle; at x 0 a timber
 // bridge 5 m wide, a flat deck 1 m up over |z| 6.5..17.5 on four posts, with four steps down at each end. Drawn only (no
 // colliders; the channels are drawn only too); the decks carry units through the map's height field.
+// Black dead trees (586, card Overview "black leafless twisted trees only"; wiki spooky_2.png: the ring is a loose line of
+// black gnarled trees, no round crowns). Spec: every base ring tree left after the shrine (an unparented "trunk" with its
+// "canopy" crown children) is hidden, its collider kept; one in four spots stays empty so the ring breaks up; on the rest a
+// black tree 6-9.5 m: a three-section crooked trunk (root 1.6 m) leaning and turning, then three or four heavy limbs leaving
+// it low, bending at an elbow and ending in a claw twig; near-black navy bark (0.035, 0.035, 0.055), barely self-lit, merged
+// with 32-bit indices, in the glow pass (dark solid).
+function blackTrees(scene: Scene, built: Set<unknown>): void {
+  const hash = (i: number, s: number) => { const v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); };
+  const bark = new StandardMaterial("spooky2DeadBark", scene);
+  bark.diffuseColor = new Color3(0.035, 0.035, 0.055);
+  bark.emissiveColor = new Color3(0.012, 0.012, 0.02);
+  bark.specularColor = Color3.Black();
+  const parts: Mesh[] = [];
+  const up = Vector3.Up();
+  const limb = (from: Vector3, len: number, d: number, yaw: number, tilt: number): Vector3 => {
+    const dir = new Vector3(Math.sin(tilt) * Math.cos(yaw), Math.cos(tilt), Math.sin(tilt) * Math.sin(yaw));
+    const c = MeshBuilder.CreateCylinder("spooky2DeadLimb", { height: len, diameterBottom: d, diameterTop: d * 0.55, tessellation: 5 }, scene);
+    c.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(up, dir, c.rotationQuaternion);
+    c.position = from.add(dir.scale(len / 2));
+    parts.push(c);
+    return from.add(dir.scale(len * 0.95));
+  };
+  let k = 0;
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.name !== "trunk" || mesh.parent || !mesh.isEnabled()) continue;
+    const { x, z } = mesh.position;
+    mesh.setEnabled(false);
+    k++;
+    if (k % 4 === 2) continue;
+    const tall = 6 + hash(k, 71) * 3.5, twist = hash(k, 72) * 6.28;
+    const knee = limb(new Vector3(x, 0, z), tall * 0.3, 1.6, twist, 0.26);
+    const shoulder = limb(knee, tall * 0.26, 1.15, twist + 1.3, 0.42);
+    const top = limb(shoulder, tall * 0.2, 0.8, twist - 0.7, 0.3);
+    const limbs = 3 + Math.floor(hash(k, 74) * 2);
+    for (let j = 0; j < limbs; j++) {
+      const yaw = twist + j * 2.4 + hash(k + j, 75) * 0.7;
+      const start = j === 0 ? knee : j === 1 ? shoulder : top;
+      const elbow = limb(start, 1.6 + hash(k + j, 76) * 1.6, 0.65, yaw, 0.95 + hash(k + j, 77) * 0.6);
+      const end = limb(elbow, 1.2 + hash(k + j, 78) * 1.3, 0.4, yaw + 0.65, 0.45 + hash(k + j, 79) * 0.8);
+      limb(end, 0.7 + hash(k + j, 80), 0.2, yaw - 0.7, 0.7);
+    }
+  }
+  const merged = Mesh.MergeMeshes(parts, true, true);
+  if (!merged) return;
+  merged.name = "spooky2DeadTrees";
+  merged.convertToFlatShadedMesh();
+  merged.material = bark;
+  merged.receiveShadows = true;
+  merged.isPickable = false;
+}
+
 const STONE_X = 30;
 function channelBridges(scene: Scene): (x: number, z: number) => number {
   const mk = (name: string, c: Color3, self: number) => {
@@ -409,6 +461,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   nightTurf(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   gratedCourt(scene);
   pumpkinShrine(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
+  blackTrees(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
 
   result.height = channelBridges(scene);
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
