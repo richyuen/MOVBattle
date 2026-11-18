@@ -8,7 +8,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - ACES lifts mid code values toward pale: an unlit plate keeps a deep value; lit timber wants (.2,.11,.055) with a small self-light.
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey.
 - A world box refreshes only on render: computeWorldMatrix(true) before reading bounds in a per-tick step. bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent.
-- Flat pieces are closed slabs (a one-sided disc can face away). execSync eats a caret: write sha~1.
+- Flat pieces need correct left-handed winding or closed slabs. execSync eats a caret: write sha~1.
 - glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh left out of the pass wears the glow behind it as a pale veil (farmer_snow mill, 562). Keep dark solids in the pass; exclude bright/self-lit ones. Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1.
 - CreateIcoSphere subdivisions 0 is falsy, so it becomes 4: a smooth navy ball (575). Use 1 for a faceted rock.
 - Lit thin-instance wheat can read gold from above and brown at ground level. Two unlit, glow-excluded instance meshes sharing one matrix buffer keep heads and stems distinct in both shots.
@@ -43,7 +43,8 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns / a palisade from the top shot (tribal_2 massif, viking_sandbox wall, 563 critic+CONFIRM): a rock mass wants heaped faceted boulders or tilted slabs with few flat tops.
 - Stage enemy positions are validated against the map's team-1 zone, hazards and obstacles (game.checkStage): a map change can misplace a stage's army (the checkpoint re-judges every stage on a finished map batch).
 - campaign.challenge base dressing: "wallStone" (dark block row), "boulder", "hayBale", "hill", "stump", pit hazards (campaign_hazard_box_pit overlays) and "<displayName>_box|_cyl|_totem_top" junk. loadMapForCapture needs the "map." prefix. Name what is near a spot with a probe before claiming it gone (564, 565).
-- Base meshes have static buffers: updateVerticesData changes only the CPU copy (rays see the new shape, the GPU draws the old). Reshape with setVerticesData (ancient_2 apron, 573-574).
+- Static base meshes need setVerticesData to upload reshaped geometry (573-574).
+- The shared skyDome covers clearColor. A map can hide/restore it and draw its own fog-free, unlit sky sphere (Legacy 582).
 - Night snow under blue moonlight: warm the diffuse to cancel the light's tint, carry the pale tone in self-light, and drop the field from the glow (farmer_snow 573, CONFIRM passed).
 - Turf caps on cliff columns flicker when their top faces share a plane with the cliff or meadow. Set the cap slightly below the meadow and the shaft top inside the cap (Medieval 1, 567).
 - The sandboxed shell blocks the capture's loopback calls to Vite: run captures with local network access.
