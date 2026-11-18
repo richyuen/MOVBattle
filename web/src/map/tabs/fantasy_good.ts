@@ -603,6 +603,69 @@ function sideIslets(scene: Scene, stone: StandardMaterial, gold: StandardMateria
   }
 }
 
+// Pit shafts (597, blocker a4; wiki fantasy_good.png: each pit is a deep dark shaft, its walls navy in shadow, and out of its
+// depths rise clusters of grey basalt columns of mixed heights, the trees and obelisks standing on them; not a shallow box with
+// a bright flat floor). Spec: the floor material dark (.08,.1,.16) self (.02,.025,.04); a navy liner (.16,.2,.3) self .08 10 cm
+// inside each wall from the kerb down to the floor; per pit 6-10 six-sided columns (r 1-2.1 m, slightly tapered, flat tops)
+// clustered round the pit's trees (tree pits) or its spire (others), 1.5-4.5 m from them, tops 1.2-6.5 m below the deck,
+// pale grey-blue (.55,.62,.72) self .3, flat shaded. Drawn only (the pit collider is unchanged).
+function pitShafts(scene: Scene): void {
+  const floor = scene.getMaterialByName("heavenPitFloor") as StandardMaterial | null;
+  if (floor) { floor.diffuseColor = new Color3(0.08, 0.1, 0.16); floor.emissiveColor = new Color3(0.02, 0.025, 0.04); }
+  const navy = new StandardMaterial("heavenPitLiner", scene);
+  navy.diffuseColor = new Color3(0.16, 0.2, 0.3);
+  navy.emissiveColor = navy.diffuseColor.scale(0.08);
+  navy.specularColor = Color3.Black();
+  const basalt = new StandardMaterial("heavenPitBasalt", scene);
+  basalt.diffuseColor = new Color3(0.55, 0.62, 0.72);
+  basalt.emissiveColor = basalt.diffuseColor.scale(0.3);
+  basalt.specularColor = Color3.Black();
+  let seed = 0x51a7;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const liners: Mesh[] = [], cols: Mesh[] = [];
+  const d = PIT_DEPTH, t = 0.6, e = 0.1;
+  for (const p of PITS) {
+    const cx = (p.x0 + p.x1) / 2, cz = (p.z0 + p.z1) / 2, w = p.x1 - p.x0, dz = p.z1 - p.z0;
+    for (const [lw, ld, lx, lz] of [
+      [w - 2 * t, 0.05, cx, p.z0 + t + e], [w - 2 * t, 0.05, cx, p.z1 - t - e],
+      [0.05, dz - 2 * t, p.x0 + t + e, cz], [0.05, dz - 2 * t, p.x1 - t - e, cz],
+    ]) {
+      const b = MeshBuilder.CreateBox("heavenPitLiner", { width: lw, height: d - 0.4, depth: ld }, scene);
+      b.position.set(lx, -d / 2 - 0.2, lz);
+      b.bakeCurrentTransformIntoVertices();
+      liners.push(b);
+    }
+    // the cluster's centres: the trees' feet (as pits() places them) or the spire
+    const sx = Math.sign(cx), sz = Math.sign(cz);
+    const hubs: Array<[number, number]> = p.kind === "tree"
+      ? [[cx + sx * 0.28 * w, cz + sz * 0.26 * dz], [cx - sx * 0.12 * w, cz - sz * 0.22 * dz]]
+      : [[cx, cz]];
+    const n = Math.min(10, Math.max(6, Math.round((w * dz) / 40)));
+    for (let i = 0; i < n; i++) {
+      const [hx, hz] = hubs[i % hubs.length];
+      const a = rnd() * 6.28, rr = 1.5 + rnd() * 3;
+      const r = 1 + rnd() * 1.1;
+      const x = Math.max(p.x0 + t + r, Math.min(p.x1 - t - r, hx + Math.cos(a) * rr));
+      const z = Math.max(p.z0 + t + r, Math.min(p.z1 - t - r, hz + Math.sin(a) * rr));
+      const top = -1.2 - rnd() * 5.3, h = d + top;
+      const c = MeshBuilder.CreateCylinder("heavenPitBasalt", { height: h, diameterTop: 2 * r * 0.9, diameterBottom: 2 * r, tessellation: 6 }, scene);
+      c.rotation.y = rnd() * 1.05;
+      c.position.set(x, -d + h / 2, z);
+      c.bakeCurrentTransformIntoVertices();
+      cols.push(c);
+    }
+  }
+  for (const [parts, mat, name] of [[liners, navy, "heavenPitLiners"], [cols, basalt, "heavenPitBasalt"]] as const) {
+    const m = Mesh.MergeMeshes(parts, true, true);
+    if (!m) continue;
+    m.name = name;
+    m.convertToFlatShadedMesh();
+    m.material = mat;
+    m.receiveShadows = true;
+    m.isPickable = false;
+  }
+}
+
 export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -615,6 +678,7 @@ export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapB
   const walled = parapets(scene, built, opened, stone, gold);
   const done = gateTowers(scene, pits(scene, built, walled, stone, gold), stone, gold);
   cleanDeck(scene, built, done);
+  pitShafts(scene);
   return { ...done, dispose: () => { restoreSky(); done.dispose?.(); } };
 }
 
