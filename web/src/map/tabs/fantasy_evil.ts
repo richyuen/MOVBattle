@@ -6,7 +6,7 @@
 // mountain range, no horizon glow). Spec: the shared sky dome, the base's clouds ("cloud*") and far range ("mountain*") are
 // hidden; clear colour and fog colour become near-black violet (.02, .012, .035), so the field's far edge fades into the void
 // rather than into daylight haze. Dome, clear and fog colours are put back on dispose.
-import { Color3, Matrix, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { HeightField } from "../terrain";
 
@@ -47,6 +47,53 @@ const blockLevel = (x: number, z: number) => {
   return Math.max(0, PLATEAU.top - PLATEAU.rise * Math.ceil(Math.max(dx, dz) / PLATEAU.tread));
 };
 
+// Chasms (593, blocker b4; wiki fantasy_evil.png: the plateau does not run out into the side ground but is cut off from it by
+// narrow sheer crevices glowing acid green at their floors, and in front a crevice runs along its foot, crossed only by the
+// two stair flights). Spec: crevices 4 m wide (two block cells), floor at the island top: one along the plateau's front foot
+// (z -10..-6) from x -28 to 28, broken by two 4 m crossings at |x| 10..14 (the stair flights), and one down each side
+// (|x| 24..28) from z 8 to the rim at z 44, leaving the side approaches at |z| < 8 (where the armies meet) whole. No block
+// stands in a crevice; its floor is an acid-green self-lit plate (1.0 x (.15,.9,.2)) with a glow strip along the foot of
+// each wall, out of the glow pass; each crevice is a void hazard, so nobody walks in.
+const CHASMS = [
+  { x0: -28, x1: -14, z0: -10, z1: -6 }, { x0: -10, x1: 10, z0: -10, z1: -6 }, { x0: 14, x1: 28, z0: -10, z1: -6 },
+  { x0: -28, x1: -24, z0: 8, z1: 44 }, { x0: 24, x1: 28, z0: 8, z1: 44 },
+];
+const inChasm = (x: number, z: number) => CHASMS.some((c) => x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1);
+
+function chasms(scene: Scene): MapBuildResult["hazards"] {
+  const acid = new StandardMaterial("voidChasmGlow", scene);
+  acid.diffuseColor = Color3.Black();
+  acid.emissiveColor = new Color3(0.15, 0.9, 0.2);
+  acid.specularColor = Color3.Black();
+  acid.disableLighting = true;
+  const parts: Mesh[] = [];
+  const box = (w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("voidChasmPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.bakeCurrentTransformIntoVertices();
+    parts.push(b);
+  };
+  for (const c of CHASMS) {
+    const w = c.x1 - c.x0, d = c.z1 - c.z0, cx = (c.x0 + c.x1) / 2, cz = (c.z0 + c.z1) / 2;
+    box(w, 0.06, d, cx, 0.03, cz);
+    box(w, 0.5, 0.08, cx, 0.25, c.z0 + 0.06);
+    box(w, 0.5, 0.08, cx, 0.25, c.z1 - 0.06);
+    box(0.08, 0.5, d, c.x0 + 0.06, 0.25, cz);
+    box(0.08, 0.5, d, c.x1 - 0.06, 0.25, cz);
+  }
+  const glow = Mesh.MergeMeshes(parts, true, true);
+  if (glow) {
+    glow.name = "voidChasmGlow";
+    glow.material = acid;
+    glow.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(glow);
+  }
+  return CHASMS.map((c) => ({
+    shape: "box" as const, kind: "void" as const,
+    center: new Vector3((c.x0 + c.x1) / 2, 0, (c.z0 + c.z1) / 2), halfX: (c.x1 - c.x0) / 2, halfZ: (c.z1 - c.z0) / 2,
+  }));
+}
+
 /** The terrace under a point: the level of the 2 m block it stands on (blocks are centred on odd metres). */
 const blockCentre = (v: number) => 2 * Math.floor(v / 2) + 1;
 export const fantasyEvilHeight: HeightField = (x, z) => blockLevel(blockCentre(x), blockCentre(z));
@@ -73,6 +120,7 @@ function basaltFloor(scene: Scene, built: Set<unknown>): void {
   for (let x = -53; x <= 53; x += 2) {
     for (let z = -47; z <= 47; z += 2) {
       if (!inside(x, z) || !inside(x + 1, z + 1) || !inside(x - 1, z - 1) || !inside(x + 1, z - 1) || !inside(x - 1, z + 1)) continue;
+      if (inChasm(x, z)) continue;
       const lift = blockLevel(x, z);
       const top = 0.02 + rnd() * 0.2 + lift, h = 0.5 + top;
       mats.push(...Matrix.Compose(new Vector3(1.85, h, 1.85), Quaternion.Identity(), new Vector3(x, top - h / 2, z)).asArray());
@@ -107,5 +155,6 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
     if (lift > 0) { m.position.y += lift; m.computeWorldMatrix(true); }
   }
   const restoreSky = voidSky(scene, built);
-  return { ...result, height: fantasyEvilHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
+  const hazards = [...result.hazards, ...chasms(scene)];
+  return { ...result, hazards, height: fantasyEvilHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
