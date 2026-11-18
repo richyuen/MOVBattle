@@ -10,6 +10,7 @@
 // warm self-light (0.18, 0.17, 0.16) so the floor reads off-white, not lilac.
 import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
+import { untoned } from "./simKit";
 
 const PLANE = 1600, TILE_M = 5, TILE_PX = 512;
 
@@ -59,12 +60,14 @@ function emptyCentre(scene: Scene, result: MapBuildResult): MapBuildResult["haza
 // cyan-blue (0.38, 0.68, 0.76) overhead to near-white haze (0.86, 0.9, 0.9) at and below the horizon (smoothstep over the
 // lowest 35 degrees), out of the glow; the fog colour becomes that haze, so the plane fades into the horizon colour. Dome and
 // fog colour are put back on dispose.
+// 591 [S]: the colours are now the frame's sRGB targets put through simKit's untoned() (the inverse of main.ts's exposure, ACES,
+// gamma and contrast chain): code (.68,.9,1) had rendered muted grey-teal (167,198,209). Read off wiki simulation.png: cyan-blue
+// (183,218,219) overhead, pale (211,226,219) haze at the horizon.
 function paleSky(scene: Scene): () => void {
   const dome = scene.getMeshByName("skyDome"), domeOn = dome?.isEnabled();
   dome?.setEnabled(false);
   const oldFog = scene.fogColor.clone(), oldClear = scene.clearColor.clone();
-  // 590 [P]: the kit's cyan-white haze and .15 span, with a lighter sky blue so the zenith reads pale, not teal
-  const haze = new Color3(0.74, 0.93, 0.97), blue = new Color3(0.68, 0.9, 1.0);
+  const haze = untoned(211, 226, 219), blue = untoned(183, 218, 219);
   scene.fogColor.copyFrom(haze);
   scene.clearColor.set(haze.r, haze.g, haze.b, 1);
   const sky = MeshBuilder.CreateSphere("simulationSky", { diameter: 1800, segments: 24, sideOrientation: Mesh.BACKSIDE }, scene);
