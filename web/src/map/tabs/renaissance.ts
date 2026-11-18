@@ -212,6 +212,22 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
   });
 }
 
+// Large close-set cream slabs replace the coarse blue-grey paving and wide dark grout.
+function creamPavement(scene: Scene, built: Set<unknown>): void {
+  for(const m of scene.meshes) if(built.has(m)&&(/^(plazaStones|campaign_zone_)/.test(m.name))) m.setEnabled(false);
+  const mats=[0,1,2].map(i=>{
+    const mat=new StandardMaterial(`renaissanceCreamSlab${i}`,scene);
+    mat.diffuseColor.set(0.71+i*0.035,0.68+i*0.035,0.58+i*0.035);
+    mat.emissiveColor.set(0.28,0.265,0.22);mat.specularColor=Color3.Black();return mat;
+  });
+  const parts:Mesh[][]=[[],[],[]];
+  for(let row=0;row<18;row++) for(let col=0;col<29;col++) {
+    const tile=MeshBuilder.CreateBox("renaissanceCreamTile",{width:2.965,height:0.05,depth:2.965},scene);
+    tile.position.set(-42+col*3,0.062,-22.95+row*3);parts[(row+col)%3].push(tile);
+  }
+  for(let i=0;i<3;i++) {const m=Mesh.MergeMeshes(parts[i],true);if(m){m.name="renaissanceCreamPavement";m.material=mats[i];m.receiveShadows=true;scene.getGlowLayerByName("glow")?.addExcludedMesh(m);}}
+}
+
 // Canal immediately behind the front house terrace, with quays and two short arched crossings.
 function frontCanal(scene: Scene): void {
   const water=new StandardMaterial("renaissanceCanalGreen",scene);
@@ -236,6 +252,7 @@ export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapB
   rectangularPiazza(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   dogesPalace(scene);
   frontCanal(scene);
+  creamPavement(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   const obstacles = [...result.obstacles, { type: "box" as const, center: new Vector3(0, 0, PALACE.z + PALACE.deep / 2), halfX: PALACE.wide / 2, halfZ: PALACE.deep / 2 }];
   return { ...result, obstacles };
 }
