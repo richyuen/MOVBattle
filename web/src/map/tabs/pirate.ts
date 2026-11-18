@@ -352,7 +352,11 @@ function hourglassBeach(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
   const sand = ground?.material ?? scene.getMaterialByName("pirateSandDrum");
   for(const m of scene.meshes) if(built.has(m) && /^(ground$|centerGrass$|pirateSandDrum$|pirateSandBelly$|campaign_zone_|sandSpit$|sandWet$|seaShore$|fieldBlades_|grassTuft|Pirate Cove_waterfall$)/.test(m.name)) m.setEnabled(false);
   const outline: Array<[number,number]> = [];
-  const stations = [[-58,7],[-51,24],[-38,32],[-23,30],[-7,25],[9,21],[23,24],[38,31],[49,28],[56,10]];
+  // Spit taper (592, blocker b3; wiki pirate.png: the sand is a spit, broad in the foreground and narrowing steadily toward the
+  // back rock, its tip a rounded point in the shallows, not a blunt end). Spec: the -x end closes to a rounded point (half 14
+  // at x -57, 3 at x -61); past the waist the +x half no longer swells again but narrows from 24 m at x 23 through 20 at x 38
+  // (still dry for every stage army: they stand stands at x 29..41.4, |z| <= 9.9) to 12 at x 50 and a 2 m point at x 61.
+  const stations = [[-61,3],[-57,14],[-51,24],[-38,32],[-23,30],[-7,25],[9,21],[23,24],[38,20],[50,12],[56,7],[61,2]];
   const halfAt = (x: number) => {
     for (let i = 0; i < stations.length - 1; i++) {
       const [xa, wa] = stations[i], [xb, wb] = stations[i + 1];
