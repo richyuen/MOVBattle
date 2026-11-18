@@ -345,7 +345,22 @@ function gladeBoulders(scene: Scene): void {
 // Clear pale blue above the snowy valley, as in legacy.a_tank; no grey-white sky dome.
 function paleBlueSky(scene: Scene): () => void {
   const clear = scene.clearColor.clone(), fog = scene.fogColor.clone();
+  // The shared vertex-colour sky dome covers clearColor. Give this valley its own
+  // fog-free backdrop, restoring the shared dome when the map is disposed.
+  const inherited = scene.getMeshByName("skyDome"), enabled = inherited?.isEnabled();
+  inherited?.setEnabled(false);
+  const backdrop = MeshBuilder.CreateSphere("legacyValleySky", { diameter: 1800, segments: 16, sideOrientation: Mesh.BACKSIDE }, scene);
+  const material = new StandardMaterial("legacyValleySky", scene);
+  material.disableLighting = true;
+  material.diffuseColor = Color3.Black();
+  material.emissiveColor.set(0.2, 0.55, 0.65);
+  material.fogEnabled = false;
+  backdrop.material = material;
+  backdrop.infiniteDistance = true;
+  backdrop.applyFog = false;
+  backdrop.isPickable = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(backdrop);
   scene.clearColor.set(0.52, 0.77, 0.88, 1);
   scene.fogColor.set(0.67, 0.82, 0.88);
-  return () => {scene.clearColor.copyFrom(clear); scene.fogColor.copyFrom(fog);};
+  return () => {inherited?.setEnabled(enabled ?? true); scene.clearColor.copyFrom(clear); scene.fogColor.copyFrom(fog);};
 }
