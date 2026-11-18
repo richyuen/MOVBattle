@@ -48,11 +48,12 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
 - Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
-- Run captures unsandboxed. A CONFIRM can fail on set pieces no list named (585, 588, 592). Island cam's sky band: backdrop at z~200 must sit at y -25..35 (590).
+- Run captures unsandboxed. A CONFIRM can fail on set pieces no list named (585-596). Island cam sky band: a z~200 backdrop at y -25..35 (590).
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
-- Grass: thin-instance fans of six thin blades with up-facing normals read as grass (legacy 583); flattened IcoSpheres read fuzzy from afar but as paving stones from a stage's low camera (spooky_1 583), upright ones as stones; leaf cards as beige flags (571).
+- Grass: thin-instance fans of six blades, normals up (583); flattened IcoSpheres read as paving from low cameras, leaf cards as beige flags (571).
 - MergeMeshes: null past 65536 verts unless (parts,true,true); throws on mixed attributes (VertexData needs uvs); a throwing build leaks into later maps (593).
 - A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
-- Buildings near a stage's line hide its army (Ancient 1; wild_west 583): the stage camera sits ~24 m west of the army.
-- Builder hazards get no overlay: draw them (578). Self-lit or pale meshes in the glow pass bloom white (a ghost on a black void): exclude them (584; 590; 594).
+- Buildings near a stage's line hide its army (583): the stage camera sits ~24 m west of it.
+- Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white: exclude them (584-594).
+- The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Corner notches under ~8 m hide under ring trees and skirt rocks (spooky_2 596).
 - Recess a descent before merging cliff columns (579). A concave bank needs longitudinal strips, not a hub fan (581).
