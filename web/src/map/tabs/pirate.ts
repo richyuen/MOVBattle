@@ -162,7 +162,18 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
       for (const s of [-1, 1]) piece("dark", 0.22, 0.3, 0, s * 1.6, 0.12);
       for (let r = 1; r < Math.floor(len); r++) piece("dark", 3.1, 0.1, r, 0, 0.14);
     }
-    obstacles.push({ type: "box", center: new Vector3(0, 0, Z), halfX: LONG / 2, halfZ: BEAM / 2 + 0.3 });
+    // Standable deck (587): the hull's one box collider becomes rails round the deck: the seaward side, both ends, and the
+    // beach side broken by the three gangplank mouths (u -9, 0, 9, 3.6 m wide), so units walk up a plank onto the deck.
+    const rail = (u0: number, u1: number, v: number, halfV: number) => {
+      const [cx, cz] = at((u0 + u1) / 2, v);
+      obstacles.push({ type: "box", center: new Vector3(cx, 0, cz), halfX: Math.abs(u1 - u0) / 2, halfZ: halfV });
+    };
+    rail(-15, 15, -BEAM / 2 - 0.1, 0.4);
+    for (const s of [-1, 1]) {
+      const [ex, ez] = at(s * 15, 0);
+      obstacles.push({ type: "box", center: new Vector3(ex, 0, ez), halfX: 0.5, halfZ: BEAM / 2 + 0.5 });
+    }
+    for (const [u0, u1] of [[-15, -10.8], [-7.2, -1.8], [1.8, 7.2], [10.8, 15]]) rail(u0, u1, BEAM / 2 + 0.1, 0.4);
   }
   const glow = scene.getGlowLayerByName("glow");
   for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
@@ -177,6 +188,29 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     // sea's glow as a pale veil); only the bright gold and sails leave it
     if (key === "gold" || key === "sail") glow?.addExcludedMesh(merged);
   }
+}
+
+// Deck heights (587, card Overview and reference/stages/pirate.x_marks_the_spot.png: the galleon decks are standable fighting
+// ground with their cannon batteries). Spec: a unit inside a galleon's rails (|x| <= 14.6, within 3.9 m of its keel line) is
+// drawn on the deck (y 3.6); on a gangplank (within 1.6 m of its centre line, 0..12.5 m from the rail toward the beach) it
+// is drawn on the plank, falling from 4.15 m at the rail to the sand. The sim stays flat (terrain.ts).
+function deckHeight(x: number, z: number): number {
+  const top = HULL - SINK;
+  let h = 0;
+  for (const { z: Z, bow } of SHIPS) {
+    const toBeach = -Math.sign(Z);
+    const v = (z - Z) * toBeach;
+    if (Math.abs(x) <= 14.6 && Math.abs(v) <= BEAM / 2 - 0.1) return top;
+    for (const [u, fan] of [[-9, -0.18], [0, 0.04], [9, 0.16]] as const) {
+      const yaw = Math.atan2(Math.sin(fan) * bow, toBeach * Math.cos(fan));
+      const rx = u * bow, rz = Z + (BEAM / 2) * toBeach;
+      const dx = x - rx, dz = z - rz;
+      const d = dx * Math.sin(yaw) + dz * Math.cos(yaw);
+      const a = dx * Math.cos(yaw) - dz * Math.sin(yaw);
+      if (Math.abs(a) <= 1.6 && d >= -0.1 && d <= 12.5) h = Math.max(h, (top + 0.55) * (1 - Math.max(0, d) / 12.5));
+    }
+  }
+  return h;
 }
 
 // No lagoon (577, pirate_beach.png and the wiki shot: the sand runs unbroken from the middle of the beach to the galleons'
@@ -248,7 +282,9 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   hourglassBeach(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   bellMountain(scene, obstacles);
   openShore(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
-  return { ...result, obstacles, hazards, dispose: () => { restoreSky(); result.dispose?.(); } };
+  const baseHeight = result.height;
+  const height = (x: number, z: number) => Math.max(baseHeight?.(x, z) ?? 0, deckHeight(x, z));
+  return { ...result, obstacles, hazards, height, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
 
 // Tropic sky (585, pirate_beach.png and the wiki shot: the island floats in a bright sky-blue haze with soft white clouds, no
