@@ -21,15 +21,19 @@ const NOTCH = { x: 36, z: 30 };
 // square step, not rounded). Spec: besides Dynasty's big back-right notch (x > 36, z > 30), the other three corners lose a
 // 7 x 7 m square (|x| > 47, |z| > 41 on the power-8 outline); floor, underside, ring trees and rock skirt all keep out of them.
 // The loop path turns its corners square (no Chaikin rounding, mitred ribbon corners).
+// 596.4b: at |x| > 47, |z| > 41 the notches cut only a 4-5 m sliver off the rounded corner, hidden under trees and rocks:
+// now |x| > 44.5, |z| > 38.5 (about 8 x 8 m), the loop path stepping in round each one as round the big notch; ring trees
+// stand 0.5 m off a small notch's edge (2 m off the big one's), clear of the stepped path.
 const NOTCHES = [
-  { sx: 1, sz: 1, x: NOTCH.x, z: NOTCH.z },
-  { sx: -1, sz: 1, x: 47, z: 41 },
-  { sx: -1, sz: -1, x: 47, z: 41 },
-  { sx: 1, sz: -1, x: 47, z: 41 },
+  { sx: 1, sz: 1, x: NOTCH.x, z: NOTCH.z, pad: 2 },
+  { sx: -1, sz: 1, x: 44.5, z: 38.5, pad: 0.5 },
+  { sx: -1, sz: -1, x: 44.5, z: 38.5, pad: 0.5 },
+  { sx: 1, sz: -1, x: 44.5, z: 38.5, pad: 0.5 },
 ];
-/** A point inside a corner notch (grown by `margin`) pushed out onto the notch's nearer edge. */
-function outOfNotches(x: number, z: number, margin = 0): [number, number] {
+/** A point inside a corner notch (grown by its pad when `padded`) pushed out onto the notch's nearer edge. */
+function outOfNotches(x: number, z: number, padded = false): [number, number] {
   for (const n of NOTCHES) {
+    const margin = padded ? n.pad : 0;
     const ax = x * n.sx, az = z * n.sz, nx = n.x - margin, nz = n.z - margin;
     if (ax > nx && az > nz) {
       if (ax - nx < az - nz) x = nx * n.sx;
@@ -131,7 +135,11 @@ function fogChannels(scene: Scene): void {
 function cobbleLoop(scene: Scene): void {
   // 596 (blocker b4): no Chaikin pass at all; each corner is mitred (its offset along the bisector, half / cos) so the ribbon
   // turns square, not chamfered (the 595 single pass still cut every corner on a diagonal)
-  const pts: Array<[number, number]> = [[-44, -38], [44, -38], [44, 26], [32, 26], [32, 38], [-44, 38]];
+  // 596.4b: stepping in round the three small corner notches (|x| > 44.5, |z| > 38.5) as round the big one
+  const pts: Array<[number, number]> = [
+    [-44, -35.25], [-41.25, -35.25], [-41.25, -38], [41.25, -38], [41.25, -35.25], [44, -35.25],
+    [44, 26], [32, 26], [32, 38], [-41.25, 38], [-41.25, 35.25], [-44, 35.25],
+  ];
   const n = pts.length;
   pts.push(pts[0]);
   const half = 2.75, y = 0.06, left: Vector3[] = [], right: Vector3[] = [], along: number[] = [];
@@ -406,7 +414,7 @@ function squareRingSpot(x: number, z: number): [number, number] {
   if (radial < 0.001) return [x, z];
   const fraction = Math.hypot(x / 54, z / 48), cx = x / radial, cz = z / radial;
   const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
-  return outOfNotches(cx * fraction * reach, cz * fraction * reach, 2);
+  return outOfNotches(cx * fraction * reach, cz * fraction * reach, true);
 }
 
 function blackTrees(scene: Scene, built: Set<unknown>, result?: MapBuildResult): void {
