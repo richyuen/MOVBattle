@@ -409,6 +409,8 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
           parts.gold.push(tip);
         }
       }
+      // 595 [P]: a 1.2 m waterfall down each leg's front (-z) face, beside the window
+      box("water", 1.2, H, 0.3, lx + Math.sign(lx) * 2.2, H / 2, -LEG / 2 - 0.2);
       obstacles.push({ type: "box", center: new Vector3(tx + lx, 0, Z), halfX: LEG / 2, halfZ: LEG / 2 });
     }
     // the arch body over the gate, its underside a stepped half-disc
