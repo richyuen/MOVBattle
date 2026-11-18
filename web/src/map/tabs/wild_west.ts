@@ -383,14 +383,31 @@ function sandstoneArches(scene: Scene, obstacles: Obstacle[]): void {
   for(const [x,z,h,yaw] of [[0,45,16,0],[-35,-31,12,0.55]]) {
     for(const s of [-1,1]) {
       const px=x+s*3.5*Math.cos(yaw),pz=z+s*3.5*Math.sin(yaw);
-      put(px,pz,h,3.7,h/2,-s*0.09);
+      // Interlocking, offset tapering segments give the pier a crooked natural
+      // outline instead of a pair of straight architectural posts.
+      for(let tier=0;tier<3;tier++) {
+        const y=h*(tier+0.5)/3, drift=s*(tier-1)*0.55;
+        const m=put(px+drift*Math.cos(yaw),pz+drift*Math.sin(yaw),h/3+0.7,4.7-tier*0.9,y,-s*(0.08+tier*0.05));
+        m.rotation.y=yaw+tier*0.6+s*0.25;
+      }
       obstacles.push({type:"cylinder",center:new Vector3(px,0,pz),radius:2});
     }
-    const lintel=MeshBuilder.CreateBox("westArchLintel",{width:11,height:2.3,depth:3.8},scene);
-    lintel.position.set(x,h-0.2,z);lintel.rotation.set(0.09,yaw,-0.1);lintel.material=rock;
+    // Three overlapping faceted boulders make an uneven arch crown with a
+    // tapering shoulder on one side; no rectangular lintel.
+    for(let i=-1;i<=1;i++) {
+      const crown=MeshBuilder.CreateIcoSphere("westArchCrown",{radius:2.5,subdivisions:1},scene);
+      crown.scaling.set(1.35,0.6+(i+1)*0.12,0.8);
+      crown.position.set(x+i*2.7*Math.cos(yaw),h-0.4+i*0.5,z+i*2.7*Math.sin(yaw));
+      crown.rotation.set(0.1,yaw,i*0.22);crown.material=rock;crown.convertToFlatShadedMesh();
+    }
   }
   for(const [x,z,h] of [[44,-27,21],[47,-22,13],[-48,18,15]]) {
-    put(x,z,h,4.2,h/2,0.08);
+    put(x,z,h*0.62,5.1,h*0.31,-0.06);
+    const tip=put(x-0.65,z+0.3,h*0.5,3.4,h*0.75,0.15);
+    tip.scaling.x=0.65;
+    // Close the silhouette with a pointed five-sided summit.
+    const peak=MeshBuilder.CreateCylinder("westSpireTip",{height:3,diameterBottom:2.2,diameterTop:0,tessellation:5},scene);
+    peak.position.set(x-1.3,h+0.5,z+0.3);peak.material=rock;
     obstacles.push({type:"cylinder",center:new Vector3(x,0,z),radius:2.1});
   }
 }
