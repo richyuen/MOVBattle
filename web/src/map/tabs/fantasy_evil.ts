@@ -381,7 +381,9 @@ function shrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): Pick
 // 596 (blocker a5, attempt 2: at (8, 26) it stood outside the ground frame): the statue moves to (18, 15), in the gap between
 // the portal altar and the shrine ring as seen from the ground camera (x -30), is built 1.25x (about 16 m to the horn tips,
 // wings 21 m across) and turned 1.27 rad so it faces the camera with its wings spread across the view, not edge-on.
-const STATUE = { x: 18, z: 15, scale: 1.25, yaw: 1.27 };
+// 596.1b: at 1.25x its horns left the top of the ground frame and its camera-facing side, turned from the sun, read black:
+// 1.05x, and the statue's stone self-lit 0.75 of its colour with no shadows received, so its shaded front reads grey-teal.
+const STATUE = { x: 18, z: 15, scale: 1.05, yaw: 1.27 };
 const SPIRE = { x: 36, z: 40 };
 function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
   const mk = (name: string, c: Color3, self: number) => {
@@ -392,7 +394,7 @@ function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): vo
     return m;
   };
   const mats = {
-    statue: mk("voidStatueStone", new Color3(0.26, 0.31, 0.33), 0.2),
+    statue: mk("voidStatueStone", new Color3(0.26, 0.31, 0.33), 0.75),
     spire: mk("voidSpireRock", new Color3(0.2, 0.24, 0.27), 0.2),
     chain: mk("voidStatueChain", new Color3(0.22, 0.24, 0.27), 0.25),
   };
@@ -484,7 +486,7 @@ function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): vo
     merged.name = `voidStatue_${key}`;
     merged.convertToFlatShadedMesh();
     merged.material = mats[key];
-    merged.receiveShadows = true;
+    merged.receiveShadows = key !== "statue";
     merged.isPickable = false;
     // 594.3b: in the glow pass the pale stone bloomed into a see-through ghost against the black void; nothing glows behind it
     scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
