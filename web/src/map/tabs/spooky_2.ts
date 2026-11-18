@@ -17,6 +17,27 @@ import { Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial
 import type { MapBuildResult } from "../mapBuilder";
 
 const NOTCH = { x: 36, z: 30 };
+// Notched corners (596, blocker b4 attempt 2; reference/maps/spooky_2.png: every corner of the square slab is cut back in a
+// square step, not rounded). Spec: besides Dynasty's big back-right notch (x > 36, z > 30), the other three corners lose a
+// 7 x 7 m square (|x| > 47, |z| > 41 on the power-8 outline); floor, underside, ring trees and rock skirt all keep out of them.
+// The loop path turns its corners square (no Chaikin rounding, mitred ribbon corners).
+const NOTCHES = [
+  { sx: 1, sz: 1, x: NOTCH.x, z: NOTCH.z },
+  { sx: -1, sz: 1, x: 47, z: 41 },
+  { sx: -1, sz: -1, x: 47, z: 41 },
+  { sx: 1, sz: -1, x: 47, z: 41 },
+];
+/** A point inside a corner notch (grown by `margin`) pushed out onto the notch's nearer edge. */
+function outOfNotches(x: number, z: number, margin = 0): [number, number] {
+  for (const n of NOTCHES) {
+    const ax = x * n.sx, az = z * n.sz, nx = n.x - margin, nz = n.z - margin;
+    if (ax > nx && az > nz) {
+      if (ax - nx < az - nz) x = nx * n.sx;
+      else z = nz * n.sz;
+    }
+  }
+  return [x, z];
+}
 
 function squareIsland(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
   const gone: Vector3[] = [];
@@ -37,11 +58,7 @@ function squareIsland(scene: Scene, built: Set<unknown>, result: MapBuildResult)
       const fraction = Math.cbrt(Math.abs(x / 54) ** 3 + Math.abs(z / 48) ** 3);
       const cx = x / radial, cz = z / radial;
       const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
-      let nx = cx * fraction * reach, nz = cz * fraction * reach;
-      if (nx > NOTCH.x && nz > NOTCH.z) {
-        if (nx - NOTCH.x < nz - NOTCH.z) nx = NOTCH.x;
-        else nz = NOTCH.z;
-      }
+      const [nx, nz] = outOfNotches(cx * fraction * reach, cz * fraction * reach);
       positions[i] = nx;
       positions[i + 2] = nz;
     }
@@ -112,28 +129,31 @@ function fogChannels(scene: Scene): void {
 // 5.5 m wide 6 cm proud (units walk over it); a 512 px tile per 4 m of jittered rounded cobbles ~0.45 m, stone (96,106,140)
 // varied +-10 on joints (28,32,50), uvs in metres along and across; lit stone with a cool self-light so it reads at night.
 function cobbleLoop(scene: Scene): void {
-  let pts: Array<[number, number]> = [[-44, -38], [44, -38], [44, 26], [32, 26], [32, 38], [-44, 38]];
-  // 595 (blocker b4, square outline): one Chaikin pass, not three, so the loop keeps the square's tight corners and notch
-  for (let pass = 0; pass < 1; pass++) {
-    const next: Array<[number, number]> = [];
-    for (let i = 0; i < pts.length; i++) {
-      const [ax, az] = pts[i], [bx, bz] = pts[(i + 1) % pts.length];
-      next.push([ax * 0.75 + bx * 0.25, az * 0.75 + bz * 0.25], [ax * 0.25 + bx * 0.75, az * 0.25 + bz * 0.75]);
-    }
-    pts = next;
-  }
+  // 596 (blocker b4): no Chaikin pass at all; each corner is mitred (its offset along the bisector, half / cos) so the ribbon
+  // turns square, not chamfered (the 595 single pass still cut every corner on a diagonal)
+  const pts: Array<[number, number]> = [[-44, -38], [44, -38], [44, 26], [32, 26], [32, 38], [-44, 38]];
+  const n = pts.length;
   pts.push(pts[0]);
   const half = 2.75, y = 0.06, left: Vector3[] = [], right: Vector3[] = [], along: number[] = [];
+  const segNormal = (a: [number, number], b: [number, number]) => {
+    const dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1;
+    return [-dz / l, dx / l];
+  };
   let run = 0;
   for (let i = 0; i < pts.length; i++) {
     const [px, pz] = pts[i];
-    const [ax, az] = pts[Math.max(0, i - 1)], [bx, bz] = pts[Math.min(pts.length - 1, i + 1)];
-    const dx = bx - ax, dz = bz - az, l = Math.hypot(dx, dz) || 1;
-    const nx = -dz / l, nz = dx / l;
+    const k = i % n;
+    const [n1x, n1z] = segNormal(pts[(k - 1 + n) % n], pts[k]);
+    const [n2x, n2z] = segNormal(pts[k], pts[(k + 1) % n]);
+    let mx = n1x + n2x, mz = n1z + n2z;
+    const ml = Math.hypot(mx, mz) || 1;
+    mx /= ml;
+    mz /= ml;
+    const miter = half / Math.max(0.3, mx * n1x + mz * n1z);
     if (i > 0) run += Math.hypot(px - pts[i - 1][0], pz - pts[i - 1][1]);
     along.push(run);
-    left.push(new Vector3(px + nx * half, y, pz + nz * half));
-    right.push(new Vector3(px - nx * half, y, pz - nz * half));
+    left.push(new Vector3(px + mx * miter, y, pz + mz * miter));
+    right.push(new Vector3(px - mx * miter, y, pz - mz * miter));
   }
   const ribbon = MeshBuilder.CreateRibbon("spooky2CobbleLoop", { pathArray: [left, right] }, scene);
   const uv: number[] = [];
@@ -386,12 +406,7 @@ function squareRingSpot(x: number, z: number): [number, number] {
   if (radial < 0.001) return [x, z];
   const fraction = Math.hypot(x / 54, z / 48), cx = x / radial, cz = z / radial;
   const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
-  let nx = cx * fraction * reach, nz = cz * fraction * reach;
-  if (nx > NOTCH.x - 2 && nz > NOTCH.z - 2) {
-    if (nx - NOTCH.x < nz - NOTCH.z) nx = NOTCH.x - 2;
-    else nz = NOTCH.z - 2;
-  }
-  return [nx, nz];
+  return outOfNotches(cx * fraction * reach, cz * fraction * reach, 2);
 }
 
 function blackTrees(scene: Scene, built: Set<unknown>, result?: MapBuildResult): void {
@@ -641,8 +656,7 @@ function rockSkirt(scene: Scene, built: Set<unknown>): void {
   const edge = (a: number) => {
     const cx = Math.cos(a), cz = Math.sin(a);
     const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
-    let x = cx * reach, z = cz * reach;
-    if (x > NOTCH.x && z > NOTCH.z) { if (x - NOTCH.x < z - NOTCH.z) x = NOTCH.x; else z = NOTCH.z; }
+    const [x, z] = outOfNotches(cx * reach, cz * reach);
     return { x, z };
   };
   const rocks: Mesh[] = [];
