@@ -39,6 +39,8 @@ function pineForest(scene: Scene, built: Set<unknown>): void {
   let k = 0;
   const pine = (x: number, z: number) => {
     k++;
+    // The ruined building occupies a clearing in the right forest belt.
+    if(x>28&&x<51&&z>19&&z<42) return;
     const tall = 9 + seeded(k, 21) * 5, wide = tall * (0.36 + seeded(k, 22) * 0.06);
     const trunk = MeshBuilder.CreateCylinder("legacyPineTrunk", { height: tall * 0.2, diameter: wide * 0.14, tessellation: 6 }, scene);
     trunk.position.set(x, tall * 0.1, z);
@@ -252,6 +254,7 @@ function churchyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): 
 
 // Right-hand sandstone ruin: broken wall teeth, open doorway and windows, fallen masonry and bare trees.
 function sandstoneRuin(scene: Scene, result: MapBuildResult): void {
+  result.obstacles=result.obstacles.filter(o=>!(o.center.x>28&&o.center.x<51&&o.center.z>19&&o.center.z<42));
   const stone=new StandardMaterial("legacyRuinSandstone",scene);
   stone.diffuseColor.set(0.52,0.43,0.28);stone.emissiveColor.set(0.16,0.13,0.08);
   const bark=new StandardMaterial("legacyRuinDeadwood",scene);bark.diffuseColor.set(0.08,0.075,0.06);
