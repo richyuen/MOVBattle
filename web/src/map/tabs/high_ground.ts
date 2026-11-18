@@ -30,13 +30,29 @@ const WALL_RAMP = { z0: 8, z1: 17, x0: 36, x1: 48, rise: 7 };
 // map's skirmish puts units up there.
 const onWallTop = (x: number, az: number) => x > 28 && x < 36 && az > 5 && az < 20;
 
-export const highGroundHeight: HeightField = (x, z) => {
+/** The drawn ground: low flat, ramp, platform, wall tops and wall ramps (the sheet mesh is shaped by this field). */
+const sheetHeight: HeightField = (x, z) => {
   if (x <= RAMP.foot) return 0;
   if (x < RAMP.top) return ((x - RAMP.foot) / (RAMP.top - RAMP.foot)) * RAMP.high;
   const w = WALL_RAMP, az = Math.abs(z);
   if (onWallTop(x, az)) return RAMP.high + w.rise;
   if (az >= w.z0 && az <= w.z1 && x >= w.x0 && x <= w.x1) return RAMP.high + (w.rise * (w.x1 - x)) / (w.x1 - w.x0);
   return RAMP.high;
+};
+
+// Archers on the bar (598, blocker b2, starvation; wiki high_ground.png: a rank of seven archers stands along the top of the
+// block over the gate, the catapults on the two lower wall tops either side). Spec: the gate block's crown (x 27..37,
+// |z| <= 5.5, 24 m above the low flat) is a standable plateau for units: a unit inside the gate opening (x 27.5..36.5,
+// |z| < 4.6, inside the walls' gate faces) is drawn on the crown, not on the sheet (the field is single-valued, so a unit
+// walking through the gate is drawn up there while it passes: it climbs onto the bar to fight the archers there, as no melee
+// reaches them in TABS). The sheet mesh keeps sheetHeight, so the opening stays open. A team-1 zone over the bar (x 28..36,
+// |z| <= 4) comes first, so the map's skirmish puts its archers' rank up there (its clubbers' rank stands before the gate).
+const BAR_TOP = { x0: 27.5, x1: 36.5, z: 4.6 };
+const onBar = (x: number, az: number) => x > BAR_TOP.x0 && x < BAR_TOP.x1 && az < BAR_TOP.z;
+
+export const highGroundHeight: HeightField = (x, z) => {
+  if (onBar(x, Math.abs(z))) return RAMP.high + 11.5 + 0.5;
+  return sheetHeight(x, z);
 };
 
 function wallFaceColliders(): MapBuildResult["obstacles"] {
@@ -90,7 +106,7 @@ export function buildHighGround(scene: Scene, base: () => MapBuildResult): MapBu
   const kept = bareField(scene, result);
   const mat = gridMaterial(scene, "simKitGridCulled");
   mat.backFaceCulling = true;
-  const sheet = terrainMesh(scene, "highGroundSheet", highGroundHeight, {
+  const sheet = terrainMesh(scene, "highGroundSheet", sheetHeight, {
     width: SHEET.x1 - SHEET.x0,
     depth: SHEET.z1 - SHEET.z0,
     cx: (SHEET.x0 + SHEET.x1) / 2,
@@ -100,7 +116,7 @@ export function buildHighGround(scene: Scene, base: () => MapBuildResult): MapBu
   });
   gridUVs(sheet);
   const obstacles = [...result.obstacles, ...gateWalls(scene)];
-  centreLine(scene, SHEET.z0, SHEET.z1, highGroundHeight(0, 0));
+  centreLine(scene, SHEET.z0, SHEET.z1, sheetHeight(0, 0));
   const hazards = [...kept, ...voidAround([SHEET], { x0: -90, x1: 90, z0: -60, z1: 60 })];
   // Defenders on the walls (592, blocker b2; wiki high_ground.png: the defenders' line stands up on both gate walls). The
   // team-1 zones over the walls now run from the wall front (x 28) back over each wall ramp to the platform's back edge (x 48),
@@ -108,6 +124,7 @@ export function buildHighGround(scene: Scene, base: () => MapBuildResult): MapBu
   // head (x 36), not on the flat before the wall; the right wall's zone first, the left wall's second.
   const placementZones = zonesOn([
     { ...SHEET, x1: -1, team: 0 },
+    { x0: 28, x1: 36, z0: -4, z1: 4, team: 1 },
     { x0: 28, x1: 48, z0: 5, z1: 20, team: 1 },
     { x0: 28, x1: 48, z0: -20, z1: -5, team: 1 },
     { ...SHEET, x0: 1, team: 1 },
