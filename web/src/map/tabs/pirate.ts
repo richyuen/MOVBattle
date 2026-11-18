@@ -10,7 +10,7 @@
 // sunk), centred at x 0 and z +-37 along x, bows to +x (the far one) and -x (the near one); stern castle 8 m long in two tiers to
 // 3.4 m above the deck; masts 17/20/15 m with two yards each; three gangplanks 1.6 m wide from the deck edge (z +-33) down to the sand
 // at z +-27; a row of six cannons on each deck facing the beach. One box collider per hull (outside both armies' zones, |z| <= 29).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -198,6 +198,7 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   galleons(scene, obstacles);
   sandIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   hourglassBeach(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+  bellMountain(scene, obstacles);
   return { ...result, obstacles, hazards };
 }
 
@@ -226,4 +227,120 @@ function hourglassBeach(scene: Scene, built: Set<unknown>): void {
   const data=new VertexData();data.positions=positions;data.indices=indices;data.normals=normals;
   const beach=new Mesh("pirateHourglassBeach",scene);data.applyToMesh(beach);beach.material=sand;
   beach.convertToFlatShadedMesh();beach.receiveShadows=true;
+}
+
+// Bell mountain (583, wiki pirate.png and card Overview: at the narrow end of the beach a grassy rock mountain rises out
+// of the shallows, a heap of big tan boulders with green ledges, palms growing from the ledges and the foot, a white
+// waterfall down its beach face into a foam pool, and a huge wooden bell hanging in a timber frame on its summit). Spec:
+// centre (60, 0), past the beach's +x tip; four tiers of faceted boulders round a core, ring radius 11 / 8 / 5.5 / 3 m at
+// y 0 / 5 / 10.5 / 15, to about 19 m; flattened green caps on the three lower tiers; seven palms 4.5-6.5 m (leaning
+// four-piece trunks, seven drooping fronds) on the ledges and at the foot; the fall 1.8 m wide in two leaning runs from
+// y 13 down the -x face; the bell 3.2 m across under a 5 m A-frame. One cylinder collider, radius 10.5 (the stage armies
+// stand at x <= 41.4).
+function bellMountain(scene: Scene, obstacles: Obstacle[]): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    rock: mk("pirateMountainRock", new Color3(0.5, 0.43, 0.32), 0.35),
+    grass: mk("pirateMountainGrass", new Color3(0.3, 0.5, 0.13), 0.35),
+    trunk: mk("pirateMountainPalmTrunk", new Color3(0.42, 0.3, 0.18), 0.35),
+    frond: mk("pirateMountainPalmFrond", new Color3(0.14, 0.42, 0.11), 0.35),
+    water: mk("pirateMountainFall", new Color3(0.78, 0.94, 0.98), 0.7),
+    bell: mk("pirateMountainBell", new Color3(0.3, 0.19, 0.1), 0.35),
+    gold: mk("pirateMountainBellRim", new Color3(0.9, 0.68, 0.22), 0.45),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { rock: [], grass: [], trunk: [], frond: [], water: [], bell: [], gold: [] };
+  const rnd = (i: number, s: number) => {
+    const raw = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453;
+    return raw - Math.floor(raw);
+  };
+  const CX = 60, CZ = 0;
+  const lump = (key: keyof typeof mats, sx: number, sy: number, sz: number, x: number, y: number, z: number, i: number) => {
+    const m = MeshBuilder.CreateIcoSphere("pirateMountainPart", { radius: 0.5, subdivisions: 1 }, scene);
+    m.scaling.set(sx, sy, sz);
+    m.rotation.set(rnd(i, 5) * 0.5, rnd(i, 6) * 6.28, rnd(i, 7) * 0.5);
+    m.position.set(x, y, z);
+    parts[key].push(m);
+  };
+  let k = 0;
+  const tiers = [[11, 6.5, 0, 9], [8, 7, 5, 7], [5.5, 6.5, 10.5, 5], [3, 5, 15, 3]];
+  tiers.forEach(([ring, size, y, count], t) => {
+    lump("rock", ring * 1.5, size * 1.5, ring * 1.5, CX, y + size * 0.4, CZ, ++k);
+    for (let j = 0; j < count; j++) {
+      const a = (j / count) * 6.28 + t * 0.7, r = ring * (0.55 + rnd(++k, 1) * 0.35);
+      lump("rock", size * (1.1 + rnd(k, 2) * 0.5), size * (1 + rnd(k, 3) * 0.6), size * (1 + rnd(k, 4) * 0.4), CX + Math.cos(a) * r, y + size * 0.35, CZ + Math.sin(a) * r, k);
+      if (t < 3 && j % 2 === 0) lump("grass", size * 0.85, 0.7, size * 0.75, CX + Math.cos(a + 0.3) * r * 1.05, y + size * 0.92, CZ + Math.sin(a + 0.3) * r * 1.05, k + 40);
+    }
+  });
+  lump("grass", 4.2, 0.8, 4.2, CX, 18.4, CZ, 90);
+  // Palms on the ledges and at the foot
+  const up = Vector3.Up();
+  const palm = (x: number, y: number, z: number, tall: number, i: number) => {
+    const lean = rnd(i, 11) * 6.28;
+    let at = new Vector3(x, y, z);
+    for (let s = 0; s < 4; s++) {
+      const tilt = 0.08 + s * 0.11;
+      const dir = new Vector3(Math.sin(tilt) * Math.cos(lean), Math.cos(tilt), Math.sin(tilt) * Math.sin(lean));
+      const seg = MeshBuilder.CreateCylinder("pirateMountainPalm", { height: tall / 4 + 0.1, diameterBottom: 0.5 - s * 0.07, diameterTop: 0.43 - s * 0.07, tessellation: 6 }, scene);
+      seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, dir, new Quaternion());
+      seg.position = at.add(dir.scale(tall / 8));
+      parts.trunk.push(seg);
+      at = at.add(dir.scale(tall / 4));
+    }
+    for (let f = 0; f < 7; f++) {
+      const fa = (f / 7) * 6.28 + lean;
+      const dir = new Vector3(Math.cos(fa), -0.32 - (f % 2) * 0.2, Math.sin(fa)).normalize();
+      const frond = MeshBuilder.CreateCylinder("pirateMountainFrond", { height: 3, diameterBottom: 1.1, diameterTop: 0, tessellation: 4 }, scene);
+      frond.scaling.z = 0.22;
+      frond.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, dir, new Quaternion());
+      frond.position = at.add(dir.scale(1.5));
+      parts.frond.push(frond);
+    }
+  };
+  [[-10.5, 0, 6, 6], [-9.5, 0, -7.5, 5.2], [-3, 0, 12, 6.5], [-6.5, 7.5, -4, 5], [-3.5, 8, 7, 4.8], [4, 9, -6.5, 5.5], [-2.5, 14, -2.5, 4.5]]
+    .forEach(([dx, y, dz, tall], i) => palm(CX + dx, y, CZ + dz, tall, i + 1));
+  // The fall down the beach face, and its foam
+  for (const [x, y, len, tilt] of [[-5.4, 10, 7, -0.5], [-8.3, 3.6, 8, -0.22]]) {
+    const run = MeshBuilder.CreateBox("pirateMountainFall", { width: 0.35, height: len, depth: 1.8 }, scene);
+    run.rotation.z = tilt;
+    run.position.set(CX + x, y, CZ + 1.5);
+    parts.water.push(run);
+  }
+  lump("water", 4.5, 0.5, 5, CX - 10, 0.15, CZ + 1.5, 95);
+  // The bell in its frame on the summit
+  for (const s of [-1, 1]) {
+    const post = MeshBuilder.CreateCylinder("pirateMountainBellPost", { height: 5.6, diameter: 0.4, tessellation: 6 }, scene);
+    post.rotation.x = s * 0.3;
+    post.position.set(CX - 0.5, 20.6, CZ + s * 1.9);
+    parts.bell.push(post);
+  }
+  const beam = MeshBuilder.CreateBox("pirateMountainBellBeam", { width: 0.45, height: 0.45, depth: 3.6 }, scene);
+  beam.position.set(CX - 0.5, 23.2, CZ);
+  parts.bell.push(beam);
+  const bell = MeshBuilder.CreateCylinder("pirateMountainBell", { height: 2.8, diameterTop: 1.3, diameterBottom: 3.2, tessellation: 10 }, scene);
+  bell.position.set(CX - 0.5, 21.2, CZ);
+  parts.bell.push(bell);
+  const crown = MeshBuilder.CreateSphere("pirateMountainBellCrown", { diameter: 1.4, segments: 6 }, scene);
+  crown.position.set(CX - 0.5, 22.6, CZ);
+  parts.bell.push(crown);
+  const rim = MeshBuilder.CreateCylinder("pirateMountainBellRim", { height: 0.3, diameter: 3.45, tessellation: 10 }, scene);
+  rim.position.set(CX - 0.5, 19.85, CZ);
+  parts.gold.push(rim);
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true, true);
+    if (!merged) continue;
+    merged.name = `pirateMountain_${key}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+  obstacles.push({ type: "cylinder", center: new Vector3(CX, 0, CZ), radius: 10.5 });
 }
