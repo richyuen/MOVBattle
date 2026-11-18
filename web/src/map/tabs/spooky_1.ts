@@ -426,6 +426,8 @@ function deadTrees(scene: Scene, built: Set<unknown>): void {
     const { x, z } = mesh.position;
     if (!onPlateau(x, z)) continue;
     mesh.setEnabled(false);
+    // The rim set pieces stand in clearings of the wood (587).
+    if (RIM_PIECES.some((p) => Math.hypot(p.x - x, p.z - z) < p.clear)) continue;
     k++;
     // Two of every five ring trunks stay bare ground: the wood is a broken line of separate black trees, not a fence.
     if (k % 5 === 1 || k % 5 === 3) continue;
@@ -454,6 +456,97 @@ function deadTrees(scene: Scene, built: Set<unknown>): void {
   merged.material = bark;
   merged.receiveShadows = true;
   merged.isPickable = false;
+}
+
+// Rim set pieces ([R] 587 on a1-a3; spec from the 581, 582 and 585 CONFIRM lists, read off reference/maps/wiki/spooky_1.png and
+// reference/stages/spooky.bone.png). The far rim's skyline is not trees alone:
+// - Watchtower: right of centre on the far (+z) rim behind the graveyard, at (33, 33.5), in a clearing 5 m round. A square dark
+//   stone tower 13 m high, 4.6 m at the foot tapering to 4 m, on a 5.4 m plinth 0.8 m high; at the top a projecting crown 5.2 m
+//   wide and 1.3 m deep with three corner merlons 1.1 m high (the fourth broken off, a jagged stub in its place). Stone near
+//   black navy (0.07, 0.07, 0.1), barely self-lit, kept in the glow pass (dark solid). Eleven small lit windows 0.5 x 0.85 m
+//   spread up its four faces at uneven heights, warm yellow (1.3, 0.95, 0.35) self-lit, out of the glow so they stay crisp.
+//   Collider r 2.7.
+// - Broken pillar: left of centre on the far (+x) rim seen from the ground camera, at (47, 7), in a clearing 4 m round. A grey
+//   square column 1.5 m thick and 10.5 m high on a 2.4 m plinth, leaning 4 degrees, its top snapped: a tilted capital block
+//   1.8 x 1.1 x 1.8 m hangs off one side; a fallen drum 1.4 x 2.8 m lies at its foot. Grey stone (0.3, 0.32, 0.4) self 0.3, in
+//   the glow pass. Collider r 1.4.
+// - Light pools: the only pools are the candles' small orange flames. The large soft red discs on the grass were the glow
+//   layer's bloom of the pumpkin bodies (orange-red self-light): the bodies leave the glow pass, the lit eyes, mouths and
+//   flames stay in it.
+const RIM_PIECES = [
+  { x: 33, z: 33.5, clear: 5 },
+  { x: 47, z: 7, clear: 4 },
+];
+
+function rimSetPieces(scene: Scene, result: MapBuildResult): void {
+  const mat = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c; m.emissiveColor = c.scale(self); m.specularColor = Color3.Black();
+    return m;
+  };
+  const glow = scene.getGlowLayerByName("glow");
+  for (const mesh of scene.meshes) if (mesh.name === "spooky1JackOLantern") glow?.addExcludedMesh(mesh as Mesh);
+
+  const box = (parts: Mesh[], w: number, h: number, d: number, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
+    const b = MeshBuilder.CreateBox("spooky1RimPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z); b.rotation.set(rx, ry, rz);
+    parts.push(b);
+    return b;
+  };
+  const merge = (parts: Mesh[], name: string, m: StandardMaterial, inGlow: boolean) => {
+    const merged = Mesh.MergeMeshes(parts, true, true);
+    if (!merged) return;
+    merged.name = name; merged.material = m; merged.isPickable = false; merged.receiveShadows = false;
+    if (!inGlow) glow?.addExcludedMesh(merged);
+  };
+
+  // Watchtower.
+  const [tx, tz] = [33, 33.5];
+  const stone: Mesh[] = [];
+  box(stone, 5.4, 0.8, 5.4, tx, 0.4, tz);
+  const shaft = MeshBuilder.CreateCylinder("spooky1RimPart", { height: 13, diameterBottom: 4.6 * Math.SQRT2, diameterTop: 4 * Math.SQRT2, tessellation: 4 }, scene);
+  shaft.rotation.y = Math.PI / 4; shaft.position.set(tx, 0.8 + 6.5, tz);
+  stone.push(shaft);
+  box(stone, 5.2, 1.3, 5.2, tx, 14.45, tz);
+  box(stone, 4.4, 0.35, 4.4, tx, 13.65, tz);
+  for (const [i, [sx, sz]] of [[-1, -1], [1, -1], [-1, 1], [1, 1]].entries()) {
+    const cx = tx + sx * 2.15, cz = tz + sz * 2.15;
+    if (i === 3) box(stone, 1, 0.45, 1, cx, 15.3, cz, 0.15, 0.4, -0.2);
+    else box(stone, 1, 1.1, 1, cx, 15.65, cz);
+  }
+  box(stone, 0.9, 0.5, 0.5, tx - 2.15, 15.35, tz + 0.2);
+  merge(stone, "spooky1Watchtower", mat("spooky1TowerStone", new Color3(0.07, 0.07, 0.1), 0.25), true);
+  const windows: Mesh[] = [];
+  const faceHalf = (y: number) => (4.6 - (4.6 - 4) * ((y - 0.8) / 13)) / 2 + 0.04;
+  const slots: [number, number, number][] = [
+    [0, -0.9, 4.2], [0, 0.8, 8.1], [0, -0.3, 11.6],
+    [1, 0.6, 5.6], [1, -0.7, 9.8],
+    [2, 0.2, 3.4], [2, -0.8, 7.2], [2, 0.9, 11.1],
+    [3, -0.5, 6.1], [3, 0.7, 9.3], [3, 0, 12.2],
+  ];
+  for (const [face, along, y] of slots) {
+    const h = faceHalf(y);
+    const [nx, nz] = [[-1, 0], [0, -1], [1, 0], [0, 1]][face];
+    const wx = tx + nx * h + (nx === 0 ? along : 0), wz = tz + nz * h + (nz === 0 ? along : 0);
+    box(windows, nx === 0 ? 0.5 : 0.08, 0.85, nz === 0 ? 0.5 : 0.08, wx, y, wz);
+  }
+  merge(windows, "spooky1TowerWindows", mat("spooky1TowerWindow", new Color3(1.3, 0.95, 0.35), 1), false);
+  result.obstacles.push({ type: "cylinder", center: new Vector3(tx, 0, tz), radius: 2.7 });
+
+  // Broken pillar.
+  const [px, pz] = [47, 7];
+  const grey: Mesh[] = [];
+  box(grey, 2.4, 0.7, 2.4, px, 0.35, pz);
+  const lean = 0.07;
+  box(grey, 1.5, 10.5, 1.5, px + Math.sin(lean) * 5.25, 0.7 + 5.25, pz, 0, 0, -lean);
+  const topX = px + Math.sin(lean) * 10.5;
+  box(grey, 1.8, 1.1, 1.8, topX + 0.55, 11.35, pz - 0.3, 0.2, 0.5, -0.38);
+  box(grey, 0.9, 0.7, 0.8, topX - 0.35, 11.1, pz + 0.35, -0.3, 0.2, 0.25);
+  const drum = MeshBuilder.CreateCylinder("spooky1RimPart", { height: 2.8, diameter: 1.4, tessellation: 6 }, scene);
+  drum.rotation.set(Math.PI / 2, 0.6, 0); drum.position.set(px - 2.6, 0.7, pz + 2.2);
+  grey.push(drum);
+  merge(grey, "spooky1BrokenPillar", mat("spooky1PillarStone", new Color3(0.3, 0.32, 0.4), 0.3), true);
+  result.obstacles.push({ type: "cylinder", center: new Vector3(px, 0, pz), radius: 1.4 });
 }
 
 // Rim offerings: ribbed orange lanterns with lit eyes/mouths, beside irregular groups of ivory candles.
@@ -504,6 +597,7 @@ export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuild
   const restore = nightSky(scene, built);
   graveyard(scene, built, result);
   rimOfferings(scene);
+  rimSetPieces(scene, result);
   leftDescent(scene, result);
   return { ...result, dispose: () => { restore(); result.dispose?.(); } };
 }
