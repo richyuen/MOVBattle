@@ -12,6 +12,7 @@
 // self-light (.22,.17,.02). The deck's corners overhang the base island's oval (drawn only; the base's hazards are unchanged).
 import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, Vector3, VertexBuffer, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
+import { cloudBanks, paleSky } from "./simKit";
 
 const DECK = { x: 52, z: 40, depth: 4, tileM: 4, tilePx: 512, kerbW: 0.7, kerbH: 0.35 };
 
@@ -409,12 +410,27 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
   return { ...result, obstacles };
 }
 
+// Heaven sky (594, blocker a5; heaven_good.png, wiki fantasy_good.png: a clear, fairly saturated pale-blue sky, paler toward the
+// horizon, with big heaped white cloud banks standing round and below the island; no grey haze, no mountain range or second
+// island behind it). Spec: the base's far range and second slab ("mountain*") and its small clouds ("cloud*") hidden; the kit
+// sky (simKit paleSky: untoned gradient sphere, fog and clear colour the horizon tone) with zenith sRGB (112,182,228) and horizon
+// (198,224,240) over 0.3 rad; five kit cloud banks behind and beside the field at z 160-230, y -30..0 (in the island shot's sky
+// band), 150-210 m wide. Fog and clear colour are put back on dispose.
+function heavenSky(scene: Scene, built: Set<unknown>): () => void {
+  for (const m of scene.meshes) if (built.has(m) && /^(mountain|cloud)/.test(m.name)) m.setEnabled(false);
+  const restore = paleSky(scene, [112, 182, 228], [198, 224, 240], 0.3);
+  cloudBanks(scene, [[-170, -18, 200, 180], [10, -6, 230, 210], [180, -22, 195, 170], [-260, -28, 90, 150], [260, -30, 100, 150]]);
+  return restore;
+}
+
 export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  const restoreSky = heavenSky(scene, built);
   const { stone, gold } = marbleDeck(scene, built);
   const opened = openCentre(scene, built, result, stone, gold);
   const walled = parapets(scene, built, opened, stone, gold);
-  return gateTowers(scene, pits(scene, built, walled, stone, gold), stone, gold);
+  const done = gateTowers(scene, pits(scene, built, walled, stone, gold), stone, gold);
+  return { ...done, dispose: () => { restoreSky(); done.dispose?.(); } };
 }
