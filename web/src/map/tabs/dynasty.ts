@@ -528,29 +528,54 @@ function sideBridges(scene: Scene, result: MapBuildResult): void {
 // vertical island edge, with irregular green ledges; no hanging stalactites.
 function columnCliffs(scene: Scene, built: Set<unknown>): void {
   for(const m of scene.meshes)if(built.has(m)&&/^(islandUnder|islandShelf|islandCliff)/.test(m.name))m.setEnabled(false);
-  const stone=new StandardMaterial("dynastyColumnRock",scene);
-  stone.diffuseColor.set(0.2,0.4,0.48);stone.emissiveColor.set(0.06,0.12,0.14);stone.specularColor=Color3.Black();
+  // Boulder cliffs (596, blocker a4; reference/maps/dynasty.png: the island's sides are heaped, lumpy grey-blue boulders of
+  // unequal size, some tall and blocky, others rounded, with bright green moss lying on their ledges, the mass bulging under
+  // the corners and tapering below; not a palisade of equal saturated-blue five-sided columns). Spec: along the same edge
+  // (square with chamfered corners and the front-left notch) three courses of faceted icosphere boulders: course c (0..2)
+  // with tops at -0.2 - 5.5c m, inset 0.8 + 3.5c m, every 3.2 m (course 2 every 4.5 m), radius 2.2-3.8 m shrinking 15% a
+  // course, stretched 1.1-1.7 tall and 0.8-1.2 across with a seeded yaw, so the faces read as blocky irregular crags; at the
+  // chamfered corners a 4th course 21 m down. Grey-blue (.42,.52,.58) self .4 (it faces away from the sun), no shadows
+  // received. Moss: on every second top-course boulder and every fourth lower one a flattened green ball on its top ledge
+  // (the lawn material). The cliff still opens round each waterfall (|x - outlet| < 2.6 + 0.8 r on the front face).
+  const stone=new StandardMaterial("dynastyCliffBoulder",scene);
+  stone.diffuseColor.set(0.42,0.52,0.58);stone.emissiveColor.set(0.17,0.21,0.23);stone.specularColor=Color3.Black();
   const turf=scene.getMaterialByName("dynastyGreenLawn")!;
   const rocks: Mesh[]=[],caps: Mesh[]=[];
-  // Follow the square's chamfered corners and the existing near-left notch.
   const edge=[[-36,-30],[-36,-47],[41,-47],[53,-36],[53,36],[41,47],[-41,47],[-53,36],[-53,-30],[-36,-30]];
+  const hash=(i:number,s:number)=>{const v=Math.sin(i*12.9898+s*78.233)*43758.5453;return v-Math.floor(v);};
   let k=0;
-  for(let e=1;e<edge.length;e++) {
-    const [ax,az]=edge[e-1],[bx,bz]=edge[e],n=Math.ceil(Math.hypot(bx-ax,bz-az)/3);
-    for(let j=0;j<n;j++,k++) {
-      const t=(j+0.5)/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t,h=10+Math.sin(k*1.7)*2.5;
-      if(z<-46&&OUTLETS.some((o)=>Math.abs(x-o)<2.6))continue; // 595: the cliff opens round each waterfall
-      const c=MeshBuilder.CreateCylinder("dynastyCliffColumn",{height:h,diameterTop:4.4,diameterBottom:3.8,tessellation:5},scene);
-      c.position.set(x,-h/2-0.15,z);c.rotation.y=k*0.7;rocks.push(c);
-      if(k%3===0) {
-        const cap=MeshBuilder.CreateIcoSphere("dynastyCliffTurf",{radius:1.8,subdivisions:1},scene);
-        cap.position.set(x,-0.7-(k%4)*1.3,z);cap.scaling.set(1.1,0.22,1.1);caps.push(cap);
+  for(let c=0;c<4;c++) {
+    const step=c===2?4.5:c===3?6:3.2;
+    for(let e=1;e<edge.length;e++) {
+      const [ax,az]=edge[e-1],[bx,bz]=edge[e],len=Math.hypot(bx-ax,bz-az),n=Math.max(1,Math.round(len/step));
+      const corner=Math.abs(bx-ax)>1&&Math.abs(bz-az)>1;
+      if(c===3&&!corner)continue;
+      for(let j=0;j<n;j++,k++) {
+        const t=(j+0.5+(hash(k,1)-0.5)*0.4)/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;
+        const r=(2.2+hash(k,2)*1.6)*(1-0.15*c)*(corner?1.2:1);
+        if(z<-46&&OUTLETS.some((o)=>Math.abs(x-o)<2.6+0.8*r))continue; // 595: the cliff opens round each waterfall
+        // inset toward the island's middle
+        const inset=0.8+3.5*c, top=-0.2-5.5*c-(c===3?5:0), sy=1.1+hash(k,3)*0.6, rl=Math.hypot(x,z)||1;
+        const px=x-(x/rl)*inset, pz=z-(z/rl)*inset;
+        const b=MeshBuilder.CreateIcoSphere("dynastyCliffBoulder",{radius:r,subdivisions:1,flat:true},scene);
+        b.scaling.set(0.8+hash(k,4)*0.4,sy,0.8+hash(k,5)*0.4);
+        b.rotation.y=hash(k,6)*6.28;
+        b.position.set(px,top-r*sy,pz);
+        b.bakeCurrentTransformIntoVertices();
+        rocks.push(b);
+        if((c===0&&k%2===0)||(c>0&&k%4===0)) {
+          const cap=MeshBuilder.CreateIcoSphere("dynastyCliffMoss",{radius:r*0.75,subdivisions:1,flat:true},scene);
+          cap.scaling.set(1.1,0.25,1.1);
+          cap.position.set(px,top-0.1-(c===0?0.25:0),pz);
+          cap.bakeCurrentTransformIntoVertices();
+          caps.push(cap);
+        }
       }
     }
   }
-  for(const [parts,mat,name] of [[rocks,stone,"dynastyColumnCliffs"],[caps,turf,"dynastyColumnLedges"]] as const) {
-    const merged=Mesh.MergeMeshes(parts,true);if(!merged)continue;
-    merged.material=mat;merged.name=name;merged.convertToFlatShadedMesh();merged.receiveShadows=true;
+  for(const [parts,mat,name] of [[rocks,stone,"dynastyBoulderCliffs"],[caps,turf,"dynastyCliffMoss"]] as const) {
+    const merged=Mesh.MergeMeshes(parts,true,true);if(!merged)continue;
+    merged.material=mat;merged.name=name;merged.convertToFlatShadedMesh();merged.receiveShadows=false;merged.isPickable=false;
   }
 }
 
