@@ -106,6 +106,9 @@ const POSE = {
   ground: { target: { x: 12, y: 2, z: 0 }, radius: 42, alpha: Math.PI, beta: 1.38 },
 };
 const TRIBAL_SANDBOX_OVERVIEW = { island: 218, top: 176 };
+// Hill: the default ground pose sits at the ramp's foot looking into its face, so the slope never shows; a raised three-quarter
+// view from the front-left corner takes in the flat, the whole ramp and the crest (589)
+const POSE_OVERRIDE = { "map.hill": { ground: { target: { x: 0, y: 6, z: 0 }, radius: 50, alpha: Math.PI - 0.5, beta: 1.2 } } };
 const frame = (page, p) => page.evaluate((q) => window.game.frameCamera(q.target, q.radius, q.alpha, q.beta, q.radiusLimit), p);
 
 /** Battle on to a result in 2 s steps; the state, the time, and anyone left standing in a hazard. */
@@ -131,7 +134,7 @@ async function mapScene(page, item) {
   if (layout.mapId !== item) summary.notes.push(`${item}: loaded ${layout.mapId} instead`);
   if (checkOnly) { summary.items[item] = rec; return; }
   for (const pose of ["island", "top", "ground"]) {
-    const view = POSE[pose];
+    const view = POSE_OVERRIDE[item]?.[pose] ?? POSE[pose];
     const radius = item === "map.tribal_sandbox" ? TRIBAL_SANDBOX_OVERVIEW[pose] : undefined;
     await frame(page, radius ? { ...view, radius, radiusLimit: radius } : view);
     await shot(page, `${p}${pose}`);
