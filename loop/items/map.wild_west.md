@@ -1,25 +1,23 @@
 # map.wild_west
-Status: open   Audited: 576 (AUDIT x2), 582 (CONFIRM: failed a, b)   Done: -
+Status: open   Audited: 576 (AUDIT x2), 582 (CONFIRM: failed a, b), 584 (CONFIRM: passed b; failed a)   Done: -
 ## Verdicts
-a FAIL (583: struck 1): 2. Ground palette in map_wild_west_ground.png — TABS: the street is light peach sand under the warm sunset; ours is a dark, strongly rust-red surface dominating the frame (ref: reference/stages/wild_west.leading_cacti.png).
-b FAIL (583: struck 1): 2. Inner rank's east end in map_wild_west_top.png — TABS: the enemy's street stays open, storefronts standing well back from where the armies form up, not a side wall 6 m from the line that hides it from the player's half (ref: reference/stages/wild_west.leading_cacti.png)
-c PASS (583 judge)
+a FAIL (plateau; 0 since 584): 1. the near row of five town buildings in map_wild_west_island (lower half of the frame) and map_wild_west_top (bottom of the frame) reads as sand-coloured, see-through boxes with dark smears, with no wall colour or solid roof — TABS: the near buildings are solid dark-wood blocks under slate-blue roofs, as crisp as the far row (ref: reference/maps/western.png, reference/maps/wiki/wild_west.png) 2. the sky and backdrop in map_wild_west_island and map_wild_west_ground are a drab grey-tan — TABS: a warm peach-orange sunset sky that lightens to cream-yellow around the sun (ref: reference/maps/western.png, reference/stages/wild_west.bullets_and_chains.png)
+b PASS (584: struck 2; CONFIRM 584)
+c PASS (584 judge)
 
 ## Ranked gaps
-1. [S] b inner rank against the enemy line — blocker 2: shift the third ROWS entry west and inward (about x -10..11) or cut it to one building, 15 m or more clear of x 28.6 — ref: reference/stages/wild_west.leading_cacti.png — ours: stage_wild_west.leading_cacti_army.png
-2. [S] a sandy street — blocker 2: peach sand floor and tufts (about (0.9,0.66,0.5)) as a surface mechanism, not a colour swap alone — ref: reference/stages/wild_west.leading_cacti.png — ours: map_wild_west_ground.png
+1. [R] a near-side block and sky — blockers 1, 2: rebuild the town's rear faces and roofs (boarded back walls, solid slate roofs, in the glow pass so nothing veils them) and the sunset sky as an own fog-free backdrop sphere, peach to cream round the sun — ref: reference/maps/western.png, reference/stages/wild_west.bullets_and_chains.png — ours: map_wild_west_island.png
 
 ## Attempts (iter | gap | criterion | verdict)
-583 | [S] timber storefronts 17a180c4, b25c16e2 | a1 | APPROVE, struck a1
-583 | [S] inner rank 35137805 | b1 | APPROVE, struck b1; added b2
+584 | [S] inner rank to x -22..-0.6 40f76430 | b2 | APPROVE, struck b2; CONFIRM b PASS
+584 | [S] sand street 397ce937, 5deb40d9, 86d685ef | a2 | APPROVE, struck a2; CONFIRM a FAIL (second) -> plateau
+583 | [S] timber storefronts 17a180c4, b25c16e2; inner rank 35137805 | a1, b1 | 2 APPROVE, struck a1, b1; added b2
 582 | [S] crooked rock masses 61cfb0a4 | a3 | APPROVE, struck a3; first CONFIRM failed a,b
-581 | [S] arches dc051619; street rows c305d702; round plaza 1f0d6c88 | a3, b1, b4 | 3 APPROVE, struck b1, b4
-580 | [S] chapel 07b08bd1; base cd907413; mesa ridge 514d0cf8 | a, b | APPROVE, struck a5, a6, b2
-576-578 | [S] town rows, barricade removed, desert rim, sunset sky | a, b | 4 APPROVE, struck a1, a2, a4, b3
+576-581 | [S] town rows, barricade, desert rim, sunset sky, chapel, base, mesa ridge, arches, street rows, round plaza | a, b | 11 APPROVE
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
 - Stages: wild_west.leading_cacti, bullets_and_chains, lone_ranger_and_his_friends (enemies x 28.6..35.5, z -25..-11). Zones x +-(27..61), z -27..-9 and 9..27.
-- 583: the inner rank (z -23.5, x 2..23.4) fills the right 45% of those three stages' _army shots: clear it before stages_wild_west is audited.
-- Critic 583: the near-side block shows blank purple backs with dark smudges in the island shot (TABS: slate roofs, boarded rear walls).
+- a is plateau (CONFIRM failed it at 582 and 584): the [R] is specified from both lists (output/loop/iter-582/confirm.md, iter-584/confirm.md). The town meshes are excluded from the glow: seen from behind they wear the bright sand as a veil (LESSONS, glow).
+- Critic 584 leftovers below a blocker: sand a shade pale, ripples read as straight strokes in the top shot.

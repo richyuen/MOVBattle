@@ -18,7 +18,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Never run a capture with a test --iter number: pruneOld keeps only summary.json for iterations older than 10 (guarded by STATE's Iteration); test into look/ (no --iter).
 - A capture wipes iter-N unless --add: save audit/critic files after the step's last capture; an audit iteration's step 5 runs with --add (555). A step-5 capture (~80 shots) takes ~12 min: background it.
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
-- Probes (loop/scripts/probes/, repo root, --build after source changes) were written for units: read one before trusting it on a map.
+- Probes (loop/scripts/probes/, --build after source changes) were written for units: read one before trusting it on a map.
 - In-page probe on the dev server (5173): import the @babylonjs_core.js?v=... URL from performance.getEntriesByType("resource"); its EngineStore.LastCreatedScene is the live scene after game.loadMapForCapture(id).
 
 ## Maps and stages
@@ -34,7 +34,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - The map ground pose (alpha pi, target x 12) looks +x from x -29 across z ~0: props in a front or back corner never show in it; name the top shot for those.
 - The translucent box framing maps in the top shot is those zone slabs too (createPlacementGuides), a map mesh. Island underside = islandUnder + islandShelf + islandCliff (merged crags); farmer_1's earthBowl replaces them. MeshBuilder.CreatePolygon needs earcut (absent): fan a ribbon to a hub instead.
 - The island shot (capture-world island pose; ArcRotate upperRadiusLimit clamps it to radius 120, elevation ~16 deg) foreshortens the underside hard: an underside must be ~0.3-0.4 of the island width deep (tribal tiers 16/13/10 m) or it reads as a thin band; farmer_1's 22 m bowl shows only ~7 m (559).
-- A `*/` inside a doc comment (e.g. "overlay_*/border_*") closes it: tsc then fails with dozens of parse errors.
+- A `*/` inside a doc comment (e.g. "overlay_*/border_*") closes it: tsc then fails with parse errors.
 - Round island (560): base lawn ("ground", "centerGrass") and underside follow islandRim (superellipse 54 x 48, power 3); remap vertices radially. hazeTreeline is one merged mesh: hide it whole. Base trunks are unparented (crowns are children); skip disabled trunks.
 - Scene fog is linear and re-keyed every frame by main.ts (fogStart/End from the camera radius): a map's fogDensity does nothing. Draw haze instead (inside-facing translucent mist walls, viking 572).
 - Farmer base ring trees are oaks ("oakCrown" lumps on oakLeaves/oakLeavesDark): recolour those, not canopy (561). A raised drawn-only set piece can carry units via MapBuildResult.height (farmer_1 bridgeHeight).
@@ -47,12 +47,12 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - The shared skyDome covers clearColor. A map can hide/restore it and draw its own fog-free, unlit sky sphere (Legacy 582).
 - Night snow under blue moonlight: warm the diffuse to cancel the light's tint, carry the pale tone in self-light, and drop the field from the glow (farmer_snow 573, CONFIRM passed).
 - Turf caps on cliff columns flicker when their top faces share a plane with the cliff or meadow. Set the cap slightly below the meadow and the shaft top inside the cap (Medieval 1, 567).
-- The sandboxed shell blocks the capture's loopback calls to Vite: run captures with local network access.
+- The sandboxed shell blocks the capture's loopback to Vite: run captures unsandboxed.
 - Grass: thin-instance fans of six thin blades with up-facing normals read as grass (legacy 583); flattened IcoSpheres read fuzzy from afar but as paving stones from a stage's low camera (spooky_1 583), upright ones as stones; leaf cards as beige flags (571).
 - Mesh.MergeMeshes returns null past 65536 vertices unless allow32BitsIndices is passed, leaving every part unmerged on the default white material: use (parts, true, true) for big merges (spooky_1's white trees, 582).
-- A merged boulder heap that receives shadows can shadow itself near black: receiveShadows false, self-light 0.6 (pirate 583).
-- Varied-height cliff buttresses can leave sky below continuous ledges. Back the ledges with a skirt down to the adjoining tier and check the ground shot.
-- Buildings near a stage's line hide its army from the low camera (Ancient 1; wild_west 583).
-- Hazards a builder adds get no overlay (base() drew them): draw them yourself (578).
+- A boulder heap receiving shadows shadows itself near black: receiveShadows false, self-light 0.6 (pirate 583).
+- Back cliff ledges with a skirt or sky shows below; where blocks leave gaps the skirt reads as a flat band (584).
+- Buildings near a stage's line hide its army (Ancient 1; wild_west 583): the stage camera sits ~24 m west of the army.
+- Hazards a builder adds get no overlay: draw them (578). A self-lit floor in the glow pass blooms white: exclude it (wild_west 584).
 - Recess a descent before merging cliff columns (579). A concave bank needs longitudinal strips: a hub fan can cross the recess and invert triangles (581).
-- An emissive bed under iron bars stayed black after two follow-ups (579): prove it in a look first.
+- Embers under a grate show only between flat bars (4 cm proud): 0.2 m bars hid the bed from every camera (579, 584).
