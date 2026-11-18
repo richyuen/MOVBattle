@@ -212,11 +212,30 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
   });
 }
 
+// Canal immediately behind the front house terrace, with quays and two short arched crossings.
+function frontCanal(scene: Scene): void {
+  const water=new StandardMaterial("renaissanceCanalGreen",scene);
+  water.diffuseColor.set(0.025,0.34,0.2);water.emissiveColor.set(0.025,0.22,0.13);water.specularColor=Color3.Black();
+  const stone=new StandardMaterial("renaissanceCanalQuay",scene);
+  stone.diffuseColor.set(0.65,0.59,0.47);stone.emissiveColor.set(0.2,0.18,0.14);
+  const box=(w:number,h:number,d:number,x:number,y:number,z:number,mat=stone)=>{
+    const m=MeshBuilder.CreateBox("renaissanceCanal",{width:w,height:h,depth:d},scene);m.position.set(x,y,z);m.material=mat;scene.getGlowLayerByName("glow")?.addExcludedMesh(m);return m;
+  };
+  box(86,0.12,5,0,0.08,-27.4,water);
+  for(const z of [-24.7,-30.1]) box(87,0.4,0.45,0,0.22,z);
+  for(const x of [-26,26]) for(let i=0;i<12;i++) {
+    const z=-30.1+i*0.48,y=0.35+Math.sin(i/11*Math.PI)*0.75;
+    const deck=box(3.2,0.25,0.6,x,y,z);deck.rotation.x=Math.cos(i/11*Math.PI)*0.42;
+    for(const s of [-1,1]) box(0.18,0.8,0.6,x+s*1.55,y+0.5,z);
+  }
+}
+
 export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   rectangularPiazza(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   dogesPalace(scene);
+  frontCanal(scene);
   const obstacles = [...result.obstacles, { type: "box" as const, center: new Vector3(0, 0, PALACE.z + PALACE.deep / 2), halfX: PALACE.wide / 2, halfZ: PALACE.deep / 2 }];
   return { ...result, obstacles };
 }
