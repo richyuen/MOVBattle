@@ -403,7 +403,7 @@ function roundPlaza(scene: Scene, built: Set<unknown>): void {
 
 // Sand street (584, wild_west.leading_cacti.png: the town stands on smooth light peach sand, paler than the red rocks, with
 // faint wind ripples and no grass). Spec: the base's rust floor ("ground", "centerGrass") takes its own peach sand material
-// (cool diffuse (0.5, 0.55, 0.6), peach self-light (0.44, 0.3, 0.21)), so the orange sunset leaves it peach, not rust; the
+// (greyed diffuse (0.6, 0.55, 0.53), peach self-light (0.5, 0.3, 0.2), out of the glow), so the orange sunset leaves it peach, not rust; the
 // base's blade and tuft fields are hidden; about 520 wind ripples, soft swells 3-8 m long, 1.3 m wide and 2 cm high, barely
 // paler than the sand, lie across the light (along z, +-0.35 rad) inside the 53 m round floor, thin instances receiving shadows.
 function sandStreet(scene: Scene, built: Set<unknown>): void {
@@ -415,20 +415,25 @@ function sandStreet(scene: Scene, built: Set<unknown>): void {
     return m;
   };
   // The sunset light is strongly orange: a cool diffuse under it and the peach carried in self-light keep the sand pale
-  const sand = mk("westStreetSand", new Color3(0.5, 0.55, 0.6), new Color3(0.44, 0.3, 0.21));
+  // (the floor leaves the glow pass: its self-light bloomed the whole street cream-white)
+  const sand = mk("westStreetSand", new Color3(0.6, 0.55, 0.53), new Color3(0.5, 0.3, 0.2));
+  const glow = scene.getGlowLayerByName("glow");
   for (const m of scene.meshes) {
     if (!built.has(m)) continue;
     if (/^(fieldBlades_|fieldTufts_|grassTuft|flowerDot)/.test(m.name)) m.setEnabled(false);
-    if (m.name === "ground" || m.name === "centerGrass") m.material = sand;
+    if (m.name === "ground" || m.name === "centerGrass") {
+      m.material = sand;
+      if (m instanceof Mesh) glow?.addExcludedMesh(m);
+    }
   }
   const ripple = MeshBuilder.CreateCylinder("westSandRipple", { height: 1, diameter: 1, tessellation: 4 }, scene);
   ripple.rotation.x = Math.PI / 2;
   ripple.bakeCurrentTransformIntoVertices();
   ripple.convertToFlatShadedMesh();
-  ripple.material = mk("westStreetRipple", new Color3(0.53, 0.58, 0.63), new Color3(0.455, 0.312, 0.22));
+  ripple.material = mk("westStreetRipple", new Color3(0.63, 0.58, 0.56), new Color3(0.52, 0.315, 0.21));
   ripple.isPickable = false;
   ripple.receiveShadows = true;
-  scene.getGlowLayerByName("glow")?.addExcludedMesh(ripple);
+  glow?.addExcludedMesh(ripple);
   const m: number[] = [];
   for (let i = 0; i < 620; i++) {
     const a = seeded(i, 71) * Math.PI * 2, r = Math.sqrt(seeded(i, 72)) * 53;
