@@ -119,22 +119,24 @@ export const STAGES: TabsStageDef[] = [
     enemy: [
       // 598 (blocker b1; basic_formation.png: two groups of eight, one on each path, the building block between them;
       // ancient_1's streets run at z -10 and +10, opening on the team-1 plaza at x 25)
-      ["ancient.shield_bearer", 27.5, -12.7],
+      // 598 (blocker b2; basic_formation.thumb.png: each group compact, a 2 x 2 of Shield Bearers in front, a 2 x 2 of Sarissas
+      // right behind)
       ["ancient.shield_bearer", 27.5, -10.9],
       ["ancient.shield_bearer", 27.5, -9.1],
-      ["ancient.shield_bearer", 27.5, -7.3],
-      ["ancient.shield_bearer", 27.5, 7.3],
+      ["ancient.shield_bearer", 29.3, -10.9],
+      ["ancient.shield_bearer", 29.3, -9.1],
       ["ancient.shield_bearer", 27.5, 9.1],
       ["ancient.shield_bearer", 27.5, 10.9],
-      ["ancient.shield_bearer", 27.5, 12.7],
-      ["ancient.sarissa", 29.5, -12.7],
-      ["ancient.sarissa", 29.5, -10.9],
-      ["ancient.sarissa", 29.5, -9.1],
-      ["ancient.sarissa", 29.5, -7.3],
-      ["ancient.sarissa", 29.5, 7.3],
-      ["ancient.sarissa", 29.5, 9.1],
-      ["ancient.sarissa", 29.5, 10.9],
-      ["ancient.sarissa", 29.5, 12.7],
+      ["ancient.shield_bearer", 29.3, 9.1],
+      ["ancient.shield_bearer", 29.3, 10.9],
+      ["ancient.sarissa", 31.1, -10.9],
+      ["ancient.sarissa", 31.1, -9.1],
+      ["ancient.sarissa", 32.9, -10.9],
+      ["ancient.sarissa", 32.9, -9.1],
+      ["ancient.sarissa", 31.1, 9.1],
+      ["ancient.sarissa", 31.1, 10.9],
+      ["ancient.sarissa", 32.9, 9.1],
+      ["ancient.sarissa", 32.9, 10.9],
     ],
   },
   {
