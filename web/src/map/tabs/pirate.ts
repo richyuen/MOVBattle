@@ -14,7 +14,10 @@ import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
-const SHIPS = [{ z: 37, bow: 1 }, { z: -37, bow: -1 }];
+// Ships per team (595, blocker b1; wiki pirate.png and pirate_beach.png: one galleon moored on each team's side of the sand, the
+// red army by one and the blue by the other, not both straddling the centre line). Spec: the +z galleon slides to x -17 (team 0's
+// half, x -30..-2 bow inward), the -z one to x +17 (team 1's half, x 2..30 bow inward); decks, planks, rails and prunes follow x.
+const SHIPS = [{ x: -17, z: 37, bow: 1 }, { x: 17, z: -37, bow: -1 }];
 const LONG = 30, BEAM = 8, HULL = 4.4, SINK = 0.8;
 
 // Curved hull (593, blocker a2; wiki pirate.png: the galleon hull is one smooth dark planked shell, its sides rounding in to the
@@ -117,10 +120,10 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     iron: mk("pirateGalleonIron", new Color3(0.2, 0.2, 0.24), 0.35),
   };
   const parts: Record<keyof typeof mats, Mesh[]> = { hull: [], dark: [], deck: [], gold: [], sail: [], iron: [] };
-  for (const { z: Z, bow } of SHIPS) {
+  for (const { x: SX, z: Z, bow } of SHIPS) {
     // u: along the hull toward the bow; v: across, toward the beach (+v points at z 0)
     const toBeach = -Math.sign(Z);
-    const at = (u: number, v: number) => [u * bow, Z + v * toBeach] as const;
+    const at = (u: number, v: number) => [SX + u * bow, Z + v * toBeach] as const;
     const box = (k: keyof typeof mats, l: number, h: number, b: number, u: number, y: number, v: number, yaw = 0) => {
       const m = MeshBuilder.CreateBox("pirateGalleonPart", { width: l, height: h, depth: b }, scene);
       const [x, z] = at(u, v);
@@ -268,13 +271,13 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
 function deckHeight(x: number, z: number): number {
   const top = HULL - SINK;
   let h = 0;
-  for (const { z: Z, bow } of SHIPS) {
+  for (const { x: SX, z: Z, bow } of SHIPS) {
     const toBeach = -Math.sign(Z);
     const v = (z - Z) * toBeach;
-    if (Math.abs(x) <= 14.6 && Math.abs(v) <= BEAM / 2 - 0.1) return top;
+    if (Math.abs(x - SX) <= 14.6 && Math.abs(v) <= BEAM / 2 - 0.1) return top;
     for (const [u, fan] of [[-9, -0.18], [0, 0.04], [9, 0.16]] as const) {
       const yaw = Math.atan2(Math.sin(fan) * bow, toBeach * Math.cos(fan));
-      const rx = u * bow, rz = Z + (BEAM / 2) * toBeach;
+      const rx = SX + u * bow, rz = Z + (BEAM / 2) * toBeach;
       const dx = x - rx, dz = z - rz;
       const d = dx * Math.sin(yaw) + dz * Math.cos(yaw);
       const a = dx * Math.cos(yaw) - dz * Math.sin(yaw);
@@ -341,7 +344,7 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
     const p = mesh.position;
     const bridge = mesh.name === "Pirate Cove_box" && bridges.some(([x, z]) => Math.hypot(p.x - x, p.z - z) < 0.5);
     // and any palm or rock standing where a galleon now lies
-    const underShip = /^(trunk|Pirate Cove_)/.test(mesh.name) && SHIPS.some(({ z }) => Math.abs(p.x) < LONG / 2 + 2 && Math.abs(p.z - z) < BEAM / 2 + 7);
+    const underShip = /^(trunk|Pirate Cove_)/.test(mesh.name) && SHIPS.some(({ x, z }) => Math.abs(p.x - x) < LONG / 2 + 2 && Math.abs(p.z - z) < BEAM / 2 + 7);
     if (mesh.name === "Pirate Cove_ship" || bridge || underShip) {
       gone.push(p.clone());
       mesh.setEnabled(false);
