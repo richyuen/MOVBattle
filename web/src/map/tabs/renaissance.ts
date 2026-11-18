@@ -10,7 +10,7 @@
 // cornice; ground arcade 6.5 m (eight arches 3 m wide, 5 m high, dark recesses with a pointed head); loggia 5 m (sixteen columns,
 // pointed heads, roundels 0.9 m with a four-lobed dark cross); upper wall 9.5 m with three windows 4 x 6.5 m; cresting merlons every
 // 1.5 m. It stands in front of the base's back townhouses, outside the armies' zones (z <= 29); one box collider.
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, TransformNode, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 const PALACE = { z: 31, wide: 36, deep: 8 };
@@ -109,7 +109,9 @@ function dogesPalace(scene: Scene): void {
 // the palace (7 m deep, |x| 18..40), corner blocks 7 x 7 m at (+-44.5, 28); houses 7.5-10.5 m wide along the row, storey 3.2 m;
 // a straight low cream wall with a stone cap along z = -30.5 for |x| <= 44. All inside the rim (superellipse 54 x 48, power 3).
 // One box collider per row and corner; the placement zones end at |x| 43, in front of the side rows.
-function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+// Returns the z at which the left row ends and the corner palazzo's side wing begins (584).
+function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildResult): number {
+  let palazzoFrom = 2;
   for (const mesh of scene.meshes) if (built.has(mesh) && mesh.name === "townRing") mesh.setEnabled(false);
   const mk = (name: string, c: Color3, self = 0.42) => {
     const m = new StandardMaterial(name, scene);
@@ -124,7 +126,9 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
   let k = 0;
   const r = (n: number) => Math.abs((Math.sin(k * 23.117 + n * 41.37) * 31337.77) % 1);
   // A row: its front line runs along `axis` from `from` to `to` at `line`; `inward` points from the front into the square
-  type Row = { axis: "x" | "z"; line: number; from: number; to: number; inward: number; deep: number };
+  // `cut`: houses starting at or past it are left out; `skip`: the whole row is (584: the corner palazzo stands there).
+  // The random sequence still advances for them, so every other house keeps its look.
+  type Row = { axis: "x" | "z"; line: number; from: number; to: number; inward: number; deep: number; cut?: number; skip?: boolean };
   const put = (mat: StandardMaterial, row: Row, along: number, high: number, through: number, u: number, y: number, back: number) => {
     const across = row.line - row.inward * back;
     const b = row.axis === "z"
@@ -161,25 +165,34 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
     }
   };
   const rows: Row[] = [
-    { axis: "z", line: -44, from: -28, to: 24, inward: 1, deep: 6 },
+    { axis: "z", line: -44, from: -28, to: 24, inward: 1, deep: 6, cut: 2 },
     { axis: "z", line: 44, from: -28, to: 24, inward: -1, deep: 6 },
-    { axis: "x", line: 31, from: -40, to: -18, inward: -1, deep: 7 },
+    { axis: "x", line: 31, from: -40, to: -18, inward: -1, deep: 7, skip: true },
     { axis: "x", line: 31, from: 30, to: 40, inward: -1, deep: 7 },
   ];
   for (const row of rows) {
-    let u = row.from;
+    let u = row.from, end = row.to;
     while (row.to - u > 4) {
       k++;
       const wide = Math.min(7.5 + r(1) * 3, row.to - u);
-      house(row, u + wide / 2, wide);
+      if (row.skip || (row.cut !== undefined && u >= row.cut)) {
+        k++;
+        end = Math.min(end, u);
+      } else house(row, u + wide / 2, wide);
       u += wide;
     }
-    const mid = (row.from + row.to) / 2, half = (row.to - row.from) / 2, centre = row.line - row.inward * row.deep / 2;
+    if (row.skip) continue;
+    if (row.cut !== undefined) palazzoFrom = end;
+    const mid = (row.from + end) / 2, half = (end - row.from) / 2, centre = row.line - row.inward * row.deep / 2;
     result.obstacles.push(row.axis === "z"
       ? { type: "box", center: new Vector3(centre, 0, mid), halfX: row.deep / 2, halfZ: half }
       : { type: "box", center: new Vector3(mid, 0, centre), halfX: half, halfZ: row.deep / 2 });
   }
   for (const sx of [-1, 1]) {
+    if (sx < 0) {
+      k++;
+      continue;
+    }
     house({ axis: "z", line: sx * 41, from: 24.5, to: 31.5, inward: -sx, deep: 7 }, 28, 7);
     result.obstacles.push({ type: "box", center: new Vector3(sx * 44.5, 0, 28), halfX: 3.5, halfZ: 3.5 });
   }
@@ -211,6 +224,105 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
     const sx = Math.sign(zone.center.x) || 1;
     return { ...zone, center: new Vector3(sx * (inner + outer) / 2, zone.center.y, zone.center.z), size: new Vector3(outer - inner, zone.size.y, zone.size.z) };
   });
+  return palazzoFrom;
+}
+
+// Corner palazzo (584, wiki renaissance.png: the square's back left corner is wrapped by one long two-storey cream stone
+// palazzo, L-shaped: on both storeys an open loggia of round arches on columns runs its whole front, a balustrade along the
+// upper one, a plain cornice and a low orange tiled roof above; it meets the Doge's palace at the back and runs well down
+// the left side). Spec: a back wing fronting z = 31 from x -44 to -18.5 (6 m deep) and a side wing fronting x = -44 from
+// the left row's end (z ~2..12) to z 31 (5 m deep), joined by a solid 5 x 6 m corner block; bays of about 3.3 m; each
+// storey 5.4 m: columns 0.55 m, round arches of eight voussoirs springing at 3.2 m, a beam over them; the front 2.6 m of
+// both storeys is open, the wall behind a shade darker with a dark doorway per bay; cornice at 10.8 m, roof to 13.2 m.
+// Units can stand in the ground loggia: the colliders cover only the walls behind it and the corner block.
+function cornerPalazzo(scene: Scene, result: MapBuildResult, sideFrom: number): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c.scale(1 - self);
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    cream: mk("renaissancePalazzoCream", new Color3(0.95, 0.9, 0.78), 0.42),
+    inner: mk("renaissancePalazzoInner", new Color3(0.7, 0.64, 0.56), 0.35),
+    dark: mk("renaissancePalazzoDark", new Color3(0.3, 0.24, 0.24), 0.2),
+    roof: mk("renaissancePalazzoRoof", new Color3(0.84, 0.42, 0.26), 0.42),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { cream: [], inner: [], dark: [], roof: [] };
+  const RECESS = 2.6, STOREY = 5.4;
+  // A wing is built along local x (u) with its front on local z = 0 and its depth toward +z, under a pivot that places it
+  const wing = (pivot: TransformNode, from: number, to: number, deep: number, closeFrom: boolean, closeTo: boolean) => {
+    pivot.computeWorldMatrix(true);
+    const box = (k: keyof typeof mats, along: number, high: number, through: number, u: number, y: number, v: number, turn = 0) => {
+      const b = MeshBuilder.CreateBox("renaissancePalazzoPart", { width: along, height: high, depth: through }, scene);
+      b.position.set(u, y, v);
+      b.rotation.z = turn;
+      b.parent = pivot;
+      parts[k].push(b);
+    };
+    const len = to - from, mid = (from + to) / 2, n = Math.max(2, Math.round(len / 3.3)), bay = len / n;
+    box("inner", len, STOREY * 2, deep - RECESS, mid, STOREY, RECESS + (deep - RECESS) / 2);
+    for (let s = 0; s < 2; s++) {
+      const y0 = s * STOREY;
+      for (let i = 0; i <= n; i++) {
+        const u = from + i * bay;
+        box("cream", 0.55, 3.3, 0.55, u, y0 + 1.65, 0.3);
+        box("cream", 0.8, 0.25, 0.8, u, y0 + 3.3, 0.3);
+        box("cream", 0.95, 1.5, 0.6, u, y0 + 4.15, 0.3);
+        if (s === 0) box("cream", 0.8, 0.3, 0.8, u, 0.15, 0.3);
+      }
+      for (let i = 0; i < n; i++) {
+        const u = from + (i + 0.5) * bay, radius = bay / 2 - 0.2;
+        for (let j = 0; j < 8; j++) {
+          const a = (j + 0.5) / 8 * Math.PI;
+          box("cream", radius * 0.44, 0.42, 0.6, u + Math.cos(a) * radius, y0 + 3.2 + Math.sin(a) * radius, 0.3, a + Math.PI / 2);
+        }
+        box("dark", 1.3, s ? 2.2 : 2.7, 0.12, u, y0 + (s ? 2 : 1.35), RECESS - 0.06);
+      }
+      box("cream", len + 0.3, 0.6, 0.75, mid, y0 + 5.1, 0.3);
+      box("cream", len, 0.4, RECESS, mid, y0 + 5.2, RECESS / 2);
+    }
+    box("cream", len, 0.14, 0.22, mid, STOREY + 1.05, 0.2);
+    for (let u = from + 0.3; u < to; u += 0.55) box("cream", 0.14, 0.9, 0.14, u, STOREY + 0.5, 0.2);
+    for (const [close, u] of [[closeFrom, from], [closeTo, to]] as const) if (close) box("cream", 0.6, STOREY * 2, deep, u, STOREY, deep / 2);
+    box("cream", len + 0.6, 0.5, deep + 0.6, mid, STOREY * 2 + 0.25, deep / 2);
+    box("roof", len + 0.2, 1.1, deep * 0.92, mid, STOREY * 2 + 1.05, deep / 2);
+    box("roof", len - 2.4, 0.9, deep * 0.5, mid, STOREY * 2 + 2, deep / 2);
+  };
+  const back = new TransformNode("renaissancePalazzoBack", scene);
+  back.position.set(0, 0, 31);
+  wing(back, -44, -18.5, 6, false, true);
+  const sideWing = new TransformNode("renaissancePalazzoSide", scene);
+  sideWing.position.set(-44, 0, 0);
+  sideWing.rotation.y = -Math.PI / 2;
+  wing(sideWing, sideFrom, 31, 5, true, false);
+  const corner = (k: keyof typeof mats, w: number, h: number, d: number, y: number) => {
+    const b = MeshBuilder.CreateBox("renaissancePalazzoPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(-46.5, y, 34);
+    parts[k].push(b);
+  };
+  corner("cream", 5, STOREY * 2, 6, STOREY);
+  corner("cream", 5.6, 0.5, 6.6, STOREY * 2 + 0.25);
+  corner("roof", 4.8, 1.1, 5.6, STOREY * 2 + 1.05);
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true);
+    if (!merged) continue;
+    merged.name = `renaissancePalazzo_${key}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+  back.dispose();
+  sideWing.dispose();
+  result.obstacles.push(
+    { type: "box", center: new Vector3(-31.25, 0, 31 + RECESS + 1.7), halfX: 12.75, halfZ: 1.7 },
+    { type: "box", center: new Vector3(-44 - RECESS - 1.2, 0, (sideFrom + 31) / 2), halfX: 1.2, halfZ: (31 - sideFrom) / 2 },
+    { type: "box", center: new Vector3(-46.5, 0, 34), halfX: 2.5, halfZ: 3 },
+  );
 }
 
 // Large close-set cream slabs replace the coarse blue-grey paving and wide dark grout.
@@ -250,7 +362,8 @@ function frontCanal(scene: Scene): void {
 export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
-  rectangularPiazza(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
+  const palazzoFrom = rectangularPiazza(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
+  cornerPalazzo(scene, result, palazzoFrom);
   dogesPalace(scene);
   coveredBridge(scene);
   frontCanal(scene);
