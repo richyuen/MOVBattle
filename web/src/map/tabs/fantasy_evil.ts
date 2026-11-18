@@ -8,6 +8,7 @@
 // rather than into daylight haze. Dome, clear and fog colours are put back on dispose.
 import { Color3, Matrix, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
+import type { HeightField } from "../terrain";
 
 const VOID = new Color3(0.02, 0.012, 0.035);
 
@@ -32,6 +33,24 @@ function voidSky(scene: Scene, built: Set<unknown>): () => void {
 // (under a unit's ankle: the sim stays flat), one thin-instance box mesh; lit slate-teal (.13,.2,.22) with a dim self-light
 // (.025,.04,.045), each block's tone varied +-12% by an instance colour; a near-black bed (.02,.03,.035) under the seams.
 // Seeded LCG, so the shots are the same every run.
+// Broken plateau (592, blocker b1; wiki fantasy_evil.png: the field is not one floor but rock-block terraces at several levels,
+// a low front level from which broad block stairs climb to a raised central plateau carrying the shrine, its edges walled by
+// the blocks' sheer faces). Spec: plateau |x| <= 24, -6 <= z <= 34 at 3 m; round it the blocks fall in 0.75 m terraces, one
+// per 2 m block, to the 0 m front level (z < -14), the two team ends (|x| > 32, where both armies place) and the rim; each
+// block's height is read at its centre, so the terraces are square stairs, and each block reaches down to the bed so its
+// faces read as walls. Visual height only (MapBuildResult.height, map/terrain.ts): every side of the plateau is a stair, so a
+// unit crossing anywhere is drawn climbing; the base's small props are seated on the terrace under them.
+const PLATEAU = { x: 24, z0: -6, z1: 34, top: 3, tread: 2, rise: 0.75 };
+
+const blockLevel = (x: number, z: number) => {
+  const dx = Math.max(0, Math.abs(x) - PLATEAU.x), dz = Math.max(0, PLATEAU.z0 - z, z - PLATEAU.z1);
+  return Math.max(0, PLATEAU.top - PLATEAU.rise * Math.ceil(Math.max(dx, dz) / PLATEAU.tread));
+};
+
+/** The terrace under a point: the level of the 2 m block it stands on (blocks are centred on odd metres). */
+const blockCentre = (v: number) => 2 * Math.floor(v / 2) + 1;
+export const fantasyEvilHeight: HeightField = (x, z) => blockLevel(blockCentre(x), blockCentre(z));
+
 function basaltFloor(scene: Scene, built: Set<unknown>): void {
   for (const m of scene.meshes) {
     if (!built.has(m)) continue;
@@ -54,11 +73,13 @@ function basaltFloor(scene: Scene, built: Set<unknown>): void {
   for (let x = -53; x <= 53; x += 2) {
     for (let z = -47; z <= 47; z += 2) {
       if (!inside(x, z) || !inside(x + 1, z + 1) || !inside(x - 1, z - 1) || !inside(x + 1, z - 1) || !inside(x - 1, z + 1)) continue;
-      const top = 0.02 + rnd() * 0.2, h = 0.5 + top;
+      const lift = blockLevel(x, z);
+      const top = 0.02 + rnd() * 0.2 + lift, h = 0.5 + top;
       mats.push(...Matrix.Compose(new Vector3(1.85, h, 1.85), Quaternion.Identity(), new Vector3(x, top - h / 2, z)).asArray());
       const k = 0.88 + rnd() * 0.24;
       cols.push(k, k, k, 1);
-      seamMats.push(...Matrix.Compose(new Vector3(2, 0.1, 2), Quaternion.Identity(), new Vector3(x, -0.08, z)).asArray());
+      // the bed sits just under this block's own top, so seams show dark between blocks of one terrace
+      seamMats.push(...Matrix.Compose(new Vector3(2, 0.1 + lift, 2), Quaternion.Identity(), new Vector3(x, (lift - 0.16) / 2, z)).asArray());
     }
   }
   block.thinInstanceSetBuffer("matrix", new Float32Array(mats), 16, true);
@@ -77,6 +98,14 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   basaltFloor(scene, built);
+  // seat the base's small props (bones, crystals, rocks, ring trunks) on the terrace under them (drawn only; colliders unchanged)
+  for (const m of scene.meshes) {
+    if (!built.has(m) || m.parent || !m.isEnabled() || m.name === "basaltBlocks" || m.name === "basaltSeams") continue;
+    const bb = m.getBoundingInfo().boundingBox;
+    if (bb.extendSizeWorld.x > 6 || bb.extendSizeWorld.z > 6) continue;
+    const lift = fantasyEvilHeight(bb.centerWorld.x, bb.centerWorld.z);
+    if (lift > 0) { m.position.y += lift; m.computeWorldMatrix(true); }
+  }
   const restoreSky = voidSky(scene, built);
-  return { ...result, dispose: () => { restoreSky(); result.dispose?.(); } };
+  return { ...result, height: fantasyEvilHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
