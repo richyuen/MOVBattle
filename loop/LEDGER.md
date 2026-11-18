@@ -13,6 +13,13 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 577 | 6259e76b, 479af4ee | map.spooky_1.a, map.spooky_1.b | approve
 577 | b1711009, 83c9ca4a | map.dynasty.a, map.dynasty.b | approve
 577 | aa80ffb9 | map.renaissance.b | approve
+578 | 5adcb485, 486e6428 | map.legacy.b, map.legacy.a | approve (P 30f467e1 approve)
+578 | 61f64ff8 (+d3dab59a) | map.dynasty.b | approve, no strike
+578 | 43348d28 | map.spooky_2.b | approve, no strike
+578 | b84e8a52, 47539e05 | map.spooky_1.a, map.spooky_1.b | approve
+578 | bf7c4fb1 (+f692a7c9) | map.pirate.a | approve
+578 | f0db546c | map.wild_west.a | approve
+578 | 0de40749 | map.renaissance.b | approve
 
 ## Done maps (rows compacted at 577; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox: 556-576 rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
@@ -39,4 +46,11 @@ web/src/map/tabs/pirate.ts:galleons | 30 m hulls at z +-37 along x, 3 gangplanks
 web/src/map/tabs/pirate.ts:pirateGalleonStern | hull (0.45,0.26,0.13) self 0.42 (kept) | 577 | rejected, reverted (P attempt 1: (0.2,0.11,0.055) self 0.3 did not show; gold cap slabs cover the tops) | -
 web/src/map/tabs/pirate.ts:drainLagoon | z +-24 water hazards and sheets removed | 577 | approved | two water bands
 web/src/map/tabs/renaissance.ts:dogesPalace | 36 x 21 m facade, front z 31 | 576 | approved | absent
-web/src/map/tabs/renaissance.ts:rectangularPiazza | rows x +-44 (6 m deep, z -28..24), z 31 (|x| 18..40), corners (+-44.5,28), front wall z -30.5; zones |x| <= 43 | 577 | approved | oval townRing
+web/src/map/tabs/renaissance.ts:rectangularPiazza | rows x +-44 (6 m deep, z -28..24), z 31 (|x| 18..40), corners (+-44.5,28); front terrace z -30.5, 5.5 m deep, 2-3 storeys (578); zones |x| <= 43 | 578 | approved, struck b4 | oval townRing; low front wall (577)
+web/src/map/tabs/legacy.ts:meadow clump | w 0.35-0.6, h 0.7-1.1 m | 578 | approved, struck a2 | 0.8-1.4 x 0.35-0.6 (577)
+web/src/map/tabs/legacy.ts:openGlade and church | barricade (22,0) gone; church nave x -4..10 z 28.5..35.5, tower x -6.5 14 m + spire 9 m, stone (0.24,0.24,0.28) | 578 | approved, struck b5, a3 | base box (-20,20)
+web/src/map/tabs/dynasty.ts:courtyard | court |x|,|z| <= 7, pave (0.4,0.41,0.4) self 0.2; pit box half 3; E/W moats |x| 7..10 water hazards | 578 | approved, no strike | pit cyl r 5; pave (0.62,0.62,0.58) self 0.4 (too white)
+web/src/map/tabs/spooky_2.ts:squareIsland and fogChannels | power 8, notch x > 36 z > 30; fog z +-12 drawn only; loop path x +-44 z +-38 | 578 | approved, no strike, kerbs/path glow | base oval
+web/src/map/tabs/spooky_1.ts:deadTrees and graveyard | bark (0.07,0.07,0.11); plot x 13..31 z 13..29, 24 stones | 578 | approved, struck a3, b2 | ring crowns; base tombs both halves
+web/src/map/tabs/pirate.ts:sandIsland | sea ring 62 x 56 (0.2,0.8,0.75); drum 64 x 58, 6 m + belly 14 m (0.72,0.52,0.28) self 0.4, no fog | 578 | approved, struck a3, drum reads thin | stalactite underside
+web/src/map/tabs/wild_west.ts:sunsetSky | clear (0.95,0.66,0.44), fog (0.97,0.72,0.5); dir (-0.9,-0.3,0.32) 1.1 warm; sun disc 22 m | 578 | approved, struck a4 | beige-grey with range

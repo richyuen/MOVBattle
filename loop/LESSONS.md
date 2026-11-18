@@ -19,7 +19,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - A capture wipes iter-N unless --add: save audit/critic files after the step's last capture; an audit iteration's step 5 runs with --add (555). A step-5 capture (~80 shots) takes ~12 min: background it.
 - Map greys read lavender-blue even at (0.6,0.54,0.52) (555): a warm grey needs r well over b; check palette.png.
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
-- Probes (loop/scripts/probes/) run from repo root; --build after source changes, --noglow for a swatch. They were written for units: read one before trusting it on a map.
+- Probes (loop/scripts/probes/, repo root, --build after source changes) were written for units: read one before trusting it on a map.
 - In-page probe on the dev server (5173): `const B = await import('<the @babylonjs_core.js?v=... URL from performance.getEntriesByType("resource")>'); B.EngineStore.LastCreatedScene` gives the live scene (meshes, materials, multiPickWithRay) after game.loadMapForCapture(id).
 
 ## Maps and stages
@@ -32,7 +32,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Dense crops: one tuft mesh drawn with thinInstanceSetBuffer (2000+ tufts) costs nothing; keep crops under waist height or armies standing in them vanish (farmer_2 556).
 - Scene lights (hemi, dir) are not reset by a map build (clearColor and fogColor are, by the theme): a builder that changes them saves and restores them in its MapBuildResult.dispose, chained to the base's (farmer_snow 557). The far range and second slab are base meshes mountainBase/Cap/Root, clouds are "cloud": hide them by name.
 - The map ground pose (alpha pi, target x 12) looks +x from x -29 across z ~0: props in a front or back corner never show in it; name the top shot for those.
-- The translucent box framing farmer maps in the top shot is the base's placement guide (campaign_zone_overlay_*/campaign_zone_border_*, mapBuilder createPlacementGuides), a map mesh, not a capture overlay. Island underside = islandUnder + islandShelf + islandCliff (merged crags); farmer_1's earthBowl replaces them. MeshBuilder.CreatePolygon needs earcut (absent): fan a ribbon to a hub instead.
+- The translucent box framing maps in the top shot is those zone slabs too (createPlacementGuides), a map mesh. Island underside = islandUnder + islandShelf + islandCliff (merged crags); farmer_1's earthBowl replaces them. MeshBuilder.CreatePolygon needs earcut (absent): fan a ribbon to a hub instead.
 - The island shot (capture-world island pose; ArcRotate upperRadiusLimit clamps it to radius 120, elevation ~16 deg) foreshortens the underside hard: an underside must be ~0.3-0.4 of the island width deep (tribal tiers 16/13/10 m) or it reads as a thin band; farmer_1's 22 m bowl shows only ~7 m (559).
 - A `*/` inside a doc comment (e.g. "overlay_*/border_*") closes it: tsc then fails with dozens of parse errors.
 - Round island (560): base lawn ("ground", "centerGrass") and underside slabs follow islandRim (superellipse 54 x 48, power 3); remap vertices radially by newR/oldR. fieldBlades_* are plain vertex meshes (4 per blade): collapse a quad past the rim onto its first vertex. hazeTreeline is one merged mesh: hide it whole. Base trunks are unparented (crowns are their children); skip disabled trunks.
@@ -51,3 +51,4 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Varied-height cliff buttresses can leave sky below continuous ledges. Back the ledges with a skirt down to the adjoining tier and check the ground shot.
 - Rooftops can hide a stage's army in a low camera; an elevated player-side diagonal shows it (Ancient 1).
 - Base props: roots `<displayName>_<kind>` with child parts, collider at root x,z. Faces toward the island camera want self-light ~0.7.
+- Hazards a builder adds get no overlay (base() drew them): draw them yourself (578).
