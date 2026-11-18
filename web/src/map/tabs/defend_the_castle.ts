@@ -21,11 +21,31 @@ const SHEET: Rect = { x0: -60, x1: 64, z0: -30, z1: 30 };
 const APPROACH = { foot: -22, top: 14, high: 10 };
 const CASTLE = { x0: 36, wall: 3, gate: 4, top: 18, terrace0: 54, terraceTop: 14, merlon: 1.2 };
 
-export const castleHeight: HeightField = (x) => {
+// Three ramps (590, blocker b2; wiki defend_the_castle.png: separate ramps climb from the attackers' ground to the forecourt,
+// split by deep V chasms whose grid walls fall sheer). Spec: over the approach (x -22..14) the sheet keeps three 12 m ramps at
+// |z| <= 6 and 14 <= |z| <= 26; between and beside them it drops 40 m (chasms 8 m wide at |z| 6..14, 4 m at the outer edges).
+// The chasms are box colliders, so armies climb the three ramps only (sim stays flat; nobody walks over the drop).
+const CHASM = { depth: -40, lanes: [[-14, -6], [6, 14], [-30, -26], [26, 30]] as Array<[number, number]> };
+
+const inChasm = (x: number, z: number) =>
+  x > APPROACH.foot && x < APPROACH.top && CHASM.lanes.some(([a, b]) => z > a && z < b);
+
+export const castleHeight: HeightField = (x, z) => {
   if (x <= APPROACH.foot) return 0;
   if (x >= APPROACH.top) return APPROACH.high;
+  if (inChasm(x, z)) return CHASM.depth;
   return ((x - APPROACH.foot) / (APPROACH.top - APPROACH.foot)) * APPROACH.high;
 };
+
+function chasmColliders(): MapBuildResult["obstacles"] {
+  const x0 = APPROACH.foot, x1 = APPROACH.top;
+  return CHASM.lanes.map(([a, b]) => ({
+    type: "box" as const,
+    center: new Vector3((x0 + x1) / 2, 0, (a + b) / 2),
+    halfX: (x1 - x0) / 2,
+    halfZ: (b - a) / 2,
+  }));
+}
 
 /** The castle's walls, terrace and stair as grid blocks standing on the 10 m floor; returns their box colliders. */
 function buildCastle(scene: Scene): MapBuildResult["obstacles"] {
@@ -92,7 +112,7 @@ export function buildDefendTheCastle(scene: Scene, base: () => MapBuildResult): 
     material: mat,
   });
   gridUVs(sheet);
-  const obstacles = [...result.obstacles, ...buildCastle(scene), ...archerPoles(scene)];
+  const obstacles = [...result.obstacles, ...buildCastle(scene), ...archerPoles(scene), ...chasmColliders()];
   centreLine(scene, SHEET.z0, SHEET.z1, castleHeight(0, 0));
   const hazards = [...kept, ...voidAround([SHEET], { x0: -90, x1: 90, z0: -60, z1: 60 })];
   const placementZones = zonesOn([
