@@ -1,18 +1,19 @@
 # introduction.hay_and_pitchforks
-Status: open   Audited: 597 (AUDIT x2)   Done: -
+Status: done   Audited: 597 (AUDIT x2), 598 (CONFIRM: passed b; failed none)   Done: 598
 ## Verdicts
-a PASS (597 judge)
-b FAIL (0 since 597): 1. Hay Balers laid in one straight line in stage_introduction.hay_and_pitchforks_army.png. TABS: 14 Hay Balers in a C-formation: a front arc facing the player, with both wings curling back several ranks deep (ref: reference/stages/introduction.hay_and_pitchforks.png, card Survey "C-Formation"). 2. Farmers placed inside the Baler line itself, alternating with the Balers, in stage_introduction.hay_and_pitchforks_army.png. TABS: the 8 Farmers stand as a block inside the hollow of the C, behind the front arc (ref: reference/stages/introduction.hay_and_pitchforks.png). 3. Army standing on the front edge of the wheat field, at the left border of the wheat, in stage_introduction.hay_and_pitchforks_field.png. TABS: the formation stands inside the wheat on the crest of the rise, with wheat all around it (ref: reference/stages/introduction.hay_and_pitchforks.thumb.png, card Survey "atop the hill").
-c PASS (597 judge)
+a PASS (598 judge)
+b PASS (598: struck 3, 1, 2; CONFIRM 598)
+c PASS (598 judge)
 
 ## Ranked gaps
-1. [S] b C of balers — blocker 1: front arc of 6 facing -x, two wings of 4 running back on both flanks, open at the rear — ref: introduction.hay_and_pitchforks.png — ours: stage_introduction.hay_and_pitchforks_army.png. Lay it with blocker 2 in mind: today's farmer row (x 9.2, z -4.5..8.1) sits where the wings would go.
-2. [S] b farmers as a 2x4 block in the C's hollow — blocker 2
-3. [S] b whole group into the wheat on the crest — blocker 3 (read farmer_2's wheat extent first) — ours: stage_introduction.hay_and_pitchforks_field.png
 
 ## Attempts (iter | gap | criterion | verdict)
+598 | [S] army into the wheat's middle 023a7c90 | b3 | APPROVE, struck b3
+598 | [S] balers as a C, arc of six, wings of four aff6a657 | b1 | APPROVE, struck b1
+598 | [S] farmers 2 x 4 block in the hollow e0b923c7 | b2 | APPROVE, struck b2 (b PASS)
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Map map.farmer_2 (D). Audit 2 also saw 12 balers on one row at x 7 with farmers on a row behind.
+- Map map.farmer_2 (D). C front arc x 18..18.6 z -8.5..0.5, wings x 19.6..25 z -10.6/2.6; farmers x 20.4/22.2 z -6.7..-1.3.
+- CONFIRM 598 note: the reference crowns the army on a wheat hill; farmer_2 has no hill (map's terrain, not this stage).

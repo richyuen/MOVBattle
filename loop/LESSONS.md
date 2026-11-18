@@ -8,7 +8,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - ACES lifts mid code values toward pale: an unlit plate keeps a deep value; lit timber wants (.2,.11,.055) with a small self-light.
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey.
 - A world box refreshes only on render: computeWorldMatrix(true) before reading bounds in a per-tick step. bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent.
-- Flat pieces need correct left-handed winding or closed slabs. execSync eats a caret: write sha~1.
+- Flat pieces need left-handed winding or closed slabs. execSync eats a caret: sha~1.
 - An excluded mesh does not occlude the glow: a dark one out of the pass wears the glow behind it as a pale veil (562, 586). Keep dark solids in.
 - IcoSphere subdivisions 0 is falsy (becomes 4): use 1. A half-disc (arc .5) at rotation (PI/2,0,PI/2) faces +-x (595).
 - Lit thin-instance wheat reads gold above, brown low: two unlit glow-excluded instance meshes sharing one matrix buffer.
@@ -18,7 +18,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 
 ## Capture and probes
 - capture-world.mjs boots like capture.mjs: mulberry32 0x4d4f5642 reseeded at every resetBattle, time only through advanceTime, setup renders at 1/8 size (__setupScale 8). It re-adds body.capture-mode before every shot (the game drops it on loads).
-- Never capture with a test --iter (pruneOld); test into look/. Near-black set pieces vanish into black tree rings: use lit dark blue-grey (587).
+- Never capture with a test --iter (pruneOld): use look/. Near-black set pieces vanish in black tree rings (587).
 - A capture wipes iter-N unless --add: save audit/critic files after the step's last capture (audit iterations: step 5 with --add). A step-5 capture takes ~12 min: background it.
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
 - In-page probe on the dev server (5173): import the @babylonjs_core.js?v=... URL from performance.getEntriesByType("resource"); its EngineStore.LastCreatedScene is the live scene after game.loadMapForCapture(id).
@@ -48,13 +48,13 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
 - Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
-- Run captures unsandboxed. A CONFIRM can fail on unlisted set pieces (585-596). Island cam sky band: z~200 backdrop, y -25..35 (590).
+- Run captures unsandboxed. CONFIRMs fail on unlisted set pieces (585-596). Island cam sky band: z~200, y -25..35.
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six blades, normals up (583); flattened IcoSpheres read as paving from low cameras, leaf cards as beige flags (571).
 - MergeMeshes: null past 65536 verts unless (parts,true,true); throws on mixed attributes (VertexData needs uvs); a throwing build leaks into later maps (593).
 - A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
-- Buildings near a stage's line hide its army (583): the stage camera sits ~24 m west of it.
 - Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white, a lit crag on the void a blur: exclude them (584-597).
-- Stage _army shot (camera at -x): -z renders on the right. Team-1 zones start ~x 27 on viking: check a formation's front unit (597).
-- The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Corner notches under ~8 m hide under ring trees and skirt rocks (spooky_2 596).
-- Recess a descent before merging cliff columns (579). A concave bank needs longitudinal strips, not a hub fan (581).
+- Stage _army shot: camera ~24 m west (-x) of the line, -z on the right; buildings near the line hide it (583); viking team-1 zones from ~x 27 (597).
+- HeightField is (x, z) only: a standable roof over a walkway lifts passers-by onto it; shape the mesh by its own field (598).
+- The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Notches: ~8 m hide under trees/rocks; pushing radial floor verts to a cut's nearest edge bevels it (596, 598).
+- Recess a descent before merging cliff columns (579). A concave bank: lengthwise strips, no hub fan (581).

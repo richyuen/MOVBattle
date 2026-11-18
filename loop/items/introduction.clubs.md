@@ -1,17 +1,18 @@
 # introduction.clubs
-Status: open   Audited: 597 (AUDIT x2)   Done: -
+Status: done   Audited: 597 (AUDIT x2), 598 (CONFIRM: passed b; failed none)   Done: 598
 ## Verdicts
-a PASS (597 judge)
-b FAIL (0 since 597; audit 1 PASS, audit 2 FAIL): 1. Six clubbers stand on one ruler-straight row, evenly spaced 1.8 m at x 20, in stage_introduction.clubs_army.png — TABS: a loose, ragged gathering of six at varied depths and uneven gaps, the left pair set back and the right ones forward (ref: reference/stages/introduction.clubs.png, card Survey "A gathering of six Clubbers"). 2. The group stands about 25 m out in open field with a wide empty band before the tree line in stage_introduction.clubs_army.png — TABS: the clubbers stand just in front of the red/orange tree trunks, with the treeline close behind them (ref: reference/stages/introduction.clubs.thumb.png).
-c PASS (597 judge)
+a PASS (598 judge)
+b PASS (598: struck 2, 1; CONFIRM 598)
+c PASS (598 judge)
 
 ## Ranked gaps
-1. [S] b loose gathering — blocker 1: six clubbers jittered in depth (±1.5 m in x) at irregular 1.5-3 m gaps, in a shallow arc — ref: introduction.clubs.png — ours: stage_introduction.clubs_army.png
-2. [S] b group back against the treeline — blocker 2 — ref: introduction.clubs.thumb.png — ours: stage_introduction.clubs_field.png
 
 ## Attempts (iter | gap | criterion | verdict)
+598 | [S] row back by the far treeline x 39 7decadec | b2 | APPROVE, struck b2
+598 | [S] loose gathering, left pair back, right forward 6f225d65 | b1 | APPROVE, struck b1 (b PASS)
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Map map.tribal_1 (D). Enemy in web/src/campaign/stages/introduction.ts; front is low x (player at -x).
+- Map map.tribal_1 (D). Clubbers x 37.4..40.8, z -5.9..6.3 (introduction.ts).
+- Critic 598: depth is a monotonic slant, not a zig-zag (not noticeable).

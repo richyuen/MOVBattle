@@ -2,24 +2,22 @@
 Status: open   Audited: 576 (AUDIT x2)   Done: -
 ## Verdicts
 a FAIL (596: struck 3): 4. pumpkin shrine in map_spooky_2_top — TABS: a large jack-o-lantern on a dead-tree mound where the pagoda stood (ref: reference/maps/wiki/spooky_2.png)
-b FAIL plateau (596; 592: struck b1 clause "outer loop path"; 594 terraces clause cleared; 596 b4 loop-corner clause cleared): 1. dynasty terrace layout in map_spooky_2_top — TABS: Dynasty's square island rotated 180 degrees, with canals turned to fog, terraces (ref: card Overview; reference/maps/wiki/spooky_2.png) 4. field outline in map_spooky_2_top — TABS: square with notched corners, not an oval (ref: reference/maps/spooky_2.png)
-c PASS (596 judge)
+b FAIL (598 [R]: struck 1; plateau lifted; b4 oval clause cleared, square-step not): 4. field outline in map_spooky_2_top — TABS: square with notched corners, not an oval (ref: reference/maps/spooky_2.png)
+c PASS (598 judge)
 
 ## Ranked gaps
-1. [R] b (plateau, waiting behind dynasty a's [R]): one rebuild of the outline and fog arms — 14 x 14 m bare square notches on the three small corners (trees and skirt boulders out of the cut, skirt stepped in round it), Dynasty's canal arms turned 180 degrees as fog bands with dry terrace blocks between
-2. a4 shrine (2 attempts: starvation pick or [R] only): 4 m stone mound at the pagoda's spot behind the court, 5 m glowing jack-o-lantern, ring of small pumpkins, 3-4 dead trees arching over
+1. [S] b4 square steps (b4 attempts 595, 596 [S] + 598 [R]: starvation pick or [R] only; next [R] would follow a new plateau): deck top and sides built from OUTLINE (extruded polygon, or vertices inserted at every cut's inner corner) so each notch and mouth is a right-angled step — ref: spooky_2.png — ours: map_spooky_2_top.png
+2. a4 shrine (2 attempts: starvation pick or [R] only): large jack-o-lantern on a raised dead-tree mound at the pagoda's spot, gnarled tree arching over, pumpkins and candles round the base, reading at top-shot scale
 
 ## Attempts (iter | gap | criterion | verdict)
-596 | [S] three corner notches (8 m after 7e3e49bc), square mitred loop stepping round them 24225dd9 | b4 | APPROVE, no strike (loop corners cleared; notches hidden) (attempt 2)
-596 | [S] thickets rebuilt as low wide bramble heaps with arching vines 703a2a26 | a3 | APPROVE, struck a3
-595 | [S] dead-tree ring pushed onto the squared rim, loop 1 Chaikin pass 1d0481dd | b4 | APPROVE, no strike (attempt 1)
-594 | [S] stone-walled night-lawn terraces with steps db5cd84b | b1 | APPROVE, no strike (attempt 2)
-592-593 | [S] cobble loop 4bbcf13d; black dead prop trees 84011b8a | b1, a5 | APPROVE; struck b1 clause, a5
-578-590 | [S] layout, sky, turf, grated court, shrine x2 (a4 attempts 2), bridges, black trees, thickets, torii, rock skirt | a, b | struck a1, a2, a6, a7, b2, b3
+598 | [R] hard square rim, 12 m corner cuts, canal mouths, bare cuts, skirt on the outline, fog spill d4fd09be | b | APPROVE, struck b1; corners render as chamfers
+596 | [S] corner notches + mitred loop 24225dd9; thickets 703a2a26 | b4, a3 | APPROVE; b4 no strike (attempt 2), struck a3
+595 | [S] ring onto squared rim 1d0481dd | b4 | APPROVE, no strike (attempt 1)
+578-594 | [S] layout, sky, turf, court, shrine x2 (a4 2), bridges, trees, thickets, torii, skirt, terraces, loop | a, b | struck a1, a2, a5-a7, b2, b3, b1 clauses
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Stages: spooky.war, wild_west.spooky_army, fantasy_good.vicious_terror. NOTCHES: big (36,30) pad 2, three small |x|>44.5 |z|>38.5 pad .5 (outOfNotches); loop steps to x +-41.25 / z +-35.25 at them.
-- b plateau 596: approved [S] with no strike 594, 595, 596. Thickets: 16 heap lumps + 52 arching vines per side at x +-44, collider unchanged.
-- Critic 596: notches under trees and boulders, silhouette unchanged; pumpkin small, mound lost in the ring.
+- Stages: spooky.war, wild_west.spooky_army, fantasy_good.vicious_terror. CUTS: big (36,30) pad 2, corners |x|>42 |z|>36, mouths |x|>47.5 z 7..17; RIM 54 x 48 max-norm; OUTLINE polygon; outOfCuts pushes to nearest inner edge (bevels the corners).
+- Loop steps to x +-39.25 / z +-33.25 at the corner cuts; ring trees within 3 m of a cut dropped with colliders.
+- Critic 598: the octagon read comes from radial floor vertices never landing on a cut's inner corner.
