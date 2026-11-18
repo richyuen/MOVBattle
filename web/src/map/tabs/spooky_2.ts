@@ -727,6 +727,78 @@ function deadPropTrees(scene: Scene, built: Set<unknown>): void {
   merged.isPickable = false;
 }
 
+// Terraces (594, blocker b1; wiki spooky_2.png, card Overview: Dynasty's layout, so the field between and beyond the fog channels
+// is not flat turf but raised lawn terraces walled in dark stone, each with a stone kerb round its top and a short flight of
+// steps down at its inner end, the bridges landing between them). Spec: middle terraces (between the channels) at |z| 0.8..6.4,
+// 0.7 m high, x 9..27.6 and 32.4..41 each side; outer terraces (beyond the channels) at |z| 18.6..29.5, 1.6 m high, x 4..27.6
+// and 32.4..40 each side, so the stone bridges at x +-30 and the timber bridge at x 0 land on open ground between them; each a
+// stone retaining block (.17,.21,.31) self .35 under a night-turf cap (.09,.12,.21) self .3 with a 0.5 m stone kerb along its
+// long edges; a flight of 0.35 m treads, 0.6 m deep, 4 m wide, down from its inner (toward x 0) end. Base props standing on a
+// terrace (small unparented meshes) are lifted onto it; the terraces and steps are drawn height only (map/terrain.ts).
+function terraces(scene: Scene, built: Set<unknown>, under: (x: number, z: number) => number): (x: number, z: number) => number {
+  const blocks: Array<{ x0: number; x1: number; z0: number; z1: number; h: number; dir: number }> = [];
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    for (const [a, b] of [[9, 27.6], [32.4, 41]]) blocks.push({ x0: Math.min(sx * a, sx * b), x1: Math.max(sx * a, sx * b), z0: Math.min(sz * 0.8, sz * 6.4), z1: Math.max(sz * 0.8, sz * 6.4), h: 0.7, dir: -sx });
+    for (const [a, b] of [[4, 27.6], [32.4, 40]]) blocks.push({ x0: Math.min(sx * a, sx * b), x1: Math.max(sx * a, sx * b), z0: Math.min(sz * 18.6, sz * 29.5), z1: Math.max(sz * 18.6, sz * 29.5), h: 1.6, dir: -sx });
+  }
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = { stone: mk("spooky2TerraceStone", new Color3(0.17, 0.21, 0.31), 0.35), turf: mk("spooky2TerraceTurf", new Color3(0.09, 0.12, 0.21), 0.3) };
+  const parts: Record<keyof typeof mats, Mesh[]> = { stone: [], turf: [] };
+  const box = (k: keyof typeof mats, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("spooky2TerracePart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    parts[k].push(b);
+  };
+  const TREAD = 0.6, RISE = 0.35, STAIR_W = 4;
+  const stairs: Array<{ x0: number; x1: number; zc: number; top: number; edge: number; dir: number }> = [];
+  for (const b of blocks) {
+    const w = b.x1 - b.x0, d = b.z1 - b.z0, cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2;
+    box("stone", w, b.h + 0.4, d, cx, (b.h - 0.4) / 2, cz);
+    box("turf", w - 0.8, 0.08, d - 0.8, cx, b.h + 0.02, cz);
+    for (const s of [-1, 1]) box("stone", w, 0.14, 0.5, cx, b.h + 0.05, cz + s * (d / 2 - 0.25));
+    // steps down from the inner end
+    const edge = b.dir > 0 ? b.x1 : b.x0, n = Math.ceil(b.h / RISE);
+    for (let i = 0; i < n; i++) {
+      const top = b.h - (i + 1) * RISE;
+      if (top <= 0) break;
+      box("stone", TREAD, top, STAIR_W, edge + b.dir * (i + 0.5) * TREAD, top / 2, cz);
+    }
+    stairs.push({ x0: Math.min(edge, edge + b.dir * n * TREAD), x1: Math.max(edge, edge + b.dir * n * TREAD), zc: cz, top: b.h, edge, dir: b.dir });
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true);
+    if (!merged) continue;
+    merged.name = `spooky2Terraces_${key}`;
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+  const height = (x: number, z: number) => {
+    const b = blocks.find((q) => x > q.x0 && x < q.x1 && z > q.z0 && z < q.z1);
+    if (b) return b.h + 0.06;
+    const s = stairs.find((q) => x > q.x0 && x < q.x1 && Math.abs(z - q.zc) < STAIR_W / 2);
+    if (s) return Math.max(0, s.top - Math.ceil(Math.abs(x - s.edge) / TREAD) * RISE);
+    return under(x, z);
+  };
+  // lift the base's small props onto the terrace under them
+  for (const m of scene.meshes) {
+    if (!built.has(m) || m.parent || !m.isEnabled()) continue;
+    const bb = m.getBoundingInfo().boundingBox;
+    if (bb.extendSizeWorld.x > 6 || bb.extendSizeWorld.z > 6) continue;
+    const b = blocks.find((q) => bb.centerWorld.x > q.x0 && bb.centerWorld.x < q.x1 && bb.centerWorld.z > q.z0 && bb.centerWorld.z < q.z1);
+    if (b) { m.position.y += b.h; m.computeWorldMatrix(true); }
+  }
+  return height;
+}
+
 export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -741,7 +813,8 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   rockSkirt(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   deadPropTrees(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
 
-  result.height = channelBridges(scene);
+  const baseBuilt = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  result.height = terraces(scene, baseBuilt, channelBridges(scene));
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return {...result,dispose:()=>{restore();result.dispose?.();}};
 }
