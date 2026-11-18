@@ -314,7 +314,41 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   pagoda(scene);
   courtyard(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   gardenCanals(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
+  lawnTerraces(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),result);
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Green lawn blocks separated from the canals by grey flagstone edges (shogun_s_samurai).
+// Four middle lawns x11..40, |z|<7, and outer lawns z18..30 rise on low stone retaining faces.
+function lawnTerraces(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const turf=new StandardMaterial("dynastyGreenLawn",scene);
+  turf.diffuseColor.set(0.12,0.38,0.14);turf.emissiveColor.set(0.035,0.11,0.04);turf.specularColor=Color3.Black();
+  const stone=new StandardMaterial("dynastyLawnStone",scene);
+  stone.diffuseColor.set(0.3,0.35,0.36);stone.emissiveColor.set(0.08,0.095,0.1);stone.specularColor=Color3.Black();
+  for(const mesh of scene.meshes) if(built.has(mesh)) {
+    if(/^(ground$|centerGrass$)/.test(mesh.name))mesh.material=turf;
+    if(/^(fieldBlades_|fieldTufts_|grassTuft)/.test(mesh.name))mesh.setEnabled(false);
+  }
+  const blocks:Array<{x:number;z:number;w:number;d:number;h:number}>=[];
+  const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=stone)=>{
+    const m=MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},scene);m.position.set(x,y,z);m.material=mat;m.receiveShadows=true;return m;
+  };
+  for(const sx of [-1,1]) for(const sz of [-1,1]) {
+    blocks.push({x:sx*26,z:sz*3.7,w:29,d:6.3,h:0.85});
+    blocks.push({x:sx*25,z:sz*24,w:30,d:12,h:1.4});
+  }
+  for(const b of blocks) {
+    box("dynastyLawnRetaining",b.w,b.h,b.d,b.x,b.h/2,b.z);
+    box("dynastyLawnTurf",b.w-0.6,0.16,b.d-0.6,b.x,b.h+0.04,b.z,turf);
+    // Discrete offset flagstones, rather than a continuous pale stripe.
+    for(const side of [-1,1]) for(let x=-b.w/2+0.6;x<b.w/2;x+=1.3)
+      box("dynastyLawnFlagstone",1.15,0.12,0.65,b.x+x,b.h+0.1,b.z+side*(b.d/2-0.35));
+  }
+  const oldHeight=result.height;
+  result.height=(x,z)=>{
+    const b=blocks.find(b=>Math.abs(x-b.x)<b.w/2&&Math.abs(z-b.z)<b.d/2);
+    return b?b.h+0.12:oldHeight?.(x,z)??0;
+  };
 }
