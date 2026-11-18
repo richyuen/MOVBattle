@@ -1,18 +1,20 @@
 # map.low_ground
 Status: open   Audited: 587 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (0 since 587): 1. No dip in map_low_ground_island — TABS: the gridded field drops into a lower middle floor between sloped banks (ref: reference/maps/wiki/low_ground.png) 2. No slab side faces in map_low_ground_island — TABS: the field is a block with tall grey-blue shaded side faces dropping into the haze (ref: wiki/low_ground.png left) 3. No grid lines in map_low_ground_ground — TABS: grid on every face (ref: wiki/low_ground.png) 4. Grey sky band in map_low_ground_island — TABS: pale cyan haze (ref: wiki/low_ground.png)
-b FAIL (0 since 587): 1. Flat middle in map_low_ground_top — TABS: a sunken central floor between the halves (ref: card Overview, wiki/low_ground.png) 2. No raised end at either side in map_low_ground_battle — TABS: each half has a high flat at its end above a slope (ref: stages/simulation.pit.png) 3. Endless plane in map_low_ground_top — TABS: a field of fixed width ending in sheer edges (ref: wiki/low_ground.png)
-c PASS (587 judge)
+a FAIL (588: struck 1, 2, 3): 4. Grey sky band in map_low_ground_island — TABS: pale cyan haze (ref: wiki/low_ground.png)
+b PASS (588: struck 1, 2, 3; CONFIRM pending)
+c PASS (588 judge)
 
 ## Ranked gaps
-1. [S] b trough builder — blocker 1: new web/src/map/tabs/low_ground.ts: terrainMesh height high-flat, slope down, low floor, slope up, high-flat along x — ref: reference/maps/wiki/low_ground.png — ours: map_low_ground_top.png
-2. [S] b bounded slab — blocker 3: fixed-width strip with sheer grey grid side faces, void beyond — ref: wiki/low_ground.png — ours: map_low_ground_top.png
-3. [S] a grid and sky — blockers 3, 4: simulation.ts's grid floor and pale sky — ref: wiki/low_ground.png — ours: map_low_ground_ground.png
+1. [P] a sky hue — blocker 4, fallout of 98ebf959 (588; eligible to 591): simKit.ts paleSky haze (.86,.9,.9) -> (.78,.9,.92), span .57 -> .15 (see map.bridge) — ours: map_low_ground_island.png
+2. [S] b bank shading — fallout of ae6ad36b (critic 588): the left bank reads like the floor in map_low_ground_top; darker bank facets so both slopes read
 
 ## Attempts (iter | gap | criterion | verdict)
+588 | [S] bounded grid slab with trough (low_ground.ts) ae6ad36b | b1 | APPROVE, struck b1, b2, b3 (b PASS)
+588 | [S] pale sky 98ebf959 | a4 | APPROVE, no strike (a1-a3 struck by ae6ad36b)
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Renders the bare campaign.simulation plane (no builder). Stage: simulation.pit.
+- Builder tabs/low_ground.ts: slab x +-60 |z|<=22, floor |x|<=10 at 0, banks to 7 m at |x| 20, 400 m skirt (culled grid material: the skirt has both windings). Stage: simulation.pit (x 20..27.4).
+- Once a4 clears: CONFIRM (a and b).

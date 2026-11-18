@@ -3,6 +3,11 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+588 | 334b790d | map.dynasty.b3 | approve, struck b3 (critic b PASS); CONFIRM failed a, b (new lists)
+588 | fded3015, fdee4e69 | map.bridge.b1, a3 | approve, struck b1, b3, a1, a2, a4
+588 | c20c50bb, 5e870bb6 | map.corridor.b2, a4 | approve, struck b1-b3 (b PASS), a1-a3
+588 | ae6ad36b, 98ebf959 | map.low_ground.b1, a4 | approve, struck b1-b3 (b PASS), a1-a3
+588 | ec25b08c, 1eb72e07 (+cfd5d291) | map.hill.b2, a1 | approve, struck b2, b3, a2
 587 | 7542093c (+80297d4f) [R] | map.spooky_1.a1-3 | approve, struck a1, a2, a3; CONFIRM a PASS -> D
 587 | 22ba62eb (+evidence fc94485f), 4ace43d4 | map.pirate.b5, b3 | approve, struck b5; b3 no strike; early CONFIRM unused (b FAIL)
 587 | cb026095 (+858d6a2e, 95f26b5d) | map.spooky_2.a3 | approve, no strike (thickets not legible from the top)
@@ -42,7 +47,14 @@ web/src/map/tabs/spooky_2.ts:thornThickets | x +-44, 30 vines 7-10 m, 6 segments
 web/src/map/tabs/spooky_2.ts:darkTorii | (-40,33), posts 7.2 m 5.6 apart, kasagi 9.6 m swept, stone (.2,.21,.28) self .35, 6 m clearing | 587 | approve, struck a7 | absent
 web/src/map/tabs/simulation.ts:gridFloor | 5 m tile 512 px, base (228,222,212), 1 m lines (190,186,182) 2 px, 5 m (172,168,165) 3 px, self (.18,.17,.16); base "ground" hidden | 587 | approve, struck a1, a4 | base lilac lawn
 web/src/map/tabs/simulation.ts:emptyCentre | centerGrass hidden, centre void hazard (r 8) and its overlay removed | 587 | approve, struck a2 | void disc at origin
-web/src/map/tabs/simulation.ts:paleSky | backdrop sphere blue (.38,.68,.76) to haze (.86,.9,.9) smoothstep over up .57, fog = haze, dome off | 587 | approve, struck a5 (hue reads slate) | grey skyDome
+web/src/map/tabs/simulation.ts:paleSky | backdrop sphere blue (.38,.68,.76) to haze (.86,.9,.9) smoothstep over up .57, fog = haze, dome off | 588 | [P] 1 rejected (blue (.62,.86,.93) span .4: paler, not cyan; island shot sees only haze); value kept | grey skyDome
+web/src/map/tabs/simKit.ts:paleSky (bridge, corridor, low_ground, hill) | defaults as simulation.ts: blue (.38,.68,.76), haze (.86,.9,.9), span .57 | 588 | approve, no strike (reads neutral grey) | base grey skyDome
+web/src/map/tabs/simKit.ts:gridMaterial/gridBlock/voidAround | 1 m grid tile per 5 m uv, planar uvs per face; blocks 400 m deep; void box hazards x +-90 z +-60 | 588 | approve | bare plane
+web/src/map/tabs/bridge.ts:blocks and span | blocks x +-18..64 |z|<=25; span |x|<18 |z|<=2.5 | 588 | approve, struck b1, b3 (span reads short) | bare plane
+web/src/map/tabs/corridor.ts:pads, wall, slot | pads x +-8..38 |z|<=15; wall |x|<=8 |z|<=26 top 7; slot |z|<=2 | 588 | approve, b PASS (wall height barely reads from top) | bare plane
+web/src/map/tabs/low_ground.ts:trough | slab x +-60 |z|<=22; floor |x|<=10 at 0, banks to 7 m at |x| 20 | 588 | approve, b PASS | bare plane
+web/src/map/tabs/hill.ts:ridge | foot -24, 10 m at x 22, crest to 28, 4 m at 40, flat to 76; grid + pale sky | 588 | approve, struck b2, b3, a2 | ramp -8..30 top 8, base plane material
+web/src/map/tabs/dynasty.ts:canalPools | water kept back x -19.6..3, 31..36.6, front -36.6..-31, -3..19.6; dry lawn blocks 0.85 m elsewhere | 588 | approve, struck b3 | two full 92 m canal sheets
 web/src/map/tabs/dynasty.ts:columnCliffs | continuous 5-sided columns h7.5..12.5m, square/notched rim, green ledges | 582 | approve | hanging stalactite underside
 web/src/map/tabs/dynasty.ts:canalSpurs | four 4.4 m spurs x34/-17 (back) -34/17 (front), |z|17.6..27, outer lawn and canal wall split, 3 m dry crossing | 583 | approve, no strike | absent
 web/src/map/tabs/dynasty.ts:terraceBranches | side channels x+-42; flights x+-27: flat deck |z|7..13 at .97, ten .5 m treads to the outer lawn, stepped cheeks | 583 | approve, struck b5 | 582 (rejected-kept): twelve .046 m steps z7..18

@@ -27,10 +27,10 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - A TABS map without a builder in web/src/map/tabs/ is its base map (tabsMaps.ts); several maps share a base, so a base edit moves all of them and the regression scenarios on campaign.adventure.
 - Clear base props by name after base(), removing only their colliders (ring trees have them too). Keep builders self-contained so reverts never conflict. Base "hill" mounds: hide by name (spooky_1 587); a position/bounds test at build time missed them (cause unverified).
 - Unexplained ground discs are base meshes: campaign.spooky's "hill" mounds wear red self-lit grass (red discs, 587); campaign.simulation's grey centre disc is its 8 m void hazard overlay campaign_hazard_cyl_void.
-- A set piece inside a merged tree belt needs a clearing before the trees merge; adding walls behind it can leave them invisible (580).
+- A set piece inside a merged tree belt needs a clearing before the trees merge (580).
 - Base crowns read pale because CanopyAerialPlugin and scene fog mix them toward sky-white: fresh crown materials made after base() (diffuse = emissive = c*0.55), applyFog false, out of the glow, stay saturated (tribal_1 556).
 - Every material a map build makes is disposed with the build (trackMapBuild), so a builder may recolour base materials by name ("grass", "groundMat", blades) without leaking to other maps; hide blades by mesh name fieldBlades_*/grassTuft. Base theme props are named `<displayName>_cyl|_box|_totem_top` with colliders at the same x,z.
-- Dense crops: thinInstanceSetBuffer (2000+ tufts) costs nothing; keep crops under waist height or armies vanish in them (556).
+- Dense crops: thin instances are cheap; keep them under waist height or armies vanish (556).
 - Scene lights (hemi, dir) are not reset by a map build (clearColor and fogColor are, by the theme): a builder that changes them saves and restores them in its MapBuildResult.dispose, chained to the base's (farmer_snow 557). The far range and second slab are base meshes mountainBase/Cap/Root, clouds are "cloud": hide them by name.
 - The map ground pose (alpha pi, target x 12) looks +x from x -29 across z ~0: props in a front or back corner never show in it; name the top shot for those.
 - The translucent box framing maps in the top shot is those zone slabs too (createPlacementGuides), a map mesh. Island underside = islandUnder + islandShelf + islandCliff (merged crags); farmer_1's earthBowl replaces them. MeshBuilder.CreatePolygon needs earcut (absent): fan a ribbon to a hub instead.
@@ -47,12 +47,13 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Static base meshes need setVerticesData to upload reshaped geometry (573-574). Grate embers show only between flat bars 4 cm proud (579, 584).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
-- Night snow under blue moonlight: warm the diffuse to cancel the light's tint, carry the pale tone in self-light, and drop the field from the glow (farmer_snow 573, CONFIRM passed).
-- Turf caps on cliff columns flicker when their top faces share a plane with the cliff or meadow. Set the cap slightly below the meadow and the shaft top inside the cap (Medieval 1, 567).
-- Run captures unsandboxed (the sandbox blocks loopback to Vite). A CONFIRM can fail on set pieces no list named (585).
+- Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
+- Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
+- Run captures unsandboxed (sandbox blocks loopback). A CONFIRM can fail on set pieces no list named (585; dynasty 588).
+- Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six thin blades with up-facing normals read as grass (legacy 583); flattened IcoSpheres read fuzzy from afar but as paving stones from a stage's low camera (spooky_1 583), upright ones as stones; leaf cards as beige flags (571).
 - Mesh.MergeMeshes returns null past 65536 vertices (parts stay unmerged, default white) unless 32-bit: (parts, true, true) (582).
 - A boulder heap receiving shadows goes near black: receiveShadows false, self-light 0.6 (583). Back cliff ledges with a skirt; through gaps it reads as a flat band (584).
 - Buildings near a stage's line hide its army (Ancient 1; wild_west 583): the stage camera sits ~24 m west of the army.
 - Hazards a builder adds get no overlay: draw them (578). A self-lit floor in the glow pass blooms white: exclude it (wild_west 584).
-- Recess a descent before merging cliff columns (579). A concave bank needs longitudinal strips: a hub fan can cross the recess and invert triangles (581).
+- Recess a descent before merging cliff columns (579). A concave bank needs longitudinal strips, not a hub fan (581).

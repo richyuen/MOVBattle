@@ -1,26 +1,21 @@
 # map.dynasty
-Status: open   Audited: 576 (AUDIT x2)   Done: -
+Status: open   Audited: 576 (AUDIT x2), 588 (CONFIRM: passed none; failed a, b)   Done: -
 ## Verdicts
-a PASS (582: struck 3; CONFIRM pending)
-b FAIL (583: struck 5): 3. canal network in map_dynasty_top — TABS: canals cut the field into raised lawn terraces joined by stairs, not two straight grey bands (ref: reference/maps/wiki/dynasty.png)
-c PASS (583 judge)
+a FAIL (0 since 588, CONFIRM list): 1. Field grass colour in map_dynasty_ground.png — TABS: soft, pale pastel green with a light texture, not saturated pure green (ref: reference/stages/dynasty.art_of_war.png, reference/maps/wiki/dynasty.png) 2. Cobblestone path loop around the field in map_dynasty_top.png — TABS: a wide grey cobblestone path runs around the whole field just inside the tree ring (ref: reference/maps/wiki/dynasty.png) 3. Blossom hedges inside the field in map_dynasty_ground.png — TABS: pink/lilac blossom shrubs line the inner terrace walls and flank the stairs (ref: reference/stages/wild_west.shogun_s_samurai.png) 4. Island underside in map_dynasty_island.png — TABS: lumpy grey-blue boulder cliffs with green moss patches, not a smooth saturated-blue column prism (ref: reference/maps/dynasty.png) 5. Cherry trees of the ring in map_dynasty_island.png — TABS: large lilac-pink clustered canopies on tall, twisted brown trunks, standing apart, not dense rows of small white-pink puffs on short sticks (ref: reference/maps/dynasty.png) 6. Pagoda body in map_dynasty_island.png — TABS: an open frame of pink-red columns under dark curved roofs, on a stone platform with wooden stairs, not white walls on a white plinth (ref: reference/maps/dynasty.png)
+b FAIL (0 since 588, CONFIRM list; critic struck b3): 1. Pagoda position in map_dynasty_top.png — TABS: the pagoda stands over the north canal close behind the centre courtyard, with arched bridges on both sides and stairs down toward the pit; ours sits on the rim grass outside the canal system (ref: reference/maps/wiki/dynasty.png) 2. Canal outlets at the island edge in map_dynasty_island.png — TABS: canals run off the island edge as waterfalls under arched stone bridges at the front, which notches the outline (ref: reference/maps/dynasty.png front-left, reference/maps/wiki/dynasty.png bottom-left and bottom-centre bridges)
+c PASS (588 judge)
 
 ## Ranked gaps
-1. [S] b long canal sheets — blocker 3: break each long sheet with dry lawn/stone blocks so four L-shaped pools remain (one per quadrant, each joined to its spur), hazards split to match — ref: reference/maps/wiki/dynasty.png — ours: map_dynasty_top.png
+1. [S] a cobble loop — blocker 2: wide grey cobble path inside the tree ring — ref: wiki/dynasty.png — ours: map_dynasty_top.png
+2. [S] b pagoda re-sited — blocker 1: over the north canal behind the court — ref: wiki/dynasty.png — ours: map_dynasty_top.png
 
 ## Attempts (iter | gap | criterion | verdict)
-583 | [S] canal spurs 4f1cb063 | b3 | APPROVE, no strike (attempts 2 on b3)
-583 | [S] terrace stairs, outer lawns 2.4 m bf9994ed | b5 | APPROVE, struck b5
-582 | [S] column cliffs 229f9b4d | a3 | APPROVE, struck a3
-582 | [S] terrace branches 5b6181bc | b3 | rejected-kept (attempt 1); revert conflicted
-582 | [S] perimeter loop 0c7d7a4e | b4 | APPROVE, struck b4
-581 | [S] lawn terraces 9a58d04e; court approaches 63de26e1 | a4, b2 | 2 APPROVE, struck a4, b2, a6
-576-579 | [S] pagoda, sky, island, courtyard, canals, torii | a, b | 6 APPROVE, struck a1, a2, a5, b1, b6
+588 | [S] L pools 334b790d | b3 | APPROVE, struck b3; CONFIRM failed a, b
+576-583 | [S] 13 approved (pagoda .. spurs), 582 branches rejected-kept | a, b | struck a1-a6, b1, b2, b4-b6
 
 ## Rejected (last 4)
-582 | [S] b3 5b6181bc | attempts 1 | side channels hidden by continuous lawn; outer flights read as low slabs; rejected-kept after revert conflict
+582 | [S] b3 5b6181bc | rejected-kept (revert conflict)
 
 ## Notes (max 3 lines)
-- Stages: dynasty.samurai, art_of_war, renaissance.renaissance_vs_dynasty_3, wild_west.shogun_s_samurai (x30..34.9, |z|<=6.6).
-- b3 has 2 [S] attempts: not pickable until starvation (588) or plateau. Spurs at x 34/-17 (back), -34/17 (front), |z| 17.6..27.
-- 583 early CONFIRM unused (b still FAIL) but would fail a too: deep green lawns (TABS pastel mint), no cobble paths on lawns, small pagoda at the far edge (TABS large, beside the court), near-white blossom, thin blue prism cliffs. Report: output/loop/iter-583/confirm.md.
+- Stages: dynasty.samurai, art_of_war, renaissance_vs_dynasty_3, wild_west.shogun_s_samurai. A 2nd CONFIRM fail makes a criterion plateau.
+- Critic 588: the right arched court bridge lands on a dry pool block (canalPools).

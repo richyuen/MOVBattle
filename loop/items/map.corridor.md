@@ -1,17 +1,20 @@
 # map.corridor
 Status: open   Audited: 587 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (0 since 587): 1. No tall block mass in map_corridor_island — TABS: a cross of tall grid-lined block columns standing out of the haze (ref: reference/maps/wiki/corridor.png) 2. No central wall block in map_corridor_ground — TABS: a thick wall block across the middle, taller than the team pads (ref: wiki/corridor.png, stages/simulation.wall.png) 3. No grid lines in map_corridor_ground — TABS: grid on every face (ref: wiki/corridor.png) 4. Grey sky band in map_corridor_island — TABS: pale cyan haze (ref: wiki/corridor.png)
-b FAIL (0 since 587): 1. Endless plane in map_corridor_top — TABS: a lower square pad for each team (ref: wiki/corridor.png) 2. No wall splitting the halves in map_corridor_top — TABS: a wall block runs across the field between the pads (ref: stages/simulation.wall.thumb.png) 3. No corridor in map_corridor_battle — TABS: a narrow slot a few units wide cut through the wall, where the armies meet (ref: wiki/corridor.png)
-c PASS (587 judge)
+a FAIL (588: struck 1, 2, 3): 4. Grey sky band in map_corridor_island — TABS: pale cyan haze (ref: wiki/corridor.png)
+b PASS (588: struck 1, 2, 3; CONFIRM pending)
+c PASS (588 judge)
 
 ## Ranked gaps
-1. [S] b corridor builder — blocker 2: new web/src/map/tabs/corridor.ts: two lower team pads, a thick taller wall block across the middle with a narrow slot cut through it (wall faces as colliders, wall height drawn) — ref: reference/maps/wiki/corridor.png — ours: map_corridor_top.png
-2. [S] a grid and sky — blockers 3, 4: simulation.ts's grid floor and pale sky — ref: wiki/corridor.png — ours: map_corridor_ground.png
+1. [P] a sky hue — blocker 4, fallout of 5e870bb6 (588; eligible to 591): simKit.ts paleSky haze (.86,.9,.9) -> (.78,.9,.92), span .57 -> .15 (one change for every kit map; see map.bridge) — ours: map_corridor_island.png
+2. [P] b wall height — fallout of c20c50bb (588): corridor.ts WALL_H 7 -> 10, shows in map_corridor_top as a step at the wall's edges
 
 ## Attempts (iter | gap | criterion | verdict)
+588 | [S] pads, wall, 4 m slot, void (corridor.ts) c20c50bb | b2 | APPROVE, struck b1, b2, b3 (b PASS)
+588 | [S] pale sky 5e870bb6 | a4 | APPROVE, no strike (a1-a3 struck by c20c50bb)
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Renders the bare campaign.simulation plane (no builder). Stage: simulation.wall.
+- Builder tabs/corridor.ts on simKit: pads x +-8..38 |z|<=15, wall |x|<=8 |z|<=26 top 7 m (two box colliders), slot |z|<=2. Stage: simulation.wall (x 20..26.6).
+- Once a4 clears: CONFIRM (a and b).
