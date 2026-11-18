@@ -403,7 +403,8 @@ function beachRing(scene: Scene): void {
     m.backFaceCulling = false;
     return m;
   };
-  const side = mk("pirateRingSide", new Color3(0.66, 0.46, 0.22), 0.45);
+  // 596.3b: at self .45 the side, facing away from the sun, read dark chocolate; self-lit 1x its colour it reads as sand
+  const side = mk("pirateRingSide", new Color3(0.66, 0.46, 0.22), 1);
   const top = mkMesh("pirateBeachRing", 0, prof.length - 1, gold ?? side);
   const drum = mkMesh("pirateRingDrum", prof.length - 1, rows.length - 1, side);
   // the side must face outward: compare a side vertex's normal with its radial direction
