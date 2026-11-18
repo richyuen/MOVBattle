@@ -31,22 +31,41 @@ const CASTLE = { x0: 36, wall: 3, gate: 4, top: 18, terrace0: 54, terraceTop: 14
 // edges |z| 26..30, leaving a 16 m middle platform (|z| <= 8, wide enough for a skirmish rank 12.6 m across) and two 12 m side
 // platforms (|z| 14..26); the gaps narrow by 2 m into the ramp chasms (|z| 6..14) at x -22. Box colliders as on the approach; team 0
 // places on the three platforms only (middle first).
+// V chasms (592, blocker b1; wiki defend_the_castle.png: the ramps are ridges and the chasms between them are wide wedges whose
+// grid walls lean in and meet far below, a dark V pointing down, legible from above). Spec: the lanes between the ramps widen
+// to 11 m (|z| 5..16, leaving a 10 m middle ramp and 10 m side ramps |z| 16..26, 4 m chasms at the outer edges), the front gaps
+// to 7 m (|z| 8..15: 16 m middle platform, 11 m side platforms |z| 15..26); every chasm is a V in cross-section, its walls
+// falling from the ridge's own height at the lane edge to -40 m on the lane's centre line (an 82 deg lean, so both walls show
+// from the top shot). The sheet is faceted at 1 m so a wall carries 5 facets. Box colliders over each whole lane as before.
 const CHASM = {
   depth: -40,
-  lanes: [[-14, -6], [6, 14], [-30, -26], [26, 30]] as Array<[number, number]>,
-  front: [[-14, -8], [8, 14], [-30, -26], [26, 30]] as Array<[number, number]>,
+  lanes: [[-16, -5], [5, 16], [-30, -26], [26, 30]] as Array<[number, number]>,
+  front: [[-15, -8], [8, 15], [-30, -26], [26, 30]] as Array<[number, number]>,
 };
 
-const inChasm = (x: number, z: number) => {
-  if (x > SHEET.x0 && x <= APPROACH.foot) return CHASM.front.some(([a, b]) => z > a && z < b);
-  return x > APPROACH.foot && x < APPROACH.top && CHASM.lanes.some(([a, b]) => z > a && z < b);
+/** The lane [a, b] a point falls in, if any. */
+const chasmAt = (x: number, z: number): [number, number] | undefined => {
+  if (x > SHEET.x0 && x <= APPROACH.foot) return CHASM.front.find(([a, b]) => z > a && z < b);
+  if (x > APPROACH.foot && x < APPROACH.top) return CHASM.lanes.find(([a, b]) => z > a && z < b);
+  return undefined;
 };
 
-export const castleHeight: HeightField = (x, z) => {
-  if (inChasm(x, z)) return CHASM.depth;
+const ridgeHeight = (x: number) => {
   if (x <= APPROACH.foot) return 0;
   if (x >= APPROACH.top) return APPROACH.high;
   return ((x - APPROACH.foot) / (APPROACH.top - APPROACH.foot)) * APPROACH.high;
+};
+
+export const castleHeight: HeightField = (x, z) => {
+  const ridge = ridgeHeight(x);
+  const lane = chasmAt(x, z);
+  if (!lane) return ridge;
+  const [a, b] = lane;
+  // outer edge lanes run off the sheet: their V centres on the sheet edge, so they fall from the ridge outward
+  const centre = a <= SHEET.z0 ? SHEET.z0 : b >= SHEET.z1 ? SHEET.z1 : (a + b) / 2;
+  const half = a <= SHEET.z0 || b >= SHEET.z1 ? b - a : (b - a) / 2;
+  const t = Math.min(1, (half - Math.abs(z - centre)) / half);
+  return ridge + (CHASM.depth - ridge) * Math.max(0, t);
 };
 
 function chasmColliders(): MapBuildResult["obstacles"] {
@@ -119,7 +138,7 @@ export function buildDefendTheCastle(scene: Scene, base: () => MapBuildResult): 
     width: SHEET.x1 - SHEET.x0,
     depth: SHEET.z1 - SHEET.z0,
     cx: (SHEET.x0 + SHEET.x1) / 2,
-    step: 2,
+    step: 1,
     skirt: 400,
     material: mat,
   });
@@ -129,8 +148,8 @@ export function buildDefendTheCastle(scene: Scene, base: () => MapBuildResult): 
   const hazards = [...kept, ...voidAround([SHEET], { x0: -90, x1: 90, z0: -60, z1: 60 })];
   const placementZones = zonesOn([
     { x0: SHEET.x0, x1: APPROACH.foot, z0: -8, z1: 8, team: 0 },
-    { x0: SHEET.x0, x1: APPROACH.foot, z0: -26, z1: -14, team: 0 },
-    { x0: SHEET.x0, x1: APPROACH.foot, z0: 14, z1: 26, team: 0 },
+    { x0: SHEET.x0, x1: APPROACH.foot, z0: -26, z1: -15, team: 0 },
+    { x0: SHEET.x0, x1: APPROACH.foot, z0: 15, z1: 26, team: 0 },
     { ...SHEET, x0: APPROACH.top, x1: CASTLE.x0, team: 1 },
   ]);
   const restoreSky = paleSky(scene);
