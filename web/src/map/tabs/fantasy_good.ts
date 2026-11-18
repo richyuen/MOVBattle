@@ -302,6 +302,113 @@ function parapets(scene: Scene, built: Set<unknown>, result: MapBuildResult, sto
   return { ...result, obstacles };
 }
 
+// Gate towers (594, blocker b3 and a3; wiki fantasy_good.png, heaven_good.png: at the far corner of each half stands a huge white
+// gate: two square tower legs joined high up by a round arch, all trimmed with gold bands and a gold-crenellated top, a tall
+// arched stained-glass window (gold frame, warm pale glass) on each leg's outer faces, and a bright blue water channel running
+// along the top of the arch and pouring down the outer side of each leg as a waterfall into a small pool; a white spire with a
+// gold ring stands on one leg). Spec: towers at (+-40, 30) on the back corners (outside both zones, which end at z 20), the arch
+// spanning x, opening along z; legs 6 x 6 m, 19 m high, 6 m apart (gate 18 m wide); arch body x 6 m, from 12.5 to 17.5 m, its
+// underside a half-disc opening r 3 (stepped boxes); gold bands 0.4 m at 5, 12 and 19 m, gold merlons 1.1 m every 2 m round both
+// leg tops and the arch top; windows 1.8 x 6 m on the legs' -z and outer faces (gold frame 0.25 m, glass unlit (1,.9,.6) with a
+// pointed top); water channel 1.6 m wide, 0.4 m deep, along the arch top and down each leg's outer face to a 4 x 3 m pool at its
+// foot (2 x 4 m; unlit blue (.3,.7,1.1), out of the glow); a spire 9 m (four-sided, white) with a gold ring on the outer leg. White
+// (.93,.95,.98) self .3, gold the kerb's material. Colliders: one box per leg and pool; the gate passage stays open.
+const TOWERS = [-40, 40];
+function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMaterial, gold: StandardMaterial): MapBuildResult {
+  const mk = (name: string, c: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = Color3.Black();
+    m.emissiveColor = c;
+    m.specularColor = Color3.Black();
+    m.disableLighting = true;
+    return m;
+  };
+  const white = new StandardMaterial("heavenTowerWhite", scene);
+  white.diffuseColor = new Color3(0.93, 0.95, 0.98);
+  white.emissiveColor = new Color3(0.28, 0.29, 0.3);
+  white.specularColor = Color3.Black();
+  const mats = { white, gold, glass: mk("heavenTowerGlass", new Color3(1, 0.9, 0.6)), water: mk("heavenTowerWater", new Color3(0.3, 0.7, 1.1)) };
+  const parts: Record<keyof typeof mats, Mesh[]> = { white: [], gold: [], glass: [], water: [] };
+  const obstacles = [...result.obstacles];
+  const Z = 30, LEG = 6, GAP = 6, H = 19;
+  for (const tx of TOWERS) {
+    const out = Math.sign(tx);
+    const box = (k: keyof typeof mats, w: number, h: number, d: number, x: number, y: number, z: number, ry = 0) => {
+      const b = MeshBuilder.CreateBox("heavenTowerPart", { width: w, height: h, depth: d }, scene);
+      b.rotation.y = ry;
+      b.position.set(tx + x, y, Z + z);
+      b.bakeCurrentTransformIntoVertices();
+      parts[k].push(b);
+    };
+    for (const side of [-1, 1]) {
+      const lx = side * (GAP + LEG) / 2;
+      box("white", LEG, H, LEG, lx, H / 2, 0);
+      for (const y of [5, 12, H]) box("gold", LEG + 0.3, 0.4, LEG + 0.3, lx, y, 0);
+      for (let u = -LEG / 2 + 0.55; u <= LEG / 2 - 0.5; u += 2) {
+        for (const s of [-1, 1]) {
+          box("gold", 1.1, 1, 0.5, lx + u, H + 0.7, s * (LEG / 2 - 0.25));
+          box("gold", 0.5, 1, 1.1, lx + s * (LEG / 2 - 0.25), H + 0.7, u);
+        }
+      }
+      // stained-glass windows on the front (-z) face and the outer face of the outer leg
+      const faces: Array<[number, number, number]> = [[lx, -LEG / 2 - 0.08, 0]];
+      if (side === out) faces.push([lx + out * (LEG / 2 + 0.08), 0, Math.PI / 2]);
+      for (const [fx, fz, ry] of faces) {
+        box("gold", 2.3, 6.5, 0.12, fx, 9, fz, ry);
+        box("glass", 1.8, 5.8, 0.16, fx, 8.8, fz, ry);
+        for (const s of [-1, 1]) {
+          const tip = MeshBuilder.CreateBox("heavenTowerPart", { width: 1.3, height: 0.25, depth: 0.2 }, scene);
+          tip.rotation.set(0, ry, s * 0.75);
+          tip.position.set(tx + fx + (ry ? 0 : s * 0.45), 12, Z + fz + (ry ? s * 0.45 : 0));
+          tip.bakeCurrentTransformIntoVertices();
+          parts.gold.push(tip);
+        }
+      }
+      obstacles.push({ type: "box", center: new Vector3(tx + lx, 0, Z), halfX: LEG / 2, halfZ: LEG / 2 });
+    }
+    // the arch body over the gate, its underside a stepped half-disc
+    const n = 12, r = GAP / 2;
+    for (let i = 0; i < n; i++) {
+      const u = -r + (i + 0.5) * (2 * r / n), under = 12.5 - 3 + Math.sqrt(Math.max(0, r * r - u * u));
+      box("white", 2 * r / n + 0.02, 17.5 - under, LEG, u, (17.5 + under) / 2, 0);
+    }
+    box("white", GAP + 0.2, 1.5, LEG, 0, 18.25, 0);
+    box("gold", GAP + 0.3, 0.4, LEG + 0.3, 0, 17.5, 0);
+    for (let u = -GAP / 2 + 0.5; u <= GAP / 2; u += 2) for (const s of [-1, 1]) box("gold", 1.1, 1, 0.5, u, 19.5, s * (LEG / 2 - 0.25));
+    // the water channel: along the arch top and down the outer leg's outer face into a pool
+    box("water", GAP + LEG * 2 - 1, 0.4, 1.6, 0, H + 0.25, 0);
+    const ox = out * (GAP / 2 + LEG + 0.25);
+    box("water", 0.5, H, 1.6, ox, H / 2, 0);
+    box("white", 2, 0.6, 4, ox + out * 0.9, 0.3, 0);
+    box("water", 1.5, 0.08, 3.4, ox + out * 0.9, 0.62, 0);
+    obstacles.push({ type: "box", center: new Vector3(tx + ox + out * 0.9, 0, Z), halfX: 1, halfZ: 2 });
+    // white spire with a gold ring on the outer leg
+    const sx = tx + out * (GAP + LEG) / 2;
+    const spire = MeshBuilder.CreateCylinder("heavenTowerPart", { diameterBottom: 2.4, diameterTop: 0.1, height: 9, tessellation: 4 }, scene);
+    spire.rotation.y = Math.PI / 4;
+    spire.position.set(sx, H + 4.5, Z);
+    spire.bakeCurrentTransformIntoVertices();
+    parts.white.push(spire);
+    const ring = MeshBuilder.CreateTorus("heavenTowerPart", { diameter: 3.2, thickness: 0.18, tessellation: 20 }, scene);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.set(sx, H + 7, Z);
+    ring.bakeCurrentTransformIntoVertices();
+    parts.gold.push(ring);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true, true);
+    if (!merged) continue;
+    merged.name = `heavenTower_${key}`;
+    merged.material = mats[key];
+    merged.receiveShadows = key === "white" || key === "gold";
+    merged.isPickable = false;
+    if (key === "glass" || key === "water") glow?.addExcludedMesh(merged);
+  }
+  void stone;
+  return { ...result, obstacles };
+}
+
 export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -309,5 +416,5 @@ export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapB
   const { stone, gold } = marbleDeck(scene, built);
   const opened = openCentre(scene, built, result, stone, gold);
   const walled = parapets(scene, built, opened, stone, gold);
-  return pits(scene, built, walled, stone, gold);
+  return gateTowers(scene, pits(scene, built, walled, stone, gold), stone, gold);
 }
