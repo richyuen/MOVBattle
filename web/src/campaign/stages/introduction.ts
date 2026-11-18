@@ -175,9 +175,10 @@ export const STAGES: TabsStageDef[] = [
       ["viking.brawler", 30.4, 4.4],
       ["viking.brawler", 31.5, -5.5],
       ["viking.brawler", 31.5, 5.5],
-      ["viking.longship", 29, 18],
-      ["viking.longship", 33.6, -1.2],
-      ["viking.longship", 34, 1.6],
+      // 597 (blocker b2; longships.thumb.png: the three Longships side by side close behind the wedge's middle)
+      ["viking.longship", 35.5, -4.5],
+      ["viking.longship", 35.5, 0],
+      ["viking.longship", 35.5, 4.5],
     ],
   },
 ];
