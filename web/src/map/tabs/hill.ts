@@ -32,7 +32,8 @@ function gridAndSky(scene: Scene, ridge: Mesh): () => void {
   mat.backFaceCulling = true;
   ridge.material = mat;
   gridUVs(ridge);
-  for (const mesh of scene.meshes) if (mesh.name === "ground") mesh.setEnabled(false);
+  // the base lawn, its centre disc and the void overlay all wear the lilac lawn: hidden (the void hazard is under the ramp)
+  for (const mesh of scene.meshes) if (["ground", "centerGrass", "campaign_hazard_cyl_void"].includes(mesh.name)) mesh.setEnabled(false);
   const plane = scene.getMeshByName("barePlane");
   if (plane) {
     const planeMat = gridMaterial(scene, "hillPlaneGrid");
