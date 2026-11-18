@@ -512,13 +512,17 @@ function greenRim(scene: Scene, built: Set<unknown>): void {
     r.rotation.set((rnd() - 0.5) * 0.2, rnd() * 6.28, (rnd() - 0.5) * 0.2);
     r.bakeCurrentTransformIntoVertices();
     rocks.push(r);
-    // the crack after this rock: a green plate on the outer face
-    const b = edge(a + Math.PI / N);
-    const g = MeshBuilder.CreateBox("voidRimGlow", { width: 0.3, height: 5, depth: 1.2 }, scene);
-    g.position.set(b.x + b.nx * 2.9, -2.2, b.z + b.nz * 2.9);
-    g.rotation.y = -Math.atan2(b.nz, b.nx);
-    g.bakeCurrentTransformIntoVertices();
-    glows.push(g);
+    // the crack after this rock: a green plate on the outer face, only in some cracks, of uneven size and lean (595.6b: one
+    // in every crack read as an even green picket fence)
+    if (rnd() < 0.35) {
+      const b = edge(a + Math.PI / N), gh = 1.5 + rnd() * 4;
+      const g = MeshBuilder.CreateBox("voidRimGlow", { width: 0.12 + rnd() * 0.25, height: gh, depth: 1.2 }, scene);
+      g.rotation.set(0, -Math.atan2(b.nz, b.nx), 0);
+      g.addRotation((rnd() - 0.5) * 0.6, 0, 0);
+      g.position.set(b.x + b.nx * 2.9, -0.2 - gh / 2 - rnd() * 1.5, b.z + b.nz * 2.9);
+      g.bakeCurrentTransformIntoVertices();
+      glows.push(g);
+    }
     if (i % 2 === 0) {
       const lip = MeshBuilder.CreateBox("voidRimLip", { width: 0.35, height: 0.12, depth: d * 0.7 }, scene);
       lip.position.set(e.x + e.nx * 2.6, top - 0.1, e.z + e.nz * 2.6);
