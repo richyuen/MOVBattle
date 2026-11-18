@@ -377,8 +377,11 @@ function shrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): Pick
 // 0.12 rad toward the front, foot sunk 6 m; two shards 18 and 12 m beside it. Chains of oval links (torus 1.3 m, 0.34 m thick,
 // stretched 1.35x, every other link turned 90 degrees) from each wrist to a point 20 and 26 m up the spire, sagging 3.5 m.
 // Statue and spire grey-teal stone (.26,.31,.33) self (.05,.06,.065), lighter than the floor so they read on the void; spire
-// (.2,.24,.27); chains (.12,.13,.15); flat shaded, out of the glow pass. Colliders: pedestal box, spire cylinder r 6.5.
-const STATUE = { x: 8, z: 26 };
+// (.2,.24,.27); chains (.12,.13,.15); flat shaded, out of the glow pass. Colliders: pedestal, spire cylinder r 6.5.
+// 596 (blocker a5, attempt 2: at (8, 26) it stood outside the ground frame): the statue moves to (18, 15), in the gap between
+// the portal altar and the shrine ring as seen from the ground camera (x -30), is built 1.25x (about 16 m to the horn tips,
+// wings 21 m across) and turned 1.27 rad so it faces the camera with its wings spread across the view, not edge-on.
+const STATUE = { x: 18, z: 15, scale: 1.25, yaw: 1.27 };
 const SPIRE = { x: 36, z: 40 };
 function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
   const mk = (name: string, c: Color3, self: number) => {
@@ -394,8 +397,17 @@ function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): vo
     chain: mk("voidStatueChain", new Color3(0.22, 0.24, 0.27), 0.25),
   };
   const parts: Record<keyof typeof mats, Mesh[]> = { statue: [], spire: [], chain: [] };
-  const put = (k: keyof typeof mats, m: Mesh) => { m.bakeCurrentTransformIntoVertices(); parts[k].push(m); };
   const top = PLATEAU.top, X = STATUE.x, Z = STATUE.z;
+  // the statue is laid out facing -z at (X, top, Z), then scaled and turned about its foot
+  const pose = Matrix.Translation(-X, -top, -Z)
+    .multiply(Matrix.Scaling(STATUE.scale, STATUE.scale, STATUE.scale))
+    .multiply(Matrix.RotationY(STATUE.yaw))
+    .multiply(Matrix.Translation(X, top, Z));
+  const put = (k: keyof typeof mats, m: Mesh) => {
+    m.bakeCurrentTransformIntoVertices();
+    if (k === "statue") m.bakeTransformIntoVertices(pose);
+    parts[k].push(m);
+  };
   const box = (w: number, h: number, d: number, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
     const b = MeshBuilder.CreateBox("voidStatuePart", { width: w, height: h, depth: d }, scene);
     b.rotation.set(rx, ry, rz);
@@ -428,7 +440,7 @@ function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): vo
       put("statue", slab);
     }
   }
-  obstacles.push({ type: "box", center: new Vector3(X, 0, Z), halfX: 2.9, halfZ: 2.9 });
+  obstacles.push({ type: "cylinder", center: new Vector3(X, 0, Z), radius: 3.9 });
   // the spire and its shards
   const shard = (h: number, d: number, x: number, z: number, rx: number, rz: number, sink: number) => {
     const c = MeshBuilder.CreateCylinder("voidSpirePart", { height: h, diameterBottom: d, diameterTop: d * 0.1, tessellation: 5 }, scene);
@@ -448,7 +460,7 @@ function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): vo
   };
   const link = MeshBuilder.CreateTorus("voidChainLink", { diameter: 1.3, thickness: 0.34, tessellation: 8 }, scene);
   for (const [s, up] of [[-1, 20], [1, 26]] as const) {
-    const a = new Vector3(X + s * 3.5, foot + 10.4, Z), b = onSpire(up);
+    const a = Vector3.TransformCoordinates(new Vector3(X + s * 3.5, foot + 10.4, Z), pose), b = onSpire(up);
     const n = Math.ceil(Vector3.Distance(a, b) / 1.0);
     for (let i = 0; i <= n; i++) {
       const t = i / n, p = Vector3.Lerp(a, b, t);
