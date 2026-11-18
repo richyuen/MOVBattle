@@ -185,7 +185,36 @@ async function mapScene(page, item) {
     await frame(page, POSE_OVERRIDE[item].battle);
     await shot(page, `${p}placed`);
   }
-  await page.evaluate(() => { window.game.startBattleImmediate(); window.advanceTime(5000); });
+  await page.evaluate(() => window.game.startBattleImmediate());
+  let battleMs = 0;
+  // Catch a defender leaving the crown before the ordinary 5 s battle frame.
+  // Two adjacent seeded frames show the front edge from the same camera.
+  if (item === "map.high_ground") {
+    const edge = await page.evaluate(() => {
+      for (let ms = 0; ms <= 5000; ms += 20) {
+        const u = window.game.listLiveUnits().find(q => q.team === 1 && q.definition.id === "medieval.archer" && q.position.x > 27.5 && q.position.x < 28.1 && Math.abs(q.position.z) < 4.6);
+        if (u) return { id: u.id, ms };
+        window.advanceTime(20);
+      }
+      return { id: null, ms: 5020 };
+    });
+    battleMs = edge.ms;
+    if (edge.id !== null) {
+      await frame(page, { target: { x: 28, y: 18, z: 0 }, radius: 32, alpha: Math.PI + 0.5, beta: 1.2 });
+      await shot(page, `${p}gate_before`);
+      const crossingMs = await page.evaluate(id => {
+        for (let ms = 0; ms <= 1000; ms += 20) {
+          const u = window.game.listLiveUnits().find(q => q.id === id);
+          if (u && u.position.x <= 27.5) return ms;
+          window.advanceTime(20);
+        }
+        return 1020;
+      }, edge.id);
+      battleMs += crossingMs;
+      await shot(page, `${p}gate`);
+    } else summary.notes.push(`${item}: no bar archer reached the crown front in 5 s, gate shot skipped`);
+  }
+  if (battleMs < 5000) await page.evaluate(ms => window.advanceTime(ms), 5000 - battleMs);
   // Ancient 1: the low pose sees only roofs; frame the player army's box from an elevated player-side diagonal (574)
   let battleView = POSE_OVERRIDE[item]?.battle ?? POSE.ground;
   if (item === "map.ancient_1") {
@@ -198,23 +227,7 @@ async function mapScene(page, item) {
   }
   await frame(page, battleView);
   await shot(page, `${p}battle`);
-  // High Ground: a unit of the attackers inside the gate passage (598): the bar crown is a standable height, so the gate shot
-  // shows how a unit walking through the gate is drawn; steps 100 ms (cap 40 s) until one is in x 27.5..36.5, |z| < 4.6
-  if (item === "map.high_ground") {
-    const inGate = await page.evaluate(() => {
-      for (let i = 0; i < 400; i++) {
-        const u = window.game.listLiveUnits().find((q) => q.team === 0 && q.position.x > 27.5 && q.position.x < 36.5 && Math.abs(q.position.z) < 4.6);
-        if (u) return true;
-        window.advanceTime(100);
-      }
-      return false;
-    });
-    if (inGate) {
-      await frame(page, { target: { x: 30, y: 16, z: 0 }, radius: 42, alpha: Math.PI + 0.5, beta: 1.2 });
-      await shot(page, `${p}gate`);
-    } else summary.notes.push(`${item}: no unit reached the gate passage in 40 s, gate shot skipped`);
-  }
-  rec.skirmish ={ placed, ...(await runToResult(page, 5000)) };
+  rec.skirmish ={ placed, ...(await runToResult(page, Math.max(5000, battleMs))) };
   summary.items[item] = rec;
 }
 
