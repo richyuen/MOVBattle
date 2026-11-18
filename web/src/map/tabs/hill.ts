@@ -7,9 +7,10 @@
 // block's far side shows the ground falling away again behind it; stages/simulation.hill.png: the army on the crest's edge).
 // Spec: flat at 0 to x -24, a straight ramp up to 10 m at x 22 (simulation.hill's front rank stands at x 20-26), a 6 m crest to
 // x 28, then down to 4 m at x 40 and a flat at 4 m on to the zone's end (x 76); the sheet is 56 m deep with plain block sides.
-import type { Scene } from "@babylonjs/core";
+import type { Mesh, Scene, Texture } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import { terrainMesh, type HeightField } from "../terrain";
+import { GRID_TILE_M, gridMaterial, gridUVs, paleSky } from "./simKit";
 
 const RIDGE = { foot: -24, crest0: 22, crest1: 28, back: 40, top: 10, low: 4, end: 76, depth: 56, step: 2 };
 
@@ -22,9 +23,30 @@ const height: HeightField = (x) => {
   return r.low;
 };
 
+// Grid and sky (588, blockers a1-a3; wiki hill.png: the ramp and the flat ruled with the 1 m simulation grid, warm off-white on
+// top with cool grey-blue shaded side faces, under a pale blue sky). Spec: the ridge sheet takes the kit's grid material with
+// planar uvs per face (its skirt culled to its outward faces), the base lawn is hidden and the endless plane takes the same grid
+// tiled 320 times over its 1600 m; the simulation sky replaces the grey band.
+function gridAndSky(scene: Scene, ridge: Mesh): () => void {
+  const mat = gridMaterial(scene, "hillGridCulled");
+  mat.backFaceCulling = true;
+  ridge.material = mat;
+  gridUVs(ridge);
+  for (const mesh of scene.meshes) if (mesh.name === "ground") mesh.setEnabled(false);
+  const plane = scene.getMeshByName("barePlane");
+  if (plane) {
+    const planeMat = gridMaterial(scene, "hillPlaneGrid");
+    const tex = planeMat.diffuseTexture as Texture;
+    tex.uScale = 1600 / GRID_TILE_M;
+    tex.vScale = 1600 / GRID_TILE_M;
+    plane.material = planeMat;
+  }
+  return paleSky(scene);
+}
+
 export function buildHill(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const result = base();
-  terrainMesh(scene, "hill_ramp", height, {
+  const ridge = terrainMesh(scene, "hill_ramp", height, {
     width: RIDGE.end - RIDGE.foot,
     depth: RIDGE.depth,
     cx: (RIDGE.foot + RIDGE.end) / 2,
@@ -32,5 +54,6 @@ export function buildHill(scene: Scene, base: () => MapBuildResult): MapBuildRes
     skirt: 0.5,
     material: scene.getMeshByName("barePlane")?.material ?? undefined,
   });
-  return { ...result, height };
+  const restoreSky = gridAndSky(scene, ridge);
+  return { ...result, height, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
