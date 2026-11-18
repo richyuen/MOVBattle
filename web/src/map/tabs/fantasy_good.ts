@@ -467,12 +467,96 @@ function heavenSky(scene: Scene, built: Set<unknown>): () => void {
   return restore;
 }
 
+// Viaduct underside (595, blocker a4; wiki fantasy_good.png lower left, heaven_good.png: under the deck's edge no dark spikes
+// hang; the rim is a white viaduct, a row of tall round-arched bays in shade along every face, and below it clusters of pale
+// grey basalt columns hang in steps, teal trees growing out of their sides). Spec: the base crags (islandCliff) hidden; on the
+// rim wall's outer face (12 m deep) a bay every 6 m: an arch opening 4 m wide, 6.5 m tall with a round head, cool shade
+// (.36,.44,.58) self .35, 6 cm proud of the face, its top 1.6 m under the deck; under the deck floor (y -12.5) clusters of
+// six-sided columns 2-3.4 m across, 3-15 m long, longest toward the middle, grey (.62,.66,.72) self .25, flat shaded; teal
+// low-poly crowns on eight of the clusters' outer columns. Drawn only.
+function viaductUnderside(scene: Scene, built: Set<unknown>, stone: StandardMaterial): void {
+  for (const m of scene.meshes) if (built.has(m) && m.name.startsWith("islandCliff")) m.setEnabled(false);
+  const shade = new StandardMaterial("heavenArchShade", scene);
+  shade.diffuseColor = new Color3(0.36, 0.44, 0.58);
+  shade.emissiveColor = new Color3(0.36, 0.44, 0.58).scale(0.35);
+  shade.specularColor = Color3.Black();
+  const basalt = new StandardMaterial("heavenBasalt", scene);
+  basalt.diffuseColor = new Color3(0.62, 0.66, 0.72);
+  basalt.emissiveColor = new Color3(0.62, 0.66, 0.72).scale(0.25);
+  basalt.specularColor = Color3.Black();
+  const leaf = new StandardMaterial("heavenUnderLeaf", scene);
+  leaf.diffuseColor = new Color3(0.2, 0.62, 0.58);
+  leaf.emissiveColor = new Color3(0.06, 0.2, 0.19);
+  leaf.specularColor = Color3.Black();
+  const arches: Mesh[] = [], cols: Mesh[] = [], crowns: Mesh[] = [];
+  const W = 4, H = 6.5, top = -1.6;
+  /** Arch bays along a run from (x0,z0) to (x1,z1), facing outward along (nx,nz). */
+  const run = (x0: number, z0: number, x1: number, z1: number, nx: number, nz: number) => {
+    const len = Math.hypot(x1 - x0, z1 - z0), n = Math.floor(len / 6);
+    if (n < 1) return;
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.5) / n, x = x0 + (x1 - x0) * t + nx * 0.06, z = z0 + (z1 - z0) * t + nz * 0.06, yaw = Math.atan2(nx, nz);
+      const body = MeshBuilder.CreateBox("heavenArch", { width: W, height: H - W / 2, depth: 0.1 }, scene);
+      body.rotation.y = yaw;
+      body.position.set(x, top - W / 2 - (H - W / 2) / 2, z);
+      body.bakeCurrentTransformIntoVertices();
+      const head = MeshBuilder.CreateCylinder("heavenArch", { diameter: W, height: 0.1, tessellation: 16, arc: 0.5 }, scene);
+      head.rotation.set(Math.PI / 2, 0, Math.PI / 2);
+      head.bakeCurrentTransformIntoVertices();
+      head.rotation.y = yaw;
+      head.position.set(x, top - W / 2, z);
+      head.bakeCurrentTransformIntoVertices();
+      arches.push(body, head);
+    }
+  };
+  for (const s of [-1, 1]) {
+    for (const g of edgeSegments(s)) if (g.z0 === g.z1) run(g.x0, g.z0, g.x1, g.z1, 0, s);
+    run(s * DECK.x, -DECK.z, s * DECK.x, DECK.z, s, 0);
+  }
+  let seed = 0x6a77;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const floorY = -PIT_DEPTH - 2.5;
+  let k = 0;
+  for (let cx = -44; cx <= 44; cx += 11) for (let cz = -30; cz <= 30; cz += 12) {
+    const inner = 1 - Math.max(Math.abs(cx) / 52, Math.abs(cz) / 40);
+    const n = 3 + Math.floor(rnd() * 3);
+    for (let j = 0; j < n; j++, k++) {
+      const d = 2 + rnd() * 1.4, len = 3 + inner * 9 + rnd() * 4;
+      const x = cx + (rnd() - 0.5) * 7, z = cz + (rnd() - 0.5) * 7;
+      const c = MeshBuilder.CreateCylinder("heavenBasaltCol", { height: len, diameterTop: d, diameterBottom: d * 0.85, tessellation: 6 }, scene);
+      c.position.set(x, floorY - len / 2 + 0.4, z);
+      c.rotation.y = rnd();
+      c.bakeCurrentTransformIntoVertices();
+      cols.push(c);
+      if (j === 0 && (Math.abs(cx) > 40 || Math.abs(cz) > 26) && crowns.length < 24) {
+        const ox = Math.sign(cx || 1) * 1.6, oz = Math.sign(cz || 1) * 1.6;
+        for (let b = 0; b < 3; b++) {
+          const crown = MeshBuilder.CreateIcoSphere("heavenUnderCrown", { radius: 1.4 + rnd(), subdivisions: 1 }, scene);
+          crown.position.set(x + ox + (rnd() - 0.5) * 2, floorY - 1.5 - b * 0.8, z + oz + (rnd() - 0.5) * 2);
+          crown.bakeCurrentTransformIntoVertices();
+          crowns.push(crown);
+        }
+      }
+    }
+  }
+  for (const [parts, mat, name] of [[arches, shade, "heavenArches"], [cols, basalt, "heavenBasaltColumns"], [crowns, leaf, "heavenUnderCrowns"]] as const) {
+    const merged = Mesh.MergeMeshes(parts, true, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.isPickable = false;
+  }
+  void stone;
+}
+
 export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   const restoreSky = heavenSky(scene, built);
   const { stone, gold } = marbleDeck(scene, built);
+  viaductUnderside(scene, built, stone);
   const opened = openCentre(scene, built, result, stone, gold);
   const walled = parapets(scene, built, opened, stone, gold);
   const done = gateTowers(scene, pits(scene, built, walled, stone, gold), stone, gold);
