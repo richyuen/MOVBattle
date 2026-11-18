@@ -11,11 +11,11 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Flat pieces need correct left-handed winding or closed slabs. execSync eats a caret: write sha~1.
 - glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh left out of the pass wears the glow behind it as a pale veil (farmer_snow mill, 562). Keep dark solids in the pass; exclude bright/self-lit ones. Near-black: lit cloth (.08,.06,.07) self-lit .4 rough 1.
 - CreateIcoSphere subdivisions 0 is falsy, so it becomes 4: a smooth navy ball (575). Use 1 for a faceted rock.
-- Lit thin-instance wheat can read gold from above and brown at ground level. Two unlit, glow-excluded instance meshes sharing one matrix buffer keep heads and stems distinct in both shots.
+- Lit thin-instance wheat reads gold from above, brown at ground level: two unlit, glow-excluded instance meshes sharing one matrix buffer keep heads and stems distinct.
 
 ## Capture and probes
 - capture-world.mjs boots like capture.mjs: mulberry32 0x4d4f5642 reseeded at every resetBattle, time only through advanceTime, setup renders at 1/8 size (__setupScale 8). It re-adds body.capture-mode before every shot (the game drops it on loads).
-- Never run a capture with a test --iter number: pruneOld keeps only summary.json for iterations older than 10 (guarded by STATE's Iteration); test into look/ (no --iter).
+- Never capture with a test --iter: pruneOld strips iterations older than 10 to summary.json; test into look/ (no --iter).
 - A capture wipes iter-N unless --add: save audit/critic files after the step's last capture; an audit iteration's step 5 runs with --add (555). A step-5 capture (~80 shots) takes ~12 min: background it.
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
 - Probes (loop/scripts/probes/, --build after source changes) were written for units: read one before trusting it on a map.
@@ -35,7 +35,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - The translucent box framing maps in the top shot is those zone slabs too (createPlacementGuides), a map mesh. Island underside = islandUnder + islandShelf + islandCliff (merged crags); farmer_1's earthBowl replaces them. MeshBuilder.CreatePolygon needs earcut (absent): fan a ribbon to a hub instead.
 - The island shot (capture-world island pose; ArcRotate upperRadiusLimit clamps it to radius 120, elevation ~16 deg) foreshortens the underside hard: an underside must be ~0.3-0.4 of the island width deep (tribal tiers 16/13/10 m) or it reads as a thin band; farmer_1's 22 m bowl shows only ~7 m (559).
 - A `*/` inside a doc comment (e.g. "overlay_*/border_*") closes it: tsc then fails with parse errors.
-- Round island (560): base lawn ("ground", "centerGrass") and underside follow islandRim (superellipse 54 x 48, power 3); remap vertices radially. hazeTreeline is one merged mesh: hide it whole. Base trunks are unparented (crowns are children); skip disabled trunks.
+- Round island (560): base lawn ("ground", "centerGrass") and underside follow islandRim (superellipse 54x48, power 3); remap radially. hazeTreeline (merged grey balls at |z| 37.5-40.5) reads as a boulder chain: hide it whole (pirate 585). Base trunks are unparented.
 - Scene fog is linear and re-keyed every frame by main.ts (fogStart/End from the camera radius): a map's fogDensity does nothing. Draw haze instead (inside-facing translucent mist walls, viking 572).
 - Farmer base ring trees are oaks ("oakCrown" lumps on oakLeaves/oakLeavesDark): recolour those, not canopy (561). A raised drawn-only set piece can carry units via MapBuildResult.height (farmer_1 bridgeHeight).
 - A ribbon's facing follows its path order (SSAO greys a DOUBLESIDE one's inward faces): a down-facing deck renders black; check the first normal after convertToFlatShadedMesh and flipFaces(true) when wrong (561; viking bankFace 574 went near black). An underside facing away from the sun needs self-light ~1x its colour or it reads near black.
@@ -47,7 +47,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - The shared skyDome covers clearColor. A map can hide/restore it and draw its own fog-free, unlit sky sphere (Legacy 582).
 - Night snow under blue moonlight: warm the diffuse to cancel the light's tint, carry the pale tone in self-light, and drop the field from the glow (farmer_snow 573, CONFIRM passed).
 - Turf caps on cliff columns flicker when their top faces share a plane with the cliff or meadow. Set the cap slightly below the meadow and the shaft top inside the cap (Medieval 1, 567).
-- The sandboxed shell blocks the capture's loopback to Vite: run captures unsandboxed.
+- The sandboxed shell blocks the capture's loopback to Vite: run captures unsandboxed. A CONFIRM can fail on set pieces no list named (spooky_1 585).
 - Grass: thin-instance fans of six thin blades with up-facing normals read as grass (legacy 583); flattened IcoSpheres read fuzzy from afar but as paving stones from a stage's low camera (spooky_1 583), upright ones as stones; leaf cards as beige flags (571).
 - Mesh.MergeMeshes returns null past 65536 vertices unless allow32BitsIndices is passed, leaving every part unmerged on the default white material: use (parts, true, true) for big merges (spooky_1's white trees, 582).
 - A boulder heap receiving shadows shadows itself near black: receiveShadows false, self-light 0.6 (pirate 583).

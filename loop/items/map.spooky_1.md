@@ -1,23 +1,23 @@
 # map.spooky_1
-Status: open   Audited: 576 (AUDIT x2), 581 (CONFIRM: passed b; failed a), 582 (CONFIRM: passed b; failed a)   Done: -
+Status: open   Audited: 576 (AUDIT x2), 581 (CONFIRM: passed b; failed a), 582 (CONFIRM: passed b; failed a), 585 (CONFIRM: passed b; failed a)   Done: -
 ## Verdicts
-a FAIL (plateau; 584: struck 4): 2. Island cliff silhouette in map_spooky_1_island.png — TABS: irregular bulky rock masses form stepped, broken cliff faces and an uneven underside; ours has long repetitive vertical columns forming smooth, regular cliff bands (ref: reference/maps/spooky_1.png).
-b PASS (581: struck 5; CONFIRM 581, copied 582)
-c PASS (584 judge)
+a FAIL (plateau; 0 since 585, CONFIRM list): 1. ruined dark stone watchtower with lit yellow windows on the far rim in map_spooky_1_top — TABS: a tall dark tower with glowing windows stands on the far side of the field, right of centre, among the dead trees (ref: reference/maps/wiki/spooky_1.png, centre-right) 2. broken standing stone pillar on the far rim in map_spooky_1_ground — TABS: a tall grey broken stone column rises above the treeline left of centre (ref: reference/maps/wiki/spooky_1.png, upper centre-left; a dark tall structure also stands at the left edge of reference/stages/spooky.bone.png) 3. large soft red translucent discs on the grass under the tree ring in map_spooky_1_top — TABS: the only light pools are small warm orange-yellow glows around candles and jack-o-lanterns; no red patches lie on the ground (ref: reference/maps/wiki/spooky_1.png, left rim candle glows)
+b PASS (581: struck 5; CONFIRM 581, copied 582, 585)
+c PASS (585 judge)
 
 ## Ranked gaps
-1. [R] a flat upper cliff band — blocker 2: rebuild plateau's upper cliff tier as separate faceted masses stepping 2-4 m in and out of the outline with uneven tops, on the front faces too, and close the two dark gaps on the left front face — ref: reference/maps/spooky_1.png — ours: map_spooky_1_island.png
+1. [R] a far-rim set pieces and light pools — blockers 1-3: one rim-dressing rebuild (spec from the 581, 582 and 585 CONFIRM lists): a dark stone watchtower with lit windows on the far rim right of centre, a broken grey stone pillar left of centre, the red ground discs found by name and removed (zone slabs or glow pools), candle glows kept small and orange — ref: reference/maps/wiki/spooky_1.png — ours: map_spooky_1_top.png
 
 ## Attempts (iter | gap | criterion | verdict)
-584 | [R] stepped masses, shelf, roots, blade turf, dim mist 012614f9 | a2, a4 | APPROVE, struck a4 (R attempt 2, none rejected)
-583 | [R] bank rebuild 8094db6e | a1-3 | APPROVE, struck a1, a3; added a4 (R attempt 1)
+585 | [R] upper tier stepped masses, inset skirt, descent face d6e6dbce | a2 | APPROVE, struck a2 (critic a PASS); CONFIRM failed a (third) with a fresh list -> plateau
+584 | [R] stepped masses, shelf, roots, blade turf, dim mist 012614f9 | a2, a4 | APPROVE, struck a4
+583 | [R] bank rebuild 8094db6e | a1-3 | APPROVE, struck a1, a3; added a4
 582 | [S] dusky meadow fe776d2a; crooked trees 1c4f83cd | a | 2 APPROVE; second failed a CONFIRM -> plateau
-581 | [S] descent 8b37b4e3, b0f7dd32, 8800d66d | b5 | APPROVE, struck b5; CONFIRM b PASS, a FAIL
-576-579 | [S] sky, grass, chasm, trees, graveyard, lanterns (one ramp dropped) | a, b | 7 APPROVE, struck a1-a5, b1-b4
+576-581 | [S] sky, grass, chasm, trees, graveyard, lanterns, descent (one ramp dropped) | a, b | 8 APPROVE, struck a1-a5, b1-b5
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Stage: spooky.bone (enemies x 20..22.2, |z| <= 9.9). Graveyard x13..31 z13..29. Preserve confirmed b and the descent.
-- 584 early CONFIRM unused (not would-be-done; it passed a, a stays unconfirmed). The gap critic kept a2: the upper tier under the turf reads as one flat wall band on both front faces (the skirt shows between blocks), two black strips on the left front face (x -17..-12, the skirt at the recess), shelf blocks read as cubes.
-- The fog is now dim mist (0.1, 0.125, 0.26); blade tufts cleared a4.
+- Stage: spooky.bone (enemies x 20..22.2, |z| <= 9.9). Graveyard x13..31 z13..29. Preserve confirmed b, the descent and the 585 cliffs (critic passed them).
+- Cliff masses passed the critic at 585; the CONFIRM failed a on rim set pieces it had not listed before. Report: output/loop/iter-585/confirm.md.
+- [R] slot order: wild_west a at 586, then spooky_1 a at 587.

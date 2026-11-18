@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 584   Batch: maps_2+maps_3   Consecutive empty: 0   Done: 13/99   Parked: 0
+Iteration: 585   Batch: maps_2+maps_3   Consecutive empty: 0   Done: 13/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<id>):
 # <id>
@@ -18,7 +18,7 @@ Marks: one per criterion a b c (+ pass, - fail, ? unscored); map a look, b layou
 ## Scoreboard (a b c as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox +++ D | farmer_1 +++ D | farmer_2 +++ D | farmer_snow +++ D
 maps_2: medieval_1 +++ D | medieval_2 +++ D | ancient_1 +++ D | ancient_2 -++ o | ancient_sandbox +++ D | viking +++ D | viking_sandbox +++ D
-maps_3: dynasty +-+ o | renaissance --+ o | pirate --+ o | spooky_1 -++ o | spooky_2 --+ o | wild_west -++ o | legacy +++ D
+maps_3: dynasty +-+ o | renaissance -++ o | pirate --+ o | spooky_1 -++ o | spooky_2 --+ o | wild_west -++ o | legacy +++ D
 maps_4: fantasy_good ??? q | fantasy_evil ??? q | simulation ??? q | bridge ??? q | hill ??? q | corridor ??? q | defend_the_castle ??? q | high_ground ??? q | low_ground ??? q
 stages_introduction: clubs ??? q | army ??? q | hay_and_pitchforks ??? q | basic_formation ??? q | ice_archers_only_almost ??? q | longships ??? q
 stages_adventure: tree_tribe ??? q | the_tiniest_attack ??? q | sneaky_tribe ??? q | tree_mammoths ??? q | final_destination_wheelbarrow ??? q | a_fierce_rider ??? q
@@ -33,51 +33,51 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 584: maps_2+maps_3, 1 [R] + 8 [S]; BASE fdac0bb4)
-- [S] map.wild_west.b blocker 2 (40f76430) APPROVE, struck b2; CONFIRM b PASS
-- [S] map.wild_west.a blocker 2 (397ce937, 5deb40d9, 86d685ef) APPROVE, struck a2; CONFIRM a FAIL (second) -> plateau
-- [S] map.spooky_2.b blocker 3 (09c46949, 83d01f33) APPROVE, struck b3 (starvation)
-- [S] map.legacy.a blocker 2 (9944d480) APPROVE, struck a2; CONFIRM a PASS -> D
-- [R] map.spooky_1.a blockers 2, 4 (012614f9) APPROVE, struck a4; early CONFIRM unused (a2 stands)
-- [S] map.renaissance.a blocker 1 (89c01adc) APPROVE, struck a1 (starvation)
-- [S] map.renaissance.b blocker 6 (7813a271) APPROVE, no strike
-- [S] map.pirate.a blocker 2 (5395195a) APPROVE, struck a2
-- [S] map.spooky_2.a blocker 4 (96f80159) APPROVE, no strike (starvation)
-- 9/9, 6 struck
+## Focus (iter 585: maps_2+maps_3, 1 [R] + 7 [S] + 1 evidence re-aim; BASE a67a7d56)
+- [E] map.renaissance.b blocker 6 shot re-aimed to map_renaissance_arcade (a67a7d56) APPROVE, struck b6 -> b PASS
+- [R] map.spooky_1.a blocker 2 (d6e6dbce) APPROVE, struck a2 (critic a PASS); CONFIRM a FAIL with a fresh list -> plateau
+- [S] map.renaissance.a blocker 6 (7325dec5) APPROVE, struck a6
+- [S] map.renaissance.a blocker 4 (2cfb1cf0) APPROVE, struck a4
+- [S] map.pirate.b blocker 2 (07e0b708) APPROVE, struck b2
+- [S] map.pirate.a blocker 6 (26b8a6d7) APPROVE, struck a6
+- [S] map.pirate.a blocker 4 (8f023e21) APPROVE, struck a4
+- [S] map.spooky_2.a blocker 4 (6ad3b2cd) APPROVE, no strike
+- [S] map.spooky_2.b blocker 2 (45cc5ae9) APPROVE, stair clause struck
+- 9/9, 8 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.wild_west (40f76430)
+GAP: [R] map.spooky_1 (d6e6dbce)
 VERDICT: APPROVE
-CRITERION: map.wild_west.b PASS   (previous: FAIL)
-GAP: [S] map.wild_west (397ce937, 5deb40d9, 86d685ef)
-VERDICT: APPROVE
-CRITERION: map.wild_west.a PASS   (previous: FAIL)
-GAP: [S] map.spooky_2 (09c46949, 83d01f33)
-VERDICT: APPROVE
-CRITERION: map.spooky_2.b FAIL   (previous: FAIL)
-GAP: [S] map.legacy (9944d480)
-VERDICT: APPROVE
-CRITERION: map.legacy.a PASS   (previous: FAIL)
-GAP: [R] map.spooky_1 (012614f9)
-VERDICT: APPROVE
-CRITERION: map.spooky_1.a FAIL   (previous: FAIL)
-GAP: [S] map.renaissance (89c01adc)
+CRITERION: map.spooky_1.a PASS   (previous: FAIL)
+GAP: [S] map.renaissance (7325dec5)
 VERDICT: APPROVE
 CRITERION: map.renaissance.a FAIL   (previous: FAIL)
-GAP: [S] map.renaissance (7813a271)
+GAP: [S] map.renaissance (2cfb1cf0)
 VERDICT: APPROVE
-CRITERION: map.renaissance.b FAIL   (previous: FAIL)
-GAP: [S] map.pirate (5395195a)
+CRITERION: map.renaissance.a FAIL   (previous: FAIL)
+GAP: [S] map.pirate (07e0b708)
+VERDICT: APPROVE
+CRITERION: map.pirate.b FAIL   (previous: FAIL)
+GAP: [S] map.pirate (26b8a6d7)
 VERDICT: APPROVE
 CRITERION: map.pirate.a FAIL   (previous: FAIL)
-GAP: [S] map.spooky_2 (96f80159)
+GAP: [S] map.pirate (8f023e21)
+VERDICT: APPROVE
+CRITERION: map.pirate.a FAIL   (previous: FAIL)
+GAP: [S] map.spooky_2 (6ad3b2cd)
 VERDICT: APPROVE
 CRITERION: map.spooky_2.a FAIL   (previous: FAIL)
+GAP: [S] map.spooky_2 (45cc5ae9)
+VERDICT: APPROVE
+CRITERION: map.spooky_2.b FAIL   (previous: FAIL)
+GAP: [E] map.renaissance (a67a7d56)
+VERDICT: APPROVE
+CRITERION: map.renaissance.b PASS   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 584: 81 shots, zero page/console errors, all 44 script criteria PASS (after 83d01f33 took the court's corner colliders off vicious_terror's candleheads); 9/9 approved, 6 struck; legacy D (13/99). No checkpoint.
-- Two plateau [R]s wait, one per iteration, oldest first: 585 spooky_1 a (upper cliff tier as separate masses stepping in and out, close the dark gaps on the left front face), 586 wild_west a (the near block went see-through with 584's sand commits: fix the floor's self-light and glow exclusion first, then the sky backdrop; 582 and 584 CONFIRM lists).
-- Evidence first on renaissance b6: no shot shows the arcade hollow; add a pose or skirmish units under the palace and light the arcade floor and back wall.
-- Spooky 2: re-site the shrine to the far edge right of centre (x 12..17, z 38); then dead ring trees (a5) and bridges (b2). Pirate: a translucent blue slab off the right rim to find and remove; b starving at 587.
-- Unpickable: dynasty b3 until 588 (2 [S] attempts), ancient_2 a3 until 586 (3 attempts). Renaissance and pirate carry the most pickable [S].
+- 585: 53 shots, zero page/console errors, all 28 script criteria PASS; 9/9 approved, 8 struck; renaissance b PASS (CONFIRM pending until renaissance is would-be-done). No checkpoint.
+- Plateau [R]s, one per iteration: 586 wild_west a (near block see-through since 584's sand: floor self-light and glow exclusion first, then the sky backdrop; 582/584 CONFIRM lists), 587 spooky_1 a (far-rim watchtower, broken pillar, red ground discs; 585 confirm.md).
+- Renaissance a: cream flagstone checker (a3) and facade kit (a5); square off the oval floor drum's lavender lip on the plinth. Pirate: galleon rebuild (a1), golden rippled sand (a5), standable decks (b5); darker plank material is eligible [P] fallout of 07e0b708.
+- Spooky 2: black twisted ring trees (a5), thorn thickets (a3), stone bridges inboard |x|~30 with 3 m arch and darker stone (b2); a4 has 2 attempts (starvation 590).
+- Unpickable: dynasty b3 until 588, ancient_2 a3 starves at 586 (takes a slot), spooky_2 a4 (2 attempts).
