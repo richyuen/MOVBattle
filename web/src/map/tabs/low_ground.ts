@@ -48,6 +48,8 @@ function bankShade(scene: Scene): void {
     });
     gridUVs(bank);
     bank.receiveShadows = true;
+    // 591.5b: self-lit, so out of the glow pass (in it the banks bloomed white)
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(bank);
   }
 }
 
