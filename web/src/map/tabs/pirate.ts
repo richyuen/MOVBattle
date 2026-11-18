@@ -211,16 +211,16 @@ function hourglassBeach(scene: Scene, built: Set<unknown>): void {
   const stations = [[-58,7],[-51,24],[-38,32],[-23,30],[-7,25],[9,21],[23,24],[38,31],[49,28],[56,10]];
   for(const [x,w] of stations) outline.push([x,-w]);
   for(const [x,w] of [...stations].reverse()) outline.push([x,w]);
-  const positions = [0,0.03,0], indices: number[] = [];
-  for(const [x,z] of outline) positions.push(x,0.03,z);
+  const positions = [0,0.1,0], indices: number[] = [];
+  for(const [x,z] of outline) positions.push(x,0.1,z);
   const n=outline.length;
-  for(let i=0;i<n;i++) indices.push(0,1+(i+1)%n,1+i);
+  for(let i=0;i<n;i++) indices.push(0,1+i,1+(i+1)%n);
   // Two tapering shore courses follow the same outline rather than leaving the
   // former oval sand drum projecting past the new waterline.
   for(const [scale,y] of [[0.9,-6],[0.45,-18]]) for(const [x,z] of outline) positions.push(x*scale,y,z*scale);
   for(let ring=0;ring<2;ring++) for(let i=0;i<n;i++) {
     const a=1+ring*n+i,b=1+ring*n+(i+1)%n,c=a+n,d=b+n;
-    indices.push(a,b,c,b,d,c);
+    indices.push(a,c,b,b,c,d);
   }
   const normals: number[]=[];VertexData.ComputeNormals(positions,indices,normals);
   const data=new VertexData();data.positions=positions;data.indices=indices;data.normals=normals;
