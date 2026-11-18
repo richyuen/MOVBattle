@@ -271,6 +271,8 @@ function openCentre(scene: Scene, built: Set<unknown>, result: MapBuildResult, s
 function parapets(scene: Scene, built: Set<unknown>, result: MapBuildResult, stone: StandardMaterial, gold: StandardMaterial): MapBuildResult {
   const gone: Array<{ x: number; z: number }> = [];
   for (const m of scene.meshes) {
+    // 593.3b: the green ball band along both long edges is the base's merged haze treeline (no colliders): it goes whole
+    if (built.has(m) && m.name === "hazeTreeline") { m.setEnabled(false); continue; }
     if (!built.has(m) || m.parent || m.name !== "trunk" || !m.isEnabled()) continue;
     m.computeWorldMatrix(true);
     const c = m.getBoundingInfo().boundingBox.centerWorld;
