@@ -569,6 +569,69 @@ function greenRim(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+// Rock mass underside (595, blocker a6; void_evil.png and wiki fantasy_evil.png: the island is not a slab on black spikes but one
+// heavy mass of dark rock below the rim, great blocky boulders heaped in a rough inverted cone, a few chains hanging off it).
+// Spec: the base crags (islandCliff) hidden; under the island four rings of faceted rock (icosphere, subdivisions 1) shrinking
+// inward as they go down: ring k at depth 4 + 7k m, radius 0.92 - 0.2k of the 53 x 47 oval, boulders 6-11 m across (smaller
+// lower), squashed to 0.75 high; a core of three big boulders at the bottom (to ~32 m down, 0.3 of the width); slate
+// (.09,.12,.14) self (.03,.04,.045), receiveShadows off, flat shaded, in the glow pass; four hanging chains of dark links off
+// the front rim. Drawn only.
+function rockMass(scene: Scene, built: Set<unknown>): void {
+  for (const m of scene.meshes) if (built.has(m) && m.name.startsWith("islandCliff")) m.setEnabled(false);
+  let seed = 0x1d0c;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const rocks: Mesh[] = [], links: Mesh[] = [];
+  for (let k = 0; k < 4; k++) {
+    const f = 0.92 - 0.2 * k, y = -4 - 7 * k, n = Math.round(28 - 5 * k);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + k * 0.4 + rnd() * 0.15, c = Math.cos(a), s = Math.sin(a);
+      const r = 1 / (Math.abs(c / 53) ** 3 + Math.abs(s / 47) ** 3) ** (1 / 3);
+      const size = (11 - k * 1.5) * (0.6 + rnd() * 0.4);
+      const b = MeshBuilder.CreateIcoSphere("voidRockMass", { radius: size / 2, subdivisions: 1 }, scene);
+      b.scaling.set(1 + rnd() * 0.3, 0.75, 1 + rnd() * 0.3);
+      b.rotation.y = rnd() * 6.28;
+      b.position.set(c * r * f, y - rnd() * 2, s * r * f);
+      b.bakeCurrentTransformIntoVertices();
+      rocks.push(b);
+    }
+  }
+  for (const [x, z, rad] of [[-6, 3, 9], [7, -4, 8], [0, 8, 7]]) {
+    const b = MeshBuilder.CreateIcoSphere("voidRockMass", { radius: rad, subdivisions: 1 }, scene);
+    b.scaling.y = 0.9;
+    b.position.set(x, -26 - rad * 0.5, z);
+    b.bakeCurrentTransformIntoVertices();
+    rocks.push(b);
+  }
+  for (const x of [-38, -14, 18, 36]) {
+    const z = -47 * (1 - Math.abs(x / 53) ** 3) ** (1 / 3) - 1.5;
+    const drop = 8 + rnd() * 10;
+    for (let j = 0; j * 1.1 < drop; j++) {
+      const l = MeshBuilder.CreateTorus("voidRimChain", { diameter: 1.1, thickness: 0.28, tessellation: 8 }, scene);
+      l.rotation.set(0, j % 2 ? Math.PI / 2 : 0, Math.PI / 2);
+      l.position.set(x, -1 - j * 1.1, z - 1);
+      l.bakeCurrentTransformIntoVertices();
+      links.push(l);
+    }
+  }
+  const rock = new StandardMaterial("voidRockMass", scene);
+  rock.diffuseColor = new Color3(0.09, 0.12, 0.14);
+  rock.emissiveColor = new Color3(0.03, 0.04, 0.045);
+  rock.specularColor = Color3.Black();
+  const iron = new StandardMaterial("voidRimChain", scene);
+  iron.diffuseColor = new Color3(0.16, 0.18, 0.2);
+  iron.emissiveColor = new Color3(0.05, 0.055, 0.06);
+  iron.specularColor = Color3.Black();
+  for (const [parts, mat, name] of [[rocks, rock, "voidRockMass"], [links, iron, "voidRimChains"]] as const) {
+    const merged = Mesh.MergeMeshes(parts, true, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = false;
+    merged.isPickable = false;
+  }
+}
+
 export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -576,6 +639,7 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
   basaltFloor(scene, built);
   stairFlights(scene);
   greenRim(scene, built);
+  rockMass(scene, built);
   rockRing(scene, built);
   // seat the base's small props (bones, crystals, rocks, ring trunks) on the terrace under them (drawn only; colliders unchanged)
   for (const m of scene.meshes) {
