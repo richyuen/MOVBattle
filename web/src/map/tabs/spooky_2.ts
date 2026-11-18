@@ -680,6 +680,53 @@ function nightSky(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
+// Last round trees (593, blocker a5; card Overview "black leafless twisted trees only"): the base theme's own field trees (a
+// round "Spooky Graveyard_tree_canopy" ball over a "Spooky Graveyard_cyl" trunk 5 m tall) still stood in the field, one
+// showing at the far left of the ground shot. Spec: every such canopy is hidden with the trunk cylinder under it (same x, z;
+// the trunk's collider kept); in its place a black dead tree 7 m tall as the ring's (blackTrees): a crooked three-section
+// trunk from 1.4 m at the root, four limbs bending at an elbow to a claw twig, the ring's near-black bark material.
+function deadPropTrees(scene: Scene, built: Set<unknown>): void {
+  const bark = scene.getMaterialByName("spooky2DeadBark");
+  const parts: Mesh[] = [];
+  const up = Vector3.Up();
+  const limb = (from: Vector3, len: number, d: number, yaw: number, tilt: number): Vector3 => {
+    const dir = new Vector3(Math.sin(tilt) * Math.cos(yaw), Math.cos(tilt), Math.sin(tilt) * Math.sin(yaw));
+    const c = MeshBuilder.CreateCylinder("spooky2DeadLimb", { height: len, diameterBottom: d, diameterTop: d * 0.55, tessellation: 5 }, scene);
+    c.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(up, dir, c.rotationQuaternion);
+    c.position = from.add(dir.scale(len / 2));
+    parts.push(c);
+    return from.add(dir.scale(len * 0.95));
+  };
+  let k = 0;
+  for (const canopy of scene.meshes) {
+    if (!built.has(canopy) || !canopy.name.endsWith("_tree_canopy") || !canopy.isEnabled()) continue;
+    const { x, z } = canopy.position;
+    canopy.setEnabled(false);
+    for (const m of scene.meshes) {
+      if (built.has(m) && m.name.endsWith("_cyl") && !m.parent && Math.hypot(m.position.x - x, m.position.z - z) < 0.3) m.setEnabled(false);
+    }
+    const twist = 1.1 + k++ * 2.3, tall = 7;
+    const knee = limb(new Vector3(x, 0, z), tall * 0.3, 1.4, twist, 0.24);
+    const shoulder = limb(knee, tall * 0.26, 1.0, twist + 1.3, 0.4);
+    const top = limb(shoulder, tall * 0.2, 0.7, twist - 0.7, 0.3);
+    for (let j = 0; j < 4; j++) {
+      const yaw = twist + j * 1.6;
+      const start = j === 0 ? knee : j < 3 ? shoulder : top;
+      const elbow = limb(start, 2 + (j % 2) * 0.8, 0.6, yaw, 1.05 + (j % 3) * 0.2);
+      const end = limb(elbow, 1.6, 0.38, yaw + 0.65, 0.55);
+      limb(end, 0.9, 0.2, yaw - 0.7, 0.7);
+    }
+  }
+  const merged = Mesh.MergeMeshes(parts, true, true);
+  if (!merged) return;
+  merged.name = "spooky2DeadPropTrees";
+  merged.convertToFlatShadedMesh();
+  if (bark) merged.material = bark;
+  merged.receiveShadows = true;
+  merged.isPickable = false;
+}
+
 export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -692,6 +739,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   thornThickets(scene, result);
   darkTorii(scene, result);
   rockSkirt(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+  deadPropTrees(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
 
   result.height = channelBridges(scene);
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
