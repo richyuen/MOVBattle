@@ -17,30 +17,66 @@ import { Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial
 import type { MapBuildResult } from "../mapBuilder";
 
 const NOTCH = { x: 36, z: 30 };
-// Notched corners (596, blocker b4 attempt 2; reference/maps/spooky_2.png: every corner of the square slab is cut back in a
-// square step, not rounded). Spec: besides Dynasty's big back-right notch (x > 36, z > 30), the other three corners lose a
-// 7 x 7 m square (|x| > 47, |z| > 41 on the power-8 outline); floor, underside, ring trees and rock skirt all keep out of them.
-// The loop path turns its corners square (no Chaikin rounding, mitred ribbon corners).
-// 596.4b: at |x| > 47, |z| > 41 the notches cut only a 4-5 m sliver off the rounded corner, hidden under trees and rocks:
-// now |x| > 44.5, |z| > 38.5 (about 8 x 8 m), the loop path stepping in round each one as round the big notch; ring trees
-// stand 0.5 m off a small notch's edge (2 m off the big one's), clear of the stepped path.
-const NOTCHES = [
-  { sx: 1, sz: 1, x: NOTCH.x, z: NOTCH.z, pad: 2 },
-  { sx: -1, sz: 1, x: 44.5, z: 38.5, pad: 0.5 },
-  { sx: -1, sz: -1, x: 44.5, z: 38.5, pad: 0.5 },
-  { sx: 1, sz: -1, x: 44.5, z: 38.5, pad: 0.5 },
+// [R] Outline rebuild (598, b plateau; blockers b1 "Dynasty's square island turned 180 degrees, canals turned to fog" and b4
+// "square with notched corners, not an oval"; reference/maps/spooky_2.png: a hard-edged square slab, every corner cut back in a
+// square step, the two fog canals running right through it so each side edge is broken by a canal mouth open to the void;
+// wiki spooky_2.png: the canal ends gape at the sides between the land blocks, fog spilling out). The 590-596 outline was the
+// base oval remapped to a power-8 superellipse (corners still visibly round from every camera) with 8 m notches lost under
+// ring trees and skirt boulders. Spec, read off the references against Dynasty's constants turned 180 degrees:
+// - Rim: a true rectangle |x| <= 54, |z| <= 48 (max-norm remap of the base floor, no rounding).
+// - Cuts (rectangles taken out of it): Dynasty's big notch back-right x > 36, z > 30; the three other corners 12 x 12 m
+//   (|x| > 42, |z| > 36); a canal mouth at each end of each fog canal, |x| > 47.5 over the canal's width (|z| 7..17), 6.5 m deep.
+// - Bare cuts: no ring tree within 3 m of a cut (tree and collider go), base props in a cut hidden; the rock skirt walks the cut
+//   outline edge by edge, every boulder kept wholly under the deck (its reach under its distance to the outline), so each
+//   step and mouth shows as a clean square notch in the top and island shots.
+// - Fog canals run out to the mouths (|x| <= 47.5) and spill past them: two fog sheets falling away 14 m into the void.
+// - The loop path steps in round the 12 m corner notches (x +-39.25, z +-33.25) as round the big one.
+const CUTS = [
+  { x0: 36, x1: 99, z0: 30, z1: 99, pad: 2 },
+  { x0: -99, x1: -42, z0: 36, z1: 99, pad: 1 },
+  { x0: -99, x1: -42, z0: -99, z1: -36, pad: 1 },
+  { x0: 42, x1: 99, z0: -99, z1: -36, pad: 1 },
+  { x0: 47.5, x1: 99, z0: 7, z1: 17, pad: 1 },
+  { x0: 47.5, x1: 99, z0: -17, z1: -7, pad: 1 },
+  { x0: -99, x1: -47.5, z0: 7, z1: 17, pad: 1 },
+  { x0: -99, x1: -47.5, z0: -17, z1: -7, pad: 1 },
 ];
-/** A point inside a corner notch (grown by its pad when `padded`) pushed out onto the notch's nearer edge. */
-function outOfNotches(x: number, z: number, padded = false): [number, number] {
-  for (const n of NOTCHES) {
-    const margin = padded ? n.pad : 0;
-    const ax = x * n.sx, az = z * n.sz, nx = n.x - margin, nz = n.z - margin;
-    if (ax > nx && az > nz) {
-      if (ax - nx < az - nz) x = nx * n.sx;
-      else z = nz * n.sz;
-    }
+const RIM = { x: 54, z: 48 };
+/** The outline as a closed polygon (the rim with every cut taken out), counter-clockwise from the front-left notch. */
+const OUTLINE: Array<[number, number]> = [
+  [-42, -48], [42, -48], [42, -36], [54, -36], [54, -17], [47.5, -17], [47.5, -7], [54, -7], [54, 7], [47.5, 7], [47.5, 17],
+  [54, 17], [54, 30], [36, 30], [36, 48], [-42, 48], [-42, 36], [-54, 36], [-54, 17], [-47.5, 17], [-47.5, 7], [-54, 7],
+  [-54, -7], [-47.5, -7], [-47.5, -17], [-54, -17], [-54, -36], [-42, -36],
+];
+/** Distance from the rim's centre to its edge along the unit bearing (cx, cz): a hard rectangle. */
+function rimReach(cx: number, cz: number): number {
+  return 1 / Math.max(Math.abs(cx) / RIM.x, Math.abs(cz) / RIM.z, 1e-6);
+}
+/** A point inside a cut (grown by `pad` m) pushed out onto the cut's nearest inner edge. */
+function outOfCuts(x: number, z: number, pad = 0): [number, number] {
+  for (const c of CUTS) {
+    const x0 = c.x0 > -99 ? c.x0 - pad : -1e9, x1 = c.x1 < 99 ? c.x1 + pad : 1e9;
+    const z0 = c.z0 > -99 ? c.z0 - pad : -1e9, z1 = c.z1 < 99 ? c.z1 + pad : 1e9;
+    if (!(x > x0 && x < x1 && z > z0 && z < z1)) continue;
+    const opts: Array<[number, "x" | "z", number]> = [[x - x0, "x", x0], [x1 - x, "x", x1], [z - z0, "z", z0], [z1 - z, "z", z1]];
+    opts.sort((a, b) => a[0] - b[0]);
+    if (opts[0][1] === "x") x = opts[0][2];
+    else z = opts[0][2];
   }
   return [x, z];
+}
+const inCut = (x: number, z: number, pad: number) => { const [px, pz] = outOfCuts(x, z, pad); return px !== x || pz !== z; };
+/** Distance from (x, z) to the outline polygon's boundary, and whether the point is inside it. */
+function outlineDistance(x: number, z: number): { d: number; inside: boolean } {
+  let d = Infinity, inside = false;
+  for (let i = 0, j = OUTLINE.length - 1; i < OUTLINE.length; j = i++) {
+    const [ax, az] = OUTLINE[j], [bx, bz] = OUTLINE[i];
+    if ((bz > z) !== (az > z) && x < ((ax - bx) * (z - bz)) / (az - bz) + bx) inside = !inside;
+    const ex = bx - ax, ez = bz - az, l2 = ex * ex + ez * ez;
+    const t = Math.max(0, Math.min(1, ((x - ax) * ex + (z - az) * ez) / l2));
+    d = Math.min(d, Math.hypot(x - (ax + t * ex), z - (az + t * ez)));
+  }
+  return { d, inside };
 }
 
 function squareIsland(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
@@ -48,7 +84,7 @@ function squareIsland(scene: Scene, built: Set<unknown>, result: MapBuildResult)
   for (const mesh of scene.meshes) {
     if (!built.has(mesh)) continue;
     if (/^campaign_zone_(overlay|border)_/.test(mesh.name) || mesh.name === "campaign_hazard_box_void") mesh.setEnabled(false);
-    if (!mesh.parent && /^(trunk|Spooky Graveyard_)/.test(mesh.name) && mesh.position.x > NOTCH.x - 1 && mesh.position.z > NOTCH.z - 1) {
+    if (!mesh.parent && /^(trunk|Spooky Graveyard_)/.test(mesh.name) && inCut(mesh.position.x, mesh.position.z, 1)) {
       gone.push(mesh.position.clone());
       mesh.setEnabled(false);
     }
@@ -61,8 +97,8 @@ function squareIsland(scene: Scene, built: Set<unknown>, result: MapBuildResult)
       if (radial < 0.001) continue;
       const fraction = Math.cbrt(Math.abs(x / 54) ** 3 + Math.abs(z / 48) ** 3);
       const cx = x / radial, cz = z / radial;
-      const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
-      const [nx, nz] = outOfNotches(cx * fraction * reach, cz * fraction * reach);
+      const reach = rimReach(cx, cz);
+      const [nx, nz] = outOfCuts(cx * fraction * reach, cz * fraction * reach);
       positions[i] = nx;
       positions[i + 2] = nz;
     }
@@ -104,8 +140,15 @@ function fogChannels(scene: Scene): void {
     parts[k].push(b);
   };
   for (const sz of [-1, 1]) {
-    box("bed", 92, 0.06, 10, 0, 0.03, sz * 12);
-    for (const y of [0.25, 0.8, 1.4]) box("fog", 92, 0.02, 9.6, 0, y, sz * 12);
+    // 598 [R]: out to the canal mouths (|x| 47.5), then spilling past them into the void, two sheets falling away 14 m
+    box("bed", 95, 0.06, 10, 0, 0.03, sz * 12);
+    for (const y of [0.25, 0.8, 1.4]) box("fog", 95, 0.02, 9.6, 0, y, sz * 12);
+    for (const sx of [-1, 1]) for (const [y, fall] of [[0.6, 0.35], [1.2, 0.55]]) {
+      const b = MeshBuilder.CreateBox("spooky2Part", { width: 14, height: 0.02, depth: 9.6 }, scene);
+      b.rotation.z = sx * -fall;
+      b.position.set(sx * (47.5 + 7 * Math.cos(fall)), y - 7 * Math.sin(fall), sz * 12);
+      parts.fog.push(b);
+    }
     // Banks: kerbs from the field edge to each crossing, gaps at x 0 and x +-44
     for (const bank of [sz * 7, sz * 17]) {
       for (const [from, to] of [[-41.5, -2.5], [2.5, 41.5]]) box("stone", to - from, 0.5, 0.5, (from + to) / 2, 0.25, bank);
@@ -137,8 +180,9 @@ function cobbleLoop(scene: Scene): void {
   // turns square, not chamfered (the 595 single pass still cut every corner on a diagonal)
   // 596.4b: stepping in round the three small corner notches (|x| > 44.5, |z| > 38.5) as round the big one
   const pts: Array<[number, number]> = [
-    [-44, -35.25], [-41.25, -35.25], [-41.25, -38], [41.25, -38], [41.25, -35.25], [44, -35.25],
-    [44, 26], [32, 26], [32, 38], [-41.25, 38], [-41.25, 35.25], [-44, 35.25],
+    // 598 [R]: round the 12 m corner cuts (|x| > 42, |z| > 36)
+    [-44, -33.25], [-39.25, -33.25], [-39.25, -38], [39.25, -38], [39.25, -33.25], [44, -33.25],
+    [44, 26], [32, 26], [32, 38], [-39.25, 38], [-39.25, 33.25], [-44, 33.25],
   ];
   const n = pts.length;
   pts.push(pts[0]);
@@ -409,12 +453,14 @@ function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult
 // straight along the sides into tight corners, not the base's oval). Spec: each ring tree is pushed out along its bearing from
 // the base oval (54 x 48, power 2) onto the squared rim (power 8, as squareIsland), out of the back-right notch onto its nearer
 // edge; its collider moves with it.
-function squareRingSpot(x: number, z: number): [number, number] {
+// 598 [R]: onto the hard rectangle; a tree landing within 3 m of a cut is dropped (null), so every cut stays bare.
+function squareRingSpot(x: number, z: number): [number, number] | null {
   const radial = Math.hypot(x, z);
   if (radial < 0.001) return [x, z];
   const fraction = Math.hypot(x / 54, z / 48), cx = x / radial, cz = z / radial;
-  const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
-  return outOfNotches(cx * fraction * reach, cz * fraction * reach, true);
+  const reach = rimReach(cx, cz);
+  const px = cx * fraction * reach, pz = cz * fraction * reach;
+  return inCut(px, pz, 3) ? null : [px, pz];
 }
 
 function blackTrees(scene: Scene, built: Set<unknown>, result?: MapBuildResult): void {
@@ -437,10 +483,15 @@ function blackTrees(scene: Scene, built: Set<unknown>, result?: MapBuildResult):
   let k = 0;
   for (const mesh of scene.meshes) {
     if (!built.has(mesh) || mesh.name !== "trunk" || mesh.parent || !mesh.isEnabled()) continue;
-    const [x, z] = squareRingSpot(mesh.position.x, mesh.position.z);
+    const spot = squareRingSpot(mesh.position.x, mesh.position.z);
     const was = mesh.position;
-    for (const o of result?.obstacles ?? []) if (Math.hypot(o.center.x - was.x, o.center.z - was.z) < 0.6) { o.center.x = x; o.center.z = z; }
     mesh.setEnabled(false);
+    if (!spot) {
+      if (result) result.obstacles = result.obstacles.filter((o) => Math.hypot(o.center.x - was.x, o.center.z - was.z) >= 0.6);
+      continue;
+    }
+    const [x, z] = spot;
+    for (const o of result?.obstacles ?? []) if (Math.hypot(o.center.x - was.x, o.center.z - was.z) < 0.6) { o.center.x = x; o.center.z = z; }
     k++;
     if (k % 4 === 2) continue;
     // the torii stands in a clearing of the ring (587.5b)
@@ -681,12 +732,6 @@ function rockSkirt(scene: Scene, built: Set<unknown>): void {
   for (const m of scene.meshes) if (built.has(m) && /^(islandUnder|islandShelf|islandCliff)/.test(m.name)) m.setEnabled(false);
   let seed = 0x5b2;
   const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-  const edge = (a: number) => {
-    const cx = Math.cos(a), cz = Math.sin(a);
-    const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
-    const [x, z] = outOfNotches(cx * reach, cz * reach);
-    return { x, z };
-  };
   const rocks: Mesh[] = [];
   const rock = (x: number, top: number, z: number, r: number) => {
     const m = MeshBuilder.CreateIcoSphere("spooky2Rock", { radius: r, subdivisions: 1, flat: true }, scene);
@@ -697,17 +742,27 @@ function rockSkirt(scene: Scene, built: Set<unknown>): void {
     m.bakeCurrentTransformIntoVertices();
     rocks.push(m);
   };
-  const steps = 96;
+  // 598 [R]: walk the cut outline edge by edge (counter-clockwise, inward normal (-ez, ex)); each boulder's centre sits in from
+  // the edge by its own reach plus 4 m a course, and its radius is cut to its distance from the outline, so nothing pokes
+  // past the deck's edge into a cut or mouth from above
   for (let k = 0; k < 4; k++) {
-    for (let i = 0; i < steps; i++) {
-      const p = edge((i + rnd() * 0.5) / steps * Math.PI * 2);
-      const corner = p.z < 0 && Math.abs(p.x) > 30;
-      if (k === 3 && !corner) continue;
-      if (k > 0 && i % 2 === 1 && !corner) continue;
-      const len = Math.hypot(p.x, p.z), inset = 1 + 5 * k + (corner ? -1.5 : 0);
-      const r = (6.5 - k * 1.1) * (0.6 + rnd() * 0.4) * (corner ? 1.25 : 1);
-      const s = (len - inset) / len;
-      rock(p.x * s, -0.3 - 6 * k, p.z * s, r);
+    for (let e = 0; e < OUTLINE.length; e++) {
+      const [ax, az] = OUTLINE[e], [bx, bz] = OUTLINE[(e + 1) % OUTLINE.length];
+      const len = Math.hypot(bx - ax, bz - az), nx = -(bz - az) / len, nz = (bx - ax) / len;
+      const n = Math.max(1, Math.round(len / (k === 0 ? 4.5 : 7)));
+      for (let i = 0; i < n; i++) {
+        const t = (i + 0.25 + rnd() * 0.5) / n, px = ax + (bx - ax) * t, pz = az + (bz - az) * t;
+        const corner = pz < -20 && Math.abs(px) > 30;
+        if (k === 3 && !corner) continue;
+        let r = (6.5 - k * 1.1) * (0.6 + rnd() * 0.4) * (corner ? 1.25 : 1);
+        const inset = r * 1.1 + 4 * k;
+        const x = px + nx * inset, z = pz + nz * inset;
+        const { d, inside } = outlineDistance(x, z);
+        if (!inside) continue;
+        r = Math.min(r, d / 1.35);
+        if (r < 1.2) continue;
+        rock(x, -0.3 - 6 * k, z, r);
+      }
     }
   }
   const merged = Mesh.MergeMeshes(rocks, true, true);
