@@ -271,6 +271,33 @@ function sunsetSky(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
+// White clapboard chapel at the far right end of the rear street, outside all placement zones.
+function chapel(scene: Scene, obstacles: Obstacle[]): void {
+  const white = new StandardMaterial("westChapelWhite", scene);
+  white.diffuseColor.set(0.8, 0.76, 0.65); white.emissiveColor.set(0.24, 0.22, 0.18);
+  const slate = new StandardMaterial("westChapelSlate", scene);
+  slate.diffuseColor.set(0.07, 0.09, 0.15); slate.emissiveColor.set(0.02, 0.025, 0.04);
+  const wood = new StandardMaterial("westChapelDoor", scene);
+  wood.diffuseColor.set(0.22, 0.12, 0.08);
+  const put = (w: number, h: number, d: number, x: number, y: number, z: number, mat = white) => {
+    const m = MeshBuilder.CreateBox("westChapel", {width:w,height:h,depth:d}, scene);
+    m.position.set(39+x,y,35+z);m.material=mat;return m;
+  };
+  put(7,8,11,0,4,0);
+  for(const s of [-1,1]) { const roof=put(4.8,0.35,12,s*1.9,9.2,0,slate);roof.rotation.z=-s*0.62; }
+  put(2.5,3.8,0.15,0,1.9,-5.58,wood);
+  for(let i=0;i<17;i++) put(7.04,0.065,11.04,0,0.4+i*0.44,0);
+  for(const s of [-1,1]) for(let i=0;i<3;i++) put(0.12,2.8,0.95,s*3.56,4, -3+i*3,slate);
+  const rose=MeshBuilder.CreateCylinder("westChapelRose",{diameter:1.9,height:0.15,tessellation:12},scene);
+  rose.rotation.x=Math.PI/2;rose.position.set(39,6.3,29.4);rose.material=slate;
+  put(2.5,4.6,2.5,0,12,-3.5);
+  for(const s of [-1,1]) put(0.15,2.5,1.1,s*1.3,12.2,-3.5,slate);
+  const spire=MeshBuilder.CreateCylinder("westChapelSpire",{height:4.2,diameterBottom:4,diameterTop:0,tessellation:4},scene);
+  spire.rotation.y=Math.PI/4;spire.position.set(39,16.4,31.5);spire.material=slate;
+  for(let i=0;i<4;i++) put(3.6,0.25,0.9,0,0.125+i*0.25,-8+i*0.8);
+  obstacles.push({type:"box",center:new Vector3(39,0,35),halfX:3.7,halfZ:5.7});
+}
+
 export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -294,6 +321,7 @@ export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuil
   }
   const kept = obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
   town(scene, kept);
+  chapel(scene, kept);
   desertRim(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), kept);
   const restoreSky = sunsetSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles: kept, dispose: () => { restoreSky(); result.dispose?.(); } };
