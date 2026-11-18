@@ -86,12 +86,12 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
         box(wall, w * 0.5, 0.9, 0.4, 0, h + rise + 0.45, front - 0.2);
         box("trim", w * 0.54, 0.22, 0.55, 0, h + rise + 0.95, front - 0.2);
       } else if (k % 3 === 1) {
-        // A gabled false front: a three-sided prism lying along the street face
-        const gable = MeshBuilder.CreateCylinder("wildWestGable", { diameter: w * 0.72, height: 0.4, tessellation: 3 }, scene);
-        gable.rotation.set(Math.PI / 2, 0, Math.PI / 2);
-        gable.scaling.z = 0.6;
+        // A gabled false front: a square board turned on its corner, its lower half sunk in the false front
+        const gable = MeshBuilder.CreateBox("wildWestGable", { width: w * 0.5, height: w * 0.5, depth: 0.4 }, scene);
+        gable.rotation.z = Math.PI / 4;
+        gable.scaling.y = 0.6;
         const [x, z] = at(0, front - 0.2);
-        gable.position.set(x, h + rise + w * 0.07, z);
+        gable.position.set(x, h + rise - 0.3, z);
         parts[wall].push(gable);
       } else {
         // A disc whose lower half sinks into the false front: its upper half reads as the arched top
