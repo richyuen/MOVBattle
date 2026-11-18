@@ -14,6 +14,7 @@ import { Color3, Mesh, MeshBuilder, StandardMaterial, TransformNode, Vector3, ty
 import type { MapBuildResult } from "../mapBuilder";
 
 const PALACE = { z: 31, wide: 36, deep: 8 };
+const ARCADE = 3.2;
 
 function dogesPalace(scene: Scene): void {
   const mk = (name: string, c: Color3, self: number) => {
@@ -45,15 +46,23 @@ function dogesPalace(scene: Scene): void {
     box(k, s, s, 0.1, x, y0 + h - w * 0.5, z, Math.PI / 4);
   };
   const face = F - 0.05;
-  // Body
-  box("wall", W, 21, D, 0, 10.5, F + D / 2);
+  // Body. Walk-in arcade (584, card Appearance and wiki renaissance.png: the palace stands on an open ground arcade that
+  // units can stand in). The ground storey is hollow for its front ARCADE metres: the upper body rests on the columns,
+  // the ground wall stands back with the dark doorways on it, and each bay's pointed head is cut by stone diamonds over
+  // the columns under a lintel band; the collider (buildRenaissance) covers only the wall behind.
+  box("wall", W, 14.5, D, 0, 13.75, F + D / 2);
+  box("wall", W, 6.5, D - ARCADE, 0, 3.25, F + ARCADE + (D - ARCADE) / 2);
   // Ground arcade: eight pointed arches between stout columns
   const n = 8, bay = W / n;
   for (let i = 0; i < n; i++) {
     const x = -W / 2 + bay * (i + 0.5);
-    pointed("shade", x, 0, 3, 5.2, face);
-    if (i > 0) box("stone", 0.9, 5, 0.9, x - bay / 2, 2.5, F - 0.3);
+    pointed("shade", x, 0, 3, 5.2, F + ARCADE - 0.05);
+    if (i > 0) {
+      box("stone", 0.9, 5, 0.9, x - bay / 2, 2.5, F - 0.3);
+      box("stone", bay / Math.SQRT2, bay / Math.SQRT2, 0.6, x - bay / 2, 5.1, F - 0.3, Math.PI / 4);
+    }
   }
+  box("stone", W, 1.4, 0.9, 0, 5.8, F - 0.3);
   box("stone", W + 0.4, 0.5, 1.2, 0, 6.5, F - 0.2);
   // Loggia: slender columns with small pointed heads, a balustrade at its foot, a band of quatrefoil roundels above
   const m = 16, lb = W / m;
@@ -370,7 +379,7 @@ export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapB
   creamPavement(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   // The circular object in the reference battle is a unit: the piazza itself has no fountain.
   for(const m of scene.meshes) if(!prior.has(m)&&m.name.startsWith("plazaFountain")) m.setEnabled(false);
-  const obstacles = [...result.obstacles.filter(o=>!(o.type==="cylinder"&&Math.hypot(o.center.x,o.center.z)<0.1&&o.radius===3.5)), { type: "box" as const, center: new Vector3(0, 0, PALACE.z + PALACE.deep / 2), halfX: PALACE.wide / 2, halfZ: PALACE.deep / 2 }];
+  const obstacles = [...result.obstacles.filter(o=>!(o.type==="cylinder"&&Math.hypot(o.center.x,o.center.z)<0.1&&o.radius===3.5)), { type: "box" as const, center: new Vector3(0, 0, PALACE.z + ARCADE + (PALACE.deep - ARCADE) / 2), halfX: PALACE.wide / 2, halfZ: (PALACE.deep - ARCADE) / 2 }];
   return { ...result, obstacles };
 }
 
