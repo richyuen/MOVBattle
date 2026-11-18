@@ -250,6 +250,15 @@ function churchyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): 
   }
 }
 
+// The glade continues into a valley floor beyond its pine belt; no exposed floating island sides.
+function valleyFloor(scene: Scene, built: Set<unknown>): void {
+  for(const m of scene.meshes) if(built.has(m)&&/^(islandUnder|islandShelf|islandCliff)/.test(m.name)) m.setEnabled(false);
+  const mat=new StandardMaterial("legacyValleyGround",scene);
+  mat.diffuseColor.set(0.4,0.46,0.19);mat.emissiveColor.set(0.13,0.15,0.05);mat.specularColor=Color3.Black();
+  const ground=MeshBuilder.CreateCylinder("legacyValleyFloor",{height:12,diameter:290,tessellation:40},scene);
+  ground.position.y=-6.25;ground.material=mat;ground.convertToFlatShadedMesh();
+}
+
 export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -261,5 +270,6 @@ export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildR
   church(scene, built, result);
   churchyard(scene,built,result);
   tentCamps(scene);
+  valleyFloor(scene,built);
   return result;
 }
