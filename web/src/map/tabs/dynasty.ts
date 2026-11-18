@@ -177,6 +177,75 @@ function squareIsland(scene: Scene, built: Set<unknown>, result: MapBuildResult)
   });
 }
 
+// Central courtyard (578, card Overview and the wiki shot: in the middle of the island a square flagstone courtyard with a
+// square bottomless pit at its heart, walled by stone kerbs, ringed by turquoise water and reached by bridges on all four
+// sides). Spec: the courtyard fills the dry strip between the base's two canals (|x|, |z| <= 7), paved in warm grey stone
+// (0.62, 0.62, 0.58) with a darker kerb; the base's round pit (r 5) becomes a square pit 6 x 6 m (a near-black well with a
+// 0.35 m stone lip, the hazard a box of half 3); the courtyard's east and west sides are moat channels 3 m wide (|x| 7..10,
+// turquoise (0.2, 0.8, 0.75) water hazards in two pieces each) leaving a 4.4 m gap at z 0 under a grey arched bridge with
+// parapets; the base's canals already close the north and south sides and their bridges at x 0 stay.
+function courtyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  for (const mesh of scene.meshes) if (built.has(mesh) && mesh.name === "campaign_hazard_cyl_pit") mesh.setEnabled(false);
+  result.hazards = result.hazards.filter((h) => !(h.kind === "pit" && h.shape === "cylinder" && Math.hypot(h.center.x, h.center.z) < 0.5));
+  result.hazards.push({ shape: "box", kind: "pit", center: new Vector3(0, 0, 0), halfX: 3, halfZ: 3 });
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    result.hazards.push({ shape: "box", kind: "water", center: new Vector3(sx * 8.5, 0, sz * 4.6), halfX: 1.5, halfZ: 2.4 });
+  }
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    pave: mk("dynastyCourtPave", new Color3(0.62, 0.62, 0.58), 0.4),
+    kerb: mk("dynastyCourtKerb", new Color3(0.44, 0.45, 0.46), 0.4),
+    water: mk("dynastyCourtWater", new Color3(0.2, 0.8, 0.75), 0.35),
+    well: mk("dynastyCourtWell", new Color3(0.03, 0.03, 0.04), 0),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { pave: [], kerb: [], water: [], well: [] };
+  const box = (k: keyof typeof mats, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("dynastyCourtPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    parts[k].push(b);
+  };
+  // Paving round the pit: four slabs, a flagstone seam grid drawn as thin kerb strips
+  box("pave", 14, 0.12, 4, 0, 0.06, -5);
+  box("pave", 14, 0.12, 4, 0, 0.06, 5);
+  box("pave", 4, 0.12, 6, -5, 0.06, 0);
+  box("pave", 4, 0.12, 6, 5, 0.06, 0);
+  for (const s of [-1, 1]) {
+    box("kerb", 14, 0.13, 0.08, 0, 0.065, s * 5);
+    box("kerb", 0.08, 0.13, 14, s * 5, 0.065, 0);
+  }
+  // The square pit: a black well under a stone lip
+  box("well", 6, 0.1, 6, 0, 0.02, 0);
+  for (const s of [-1, 1]) {
+    box("kerb", 6.7, 0.35, 0.35, 0, 0.17, s * 3.17);
+    box("kerb", 0.35, 0.35, 6.7, s * 3.17, 0.17, 0);
+  }
+  // East and west moat channels with stone walls, and a bridge across each at z 0
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) box("water", 3, 0.1, 4.8, sx * 8.5, 0.05, sz * 4.6);
+    box("kerb", 0.4, 0.5, 14.4, sx * 7, 0.25, 0);
+    box("kerb", 0.4, 0.5, 14.4, sx * 10, 0.25, 0);
+    box("kerb", 4.4, 0.4, 3.6, sx * 8.5, 0.55, 0);
+    box("kerb", 3.4, 0.4, 3.6, sx * 8.5, 0.25, 0);
+    for (const pz of [-1, 1]) box("kerb", 4.4, 0.5, 0.25, sx * 8.5, 0.95, pz * 1.7);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true);
+    if (!merged) continue;
+    merged.name = `dynastyCourt_${key}`;
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    if (key !== "well") glow?.addExcludedMesh(merged);
+  }
+}
+
 export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -195,6 +264,7 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   }
   const obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 1));
   pagoda(scene);
+  courtyard(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
