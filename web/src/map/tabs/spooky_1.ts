@@ -57,42 +57,64 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
   data.applyToMesh(mesh);
   mesh.material = grass;
   mesh.receiveShadows = true;
-  const columns: Mesh[] = [];
-  const caps: Mesh[] = [];
+  // Rock-mass cliffs (583 rebuild, spec at the head of the bank rebuild below): a dark skirt wall under the whole outline, and
+  // in front of it three stepped tiers of heaped rocks per 4.2 m station.
+  const rocks: Mesh[] = [];
+  const skirtPositions: number[] = [];
+  const skirtIndices: number[] = [];
+  let n = side < 0 ? 0 : 700;
   for (let i = 0; i < points.length; i++) {
     const a = points[i], b = points[(i + 1) % points.length];
     const span = Vector3.Distance(a, b);
-    const count = Math.ceil(span / 5);
+    const at = skirtPositions.length / 3;
+    skirtPositions.push(a.x, -0.05, a.z, b.x, -0.05, b.z, b.x, -20, b.z, a.x, -20, a.z);
+    skirtIndices.push(at, at + 1, at + 2, at, at + 2, at + 3);
+    const count = Math.ceil(span / 4.2);
     const nx = side * (a.z - b.z) / span, nz = side * (b.x - a.x) / span;
+    const yaw = Math.atan2(a.z - b.z, b.x - a.x);
     for (let j = 0; j < count; j++) {
       const p = Vector3.Lerp(a, b, (j + 0.5) / count);
-      // Leave the recessed secret passage open before the cliff columns merge.
+      // Leave the recessed secret passage open before the cliff rocks merge.
       if (side < 0 && p.x > -17 && p.z > -25 && p.z < 7) continue;
       const width = span / count;
-      const upper = 6 + ((i * 3 + j * 5) % 7);
-      for (const [height, top, offset] of [[upper, 0, 0.35], [19 - upper, -upper, 1.65 + j % 3]]) {
-        const x = p.x + nx * offset, z = p.z + nz * offset;
-        const shaft = MeshBuilder.CreateCylinder("spooky1CliffColumn", { height, diameterTop: width * 1.18, diameterBottom: width * 1.37, tessellation: 6 }, scene);
-        shaft.scaling.z = 0.72;
-        shaft.rotation.y = Math.atan2(a.z - b.z, b.x - a.x);
-        shaft.position.set(x, top - height / 2 - 0.18, z);
-        columns.push(shaft);
-        const cap = MeshBuilder.CreateCylinder("spooky1TurfLedge", { height: 0.72, diameterTop: width * 1.23, diameterBottom: width * 1.13, tessellation: 6 }, scene);
-        cap.scaling.copyFrom(shaft.scaling);
-        cap.rotation.y = shaft.rotation.y;
-        cap.position.set(x, top - 0.39, z);
-        caps.push(cap);
+      for (let tier = 0; tier < 3; tier++) {
+        n++;
+        const r = (s: number) => seeded(n, 400 + s);
+        const h = [6.5, 8, 8.5][tier] + r(1) * 3.5;
+        const w = width * (1.2 + r(2) * 0.7);
+        const d = [3.4, 5, 4.4][tier] + r(3) * 2.2;
+        const out = [0.4, 2.6, 1.1][tier] + r(4) * 1.7;
+        const top = [-0.75, -4.4, -10.5][tier] - r(5) * [0.9, 2.6, 2.8][tier];
+        const along = (r(6) - 0.5) * width * 0.6;
+        const rock = r(7) < 0.55
+          ? MeshBuilder.CreateIcoSphere("spooky1CliffRock", { radius: 0.5, subdivisions: 1 }, scene)
+          : MeshBuilder.CreateCylinder("spooky1CliffRock", { height: 1, diameterTop: 0.6 + r(8) * 0.3, diameterBottom: 1, tessellation: 5 }, scene);
+        rock.scaling.set(w, h, d);
+        rock.rotation.set((r(9) - 0.5) * 0.3, yaw + (r(10) - 0.5) * 0.8, (r(11) - 0.5) * 0.3);
+        rock.position.set(p.x + nx * out + ((b.x - a.x) / span) * along, top - h / 2, p.z + nz * out + ((b.z - a.z) / span) * along);
+        rocks.push(rock);
       }
     }
   }
-  for (const [group, mat] of [[columns, stone], [caps, grass]] as const) {
-    const merged = Mesh.MergeMeshes(group, true);
-    if (!merged) continue;
-    merged.name = "spooky1Cliffs";
-    merged.convertToFlatShadedMesh();
-    merged.material = mat;
-    merged.receiveShadows = true;
-  }
+  const skirt = new Mesh("spooky1CliffSkirt", scene);
+  const skirtNormals: number[] = [];
+  VertexData.ComputeNormals(skirtPositions, skirtIndices, skirtNormals);
+  const skirtData = new VertexData();
+  skirtData.positions = skirtPositions;
+  skirtData.indices = skirtIndices;
+  skirtData.normals = skirtNormals;
+  skirtData.applyToMesh(skirt);
+  const skirtStone = stone.clone("spooky1CliffSkirtStone");
+  skirtStone.backFaceCulling = false;
+  skirt.material = skirtStone;
+  skirt.isPickable = false;
+  const merged = Mesh.MergeMeshes(rocks, true, true);
+  if (!merged) return;
+  merged.name = "spooky1Cliffs";
+  merged.convertToFlatShadedMesh();
+  merged.material = stone;
+  merged.receiveShadows = true;
+  merged.isPickable = false;
 }
 
 function fogChasm(scene: Scene, built: Set<unknown>, result: MapBuildResult): MapBuildResult {
@@ -113,8 +135,8 @@ function fogChasm(scene: Scene, built: Set<unknown>, result: MapBuildResult): Ma
     m.alpha = alpha;
     return m;
   };
-  const grass = mk("spooky1PlateauGrass", new Color3(0.2, 0.24, 0.38), new Color3(0.05, 0.06, 0.11));
-  const stone = mk("spooky1CliffStone", new Color3(0.3, 0.33, 0.48), new Color3(0.1, 0.11, 0.18));
+  const grass = mk("spooky1PlateauGrass", new Color3(0.13, 0.16, 0.28), new Color3(0.03, 0.038, 0.075));
+  const stone = mk("spooky1CliffStone", new Color3(0.22, 0.25, 0.4), new Color3(0.04, 0.046, 0.085));
   plateau(scene, -1, grass, stone);
   plateau(scene, 1, grass, stone);
   const glow = scene.getGlowLayerByName("glow");
@@ -335,8 +357,8 @@ function nightGrass(scene: Scene, built: Set<unknown>): void {
 // 0.9-1.6 m flaring further out; all near-black navy (0.07, 0.07, 0.11), barely self-lit, merged, in the glow pass (dark solid).
 function deadTrees(scene: Scene, built: Set<unknown>): void {
   const bark = new StandardMaterial("spooky1DeadBark", scene);
-  bark.diffuseColor = new Color3(0.07, 0.07, 0.11);
-  bark.emissiveColor = new Color3(0.028, 0.028, 0.045);
+  bark.diffuseColor = new Color3(0.035, 0.035, 0.055);
+  bark.emissiveColor = new Color3(0.012, 0.012, 0.02);
   bark.specularColor = Color3.Black();
   const parts: Mesh[] = [];
   const up = Vector3.Up();
@@ -356,24 +378,27 @@ function deadTrees(scene: Scene, built: Set<unknown>): void {
     if (!onPlateau(x, z)) continue;
     mesh.setEnabled(false);
     k++;
-    const tall = 4.8 + seeded(k, 71) * 3.2;
-    const twist = seeded(k, 72)*6.28;
-    // A crooked three-section trunk with a broad root flare, and asymmetric
-    // low limbs. Branches bend at elbows rather than forming repeated Ys.
-    const knee = limb(new Vector3(x, 0, z), tall*0.28, 1.35, twist,0.25);
-    const shoulder = limb(knee,tall*0.25,0.95,twist+1.3,0.4);
-    const top = limb(shoulder,tall*0.2,0.68,twist-0.7,0.3);
-    const limbs = 3+Math.floor(seeded(k,74)*2);
+    // Two of every five ring trunks stay bare ground: the wood is a broken line of separate black trees, not a fence.
+    if (k % 5 === 1 || k % 5 === 3) continue;
+    const tall = 5.5 + seeded(k, 71) * 3.5;
+    const twist = seeded(k, 72) * 6.28;
+    // A squat crooked three-section trunk with a broad root flare, and three or four heavy limbs that leave it low,
+    // bend at an elbow and end in one claw twig.
+    const knee = limb(new Vector3(x, 0, z), tall * 0.3, 1.7, twist, 0.28);
+    const shoulder = limb(knee, tall * 0.26, 1.2, twist + 1.3, 0.45);
+    const top = limb(shoulder, tall * 0.2, 0.85, twist - 0.7, 0.32);
+    const limbs = 3 + Math.floor(seeded(k, 74) * 2);
     for (let j = 0; j < limbs; j++) {
-      const yaw = twist+j*2.4+seeded(k+j,75)*0.7;
-      const start=j===0?knee:j===1?shoulder:top;
-      const elbow=limb(start,1.5+seeded(k+j,76)*1.5,0.58,yaw,0.95+seeded(k+j,77)*0.6);
-      const end=limb(elbow,1.1+seeded(k+j,78)*1.2,0.34,yaw+0.65,0.45+seeded(k+j,79)*0.8);
-      limb(end,0.7+seeded(k+j,80),0.17,yaw-0.7,0.7);
-      if(j%2===0)limb(elbow,1.2,0.2,yaw-0.85,1.25);
+      const yaw = twist + j * 2.4 + seeded(k + j, 75) * 0.7;
+      const start = j === 0 ? knee : j === 1 ? shoulder : top;
+      const elbow = limb(start, 1.6 + seeded(k + j, 76) * 1.6, 0.7, yaw, 0.95 + seeded(k + j, 77) * 0.6);
+      const end = limb(elbow, 1.2 + seeded(k + j, 78) * 1.3, 0.42, yaw + 0.65, 0.45 + seeded(k + j, 79) * 0.8);
+      limb(end, 0.7 + seeded(k + j, 80), 0.2, yaw - 0.7, 0.7);
     }
   }
-  const merged = Mesh.MergeMeshes(parts, true);
+  // 32-bit indices: past 65536 vertices a 16-bit merge returns null and leaves every limb unmerged on the default white
+  // material (582's blue-white thicket).
+  const merged = Mesh.MergeMeshes(parts, true, true);
   if (!merged) return;
   merged.name = "spooky1DeadTrees";
   merged.convertToFlatShadedMesh();
@@ -434,23 +459,44 @@ export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuild
   return { ...result, dispose: () => { restore(); result.dispose?.(); } };
 }
 
-// Dense short, faceted grass on both banks (spooky.bone). Thin instances keep
-// the cover inexpensive; the ravine, bridge and recessed descent stay bare.
+// Bank rebuild (583, replaces 582's meadow, trees and column cliffs; references reference/stages/spooky.bone.png,
+// reference/maps/wiki/spooky_1.png, reference/maps/spooky_1.png). Spec:
+// - Ground: the banks are dark navy turf, darker than the cliffs' lit faces (floor (0.13, 0.16, 0.28)); over it lie low
+//   soft tussocks in drifts, not a carpet: flattened faceted lumps 0.9-1.7 m across and 0.14-0.26 m high on a 0.95 m grid,
+//   present on about half the cells (two crossing sine swathes), in two tones a shade lighter than the floor, so the wiki
+//   shot's pale grass patches between bare dark ground read; nothing stands above ankle height.
+// - Trees: three of every five ring positions carry a tree; each is black (0.035, 0.035, 0.055), a squat trunk 1.7 m at
+//   the root in three bent sections 5.5-9 m, with 3-4 heavy elbowed limbs; merged with 32-bit indices so the bark material
+//   applies to all of them.
+// - Cliffs: no columns. A dark skirt wall drops 20 m under the outline; in front of it every 4.2 m of edge carries three
+//   stepped tiers of rock, each a faceted boulder or a tilted five-sided block 4-9 m wide and 6.5-12 m high, tops at
+//   -0.75..-1.65, -4.4..-7 and -10.5..-13.3 m, standing 0.4-2.1, 2.6-4.3 and 1.1-2.8 m out, turned up to 23 degrees and
+//   tipped up to 9, so the face is broken and stepped and the underside ends at uneven depths (-17..-25 m). Stone is a
+//   darker navy (0.22, 0.25, 0.4), barely self-lit, so the cliff no longer glows white.
 function duskyMeadow(scene: Scene): void {
-  const mat = new StandardMaterial("spooky1DuskyGrass",scene);
-  mat.diffuseColor.set(0.2,0.24,0.38);mat.emissiveColor.set(0.05,0.06,0.11);mat.specularColor=Color3.Black();
-  const tuft = MeshBuilder.CreateIcoSphere("spooky1DuskyTufts",{radius:0.5,subdivisions:1},scene);
-  tuft.material=mat;tuft.receiveShadows=true;tuft.isPickable=false;
-  const matrices: number[]=[];
-  let i=0;
-  for(let x=-52;x<=52;x+=0.78) for(let z=-42;z<=39;z+=0.78) {
+  const tones = [[0.17, 0.21, 0.35], [0.21, 0.26, 0.42]] as const;
+  const matrices: number[][] = [[], []];
+  let i = 0;
+  for (let x = -52; x <= 52; x += 0.95) for (let z = -42; z <= 39; z += 0.95) {
     i++;
-    const px=x+(seeded(i,301)-0.5)*0.5,pz=z+(seeded(i,302)-0.5)*0.5;
-    if(!onPlateau(px,pz) || (px>-16&&px<-6&&pz>-26&&pz<2)) continue;
-    const h=0.32+seeded(i,303)*0.3;
-    matrices.push(...Matrix.Compose(new Vector3(0.7+seeded(i,304)*0.4,h*2,0.6+seeded(i,305)*0.35),Quaternion.RotationAxis(Vector3.Up(),seeded(i,306)*6.28),new Vector3(px,h*0.4,pz)).m);
+    const px = x + (seeded(i, 301) - 0.5) * 0.7, pz = z + (seeded(i, 302) - 0.5) * 0.7;
+    if (!onPlateau(px, pz) || (px > -16 && px < -6 && pz > -26 && pz < 2)) continue;
+    const drift = Math.sin(px * 0.21 + pz * 0.09) + Math.sin(pz * 0.27 - px * 0.13 + 1.7);
+    if (drift + (seeded(i, 307) - 0.5) * 0.9 < 0.05) continue;
+    const h = 0.14 + seeded(i, 303) * 0.12;
+    matrices[seeded(i, 308) < 0.6 ? 0 : 1].push(...Matrix.Compose(new Vector3(0.9 + seeded(i, 304) * 0.8, h * 2, 0.8 + seeded(i, 305) * 0.7), Quaternion.RotationAxis(Vector3.Up(), seeded(i, 306) * 6.28), new Vector3(px, h * 0.25, pz)).m);
   }
-  tuft.thinInstanceSetBuffer("matrix",new Float32Array(matrices),16);
+  for (const [t, tone] of tones.entries()) {
+    const mat = new StandardMaterial(`spooky1DuskyGrass${t}`, scene);
+    mat.diffuseColor.set(tone[0], tone[1], tone[2]);
+    mat.emissiveColor.set(tone[0] * 0.25, tone[1] * 0.25, tone[2] * 0.25);
+    mat.specularColor = Color3.Black();
+    const tuft = MeshBuilder.CreateIcoSphere("spooky1DuskyTufts", { radius: 0.5, subdivisions: 1 }, scene);
+    tuft.material = mat;
+    tuft.receiveShadows = true;
+    tuft.isPickable = false;
+    tuft.thinInstanceSetBuffer("matrix", new Float32Array(matrices[t]), 16);
+  }
 }
 
 // A walled descent in a recess on the left bank, ending at the broken room beneath the bridge.
