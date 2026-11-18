@@ -134,9 +134,9 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
     else b.position.set(u, y, across);
     (parts.get(mat) ?? parts.set(mat, []).get(mat)!).push(b);
   };
-  const house = (row: Row, u: number, wide: number) => {
+  const house = (row: Row, u: number, wide: number, low = false) => {
     k++;
-    const floors = 3 + Math.round(r(2) * 2), tall = floors * 3.2;
+    const floors = (low ? 2 : 3) + Math.round(r(2) * (low ? 1 : 2)), tall = floors * 3.2;
     const D = row.deep;
     put(walls[Math.floor(r(3) * walls.length) % walls.length], row, wide, tall + 1, D, u, (tall - 1) / 2, D / 2);
     put(mats.stone, row, wide * 1.02, 0.4, D * 1.04, u, tall + 0.2, D / 2);
@@ -182,10 +182,18 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
     house({ axis: "z", line: sx * 41, from: 24.5, to: 31.5, inward: -sx, deep: 7 }, 28, 7);
     result.obstacles.push({ type: "box", center: new Vector3(sx * 44.5, 0, 28), halfX: 3.5, halfZ: 3.5 });
   }
-  // The near side: a straight low wall with a stone cap
-  const front: Row = { axis: "x", line: -30.5, from: -44, to: 44, inward: 1, deep: 1.4 };
-  put(walls[2], front, 88, 3.2, 1.4, 0, 0.6, 0);
-  put(mats.stone, front, 88.4, 0.35, 1.8, 0, 2.35, 0);
+  // Front terrace (578, renaissance_town.png: the near side of the square is closed by a solid row of lower houses, cream and
+  // ochre under orange hipped roofs, their backs to the canal; no gap and no low wall). Spec: the low wall goes; houses 7.5-10.5 m
+  // wide along z = -30.5 (fronts facing the square, 5.5 m deep) for |x| <= 44, two or three storeys, the same house kit; one
+  // box collider (it stands in the canal hazard, behind the armies' zones).
+  const front: Row = { axis: "x", line: -30.5, from: -44, to: 44, inward: 1, deep: 5.5 };
+  for (let u = front.from; front.to - u > 4;) {
+    k++;
+    const wide = Math.min(7.5 + r(1) * 3, front.to - u);
+    house(front, u + wide / 2, wide, true);
+    u += wide;
+  }
+  result.obstacles.push({ type: "box", center: new Vector3(0, 0, -30.5 - 2.75), halfX: 44, halfZ: 2.75 });
   const glow = scene.getGlowLayerByName("glow");
   for (const [mat, group] of parts) {
     const merged = Mesh.MergeMeshes(group, true);
