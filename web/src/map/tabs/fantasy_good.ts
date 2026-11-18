@@ -230,10 +230,44 @@ function marbleDeck(scene: Scene, built: Set<unknown>): { stone: StandardMateria
   return { stone, gold };
 }
 
+// Open centre (593, blocker b4; wiki fantasy_good.png centre: where the two cross walkways meet the paving runs on open and
+// flat, no block standing on it, only a gold-ringed medallion let into the marble). Spec: the base temple (two
+// "Fantasy Good Sanctum_box" slabs at 0,0) is hidden with its collider; in its place, flush with the deck, a round inlay 9 m
+// across: a gold ring 0.5 m wide, a white marble disc inside it, a gold eight-point star 6 m across on the disc (two squares
+// turned 45 degrees), all 1-3 cm proud, no collider (units walk over it).
+function openCentre(scene: Scene, built: Set<unknown>, result: MapBuildResult, stone: StandardMaterial, gold: StandardMaterial): MapBuildResult {
+  for (const m of scene.meshes) {
+    if (!built.has(m) || !m.name.endsWith("_box")) continue;
+    m.computeWorldMatrix(true);
+    const c = m.getBoundingInfo().boundingBox.centerWorld;
+    if (Math.hypot(c.x, c.z) < 2) m.setEnabled(false);
+  }
+  const obstacles = result.obstacles.filter((o) => Math.hypot(o.center.x, o.center.z) >= 2);
+  const ring = MeshBuilder.CreateTorus("heavenMedallionRing", { diameter: 8.5, thickness: 0.5, tessellation: 48 }, scene);
+  ring.scaling.y = 0.06;
+  ring.position.y = 0.02;
+  ring.material = gold;
+  const disc = MeshBuilder.CreateCylinder("heavenMedallionDisc", { diameter: 8.2, height: 0.02, tessellation: 48 }, scene);
+  disc.position.y = 0.012;
+  disc.material = stone;
+  const star = [0, Math.PI / 4].map((a) => {
+    const s = MeshBuilder.CreateBox("heavenMedallionStar", { width: 4.2, depth: 4.2, height: 0.03 }, scene);
+    s.rotation.y = a;
+    s.position.y = 0.03;
+    s.bakeCurrentTransformIntoVertices();
+    return s;
+  });
+  const starMesh = Mesh.MergeMeshes(star, true, true);
+  if (starMesh) { starMesh.name = "heavenMedallionStar"; starMesh.material = gold; }
+  for (const m of [ring, disc, starMesh]) if (m) m.receiveShadows = true;
+  return { ...result, obstacles };
+}
+
 export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   const { stone, gold } = marbleDeck(scene, built);
-  return pits(scene, built, result, stone, gold);
+  const opened = openCentre(scene, built, result, stone, gold);
+  return pits(scene, built, opened, stone, gold);
 }
