@@ -193,13 +193,15 @@ function gratedCourt(scene: Scene): void {
 
 // Pumpkin shrine (584, wiki spooky_2.png: where Dynasty's pagoda stood there is a rocky mound crowned by one huge
 // jack-o-lantern, its carved face lit from inside, small lit pumpkins heaped round it and black dead trees leaning over
-// it). Spec: at the pagoda's corner after the half turn, (-17, -38): a mound of nine dark boulders 13 m across and 3 m
-// high; on it a ribbed orange pumpkin 4.6 m across with a stem, triangle eyes and a toothed mouth in unlit flame colour
+// it). Spec: on the far rim right of centre, (14, 38) (585; 584 had it at the pagoda's corner after the half turn, the
+// near edge): a mound of nine dark boulders 16 m across and 3.8 m high; on it a ribbed orange pumpkin 4.6 m across with a stem, triangle eyes and a toothed mouth in unlit flame colour
 // facing the field (+z) and a second face toward the near rim; nine pumpkins 0.9-1.5 m with lit faces round its foot;
-// three black trees 7-9.5 m in three bent sections with four limbs each. Base props and ring trees within 8 m go with their
+// three black trees 7-9.5 m in three bent sections with four limbs each, trunks 1.7 m at the root. Base props and ring trees within 8 m go with their
 // colliders; one cylinder collider, radius 6.5 (outside both zones).
 function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
-  const AT = { x: -17, z: -38 };
+  // 585 re-site: the wiki shot has the shrine on the far edge just right of centre, between the far channel's bridges,
+  // so it stands at (14, 38) on the far rim, clear of the far hedge's line, facing back over the field (-z)
+  const AT = { x: 14, z: 38 };
   const gone: Vector3[] = [];
   for (const mesh of scene.meshes) {
     if (!built.has(mesh) || mesh.parent || !mesh.isEnabled() || !/^(trunk|Spooky Graveyard_)/.test(mesh.name)) continue;
@@ -231,7 +233,7 @@ function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult
   for (let i = 0; i < 9; i++) {
     const a = i * 0.7 + 0.3, r = i ? 2.2 + rnd(i, 1) * 2.6 : 0;
     const rock = MeshBuilder.CreateIcoSphere("spooky2ShrinePart", { radius: 0.5, subdivisions: 1 }, scene);
-    rock.scaling.set(i ? 4.5 + rnd(i, 2) * 2.5 : 9, i ? 2.6 + rnd(i, 3) * 2 : 6, i ? 4 + rnd(i, 4) * 2.5 : 9);
+    rock.scaling.set(i ? 5.5 + rnd(i, 2) * 2.5 : 11, i ? 3.2 + rnd(i, 3) * 2 : 7.5, i ? 5 + rnd(i, 4) * 2.5 : 11);
     rock.rotation.set(rnd(i, 5) * 0.4, rnd(i, 6) * 6.28, rnd(i, 7) * 0.4);
     rock.position.set(AT.x + Math.cos(a) * r, i ? 0.6 : 0.2, AT.z + Math.sin(a) * r);
     parts.rock.push(rock);
@@ -274,7 +276,7 @@ function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult
     for (let s = 0; s < 3; s++) {
       const tilt = 0.1 + s * 0.22, bend = lean + s * 1.1;
       const dir = new Vector3(Math.sin(tilt) * Math.cos(bend), Math.cos(tilt), Math.sin(tilt) * Math.sin(bend));
-      const seg = MeshBuilder.CreateCylinder("spooky2ShrinePart", { height: tall / 3 + 0.2, diameterBottom: 1.1 - s * 0.3, diameterTop: 0.8 - s * 0.3, tessellation: 6 }, scene);
+      const seg = MeshBuilder.CreateCylinder("spooky2ShrinePart", { height: tall / 3 + 0.2, diameterBottom: 1.7 - s * 0.45, diameterTop: 1.25 - s * 0.4, tessellation: 6 }, scene);
       seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(up, dir, new Quaternion());
       seg.position = at.add(dir.scale(tall / 6));
       parts.bark.push(seg);
