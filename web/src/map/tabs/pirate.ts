@@ -145,6 +145,36 @@ function drainLagoon(scene: Scene, built: Set<unknown>, result: MapBuildResult):
   return result.hazards.filter((h) => !(h.kind === "water" && h.shape === "box" && lagoon(h.center.z)));
 }
 
+// Sand island (578, pirate_beach.png: the beach is a round sandy disc set in a ring of turquoise shallow sea, its sides a thick
+// rounded drum of the same pale sand tapering underneath, no dark stalactite crags). Spec: the base underside (islandUnder,
+// islandShelf, islandCliff) hidden; a turquoise (0.2, 0.8, 0.75) shallow-sea ring, an oval 62 x 56 m half sizes, its top just
+// under the beach; a sand drum (0.84, 0.68, 0.42) oval 64 x 58 at the top, 6 m deep, tapering to 0.8 of that, then a faceted sand
+// belly 14 m deep down to 0.35; 28 sides, flat shaded, faces self-lit 0.6 so the drum reads pale from the island camera.
+function sandIsland(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) if (built.has(mesh) && /^(islandUnder|islandShelf|islandCliff)/.test(mesh.name)) mesh.setEnabled(false);
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const oval = (name: string, top: number, bottom: number, h: number, y: number, sx: number, sz: number, mat: StandardMaterial) => {
+    const c = MeshBuilder.CreateCylinder(name, { height: h, diameterTop: top, diameterBottom: bottom, tessellation: 28 }, scene);
+    c.scaling.set(sx, 1, sz);
+    c.position.y = y - h / 2;
+    c.convertToFlatShadedMesh();
+    c.material = mat;
+    c.receiveShadows = true;
+    c.isPickable = false;
+    return c;
+  };
+  oval("pirateShallowSea", 2, 2, 0.3, -0.04, 62, 56, mk("pirateShallowSea", new Color3(0.2, 0.8, 0.75), 0.45));
+  const sand = mk("pirateSandDrum", new Color3(0.84, 0.68, 0.42), 0.6);
+  oval("pirateSandDrum", 2, 1.6, 6, -0.3, 64, 58, sand);
+  oval("pirateSandBelly", 1.6, 0.56, 14, -6.3, 64, 58, sand);
+}
+
 export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -165,5 +195,6 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   }
   const obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
   galleons(scene, obstacles);
+  sandIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles, hazards };
 }
