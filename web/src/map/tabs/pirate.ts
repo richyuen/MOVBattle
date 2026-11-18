@@ -184,6 +184,8 @@ function sandIsland(scene: Scene, built: Set<unknown>): void {
 export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
+  const restoreSky = tropicSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+
   const hazards = drainLagoon(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   // The base's ships (roots with their parts as children) and the two plank bridges between them
   const bridges = [[-6, 20], [6, 20]];
@@ -205,7 +207,31 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   hourglassBeach(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   bellMountain(scene, obstacles);
   openShore(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
-  return { ...result, obstacles, hazards };
+  return { ...result, obstacles, hazards, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Tropic sky (585, pirate_beach.png and the wiki shot: the island floats in a bright sky-blue haze with soft white clouds, no
+// mountain range). Spec: the base's mountain* range hidden; the shared sky dome off and in its place a fog-free unlit
+// backdrop sphere in light sky blue (0.55, 0.84, 0.93), clear and fog colour to match; clouds stay; all put back on dispose.
+function tropicSky(scene: Scene, built: Set<unknown>): () => void {
+  const clear = scene.clearColor.clone(), fog = scene.fogColor.clone();
+  for (const mesh of scene.meshes) if (built.has(mesh) && mesh.name.startsWith("mountain")) mesh.setEnabled(false);
+  const inherited = scene.getMeshByName("skyDome"), enabled = inherited?.isEnabled();
+  inherited?.setEnabled(false);
+  const backdrop = MeshBuilder.CreateSphere("pirateTropicSky", { diameter: 1800, segments: 16, sideOrientation: Mesh.BACKSIDE }, scene);
+  const material = new StandardMaterial("pirateTropicSky", scene);
+  material.disableLighting = true;
+  material.diffuseColor = Color3.Black();
+  material.emissiveColor.set(0.55, 0.84, 0.93);
+  material.fogEnabled = false;
+  backdrop.material = material;
+  backdrop.infiniteDistance = true;
+  backdrop.applyFog = false;
+  backdrop.isPickable = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(backdrop);
+  scene.clearColor.set(0.5, 0.8, 0.9, 1);
+  scene.fogColor.set(0.6, 0.84, 0.92);
+  return () => { inherited?.setEnabled(enabled ?? true); scene.clearColor.copyFrom(clear); scene.fogColor.copyFrom(fog); };
 }
 
 // Open shore (585, pirate_beach.png and the wiki shot: the beach runs straight into the shallows, fringed only by palms,
