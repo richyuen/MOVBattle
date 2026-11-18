@@ -56,24 +56,38 @@ function pineForest(scene: Scene, built: Set<unknown>, result: MapBuildResult): 
   };
   // A broad circular inner clearing replaces the inherited pinched oval tree belt.
   // Move tree colliders with their trunks; retain the church and ruin clearings.
+  const dropped: Vector3[] = [], edge: Array<[number, number]> = [];
   for (const spot of spots) {
     const old = new Vector3(spot[0],0,spot[1]);
     const length = Math.hypot(...spot) || 1;
     const radius = Math.max(52, length);
     const x = spot[0] / length * radius, z = spot[1] / length * radius;
     for (const obstacle of result.obstacles) if (Vector3.Distance(obstacle.center,old)<0.6) obstacle.center.set(x,0,z);
-    // Irregular forest (583, wiki legacy.png: separate conifers of every size, saplings to tall firs, stand several deep
-    // with grass between them and thin out into the glade; no even wall). Each ring spot keeps one tree on its collider,
-    // 5-15 m; around it stand, drawn only: one tree 3.5-8 m out and 2-5 m to a side (4-13 m), on two spots in three a
-    // tree 9-16 m out (5-14 m) so the wood is three ranks deep, and on one spot in four a 3.5-6 m sapling 2-5 m inside the
-    // ring. Crown width varies 0.3-0.46 of the height.
-    pine(x, z, 5, 15);
-    const out = Math.hypot(x, z) || 1;
-    const beside = (d: number, side: number, low: number, high: number) => pine(x + (x / out) * d - (z / out) * side, z + (z / out) * d + (x / out) * side, low, high);
-    const s = spots.indexOf(spot);
-    beside(3.5 + seeded(s, 31) * 4.5, (s % 2 ? 1 : -1) * (2 + seeded(s, 33) * 3), 4, 13);
-    if (s % 3 !== 0) beside(9 + seeded(s, 35) * 7, (seeded(s, 36) - 0.5) * 7, 5, 14);
-    if (s % 4 === 1) beside(-2 - seeded(s, 37) * 3, (seeded(s, 38) - 0.5) * 6, 3.5, 6);
+    // Open wood (584, wiki legacy.png: the glade's edge is single small firs with grass between them, the wood thickening
+    // and growing taller away from the glade and running on up the valley sides; nowhere a wall). Every other ring spot
+    // keeps one 4-9 m fir on its collider, the rest lose tree and collider; the wood itself is scattered below.
+    if (spots.indexOf(spot) % 2) dropped.push(new Vector3(x, 0, z));
+    else {
+      pine(x, z, 4, 9);
+      edge.push([x, z]);
+    }
+  }
+  result.obstacles = result.obstacles.filter(({ center }) => !dropped.some((p) => Vector3.Distance(center, p) < 0.6));
+  // The wood: a 5.5 m grid jittered +-2 m over the ring r 53.5..86 (drawn only); a cell holds a tree on 28% of cells at the
+  // glade's edge rising to 78% from 18 m in, so trees stand 4-7 m apart with grass showing; heights 3.5-7 m at the edge
+  // rising to 5.5-15 m.
+  let cell = 0;
+  for (let gx = -88; gx <= 88; gx += 5.5) {
+    for (let gz = -88; gz <= 88; gz += 5.5) {
+      cell++;
+      const x = gx + (seeded(cell, 61) - 0.5) * 4, z = gz + (seeded(cell, 62) - 0.5) * 4;
+      const r = Math.hypot(x, z);
+      if (r < 53.5 || r > 86) continue;
+      const depth = Math.min(1, (r - 53.5) / 18);
+      if (seeded(cell, 63) > 0.28 + depth * 0.5) continue;
+      if (edge.some(([ex, ez]) => Math.hypot(ex - x, ez - z) < 4)) continue;
+      pine(x, z, 3.5 + depth * 2, 7 + depth * 8);
+    }
   }
   for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
     const merged = Mesh.MergeMeshes(parts[key], true, true);
@@ -371,6 +385,9 @@ function snowMountains(scene: Scene, built: Set<unknown>): void {
   snow.diffuseColor.set(0.8,0.87,0.9);snow.emissiveColor.set(0.4,0.44,0.47);
   for(let i=0;i<22;i++) {
     const a=i/22*Math.PI*2, h=27+seeded(i,201)*22, r=98+seeded(i,202)*12;
+    // The valley opens toward the viewer (584, wiki legacy.png: open grass and firs in the foreground, the mountains
+    // behind and to the sides): no peak on the near side (-z), where it stood as a grey plane across the island shot.
+    if(Math.sin(a)<-0.3) continue;
     const root=MeshBuilder.CreateCylinder("legacyValleyMountain",{height:h,diameterBottom:61,diameterTop:3,tessellation:5},scene);
     root.position.set(Math.cos(a)*r,h/2-1,Math.sin(a)*r);root.rotation.y=a;root.material=rock;root.convertToFlatShadedMesh();
     const cap=MeshBuilder.CreateCylinder("legacySnowSummit",{height:h*0.28,diameterBottom:19.3,diameterTop:3,tessellation:5},scene);
