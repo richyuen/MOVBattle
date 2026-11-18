@@ -271,6 +271,19 @@ function sunsetSky(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
+// Long overlapping polygonal terraces behind the left rear town row, as in the wiki overview.
+function mesaRidge(scene: Scene): void {
+  const rock=new StandardMaterial("westRidgeRed",scene);
+  rock.diffuseColor.set(0.55,0.19,0.095);rock.emissiveColor.set(0.18,0.055,0.025);
+  const band=new StandardMaterial("westRidgeBand",scene);
+  band.diffuseColor.set(0.72,0.32,0.15);band.emissiveColor.set(0.18,0.08,0.03);
+  for(let i=0;i<5;i++) for(let t=0;t<3;t++) {
+    const m=MeshBuilder.CreateCylinder("westMesaRidge",{height:2.8,diameterBottom:18-t*3,diameterTop:16-t*3,tessellation:6},scene);
+    m.scaling.set(1.25,1,0.55);m.position.set(-43+i*6,1.4+t*2.65,43+t*1.6);
+    m.rotation.y=0.2+0.12*i;m.material=t===1?band:rock;m.convertToFlatShadedMesh();
+  }
+}
+
 // White clapboard chapel at the far right end of the rear street, outside all placement zones.
 function chapel(scene: Scene, obstacles: Obstacle[]): void {
   const white = new StandardMaterial("westChapelWhite", scene);
@@ -322,6 +335,7 @@ export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuil
   const kept = obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
   town(scene, kept);
   chapel(scene, kept);
+  mesaRidge(scene);
   desertRim(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), kept);
   const restoreSky = sunsetSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles: kept, dispose: () => { restoreSky(); result.dispose?.(); } };
