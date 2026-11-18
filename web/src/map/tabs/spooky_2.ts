@@ -137,38 +137,6 @@ function nightTurf(scene: Scene, built: Set<unknown>): void {
   }
 }
 
-// Nine-metre square courtyard with a sealed luminous iron grate; four stairs meet the fog banks.
-function gratedCourt(scene: Scene): void {
-  const stone=new StandardMaterial("spooky2CourtStone",scene);
-  stone.diffuseColor.set(0.19,0.23,0.34);stone.emissiveColor.set(0.055,0.065,0.11);stone.specularColor=Color3.Black();
-  const iron=new StandardMaterial("spooky2GrateIron",scene);
-  iron.diffuseColor.set(0.035,0.04,0.06);iron.emissiveColor.set(0.012,0.014,0.025);
-  const fire=new StandardMaterial("spooky2GrateLight",scene);
-  fire.diffuseColor=Color3.Black();fire.emissiveColor.set(0.75,0.27,0.055);fire.disableLighting=true;
-  const parts:Mesh[]=[];
-  const box=(w:number,h:number,d:number,x:number,y:number,z:number,mat:StandardMaterial)=>{
-    const m=MeshBuilder.CreateBox("spooky2CourtPart",{width:w,height:h,depth:d},scene);
-    m.position.set(x,y,z);m.material=mat;m.isPickable=false;
-    if(mat===stone) parts.push(m);
-    return m;
-  };
-  for(const s of [-1,1]) {
-    box(14,0.6,3.5,0,0.3,s*5.25,stone);box(3.5,0.6,7,s*5.25,0.3,0,stone);
-    box(7.6,0.3,0.35,0,0.75,s*3.65,stone);box(0.35,0.3,7.6,s*3.65,0.75,0,stone);
-    for(let i=0;i<4;i++) {
-      box(4.8,0.15*(4-i),0.8,0,0.075*(4-i),s*(7.4+i*0.8),stone);
-      box(0.8,0.15*(4-i),4.8,s*(7.4+i*0.8),0.075*(4-i),0,stone);
-    }
-  }
-  box(7,0.08,7,0,0.39,0,fire);
-  for(let i=-7;i<=7;i++) {
-    box(0.15,0.2,7,i*0.48,0.58,0,iron);
-    box(7,0.2,0.15,0,0.59,i*0.48,iron);
-  }
-  const merged=Mesh.MergeMeshes(parts,true);
-  if(merged) {merged.material=stone;merged.name="spooky2CourtStonework";merged.receiveShadows=true;}
-}
-
 // Night void and cold moonlight, no daylight range/clouds. Restore shared lights when changing maps.
 function nightSky(scene: Scene, built: Set<unknown>): () => void {
   const clear=scene.clearColor.clone(), fog=scene.fogColor.clone();
@@ -192,7 +160,6 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   const result = base();
   squareIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   fogChannels(scene);
-  gratedCourt(scene);
   nightTurf(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return {...result,dispose:()=>{restore();result.dispose?.();}};
