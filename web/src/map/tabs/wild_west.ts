@@ -403,9 +403,9 @@ function roundPlaza(scene: Scene, built: Set<unknown>): void {
 
 // Sand street (584, wild_west.leading_cacti.png: the town stands on smooth light peach sand, paler than the red rocks, with
 // faint wind ripples and no grass). Spec: the base's rust floor ("ground", "centerGrass") takes its own peach sand material
-// (0.72, 0.56, 0.48) with a little self-light, so the warm sunset tints it peach, not rust; the base's blade and tuft fields
-// are hidden; about 520 wind ripples, low ridges 3-8 m long, 0.45 m wide and 5 cm high, a shade paler, lie across the
-// light (along z, +-0.35 rad) inside the 53 m round floor, thin instances receiving shadows.
+// (cool diffuse (0.5, 0.55, 0.6), peach self-light (0.44, 0.3, 0.21)), so the orange sunset leaves it peach, not rust; the
+// base's blade and tuft fields are hidden; about 520 wind ripples, soft swells 3-8 m long, 1.3 m wide and 2 cm high, barely
+// paler than the sand, lie across the light (along z, +-0.35 rad) inside the 53 m round floor, thin instances receiving shadows.
 function sandStreet(scene: Scene, built: Set<unknown>): void {
   const mk = (name: string, c: Color3, self: Color3) => {
     const m = new StandardMaterial(name, scene);
@@ -414,7 +414,8 @@ function sandStreet(scene: Scene, built: Set<unknown>): void {
     m.specularColor = Color3.Black();
     return m;
   };
-  const sand = mk("westStreetSand", new Color3(0.72, 0.56, 0.48), new Color3(0.13, 0.08, 0.055));
+  // The sunset light is strongly orange: a cool diffuse under it and the peach carried in self-light keep the sand pale
+  const sand = mk("westStreetSand", new Color3(0.5, 0.55, 0.6), new Color3(0.44, 0.3, 0.21));
   for (const m of scene.meshes) {
     if (!built.has(m)) continue;
     if (/^(fieldBlades_|fieldTufts_|grassTuft|flowerDot)/.test(m.name)) m.setEnabled(false);
@@ -424,7 +425,7 @@ function sandStreet(scene: Scene, built: Set<unknown>): void {
   ripple.rotation.x = Math.PI / 2;
   ripple.bakeCurrentTransformIntoVertices();
   ripple.convertToFlatShadedMesh();
-  ripple.material = mk("westStreetRipple", new Color3(0.8, 0.64, 0.55), new Color3(0.15, 0.095, 0.065));
+  ripple.material = mk("westStreetRipple", new Color3(0.53, 0.58, 0.63), new Color3(0.455, 0.312, 0.22));
   ripple.isPickable = false;
   ripple.receiveShadows = true;
   scene.getGlowLayerByName("glow")?.addExcludedMesh(ripple);
@@ -435,7 +436,7 @@ function sandStreet(scene: Scene, built: Set<unknown>): void {
     const len = 3 + seeded(i, 73) * 5;
     if (Math.hypot(x, z) + len / 2 > 53) continue;
     const yaw = (seeded(i, 74) - 0.5) * 0.7;
-    m.push(...Matrix.Compose(new Vector3(0.64, 0.1, len), Quaternion.RotationAxis(Vector3.Up(), yaw), new Vector3(x, 0.005, z)).m);
+    m.push(...Matrix.Compose(new Vector3(1.9, 0.05, len),Quaternion.RotationAxis(Vector3.Up(), yaw), new Vector3(x, 0.005, z)).m);
   }
   ripple.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
 }
