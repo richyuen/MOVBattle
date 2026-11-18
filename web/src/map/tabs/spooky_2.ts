@@ -113,7 +113,8 @@ function fogChannels(scene: Scene): void {
 // varied +-10 on joints (28,32,50), uvs in metres along and across; lit stone with a cool self-light so it reads at night.
 function cobbleLoop(scene: Scene): void {
   let pts: Array<[number, number]> = [[-44, -38], [44, -38], [44, 26], [32, 26], [32, 38], [-44, 38]];
-  for (let pass = 0; pass < 3; pass++) {
+  // 595 (blocker b4, square outline): one Chaikin pass, not three, so the loop keeps the square's tight corners and notch
+  for (let pass = 0; pass < 1; pass++) {
     const next: Array<[number, number]> = [];
     for (let i = 0; i < pts.length; i++) {
       const [ax, az] = pts[i], [bx, bz] = pts[(i + 1) % pts.length];
@@ -376,7 +377,24 @@ function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult
 // black tree 6-9.5 m: a three-section crooked trunk (root 1.6 m) leaning and turning, then three or four heavy limbs leaving
 // it low, bending at an elbow and ending in a claw twig; near-black navy bark (0.035, 0.035, 0.055), barely self-lit, merged
 // with 32-bit indices, in the glow pass (dark solid).
-function blackTrees(scene: Scene, built: Set<unknown>): void {
+// Square ring (595, blocker b4; reference/maps/spooky_2.png: the field is a square with notched corners, its tree line running
+// straight along the sides into tight corners, not the base's oval). Spec: each ring tree is pushed out along its bearing from
+// the base oval (54 x 48, power 2) onto the squared rim (power 8, as squareIsland), out of the back-right notch onto its nearer
+// edge; its collider moves with it.
+function squareRingSpot(x: number, z: number): [number, number] {
+  const radial = Math.hypot(x, z);
+  if (radial < 0.001) return [x, z];
+  const fraction = Math.hypot(x / 54, z / 48), cx = x / radial, cz = z / radial;
+  const reach = 1 / (Math.abs(cx / 54) ** 8 + Math.abs(cz / 48) ** 8) ** 0.125;
+  let nx = cx * fraction * reach, nz = cz * fraction * reach;
+  if (nx > NOTCH.x - 2 && nz > NOTCH.z - 2) {
+    if (nx - NOTCH.x < nz - NOTCH.z) nx = NOTCH.x - 2;
+    else nz = NOTCH.z - 2;
+  }
+  return [nx, nz];
+}
+
+function blackTrees(scene: Scene, built: Set<unknown>, result?: MapBuildResult): void {
   const hash = (i: number, s: number) => { const v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); };
   const bark = new StandardMaterial("spooky2DeadBark", scene);
   bark.diffuseColor = new Color3(0.035, 0.035, 0.055);
@@ -396,7 +414,9 @@ function blackTrees(scene: Scene, built: Set<unknown>): void {
   let k = 0;
   for (const mesh of scene.meshes) {
     if (!built.has(mesh) || mesh.name !== "trunk" || mesh.parent || !mesh.isEnabled()) continue;
-    const { x, z } = mesh.position;
+    const [x, z] = squareRingSpot(mesh.position.x, mesh.position.z);
+    const was = mesh.position;
+    for (const o of result?.obstacles ?? []) if (Math.hypot(o.center.x - was.x, o.center.z - was.z) < 0.6) { o.center.x = x; o.center.z = z; }
     mesh.setEnabled(false);
     k++;
     if (k % 4 === 2) continue;
@@ -807,7 +827,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   nightTurf(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   gratedCourt(scene);
   pumpkinShrine(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
-  blackTrees(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+  blackTrees(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   thornThickets(scene, result);
   darkTorii(scene, result);
   rockSkirt(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
