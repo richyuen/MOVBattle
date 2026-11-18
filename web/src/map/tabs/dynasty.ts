@@ -318,7 +318,37 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   courtApproaches(scene,result);
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
+  columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Dynasty placement reference: blue-grey faceted columns form a continuous
+// vertical island edge, with irregular green ledges; no hanging stalactites.
+function columnCliffs(scene: Scene, built: Set<unknown>): void {
+  for(const m of scene.meshes)if(built.has(m)&&/^(islandUnder|islandShelf|islandCliff)/.test(m.name))m.setEnabled(false);
+  const stone=new StandardMaterial("dynastyColumnRock",scene);
+  stone.diffuseColor.set(0.2,0.4,0.48);stone.emissiveColor.set(0.06,0.12,0.14);stone.specularColor=Color3.Black();
+  const turf=scene.getMaterialByName("dynastyGreenLawn")!;
+  const rocks: Mesh[]=[],caps: Mesh[]=[];
+  // Follow the square's chamfered corners and the existing near-left notch.
+  const edge=[[-36,-30],[-36,-47],[41,-47],[53,-36],[53,36],[41,47],[-41,47],[-53,36],[-53,-30],[-36,-30]];
+  let k=0;
+  for(let e=1;e<edge.length;e++) {
+    const [ax,az]=edge[e-1],[bx,bz]=edge[e],n=Math.ceil(Math.hypot(bx-ax,bz-az)/3);
+    for(let j=0;j<n;j++,k++) {
+      const t=(j+0.5)/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t,h=10+Math.sin(k*1.7)*2.5;
+      const c=MeshBuilder.CreateCylinder("dynastyCliffColumn",{height:h,diameterTop:4.4,diameterBottom:3.8,tessellation:5},scene);
+      c.position.set(x,-h/2-0.15,z);c.rotation.y=k*0.7;rocks.push(c);
+      if(k%3===0) {
+        const cap=MeshBuilder.CreateIcoSphere("dynastyCliffTurf",{radius:1.8,subdivisions:1},scene);
+        cap.position.set(x,-0.7-(k%4)*1.3,z);cap.scaling.set(1.1,0.22,1.1);caps.push(cap);
+      }
+    }
+  }
+  for(const [parts,mat,name] of [[rocks,stone,"dynastyColumnCliffs"],[caps,turf,"dynastyColumnLedges"]] as const) {
+    const merged=Mesh.MergeMeshes(parts,true);if(!merged)continue;
+    merged.material=mat;merged.name=name;merged.convertToFlatShadedMesh();merged.receiveShadows=true;
+  }
 }
 
 // Four separate stone bridge/stair approaches over the water ring around the square courtyard.
