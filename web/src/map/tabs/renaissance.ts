@@ -138,7 +138,8 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
     k++;
     const floors = (low ? 2 : 3) + Math.round(r(2) * (low ? 1 : 2)), tall = floors * 3.2;
     const D = row.deep;
-    put(walls[Math.floor(r(3) * walls.length) % walls.length], row, wide, tall + 1, D, u, (tall - 1) / 2, D / 2);
+    const pinkBridgeHouse=row.axis==="x"&&row.line===31&&row.from===30;
+    put(walls[pinkBridgeHouse?1:Math.floor(r(3) * walls.length) % walls.length], row, wide, tall + 1, D, u, (tall - 1) / 2, D / 2);
     put(mats.stone, row, wide * 1.02, 0.4, D * 1.04, u, tall + 0.2, D / 2);
     if (r(4) < 0.5) {
       // an orange hipped roof
@@ -163,7 +164,7 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
     { axis: "z", line: -44, from: -28, to: 24, inward: 1, deep: 6 },
     { axis: "z", line: 44, from: -28, to: 24, inward: -1, deep: 6 },
     { axis: "x", line: 31, from: -40, to: -18, inward: -1, deep: 7 },
-    { axis: "x", line: 31, from: 18, to: 40, inward: -1, deep: 7 },
+    { axis: "x", line: 31, from: 30, to: 40, inward: -1, deep: 7 },
   ];
   for (const row of rows) {
     let u = row.from;
@@ -251,10 +252,44 @@ export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapB
   const result = base();
   rectangularPiazza(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   dogesPalace(scene);
+  coveredBridge(scene);
   frontCanal(scene);
   creamPavement(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   // The circular object in the reference battle is a unit: the piazza itself has no fountain.
   for(const m of scene.meshes) if(!prior.has(m)&&m.name.startsWith("plazaFountain")) m.setEnabled(false);
   const obstacles = [...result.obstacles.filter(o=>!(o.type==="cylinder"&&Math.hypot(o.center.x,o.center.z)<0.1&&o.radius===3.5)), { type: "box" as const, center: new Vector3(0, 0, PALACE.z + PALACE.deep / 2), halfX: PALACE.wide / 2, halfZ: PALACE.deep / 2 }];
   return { ...result, obstacles };
+}
+
+// Wiki: an elevated covered loggia bridges the palace's right side to the
+// pink house, with a broad open arch beneath and four small upper arches.
+function coveredBridge(scene: Scene): void {
+  const stone=scene.getMaterialByName("renaissancePalaceStone")!;
+  const roof=scene.getMaterialByName("renaissanceRowRoof")!;
+  const box=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=stone)=>{
+    const m=MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},scene);
+    m.position.set(x,y,z);m.material=mat;m.receiveShadows=true;scene.getGlowLayerByName("glow")?.addExcludedMesh(m);return m;
+  };
+  // Elliptic stone arch from x18 to30. The space beneath remains open.
+  for(let i=0;i<20;i++) {
+    const a=(i+0.5)/20*Math.PI;
+    const m=box("renaissanceBridgeArch",1.05,0.7,4.8,24+6*Math.cos(a),3.8+2.9*Math.sin(a),34);
+    m.rotation.z=Math.atan2(2.9*Math.cos(a),-6*Math.sin(a));
+  }
+  box("renaissanceBridgeDeck",12.4,0.55,5.1,24,7.05,34);
+  for(const z of [31.6,36.4]) {
+    box("renaissanceBridgeRail",12,0.2,0.35,24,8.25,z);
+    for(let i=0;i<=24;i++)box("renaissanceBridgeBaluster",0.14,0.9,0.15,18+i*0.5,7.8,z);
+    for(let i=0;i<=4;i++)box("renaissanceBridgeColumn",0.35,3.2,0.4,18+i*3,9.5,z);
+    for(let bay=0;bay<4;bay++)for(let j=0;j<10;j++) {
+      const a=(j+0.5)/10*Math.PI;
+      const m=box("renaissanceBridgeUpperArch",0.5,0.3,0.4,19.5+bay*3+1.35*Math.cos(a),10+1.05*Math.sin(a),z);
+      m.rotation.z=Math.atan2(1.05*Math.cos(a),-1.35*Math.sin(a));
+    }
+  }
+  box("renaissanceBridgeCornice",12.6,0.35,5.4,24,11.35,34);
+  for(const s of [-1,1]) {
+    const slope=box("renaissanceBridgeRoof",12.8,0.25,3,24,11.9,34+s*1.25,roof);
+    slope.rotation.x=s*0.3;
+  }
 }
