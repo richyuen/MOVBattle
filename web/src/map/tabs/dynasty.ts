@@ -13,7 +13,16 @@
 import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
-const PAGODA = { x: 17, z: 37 };
+// Pagoda re-sited (594, blocker b1; wiki dynasty.png: the pagoda stands over the north canal close behind the courtyard, its
+// stair coming down over the water toward the pit, an arched stone bridge across the canal on either side of it). Spec: centre
+// (0, 19) on the centre line, platform 15 x 15 (x -7.5..7.5, z 11.5..26.5: its front half over the canal z 7..17, its back
+// short of the cobble loop at z ~28), stair 8 steps from the platform's front edge down to the courtyard's north edge (z 7),
+// replacing the north court approach; one box collider over platform and stair. Two stone bridges at x +-12.5 cross the canal
+// (z 7..17), 4.8 m decks with parapets on an arched body with a dark opening, climbing from the middle lawn (0.97 m) to the
+// outer lawn (2.52 m) with a 0.8 m arch; the canal's back arm is carried on under the pagoda and the right bridge (water
+// x -19.6..16, dry lawn 16..23), its hazard cut out under both bridge decks. The old site (17, 37) is left to the ring.
+const PAGODA = { x: 0, z: 19, size: 15 };
+const SIDE_BRIDGES = [-12.5, 12.5];
 
 function pagoda(scene: Scene): void {
   const mk = (name: string, c: Color3, self: number) => {
@@ -49,14 +58,16 @@ function pagoda(scene: Scene): void {
     return c;
   };
   // Platform with a kerb, and the wide stair down to the field (-z)
-  const P = 3;
-  box("stone", 17, P, 17, 0, P / 2, 0);
-  box("kerb", 17.6, 0.5, 17.6, 0, P - 0.1, 0);
-  for (let s = 0; s < 10; s++) {
-    const h = P * (s + 1) / 10;
-    box(s % 2 ? "wood" : "kerb", 7, h, 0.6, 0, h / 2, -8.5 - 5.7 + s * 0.6);
+  const P = 3, S = PAGODA.size, front = -S / 2, run = Z + front - 7, steps = 8;
+  box("stone", S, P, S, 0, P / 2, 0);
+  box("kerb", S + 0.6, 0.5, S + 0.6, 0, P - 0.1, 0);
+  // stone piers under the front edge where it stands in the canal
+  for (const sx of [-1, 1]) box("kerb", 1.2, P, 1.2, sx * (S / 2 - 0.6), P / 2, front + 0.6);
+  for (let s = 0; s < steps; s++) {
+    const h = P * (s + 1) / steps;
+    box(s % 2 ? "wood" : "kerb", 7, h, run / steps, 0, h / 2, front - run + (s + 0.5) * run / steps);
   }
-  for (const sx of [-1, 1]) box("red", 0.4, 1.4, 6.2, sx * 3.7, P * 0.55, -8.5 - 2.8);
+  for (const sx of [-1, 1]) box("red", 0.4, 1.4, run, sx * 3.7, P * 0.55, front - run / 2);
   // A storey: columns round a pale wall with lattice panels, a beam on top
   const storey = (y: number, w: number, h: number, posts: number) => {
     box("wall", w * 0.82, h, w * 0.82, 0, y + h / 2, 0);
@@ -302,7 +313,7 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   // The base's small pagoda (a root with its parts as children) and its collider
   // and any ring tree standing in the new pagoda's footprint, with their colliders
   const gone: Vector3[] = [];
-  const inFootprint = (p: Vector3) => Math.abs(p.x - PAGODA.x) < 10.5 && p.z > PAGODA.z - 16 && p.z < PAGODA.z + 11;
+  const inFootprint = (p: Vector3) => Math.abs(p.x - PAGODA.x) < PAGODA.size / 2 + 2 && p.z > 8 && p.z < PAGODA.z + PAGODA.size / 2 + 2;
   for (const mesh of scene.meshes) {
     if (prior.has(mesh)) continue;
     if (mesh.name === "Dynasty Garden_pagoda" || (!mesh.parent && inFootprint(mesh.position) && /^(trunk|Dynasty Garden_(lantern|cyl|box))/.test(mesh.name))) {
@@ -320,10 +331,50 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   perimeterFlagstones(scene,result);
   canalSpurs(scene, result);
   canalPools(scene, result);
-  obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
+  sideBridges(scene, result);
+  // platform and stair (z 7 .. 26.5)
+  obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, (7 + PAGODA.z + PAGODA.size / 2) / 2), halfX: PAGODA.size / 2, halfZ: (PAGODA.z + PAGODA.size / 2 - 7) / 2 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// The pagoda's two side bridges (594, spec at PAGODA): z 7 .. 18.2 at x +-12.5.
+function sideBridges(scene: Scene, result: MapBuildResult): void {
+  const stone = new StandardMaterial("dynastySideBridgeStone", scene);
+  stone.diffuseColor.set(0.36, 0.4, 0.44); stone.emissiveColor.set(0.1, 0.11, 0.13); stone.specularColor = Color3.Black();
+  const Z0 = 7, Z1 = 18.2, LO = 0.97, HI = 2.52, ARCH = 0.8, n = 18, span = Z1 - Z0;
+  const deck = (t: number) => LO + (HI - LO) * t + Math.sin(t * Math.PI) * ARCH;
+  const parts: Mesh[] = [];
+  const box = (w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const m = MeshBuilder.CreateBox("dynastySideBridge", { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z);
+    parts.push(m);
+  };
+  for (const bx of SIDE_BRIDGES) {
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.5) / n, z = Z0 + t * span, y = deck(t), d = span / n + 0.03;
+      box(4.8, 0.35, d, bx, y - 0.175, z);
+      for (const s of [-1, 1]) box(0.3, 0.7, d, bx + s * 2.35, y + 0.3, z);
+      // arched body: solid at the ends, an opening under the middle over the water
+      const u = (z - 8.2) / 8.2;
+      const bottom = u > 0 && u < 1 ? 0.1 + Math.sin(u * Math.PI) * Math.min(1.9, y - 0.6) : 0;
+      if (y - 0.35 - bottom > 0.05) box(4.2, y - 0.35 - bottom, d, bx, bottom + (y - 0.35 - bottom) / 2, z);
+    }
+  }
+  const merged = Mesh.MergeMeshes(parts, true);
+  if (merged) {
+    merged.name = "dynastySideBridges";
+    merged.material = stone;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
+  }
+  const oldHeight = result.height;
+  result.height = (x, z) => {
+    if (z >= Z0 && z <= Z1 && SIDE_BRIDGES.some((bx) => Math.abs(x - bx) < 2.4)) return deck((z - Z0) / span);
+    return oldHeight?.(x, z) ?? 0;
+  };
 }
 
 // Dynasty placement reference: blue-grey faceted columns form a continuous
@@ -488,6 +539,7 @@ function courtApproaches(scene: Scene, result: MapBuildResult): void {
     const m=MeshBuilder.CreateBox("dynastyCourtApproach",{width:w,height:h,depth:d},scene);m.position.set(x,y,z);m.material=stone;m.receiveShadows=true;
   };
   for(const ns of [true,false]) for(const sign of [-1,1]) {
+    if(ns&&sign>0)continue; // the north approach is the pagoda's stair (594)
     const start=7,end=ns?17:10,span=end-start,n=16;
     for(let i=0;i<n;i++) {
       const t=(i+0.5)/n,along=sign*(start+t*span),y=0.7+Math.sin(t*Math.PI)*0.65;
@@ -502,6 +554,7 @@ function courtApproaches(scene: Scene, result: MapBuildResult): void {
   const oldHeight=result.height;
   result.height=(x,z)=>{
     for(const ns of [true,false]) {
+      if(ns&&z>0)continue;
       const across=Math.abs(ns?x:z),along=Math.abs(ns?z:x),end=ns?17:10;
       if(across<2.4&&along>=7&&along<=end)return 0.7+Math.sin((along-7)/(end-7)*Math.PI)*0.65;
       if(across<2.4&&along>4.3&&along<7)return 0.7*(along-4.3)/2.7;
@@ -606,9 +659,9 @@ function canalSpurs(scene: Scene, result: MapBuildResult): void {
 // front (z < 0) x -36.6..-31 and x -3..19.6. Every other stretch of canal is filled by a dry lawn block at the middle lawns'
 // height (0.85 m): stone retaining box, turf cap and offset edge flagstones, as lawnTerraces. The canal hazards are cut to the
 // kept arms; the ground over the dry blocks is drawn at the lawn height.
-const POOL_ARMS: Record<number, Array<[number, number]>> = { 1: [[-19.6, 3], [31, 36.6]], [-1]: [[-36.6, -31], [-3, 19.6]] };
+const POOL_ARMS: Record<number, Array<[number, number]>> = { 1: [[-19.6, 16], [31, 36.6]], [-1]: [[-36.6, -31], [-3, 19.6]] };
 const DRY_BLOCKS: Record<number, Array<[number, number]>> = {
-  1: [[-46, -31], [-23, -19.6], [3, 23], [36.6, 46]],
+  1: [[-46, -31], [-23, -19.6], [16, 23], [36.6, 46]],
   [-1]: [[-46, -36.6], [-23, -3], [19.6, 23], [31, 46]],
 };
 function canalPools(scene: Scene, result: MapBuildResult): void {
@@ -634,8 +687,16 @@ function canalPools(scene: Scene, result: MapBuildResult): void {
   const canal = result.hazards.find((h) => h.shape === "box" && h.kind === "water" && Math.abs(Math.abs(h.center.z) - 12) < 0.1);
   const halfZ = canal && canal.shape === "box" ? canal.halfZ : 5;
   result.hazards = result.hazards.filter((h) => !(h.shape === "box" && h.kind === "water" && Math.abs(Math.abs(h.center.z) - 12) < 0.1));
-  for (const sz of [1, -1]) for (const [a, b] of POOL_ARMS[sz])
-    result.hazards.push({ shape: "box", kind: "water", center: new Vector3((a + b) / 2, 0, sz * ZC), halfX: (b - a) / 2, halfZ });
+  for (const sz of [1, -1]) for (const [a, b] of POOL_ARMS[sz]) {
+    // cut out under the side bridges of the pagoda (594)
+    const cuts = sz > 0 ? SIDE_BRIDGES.filter((x) => x > a && x < b).sort((p, q) => p - q) : [];
+    let lo = a;
+    for (const c of [...cuts, Infinity]) {
+      const hi = Math.min(b, c - 2.4);
+      if (hi > lo) result.hazards.push({ shape: "box", kind: "water", center: new Vector3((lo + hi) / 2, 0, sz * ZC), halfX: (hi - lo) / 2, halfZ });
+      lo = c + 2.4;
+    }
+  }
   const oldHeight = result.height;
   result.height = (x, z) => {
     if (Math.abs(z) > Z0 && Math.abs(z) < Z1 && dry.some((d) => Math.sign(z) === d.sz && x > d.a && x < d.b)) return H + 0.12;
