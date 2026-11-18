@@ -173,7 +173,9 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     merged.material = mats[key];
     merged.receiveShadows = true;
     merged.isPickable = false;
-    glow?.addExcludedMesh(merged);
+    // (586.8b) dark solids stay in the glow pass so they occlude the glow behind them (excluded, the near hull wore the
+    // sea's glow as a pale veil); only the bright gold and sails leave it
+    if (key === "gold" || key === "sail") glow?.addExcludedMesh(merged);
   }
 }
 
