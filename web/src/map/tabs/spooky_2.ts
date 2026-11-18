@@ -13,7 +13,7 @@
 // +-12, 10 m deep, walkable as there): a navy channel bed, three stacked pale-blue fog sheets (alpha 0.3, y 0.25/0.8/1.4) and
 // blue-grey stone kerbs 0.5 m high along both banks with gaps at x 0 and x +-44 where the paths cross. The outer loop path is
 // 3.5 m of blue-grey flagstone at x +-44 / z +-38, stepping in round the notch (x 32, z 26).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene, type HemisphericLight, type DirectionalLight } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 const NOTCH = { x: 36, z: 30 };
@@ -111,10 +111,29 @@ function fogChannels(scene: Scene): void {
   }
 }
 
+// Night void and cold moonlight, no daylight range/clouds. Restore shared lights when changing maps.
+function nightSky(scene: Scene, built: Set<unknown>): () => void {
+  const clear=scene.clearColor.clone(), fog=scene.fogColor.clone();
+  scene.clearColor.set(0.025,0.04,0.12,1); scene.fogColor=new Color3(0.025,0.04,0.12);
+  for(const m of scene.meshes) if(built.has(m) && /^(mountain|cloud)/.test(m.name)) m.setEnabled(false);
+  const hemi=scene.getLightByName("hemi") as HemisphericLight|null;
+  const dir=scene.getLightByName("dir") as DirectionalLight|null;
+  const h=hemi ? [hemi.intensity,hemi.diffuse.clone(),hemi.groundColor.clone()] as const:null;
+  const d=dir ? [dir.intensity,dir.diffuse.clone(),dir.direction.clone()] as const:null;
+  if(hemi) { hemi.intensity=0.3;hemi.diffuse=new Color3(0.42,0.52,1.1);hemi.groundColor=new Color3(0.1,0.1,0.25); }
+  if(dir) { dir.intensity=0.65;dir.diffuse=new Color3(0.58,0.68,1.1);dir.direction.set(0.55,-0.62,0.5); }
+  return ()=>{
+    scene.clearColor.copyFrom(clear);scene.fogColor.copyFrom(fog);
+    if(hemi&&h) [hemi.intensity,hemi.diffuse,hemi.groundColor]=[h[0],h[1],h[2]];
+    if(dir&&d) [dir.intensity,dir.diffuse,dir.direction]=[d[0],d[1],d[2]];
+  };
+}
+
 export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   squareIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   fogChannels(scene);
-  return result;
+  const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
+  return {...result,dispose:()=>{restore();result.dispose?.();}};
 }
