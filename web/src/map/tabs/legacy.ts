@@ -250,6 +250,22 @@ function churchyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): 
   }
 }
 
+// Overlapping faceted valley walls rise directly from the outer forest, capped with angular snow.
+function snowMountains(scene: Scene, built: Set<unknown>): void {
+  for(const m of scene.meshes) if(built.has(m)&&m.name.startsWith("mountain")) m.setEnabled(false);
+  const rock=new StandardMaterial("legacyValleyRock",scene);
+  rock.diffuseColor.set(0.24,0.3,0.31);rock.emissiveColor.set(0.12,0.15,0.16);
+  const snow=new StandardMaterial("legacyPeakSnow",scene);
+  snow.diffuseColor.set(0.8,0.87,0.9);snow.emissiveColor.set(0.4,0.44,0.47);
+  for(let i=0;i<22;i++) {
+    const a=i/22*Math.PI*2, h=27+seeded(i,201)*22, r=98+seeded(i,202)*12;
+    const root=MeshBuilder.CreateCylinder("legacyValleyMountain",{height:h,diameterBottom:61,diameterTop:3,tessellation:5},scene);
+    root.position.set(Math.cos(a)*r,h/2-1,Math.sin(a)*r);root.rotation.y=a;root.material=rock;root.convertToFlatShadedMesh();
+    const cap=MeshBuilder.CreateCylinder("legacySnowSummit",{height:h*0.28,diameterBottom:19.3,diameterTop:3,tessellation:5},scene);
+    cap.position.set(root.position.x,h*0.86-0.9,root.position.z);cap.rotation.y=a;cap.material=snow;cap.convertToFlatShadedMesh();
+  }
+}
+
 // The glade continues into a valley floor beyond its pine belt; no exposed floating island sides.
 function valleyFloor(scene: Scene, built: Set<unknown>): void {
   for(const m of scene.meshes) if(built.has(m)&&/^(islandUnder|islandShelf|islandCliff)/.test(m.name)) m.setEnabled(false);
@@ -271,5 +287,6 @@ export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildR
   churchyard(scene,built,result);
   tentCamps(scene);
   valleyFloor(scene,built);
+  snowMountains(scene,built);
   return result;
 }
