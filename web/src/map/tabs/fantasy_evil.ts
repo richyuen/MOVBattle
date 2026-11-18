@@ -314,6 +314,116 @@ function shrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): Pick
   return { hazards, obstacles };
 }
 
+// Chained statue (594, blocker a5, and a6's spire; wiki fantasy_evil.png, void_evil.png: at the back of the plateau, behind the
+// portal, a tall stone statue of the Void Monarch, a robed horned figure with great ragged wings, held by heavy chains that run
+// up to a giant leaning rock spire standing beyond the right-hand crevice, taller than anything on the island). Spec: statue at
+// (8, 26) facing the front (-z), on a two-step pedestal 5.5 / 4.2 m square, 2.4 m; a robe frustum 4 m to 1.8 m across, 6.5 m
+// high; chest 2.8 x 2 x 1.7 m; a faceted head r 0.85 with two back-swept horns 1.8 m; arms raised outward to wrist manacles at
+// 12 m; two wings of three ragged slabs each (7.5 / 6 / 4.5 m long, 0.25 m thick) fanned up and out behind the shoulders. Rock
+// spire at (36, 40): a five-sided shaft 40 m long, 14 m across at the foot to 1.5 m, leaning 0.3 rad toward the field (-x) and
+// 0.12 rad toward the front, foot sunk 6 m; two shards 18 and 12 m beside it. Chains of oval links (torus 1 m, 0.22 m thick,
+// stretched 1.35x, every other link turned 90 degrees) from each wrist to a point 20 and 26 m up the spire, sagging 3.5 m.
+// Statue and spire grey-teal stone (.26,.31,.33) self (.05,.06,.065), lighter than the floor so they read on the void; spire
+// (.2,.24,.27); chains (.12,.13,.15); flat shaded, in the glow pass. Colliders: pedestal box, spire cylinder r 6.5.
+const STATUE = { x: 8, z: 26 };
+const SPIRE = { x: 36, z: 40 };
+function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    statue: mk("voidStatueStone", new Color3(0.26, 0.31, 0.33), 0.2),
+    spire: mk("voidSpireRock", new Color3(0.2, 0.24, 0.27), 0.2),
+    chain: mk("voidStatueChain", new Color3(0.12, 0.13, 0.15), 0.25),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { statue: [], spire: [], chain: [] };
+  const put = (k: keyof typeof mats, m: Mesh) => { m.bakeCurrentTransformIntoVertices(); parts[k].push(m); };
+  const top = PLATEAU.top, X = STATUE.x, Z = STATUE.z;
+  const box = (w: number, h: number, d: number, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
+    const b = MeshBuilder.CreateBox("voidStatuePart", { width: w, height: h, depth: d }, scene);
+    b.rotation.set(rx, ry, rz);
+    b.position.set(X + x, y, Z + z);
+    put("statue", b);
+  };
+  box(5.5, 1.4, 5.5, 0, top + 0.7, 0);
+  box(4.2, 1, 4.2, 0, top + 1.9, 0);
+  const foot = top + 2.4;
+  const robe = MeshBuilder.CreateCylinder("voidStatuePart", { diameterBottom: 4, diameterTop: 1.8, height: 6.5, tessellation: 7 }, scene);
+  robe.position.set(X, foot + 3.25, Z);
+  put("statue", robe);
+  box(2.8, 2, 1.7, 0, foot + 7.3, 0);
+  const head = MeshBuilder.CreateIcoSphere("voidStatuePart", { radius: 0.85, subdivisions: 1 }, scene);
+  head.position.set(X, foot + 9, Z - 0.1);
+  put("statue", head);
+  for (const s of [-1, 1]) {
+    const horn = MeshBuilder.CreateCylinder("voidStatuePart", { diameterBottom: 0.45, diameterTop: 0.05, height: 1.8, tessellation: 4 }, scene);
+    horn.rotation.set(-0.6, 0, -s * 0.5);
+    horn.position.set(X + s * 0.6, foot + 10, Z + 0.3);
+    put("statue", horn);
+    // arms raised outward to the manacles
+    box(0.7, 3.4, 0.7, s * 2.4, foot + 9, 0, 0, 0, -s * 0.7);
+    box(0.95, 0.6, 0.95, s * 3.5, foot + 10.4, 0);
+    // wings: three ragged slabs fanned up and out behind the shoulders
+    for (const [len, lift, w] of [[7.5, 0.55, 2.2], [6, 0.95, 1.8], [4.5, 1.35, 1.4]] as const) {
+      const slab = MeshBuilder.CreateBox("voidStatuePart", { width: len, height: w, depth: 0.25 }, scene);
+      slab.rotation.set(0, 0, s * lift);
+      slab.position.set(X + s * (0.9 + Math.cos(lift) * len / 2), foot + 7.6 + Math.sin(lift) * len / 2, Z + 1.1);
+      put("statue", slab);
+    }
+  }
+  obstacles.push({ type: "box", center: new Vector3(X, 0, Z), halfX: 2.9, halfZ: 2.9 });
+  // the spire and its shards
+  const shard = (h: number, d: number, x: number, z: number, rx: number, rz: number, sink: number) => {
+    const c = MeshBuilder.CreateCylinder("voidSpirePart", { height: h, diameterBottom: d, diameterTop: d * 0.1, tessellation: 5 }, scene);
+    c.rotation.set(rx, 0.4, rz);
+    const axis = Vector3.TransformNormal(Vector3.Up(), Matrix.RotationYawPitchRoll(0.4, rx, rz));
+    c.position.copyFrom(new Vector3(x, -sink, z).add(axis.scale(h / 2)));
+    put("spire", c);
+  };
+  shard(40, 14, SPIRE.x, SPIRE.z, -0.12, 0.3, 6);
+  shard(18, 7, SPIRE.x + 6, SPIRE.z - 7, -0.2, 0.15, 3);
+  shard(12, 5, SPIRE.x - 4, SPIRE.z + 5, 0.1, 0.35, 2);
+  obstacles.push({ type: "cylinder", center: new Vector3(SPIRE.x, 0, SPIRE.z), radius: 6.5 });
+  // a point up the leaning spire's axis: the foot at -6 m, the axis turned by the shard's pitch and roll
+  const onSpire = (up: number) => {
+    const axis = Vector3.TransformNormal(new Vector3(0, 1, 0), Matrix.RotationYawPitchRoll(0.4, -0.12, 0.3));
+    return new Vector3(SPIRE.x, -6, SPIRE.z).add(axis.scale(up + 6));
+  };
+  const link = MeshBuilder.CreateTorus("voidChainLink", { diameter: 1, thickness: 0.22, tessellation: 8 }, scene);
+  for (const [s, up] of [[-1, 20], [1, 26]] as const) {
+    const a = new Vector3(X + s * 3.5, foot + 10.4, Z), b = onSpire(up);
+    const n = Math.ceil(Vector3.Distance(a, b) / 0.78);
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, p = Vector3.Lerp(a, b, t);
+      p.y -= Math.sin(t * Math.PI) * 3.5;
+      const q = Vector3.Lerp(a, b, t + 0.01);
+      q.y -= Math.sin((t + 0.01) * Math.PI) * 3.5;
+      const d = q.subtract(p).normalize();
+      const side = Vector3.Cross(d, Vector3.Up()).normalize();
+      const normal = i % 2 ? side : Vector3.Cross(side, d).normalize();
+      const c = link.clone("voidChainLink");
+      c.scaling.set(1.35, 1, 1);
+      c.rotationQuaternion = Quaternion.RotationQuaternionFromAxis(d, normal, Vector3.Cross(d, normal));
+      c.position.copyFrom(p);
+      put("chain", c);
+    }
+  }
+  link.dispose();
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true, true);
+    if (!merged) continue;
+    merged.name = `voidStatue_${key}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 /** Drawn height with the shrine dais and the altar raised over the plateau. */
 const shrineHeight: HeightField = (x, z) => {
   const base = fantasyEvilHeight(x, z);
@@ -338,6 +448,7 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
   }
   const restoreSky = voidSky(scene, built);
   const shrined = shrine(scene, built, result);
+  chainedStatue(scene, shrined.obstacles);
   const hazards = [...shrined.hazards, ...chasms(scene)];
   return { ...result, hazards, obstacles: shrined.obstacles, height: shrineHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
