@@ -650,6 +650,74 @@ function rockMass(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+// Backdrop crag (597, blocker a6; reference/maps/void_evil.png: behind the field's back-right rim a dark rock mass of heaped,
+// tilted blocks climbs well above the deck round the foot of a giant leaning spire, chains hanging off its ledges; the 596
+// slate spire alone read as a black shard on the void). Spec: 26 faceted boulders of unequal size (r 3-8 m, stretched 1.3-2.4
+// tall, tilted up to .35 rad) heaped in three rising tiers over x 22..56, z 42..62 (outside the rim, so no colliders): tier
+// tops 8, 18, 30 m above the deck, the tallest nearest the spire (36, 40); grey-teal (.2,.26,.32) self .55, no shadows
+// received, kept in the glow pass (dark solid, LESSONS); the spire stone re-lit the same; four chains of 1.3 m links drop
+// 7-12 m off the front ledges.
+function backdropCrag(scene: Scene): void {
+  let seed = 0x2c4a;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const rocks: Mesh[] = [], links: Mesh[] = [];
+  const tiers: Array<[number, number, number]> = [[10, 8, 3.2], [9, 18, 4.6], [7, 30, 5.6]];
+  const ledges: Vector3[] = [];
+  tiers.forEach(([n, top, rMean], t) => {
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5 + (rnd() - 0.5) * 0.5) / n;
+      // tier 0 runs the full arc, higher tiers close in on the spire
+      const span = 1 - t * 0.28, x = 39 + (u - 0.5) * 34 * span, z = 46 + t * 3.5 + rnd() * 6;
+      const r = rMean * (0.65 + rnd() * 0.6), sy = 1.3 + rnd() * 1.1;
+      const near = 1 - Math.min(1, Math.abs(x - 36) / 20) * 0.45;
+      const b = MeshBuilder.CreateIcoSphere("voidCrag", { radius: r, subdivisions: 1 }, scene);
+      b.scaling.set(1, sy, 0.8 + rnd() * 0.4);
+      b.rotation.set((rnd() - 0.5) * 0.7, rnd() * 6.28, (rnd() - 0.5) * 0.7);
+      b.position.set(x, top * near - r * sy * 0.55, z);
+      b.bakeCurrentTransformIntoVertices();
+      rocks.push(b);
+      if (t === 0 && i % 3 === 1) ledges.push(new Vector3(x, top * near - r * sy * 0.2, z - r * 0.8));
+    }
+  });
+  // the heap's root under the deck level, so it reads as one mass rising out of the void
+  for (const [x, z, r] of [[30, 52, 9], [44, 54, 10]] as const) {
+    const b = MeshBuilder.CreateIcoSphere("voidCrag", { radius: r, subdivisions: 1 }, scene);
+    b.scaling.y = 1.6;
+    b.position.set(x, -8, z);
+    b.bakeCurrentTransformIntoVertices();
+    rocks.push(b);
+  }
+  ledges.slice(0, 4).forEach((p, c) => {
+    const drop = 7 + rnd() * 5;
+    for (let j = 0; j * 1.3 < drop; j++) {
+      const l = MeshBuilder.CreateTorus("voidCragChain", { diameter: 1.3, thickness: 0.34, tessellation: 8 }, scene);
+      l.rotation.set(0, j % 2 ? Math.PI / 2 : 0, Math.PI / 2);
+      l.position.set(p.x + c * 0.1, p.y - j * 1.3, p.z);
+      l.bakeCurrentTransformIntoVertices();
+      links.push(l);
+    }
+  });
+  const rock = new StandardMaterial("voidCrag", scene);
+  rock.diffuseColor = new Color3(0.2, 0.26, 0.32);
+  rock.emissiveColor = rock.diffuseColor.scale(0.55);
+  rock.specularColor = Color3.Black();
+  const iron = new StandardMaterial("voidCragChain", scene);
+  iron.diffuseColor = new Color3(0.3, 0.33, 0.37);
+  iron.emissiveColor = iron.diffuseColor.scale(0.45);
+  iron.specularColor = Color3.Black();
+  for (const [parts, mat, name] of [[rocks, rock, "voidCrag"], [links, iron, "voidCragChains"]] as const) {
+    const merged = Mesh.MergeMeshes(parts, true, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = false;
+    merged.isPickable = false;
+  }
+  const spire = scene.getMeshByName("voidStatue_spire");
+  if (spire) { spire.material = rock; spire.receiveShadows = false; }
+}
+
 export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -670,6 +738,7 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
   const restoreSky = voidSky(scene, built);
   const shrined = shrine(scene, built, result);
   chainedStatue(scene, shrined.obstacles);
+  backdropCrag(scene);
   const hazards = [...shrined.hazards, ...chasms(scene)];
   return { ...result, hazards, obstacles: shrined.obstacles, height: shrineHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
