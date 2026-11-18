@@ -80,6 +80,9 @@ function deckPieces(): Array<{ x0: number; x1: number; z0: number; z1: number }>
 function pits(scene: Scene, built: Set<unknown>, result: MapBuildResult, stone: StandardMaterial, gold: StandardMaterial): MapBuildResult {
   for (const m of scene.meshes) {
     if (!built.has(m) || !m.isEnabled()) continue;
+    // the base island's top slab and shelf lie at the deck's top and would lid the pits (592.5b)
+    if (m.name === "islandUnder" || m.name === "islandShelf") { m.setEnabled(false); continue; }
+    m.computeWorldMatrix(true);
     const bb = m.getBoundingInfo().boundingBox, c = bb.centerWorld;
     // the base pools' water sheets and bridges (x +-18, z 11..25) would lie over the cross walkway
     const inPool = Math.abs(c.x) <= 18 && Math.abs(c.z) >= 10 && Math.abs(c.z) <= 26 && bb.extendSizeWorld.x < 25 && bb.extendSizeWorld.z < 25;
