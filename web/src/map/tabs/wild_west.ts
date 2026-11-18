@@ -20,9 +20,14 @@ function seeded(i: number, seed: number): number {
   return raw - Math.floor(raw);
 }
 
-const ROWS: Array<{ z: number; face: number; from: number; to: number }> = [
-  { z: 35.5, face: -1, from: -27, to: 27 },
-  { z: -38, face: 1, from: 1, to: 36 },
+// Near-side town block (583, western.png: the near-side buildings are a deep block, a second rank standing well inside the
+// island in front of the rim row, offset from it, with alleys between and behind). The third row is that inner rank: two
+// buildings at z -23.5 (x 2..23.4), an alley of 1.3-3 m in front of the rim row's porches, left of both the right zone (x >= 27) and the
+// stage armies (x >= 28.6).
+const ROWS: Array<{ z: number; face: number; from: number; to: number; count: number }> = [
+  { z: 35.5, face: -1, from: -27, to: 27, count: 5 },
+  { z: -38, face: 1, from: 1, to: 36, count: 3 },
+  { z: -23.5, face: 1, from: 2, to: 23.4, count: 2 },
 ];
 const DEPTH = 9;
 const ALLEY = 3.2;
@@ -51,7 +56,7 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
   const parts: Record<keyof typeof mats, Mesh[]> = { board: [], boardAlt: [], seam: [], trim: [], roof: [], window: [], plank: [], sign: [] };
   let k = 0;
   for (const row of ROWS) {
-    const count = row.face < 0 ? 5 : 3;
+    const count = row.count;
     const each = (row.to - row.from - ALLEY * (count - 1)) / count;
     for (let i = 0; i < count; i++, k++) {
       const w = each - seeded(k, 1) * 0.8;
