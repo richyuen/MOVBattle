@@ -1,19 +1,22 @@
 # map.bridge
 Status: open   Audited: 587 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (588: struck 1, 2, 4): 3. Grey sky band in map_bridge_island — TABS: pale cyan haze all round (ref: wiki/bridge.png, stages/simulation.bridge_battle.thumb.png)
-b FAIL (588: struck 1, 3): 2. No bridge in map_bridge_top — TABS: a long track about 5 units wide and 53 long linking the two blocks (ref: card Layout, wiki/bridge.png)
-c PASS (588 judge)
+a FAIL (589: struck 3): 5. Dark teal band across the upper sky in map_bridge_ground — TABS: light sky blue fading into pale haze (ref: stages/simulation.pit.png)
+b PASS (589: struck 2; CONFIRM pending)
+c PASS (589 judge)
 
 ## Ranked gaps
-1. [S] b bridge length — blocker 2: re-proportion the blocks to x 18..40 (army at x 20-27.2, |z| <= 22) so the 36 m span reads longer than a block — ref: reference/maps/wiki/bridge.png — ours: map_bridge_top.png
-2. [P] a sky hue — blocker 3, fallout of fdee4e69 (588; eligible to 591): simKit.ts paleSky default haze (.86,.9,.9) -> (.78,.9,.92), span .57 -> .15 (moves corridor, low_ground and hill skies too) — ours: map_bridge_island.png
+1. [P] a sky hue — blocker 5, fallout of fdee4e69 (588; eligible to 591): simKit.ts paleSky blue (.38,.68,.76) -> (.55,.78,.92), span .15 kept (one change for every kit map) — ref: stages/simulation.pit.png — ours: map_*_ground top third
+2. [P] b square pillars (non-blocking, fallout of 07d52058, to 592): bridge.ts BLOCK |z| 23 -> 11 (stage army |z| <= 22 must move first: stage batch) — ours: map_bridge_top.png
 
 ## Attempts (iter | gap | criterion | verdict)
-588 | [S] two grid blocks + 5 m bridge, void round (bridge.ts) fded3015 | b1 | APPROVE, struck b1, b3 (CLOSER also named b2's width cleared; length stands)
+589 | [S] blocks 22 x 46 m 07d52058 | b2 | APPROVE, struck b2 (b PASS)
+589 | [P] kit haze (.74,.93,.97) span .15 8d4fd3bc | a3 | APPROVE, struck a3; added a5 (teal zenith)
+588 | [S] two grid blocks + 5 m bridge, void round (bridge.ts) fded3015 | b1 | APPROVE, struck b1, b3
 588 | [S] pale sky fdee4e69 | a3 | APPROVE, no strike (a1, a2, a4 struck by fded3015)
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Builder tabs/bridge.ts on tabs/simKit.ts: blocks x +-18..64 |z|<=25, span |x|<18 |z|<=2.5, 400 m deep; void box hazards x +-90 z +-60. Stage: simulation.bridge_battle (x 20..27.2).
+- Builder tabs/bridge.ts on simKit: blocks x +-18..40 |z|<=23, span |x|<18 |z|<=2.5, 400 m deep; void x +-90 z +-60. Stage: simulation.bridge_battle (x 20..27.2, |z|<=22).
+- 589 early CONFIRM (unused, a open) would fail b: blocks twice as wide as deep, span shorter than a block's long side (H, not dumbbell); the CONFIRM after a5 clears needs square pillars. output/loop/iter-589/confirm.md.

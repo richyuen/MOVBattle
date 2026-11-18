@@ -18,7 +18,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Never capture with a test --iter (pruneOld); test into look/. Near-black set pieces vanish into black tree rings: use lit dark blue-grey (587).
 - A capture wipes iter-N unless --add: save audit/critic files after the step's last capture (audit iterations: step 5 with --add). A step-5 capture takes ~12 min: background it.
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
-- Probes (loop/scripts/probes/, --build after source changes) were written for units: read one before trusting it on a map.
+- Probes (loop/scripts/probes/, --build) were written for units: read one before using it on a map.
 - In-page probe on the dev server (5173): import the @babylonjs_core.js?v=... URL from performance.getEntriesByType("resource"); its EngineStore.LastCreatedScene is the live scene after game.loadMapForCapture(id).
 
 ## Maps and stages
@@ -30,7 +30,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - A set piece inside a merged tree belt needs a clearing before the trees merge (580).
 - Base crowns read pale because CanopyAerialPlugin and scene fog mix them toward sky-white: fresh crown materials made after base() (diffuse = emissive = c*0.55), applyFog false, out of the glow, stay saturated (tribal_1 556).
 - Every material a map build makes is disposed with the build (trackMapBuild), so a builder may recolour base materials by name ("grass", "groundMat", blades) without leaking to other maps; hide blades by mesh name fieldBlades_*/grassTuft. Base theme props are named `<displayName>_cyl|_box|_totem_top` with colliders at the same x,z.
-- Dense crops: thin instances are cheap; keep them under waist height or armies vanish (556).
+- Dense crops: thin instances; keep them under waist height or armies vanish (556).
 - Scene lights (hemi, dir) are not reset by a map build (clearColor and fogColor are, by the theme): a builder that changes them saves and restores them in its MapBuildResult.dispose, chained to the base's (farmer_snow 557). The far range and second slab are base meshes mountainBase/Cap/Root, clouds are "cloud": hide them by name.
 - The map ground pose (alpha pi, target x 12) looks +x from x -29 across z ~0: props in a front or back corner never show in it; name the top shot for those.
 - The translucent box framing maps in the top shot is those zone slabs too (createPlacementGuides), a map mesh. Island underside = islandUnder + islandShelf + islandCliff (merged crags); farmer_1's earthBowl replaces them. MeshBuilder.CreatePolygon needs earcut (absent): fan a ribbon to a hub instead.
@@ -44,12 +44,12 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns or a palisade (563): a rock mass wants heaped faceted boulders or tilted slabs, few and large, of unequal size (spooky_1 583: equal rocks read as an even band).
 - Stage enemy positions are validated against the map's team-1 zone, hazards and obstacles (game.checkStage): a map change can misplace a stage's army (the checkpoint re-judges every stage on a finished map batch).
 - campaign.challenge dressing: "wallStone", "boulder", "hayBale", "hill", "stump", pit hazards, "<displayName>_box|_cyl" junk. loadMapForCapture needs "map.". Probe before claiming a thing gone (564).
-- Static base meshes need setVerticesData to upload reshaped geometry (573-574). Grate embers show only between flat bars 4 cm proud (579, 584).
+- Static base meshes need setVerticesData to upload reshaped geometry (573-574). Grate embers show between bars 4 cm proud (579).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
 - Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
-- Run captures unsandboxed (sandbox blocks loopback). A CONFIRM can fail on set pieces no list named (585; dynasty 588).
+- Run captures unsandboxed. A CONFIRM can fail on set pieces no list named (585, 588). Scenery at z 450+ is clipped (589); sky span <.2 puts zenith blue in ground shots.
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six thin blades with up-facing normals read as grass (legacy 583); flattened IcoSpheres read fuzzy from afar but as paving stones from a stage's low camera (spooky_1 583), upright ones as stones; leaf cards as beige flags (571).
 - Mesh.MergeMeshes returns null past 65536 vertices (parts stay unmerged, default white) unless 32-bit: (parts, true, true) (582).

@@ -3,6 +3,11 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+589 | 07d52058 | map.bridge.b2 | approve, struck b2 (critic b PASS; early CONFIRM unused would fail b: blocks not square)
+589 | 90341a4e | map.hill.b1 | approve, struck b1 (b PASS); evidence 00cf09ce+cc5ef659 re-aimed ground, a1 struck
+589 | de48f83f | map.hill.a3 | reject, reverted 5093c46c (clouds z 450-540 never rendered)
+589 | 41f10807, 2177a9ad | map.high_ground.b1, a2 | approve, struck b1, a1, a2, a3
+589 | f2467ab3, 57155431 | map.defend_the_castle.b1, a2 | approve, struck b1, b4, a1, a2, a3
 588 | 334b790d | map.dynasty.b3 | approve, struck b3 (critic b PASS); CONFIRM failed a, b (new lists)
 588 | fded3015, fdee4e69 | map.bridge.b1, a3 | approve, struck b1, b3, a1, a2, a4
 588 | c20c50bb, 5e870bb6 | map.corridor.b2, a4 | approve, struck b1-b3 (b PASS), a1-a3
@@ -31,10 +36,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 584 | 012614f9 [R] | map.spooky_1.a2,4 | approve, struck a4; CONFIRM a PASS, critic a FAIL
 584 | 5395195a | map.pirate.a2 | approve, struck a2
 584 | 96f80159 | map.spooky_2.a4 | approve, no strike (near edge; TABS far edge)
-583 | 8094db6e [R] | map.spooky_1.a1-3 | approve, struck a1, a3; added a4
-583 | 4f1cb063 | map.dynasty.b3 | approve, no strike
-583 | bf9994ed | map.dynasty.b5 | approve, struck b5
-583 | 1bac6c2d, 36dabe6f | map.pirate.a2 | approve, no strike
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584): rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
@@ -48,12 +49,14 @@ web/src/map/tabs/spooky_2.ts:darkTorii | (-40,33), posts 7.2 m 5.6 apart, kasagi
 web/src/map/tabs/simulation.ts:gridFloor | 5 m tile 512 px, base (228,222,212), 1 m lines (190,186,182) 2 px, 5 m (172,168,165) 3 px, self (.18,.17,.16); base "ground" hidden | 587 | approve, struck a1, a4 | base lilac lawn
 web/src/map/tabs/simulation.ts:emptyCentre | centerGrass hidden, centre void hazard (r 8) and its overlay removed | 587 | approve, struck a2 | void disc at origin
 web/src/map/tabs/simulation.ts:paleSky | backdrop sphere blue (.38,.68,.76) to haze (.86,.9,.9) smoothstep over up .57, fog = haze, dome off | 588 | [P] 1 rejected (blue (.62,.86,.93) span .4: paler, not cyan; island shot sees only haze); value kept | grey skyDome
-web/src/map/tabs/simKit.ts:paleSky (bridge, corridor, low_ground, hill) | defaults as simulation.ts: blue (.38,.68,.76), haze (.86,.9,.9), span .57 | 588 | approve, no strike (reads neutral grey) | base grey skyDome
+web/src/map/tabs/simKit.ts:paleSky (every kit map) | blue (.38,.68,.76), haze (.74,.93,.97), span .15 | 589 | [P] approve, struck island grey bands (bridge a3, corridor a4, low_ground a4, castle a4); added teal zenith in every _ground (blue too dark/green low) | 588: haze (.86,.9,.9) span .57 (neutral grey); base grey skyDome
+web/src/map/tabs/high_ground.ts:sheet and gate | sheet x -60..48 |z|<=22, ramp -24..10 to 12 m; walls x 28..36 |z| 5..20 +7 m, bar |z|<=5 +4.5..7 | 589 | approve, struck b1, a1-a3 | bare plane
+web/src/map/tabs/defend_the_castle.ts:castle | sheet x -60..64 |z|<=30, ramp -22..14 to 10 m; castle x 36..64 walls 3 m top 18, gate 8 m, terrace x 54+ top 14, stair, merlons 1.2 m / 3 m; pillars 3x3 at (29,+-12) top 21 | 589 | approve, struck b1, b4, a1-a4 | bare plane
 web/src/map/tabs/simKit.ts:gridMaterial/gridBlock/voidAround | 1 m grid tile per 5 m uv, planar uvs per face; blocks 400 m deep; void box hazards x +-90 z +-60 | 588 | approve | bare plane
-web/src/map/tabs/bridge.ts:blocks and span | blocks x +-18..64 |z|<=25; span |x|<18 |z|<=2.5 | 588 | approve, struck b1, b3 (span reads short) | bare plane
+web/src/map/tabs/bridge.ts:blocks and span | blocks x +-18..40 |z|<=23; span |x|<18 |z|<=2.5 | 589 | approve, struck b2 (reads H, not dumbbell) | 588: blocks x +-18..64 |z|<=25; bare plane
 web/src/map/tabs/corridor.ts:pads, wall, slot | pads x +-8..38 |z|<=15; wall |x|<=8 |z|<=26 top 7; slot |z|<=2 | 588 | approve, b PASS (wall height barely reads from top) | bare plane
 web/src/map/tabs/low_ground.ts:trough | slab x +-60 |z|<=22; floor |x|<=10 at 0, banks to 7 m at |x| 20 | 588 | approve, b PASS | bare plane
-web/src/map/tabs/hill.ts:ridge | foot -24, 10 m at x 22, crest to 28, 4 m at 40, flat to 76; grid + pale sky | 588 | approve, struck b2, b3, a2 | ramp -8..30 top 8, base plane material
+web/src/map/tabs/hill.ts:ridge | sheet x -60..76 |z|<=28, foot -24, 10 m at x 22, crest to 28, 4 m at 40; 400 m skirt, void round, bareField | 589 | approve, struck b1 (b PASS) | 588: sheet from -24 on the endless grid plane; ramp -8..30 top 8
 web/src/map/tabs/dynasty.ts:canalPools | water kept back x -19.6..3, 31..36.6, front -36.6..-31, -3..19.6; dry lawn blocks 0.85 m elsewhere | 588 | approve, struck b3 | two full 92 m canal sheets
 web/src/map/tabs/dynasty.ts:columnCliffs | continuous 5-sided columns h7.5..12.5m, square/notched rim, green ledges | 582 | approve | hanging stalactite underside
 web/src/map/tabs/dynasty.ts:canalSpurs | four 4.4 m spurs x34/-17 (back) -34/17 (front), |z|17.6..27, outer lawn and canal wall split, 3 m dry crossing | 583 | approve, no strike | absent

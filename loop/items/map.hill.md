@@ -1,21 +1,24 @@
 # map.hill
 Status: open   Audited: 587 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (588: struck 2): 1. No grid lines on the ramp in map_hill_ground — TABS: grid lines over the ramp and the flat, with brighter bands across the slope (ref: reference/maps/wiki/hill.png) 3. Grey sky band in map_hill_island — TABS: pale-blue sky with large soft white clouds (ref: wiki/hill.png)
-b FAIL (588: struck 2, 3): 1. Left half on an endless plane in map_hill_island — TABS: the low flat is part of one block that ends in a sheer drop to the void (ref: wiki/hill.png, stages/simulation.hill.png)
-c PASS (588 judge)
+a FAIL (589: struck 1 on the re-aimed ground shot): 3. Grey sky band in map_hill_island — TABS: pale-blue sky with large soft white clouds (ref: wiki/hill.png) 4. Dark teal band across the upper sky in map_hill_ground — TABS: light sky blue with white clouds (ref: wiki/hill.png)
+b PASS (589: struck 1)
+c PASS (589 judge)
 
 ## Ranked gaps
-0. [E] evidence first — a1's shot map_hill_ground shows only the flat (no ramp in frame): re-aim it at the slope in capture-world.mjs before any pick on hill
-1. [S] b bounded block — blocker 1: bareField + voidAround round the ridge sheet, 400 m grid skirt (as low_ground.ts); team-1 zone ends at the sheet (x 76) — ref: wiki/hill.png — ours: map_hill_island.png
-2. [S] a cross-slope bands — blocker 1: brighter bands across the ramp facets every 5 m of rise — ref: wiki/hill.png — ours: map_hill_ground.png (re-aimed)
-3. [S] a clouds — blocker 3: large soft white cloud banks in the pale sky — ref: wiki/hill.png — ours: map_hill_island.png
+1. [S] a cloud banks that render — blocker 3: simKit cloudBanks at z 180-250, y 40-80 (inside the camera's far clip), disposed in the map's dispose — ref: wiki/hill.png — ours: map_hill_island.png
+2. [P] a sky hue — blocker 4 (kit paleSky blue, see map.bridge) — ours: map_hill_ground.png top third
+3. [S] a slope bands (critic NEXT, not a blocker): brighter 5 m bands across the ramp through a hill-only grid material — ours: map_hill_ground.png
 
 ## Attempts (iter | gap | criterion | verdict)
-588 | [S] crest x 22-28, fall to 4 m flat (hill.ts) ec25b08c | b2 | APPROVE, struck b2, b3
-588 | [S] grid ridge + plane, pale sky 1eb72e07 (+cfd5d291 lilac disc hidden) | a1 | APPROVE, struck a2 (a1 not judgeable in its shot; sky out of scope)
+589 | [E] ground shot re-aimed 00cf09ce + cc5ef659 (low from the left flat's corner up the ramp) | a1 | re-audit struck a1
+589 | [S] bounded block, void round, zones (hill.ts) 90341a4e | b1 | APPROVE, struck b1 (b PASS)
+589 | [S] cloud banks z 450-540 de48f83f | a3 | REJECT, reverted 5093c46c (attempt 1 on a3)
+588 | [S] crest ec25b08c; grid ridge + pale sky 1eb72e07 (+cfd5d291) | b2, a1 | APPROVE, struck b2, b3, a2
 
 ## Rejected (last 4)
+589 | [S] a3 de48f83f | attempts 1 | clouds never rendered (past the camera's far clip, z 450-540); not disposed with the map
 
 ## Notes (max 3 lines)
-- Builder tabs/hill.ts: foot -24, ramp to 10 m at x 22, crest to 28, down to 4 m at 40, flat to 76; sheet |z|<=28. Stage: simulation.hill (x 20..25.9, on the crest).
+- Builder tabs/hill.ts: sheet x -60..76 |z|<=28 (foot -24, 10 m at 22, crest to 28, 4 m flat from 40), 400 m skirt, void x -90..100 z +-60; zones x<-1 / x>1. Stage: simulation.hill (x 20..25.9).
+- map_hill_ground pose: capture-world.mjs POSE_OVERRIDE (target (12,6,0), radius 64, alpha -2.8, beta 1.4).
