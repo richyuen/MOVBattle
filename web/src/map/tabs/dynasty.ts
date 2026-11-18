@@ -246,6 +246,32 @@ function courtyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): v
   }
 }
 
+// Turquoise canals: two 92 x 10 m stone-lined channels, lily groups kept clear of the six bridges.
+function gardenCanals(scene: Scene, built: Set<unknown>): void {
+  for(const m of scene.meshes) if(built.has(m)&&m.name==="campaign_hazard_box_water") m.setEnabled(false);
+  const water=new StandardMaterial("dynastyCanalTurquoise",scene);
+  water.diffuseColor=Color3.Black();water.emissiveColor.set(0.025,0.42,0.37);water.disableLighting=true;
+  const stone=new StandardMaterial("dynastyCanalStone",scene);
+  stone.diffuseColor.set(0.3,0.34,0.37);stone.emissiveColor.set(0.09,0.1,0.11);stone.specularColor=Color3.Black();
+  const leaf=new StandardMaterial("dynastyLily",scene);
+  leaf.diffuseColor.set(0.25,0.38,0.07);leaf.emissiveColor.set(0.05,0.08,0.01);
+  const glow=scene.getGlowLayerByName("glow");
+  for(const sz of [-1,1]) {
+    const sheet=MeshBuilder.CreateBox("dynastyCanalWater",{width:92,height:0.08,depth:10},scene);
+    sheet.position.set(0,0.14,sz*12);sheet.material=water;glow?.addExcludedMesh(sheet);
+    for(const z of [sz*7,sz*17]) for(const [a,b] of [[-41,-3],[3,41]]) {
+      const wall=MeshBuilder.CreateBox("dynastyCanalWall",{width:b-a,height:0.65,depth:0.5},scene);
+      wall.position.set((a+b)/2,0.3,z);wall.material=stone;wall.receiveShadows=true;
+    }
+    for(let i=0;i<32;i++) {
+      const x=-37+(i%16)*4.8, z=sz*12+(i<16?-2.2:2.2)+Math.sin(i*3.7)*0.7;
+      if(Math.abs(x)<4) continue;
+      const pad=MeshBuilder.CreateCylinder("dynastyLilyPad",{height:0.05,diameter:0.6+(i%3)*0.25,tessellation:7},scene);
+      pad.position.set(x,0.22,z);pad.material=leaf;glow?.addExcludedMesh(pad);
+    }
+  }
+}
+
 export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -265,6 +291,7 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   const obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 1));
   pagoda(scene);
   courtyard(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
+  gardenCanals(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
