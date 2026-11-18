@@ -11,7 +11,7 @@
 // porch roof on every other building; windows 1 x 1.4 m, four per floor; sign board 5.5 x 1.1 m under the false-front top. The base's
 // two black boxes (houses at (4,-16) and (6,16)) go with their colliders; one box collider per building plus its porch. Both armies'
 // zones (|x| 27..61, |z| 9..27) and the stage armies (x 28.6..35.5, z -25..-11) stay clear.
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -380,6 +380,7 @@ export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuil
   sandstoneBase(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   desertRim(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), kept);
   roundPlaza(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
+  sandStreet(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   const restoreSky = sunsetSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles: kept, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
@@ -398,6 +399,45 @@ function roundPlaza(scene: Scene, built: Set<unknown>): void {
     }
     m.setVerticesData("position",p,false);m.refreshBoundingInfo();
   }
+}
+
+// Sand street (584, wild_west.leading_cacti.png: the town stands on smooth light peach sand, paler than the red rocks, with
+// faint wind ripples and no grass). Spec: the base's rust floor ("ground", "centerGrass") takes its own peach sand material
+// (0.72, 0.56, 0.48) with a little self-light, so the warm sunset tints it peach, not rust; the base's blade and tuft fields
+// are hidden; about 520 wind ripples, low ridges 3-8 m long, 0.45 m wide and 5 cm high, a shade paler, lie across the
+// light (along z, +-0.35 rad) inside the 53 m round floor, thin instances receiving shadows.
+function sandStreet(scene: Scene, built: Set<unknown>): void {
+  const mk = (name: string, c: Color3, self: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = self;
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const sand = mk("westStreetSand", new Color3(0.72, 0.56, 0.48), new Color3(0.13, 0.08, 0.055));
+  for (const m of scene.meshes) {
+    if (!built.has(m)) continue;
+    if (/^(fieldBlades_|fieldTufts_|grassTuft|flowerDot)/.test(m.name)) m.setEnabled(false);
+    if (m.name === "ground" || m.name === "centerGrass") m.material = sand;
+  }
+  const ripple = MeshBuilder.CreateCylinder("westSandRipple", { height: 1, diameter: 1, tessellation: 4 }, scene);
+  ripple.rotation.x = Math.PI / 2;
+  ripple.bakeCurrentTransformIntoVertices();
+  ripple.convertToFlatShadedMesh();
+  ripple.material = mk("westStreetRipple", new Color3(0.8, 0.64, 0.55), new Color3(0.15, 0.095, 0.065));
+  ripple.isPickable = false;
+  ripple.receiveShadows = true;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(ripple);
+  const m: number[] = [];
+  for (let i = 0; i < 620; i++) {
+    const a = seeded(i, 71) * Math.PI * 2, r = Math.sqrt(seeded(i, 72)) * 53;
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    const len = 3 + seeded(i, 73) * 5;
+    if (Math.hypot(x, z) + len / 2 > 53) continue;
+    const yaw = (seeded(i, 74) - 0.5) * 0.7;
+    m.push(...Matrix.Compose(new Vector3(0.64, 0.1, len), Quaternion.RotationAxis(Vector3.Up(), yaw), new Vector3(x, 0.005, z)).m);
+  }
+  ripple.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
 }
 
 // Tall angular red-rock arches and narrow spires punctuate the cactus rim (western.png).
