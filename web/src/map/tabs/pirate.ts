@@ -161,18 +161,44 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     const foreU = 5.5;
     box("hull", 5, 1.4, 2 * hullHalfBeam(8) - 0.1, foreU, top + 0.7, 0);
     for (const s of [-1, 1]) box("gold", 5.1, 0.2, 0.14, foreU, top + 1.45, s * (hullHalfBeam(8) - 0.05));
-    // Stern castle in three tiers with gold edge rails and gold-framed windows on its stern face
+    // 599 a2: the wiki stern is a raked, rounded continuation of the hull,
+    // not stacked full-beam boxes. Three lofted galleries narrow aft and rise
+    // 2.2/1.8/1.4 m; side/quarter windows face the deck camera as well as aft.
     const sternU = -LONG * 0.45 + 4;
     let base = top;
     for (const [len, rise, wins] of [[8, 2.2, 4], [6, 1.8, 3], [4.2, 1.4, 0]] as const) {
-      const cu = sternU - 4 + len / 2, beam = BEAM * (1.02 - (8 - len) * 0.025);
-      box("hull", len, rise, beam, cu, base + rise / 2, 0);
-      for (const s of [-1, 1]) box("gold", len + 0.1, 0.2, 0.14, cu, base + rise + 0.05, s * beam / 2);
-      box("gold", 0.14, 0.2, beam, sternU - 4.03, base + rise + 0.05, 0);
+      const beam = BEAM * (1.02 - (8 - len) * 0.025), aft=sternU-4, fore=aft+len;
+      const width=(u:number)=>beam/2*(0.68+0.32*Math.sin(Math.min(1,Math.max(0,(u-aft)/len))*Math.PI/2));
+      const outline:Array<[number,number]>=[];
+      for(let i=0;i<=8;i++){const u=aft+len*i/8;outline.push([u,-width(u)]);}
+      for(let i=8;i>=0;i--){const u=aft+len*i/8;outline.push([u,width(u)]);}
+      const pos:number[]=[],idx:number[]=[],n=outline.length;
+      for(const upper of [false,true])for(const [u,v]of outline){
+        const [x,z]=at(u-(upper?0.35*(fore-u)/len:0),v*(upper?1:0.9));
+        pos.push(x,base+(upper?rise:0),z);
+      }
+      for(let i=0;i<n;i++){const j=(i+1)%n;idx.push(i,j,n+i,j,n+j,n+i);}
+      const [cx,cz]=at((aft+fore)/2,0);const hub=pos.length/3;pos.push(cx,base+rise,cz);
+      for(let i=0;i<n;i++)idx.push(hub,n+i,n+(i+1)%n);
+      const shell=new Mesh("pirateSternGallery",scene),data=new VertexData(),normals:number[]=[];
+      VertexData.ComputeNormals(pos,idx,normals);data.positions=pos;data.indices=idx;data.normals=normals;data.uvs=new Array(pos.length/3*2).fill(0);data.applyToMesh(shell);
+      parts.hull.push(shell);
+      // Raked quarter galleries and two long rows of side windows are visible
+      // from the island/deck poses; the aft face alone points out of those views.
+      for(const side of [-1,1])for(let i=0;i<8;i++){
+        const u=aft+(i+0.5)*len/8,v=side*(width(u)+0.04);
+        box("gold",len/8+0.06,0.18,0.14,u,base+rise+0.04,v);
+        if(wins&&i>0&&i<7&&i%2===1){
+          box("gold",0.95,rise*0.65,0.16,u,base+rise*0.5,v);
+          box("sail",0.68,rise*0.44,0.19,u,base+rise*0.5,v+side*0.06);
+          box("dark",0.07,rise*0.47,0.21,u,base+rise*0.5,v+side*0.08);
+        }
+      }
+      box("gold",0.15,0.2,beam*0.68,aft-0.36,base+rise+0.05,0);
       for (let w = 0; w < wins; w++) {
-        const v = (w + 0.5 - wins / 2) * (beam / wins);
-        box("gold", 0.08, rise * 0.62, 1.25, sternU - 4.04, base + rise * 0.5, v);
-        box("dark", 0.1, rise * 0.48, 0.95, sternU - 4.07, base + rise * 0.5, v);
+        const v = (w + 0.5 - wins / 2) * (beam*0.68 / wins);
+        box("gold",0.12,rise*0.62,0.85,aft-0.22,base+rise*0.5,v);
+        box("sail",0.15,rise*0.44,0.6,aft-0.25,base+rise*0.5,v);
       }
       base += rise;
     }
