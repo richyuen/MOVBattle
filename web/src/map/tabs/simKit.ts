@@ -153,11 +153,14 @@ export function cloudBanks(scene: Scene, banks: Array<[number, number, number, n
   const pos = merged.getVerticesData(VertexBuffer.PositionKind) ?? [];
   let lo = Infinity, hi = -Infinity;
   for (let i = 1; i < pos.length; i += 3) { lo = Math.min(lo, pos[i]); hi = Math.max(hi, pos[i]); }
+  // 591: untoned like the sky, white tops (246,248,250) over cool grey-blue bases (196,208,220), so the banks stay brighter than
+  // the horizon haze (216,228,227) they stand in (code white rendered (210,210,210), darker than the new haze)
+  const top = untoned(246, 248, 250), low = untoned(196, 208, 220);
   const cols: number[] = [];
   for (let i = 0; i < pos.length; i += 3) {
     const t0 = Math.max(0, Math.min(1, (pos[i + 1] - lo) / Math.max(1, hi - lo) * 1.6));
     const t = t0 * t0 * (3 - 2 * t0);
-    cols.push(0.8 + 0.2 * t, 0.87 + 0.13 * t, 0.93 + 0.07 * t, 1);
+    cols.push(low.r + (top.r - low.r) * t, low.g + (top.g - low.g) * t, low.b + (top.b - low.b) * t, 1);
   }
   merged.setVerticesData(VertexBuffer.ColorKind, cols);
   const mat = new StandardMaterial("simKitCloud", scene);
@@ -175,8 +178,34 @@ export function cloudBanks(scene: Scene, banks: Array<[number, number, number, n
   return merged;
 }
 
-// Kit haze (589): cyan-white (.74,.93,.97) reaching the blue by 15 deg up, so the island shot's band above the horizon reads pale cyan
-export function paleSky(scene: Scene, blue = new Color3(0.38, 0.68, 0.76), haze = new Color3(0.74, 0.93, 0.97), span = 0.15): () => void {
+/** Untoned colour (591): the code value an unlit StandardMaterial emissive needs so the frame shows the sRGB `target` (0-255)
+ *  after main.ts's image processing. That pipeline is a full-frame post-process, so no mesh can leave it; instead its chain is
+ *  inverted. Forward chain: the material decodes code^2.2 (IMAGEPROCESSINGPOSTPROCESS), x exposure 1.05, ACES fitted (input
+ *  matrix, RRT/ODT fit, output matrix, saturate), gamma 1/2.2, contrast 1.1 (mix toward smoothstep by .1). It reproduces the
+ *  590 shots: code (.38,.68,.76) -> (82,156,172) (measured (78,148,164) under the vignette), white -> (210,210,210), which is
+ *  why the kit zenith read teal and its clouds grey. A pale target needs code values a little over 1 (the pipeline is HDR). */
+export function untoned(r: number, g: number, b: number): Color3 {
+  const IN = [[0.59719, 0.35458, 0.04823], [0.076, 0.90834, 0.01566], [0.0284, 0.13383, 0.83777]];
+  const OUT = [[1.60475, -0.53108, -0.07367], [-0.10208, 1.10813, -0.00605], [-0.00327, -0.07276, 1.07602]];
+  const mul = (m: number[][], v: number[]) => m.map((row) => row[0] * v[0] + row[1] * v[1] + row[2] * v[2]);
+  const fit = (v: number) => (v * (v + 0.0245786) - 0.000090537) / (v * (0.983729 * v + 0.432951) + 0.238081);
+  const sat = (x: number) => Math.min(1, Math.max(0, x));
+  const fwd = (lin: number[]) => mul(OUT, mul(IN, lin.map((x) => x * 1.05)).map(fit)).map(sat)
+    .map((x) => sat(Math.pow(x, 1 / 2.2))).map((x) => x + (x * x * (3 - 2 * x) - x) * 0.1);
+  const t = [r / 255, g / 255, b / 255];
+  let lin = t.map((x) => Math.pow(x, 2.2));
+  for (let it = 0; it < 200; it++) {
+    const f = fwd(lin);
+    lin = lin.map((x, i) => Math.max(0, x * Math.pow(Math.max(1e-4, t[i]) / Math.max(1e-4, f[i]), 2.2)));
+  }
+  return new Color3(...lin.map((x) => Math.pow(x, 1 / 2.2)) as [number, number, number]);
+}
+
+// Kit sky (591, [S]): colours are the frame's sRGB targets, untoned. Read off wiki hill.png / stages/simulation.pit.png: pale
+// grey-cyan (188,207,209) overhead lightening to (216,228,227) at the horizon; the 589/590 code values went through ACES as a
+// dark teal zenith (82,156,172). The fog and clear colour take the untoned haze, so the far floor melts into the horizon ring.
+export function paleSky(scene: Scene, blueSrgb: [number, number, number] = [186, 207, 210], hazeSrgb: [number, number, number] = [216, 228, 227], span = 0.15): () => void {
+  const blue = untoned(...blueSrgb), haze = untoned(...hazeSrgb);
   const dome = scene.getMeshByName("skyDome"), domeOn = dome?.isEnabled();
   dome?.setEnabled(false);
   const oldFog = scene.fogColor.clone(), oldClear = scene.clearColor.clone();
