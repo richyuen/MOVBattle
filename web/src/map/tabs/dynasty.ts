@@ -272,7 +272,7 @@ function rimTorii(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult["
 function gardenCanals(scene: Scene, built: Set<unknown>): void {
   for(const m of scene.meshes) if(built.has(m)&&m.name==="campaign_hazard_box_water") m.setEnabled(false);
   const water=new StandardMaterial("dynastyCanalTurquoise",scene);
-  water.diffuseColor=Color3.Black();water.emissiveColor.set(0.025,0.42,0.37);water.disableLighting=true;
+  water.diffuseColor.set(0.2,0.8,0.75);water.emissiveColor.set(0.07,0.28,0.26);water.specularColor=Color3.Black();
   const stone=new StandardMaterial("dynastyCanalStone",scene);
   stone.diffuseColor.set(0.3,0.34,0.37);stone.emissiveColor.set(0.09,0.1,0.11);stone.specularColor=Color3.Black();
   const leaf=new StandardMaterial("dynastyLily",scene);
