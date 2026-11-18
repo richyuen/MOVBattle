@@ -46,7 +46,7 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
   const indices: number[] = [];
   for(let i=0;i<SHORE.length-1;i++) {
     const a=i,b=i+1,c=points.length-1-i,d=c-1;
-    indices.push(...(side>0?[a,b,c,b,d,c]:[a,c,b,b,c,d]));
+    indices.push(...(side>0?[a,c,b,b,c,d]:[a,b,c,b,d,c]));
   }
   const normals: number[] = [];
   VertexData.ComputeNormals(positions, indices, normals);
