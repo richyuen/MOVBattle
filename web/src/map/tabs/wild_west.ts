@@ -271,6 +271,15 @@ function sunsetSky(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
+// A broad, flat-bottomed sandstone drum replaces the suspended pointed underside.
+function sandstoneBase(scene: Scene, built: Set<unknown>): void {
+  for(const m of scene.meshes) if(built.has(m)&&/^(islandUnder|islandShelf|islandCliff)/.test(m.name)) m.setEnabled(false);
+  const sand=new StandardMaterial("westSandstoneBase",scene);
+  sand.diffuseColor.set(0.65,0.46,0.28);sand.emissiveColor.set(0.3,0.21,0.13);sand.specularColor=Color3.Black();
+  const slab=MeshBuilder.CreateCylinder("westSandstoneDrum",{height:9,diameterTop:111,diameterBottom:106,tessellation:20},scene);
+  slab.position.y=-4.7;slab.scaling.z=0.91;slab.material=sand;slab.convertToFlatShadedMesh();
+}
+
 // Long overlapping polygonal terraces behind the left rear town row, as in the wiki overview.
 function mesaRidge(scene: Scene): void {
   const rock=new StandardMaterial("westRidgeRed",scene);
@@ -336,6 +345,7 @@ export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuil
   town(scene, kept);
   chapel(scene, kept);
   mesaRidge(scene);
+  sandstoneBase(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   desertRim(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), kept);
   const restoreSky = sunsetSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles: kept, dispose: () => { restoreSky(); result.dispose?.(); } };
