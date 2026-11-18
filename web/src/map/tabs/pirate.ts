@@ -17,16 +17,97 @@ import type { Obstacle } from "../obstacles";
 const SHIPS = [{ z: 37, bow: 1 }, { z: -37, bow: -1 }];
 const LONG = 30, BEAM = 8, HULL = 4.4, SINK = 0.8;
 
+// Curved hull (593, blocker a2; wiki pirate.png: the galleon hull is one smooth dark planked shell, its sides rounding in to the
+// keel, its bow drawing to a point, its stern raked under a high transom; dark chocolate brown with gold bands at the sheer and
+// along the wale). Spec: a lofted shell from the stern transom (u -13) to the bow (u 15), 29 stations, each section a rounded U
+// (superellipse, exponent 2.6) from the bulwark top (0.9 m over the deck) down to the keel and back; half beam 4 m amidships,
+// 0.9 of it at the transom, drawing in on a quarter ellipse from u 3 to the stem at u 15; depth 4.4 m, the keel rising forward
+// of u 3 to half that at the stem and raked up aft of u -11; the transom closed by a fan; the deck a plate following the
+// shell at 0.97 of its beam. Strakes (dark, every 0.6 m), the sheer rail and the wale (gold) run as bands along the shell,
+// gun ports sit on it. Hull (.24,.11,.04) self .14 (palette: orange x .25 reads dark chocolate), both faces lit.
+const HULL_U0 = -13, HULL_U1 = 15, HULL_PW = 2 / 2.6, BULWARK = 0.9;
+const hullHalfBeam = (u: number) =>
+  u <= 3 ? (BEAM / 2) * (1 - 0.1 * ((3 - u) / 16) ** 2) : (BEAM / 2) * Math.sqrt(Math.max(0.003, 1 - ((u - 3) / 12) ** 2));
+const hullDepth = (u: number) => {
+  let d = HULL;
+  if (u > 3) d *= 0.5 + 0.5 * Math.sqrt(Math.max(0, 1 - ((u - 3) / 12) ** 2));
+  if (u < -11) d *= 1 - (0.45 * (-11 - u)) / 2;
+  return d;
+};
+/** The shell's half-width at height y (deck top `top`) at station u. */
+function hullV(u: number, y: number, top: number): number {
+  const f = Math.min(1, Math.max(0, (top - y) / hullDepth(u)));
+  const s = f ** (1 / HULL_PW), c = Math.sqrt(Math.max(0, 1 - s * s));
+  return hullHalfBeam(u) * c ** HULL_PW;
+}
+
+function loftHull(scene: Scene, parts: Record<string, Mesh[]>, at: (u: number, v: number) => readonly [number, number], top: number): void {
+  const NS = 28, NP = 14;
+  const stations = Array.from({ length: NS + 1 }, (_, i) => HULL_U0 + ((HULL_U1 - HULL_U0) * i) / NS);
+  const sheet = (rows: number[][][], closeFan?: number[]) => {
+    const pos: number[] = [], idx: number[] = [];
+    const per = rows[0].length;
+    for (const row of rows) for (const [u, y, v] of row) { const [x, z] = at(u, v); pos.push(x, y, z); }
+    for (let i = 0; i < rows.length - 1; i++) for (let j = 0; j < per - 1; j++) {
+      const a = i * per + j, b = a + per;
+      idx.push(a, b, b + 1, a, b + 1, a + 1);
+    }
+    if (closeFan) {
+      const [u, y, v] = closeFan, [x, z] = at(u, v), c = pos.length / 3;
+      pos.push(x, y, z);
+      for (let j = 0; j < per - 1; j++) idx.push(c, j, j + 1);
+    }
+    const m = new Mesh("pirateGalleonShell", scene);
+    const vd = new VertexData();
+    vd.positions = pos;
+    vd.indices = idx;
+    const normals: number[] = [];
+    VertexData.ComputeNormals(pos, idx, normals);
+    vd.normals = normals;
+    vd.applyToMesh(m);
+    return m;
+  };
+  // the shell: bulwark top, round the U, bulwark top
+  const section = (u: number) => {
+    const b = hullHalfBeam(u), d = hullDepth(u), pts: number[][] = [[u, top + BULWARK, b]];
+    for (let j = 0; j <= NP; j++) {
+      const phi = (Math.PI * j) / NP, c = Math.cos(phi), s = Math.sin(phi);
+      pts.push([u, top - d * Math.abs(s) ** HULL_PW, b * Math.sign(c) * Math.abs(c) ** HULL_PW]);
+    }
+    pts.push([u, top + BULWARK, -b]);
+    return pts;
+  };
+  parts.hull.push(sheet(stations.map(section), [HULL_U0, top - hullDepth(HULL_U0) / 2, 0]));
+  // the deck plate inside the bulwarks
+  parts.deck.push(sheet(stations.map((u) => [[u, top + 0.2, -0.97 * hullHalfBeam(u)], [u, top + 0.2, 0.97 * hullHalfBeam(u)]])));
+  // bands along the shell at a height, both sides, where the hull is deep enough
+  const band = (k: string, y: number, h: number, out: number) => {
+    const live = stations.filter((u) => top - y < hullDepth(u) * 0.92);
+    for (const side of [-1, 1]) {
+      parts[k].push(sheet(live.map((u) => {
+        const v = side * (hullV(u, y, top) + out);
+        return [[u, y - h / 2, v], [u, y + h / 2, v]];
+      })));
+    }
+  };
+  for (let y = top - 0.6; y > top - HULL + 0.9; y -= 0.6) band("dark", y, 0.07, 0.03);
+  band("gold", top + BULWARK + 0.1, 0.28, 0.06);
+  band("gold", top - 1.9, 0.22, 0.05);
+}
+
 function galleons(scene: Scene, obstacles: Obstacle[]): void {
   const mk = (name: string, c: Color3, self: number) => {
     const m = new StandardMaterial(name, scene);
     m.diffuseColor = c;
     m.emissiveColor = c.scale(self);
     m.specularColor = Color3.Black();
+    // (593) the lofted shell and its bands are open sheets: light both faces
+    m.backFaceCulling = false;
+    m.twoSidedLighting = true;
     return m;
   };
   const mats = {
-    hull: mk("pirateGalleonHull", new Color3(0.36, 0.21, 0.1), 0.45),
+    hull: mk("pirateGalleonHull", new Color3(0.24, 0.11, 0.04), 0.14),
     dark: mk("pirateGalleonDark", new Color3(0.18, 0.11, 0.07), 0.35),
     deck: mk("pirateGalleonDeck", new Color3(0.72, 0.55, 0.34), 0.42),
     gold: mk("pirateGalleonGold", new Color3(0.95, 0.72, 0.25), 0.5),
@@ -66,27 +147,15 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     // face; masts 19/23/17 m, yards at 0.4/0.62/0.82 of the height spanning 13/10.5/7.5 m, furled rolls 1.15 m thick with four
     // gaskets; three shrouds a side per mast from the deck edge to 0.8 of its height. Deck, cannons, gangplanks and the hull's
     // collider are as before.
-    for (let t = 0; t < 4; t++) {
-      const f = (t + 1) / 4, h = HULL / 4;
-      box("hull", LONG * 0.8 * (0.82 + 0.18 * f), h + 0.02, BEAM * (0.62 + 0.38 * f), -LONG * 0.05, top - HULL + h * (t + 0.5), 0);
+    loftHull(scene, parts, at, top);
+    for (let g = 0; g < 7; g++) {
+      const u = -LONG * 0.36 + g * 3.6;
+      box("dark", 0.9, 0.8, 0.1, u, top - 1.2, hullV(u, top - 1.2, top) + 0.04);
     }
-    const prow = BEAM / Math.SQRT2;
-    box("hull", prow, HULL * 0.75, prow, LONG * 0.35, top - HULL * 0.3, 0, Math.PI / 4);
-    for (let y = top - 0.6; y > top - HULL + 0.9; y -= 0.6) {
-      const f = 1 - (top - y) / HULL * 0.38;
-      box("dark", LONG * 0.8 * (0.82 + 0.18 * f), 0.07, BEAM * (0.62 + 0.38 * f) + 0.06, -LONG * 0.05, y, 0);
-    }
-    for (const s of [-1, 1]) {
-      box("gold", LONG * 0.8, 0.28, 0.14, -LONG * 0.05, top + 1.02, s * (BEAM / 2 + 0.02));
-      box("gold", LONG * 0.74, 0.22, 0.12, -LONG * 0.05, top - 1.9, s * (BEAM * 0.47 + 0.08));
-    }
-    for (let g = 0; g < 7; g++) box("dark", 0.9, 0.8, 0.1, -LONG * 0.36 + g * 3.6, top - 1.2, BEAM / 2 + 0.04);
-    box("deck", LONG * 0.78, 0.2, BEAM * 0.9, -LONG * 0.05, top + 0.1, 0);
-    for (const s of [-1, 1]) box("hull", LONG * 0.78, 0.9, 0.3, -LONG * 0.05, top + 0.55, s * BEAM * 0.47);
-    // Forecastle at the bow
-    const foreU = LONG * 0.27;
-    box("hull", 6, 1.4, BEAM * 0.94, foreU, top + 0.7, 0);
-    for (const s of [-1, 1]) box("gold", 6.1, 0.2, 0.14, foreU, top + 1.45, s * BEAM * 0.47);
+    // Forecastle at the bow, inside the narrowing hull
+    const foreU = 5.5;
+    box("hull", 5, 1.4, 2 * hullHalfBeam(8) - 0.1, foreU, top + 0.7, 0);
+    for (const s of [-1, 1]) box("gold", 5.1, 0.2, 0.14, foreU, top + 1.45, s * (hullHalfBeam(8) - 0.05));
     // Stern castle in three tiers with gold edge rails and gold-framed windows on its stern face
     const sternU = -LONG * 0.45 + 4;
     let base = top;
@@ -147,7 +216,7 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     // cleats every metre and a dark rail beam along both edges.
     for (const [u, fan] of [[-9, -0.18], [0, 0.04], [9, 0.16]] as const) {
       const run = 12.5, drop = top + 0.6, len = Math.hypot(run, drop), slope = Math.atan2(drop, run);
-      const [rx, rz] = at(u, BEAM / 2);
+      const [rx, rz] = at(u, hullHalfBeam(u));
       const yaw = Math.atan2(Math.sin(fan) * bow, toBeach * Math.cos(fan));
       const piece = (k: keyof typeof mats, w: number, h: number, along: number, across: number, lift: number) => {
         const m = MeshBuilder.CreateBox("pirateGalleonPlank", { width: w, height: h, depth: along === 0 ? len : 0.22 }, scene);
