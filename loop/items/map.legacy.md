@@ -1,15 +1,16 @@
 # map.legacy
 Status: open   Audited: 576 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (580: struck 4, 5): 7. Sky in map_legacy_island — TABS: clear pale-blue sky; ours is grey-white haze (ref: reference/stages/legacy.a_tank.png)
-b FAIL (580: struck 2): 3. field outline in map_legacy_top — TABS: a wide round meadow with scattered grey boulders (ref: reference/maps/wiki/legacy.png)
-c PASS (580 judge)
+a FAIL (581: no strike): 7. Sky in map_legacy_island — TABS: clear pale-blue sky; ours is grey-white haze (ref: reference/stages/legacy.a_tank.png)
+b PASS (581: struck 3; CONFIRM pending)
+c PASS (581 judge)
 
 ## Ranked gaps
-1. [S] a pale-blue sky — blocker 7: map-specific sky and fog — ref: reference/stages/legacy.a_tank.png — ours: map_legacy_island.png
-2. [S] b broad glade — blocker 3: reshape inner pine belt around a wider round meadow with scattered boulders — ref: reference/maps/wiki/legacy.png — ours: map_legacy_top.png
+1. [S] a clear valley sky — blocker 7: draw a pale-blue backdrop that survives fog and tone mapping — ref: reference/stages/legacy.a_tank.png — ours: map_legacy_island.png
 
 ## Attempts (iter | gap | criterion | verdict)
+581 | [S] pale-blue sky 4ca22ba3 | a7 | APPROVE, no strike
+581 | [S] circular clearing 5a649e0c | b3 | APPROVE, struck b3 (b PASS)
 580 | [S] valley floor f5d5ce85 | b | APPROVE, struck b2
 580 | [S] mountains bfb1c703; ruin 9a3f5024 + 2fc231cb | a | APPROVE, struck a4, a5
 576 | [S] 341586e1 | a | APPROVE, struck a1

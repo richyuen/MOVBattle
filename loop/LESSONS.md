@@ -51,5 +51,5 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Varied-height cliff buttresses can leave sky below continuous ledges. Back the ledges with a skirt down to the adjoining tier and check the ground shot.
 - Rooftops can hide a stage's army in a low camera; an elevated player-side diagonal shows it (Ancient 1).
 - Hazards a builder adds get no overlay (base() drew them): draw them yourself (578).
-- A descending path against a merged cliff can be buried by its columns (579); carve its recess before adding the ramp, and check the named top shot.
+- Recess a descent before merging cliff columns (579). A concave bank needs longitudinal strips: a hub fan can cross the recess and invert triangles (581).
 - Test an emissive bed under iron bars in a small look first (579): it stayed black after two material/height follow-ups.

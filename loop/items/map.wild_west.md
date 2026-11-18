@@ -1,15 +1,17 @@
 # map.wild_west
 Status: open   Audited: 576 (AUDIT x2)   Done: -
 ## Verdicts
-a FAIL (580: struck 5, 6): 3. rock arches in map_wild_west_island — TABS: tall red sandstone arches and spires on the rim (ref: reference/maps/western.png)
-b FAIL (580: struck 2): 1. street layout in map_wild_west_top — TABS: two building rows (back and front right) frame wide dirt streets with alleys, not two boxes at the centre (ref: card Overview; reference/maps/wiki/wild_west.png) 4. field outline in map_wild_west_top — TABS: a round island with a sand plaza (ref: reference/maps/western.png)
-c PASS (580 judge)
+a FAIL (581: no strike): 3. rock arches in map_wild_west_island — TABS: tall red sandstone arches and spires on the rim (ref: reference/maps/western.png)
+b PASS (581: struck 1, 4; CONFIRM pending)
+c PASS (581 judge)
 
 ## Ranked gaps
-1. [S] a sandstone arches — blocker 3: tall faceted arch uprights, lintels and spires — ref: reference/maps/western.png — ours: map_wild_west_island.png
-2. [S] b street rows — blocker 1: extend and stagger front-right houses around broad streets and alley gaps — ref: reference/maps/wiki/wild_west.png — ours: map_wild_west_top.png
+1. [S] a natural sandstone masses — blocker 3: offset tapering rock piers, pointed spires and irregular lintel caps — ref: reference/maps/western.png — ours: map_wild_west_island.png
 
 ## Attempts (iter | gap | criterion | verdict)
+581 | [S] arches dc051619 | a3 | APPROVE, no strike
+581 | [S] street rows c305d702 | b1 | APPROVE, struck b1
+581 | [S] round plaza 1f0d6c88 | b4 | APPROVE, struck b4 (b PASS)
 580 | [S] chapel 07b08bd1; base cd907413 | a | APPROVE, struck a5, a6
 580 | [S] mesa ridge 514d0cf8 | b | APPROVE, struck b2
 576 | [S] false-front clapboard town rows at back and front right (ea5d9883) | a | APPROVE, struck a1

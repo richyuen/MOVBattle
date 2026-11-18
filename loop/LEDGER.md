@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+581 | 7ced1c3e | map.ancient_2.a3 | approve, no strike
+581 | 4ca22ba3 | map.legacy.a7 | approve, no strike
+581 | 5a649e0c | map.legacy.b3 | approve, struck b3
+581 | 8b37b4e3, b0f7dd32, 8800d66d | map.spooky_1.b5 | approve, struck b5; CONFIRM b PASS, a FAIL
+581 | dc051619 | map.wild_west.a3 | approve, no strike
+581 | c305d702 | map.wild_west.b1 | approve, struck b1
+581 | 1f0d6c88 | map.wild_west.b4 | approve, struck b4
+581 | 9a58d04e | map.dynasty.a4 | approve, struck a4
+581 | 63de26e1 | map.dynasty.b2 | approve, struck b2, collateral a6
 580 | 07b08bd1 | map.wild_west.a5 | approve, struck a5
 580 | 514d0cf8 | map.wild_west.b2 | approve, struck b2
 580 | cd907413 | map.wild_west.a6 | approve, struck a6
@@ -20,7 +29,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 579 | 6fce1036 | map.dynasty.b | approve, struck b6
 579 | 0167e0b6 | map.legacy.b | approve, struck b1, b4
 579 | 2f5b6c6f | map.legacy.a | approve, struck a6
-575 | 10 commits (viking: D; medieval_2 R: D; ancient_2 x3; ancient_sandbox x2: D; ancient_1 x3) | all approve, 14 struck
 576 | 10 commits (ancient_1 x2: D; ancient_2 x2 + P; dynasty, spooky_1, legacy, wild_west, renaissance a; pirate b) | all approve, 9 struck
 577 | 6141b061 | map.pirate.b | approve
 577 | fc2afb16, 4b99d78f | map.wild_west.b, map.wild_west.a | approve
@@ -40,6 +48,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox: 556-576 rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
 
 ## Tuned values
+web/src/map/tabs/wild_west.ts:roundPlaza | 55 m circular floor, round drum (z scale1), guide slabs hidden | 581 | approve | power3 oval/rounded rectangle, drum zscale .91
+web/src/map/tabs/dynasty.ts:lawnTerraces | eight green lawn blocks h.85/1.4 m, stone faces and offset flagstone edges, draw height | 581 | approve | olive-brown flat floor
+web/src/map/tabs/dynasty.ts:courtApproaches | N/S spans7..17 E/W7..10, four curved decks and six-step approaches each end, draw height | 581 | approve | incomplete ring approaches
+web/src/map/tabs/ancient_2.ts:frontPorticos | 4-column recesses, 2.8-4 m high, alternate small shrines, fronts stepped 0-2.8 m | 581 | approve, no strike | uniform terrace1 front
+web/src/map/tabs/legacy.ts:paleBlueSky | clear (.52,.77,.88), fog (.67,.82,.88), restored on dispose | 581 | approve, no strike | inherited grey-white
+web/src/map/tabs/legacy.ts:innerGlade | pine centres at radius >=52, colliders moved; 24 sparse low boulders at r37..46 | 581 | approve | pinched oval inner belt
+web/src/map/tabs/spooky_1.ts:leftDescent | left cliff recessed to x-15, path x-10.5 z-23..0 y0..-6, broken room entrance | 581 | approve | absent
+web/src/map/tabs/wild_west.ts:sandstoneArches | two arches 12/16 m and three spires 13..21 m, rim colliders | 581 | approve, no strike | absent
+web/src/map/tabs/wild_west.ts:townRows | five rear + three front-right; 3.2 m alleys, 1.8 m alternating setbacks; front row z-38 x1..36 | 581 | approve | five rear + two front-right, alleys1.4, z-35.5 x1..27
 web/src/map/tabs/wild_west.ts:chapel | (39,35), 7x11 m nave, 8 m wall, 18.5 m steeple | 580 | approve | absent
 web/src/map/tabs/wild_west.ts:mesaRidge | five overlapping three-tier hexagonal terraces, x -43..-19, z 43..46.2 | 580 | approve | three isolated small mesas (kept)
 web/src/map/tabs/wild_west.ts:sandstoneBase | 111/106 m diameters, 9 m deep, 20 facets, sandstone (.65,.46,.28) | 580 | approve | stalactite underside

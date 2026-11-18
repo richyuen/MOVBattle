@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 580   Batch: maps_2+maps_3   Consecutive empty: 0   Done: 12/99   Parked: 0
+Iteration: 581   Batch: maps_2+maps_3   Consecutive empty: 0   Done: 12/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<id>):
 # <id>
@@ -18,7 +18,7 @@ Marks: one per criterion a b c (+ pass, - fail, ? unscored); map a look, b layou
 ## Scoreboard (a b c as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox +++ D | farmer_1 +++ D | farmer_2 +++ D | farmer_snow +++ D
 maps_2: medieval_1 +++ D | medieval_2 +++ D | ancient_1 +++ D | ancient_2 -++ o | ancient_sandbox +++ D | viking +++ D | viking_sandbox +++ D
-maps_3: dynasty --+ o | renaissance --+ o | pirate --+ o | spooky_1 +-+ o | spooky_2 --+ o | wild_west --+ o | legacy --+ o
+maps_3: dynasty --+ o | renaissance --+ o | pirate --+ o | spooky_1 -++ o | spooky_2 --+ o | wild_west -++ o | legacy -++ o
 maps_4: fantasy_good ??? q | fantasy_evil ??? q | simulation ??? q | bridge ??? q | hill ??? q | corridor ??? q | defend_the_castle ??? q | high_ground ??? q | low_ground ??? q
 stages_introduction: clubs ??? q | army ??? q | hay_and_pitchforks ??? q | basic_formation ??? q | ice_archers_only_almost ??? q | longships ??? q
 stages_adventure: tree_tribe ??? q | the_tiniest_attack ??? q | sneaky_tribe ??? q | tree_mammoths ??? q | final_destination_wheelbarrow ??? q | a_fierce_rider ??? q
@@ -33,51 +33,51 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 580: maps_2+maps_3, 9 [S]; BASE 6193aede)
-- [S] map.wild_west.a blocker 5 (07b08bd1) APPROVE, struck a5
-- [S] map.wild_west.b blocker 2 (514d0cf8) APPROVE, struck b2
-- [S] map.wild_west.a blocker 6 (cd907413) APPROVE, struck a6
-- [S] map.legacy.b blocker 2 (f5d5ce85) APPROVE, struck b2
-- [S] map.legacy.a blocker 4 (bfb1c703) APPROVE, struck a4
-- [S] map.legacy.a blocker 5 (9a3f5024, 2fc231cb) APPROVE, struck a5
-- [S] map.renaissance.b blocker 2 (eae680b0) APPROVE, struck b2
-- [S] map.renaissance.a blocker 3 (304cb24f) APPROVE, no strike
-- [S] map.renaissance.b blocker 5 (19ca5178) APPROVE, struck b5
-- 9/9, 8 struck
+## Focus (iter 581: maps_2+maps_3, 9 [S]; BASE b5efbd6a)
+- [S] map.ancient_2.a blocker 3 (7ced1c3e) APPROVE, no strike (starvation)
+- [S] map.legacy.a blocker 7 (4ca22ba3) APPROVE, no strike
+- [S] map.legacy.b blocker 3 (5a649e0c) APPROVE, struck b3
+- [S] map.spooky_1.b blocker 5 (8b37b4e3, b0f7dd32, 8800d66d) APPROVE, struck b5
+- [S] map.wild_west.a blocker 3 (dc051619) APPROVE, no strike
+- [S] map.wild_west.b blocker 1 (c305d702) APPROVE, struck b1
+- [S] map.wild_west.b blocker 4 (1f0d6c88) APPROVE, struck b4
+- [S] map.dynasty.a blocker 4 (9a58d04e) APPROVE, struck a4
+- [S] map.dynasty.b blocker 2 (63de26e1) APPROVE, struck b2 and collateral a6
+- 9/9, 7 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.wild_west.a blocker 5 (07b08bd1)
+GAP: [S] map.ancient_2.a blocker 3 (7ced1c3e)
+VERDICT: APPROVE
+CRITERION: map.ancient_2.a FAIL (previous: FAIL)
+GAP: [S] map.legacy.a blocker 7 (4ca22ba3)
+VERDICT: APPROVE
+CRITERION: map.legacy.a FAIL (previous: FAIL)
+GAP: [S] map.legacy.b blocker 3 (5a649e0c)
+VERDICT: APPROVE
+CRITERION: map.legacy.b PASS (previous: FAIL)
+GAP: [S] map.spooky_1.b blocker 5 (8b37b4e3, b0f7dd32, 8800d66d)
+VERDICT: APPROVE
+CRITERION: map.spooky_1.b PASS (previous: FAIL)
+GAP: [S] map.wild_west.a blocker 3 (dc051619)
 VERDICT: APPROVE
 CRITERION: map.wild_west.a FAIL (previous: FAIL)
-GAP: [S] map.wild_west.b blocker 2 (514d0cf8)
+GAP: [S] map.wild_west.b blocker 1 (c305d702)
 VERDICT: APPROVE
 CRITERION: map.wild_west.b FAIL (previous: FAIL)
-GAP: [S] map.wild_west.a blocker 6 (cd907413)
+GAP: [S] map.wild_west.b blocker 4 (1f0d6c88)
 VERDICT: APPROVE
-CRITERION: map.wild_west.a FAIL (previous: FAIL)
-GAP: [S] map.legacy.b blocker 2 (f5d5ce85)
+CRITERION: map.wild_west.b PASS (previous: FAIL)
+GAP: [S] map.dynasty.a blocker 4 (9a58d04e)
 VERDICT: APPROVE
-CRITERION: map.legacy.b FAIL (previous: FAIL)
-GAP: [S] map.legacy.a blocker 4 (bfb1c703)
+CRITERION: map.dynasty.a FAIL (previous: FAIL)
+GAP: [S] map.dynasty.b blocker 2 (63de26e1)
 VERDICT: APPROVE
-CRITERION: map.legacy.a FAIL (previous: FAIL)
-GAP: [S] map.legacy.a blocker 5 (9a3f5024, follow-up 2fc231cb)
-VERDICT: APPROVE
-CRITERION: map.legacy.a FAIL (previous: FAIL)
-GAP: [S] map.renaissance.b blocker 2 (eae680b0)
-VERDICT: APPROVE
-CRITERION: map.renaissance.b FAIL (previous: FAIL)
-GAP: [S] map.renaissance.a blocker 3 (304cb24f)
-VERDICT: APPROVE
-CRITERION: map.renaissance.a FAIL (previous: FAIL)
-GAP: [S] map.renaissance.b blocker 5 (19ca5178)
-VERDICT: APPROVE
-CRITERION: map.renaissance.b FAIL (previous: FAIL)
-REGRESSIONS: none. All 48 final PNGs were inspected; no regression attributable to these commits was identified in the twelve dependent stages.
+CRITERION: map.dynasty.b FAIL (previous: FAIL)
+REGRESSIONS: none. All 62 final PNGs were inspected, including every dependent-stage army/field/battle shot; no regression attributable to these commits was identified. All 33 script criteria PASS. The missing reference/stages/fantasy_good.fortified_formation.png was checked via its available .thumb.png fallback and the other Legacy references.
 
 ## Notes for next iteration (max 5 lines)
-- 580: 48 final shots; zero page/console errors; all 27 script criteria PASS. One --add note records the Legacy refresh. No item proposed done; no CONFIRM or checkpoint due.
-- Legacy now has only a7 sky and b3 broad glade; Wild West has a3 arches and b1/b4 streets/outline. Neither is done.
-- Renaissance a3 remains: paving paler but cool-grey and continuously seamed; cream checker uncleared. Canal and open centre struck b2/b5.
-- Ancient 2 a3 last attempted 576: it starves at 581 and must be picked then despite its 2 attempts. Spooky 1 b5 ramp remains; carve the recess first.
-- Critic ranked gaps: output/loop/iter-580/critic.md. LESSONS near cap; merge before adding. Pirate b last attempted 577 (starves 582); a last 578 (583).
+- 581: 62 final shots; zero page/console errors; all 33 script criteria PASS. Expected --add note for Spooky 1 refresh. No batch checkpoint or new D.
+- Spooky 1 b passed CONFIRM; a failed its first CONFIRM (grass and tree silhouettes). Only Spooky 1 was would-be-done; other early CONFIRM answers unused.
+- Legacy a7 sky and Wild West a3 natural rock silhouettes remain; both b PASS await applicable CONFIRM. Dynasty a3 cliff sides and b3/b4/b5 remain.
+- Ancient 2 a3 attempt 3 approved, no strike; next starvation at 586. Pirate b starves at 582 and a at 583; Renaissance a3 checker still open.
+- Critic/CONFIRM: output/loop/iter-581/critic.md, confirm.md. LESSONS near cap; merge before adding. No criterion newly plateaued or parked.
