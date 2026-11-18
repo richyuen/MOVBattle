@@ -199,7 +199,7 @@ function courtyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): v
     return m;
   };
   const mats = {
-    pave: mk("dynastyCourtPave", new Color3(0.62, 0.62, 0.58), 0.4),
+    pave: mk("dynastyCourtPave", new Color3(0.4, 0.41, 0.4), 0.2),
     kerb: mk("dynastyCourtKerb", new Color3(0.44, 0.45, 0.46), 0.4),
     water: mk("dynastyCourtWater", new Color3(0.2, 0.8, 0.75), 0.35),
     well: mk("dynastyCourtWell", new Color3(0.03, 0.03, 0.04), 0),
