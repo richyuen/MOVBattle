@@ -250,6 +250,31 @@ function churchyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): 
   }
 }
 
+// Right-hand sandstone ruin: broken wall teeth, open doorway and windows, fallen masonry and bare trees.
+function sandstoneRuin(scene: Scene, result: MapBuildResult): void {
+  const stone=new StandardMaterial("legacyRuinSandstone",scene);
+  stone.diffuseColor.set(0.52,0.43,0.28);stone.emissiveColor.set(0.16,0.13,0.08);
+  const bark=new StandardMaterial("legacyRuinDeadwood",scene);bark.diffuseColor.set(0.08,0.075,0.06);
+  const box=(w:number,h:number,d:number,x:number,y:number,z:number)=>{
+    const m=MeshBuilder.CreateBox("legacyRuinWall",{width:w,height:h,depth:d},scene);m.position.set(x,y,z);m.material=stone;return m;
+  };
+  for(let i=0;i<7;i++) {
+    const x=33+i*1.5,h=4+seeded(i,211)*4;
+    if(i===3) {box(1.5,1.1,0.8,x,5.8,32);continue;}
+    box(1.5,h,0.8,x,h/2,32);
+    if(i%2===0) box(0.7,0.7,0.85,x,h+0.35,32);
+  }
+  for(let i=0;i<5;i++) box(0.8,2.2+i*0.5,1.5,33,1.1+i*0.25,25+i*1.5);
+  for(let i=0;i<15;i++) {const m=box(0.8,0.6,1.2,32+seeded(i,212)*13,0.3,23+seeded(i,213)*12);m.rotation.y=i;}
+  for(const [x,z] of [[31,27],[46,32],[41,36]]) for(let i=0;i<4;i++) {
+    const m=MeshBuilder.CreateCylinder("legacyRuinDeadTree",{height:i?3.2:6,diameterBottom:i?0.24:0.5,diameterTop:0.08,tessellation:5},scene);
+    m.position.set(x+(i?Math.cos(i*2)*0.7:0),i?4.3:3,z+(i?Math.sin(i*2)*0.7:0));
+    m.rotation.z=i?Math.cos(i*2)*0.8:0;m.rotation.x=i?Math.sin(i*2)*0.8:0;m.material=bark;
+  }
+  result.obstacles.push({type:"box",center:new Vector3(38,0,32),halfX:5.8,halfZ:0.5});
+  result.obstacles.push({type:"box",center:new Vector3(33,0,28),halfX:0.5,halfZ:4});
+}
+
 // Overlapping faceted valley walls rise directly from the outer forest, capped with angular snow.
 function snowMountains(scene: Scene, built: Set<unknown>): void {
   for(const m of scene.meshes) if(built.has(m)&&m.name.startsWith("mountain")) m.setEnabled(false);
@@ -288,5 +313,6 @@ export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildR
   tentCamps(scene);
   valleyFloor(scene,built);
   snowMountains(scene,built);
+  sandstoneRuin(scene,result);
   return result;
 }
