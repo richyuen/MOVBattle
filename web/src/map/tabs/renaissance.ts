@@ -371,6 +371,8 @@ function frontCanal(scene: Scene): void {
 export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
+  const restoreSky = hazeSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+
   const palazzoFrom = rectangularPiazza(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   cornerPalazzo(scene, result, palazzoFrom);
   dogesPalace(scene);
@@ -380,7 +382,31 @@ export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapB
   // The circular object in the reference battle is a unit: the piazza itself has no fountain.
   for(const m of scene.meshes) if(!prior.has(m)&&m.name.startsWith("plazaFountain")) m.setEnabled(false);
   const obstacles = [...result.obstacles.filter(o=>!(o.type==="cylinder"&&Math.hypot(o.center.x,o.center.z)<0.1&&o.radius===3.5)), { type: "box" as const, center: new Vector3(0, 0, PALACE.z + ARCADE + (PALACE.deep - ARCADE) / 2), halfX: PALACE.wide / 2, halfZ: (PALACE.deep - ARCADE) / 2 }];
-  return { ...result, obstacles };
+  return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Haze sky (585, renaissance_town.png: the city floats in a bright white-blue haze with soft clouds, no mountain range).
+// Spec: the base's mountain* range hidden; the shared sky dome off, and in its place a fog-free unlit backdrop sphere in
+// pale white-blue (0.8, 0.9, 0.95), clear and fog colour a shade bluer; the clouds stay; all put back on dispose.
+function hazeSky(scene: Scene, built: Set<unknown>): () => void {
+  const clear = scene.clearColor.clone(), fog = scene.fogColor.clone();
+  for (const mesh of scene.meshes) if (built.has(mesh) && mesh.name.startsWith("mountain")) mesh.setEnabled(false);
+  const inherited = scene.getMeshByName("skyDome"), enabled = inherited?.isEnabled();
+  inherited?.setEnabled(false);
+  const backdrop = MeshBuilder.CreateSphere("renaissanceHazeSky", { diameter: 1800, segments: 16, sideOrientation: Mesh.BACKSIDE }, scene);
+  const material = new StandardMaterial("renaissanceHazeSky", scene);
+  material.disableLighting = true;
+  material.diffuseColor = Color3.Black();
+  material.emissiveColor.set(0.8, 0.9, 0.95);
+  material.fogEnabled = false;
+  backdrop.material = material;
+  backdrop.infiniteDistance = true;
+  backdrop.applyFog = false;
+  backdrop.isPickable = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(backdrop);
+  scene.clearColor.set(0.74, 0.86, 0.93, 1);
+  scene.fogColor.set(0.8, 0.88, 0.93);
+  return () => { inherited?.setEnabled(enabled ?? true); scene.clearColor.copyFrom(clear); scene.fogColor.copyFrom(fog); };
 }
 
 // Wiki: an elevated covered loggia bridges the palace's right side to the
