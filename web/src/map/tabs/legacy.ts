@@ -16,7 +16,7 @@ function seeded(i: number, seed: number): number {
   return raw - Math.floor(raw);
 }
 
-function pineForest(scene: Scene, built: Set<unknown>): void {
+function pineForest(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
   const mk = (name: string, c: Color3, self: number) => {
     const m = new StandardMaterial(name, scene);
     m.diffuseColor = c;
@@ -54,7 +54,14 @@ function pineForest(scene: Scene, built: Set<unknown>): void {
       parts[t % 2 ? "light" : "dark"].push(cone);
     }
   };
-  for (const [x, z] of spots) {
+  // A broad circular inner clearing replaces the inherited pinched oval tree belt.
+  // Move tree colliders with their trunks; retain the church and ruin clearings.
+  for (const spot of spots) {
+    const old = new Vector3(spot[0],0,spot[1]);
+    const length = Math.hypot(...spot) || 1;
+    const radius = Math.max(52, length);
+    const x = spot[0] / length * radius, z = spot[1] / length * radius;
+    for (const obstacle of result.obstacles) if (Vector3.Distance(obstacle.center,old)<0.6) obstacle.center.set(x,0,z);
     pine(x, z);
     const out = Math.hypot(x, z) || 1;
     for (let j = 0; j < 2; j++) {
@@ -309,7 +316,7 @@ export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildR
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   openGlade(scene, built, result);
 
-  pineForest(scene, built);
+  pineForest(scene, built, result);
   meadow(scene, built);
   church(scene, built, result);
   churchyard(scene,built,result);
@@ -317,8 +324,22 @@ export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildR
   valleyFloor(scene,built);
   snowMountains(scene,built);
   sandstoneRuin(scene,result);
+  gladeBoulders(scene);
   const restoreSky = paleBlueSky(scene);
   return {...result, dispose: () => { restoreSky(); result.dispose?.(); }};
+}
+
+// Scattered low grey stones frame the meadow, away from every campaign army and the centre lanes.
+function gladeBoulders(scene: Scene): void {
+  const stone = new StandardMaterial("legacyGladeStone",scene);
+  stone.diffuseColor.set(0.3,0.34,0.37);stone.emissiveColor.set(0.09,0.1,0.11);
+  for(let i=0;i<24;i++) {
+    const a=i/24*Math.PI*2, r=37+seeded(i,241)*9;
+    const x=Math.cos(a)*r,z=Math.sin(a)*r;
+    if(z>19&&Math.abs(x)<25 || x>28&&z>19) continue;
+    const b=MeshBuilder.CreateIcoSphere("legacyGladeBoulder",{radius:0.65+seeded(i,242)*0.8,subdivisions:1},scene);
+    b.scaling.set(1.3,0.6,1);b.position.set(x,0.35,z);b.material=stone;b.receiveShadows=true;
+  }
 }
 
 // Clear pale blue above the snowy valley, as in legacy.a_tank; no grey-white sky dome.
