@@ -614,5 +614,57 @@ export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapB
   const opened = openCentre(scene, built, result, stone, gold);
   const walled = parapets(scene, built, opened, stone, gold);
   const done = gateTowers(scene, pits(scene, built, walled, stone, gold), stone, gold);
+  cleanDeck(scene, built, done);
   return { ...done, dispose: () => { restoreSky(); done.dispose?.(); } };
+}
+
+// Clean deck (596, blocker a6; wiki fantasy_good.png: the marble deck is clean blue-grey paving with small teal inlay tiles
+// set into it in clusters; no rocks, mounds or rubble lie on it). Spec: the base campaign dressing on the island (the dark
+// "boulder"s, the khaki "hill" mound discs, the brown "wallStone" rubble rows, "pebble", "stump", "hayBale" and the theme's
+// "Fantasy Good Sanctum_box|_cyl" junk) is hidden and its colliders go. Inlays: 16 seeded patches on the open paving (never
+// over a pit or within 3 m of one, clear of the centre ring r 9), each a 4 x 3 grid of 1 m tiles of which about half are
+// teal (.2,.62,.6) self .35 and a few a paler aqua (.45,.78,.76) self .35, 1.2 cm proud of the deck, flat, out of the glow.
+function cleanDeck(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const junk = /^(boulder|hill|wallStone|pebble|stump|hayBale|Fantasy Good Sanctum_(box|cyl))$/;
+  const gone: Vector3[] = [];
+  for (const m of scene.meshes) {
+    if (!built.has(m) || !m.isEnabled() || !junk.test(m.name)) continue;
+    gone.push(m.getAbsolutePosition().clone());
+    m.setEnabled(false);
+  }
+  result.obstacles = result.obstacles.filter((o) => !gone.some((p) => Math.hypot(o.center.x - p.x, o.center.z - p.z) < 0.6));
+  let seed = 0x7a11;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const mk = (name: string, c: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(0.35);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const teal: Mesh[] = [], aqua: Mesh[] = [];
+  let placed = 0;
+  for (let tries = 0; tries < 400 && placed < 16; tries++) {
+    const cx = (rnd() - 0.5) * 2 * (DECK.x - 8), cz = (rnd() - 0.5) * 2 * (DECK.z - 10);
+    if (inPit(cx, cz, 5) || Math.hypot(cx, cz) < 11) continue;
+    placed++;
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) {
+      const r = rnd();
+      if (r > 0.6) continue;
+      const tile = MeshBuilder.CreateBox("heavenInlay", { width: 0.94, height: 0.024, depth: 0.94 }, scene);
+      tile.position.set(Math.round(cx) + i - 1.5, 0.012, Math.round(cz) + j - 1);
+      tile.bakeCurrentTransformIntoVertices();
+      (r < 0.12 ? aqua : teal).push(tile);
+    }
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const [list, mat, name] of [[teal, mk("heavenInlayTeal", new Color3(0.2, 0.62, 0.6)), "heavenInlaysTeal"], [aqua, mk("heavenInlayAqua", new Color3(0.45, 0.78, 0.76)), "heavenInlaysAqua"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
 }
