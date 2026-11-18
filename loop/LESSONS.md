@@ -10,7 +10,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - A world box refreshes only on render: computeWorldMatrix(true) before reading bounds in a per-tick step. bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent.
 - Flat pieces need correct left-handed winding or closed slabs. execSync eats a caret: write sha~1.
 - glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh out of the pass wears the glow behind it as a pale see-through veil (farmer_snow 562; wild_west town, pirate hulls 586). Keep dark solids in; exclude bright/self-lit ones.
-- CreateIcoSphere subdivisions 0 is falsy, so it becomes 4: a smooth navy ball (575). Use 1 for a faceted rock.
+- IcoSphere subdivisions 0 is falsy (becomes 4): use 1. A half-disc (arc .5) at rotation (PI/2,0,PI/2) faces +-x (595).
 - Lit thin-instance wheat reads gold above, brown low: two unlit glow-excluded instance meshes sharing one matrix buffer.
 - Image processing is a full-frame post-process: code c renders contrast(gamma(ACES(1.05*c^2.2))), white -> (210,210,210); simKit untoned() inverts it for skies/clouds (591); an unlit textured sheet missed its target (591).
 - Sun dir (-.52,-.669,-.53) lights +x-facing slopes; a -x-facing one goes lilac. Bend its flat-shaded normals (after gridUVs) to one shared normal, not an unlit sheet (592).
@@ -52,7 +52,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six thin blades with up-facing normals read as grass (legacy 583); flattened IcoSpheres read fuzzy from afar but as paving stones from a stage's low camera (spooky_1 583), upright ones as stones; leaf cards as beige flags (571).
 - MergeMeshes: null past 65536 verts unless (parts,true,true); throws on mixed attributes (VertexData needs uvs); a throwing build leaks into later maps (593).
-- A boulder heap receiving shadows goes near black: receiveShadows false, self-light 0.6 (583). Back cliff ledges with a skirt; through gaps it reads as a flat band (584).
+- A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
 - Buildings near a stage's line hide its army (Ancient 1; wild_west 583): the stage camera sits ~24 m west of the army.
 - Builder hazards get no overlay: draw them (578). Self-lit or pale meshes in the glow pass bloom white (a ghost on a black void): exclude them (584; 590; 594).
 - Recess a descent before merging cliff columns (579). A concave bank needs longitudinal strips, not a hub fan (581).

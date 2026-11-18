@@ -1,24 +1,21 @@
 # map.fantasy_good
-Status: open   Audited: 587 (AUDIT x2)   Done: -
+Status: open   Audited: 587 (AUDIT x2), 595 (CONFIRM: passed none; failed a, b)   Done: -
 ## Verdicts
-a FAIL (594: struck 5): 3. No gate towers in map_fantasy_good_island — TABS: two huge white-and-gold arched gate towers with stained-glass windows and blue waterfall channels (ref: reference/maps/heaven_good.png) 4. Dark stalactite spikes under the island in map_fantasy_good_island — TABS: white arcaded viaduct arches over grey basalt column cliffs with teal trees (ref: wiki/fantasy_good.png lower left)
-b FAIL (594: struck 3): 1. Rounded oval lawn outline in map_fantasy_good_top — TABS: rectangular paved deck with stepped, zig-zag edges (ref: wiki/fantasy_good.png) 5. No side islets in map_fantasy_good_island — TABS: several small floating islands beside the main deck (ref: card Overview, heaven_good.png top left)
-c PASS (594 judge)
+a FAIL (0 since 595, CONFIRM list): 1. Underside of the slab in map_fantasy_good_island: a flat white wall with square dark windows over short grey stub pillars — TABS: arcaded viaduct arches over hanging grey basalt column clusters with teal trees, clouds below (ref: reference/maps/wiki/fantasy_good.png, reference/maps/heaven_good.png) 2. The two gate arches in map_fantasy_good_island and _top: small plain boxes with one round arch and a thin spike — TABS: huge ornate gate towers with stained-glass windows and tall pale-blue crystal spires (ref: reference/maps/wiki/fantasy_good.png) 3. Waterfalls in map_fantasy_good_island and _top: none anywhere — TABS: bright blue water channels running down the gate faces, falling into the pits and off the deck edge (ref: reference/maps/wiki/fantasy_good.png, card Overview "several waterfalls") 4. Pit interiors in map_fantasy_good_top and _ground: shallow boxes with a flat blue or lavender floor and two teal bushes — TABS: deep dark shafts with grey basalt column clusters and trees rising out of them (ref: reference/maps/wiki/fantasy_good.png) 5. Corrupted-darkness pieces in map_fantasy_good_top: none — TABS: black thorn vines and a dark corrupted obelisk in the pits beside the light statues (ref: reference/maps/wiki/fantasy_good.png, card Overview) 6. Deck dressing in map_fantasy_good_top and _ground: dark boulders, khaki mound discs and brown brick-rubble rows lying on the marble — TABS: a clean blue-grey flagstone deck with teal inlay tiles and no rocks or rubble (ref: reference/maps/wiki/fantasy_good.png)
+b FAIL (0 since 595, CONFIRM list): 1. Pit arrangement in map_fantasy_good_top: four equal squares in a symmetric 2x2 around a plus-shaped open cross — TABS: five or six pits of different sizes staggered along both long rims (a large tree pit on the left, a large open pit at the front right, small obelisk pits), leaving a zigzag central walkway (ref: reference/maps/wiki/fantasy_good.png) 2. Deck outline in map_fantasy_good_top: a plain rectangle with a notched front edge — TABS: a stepped outline with a lower ledge walkway along the front rim and an angled jog at the back (ref: reference/maps/wiki/fantasy_good.png, reference/maps/heaven_good.png)
+c PASS (595 judge)
 
 ## Ranked gaps
-1. [S] b stepped edge — blocker 1: deck rectangle stepping in and out in zig-zag notches along both long sides, kerb and parapet following — ref: wiki/fantasy_good.png — ours: map_fantasy_good_top.png
-2. [S] a underside — blocker 4: base stalactites hidden; white arcaded viaduct band (round arches, 6 m bays) under the rim over grey basalt column clusters with teal trees — ref: wiki/fantasy_good.png — ours: map_fantasy_good_island.png
-3. [P] a waterfalls (fallout of b993ae0a, to 597): waterfall on each leg's front (-z) face, 0.5 -> 1.2 m wide — ours: map_fantasy_good_island.png
-4. [S] b side islets — blocker 5: small floating islets beside the deck — ref: heaven_good.png — ours: map_fantasy_good_island.png
+1. [P] a1 (fallout d777e226, to 598): arch head rotation (PI/2,0,0); columns 8+inner*18 m
+2. [S] a6 deck dressing: base boulders, discs, rubble hidden; teal inlays
+3. [S] a5 corruption: thorn vines + dark obelisk in two pits
 
 ## Attempts (iter | gap | criterion | verdict)
-594 | [S] gate towers (+-40,30) b993ae0a | b3 (a3) | APPROVE, struck b3; a3 towers/gold/glass cleared, waterfalls unseen
-594 | [S] heaven sky: kit paleSky + cloud banks, range hidden 7b828924 | a5 | APPROVE, struck a5
-593 | [S] open centre 1f3aa7be; parapets 4b047cbf (+9319c5b6) | b4, a2 | APPROVE, struck b4, a6, a2
-591-592 | [S] own builder, marble deck; four 10 m pits | a1, b2 | APPROVE, struck a1, b2, b6
+595 | [S] b1 3ea9ae23, b5 79c9305c, a4 d777e226; [P] a3 725faf2f | b, a | APPROVE all; CONFIRM failed a, b
+591-594 | [S] builder, deck, pits, centre, parapets, towers, sky | a, b | APPROVE, struck old lists
 
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- Builder tabs/fantasy_good.ts on campaign.fantasy_good: deck x +-52 z +-40, pits x 6..30 z 9..30 mirrored, parapets drawn only, TOWERS x +-40 z 30 (legs 6 m, 19 m high), heavenSky. No stage here.
-- Critic 594: towers read modest (19 m); grey jagged peaks still show beyond the back parapet in map_fantasy_good_top; sage lawn patches and dark boulders (base props) on the deck.
+- tabs/fantasy_good.ts: deck x+-52 z+-40, EDGE_STEPS, pits x 6..30 z 9..30, TOWERS (+-40,30). No stage. 2nd CONFIRM fail -> plateau.
+- Critic 595: arch heads edge-on; columns stubs; blue zone column over right islet.
