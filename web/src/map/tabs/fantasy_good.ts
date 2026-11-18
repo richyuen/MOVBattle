@@ -57,11 +57,21 @@ function marbleMaterial(scene: Scene): StandardMaterial {
 // (.24,.3,.42) self (.06,.08,.12), a gold rim kerb, two teal low-poly trees and one white spire rising above the deck.
 // Every base mesh standing in a pit (crystals, bridges) is hidden with its collider; the base's two water pools (x +-18,
 // z 11..25) go, and each pit is a box collider instead, so nobody walks over the drop (the sim stays flat).
-const PITS: Array<{ x0: number; x1: number; z0: number; z1: number }> = [];
-for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-  const xs = [6 * sx, 30 * sx].sort((a, b) => a - b), zs = [9 * sz, 30 * sz].sort((a, b) => a - b);
-  PITS.push({ x0: xs[0], x1: xs[1], z0: zs[0], z1: zs[1] });
-}
+// Staggered pits (596, blocker b1; wiki fantasy_good.png: not four equal squares round a plus-shaped cross but five pits of
+// different sizes along the two long rims, a large tree pit at the front left, a large open pit at the front right, small
+// obelisk pits between and behind, so the paving between them runs as a zigzag walkway). Spec: front rim (z < 0) a tree pit
+// x -34..-12 z -32..-12 (22 x 20), an obelisk pit x 2..12 z -30..-19 (10 x 11), an open pit x 22..40 z -32..-15 (18 x 17);
+// back rim a tree pit x -26..-8 z 13..30 (18 x 17) and an obelisk pit x 6..16 z 19..31 (10 x 12); all at least 4 m inside
+// the stepped edges and clear of the tower legs (x +-31..49, z 27..33). Tree pits keep two teal trees and a spire, open and
+// obelisk pits one spire on a plinth. The walkway between them steps from 24 m wide (x -12..2) to 31 m (x 12..22).
+type Pit = { x0: number; x1: number; z0: number; z1: number; kind: "tree" | "obelisk" | "open" };
+const PITS: Pit[] = [
+  { x0: -34, x1: -12, z0: -32, z1: -12, kind: "tree" },
+  { x0: 2, x1: 12, z0: -30, z1: -19, kind: "obelisk" },
+  { x0: 22, x1: 40, z0: -32, z1: -15, kind: "open" },
+  { x0: -26, x1: -8, z0: 13, z1: 30, kind: "tree" },
+  { x0: 6, x1: 16, z0: 19, z1: 31, kind: "obelisk" },
+];
 const PIT_DEPTH = 10;
 const inPit = (x: number, z: number, pad = 0) => PITS.some((p) => x > p.x0 - pad && x < p.x1 + pad && z > p.z0 - pad && z < p.z1 + pad);
 
@@ -90,7 +100,7 @@ function edgeSegments(s: number): Array<{ x0: number; x1: number; z0: number; z1
 
 /** Deck top pieces around the pits: x bands split at the pits' edges, each band's z runs outside every pit. */
 function deckPieces(): Array<{ x0: number; x1: number; z0: number; z1: number }> {
-  const xs = [...new Set([-30, -6, 6, 30, ...EDGE_XS])].sort((a, b) => a - b), out: Array<{ x0: number; x1: number; z0: number; z1: number }> = [];
+  const xs = [...new Set([...PITS.flatMap((p) => [p.x0, p.x1]), ...EDGE_XS])].sort((a, b) => a - b), out: Array<{ x0: number; x1: number; z0: number; z1: number }> = [];
   for (let i = 0; i < xs.length - 1; i++) {
     const x0 = xs[i], x1 = xs[i + 1], mid = (x0 + x1) / 2;
     const cuts = PITS.filter((p) => p.x0 < mid && p.x1 > mid).map((p) => [p.z0, p.z1]).sort((a, b) => a[0] - b[0]);
@@ -160,7 +170,8 @@ function pits(scene: Scene, built: Set<unknown>, result: MapBuildResult, stone: 
     box(kerbs, k, 0.35, dz, p.x1 + k / 2, 0.175, cz);
     // two teal trees in the pit's outer half, one spire near its inner corner
     const sx = Math.sign(cx), sz = Math.sign(cz);
-    for (const [ox, oz, s] of [[0.32, 0.28, 1], [0.05, -0.25, 0.8]] as Array<[number, number, number]>) {
+    const trees: Array<[number, number, number]> = p.kind === "tree" ? [[0.28, 0.26, 1], [-0.12, -0.22, 0.85]] : [];
+    for (const [ox, oz, s] of trees) {
       const tx = cx + sx * ox * w, tz = cz + sz * oz * dz;
       const trunk = MeshBuilder.CreateCylinder("heavenPitTrunk", { height: 7 * s, diameterTop: 0.5, diameterBottom: 0.9, tessellation: 6 }, scene);
       trunk.position.set(tx, -d + 3.5 * s, tz);
@@ -173,7 +184,8 @@ function pits(scene: Scene, built: Set<unknown>, result: MapBuildResult, stone: 
         leaves.push(crown);
       }
     }
-    const spx = cx - sx * 0.3 * w, spz = cz - sz * 0.25 * dz;
+    // a tree pit's spire stands by its inner corner, an obelisk or open pit's in its middle
+    const spx = p.kind === "tree" ? cx - sx * 0.3 * w : cx, spz = p.kind === "tree" ? cz - sz * 0.25 * dz : cz;
     box(spires, 3, 2, 3, spx, -d + 1, spz);
     const shaft = MeshBuilder.CreateCylinder("heavenPitSpire", { height: 15, diameterTop: 0.2, diameterBottom: 2, tessellation: 4 }, scene);
     shaft.position.set(spx, -d + 2 + 7.5, spz);
