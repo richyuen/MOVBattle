@@ -197,6 +197,131 @@ function rockRing(scene: Scene, built: Set<unknown>): void {
   merged.isPickable = false;
 }
 
+// Shrine (594, blocker b3; wiki fantasy_evil.png, void_evil.png: at the plateau's front, between the two stair flights, a raised
+// round gothic shrine, a ring of dark stone wall pierced by tall pointed-arch windows between buttress pillars with spiked caps;
+// behind it, a blue-glowing portal altar, a round stepped dais with a bright blue disc and blue crystal shards at its back).
+// Spec: the base's void disc (cylinder hazard r 10 at 0,0, its overlay) with its plank ("Fantasy Evil Rift_box" at 0,0) and the
+// base's void slot (box hazard at 0,24, its overlay) go. Shrine centre (0, 1) on the 3 m plateau: a 0.8 m dais r 7.4 with a
+// darker floor, on it a ring wall r 6.2, 0.8 m thick, 4.5 m high, in 16 segments, the two facing +-x left open (the armies'
+// lane runs through it); each segment carries a pointed-arch window (a near-black recess, a 45-degree turned box as its point)
+// on its outer face, a 1 m buttress pillar 6.2 m high with a four-sided spike at every segment joint. Portal altar at (0, 12): two
+// tiers r 3.2 and 2.4 (0.5 m each), a blue disc r 1.8 (unlit (.3,.75,1.4)), five blue crystal prisms 2.5-5.5 m behind it
+// (unlit (.08,.4,.9)), two dark obelisks 4.5 m beside it. Stone (.2,.25,.27) self (.04,.05,.055), flat shaded, in the glow pass;
+// the blue pieces out of it. Colliders: a cylinder per wall segment and pillar, one r 3.2 for the altar; drawn height +0.8 m
+// inside the dais (+1 m on the altar).
+const SHRINE = { x: 0, z: 1, dais: 7.4, r: 6.2, wall: 4.5, segs: 16 };
+const ALTAR = { x: 0, z: 12 };
+function shrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): Pick<MapBuildResult, "hazards" | "obstacles"> {
+  for (const m of scene.meshes) {
+    if (!built.has(m)) continue;
+    if (/^campaign_hazard_(cyl|box)_void$/.test(m.name)) m.setEnabled(false);
+    if (m.name === "Fantasy Evil Rift_box" && Math.hypot(m.position.x, m.position.z) < 2) m.setEnabled(false);
+  }
+  const hazards = result.hazards.filter((h) => h.kind !== "void");
+  const obstacles = result.obstacles.filter((o) => Math.hypot(o.center.x, o.center.z) > 2);
+  const mk = (name: string, c: Color3, self: number, unlit = false) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = unlit ? Color3.Black() : c;
+    m.emissiveColor = unlit ? c : c.scale(self);
+    m.specularColor = Color3.Black();
+    m.disableLighting = unlit;
+    return m;
+  };
+  const mats = {
+    stone: mk("voidShrineStone", new Color3(0.2, 0.25, 0.27), 0.2),
+    floor: mk("voidShrineFloor", new Color3(0.08, 0.1, 0.12), 0.2),
+    recess: mk("voidShrineRecess", new Color3(0.01, 0.012, 0.02), 0),
+    portal: mk("voidShrinePortal", new Color3(0.3, 0.75, 1.4), 0, true),
+    crystal: mk("voidShrineCrystal", new Color3(0.08, 0.4, 0.9), 0, true),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { stone: [], floor: [], recess: [], portal: [], crystal: [] };
+  const put = (k: keyof typeof mats, m: Mesh) => { m.bakeCurrentTransformIntoVertices(); parts[k].push(m); };
+  const top = PLATEAU.top, Y = top + 0.8;
+  // dais and floor
+  const dais = MeshBuilder.CreateCylinder("voidShrinePart", { diameter: SHRINE.dais * 2, height: 0.8 + 1, tessellation: 24 }, scene);
+  dais.position.set(SHRINE.x, top - 0.5 + 0.4, SHRINE.z);
+  put("stone", dais);
+  const floor = MeshBuilder.CreateCylinder("voidShrinePart", { diameter: SHRINE.r * 2 - 0.6, height: 0.06, tessellation: 24 }, scene);
+  floor.position.set(SHRINE.x, Y + 0.02, SHRINE.z);
+  put("floor", floor);
+  const step = (Math.PI * 2) / SHRINE.segs;
+  const open = (a: number) => Math.abs(Math.cos(a)) > 0.93; // the two segments facing +-x
+  for (let i = 0; i < SHRINE.segs; i++) {
+    const a = (i + 0.5) * step, cx = SHRINE.x + Math.cos(a) * SHRINE.r, cz = SHRINE.z + Math.sin(a) * SHRINE.r;
+    const len = 2 * SHRINE.r * Math.sin(step / 2) - 0.9;
+    if (!open(a)) {
+      const w = MeshBuilder.CreateBox("voidShrinePart", { width: 0.8, height: SHRINE.wall, depth: len }, scene);
+      w.rotation.y = -a;
+      w.position.set(cx, Y + SHRINE.wall / 2, cz);
+      put("stone", w);
+      // pointed-arch window on the outer face
+      const ox = Math.cos(a) * 0.36, oz = Math.sin(a) * 0.36;
+      const win = MeshBuilder.CreateBox("voidShrinePart", { width: 0.16, height: 2.4, depth: len * 0.42 }, scene);
+      win.rotation.y = -a;
+      win.position.set(cx + ox, Y + 0.9 + 1.2, cz + oz);
+      put("recess", win);
+      const turn = MeshBuilder.CreateBox("voidShrinePart", { width: 0.16, height: len * 0.3, depth: len * 0.3 }, scene);
+      turn.rotation.set(Math.PI / 4, -a, 0); // pitch about its thickness axis (a diamond), then turned to face out
+      turn.position.set(cx + ox, Y + 3.3, cz + oz);
+      put("recess", turn);
+      obstacles.push({ type: "cylinder", center: new Vector3(cx, 0, cz), radius: len / 2 + 0.2 });
+    }
+    // buttress pillar with a spike at the joint after this segment
+    const pa = (i + 1) * step, px = SHRINE.x + Math.cos(pa) * (SHRINE.r + 0.15), pz = SHRINE.z + Math.sin(pa) * (SHRINE.r + 0.15);
+    const pillar = MeshBuilder.CreateBox("voidShrinePart", { width: 1, height: 6.2, depth: 1 }, scene);
+    pillar.rotation.y = -pa;
+    pillar.position.set(px, Y + 3.1, pz);
+    put("stone", pillar);
+    const spike = MeshBuilder.CreateCylinder("voidShrinePart", { diameterBottom: 1.25, diameterTop: 0, height: 1.8, tessellation: 4 }, scene);
+    spike.rotation.y = -pa + Math.PI / 4;
+    spike.position.set(px, Y + 6.2 + 0.9, pz);
+    put("stone", spike);
+    obstacles.push({ type: "cylinder", center: new Vector3(px, 0, pz), radius: 0.7 });
+  }
+  // portal altar
+  for (const [r, h, y] of [[3.2, 1.5, top - 0.25], [2.4, 0.5, top + 0.75]] as const) {
+    const t = MeshBuilder.CreateCylinder("voidShrinePart", { diameter: r * 2, height: h, tessellation: 16 }, scene);
+    t.position.set(ALTAR.x, y, ALTAR.z);
+    put("stone", t);
+  }
+  const disc = MeshBuilder.CreateCylinder("voidShrinePart", { diameter: 3.6, height: 0.08, tessellation: 24 }, scene);
+  disc.position.set(ALTAR.x, top + 1.04, ALTAR.z);
+  put("portal", disc);
+  for (const [dx, dz, h, tilt] of [[0, 2.2, 5.5, 0], [-1.3, 1.9, 4, 0.25], [1.3, 1.9, 4.2, -0.22], [-2.2, 1.2, 2.5, 0.4], [2.1, 1.3, 2.8, -0.38]] as const) {
+    const c = MeshBuilder.CreateCylinder("voidShrinePart", { diameterBottom: 0.9, diameterTop: 0.15, height: h, tessellation: 6 }, scene);
+    c.rotation.set(0.12, 0, tilt);
+    c.position.set(ALTAR.x + dx, top + 1 + h / 2 - 0.2, ALTAR.z + dz);
+    put("crystal", c);
+  }
+  for (const s of [-1, 1]) {
+    const o = MeshBuilder.CreateCylinder("voidShrinePart", { diameterBottom: 1.1, diameterTop: 0.5, height: 4.5, tessellation: 4 }, scene);
+    o.rotation.y = Math.PI / 4;
+    o.position.set(ALTAR.x + s * 4, top + 2.25, ALTAR.z + 0.5);
+    put("stone", o);
+  }
+  obstacles.push({ type: "cylinder", center: new Vector3(ALTAR.x, 0, ALTAR.z), radius: 3.2 });
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true, true);
+    if (!merged) continue;
+    merged.name = `voidShrine_${key}`;
+    if (key === "stone") merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = key !== "portal" && key !== "crystal";
+    merged.isPickable = false;
+    if (key === "portal" || key === "crystal") glow?.addExcludedMesh(merged);
+  }
+  return { hazards, obstacles };
+}
+
+/** Drawn height with the shrine dais and the altar raised over the plateau. */
+const shrineHeight: HeightField = (x, z) => {
+  const base = fantasyEvilHeight(x, z);
+  if (Math.hypot(x - ALTAR.x, z - ALTAR.z) < 3.2) return base + 1;
+  if (Math.hypot(x - SHRINE.x, z - SHRINE.z) < SHRINE.dais) return base + 0.8;
+  return base;
+};
+
 export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -212,6 +337,7 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
     if (lift > 0) { m.position.y += lift; m.computeWorldMatrix(true); }
   }
   const restoreSky = voidSky(scene, built);
-  const hazards = [...result.hazards, ...chasms(scene)];
-  return { ...result, hazards, height: fantasyEvilHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
+  const shrined = shrine(scene, built, result);
+  const hazards = [...shrined.hazards, ...chasms(scene)];
+  return { ...result, hazards, obstacles: shrined.obstacles, height: shrineHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
