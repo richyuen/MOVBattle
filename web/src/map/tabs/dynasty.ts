@@ -10,7 +10,7 @@
 // 19 m at the eaves, 4 m high, corner tips 2 m curling up; storey 2 7.5 m square, 3.8 m high, 8 columns; roof 2 13 m, 3.2 m high; finial
 // 3.5 m. The base's small pagoda at (0, 29) goes with its collider; one box collider for the platform (outside both armies' zones,
 // which end at |x| 29 / z 32 and leave x 8..26 free behind the courtyard).
-import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, Texture, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 // Pagoda re-sited (594, blocker b1; wiki dynasty.png: the pagoda stands over the north canal close behind the courtyard, its
@@ -337,7 +337,84 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, (7 + PAGODA.z + PAGODA.size / 2) / 2), halfX: PAGODA.size / 2, halfZ: (PAGODA.z + PAGODA.size / 2 - 7) / 2 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
+  cherryGrove(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result, obstacles);
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Cherry grove (596, blocker a5; reference/maps/dynasty.png: the ring is a loose grove of big cherry trees standing apart, each
+// a tall, bent and twisted brown trunk forking into two or three limbs that carry large clustered lilac-pink canopies, not a
+// dense double row of small white-pink puffs on short sticks). Spec: every base ring tree (an unparented "trunk", its puffs its
+// children) is hidden; every third one, in ring order, is replaced at its foot by a cherry: a trunk of four tapering segments
+// (0.9 m to 0.35 m) 5.5-8 m high, each segment bent 0.18-0.4 rad a new way (a twisted, leaning bole), forking at the top into
+// three limbs 2.2-3.4 m spread 120 degrees, each carrying a clump of 3-4 faceted balls r 1.4-2.4 m (one big canopy 7-9 m across
+// overall) in lilac-pink (.8,.52,.84) self .42, trunks brown (.3,.19,.1) self .25, both flat shaded, crowns out of the glow and
+// fog-free so they stay saturated. Hidden trees lose their colliders; kept ones keep theirs. Seated on the drawn ground height.
+function cherryGrove(scene: Scene, built: Set<unknown>, result: MapBuildResult, obstacles: MapBuildResult["obstacles"]): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const bark = mk("dynastyCherryBark", new Color3(0.3, 0.19, 0.1), 0.25);
+  const bloom = mk("dynastyCherryBloom", new Color3(0.8, 0.52, 0.84), 0.42);
+  const hash = (i: number, s: number) => { const v = Math.sin(i * 17.31 + s * 61.7) * 43758.5453; return v - Math.floor(v); };
+  const trunks: Mesh[] = [], crowns: Mesh[] = [];
+  const seg = (from: Vector3, dir: Vector3, len: number, d0: number, d1: number) => {
+    const c = MeshBuilder.CreateCylinder("dynastyCherryLimb", { height: len * 1.04, diameterBottom: d0, diameterTop: d1, tessellation: 6 }, scene);
+    const axis = Vector3.Cross(Vector3.Up(), dir);
+    const ang = Math.acos(Math.max(-1, Math.min(1, dir.y)));
+    if (axis.length() > 1e-4) c.rotationQuaternion = Quaternion.RotationAxis(axis.normalize(), ang);
+    c.position.copyFrom(from.add(dir.scale(len / 2)));
+    trunks.push(c);
+    return from.add(dir.scale(len));
+  };
+  const feet: Vector3[] = [];
+  let k = 0;
+  for (const m of scene.meshes) {
+    if (!built.has(m) || m.name !== "trunk" || m.parent || !m.isEnabled()) continue;
+    m.setEnabled(false);
+    if (k++ % 3 === 0) feet.push(m.position.clone());
+    else for (let o = obstacles.length - 1; o >= 0; o--) if (Math.hypot(obstacles[o].center.x - m.position.x, obstacles[o].center.z - m.position.z) < 0.6) obstacles.splice(o, 1);
+  }
+  feet.forEach((foot, i) => {
+    const y0 = result.height?.(foot.x, foot.z) ?? 0;
+    let p = new Vector3(foot.x, y0 - 0.2, foot.z);
+    const tall = 5.5 + hash(i, 1) * 2.5;
+    let yaw = hash(i, 2) * 6.28;
+    for (let s = 0; s < 4; s++) {
+      const tilt = 0.18 + hash(i, 3 + s) * 0.22;
+      yaw += 1.4 + hash(i, 8 + s) * 1.6;
+      const dir = new Vector3(Math.sin(tilt) * Math.cos(yaw), Math.cos(tilt), Math.sin(tilt) * Math.sin(yaw));
+      p = seg(p, dir, tall / 4, 0.9 - s * 0.13, 0.9 - (s + 1) * 0.13);
+    }
+    const spin = hash(i, 13) * 6.28;
+    for (let l = 0; l < 3; l++) {
+      const a = spin + (l * Math.PI * 2) / 3, reach = 2.2 + hash(i * 3 + l, 14) * 1.2;
+      const dir = new Vector3(Math.cos(a) * 0.8, 0.6, Math.sin(a) * 0.8).normalize();
+      const end = seg(p, dir, reach, 0.36, 0.2);
+      const balls = 3 + Math.floor(hash(i * 3 + l, 15) * 2);
+      for (let b = 0; b < balls; b++) {
+        const r = 1.4 + hash(i * 7 + l * 3 + b, 16) * 1, ba = a + (b - balls / 2) * 1.1;
+        const ball = MeshBuilder.CreateIcoSphere("dynastyCherryCrown", { radius: r, subdivisions: 1, flat: true }, scene);
+        ball.scaling.set(1, 0.82, 1);
+        ball.position.set(end.x + Math.cos(ba) * r * 0.55, end.y + 0.4 + (b % 2) * 0.7, end.z + Math.sin(ba) * r * 0.55);
+        crowns.push(ball);
+      }
+    }
+  });
+  const glow = scene.getGlowLayerByName("glow");
+  for (const [list, mat, name] of [[trunks, bark, "dynastyCherryTrunks"], [crowns, bloom, "dynastyCherryCrowns"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    if (name === "dynastyCherryCrowns") { merged.applyFog = false; glow?.addExcludedMesh(merged); }
+  }
 }
 
 // Canal outlets (595, blocker b2; reference/maps/dynasty.png front left, wiki dynasty.png bottom: the canals do not stop inside
