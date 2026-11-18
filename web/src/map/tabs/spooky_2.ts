@@ -425,17 +425,21 @@ function thornThickets(scene: Scene, result: MapBuildResult): void {
 // Dark torii (587, reference/maps/wiki/spooky_2.png: a black torii stands at the back-left corner of the island, its curved
 // top beam overhanging the posts; Dynasty's rim torii rotated 180 degrees with the map). Spec: at (-40, 33), spanning x; two
 // round posts 0.75 m thick and 7.2 m high, 5.6 m apart, on 1.1 m square plinths; the nuki tie beam 7.4 m long at 5.4 m; the
-// kasagi top 9.6 m long, two stacked beams whose ends sweep up 0.5 m, with a short gakuzuka strut between the beams. Near-black
-// navy (0.05, 0.05, 0.08), barely self-lit, in the glow pass. A small collider round each post. (587.5b) It stands in a clearing:
+// kasagi top 9.6 m long, two stacked beams whose ends sweep up 0.5 m, with a short gakuzuka strut between the beams. Dark
+// blue-grey stone (587.5c), in the glow pass. A small collider round each post. (587.5b) It stands in a clearing:
 // no ring tree within 6 m, and the base's low "hill" mound under it (a red self-lit grass lump at (-40, 30)) is hidden.
 const TORII = { x: -40, z: 33 };
 function darkTorii(scene: Scene, result: MapBuildResult): void {
+  // (587.5c) the mound's vertices are baked (its position is the origin): find it by its bounds; and the torii is the lit dark
+  // blue-grey stone of the approved bridges (0.2, 0.21, 0.28) self 0.35, since near-black vanished into the black tree ring
   for (const mesh of scene.meshes) {
-    if (mesh.name === "hill" && Math.hypot(mesh.position.x - TORII.x, mesh.position.z - TORII.z) < 6) mesh.setEnabled(false);
+    if (mesh.name !== "hill") continue;
+    const c = mesh.getBoundingInfo().boundingBox.centerWorld;
+    if (Math.hypot(c.x - TORII.x, c.z - TORII.z) < 6) mesh.setEnabled(false);
   }
   const mat = new StandardMaterial("spooky2Torii", scene);
-  mat.diffuseColor = new Color3(0.05, 0.05, 0.08);
-  mat.emissiveColor = new Color3(0.02, 0.02, 0.035);
+  mat.diffuseColor = new Color3(0.2, 0.21, 0.28);
+  mat.emissiveColor = new Color3(0.2, 0.21, 0.28).scale(0.35);
   mat.specularColor = Color3.Black();
   const [tx, tz] = [TORII.x, TORII.z];
   const parts: Mesh[] = [];
