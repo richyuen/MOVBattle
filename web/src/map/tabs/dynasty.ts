@@ -319,6 +319,7 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   terraceBranches(scene,result);
   perimeterFlagstones(scene,result);
   canalSpurs(scene, result);
+  canalPools(scene, result);
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
@@ -538,6 +539,50 @@ function canalSpurs(scene: Scene, result: MapBuildResult): void {
   const oldHeight = result.height;
   result.height = (x, z) => {
     for (const [xs, sz] of SPURS) if (Math.abs(x - xs) < HALF - 0.4 && z * sz > NEAR && z * sz < FAR) return 0;
+    return oldHeight?.(x, z) ?? 0;
+  };
+}
+
+// L-shaped pools (588, blocker b3; wiki dynasty.png: the water is not two long straight canals but separate pools, each an
+// arm of canal that turns into a side arm between the lawns, the rest of the field dry raised lawn). Spec: each long canal
+// (|z| 7..17) keeps water only from its spur back along the canal, so every quadrant holds one L (canal arm + spur): back
+// (z > 0) x -19.6..3 (the inner arm to the spur at -17, under the centre bridge) and x 31..36.6 (stair to the spur at 34);
+// front (z < 0) x -36.6..-31 and x -3..19.6. Every other stretch of canal is filled by a dry lawn block at the middle lawns'
+// height (0.85 m): stone retaining box, turf cap and offset edge flagstones, as lawnTerraces. The canal hazards are cut to the
+// kept arms; the ground over the dry blocks is drawn at the lawn height.
+const POOL_ARMS: Record<number, Array<[number, number]>> = { 1: [[-19.6, 3], [31, 36.6]], [-1]: [[-36.6, -31], [-3, 19.6]] };
+const DRY_BLOCKS: Record<number, Array<[number, number]>> = {
+  1: [[-46, -31], [-23, -19.6], [3, 23], [36.6, 46]],
+  [-1]: [[-46, -36.6], [-23, -3], [19.6, 23], [31, 46]],
+};
+function canalPools(scene: Scene, result: MapBuildResult): void {
+  const stone = scene.getMaterialByName("dynastyLawnStone")!;
+  const turf = scene.getMaterialByName("dynastyGreenLawn")!;
+  const H = 0.85, Z0 = 7.25, Z1 = 16.75, ZC = 12, D = Z1 - Z0;
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat = stone) => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z);
+    m.material = mat;
+    m.receiveShadows = true;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  };
+  const dry: Array<{ a: number; b: number; sz: number }> = [];
+  for (const sz of [1, -1]) for (const [a, b] of DRY_BLOCKS[sz]) {
+    const w = b - a, x = (a + b) / 2, z = sz * ZC;
+    dry.push({ a, b, sz });
+    box("dynastyPoolLawnRetaining", w, H, D, x, H / 2, z);
+    box("dynastyPoolLawnTurf", w - 0.6, 0.16, D - 0.6, x, H + 0.04, z, turf);
+    for (const side of [-1, 1]) for (let dx = 0.6; dx < w - 0.6; dx += 1.3)
+      box("dynastyLawnFlagstone", Math.min(1.15, w - dx - 0.1), 0.12, 0.65, a + dx + 0.575, H + 0.1, z + side * (D / 2 - 0.35));
+  }
+  const canal = result.hazards.find((h) => h.shape === "box" && h.kind === "water" && Math.abs(Math.abs(h.center.z) - 12) < 0.1);
+  const halfZ = canal && canal.shape === "box" ? canal.halfZ : 5;
+  result.hazards = result.hazards.filter((h) => !(h.shape === "box" && h.kind === "water" && Math.abs(Math.abs(h.center.z) - 12) < 0.1));
+  for (const sz of [1, -1]) for (const [a, b] of POOL_ARMS[sz])
+    result.hazards.push({ shape: "box", kind: "water", center: new Vector3((a + b) / 2, 0, sz * ZC), halfX: (b - a) / 2, halfZ });
+  const oldHeight = result.height;
+  result.height = (x, z) => {
+    if (Math.abs(z) > Z0 && Math.abs(z) < Z1 && dry.some((d) => Math.sign(z) === d.sz && x > d.a && x < d.b)) return H + 0.12;
     return oldHeight?.(x, z) ?? 0;
   };
 }
