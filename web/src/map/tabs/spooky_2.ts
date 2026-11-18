@@ -361,6 +361,63 @@ function blackTrees(scene: Scene, built: Set<unknown>): void {
   merged.isPickable = false;
 }
 
+// Thorn thickets (587, card Overview "giant thorns blocking the pathways on the left and right sides"; reference/maps/wiki/
+// spooky_2.png: black tangles of thick thorny vines heaped across the side paths, taller than a man, their limbs arching and
+// curling out with hooked spikes). Spec: one thicket on each side path, across the loop path at x -44 and x 44 between the fog
+// channels (z -7..7); each is 26 seeded vines rising from a 6 x 12 m footprint, every vine five tapering segments (0.7 m at
+// the root to 0.15 m) that bend 25-45 degrees per joint around a turning axis, so they arch up to 3.5-5.5 m and curl over;
+// a hooked cone spike 0.5-0.8 m off every other joint. Near-black (0.03, 0.03, 0.05), barely self-lit, merged (32-bit), in the
+// glow pass (dark solid). A box collider 3 x 6 m half size blocks each path.
+function thornThickets(scene: Scene, result: MapBuildResult): void {
+  const hash = (i: number, s: number) => { const v = Math.sin(i * 91.7 + s * 47.31) * 24634.6345; return v - Math.floor(v); };
+  const mat = new StandardMaterial("spooky2Thorn", scene);
+  mat.diffuseColor = new Color3(0.03, 0.03, 0.05);
+  mat.emissiveColor = new Color3(0.012, 0.012, 0.022);
+  mat.specularColor = Color3.Black();
+  const parts: Mesh[] = [];
+  const up = Vector3.Up();
+  const piece = (from: Vector3, dir: Vector3, len: number, d0: number, d1: number, name: string) => {
+    const c = MeshBuilder.CreateCylinder(name, { height: len, diameterBottom: d0, diameterTop: d1, tessellation: 5 }, scene);
+    c.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(up, dir, c.rotationQuaternion);
+    c.position = from.add(dir.scale(len / 2));
+    parts.push(c);
+  };
+  let k = 0;
+  for (const side of [-1, 1]) {
+    const cx = side * 44;
+    for (let v = 0; v < 26; v++, k++) {
+      let p = new Vector3(cx + (hash(k, 1) - 0.5) * 6, 0, (hash(k, 2) - 0.5) * 12);
+      let yaw = hash(k, 3) * 6.28;
+      let tilt = 0.15 + hash(k, 4) * 0.35;
+      const turn = (hash(k, 5) < 0.5 ? -1 : 1) * (0.5 + hash(k, 6) * 0.6);
+      const total = 3.5 + hash(k, 7) * 2;
+      for (let s = 0; s < 5; s++) {
+        const len = total / 5 * (1.3 - s * 0.12);
+        const dir = new Vector3(Math.sin(tilt) * Math.cos(yaw), Math.cos(tilt), Math.sin(tilt) * Math.sin(yaw));
+        const d0 = 0.7 - s * 0.13, d1 = 0.7 - (s + 1) * 0.11;
+        piece(p, dir, len, d0, d1, "spooky2ThornVine");
+        p = p.add(dir.scale(len * 0.95));
+        if (s % 2 === 1) {
+          const sy = yaw + 1.6 + hash(k + s, 8) * 3;
+          const sd = new Vector3(Math.cos(sy) * 0.8, 0.6, Math.sin(sy) * 0.8).normalize();
+          piece(p, sd, 0.5 + hash(k + s, 9) * 0.3, d1 * 0.9, 0.02, "spooky2ThornSpike");
+        }
+        tilt += 0.45 + hash(k + s, 10) * 0.35;
+        yaw += turn * 0.5;
+      }
+    }
+    result.obstacles.push({ type: "box", center: new Vector3(cx, 0, 0), halfX: 3, halfZ: 6 });
+  }
+  const merged = Mesh.MergeMeshes(parts, true, true);
+  if (!merged) return;
+  merged.name = "spooky2ThornThickets";
+  merged.convertToFlatShadedMesh();
+  merged.material = mat;
+  merged.receiveShadows = true;
+  merged.isPickable = false;
+}
+
 const STONE_X = 30;
 function channelBridges(scene: Scene): (x: number, z: number) => number {
   const mk = (name: string, c: Color3, self: number) => {
@@ -462,6 +519,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   gratedCourt(scene);
   pumpkinShrine(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   blackTrees(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+  thornThickets(scene, result);
 
   result.height = channelBridges(scene);
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
