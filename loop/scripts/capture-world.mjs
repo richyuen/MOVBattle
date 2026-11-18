@@ -152,13 +152,15 @@ async function mapScene(page, item) {
     await page.evaluate(() => { window.game.resetBattle(); window.advanceTime(50); });
   }
   // Pirate: the galleon decks (fighting ground in TABS) lie past the placement zones, so the skirmish never reaches them; a
-  // shot from the beach at the +z galleon with eight clubbers standing on its deck and two on a gangplank, then a reset (587)
+  // shot from the beach at the +z galleon with eight clubbers standing on its deck and two on a gangplank, then a reset (587).
+  // 595: the +z galleon lies at x -17 (bow +x, stern x -30); the camera stands on the beach off its stern quarter so the stern
+  // and the hull's run both show
   if (item === "map.pirate") {
     await page.evaluate(() => {
-      for (const [x, z] of [[-10, 36], [-6, 38], [-2, 36], [2, 38], [6, 36], [10, 38], [-4, 39.5], [4, 34.5], [0, 30], [0, 26]]) window.game.spawnUnit("tribal.clubber", 1, { x, z });
+      for (const [x, z] of [[-27, 36], [-23, 38], [-19, 36], [-15, 38], [-11, 36], [-7, 38], [-21, 39.5], [-13, 34.5], [-17, 30], [-17, 26]]) window.game.spawnUnit("tribal.clubber", 1, { x, z });
       window.advanceTime(50);
     });
-    await frame(page, { target: { x: 0, y: 4, z: 36 }, radius: 30, alpha: -Math.PI / 2 - 0.3, beta: 1.2 });
+    await frame(page, { target: { x: -21, y: 4, z: 36 }, radius: 32, alpha: -Math.PI / 2 - 0.65, beta: 1.2 });
     await shot(page, `${p}deck`);
     await page.evaluate(() => { window.game.resetBattle(); window.advanceTime(50); });
   }
