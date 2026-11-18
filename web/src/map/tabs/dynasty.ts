@@ -317,6 +317,7 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   lawnTerraces(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),result);
   courtApproaches(scene,result);
   terraceBranches(scene,result);
+  perimeterFlagstones(scene,result);
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
@@ -383,6 +384,31 @@ function terraceBranches(scene: Scene, result: MapBuildResult): void {
     if(Math.abs(Math.abs(x)-42)<1.9&&Math.abs(z)<2.4)return 1.05;
     return oldHeight?.(x,z)??0;
   };
+}
+
+// A continuous walkable flagstone loop frames the outer lawn (wiki Dynasty).
+// Follow the corner notch and rise onto the existing canal bridges at x +/-44.
+function perimeterFlagstones(scene: Scene, result: MapBuildResult): void {
+  const stone=scene.getMaterialByName("dynastyLawnStone")!;
+  const parts: Mesh[]=[];
+  const corners=[[-32,-26],[-32,-35],[41,-35],[46,-29],[46,30],[39,35],[-39,35],[-46,29],[-46,-26],[-32,-26]];
+  const oldHeight=result.height;
+  const pathHeight=(x:number,z:number)=>{
+    // Leave the pagoda's raised platform alone.
+    const h=oldHeight?.(x,z)??0;
+    return Math.max(0.22,h);
+  };
+  for(let e=1;e<corners.length;e++) {
+    const [ax,az]=corners[e-1],[bx,bz]=corners[e],len=Math.hypot(bx-ax,bz-az),n=Math.ceil(len/1.15),yaw=Math.atan2(bz-az,bx-ax);
+    for(let i=0;i<n;i++)for(let row=-1;row<=1;row++) {
+      const t=(i+0.5)/n,off=row*0.9;
+      const x=ax+(bx-ax)*t-Math.sin(yaw)*off,z=az+(bz-az)*t+Math.cos(yaw)*off;
+      const p=MeshBuilder.CreateBox("dynastyPerimeterFlagstone",{width:len/n-0.08,height:0.16,depth:0.82},scene);
+      p.position.set(x,pathHeight(x,z)+0.06,z);p.rotation.y=-yaw+(i%3-1)*0.035;parts.push(p);
+    }
+  }
+  const merged=Mesh.MergeMeshes(parts,true);
+  if(merged){merged.name="dynastyPerimeterLoop";merged.material=stone;merged.receiveShadows=true;scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);}
 }
 
 // Four separate stone bridge/stair approaches over the water ring around the square courtyard.
