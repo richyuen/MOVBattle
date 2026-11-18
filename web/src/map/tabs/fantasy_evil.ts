@@ -109,6 +109,9 @@ function basaltFloor(scene: Scene, built: Set<unknown>): void {
   const bedMat = new StandardMaterial("basaltBed", scene);
   bedMat.diffuseColor = new Color3(0.02, 0.03, 0.035);
   bedMat.specularColor = Color3.Black();
+  // 594 [P]: lit, the seams read pale lilac (sun + fog on the bed); unlit near-black
+  bedMat.disableLighting = true;
+  bedMat.emissiveColor = new Color3(0.012, 0.018, 0.022);
   const block = MeshBuilder.CreateBox("basaltBlocks", { size: 1 }, scene);
   const mat = new StandardMaterial("basaltBlocks", scene);
   mat.diffuseColor = new Color3(0.13, 0.2, 0.22);
