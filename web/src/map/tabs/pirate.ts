@@ -10,7 +10,7 @@
 // sunk), centred at x 0 and z +-37 along x, bows to +x (the far one) and -x (the near one); stern castle 8 m long in two tiers to
 // 3.4 m above the deck; masts 17/20/15 m with two yards each; three gangplanks 1.6 m wide from the deck edge (z +-33) down to the sand
 // at z +-27; a row of six cannons on each deck facing the beach. One box collider per hull (outside both armies' zones, |z| <= 29).
-import { Color3, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -287,6 +287,55 @@ function hourglassBeach(scene: Scene, built: Set<unknown>): void {
   const data=new VertexData();data.positions=positions;data.indices=indices;data.normals=normals;
   const beach=new Mesh("pirateHourglassBeach",scene);data.applyToMesh(beach);beach.material=sand;
   beach.convertToFlatShadedMesh();beach.receiveShadows=true;
+  goldenSand(scene, beach, stations);
+}
+
+// Golden sand (586, wiki pirate.png: the beach is a warm golden yellow sand, not pale pink-white, combed by long wavy
+// ripple lines running across it). Spec: the beach and its shore courses take their own lit sand (diffuse (0.8, 0.6, 0.3),
+// warm self-light (0.3, 0.21, 0.09)), out of the glow so it does not bloom; about 900 ripple strokes, each a zig-zag of two
+// 1.6-2.6 m strips 0.22 m wide and 1.5 cm proud, a shade darker and browner (0.62, 0.44, 0.2), laid across the beach (along
+// z) in lines about 1.6 m apart along x, inside the hourglass outline less 1.5 m; thin instances receiving shadows.
+function goldenSand(scene: Scene, beach: Mesh, stations: number[][]): void {
+  const glow = scene.getGlowLayerByName("glow");
+  const mk = (name: string, d: Color3, self: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = d;
+    m.emissiveColor = self;
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  beach.material = mk("pirateGoldenSand", new Color3(0.8, 0.6, 0.3), new Color3(0.3, 0.21, 0.09));
+  glow?.addExcludedMesh(beach);
+  const half = (x: number) => {
+    for (let i = 0; i < stations.length - 1; i++) {
+      const [xa, wa] = stations[i], [xb, wb] = stations[i + 1];
+      if (x >= xa && x <= xb) return wa + (wb - wa) * (x - xa) / (xb - xa);
+    }
+    return 0;
+  };
+  const ripple = MeshBuilder.CreateBox("pirateSandRipple", { width: 0.22, height: 0.03, depth: 1 }, scene);
+  ripple.material = mk("pirateSandRipple", new Color3(0.62, 0.44, 0.2), new Color3(0.2, 0.13, 0.05));
+  ripple.isPickable = false;
+  ripple.receiveShadows = true;
+  glow?.addExcludedMesh(ripple);
+  const m: number[] = [];
+  let k = 0;
+  const rnd = () => { k++; const v = Math.sin(k * 37.719 + 3.1) * 14375.13; return v - Math.floor(v); };
+  for (let x = -55; x < 54; x += 1.6) {
+    const w = half(x) - 1.5;
+    for (let z = -w + rnd() * 2; z < w - 2.6;) {
+      const len = 1.6 + rnd() * 1;
+      const x0 = x + (rnd() - 0.5) * 0.6;
+      // a V: (x0, z) -> (x0 + dx, z + len/2) -> (x0, z + len)
+      const dx = 0.5, seg = Math.hypot(dx, len / 2), yaw = Math.atan2(dx, len / 2);
+      for (const s of [1, -1]) {
+        m.push(...Matrix.Compose(new Vector3(1, 1, seg), Quaternion.RotationAxis(Vector3.Up(), s * yaw),
+          new Vector3(x0 + dx / 2, 0.105, z + len * (s > 0 ? 0.25 : 0.75))).m);
+      }
+      z += len + rnd() * 0.8;
+    }
+  }
+  ripple.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
 }
 
 // Bell mountain (583, wiki pirate.png and card Overview: at the narrow end of the beach a grassy rock mountain rises out
