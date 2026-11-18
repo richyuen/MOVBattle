@@ -6,7 +6,7 @@ b PASS (584: struck 2; CONFIRM 584)
 c PASS (584 judge)
 
 ## Ranked gaps
-1. [R] a near-side block and sky — blockers 1, 2: rebuild the town's rear faces and roofs (boarded back walls, solid slate roofs, in the glow pass so nothing veils them) and the sunset sky as an own fog-free backdrop sphere, peach to cream round the sun — ref: reference/maps/western.png, reference/stages/wild_west.bullets_and_chains.png — ours: map_wild_west_island.png
+1. [R] a near-side block and sky — blockers 1, 2: rebuild the sand floor's lighting so the near block stands solid again (it veils the buildings since 584), give the block boarded back walls and slate roofs, and the sunset sky an own fog-free backdrop sphere, peach to cream round the sun — ref: reference/maps/western.png, reference/stages/wild_west.bullets_and_chains.png — ours: map_wild_west_island.png
 
 ## Attempts (iter | gap | criterion | verdict)
 584 | [S] inner rank to x -22..-0.6 40f76430 | b2 | APPROVE, struck b2; CONFIRM b PASS
@@ -19,5 +19,5 @@ c PASS (584 judge)
 
 ## Notes (max 3 lines)
 - Stages: wild_west.leading_cacti, bullets_and_chains, lone_ranger_and_his_friends (enemies x 28.6..35.5, z -25..-11). Zones x +-(27..61), z -27..-9 and 9..27.
-- a is plateau (CONFIRM failed it at 582 and 584): the [R] is specified from both lists (output/loop/iter-582/confirm.md, iter-584/confirm.md). The town meshes are excluded from the glow: seen from behind they wear the bright sand as a veil (LESSONS, glow).
+- a is plateau (CONFIRM failed it at 582 and 584; lists in output/loop/iter-582/confirm.md, iter-584/confirm.md). The see-through near block is NEW in 584: solid purple in iter-583's island shot, tan and translucent after the sand commits (397ce937, 5deb40d9, 86d685ef). The [R] starts at the floor's self-light (.5,.3,.2) and its glow exclusion, not at a town rebuild.
 - Critic 584 leftovers below a blocker: sand a shade pale, ripples read as straight strokes in the top shot.

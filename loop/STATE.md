@@ -38,7 +38,7 @@ stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_
 - [S] map.wild_west.a blocker 2 (397ce937, 5deb40d9, 86d685ef) APPROVE, struck a2; CONFIRM a FAIL (second) -> plateau
 - [S] map.spooky_2.b blocker 3 (09c46949, 83d01f33) APPROVE, struck b3 (starvation)
 - [S] map.legacy.a blocker 2 (9944d480) APPROVE, struck a2; CONFIRM a PASS -> D
-- [R] map.spooky_1.a blockers 2, 4 (012614f9) APPROVE, struck a4; CONFIRM a PASS, critic a FAIL
+- [R] map.spooky_1.a blockers 2, 4 (012614f9) APPROVE, struck a4; early CONFIRM unused (a2 stands)
 - [S] map.renaissance.a blocker 1 (89c01adc) APPROVE, struck a1 (starvation)
 - [S] map.renaissance.b blocker 6 (7813a271) APPROVE, no strike
 - [S] map.pirate.a blocker 2 (5395195a) APPROVE, struck a2
@@ -77,7 +77,7 @@ REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
 - 584: 81 shots, zero page/console errors, all 44 script criteria PASS (after 83d01f33 took the court's corner colliders off vicious_terror's candleheads); 9/9 approved, 6 struck; legacy D (13/99). No checkpoint.
-- Two plateau [R]s wait, one per iteration, oldest first: 585 spooky_1 a (upper cliff tier as separate masses stepping in and out, close the dark gaps on the left front face), 586 wild_west a (near-side buildings' backs and roofs solid, sunset sky backdrop; spec from the 582 and 584 CONFIRM lists).
+- Two plateau [R]s wait, one per iteration, oldest first: 585 spooky_1 a (upper cliff tier as separate masses stepping in and out, close the dark gaps on the left front face), 586 wild_west a (the near block went see-through with 584's sand commits: fix the floor's self-light and glow exclusion first, then the sky backdrop; 582 and 584 CONFIRM lists).
 - Evidence first on renaissance b6: no shot shows the arcade hollow; add a pose or skirmish units under the palace and light the arcade floor and back wall.
 - Spooky 2: re-site the shrine to the far edge right of centre (x 12..17, z 38); then dead ring trees (a5) and bridges (b2). Pirate: a translucent blue slab off the right rim to find and remove; b starving at 587.
 - Unpickable: dynasty b3 until 588 (2 [S] attempts), ancient_2 a3 until 586 (3 attempts). Renaissance and pirate carry the most pickable [S].
