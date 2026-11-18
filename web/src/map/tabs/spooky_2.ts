@@ -485,39 +485,59 @@ function thornThickets(scene: Scene, result: MapBuildResult): void {
     c.position = from.add(dir.scale(len / 2));
     parts.push(c);
   };
+  // Bramble heaps (596, blocker a3 attempt 2; wiki spooky_2.png: each side path is buried under a broad, low, dense mass of
+  // coiled thorny vines, wider than the path and heaped over it, read from above as a dark tangle; the 587 thicket of 30 tall
+  // upright vines read as a few more dead trees in the ring). Spec: per side, a heap body of 16 near-black faceted lumps
+  // (r 1.8-3.2 m, flattened to 0.7-1 of their height) over a 10 x 16 m footprint centred on the loop path (x +-44, z -8..8),
+  // and 52 arching vines: each springs from the ground inside the footprint, runs 3-7 m in a seeded direction and arches
+  // 2-4.5 m high over the heap in 8 tapering segments (0.6 m to 0.18 m), a hooked spike off every second joint. Vines keep
+  // the navy thorn colour; the heap a darker (.055,.06,.1) self .35 so the arches read against it and both read on the pale
+  // cobbles. The collider is unchanged (3.5 x 7 m half size).
+  const heapMat = new StandardMaterial("spooky2ThornHeap", scene);
+  heapMat.diffuseColor = new Color3(0.055, 0.06, 0.1);
+  heapMat.emissiveColor = new Color3(0.055, 0.06, 0.1).scale(0.35);
+  heapMat.specularColor = Color3.Black();
+  const heaps: Mesh[] = [];
   let k = 0;
   for (const side of [-1, 1]) {
     const cx = side * 44;
-    for (let v = 0; v < 30; v++, k++) {
-      let p = new Vector3(cx + (hash(k, 1) - 0.5) * 7, 0, (hash(k, 2) - 0.5) * 14);
-      let yaw = hash(k, 3) * 6.28;
-      let tilt = 0.05 + hash(k, 4) * 0.2;
-      const turn = (hash(k, 5) < 0.5 ? -1 : 1) * (0.5 + hash(k, 6) * 0.6);
-      const total = 7 + hash(k, 7) * 3;
-      for (let s = 0; s < 6; s++) {
-        const len = total / 6 * (1.3 - s * 0.1);
-        const dir = new Vector3(Math.sin(tilt) * Math.cos(yaw), Math.cos(tilt), Math.sin(tilt) * Math.sin(yaw));
-        const d0 = 0.95 - s * 0.14, d1 = Math.max(0.12, 0.95 - (s + 1) * 0.14);
-        piece(p, dir, len, d0, d1, "spooky2ThornVine");
-        p = p.add(dir.scale(len * 0.95));
+    for (let h = 0; h < 16; h++, k++) {
+      const r = 1.8 + hash(k, 13) * 1.4, sy = 0.7 + hash(k, 14) * 0.3;
+      const lump = MeshBuilder.CreateIcoSphere("spooky2ThornLump", { radius: r, subdivisions: 1, flat: true }, scene);
+      lump.scaling.set(1.15, sy, 1.15);
+      lump.rotation.y = hash(k, 15) * 6.28;
+      lump.position.set(cx + (hash(k, 11) - 0.5) * 7, r * sy * 0.45, (hash(k, 12) - 0.5) * 13);
+      lump.bakeCurrentTransformIntoVertices();
+      heaps.push(lump);
+    }
+    for (let v = 0; v < 52; v++, k++) {
+      const a = new Vector3(cx + (hash(k, 1) - 0.5) * 10, 0, (hash(k, 2) - 0.5) * 16);
+      const yaw = hash(k, 3) * 6.28, span = 3 + hash(k, 4) * 4, rise = 2 + hash(k, 5) * 2.5;
+      const run = new Vector3(Math.cos(yaw), 0, Math.sin(yaw));
+      const at = (t: number) => a.add(run.scale(span * t)).add(new Vector3(0, rise * Math.sin(Math.PI * t), 0));
+      for (let s = 0; s < 8; s++) {
+        const p = at(s / 8), q = at((s + 1) / 8);
+        const d = q.subtract(p), len = d.length();
+        const d0 = 0.6 - s * 0.05, d1 = Math.max(0.18, 0.6 - (s + 1) * 0.05);
+        piece(p, d.normalize(), len * 1.06, d0, d1, "spooky2ThornVine");
         if (s % 2 === 1) {
           const sy = yaw + 1.6 + hash(k + s, 8) * 3;
           const sd = new Vector3(Math.cos(sy) * 0.8, 0.6, Math.sin(sy) * 0.8).normalize();
-          piece(p, sd, 0.5 + hash(k + s, 9) * 0.3, d1 * 0.9, 0.02, "spooky2ThornSpike");
+          piece(q, sd, 0.5 + hash(k + s, 9) * 0.3, d1 * 0.9, 0.02, "spooky2ThornSpike");
         }
-        tilt += 0.2 + hash(k + s, 10) * 0.18;
-        yaw += turn * 0.5;
       }
     }
     result.obstacles.push({ type: "box", center: new Vector3(cx, 0, 0), halfX: 3.5, halfZ: 7 });
   }
-  const merged = Mesh.MergeMeshes(parts, true, true);
-  if (!merged) return;
-  merged.name = "spooky2ThornThickets";
-  merged.convertToFlatShadedMesh();
-  merged.material = mat;
-  merged.receiveShadows = true;
-  merged.isPickable = false;
+  for (const [list, m, name] of [[parts, mat, "spooky2ThornThickets"], [heaps, heapMat, "spooky2ThornHeaps"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = m;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
 }
 
 // Dark torii (587, reference/maps/wiki/spooky_2.png: a black torii stands at the back-left corner of the island, its curved
