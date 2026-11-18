@@ -10,7 +10,7 @@
 import type { Mesh, Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import { terrainMesh, type HeightField } from "../terrain";
-import { bareField, centreLine, gridMaterial, gridUVs, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
+import { bareField, centreLine, cloudBanks, gridMaterial, gridUVs, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
 
 const RIDGE = { foot: -24, crest0: 22, crest1: 28, back: 40, top: 10, low: 4, end: 76, depth: 56, step: 2 };
 
@@ -32,6 +32,9 @@ function gridAndSky(scene: Scene, ridge: Mesh): () => void {
   mat.backFaceCulling = true;
   ridge.material = mat;
   gridUVs(ridge);
+  // Clouds (589, blocker a3; wiki hill.png: large soft white cloud banks fill the sky behind the crest): three banks far on +z,
+  // their tops 70-130 m up, low enough to stand in the island shot's band above the horizon
+  cloudBanks(scene, [[-150, 95, 450, 260], [180, 80, 480, 220], [20, 115, 540, 180]]);
   return paleSky(scene);
 }
 

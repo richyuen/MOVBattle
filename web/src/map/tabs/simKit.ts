@@ -120,6 +120,39 @@ export function zonesOn(rects: Array<Rect & { team: number }>): PlacementZone[] 
   return rects.map((r) => ({ team: r.team, center: new Vector3((r.x0 + r.x1) / 2, 0, (r.z0 + r.z1) / 2), size: new Vector3(r.x1 - r.x0, 100, r.z1 - r.z0) }));
 }
 
+/** Soft white cloud banks far behind the field on +z (the island and top shots look +z): each bank a row of flattened unlit
+ *  spheres, overlapping puffs of falling size, fog-free and out of the glow. `banks`: [x, y, z, width] per bank. */
+export function cloudBanks(scene: Scene, banks: Array<[number, number, number, number]>): Mesh | null {
+  const mat = new StandardMaterial("simKitCloud", scene);
+  mat.disableLighting = true;
+  mat.diffuseColor = Color3.Black();
+  mat.emissiveColor = new Color3(0.97, 0.99, 1);
+  mat.specularColor = Color3.Black();
+  mat.fogEnabled = false;
+  mat.alpha = 0.9;
+  const puffs: Mesh[] = [];
+  for (const [cx, cy, cz, w] of banks) {
+    const n = Math.max(3, Math.round(w / 18));
+    for (let i = 0; i < n; i++) {
+      const t = n === 1 ? 0 : i / (n - 1) - 0.5;
+      const r = (0.55 - Math.abs(t) * 0.6) * w * 0.45;
+      const puff = MeshBuilder.CreateSphere("simKitCloudPuff", { diameter: 2 * r, segments: 10 }, scene);
+      puff.scaling.set(1.15, 0.5, 0.35);
+      puff.position.set(cx + t * w, cy + r * 0.12 * (1 - Math.abs(t) * 2), cz);
+      puff.bakeCurrentTransformIntoVertices();
+      puffs.push(puff);
+    }
+  }
+  const merged = Mesh.MergeMeshes(puffs, true, true);
+  if (!merged) return null;
+  merged.name = "simKitClouds";
+  merged.material = mat;
+  merged.applyFog = false;
+  merged.isPickable = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
+  return merged;
+}
+
 // Kit haze (589): cyan-white (.74,.93,.97) reaching the blue by 15 deg up, so the island shot's band above the horizon reads pale cyan
 export function paleSky(scene: Scene, blue = new Color3(0.38, 0.68, 0.76), haze = new Color3(0.74, 0.93, 0.97), span = 0.15): () => void {
   const dome = scene.getMeshByName("skyDome"), domeOn = dome?.isEnabled();
