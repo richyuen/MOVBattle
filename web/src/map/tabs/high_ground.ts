@@ -66,8 +66,23 @@ function gateWalls(scene: Scene): MapBuildResult["obstacles"] {
   const g = GATE, floor = RAMP.high;
   const walls: Rect[] = [-1, 1].map((s) => ({ x0: g.x0, x1: g.x1, z0: s > 0 ? g.gate : -g.side, z1: s > 0 ? g.side : -g.gate }));
   for (const r of walls) gridBlock(scene, "highGroundWall", r, floor + g.wallH, floor);
-  gridBlock(scene, "highGroundBar", { x0: g.x0, x1: g.x1, z0: -g.gate, z1: g.gate }, floor + g.wallH, floor + g.barUnder);
+  gateBlock(scene, floor);
   return wallFaceColliders();
+}
+
+// Gate block (593, blocker a1; wiki high_ground.png: over the gate the bar is a taller block of its own, standing clearly above
+// the two side walls and a little proud of their faces, so the gateway reads as a central keep between two lower wings).
+// Spec: the bar becomes a block x 27..37 (1 m proud of the walls front and back), |z| <= 5.5 (0.5 m over each wall's gate
+// end, short of the wall tops' first rank at |z| ~6), from 4.5 m (the opening's head, unchanged) to 11.5 m above the
+// platform, 4.5 m over the 7 m walls; a 0.5 m crown slab 0.5 m proud of it all round. Drawn only: the height field and the
+// colliders are unchanged (units walk under it through the gate, the field being single-valued).
+const GATE_BLOCK = { x0: 27, x1: 37, z: 5.5, top: 11.5, crown: 0.5 };
+
+function gateBlock(scene: Scene, floor: number): void {
+  const b = GATE_BLOCK, under = floor + GATE.barUnder;
+  gridBlock(scene, "highGroundGateBlock", { x0: b.x0, x1: b.x1, z0: -b.z, z1: b.z }, floor + b.top, under);
+  const c = b.crown;
+  gridBlock(scene, "highGroundGateCrown", { x0: b.x0 - c, x1: b.x1 + c, z0: -b.z - c, z1: b.z + c }, floor + b.top + c, floor + b.top);
 }
 
 export function buildHighGround(scene: Scene, base: () => MapBuildResult): MapBuildResult {
