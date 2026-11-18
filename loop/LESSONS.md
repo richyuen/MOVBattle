@@ -9,7 +9,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey.
 - A world box refreshes only on render: computeWorldMatrix(true) before reading bounds in a per-tick step. bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent.
 - Flat pieces need correct left-handed winding or closed slabs. execSync eats a caret: write sha~1.
-- glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh out of the pass wears the glow behind it as a pale see-through veil (farmer_snow 562; wild_west town, pirate hulls 586). Keep dark solids in; exclude bright/self-lit ones.
+- An excluded mesh does not occlude the glow: a dark one out of the pass wears the glow behind it as a pale veil (562, 586). Keep dark solids in.
 - IcoSphere subdivisions 0 is falsy (becomes 4): use 1. A half-disc (arc .5) at rotation (PI/2,0,PI/2) faces +-x (595).
 - Lit thin-instance wheat reads gold above, brown low: two unlit glow-excluded instance meshes sharing one matrix buffer.
 - Image processing is a full-frame post-process: code c renders contrast(gamma(ACES(1.05*c^2.2))), white -> (210,210,210); simKit untoned() inverts it for skies/clouds (591); an unlit textured sheet missed its target (591).
@@ -43,17 +43,18 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Read stage armies from the stage files, not Notes (tribal_2 563). campaign.challenge zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones inside it.
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns or a palisade (563): a rock mass wants heaped faceted boulders or tilted slabs, few and large, of unequal size (spooky_1 583: equal rocks read as an even band).
 - Stage enemy positions are validated against the map's team-1 zone, hazards and obstacles (game.checkStage): a map change can misplace a stage's army (the checkpoint re-judges every stage on a finished map batch).
-- campaign.challenge dressing: "wallStone", "boulder", "hayBale", "hill", "stump", pit hazards, "<displayName>_box|_cyl" junk. loadMapForCapture needs "map.". Probe before claiming a thing gone (564).
+- campaign.challenge dressing: wallStone, boulder, hayBale, hill, stump, pits, "<name>_box|_cyl". loadMapForCapture needs "map." (564).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
 - Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
-- Run captures unsandboxed. A CONFIRM can fail on set pieces no list named (585-596). Island cam sky band: a z~200 backdrop at y -25..35 (590).
+- Run captures unsandboxed. A CONFIRM can fail on unlisted set pieces (585-596). Island cam sky band: z~200 backdrop, y -25..35 (590).
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six blades, normals up (583); flattened IcoSpheres read as paving from low cameras, leaf cards as beige flags (571).
 - MergeMeshes: null past 65536 verts unless (parts,true,true); throws on mixed attributes (VertexData needs uvs); a throwing build leaks into later maps (593).
 - A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
 - Buildings near a stage's line hide its army (583): the stage camera sits ~24 m west of it.
-- Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white: exclude them (584-594).
+- Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white, a lit crag on the void a blur: exclude them (584-597).
+- Stage _army shot (camera at -x): -z renders on the right. Team-1 zones start ~x 27 on viking: check a formation's front unit (597).
 - The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Corner notches under ~8 m hide under ring trees and skirt rocks (spooky_2 596).
 - Recess a descent before merging cliff columns (579). A concave bank needs longitudinal strips, not a hub fan (581).
