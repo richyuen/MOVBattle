@@ -3,6 +3,11 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+591 | eadae3e9, dd6f6429 | map.hill.a4 (+5 kit maps a5), map.simulation.a3 | approve, struck all six a5/a4 and sim a3 (skies untoned)
+591 | e417622a | map.defend_the_castle.b3 | approve, struck b3; CONFIRM failed a (merlons), b (chasms read as steps)
+591 | 7abd9cdd (+evidence 336cbba3) | map.high_ground.b2 | approve, no strike
+591 | 15ca3a31, 21913c7f | map.fantasy_evil.a2, map.fantasy_good.a1 | approve, struck both
+591 | c8082cb0 (+51f659a2, f37f2aeb) | map.low_ground.a (bank tone) | dropped, reverted (unlit sheet rendered lighter than the flats)
 590 | e8ee5a82, bbb9869d | map.hill.a3, map.high_ground.a4 | approve, struck both (simKit cloudBanks in the island band)
 590 | 5f1ae860 | map.defend_the_castle.b2 | approve, struck b2
 590 | b1715d8e | map.high_ground.b3 | approve, struck b3
@@ -39,27 +44,25 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584): rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
 wild_west (576-586): town rows/storefronts/inner rank, sand street, round plaza, desert rim, mesas, arches, chapel, sandstone base, sunset backdrop sphere (peach (1,.55,.28) to cream (1,.9,.6)); town dark solids in the glow pass. ancient_2 (565-586): round rim, lawn, ring wall, drum, propylon, pavilions, terraced mound + six temple towers (dark stone (.58,.53,.44)). renaissance (576-586): palace + arcade, rectangular piazza, front terrace, canal, corner palazzo, covered bridge, plinth, haze sky, facade kit, flagstone checker (four shades ~(.72,.62,.45), pale bed). All approved and CONFIRMed. spooky_1 (576-587): night sky, night grass/dusky meadow blades, fog chasm, dead trees, rock cliffs (inset skirt, stepped masses), graveyard, rim offerings, left descent, rim set pieces (watchtower (33,33.5) 13 m dark stone with 11 lit windows; broken grey pillar (47,7) 10.5 m; base "hill" mounds hidden; pumpkin bodies out of glow).
 
+simulation, hill, bridge, corridor (587-591): grid floor, empty centre, sky untoned (183,218,219)/(211,226,219); hill ridge sheet + clouds; bridge blocks x +-18..40 |z|<=23 + 5 m span; corridor pads + 7 m wall + 4 m slot. All approved and CONFIRMed.
+
 ## Tuned values
+web/src/map/tabs/fantasy_evil.ts:basaltFloor | 2 m blocks 1.85 m, tops .02-.22, superellipse 53x47 p3; diffuse (.13,.2,.22) self (.025,.04,.045), tone +-12%; seams (.02,.03,.035) | 591 | approve, struck a2 (seams read lilac) | base maroon lawn
+web/src/map/tabs/fantasy_good.ts:marbleDeck | 104 x 80 deck 4 m deep, 1 x .5 m running-bond pavers (236,240,244), 7% teal, seams (196,208,220); gold kerb .7 x .35 (.78,.62,.1) self (.22,.17,.02) | 591 | approve, struck a1 (bond/teal not visible) | base sage lawn
 web/src/map/tabs/pirate.ts:deckHeight and rails | deck y 3.6 inside |x|<=14.6, plank height 4.15 m falling over 12.5 m; hull box collider split into seaward/end rails and beach rails with 3.6 m mouths at u -9, 0, 9 | 587 | approve, struck b5 | one hull box collider
 web/src/map/tabs/pirate.ts:hourglassBeach base hidden | sandSpit, sandWet, seaShore, fieldBlades_*, grassTuft, Pirate Cove_waterfall hidden; trunk/bush/prop roots past the outline + 1 m pruned | 587 | approve, no strike | base oval shown over the hourglass
 web/src/map/tabs/spooky_2.ts:thornThickets | x +-44, 30 vines 7-10 m, 6 segments, root .95, tilt .05-.25 + .2-.38/joint, navy (.1,.11,.19) self .3; collider 3.5 x 7 | 587 | approve, no strike | absent
 web/src/map/tabs/spooky_2.ts:darkTorii | (-40,33), posts 7.2 m 5.6 apart, kasagi 9.6 m swept, stone (.2,.21,.28) self .35, 6 m clearing | 587 | approve, struck a7 | absent
-web/src/map/tabs/simulation.ts:gridFloor | 5 m tile 512 px, base (228,222,212), 1 m lines (190,186,182) 2 px, 5 m (172,168,165) 3 px, self (.18,.17,.16); base "ground" hidden | 587 | approve, struck a1, a4 | base lilac lawn
-web/src/map/tabs/simulation.ts:emptyCentre | centerGrass hidden, centre void hazard (r 8) and its overlay removed | 587 | approve, struck a2 | void disc at origin
-web/src/map/tabs/simulation.ts:paleSky | blue (.68,.9,1), haze (.74,.93,.97), span .15 | 590 | [P] 2 approve, no strike (renders muted grey-teal: numbers exhausted, next is [S] out of image processing) | 588: blue (.38,.68,.76) haze (.86,.9,.9) span .57; 588 [P] (.62,.86,.93) span .4 rejected; grey skyDome
-web/src/map/tabs/simKit.ts:cloudBanks (hill, high_ground) | banks [x,y,z,w] at z 200-240, y -22..-12, w 120-190; puffs scale (1.2,.62,.45), crown row; vertex colours (.8,.87,.93) -> white, unlit, out of glow | 590 | approve, struck hill a3, high_ground a4 (read flat light grey) | 589: z 450-540 y 40-80 (out of frame)
-web/src/map/tabs/defend_the_castle.ts:chasms | x -22..14 at |z| 6..14, 26..30, -40 m, box colliders | 590 | approve, struck b2 | one full-width ramp
-web/src/map/tabs/high_ground.ts:wallRamps | x 48 -> 36 at |z| 8..17, rise 7 m (height field) | 590 | approve, struck b3 (no side colliders) | absent
+web/src/map/tabs/simKit.ts:cloudBanks (hill, high_ground) | banks [x,y,z,w] at z 200-240, y -22..-12, w 120-190; puffs scale (1.2,.62,.45), crown row; 591: untoned (196,208,220) -> (246,248,250) (was code (.8,.87,.93) -> white, read grey), unlit, out of glow | 591 | approve, struck hill a3, high_ground a4 (read flat light grey) | 589: z 450-540 y 40-80 (out of frame)
+web/src/map/tabs/defend_the_castle.ts:chasms | approach x -22..14 at |z| 6..14, 26..30; front x -60..-22 at |z| 8..14, 26..30; -40 m, box colliders; team-0 zones on three platforms | 591 | approve, struck b3; CONFIRM failed b (chasms read as thin steps, want wide V) | 590: approach lanes only
+web/src/map/tabs/high_ground.ts:wallRamps and wallTops | ramps x 48 -> 36 at |z| 8..17, rise 7 m; wall tops standable 19 m (strict 28<x<36, 5<|z|<20), sheet step 1 m; face colliders .8 m, ramp sides x 36..44; team-1 zone right wall top first | 591 | approve, no strike (one unit on one wall) | 590: ramps only, wall box colliders
 web/src/map/tabs/spooky_2.ts:rockSkirt | 4 courses icosphere boulders r 3-6.5 (x1.25 front corners), tops -0.3-6k, diffuse (.3,.34,.48) self (.07,.08,.11), out of glow; base underside hidden | 590 | approve, struck a6 (reads royal blue, even band) | base stalactite slab
 web/src/map/tabs/fantasy_evil.ts:voidSky | dome, cloud*, mountain* hidden; clear/fog (.02,.012,.035) | 590 | approve, struck a1 | base mauve daylight sky
-web/src/map/tabs/simKit.ts:paleSky (every kit map) | blue (.38,.68,.76), haze (.74,.93,.97), span .15 | 589 | [P] approve, struck island grey bands (bridge a3, corridor a4, low_ground a4, castle a4); added teal zenith in every _ground (blue too dark/green low) | 588: haze (.86,.9,.9) span .57 (neutral grey); base grey skyDome
+web/src/map/tabs/simKit.ts:paleSky + untoned (every kit map) | untoned sRGB targets: blue (186,207,210), haze (216,228,227), span .15; untoned() inverts exposure 1.05, ACES, gamma, contrast 1.1 (code^2.2 decode first) | 591 | [S] approve, struck a5 on hill (a4), bridge, corridor, low_ground, castle, high_ground | 589: code (.38,.68,.76) haze (.74,.93,.97) (rendered teal (82,156,172))
 web/src/map/tabs/high_ground.ts:sheet and gate | sheet x -60..48 |z|<=22, ramp -24..10 to 12 m; walls x 28..36 |z| 5..20 +7 m, bar |z|<=5 +4.5..7 | 589 | approve, struck b1, a1-a3 | bare plane
 web/src/map/tabs/defend_the_castle.ts:castle | sheet x -60..64 |z|<=30, ramp -22..14 to 10 m; castle x 36..64 walls 3 m top 18, gate 8 m, terrace x 54+ top 14, stair, merlons 1.2 m / 3 m; pillars 3x3 at (29,+-12) top 21 | 589 | approve, struck b1, b4, a1-a4 | bare plane
 web/src/map/tabs/simKit.ts:gridMaterial/gridBlock/voidAround | 1 m grid tile per 5 m uv, planar uvs per face; blocks 400 m deep; void box hazards x +-90 z +-60 | 588 | approve | bare plane
-web/src/map/tabs/bridge.ts:blocks and span | blocks x +-18..40 |z|<=23; span |x|<18 |z|<=2.5 | 589 | approve, struck b2 (reads H, not dumbbell) | 588: blocks x +-18..64 |z|<=25; bare plane
-web/src/map/tabs/corridor.ts:pads, wall, slot | pads x +-8..38 |z|<=15; wall |x|<=8 |z|<=26 top 7; slot |z|<=2 | 588 | approve, b PASS (wall height barely reads from top) | bare plane
 web/src/map/tabs/low_ground.ts:trough | slab x +-60 |z|<=22; floor |x|<=10 at 0, banks to 7 m at |x| 20 | 588 | approve, b PASS | bare plane
-web/src/map/tabs/hill.ts:ridge | sheet x -60..76 |z|<=28, foot -24, 10 m at x 22, crest to 28, 4 m at 40; 400 m skirt, void round, bareField | 589 | approve, struck b1 (b PASS) | 588: sheet from -24 on the endless grid plane; ramp -8..30 top 8
 web/src/map/tabs/dynasty.ts:canalPools | water kept back x -19.6..3, 31..36.6, front -36.6..-31, -3..19.6; dry lawn blocks 0.85 m elsewhere | 588 | approve, struck b3 | two full 92 m canal sheets
 web/src/map/tabs/dynasty.ts:columnCliffs | continuous 5-sided columns h7.5..12.5m, square/notched rim, green ledges | 582 | approve | hanging stalactite underside
 web/src/map/tabs/dynasty.ts:canalSpurs | four 4.4 m spurs x34/-17 (back) -34/17 (front), |z|17.6..27, outer lawn and canal wall split, 3 m dry crossing | 583 | approve, no strike | absent

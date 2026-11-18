@@ -12,21 +12,20 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - glow.addExcludedMesh does not make a mesh occlude the glow: a dark mesh out of the pass wears the glow behind it as a pale see-through veil (farmer_snow 562; wild_west town, pirate hulls 586). Keep dark solids in; exclude bright/self-lit ones.
 - CreateIcoSphere subdivisions 0 is falsy, so it becomes 4: a smooth navy ball (575). Use 1 for a faceted rock.
 - Lit thin-instance wheat reads gold above, brown low: two unlit glow-excluded instance meshes sharing one matrix buffer.
-- An unlit sky sphere still goes through ACES: vertex blue (.68,.9,1) renders muted grey-teal (590); take it out of image processing.
+- Image processing is a full-frame post-process (no mesh leaves it): a StandardMaterial code c renders as contrast(gamma(ACES(1.05*c^2.2))); code white -> (210,210,210). simKit untoned(r,g,b) inverts it (codes a little over 1 survive, HDR): skies/clouds hit their sRGB targets (591); an unlit textured sheet missed its target (low_ground 591): sample before trusting it.
 
 ## Capture and probes
 - capture-world.mjs boots like capture.mjs: mulberry32 0x4d4f5642 reseeded at every resetBattle, time only through advanceTime, setup renders at 1/8 size (__setupScale 8). It re-adds body.capture-mode before every shot (the game drops it on loads).
 - Never capture with a test --iter (pruneOld); test into look/. Near-black set pieces vanish into black tree rings: use lit dark blue-grey (587).
 - A capture wipes iter-N unless --add: save audit/critic files after the step's last capture (audit iterations: step 5 with --add). A step-5 capture takes ~12 min: background it.
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
-- Probes (loop/scripts/probes/, --build) were written for units: read one before using it on a map.
 - In-page probe on the dev server (5173): import the @babylonjs_core.js?v=... URL from performance.getEntriesByType("resource"); its EngineStore.LastCreatedScene is the live scene after game.loadMapForCapture(id).
 
 ## Maps and stages
 - The sim's ground is flat (body.root at y 0); terrain.ts lifts every dynamic root node by MapBuildResult.height at draw time and recomputes its world matrices after, so battles are identical with or without height (checked on Hill). Map meshes are marked static by trackMapBuild: a map builder seats its own props at groundHeightAt(). Nav and placement still come from zones, obstacles and hazards. An effect whose root sits at the origin with world-placed children is lifted by the height at the origin: give such roots their own position.
 - terrainMesh winds its grid to face +y; skirts are double-sided. The placement centre line and zone overlays stay flat (they are map meshes).
 - A TABS map without a builder in web/src/map/tabs/ is its base map (tabsMaps.ts); several maps share a base, so a base edit moves all of them and the regression scenarios on campaign.adventure.
-- Clear base props by name after base(), removing only their colliders (ring trees have them too). Keep builders self-contained so reverts never conflict. Base "hill" mounds (red self-lit discs, campaign.spooky): hide by name (587); a position/bounds test missed them. Odd ground discs are base meshes (simulation's grey one: campaign_hazard_cyl_void).
+- Clear base props by name after base(), removing only their colliders (ring trees have them too). Keep builders self-contained so reverts never conflict. Base "hill" mounds and odd ground discs are base meshes: hide by name (587).
 - A set piece inside a merged tree belt needs a clearing before the trees merge (580).
 - Base crowns read pale because CanopyAerialPlugin and scene fog mix them toward sky-white: fresh crown materials made after base() (diffuse = emissive = c*0.55), applyFog false, out of the glow, stay saturated (tribal_1 556).
 - Every material a map build makes is disposed with the build (trackMapBuild), so a builder may recolour base materials by name ("grass", "groundMat", blades) without leaking to other maps; hide blades by mesh name fieldBlades_*/grassTuft. Base theme props are named `<displayName>_cyl|_box|_totem_top` with colliders at the same x,z.
