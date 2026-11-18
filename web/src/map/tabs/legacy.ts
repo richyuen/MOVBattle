@@ -189,11 +189,66 @@ function church(scene: Scene, built: Set<unknown>, result: MapBuildResult): void
     }
   };
   const Z = 32;
-  box("stone", 14, 6, 7, 3, 3, Z);
-  gable(15, 8, 4.5, 3, 6, Z, false);
+  // Ruin (583, legacy.png: the church is a ruin; its roof has fallen in over half the nave leaving bare rafters, the wall
+  // under the gap is breached to waist height, the gable end and the tower top are broken into uneven teeth, and fallen
+  // blocks lie at its foot). Spec: the nave wall is three pieces with a 2.5 m breach at x -0.5..2 down to 2.2 m showing a
+  // dark interior; the nave roof is six 2.5 m bays a side, the two front bays next to the tower and two rear bays open
+  // with two rafters each over a dark void, the other slates of uneven length; the transept's front-left roof quarter is
+  // open too; broken teeth 0.5-1.7 m stand along the open eave, a stepped half-fallen gable wall at the east end, uneven
+  // merlons on three of the tower's corners, and 16 fallen blocks lie before the breach.
+  box("stone", 3.5, 6, 7, -2.25, 3, Z);
+  box("stone", 8, 6, 7, 6, 3, Z);
+  box("stone", 2.5, 2.2, 7, 0.75, 1.1, Z);
+  box("dark", 2.5, 3.8, 6.4, 0.75, 4.1, Z + 0.3);
+  const naveSlope = Math.hypot(4, 4.5), naveTilt = Math.atan2(4.5, 4);
+  const open = new Set(["0,-1", "1,-1", "3,1", "4,1"]);
+  for (let bay = 0; bay < 6; bay++) for (const s of [-1, 1]) {
+    const x = -3.25 + bay * 2.5;
+    if (open.has(`${bay},${s}`)) {
+      for (const dx of [-0.8, 0.55]) {
+        const rafter = MeshBuilder.CreateBox("legacyChurchRafter", { width: 0.22, height: 0.22, depth: naveSlope }, scene);
+        rafter.rotation.x = s * naveTilt;
+        rafter.position.set(x + dx, 8.2, Z + s * 2);
+        parts.dark.push(rafter);
+      }
+      box("dark", 2.5, 0.1, 3.4, x, 6.06, Z + s * 1.75);
+      for (let t = 0; t < 3; t++) {
+        const h = 0.5 + seeded(bay * 3 + t, 251) * 1.2;
+        box("stone", 0.75, h, 0.7, x - 0.85 + t * 0.85, 6 + h / 2, Z + s * 3.15);
+      }
+    } else {
+      const short = (bay % 3) * 0.45;
+      const slab = MeshBuilder.CreateBox("legacyChurchRoof", { width: 2.5, height: 0.35, depth: naveSlope - short }, scene);
+      slab.rotation.x = s * naveTilt;
+      slab.position.set(x, 8.25 + short * 0.3, Z + s * (2 - short * 0.27));
+      parts.slate.push(slab);
+    }
+  }
+  for (let j = -3; j <= 3; j++) {
+    const h = Math.max(0.4, (4.4 - Math.abs(j) * 1.25) * (j > 0 ? 0.45 : 1));
+    box("stone", 0.6, h, 1.1, 9.9, 6 + h / 2, Z + j * 1.05);
+  }
   box("stone", 5, 6, 10, 5, 3, Z);
-  gable(11, 6, 4.5, 5, 6, Z, true);
-  for (let i = 0; i < 4; i++) box("dark", 0.9, 2.6, 0.2, -2 + i * 3.4, 3.4, Z - 3.55);
+  const armSlope = Math.hypot(3, 4.5), armTilt = Math.atan2(4.5, 3);
+  for (const half of [-1, 1]) for (const s of [-1, 1]) {
+    const gone = half < 0 && s < 0;
+    for (const dz of gone ? [-1.6, 0.4, 2] : [0]) {
+      const piece = MeshBuilder.CreateBox("legacyChurchRoof", { width: armSlope, height: gone ? 0.22 : 0.35, depth: gone ? 0.22 : 5.5 }, scene);
+      piece.rotation.z = -s * armTilt;
+      piece.position.set(5 + s * 1.5, 8.25, Z + half * 2.75 + dz);
+      parts[gone ? "dark" : "slate"].push(piece);
+    }
+    if (gone) box("dark", 2.4, 0.1, 5.2, 3.75, 6.06, Z - 2.6);
+  }
+  for (const [cx, cz, h] of [[-1, -1, 1.5], [1, -1, 0.6], [1, 1, 1.1]]) box("stone", 1.3, h, 1.3, -6.5 + cx * 1.85, 14.5 + h / 2, Z + cz * 1.85);
+  for (let i = 0; i < 16; i++) {
+    const size = 0.5 + seeded(i, 252) * 0.7;
+    const block = MeshBuilder.CreateBox("legacyChurchRubble", { width: size * 1.4, height: size * 0.7, depth: size }, scene);
+    block.position.set(-3.5 + seeded(i, 253) * 8, size * 0.3, Z - 4 - seeded(i, 254) * 3.2);
+    block.rotation.set(seeded(i, 255) * 0.5, seeded(i, 256) * 6.28, seeded(i, 257) * 0.5);
+    parts.stone.push(block);
+  }
+  for (const i of [0, 2, 3]) box("dark", 0.9, 2.6, 0.2, -2 + i * 3.4, 3.4, Z - 3.55);
   box("dark", 1.8, 3.2, 0.2, 5, 1.6, Z - 5.05);
   box("stone", 4.4, 14, 4.4, -6.5, 7, Z);
   box("stone", 5, 0.6, 5, -6.5, 14.2, Z);
