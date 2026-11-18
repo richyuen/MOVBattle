@@ -450,6 +450,33 @@ function perimeterFlagstones(scene: Scene, result: MapBuildResult): void {
   mat.diffuseTexture=tex;mat.diffuseColor=Color3.White();mat.emissiveColor=new Color3(0.16,0.17,0.18);mat.specularColor=Color3.Black();
   ribbon.material=mat;ribbon.receiveShadows=true;ribbon.isPickable=false;
   scene.getGlowLayerByName("glow")?.addExcludedMesh(ribbon);
+  clearLoop(scene,result,dense);
+}
+
+// Loop clear (593, blocker a2; wiki dynasty.png: the cherry trees stand beside the cobble path, just outside it, never on it).
+// Spec: every ring tree (an unparented "trunk", its blossom puffs its children) whose foot lies within 4.6 m of the loop's
+// centre line is set back to 4.6 m (the ribbon's 2.5 m half width + 2.1 m), along the line from its nearest loop point
+// through the tree, so it keeps its side (a tree on the line goes outward); its collider (centred on the foot) moves with
+// it. Trees are moved, none removed.
+function clearLoop(scene: Scene, result: MapBuildResult, line: Array<[number,number]>): void {
+  const keep=4.6;
+  for(const m of scene.meshes){
+    if(m.name!=="trunk"||m.parent||!m.isEnabled())continue;
+    const p=m.position;
+    let best=Infinity,nx=0,nz=0;
+    for(let i=0;i<line.length-1;i++){
+      const [ax,az]=line[i],[bx,bz]=line[i+1],dx=bx-ax,dz=bz-az,l2=dx*dx+dz*dz||1;
+      const t=Math.max(0,Math.min(1,((p.x-ax)*dx+(p.z-az)*dz)/l2)),qx=ax+dx*t,qz=az+dz*t,d=Math.hypot(p.x-qx,p.z-qz);
+      if(d<best){best=d;nx=qx;nz=qz;}
+    }
+    if(best>=keep)continue;
+    // from the loop toward the tree (it keeps its side); a tree right on the line goes outward
+    let ux=p.x-nx,uz=p.z-nz;const l=Math.hypot(ux,uz);
+    if(l<1e-3){const r=Math.hypot(nx,nz)||1;ux=nx/r;uz=nz/r;}else{ux/=l;uz/=l;}
+    const tx=nx+ux*keep,tz=nz+uz*keep;
+    for(const o of result.obstacles)if(Math.hypot(o.center.x-p.x,o.center.z-p.z)<1){o.center.x+=tx-p.x;o.center.z+=tz-p.z;}
+    p.x=tx;p.z=tz;m.computeWorldMatrix(true);
+  }
 }
 
 // Four separate stone bridge/stair approaches over the water ring around the square courtyard.
