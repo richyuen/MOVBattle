@@ -7,10 +7,10 @@
 // block's far side shows the ground falling away again behind it; stages/simulation.hill.png: the army on the crest's edge).
 // Spec: flat at 0 to x -24, a straight ramp up to 10 m at x 22 (simulation.hill's front rank stands at x 20-26), a 6 m crest to
 // x 28, then down to 4 m at x 40 and a flat at 4 m on to the zone's end (x 76); the sheet is 56 m deep with plain block sides.
-import type { Mesh, Scene, Texture } from "@babylonjs/core";
+import type { Mesh, Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import { terrainMesh, type HeightField } from "../terrain";
-import { GRID_TILE_M, gridMaterial, gridUVs, paleSky } from "./simKit";
+import { bareField, centreLine, gridMaterial, gridUVs, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
 
 const RIDGE = { foot: -24, crest0: 22, crest1: 28, back: 40, top: 10, low: 4, end: 76, depth: 56, step: 2 };
 
@@ -32,29 +32,29 @@ function gridAndSky(scene: Scene, ridge: Mesh): () => void {
   mat.backFaceCulling = true;
   ridge.material = mat;
   gridUVs(ridge);
-  // the base lawn, its centre disc and the void overlay all wear the lilac lawn: hidden (the void hazard is under the ramp)
-  for (const mesh of scene.meshes) if (["ground", "centerGrass", "campaign_hazard_cyl_void"].includes(mesh.name)) mesh.setEnabled(false);
-  const plane = scene.getMeshByName("barePlane");
-  if (plane) {
-    const planeMat = gridMaterial(scene, "hillPlaneGrid");
-    const tex = planeMat.diffuseTexture as Texture;
-    tex.uScale = 1600 / GRID_TILE_M;
-    tex.vScale = 1600 / GRID_TILE_M;
-    plane.material = planeMat;
-  }
   return paleSky(scene);
 }
 
+// Bounded block (589, blocker b1; wiki hill.png and stages/simulation.hill.png: the ramp, the crest and the low flat are one block
+// whose sides drop sheer into the haze, no endless plane round it). Spec: the sheet runs from a 36 m left flat (x -60) to the
+// right flat's end (x 76), |z| <= 28, its grid-ruled skirt 400 m deep; the base plane, lawn, centre disc and its void put away
+// (bareField); everything off the sheet is void (box hazards x -90..100, z -60..60); team 0 places on the left flat and the ramp
+// (x -60..-1), team 1 from x 1 to the sheet's end; the red line crosses the ramp at its height there.
+const SHEET: Rect = { x0: -60, x1: RIDGE.end, z0: -RIDGE.depth / 2, z1: RIDGE.depth / 2 };
+
 export function buildHill(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const result = base();
+  const kept = bareField(scene, result);
   const ridge = terrainMesh(scene, "hill_ramp", height, {
-    width: RIDGE.end - RIDGE.foot,
-    depth: RIDGE.depth,
-    cx: (RIDGE.foot + RIDGE.end) / 2,
+    width: SHEET.x1 - SHEET.x0,
+    depth: SHEET.z1 - SHEET.z0,
+    cx: (SHEET.x0 + SHEET.x1) / 2,
     step: RIDGE.step,
-    skirt: 0.5,
-    material: scene.getMeshByName("barePlane")?.material ?? undefined,
+    skirt: 400,
   });
   const restoreSky = gridAndSky(scene, ridge);
-  return { ...result, height, dispose: () => { restoreSky(); result.dispose?.(); } };
+  centreLine(scene, SHEET.z0, SHEET.z1, height(0, 0));
+  const hazards = [...kept, ...voidAround([SHEET], { x0: -90, x1: 100, z0: -60, z1: 60 })];
+  const placementZones = zonesOn([{ ...SHEET, x1: -1, team: 0 }, { ...SHEET, x0: 1, team: 1 }]);
+  return { ...result, hazards, placementZones, height, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
