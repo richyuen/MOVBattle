@@ -204,7 +204,36 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   sandIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   hourglassBeach(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   bellMountain(scene, obstacles);
+  openShore(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   return { ...result, obstacles, hazards };
+}
+
+// Open shore (585, pirate_beach.png and the wiki shot: the beach runs straight into the shallows, fringed only by palms,
+// bushes and a few crates; no wall of grey stones). The grey chain along the front and back shores is the base's haze
+// treeline (merged "hazeTreeline" ball crowns at |z| 37.5-40.5, no colliders): hidden whole. In its place a few washed-up
+// crates and barrels stand by the waterline at the near shore's open stretches (drawn only, |x| 20..34, |z| 27..31).
+function openShore(scene: Scene, built: Set<unknown>): void {
+  for (const mesh of scene.meshes) if (built.has(mesh) && mesh.name === "hazeTreeline") mesh.setEnabled(false);
+  const wood = new StandardMaterial("pirateShoreCrate", scene);
+  wood.diffuseColor = new Color3(0.42, 0.27, 0.14);
+  wood.emissiveColor = new Color3(0.13, 0.08, 0.04);
+  wood.specularColor = Color3.Black();
+  const parts: Mesh[] = [];
+  for (const [x, z, s, kind] of [[-31, -29, 1.1, 0], [-29.4, -29.8, 0.8, 1], [24, -28, 1, 0], [33, 29, 1.2, 0], [31.5, 30.2, 0.8, 1], [-24, 28.5, 0.9, 0]] as const) {
+    const m = kind === 0
+      ? MeshBuilder.CreateBox("pirateShoreCrate", { size: s }, scene)
+      : MeshBuilder.CreateCylinder("pirateShoreCrate", { height: s * 1.2, diameter: s * 0.9, tessellation: 9 }, scene);
+    m.position.set(x, kind === 0 ? s / 2 : s * 0.6, z);
+    m.rotation.y = x * 0.37;
+    parts.push(m);
+  }
+  const merged = Mesh.MergeMeshes(parts, true);
+  if (!merged) return;
+  merged.name = "pirateShoreCrates";
+  merged.convertToFlatShadedMesh();
+  merged.material = wood;
+  merged.receiveShadows = true;
+  merged.isPickable = false;
 }
 
 // Pirate wiki: the broad foreground beach pinches before widening beneath the
