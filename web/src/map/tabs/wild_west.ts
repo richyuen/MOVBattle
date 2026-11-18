@@ -36,13 +36,16 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
     return m;
   };
   const mats = {
-    board: mk("wildWestBoard", new Color3(0.36, 0.41, 0.53), 0.5),
-    boardAlt: mk("wildWestBoardAlt", new Color3(0.5, 0.46, 0.44), 0.5),
-    seam: mk("wildWestSeam", new Color3(0.2, 0.22, 0.3), 0.45),
-    trim: mk("wildWestTrim", new Color3(0.9, 0.87, 0.8), 0.5),
-    roof: mk("wildWestRoof", new Color3(0.27, 0.36, 0.62), 0.5),
-    window: mk("wildWestWindow", new Color3(0.85, 0.93, 1), 0.85),
-    plank: mk("wildWestPlank", new Color3(0.55, 0.38, 0.24), 0.45),
+    // Timber storefronts (583, wiki wild_west.png: big dark slate-and-brown timber buildings two full storeys high, each
+    // window a framed grid of four pale panes, heavy porch posts, and false fronts that differ: stepped, arched or
+    // gabled). Boards are dark, trim a dull grey-cream, panes a soft sky blue kept out of the glow so they stay panes.
+    board: mk("wildWestBoard", new Color3(0.17, 0.21, 0.31), 0.4),
+    boardAlt: mk("wildWestBoardAlt", new Color3(0.27, 0.2, 0.15), 0.4),
+    seam: mk("wildWestSeam", new Color3(0.08, 0.09, 0.13), 0.4),
+    trim: mk("wildWestTrim", new Color3(0.58, 0.56, 0.52), 0.35),
+    roof: mk("wildWestRoof", new Color3(0.2, 0.28, 0.5), 0.45),
+    window: mk("wildWestWindow", new Color3(0.5, 0.68, 0.82), 0.45),
+    plank: mk("wildWestPlank", new Color3(0.36, 0.24, 0.15), 0.4),
     sign: mk("wildWestSign", new Color3(0.3, 0.22, 0.17), 0.45),
   };
   const parts: Record<keyof typeof mats, Mesh[]> = { board: [], boardAlt: [], seam: [], trim: [], roof: [], window: [], plank: [], sign: [] };
@@ -53,7 +56,7 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
     for (let i = 0; i < count; i++, k++) {
       const w = each - seeded(k, 1) * 0.8;
       const cx = row.from + i * (each + ALLEY) + each / 2;
-      const h = 6 + seeded(k, 2) * 1.5;
+      const h = 7.6 + seeded(k, 2) * 2.4;
       const f = row.face;
       // In local terms: u along the street (x), v toward the street (f * -z offset from the row line)
       // Stagger rear walls and porches so the row has real alley mouths and a broad street frontage.
@@ -74,9 +77,17 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
       // False front: a taller board wall at the street face, its top stepped or arched, white trim round it
       const rise = 1.6 + seeded(k, 4) * 1;
       box(wall, w, rise, 0.4, 0, h + rise / 2, front - 0.2);
-      if (seeded(k, 5) < 0.5) {
+      if (k % 3 === 0) {
         box(wall, w * 0.5, 0.9, 0.4, 0, h + rise + 0.45, front - 0.2);
         box("trim", w * 0.54, 0.22, 0.55, 0, h + rise + 0.95, front - 0.2);
+      } else if (k % 3 === 1) {
+        // A gabled false front: a three-sided prism lying along the street face
+        const gable = MeshBuilder.CreateCylinder("wildWestGable", { diameter: w * 0.72, height: 0.4, tessellation: 3 }, scene);
+        gable.rotation.set(Math.PI / 2, 0, Math.PI / 2);
+        gable.scaling.z = 0.6;
+        const [x, z] = at(0, front - 0.2);
+        gable.position.set(x, h + rise + w * 0.07, z);
+        parts[wall].push(gable);
       } else {
         // A disc whose lower half sinks into the false front: its upper half reads as the arched top
         const arch = MeshBuilder.CreateCylinder("wildWestArch", { diameter: w * 0.55, height: 0.38, tessellation: 16 }, scene);
@@ -91,17 +102,28 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
       box("sign", Math.min(5.5, w - 1.5), 1.1, 0.12, 0, h + rise * 0.45, front + 0.05);
       box("trim", Math.min(5.5, w - 1.5) + 0.2, 0.12, 0.14, 0, h + rise * 0.45 + 0.6, front + 0.05);
       // Two rows of windows (lower row beside the door)
-      for (const [y, us] of [[1.9, [-w * 0.36, -w * 0.18, w * 0.18, w * 0.36]], [h - 2, [-w * 0.36, -w * 0.12, w * 0.12, w * 0.36]]] as const) {
+      for (const [y, us] of [[2, [-w * 0.34, w * 0.34]], [h - 2.3, [-w * 0.34, -w * 0.115, w * 0.115, w * 0.34]]] as const) {
         for (const u of us) {
-          box("window", 1, 1.4, 0.08, u, y, front + 0.06);
-          box("trim", 1.2, 0.14, 0.12, u, y + 0.78, front + 0.07);
+          // A framed sash window: a trim frame, four panes, a dark mullion cross and a sill
+          box("trim", 1.5, 2.1, 0.1, u, y, front + 0.05);
+          box("window", 1.2, 1.8, 0.1, u, y, front + 0.08);
+          box("seam", 0.1, 1.8, 0.1, u, y, front + 0.11);
+          box("seam", 1.2, 0.1, 0.1, u, y, front + 0.11);
+          box("trim", 1.7, 0.16, 0.3, u, y - 1.1, front + 0.12);
         }
       }
-      box("seam", 1.4, 2.4, 0.08, 0, 1.2, front + 0.06);
+      box("seam", 1.6, 2.8, 0.08, 0, 1.4, front + 0.06);
+      box("trim", 2, 0.2, 0.14, 0, 2.9, front + 0.07);
+      // Corner pilasters and a cornice under the false front give each front its own frame
+      for (const s of [-1, 1]) box("seam", 0.45, h, 0.3, s * (w / 2 - 0.22), h / 2, front + 0.08);
+      box("seam", w + 0.1, 0.35, 0.3, 0, h - 0.6, front + 0.08);
       // Porch: deck, posts and a roof along the street; a balcony rail on every other one
       const pd = 2.4;
       box("plank", w, 0.3, pd, 0, 0.15, front + pd / 2);
-      for (let p = 0; p < 5; p++) box("plank", 0.22, 3.4, 0.22, -w / 2 + 0.3 + p * (w - 0.6) / 4, 1.7, front + pd - 0.2);
+      for (let p = 0; p < 5; p++) {
+        box("plank", 0.36, 3.4, 0.36, -w / 2 + 0.3 + p * (w - 0.6) / 4, 1.7, front + pd - 0.2);
+        box("plank", 0.9, 0.22, 0.4, -w / 2 + 0.3 + p * (w - 0.6) / 4, 3.25, front + pd - 0.2);
+      }
       box("roof", w + 0.2, 0.22, pd + 0.2, 0, 3.5, front + pd / 2);
       if (k % 2 === 0) {
         box("trim", w, 0.12, 0.12, 0, 4.4, front + pd - 0.1);
@@ -120,7 +142,7 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
     merged.material = mats[key];
     merged.receiveShadows = true;
     merged.isPickable = false;
-    if (key !== "window") glow?.addExcludedMesh(merged);
+    glow?.addExcludedMesh(merged);
   }
 }
 
