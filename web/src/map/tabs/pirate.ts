@@ -103,20 +103,25 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
       barrel.position.set(cx, top + 0.75, cz);
       parts.iron.push(barrel);
     }
-    // Gangplanks from the deck edge down to the sand
-    for (const u of [-8, 0, 8]) {
-      const run = 6.2, drop = top + 0.2;
-      const plank = MeshBuilder.CreateBox("pirateGalleonPlank", { width: 1.6, height: 0.18, depth: Math.hypot(run, drop) }, scene);
-      plank.rotation.x = toBeach * Math.atan2(drop, run);
-      const [px, pz] = at(u, BEAM / 2 + run / 2);
-      plank.position.set(px, drop / 2, pz);
-      parts.deck.push(plank);
-      for (let r = 1; r < 6; r++) {
-        const cleat = MeshBuilder.CreateBox("pirateGalleonCleat", { width: 1.6, height: 0.1, depth: 0.15 }, scene);
-        const [qx, qz] = at(u, BEAM / 2 + run * r / 6);
-        cleat.position.set(qx, drop * (1 - r / 6) + 0.12, qz);
-        parts.dark.push(cleat);
-      }
+    // Gangplanks (585, wiki pirate.png: three broad planked ramps from each deck's rail across the shallows onto the dry sand,
+    // fanned a little): 3.2 m wide, 12.5 m run from the rail (|z| 33) to |z| ~20.5, each turned up to 0.18 rad off square, dark
+    // cleats every metre and a dark rail beam along both edges.
+    for (const [u, fan] of [[-9, -0.18], [0, 0.04], [9, 0.16]] as const) {
+      const run = 12.5, drop = top + 0.6, len = Math.hypot(run, drop), slope = Math.atan2(drop, run);
+      const [rx, rz] = at(u, BEAM / 2);
+      const yaw = Math.atan2(Math.sin(fan) * bow, toBeach * Math.cos(fan));
+      const piece = (k: keyof typeof mats, w: number, h: number, along: number, across: number, lift: number) => {
+        const m = MeshBuilder.CreateBox("pirateGalleonPlank", { width: w, height: h, depth: along === 0 ? len : 0.22 }, scene);
+        m.rotation.set(slope, yaw, 0);
+        const d = along === 0 ? len / 2 : along;
+        // local (across, y, forward) turned by the yaw onto the world
+        const fwd = Math.cos(slope) * d;
+        m.position.set(rx + Math.cos(yaw) * across + Math.sin(yaw) * fwd, drop - 0.05 - Math.sin(slope) * d + lift, rz - Math.sin(yaw) * across + Math.cos(yaw) * fwd);
+        parts[k].push(m);
+      };
+      piece("deck", 3.2, 0.22, 0, 0, 0);
+      for (const s of [-1, 1]) piece("dark", 0.22, 0.3, 0, s * 1.6, 0.12);
+      for (let r = 1; r < Math.floor(len); r++) piece("dark", 3.1, 0.1, r, 0, 0.14);
     }
     obstacles.push({ type: "box", center: new Vector3(0, 0, Z), halfX: LONG / 2, halfZ: BEAM / 2 + 0.3 });
   }
