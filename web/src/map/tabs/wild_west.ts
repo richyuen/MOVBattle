@@ -22,12 +22,14 @@ function seeded(i: number, seed: number): number {
 
 // Near-side town block (583, western.png: the near-side buildings are a deep block, a second rank standing well inside the
 // island in front of the rim row, offset from it, with alleys between and behind). The third row is that inner rank: two
-// buildings at z -23.5 (x 2..23.4), an alley of 1.3-3 m in front of the rim row's porches, left of both the right zone (x >= 27) and the
-// stage armies (x >= 28.6).
+// buildings at z -23.5, an alley in front of the rim row's porches.
+// Open enemy street (584, wild_west.leading_cacti.png: the enemy forms up on open sand, the storefronts well back from the
+// line). The inner rank stands at the middle of the near side, x -22..-0.6: 29 m west of the stage armies (x >= 28.6) and
+// west of the stage camera (x >= 3), east of the left zone (x <= -27), its east end one alley off the rim row's west end.
 const ROWS: Array<{ z: number; face: number; from: number; to: number; count: number }> = [
   { z: 35.5, face: -1, from: -27, to: 27, count: 5 },
   { z: -38, face: 1, from: 1, to: 36, count: 3 },
-  { z: -23.5, face: 1, from: 2, to: 23.4, count: 2 },
+  { z: -23.5, face: 1, from: -22, to: -0.6, count: 2 },
 ];
 const DEPTH = 9;
 const ALLEY = 3.2;
