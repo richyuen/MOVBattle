@@ -144,8 +144,7 @@ function gratedCourt(scene: Scene): void {
   const iron=new StandardMaterial("spooky2GrateIron",scene);
   iron.diffuseColor.set(0.035,0.04,0.06);iron.emissiveColor.set(0.012,0.014,0.025);
   const fire=new StandardMaterial("spooky2GrateLight",scene);
-  fire.diffuseColor.set(0.75,0.27,0.055);fire.emissiveColor.set(0.75,0.27,0.055);
-  fire.disableLighting=true;fire.useEmissiveAsIllumination=true;
+  fire.diffuseColor=Color3.Black();fire.emissiveColor.set(0.75,0.27,0.055);fire.disableLighting=true;
   const parts:Mesh[]=[];
   const box=(w:number,h:number,d:number,x:number,y:number,z:number,mat:StandardMaterial)=>{
     const m=MeshBuilder.CreateBox("spooky2CourtPart",{width:w,height:h,depth:d},scene);
