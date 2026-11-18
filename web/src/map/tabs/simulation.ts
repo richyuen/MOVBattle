@@ -64,7 +64,7 @@ function paleSky(scene: Scene): () => void {
   dome?.setEnabled(false);
   const oldFog = scene.fogColor.clone(), oldClear = scene.clearColor.clone();
   // 590 [P]: the kit's cyan-white haze and .15 span, with a lighter sky blue so the zenith reads pale, not teal
-  const haze = new Color3(0.74, 0.93, 0.97), blue = new Color3(0.55, 0.8, 0.88);
+  const haze = new Color3(0.74, 0.93, 0.97), blue = new Color3(0.68, 0.9, 1.0);
   scene.fogColor.copyFrom(haze);
   scene.clearColor.set(haze.r, haze.g, haze.b, 1);
   const sky = MeshBuilder.CreateSphere("simulationSky", { diameter: 1800, segments: 24, sideOrientation: Mesh.BACKSIDE }, scene);
