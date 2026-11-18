@@ -142,8 +142,8 @@ function nightTurf(scene: Scene, built: Set<unknown>): void {
 // Spec: a 15 m paved court, flush (0.1 m, units walk over it), with path tongues to the four kerb gaps; a 7 m ember plate at
 // 0.14 m, unlit orange (1.6, 0.5, 0.06) and inside the glow pass; over it a flat lattice of nine 0.22 m bars each way on a
 // 0.85 m pitch, only 4 cm proud so the low battle camera still sees the embers between them (579's 0.2 m bars hid the bed
-// from every camera), a 0.55 m iron frame, and four corner plinths 1.1 m high carrying a flame (a 0.8 m collider each).
-function gratedCourt(scene: Scene, result: MapBuildResult): void {
+// from every camera), a 0.55 m iron frame, and four low corner kerb stones carrying a flame (no colliders).
+function gratedCourt(scene: Scene): void {
   const mk = (name: string, c: Color3, self: Color3, unlit = false) => {
     const m = new StandardMaterial(name, scene);
     m.diffuseColor = unlit ? Color3.Black() : c;
@@ -168,10 +168,9 @@ function gratedCourt(scene: Scene, result: MapBuildResult): void {
     box("stone", 4.6, 0.08, 4, 0, 0.04, s * 9.2);
     box("stone", 6, 0.08, 4.6, s * 10.4, 0.04, 0);
     for (const t of [-1, 1]) {
-      box("stone", 1.3, 1.1, 1.3, s * 6.6, 0.55, t * 6.6);
-      box("stone", 1.6, 0.18, 1.6, s * 6.6, 1.15, t * 6.6);
-      box("ember", 0.5, 0.6, 0.5, s * 6.6, 1.54, t * 6.6);
-      result.obstacles.push({ type: "cylinder", center: new Vector3(s * 6.6, 0, t * 6.6), radius: 0.8 });
+      // Low kerb lanterns, drawn only: a stage army (fantasy_good.vicious_terror) stands on these corners
+      box("stone", 1.1, 0.4, 1.1, s * 6.6, 0.2, t * 6.6);
+      box("ember", 0.5, 0.45, 0.5, s * 6.6, 0.62, t * 6.6);
     }
     box("iron", 8.1, 0.2, 0.55, 0, 0.1, s * 3.78);
     box("iron", 0.55, 0.2, 8.1, s * 3.78, 0.1, 0);
@@ -326,7 +325,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   squareIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   fogChannels(scene);
   nightTurf(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
-  gratedCourt(scene, result);
+  gratedCourt(scene);
   pumpkinShrine(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return {...result,dispose:()=>{restore();result.dispose?.();}};
