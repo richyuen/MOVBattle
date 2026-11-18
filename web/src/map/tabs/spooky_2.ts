@@ -309,6 +309,7 @@ function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult
 // 1.4 m, a 0.6 m parapet each side, a pier under each end and a dark arch opening under the middle; at x 0 a timber
 // bridge 5 m wide, a flat deck 1 m up over |z| 6.5..17.5 on four posts, with four steps down at each end. Drawn only (no
 // colliders; the channels are drawn only too); the decks carry units through the map's height field.
+const STONE_X = 30;
 function channelBridges(scene: Scene): (x: number, z: number) => number {
   const mk = (name: string, c: Color3, self: number) => {
     const m = new StandardMaterial(name, scene);
@@ -318,7 +319,8 @@ function channelBridges(scene: Scene): (x: number, z: number) => number {
     return m;
   };
   const mats = {
-    stone: mk("spooky2BridgeStone", new Color3(0.4, 0.45, 0.6), 0.4),
+    // (586) darker than the fog (0.1, 0.125, 0.26 at alpha .34): a deep slate stone
+    stone: mk("spooky2BridgeStone", new Color3(0.2, 0.21, 0.28), 0.35),
     dark: mk("spooky2BridgeDark", new Color3(0.03, 0.04, 0.09), 0.3),
     wood: mk("spooky2BridgeWood", new Color3(0.34, 0.3, 0.32), 0.35),
   };
@@ -329,11 +331,14 @@ function channelBridges(scene: Scene): (x: number, z: number) => number {
     b.rotation.x = tilt;
     parts[k].push(b);
   };
-  const HALF = 6.5, RISE = 1.4, SEGS = 12;
+  // (586, wiki spooky_2.png: the stone bridges stand inboard of the corners, high humped arches with a dark opening under
+  // them) Spec: at x +-30, spanning |z| 5..19 (half 7), the deck rising 3 m, piers 3.4 m deep below the banks, the dark
+  // opening 3.2 m wide and 2.4 m high under the crown.
+  const HALF = 7, RISE = 3, SEGS = 14;
   const arch = (dz: number) => RISE * Math.max(0, 1 - (dz / HALF) ** 2);
   for (const sz of [-1, 1]) {
     const cz = sz * 12;
-    for (const x of [-44, 44]) {
+    for (const x of [-STONE_X, STONE_X]) {
       for (let s = 0; s < SEGS; s++) {
         const z0 = -HALF + (s * 2 * HALF) / SEGS, z1 = z0 + (2 * HALF) / SEGS;
         const y0 = arch(z0), y1 = arch(z1), len = Math.hypot(z1 - z0, y1 - y0) + 0.05;
@@ -341,8 +346,10 @@ function channelBridges(scene: Scene): (x: number, z: number) => number {
         box("stone", 4.4, 0.45, len, x, (y0 + y1) / 2 - 0.2, cz + (z0 + z1) / 2, tilt);
         for (const side of [-1, 1]) box("stone", 0.4, 0.6, len, x + side * 2, (y0 + y1) / 2 + 0.3, cz + (z0 + z1) / 2, tilt);
       }
-      for (const end of [-1, 1]) box("stone", 4.6, 2.2, 1.6, x, -0.9, cz + end * (HALF - 1.4));
-      box("dark", 3.6, 0.7, 5, x, 0.25, cz);
+      for (const end of [-1, 1]) box("stone", 4.6, 3.4, 2.2, x, -1.2, cz + end * (HALF - 1.6));
+      // spandrel walls fill the hump either side of the opening, the opening itself dark
+      for (const end of [-1, 1]) box("stone", 4.2, 1.8, 2.4, x, 1.0, cz + end * 3.6);
+      box("dark", 3.2, 2.4, 4.8, x, 0.6, cz);
     }
     // Timber bridge at the middle: deck, posts, side beams and steps
     box("wood", 5, 0.25, 11, 0, 0.88, cz);
@@ -367,7 +374,7 @@ function channelBridges(scene: Scene): (x: number, z: number) => number {
   return (x, z) => {
     const dz = Math.abs(z) - 12;
     if (Math.abs(dz) > 8) return 0;
-    if (Math.abs(Math.abs(x) - 44) < 2.2) return arch(dz);
+    if (Math.abs(Math.abs(x) - STONE_X) < 2.2) return arch(dz);
     if (Math.abs(x) < 2.5) {
       const off = Math.abs(dz);
       return off <= 5.5 ? 1 : Math.max(0, 1 - Math.ceil((off - 5.5) / 0.5) * 0.25 + 0.25);
