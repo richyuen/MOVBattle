@@ -111,6 +111,32 @@ function fogChannels(scene: Scene): void {
   }
 }
 
+// Night turf replaces the daylight floor and warm team tint; dense low faceted tufts break the bare plane.
+function nightTurf(scene: Scene, built: Set<unknown>): void {
+  const grass=new StandardMaterial("spooky2NightGrass",scene);
+  grass.diffuseColor.set(0.09,0.12,0.21);grass.emissiveColor.set(0.025,0.035,0.075);grass.specularColor=Color3.Black();
+  const blades=new StandardMaterial("spooky2NightBlades",scene);
+  blades.diffuseColor.set(0.14,0.19,0.29);blades.emissiveColor.set(0.04,0.055,0.1);blades.specularColor=Color3.Black();
+  for(const m of scene.meshes) {
+    if(!built.has(m)) continue;
+    if(/^(campaign_zone_|fieldBlades_|fieldTufts_|grassTuft)/.test(m.name)) m.setEnabled(false);
+    if(m.name==="ground"||m.name==="centerGrass") m.material=grass;
+  }
+  const tufts:Mesh[]=[];
+  for(let z=-35;z<36;z+=1.7) for(let x=-41;x<42;x+=1.7) {
+    if(Math.abs(Math.abs(z)-12)<6 || (Math.abs(x)<9 && Math.abs(z)<9)) continue;
+    const n=Math.sin(x*12.9+z*78.2)*43758.5, f=n-Math.floor(n);
+    const m=MeshBuilder.CreateCylinder("spooky2TurfTuft",{height:0.35+f*0.25,diameterBottom:0.55,diameterTop:0,tessellation:3},scene);
+    m.position.set(x+f*0.7,0.12,z+f*0.7);tufts.push(m);
+  }
+  const merged=Mesh.MergeMeshes(tufts,true);
+  if(merged) {merged.name="spooky2NightTurf";merged.material=blades;merged.isPickable=false;merged.receiveShadows=true;}
+  for(const name of ["spooky2Stone","spooky2Path"]) {
+    const m=scene.getMaterialByName(name);
+    if(m instanceof StandardMaterial) {m.diffuseColor.set(0.17,0.21,0.31);m.emissiveColor.set(0.045,0.055,0.09);}
+  }
+}
+
 // Nine-metre square courtyard with a sealed luminous iron grate; four stairs meet the fog banks.
 function gratedCourt(scene: Scene): void {
   const stone=new StandardMaterial("spooky2CourtStone",scene);
@@ -167,6 +193,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   squareIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   fogChannels(scene);
   gratedCourt(scene);
+  nightTurf(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return {...result,dispose:()=>{restore();result.dispose?.();}};
 }
