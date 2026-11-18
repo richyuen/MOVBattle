@@ -16,10 +16,17 @@ import { bareField, centreLine, gridBlock, gridMaterial, gridUVs, paleSky, voidA
 const SHEET: Rect = { x0: -60, x1: 48, z0: -22, z1: 22 };
 const RAMP = { foot: -24, top: 10, high: 12 };
 
-export const highGroundHeight: HeightField = (x) => {
+// Wall ramps (590, blocker b3; card: "at the top, there are two ramps, which lead up to two walls"). Spec: behind each gate
+// wall a 9 m wide ramp (8 <= |z| <= 17) climbs from the platform's back edge (x 48) to the wall top (7 m up) at the wall's back
+// face (x 36), drawn in the sheet's own height field so its sides fall as grid faces; units walking there are drawn on it.
+const WALL_RAMP = { z0: 8, z1: 17, x0: 36, x1: 48, rise: 7 };
+
+export const highGroundHeight: HeightField = (x, z) => {
   if (x <= RAMP.foot) return 0;
-  if (x >= RAMP.top) return RAMP.high;
-  return ((x - RAMP.foot) / (RAMP.top - RAMP.foot)) * RAMP.high;
+  if (x < RAMP.top) return ((x - RAMP.foot) / (RAMP.top - RAMP.foot)) * RAMP.high;
+  const w = WALL_RAMP, az = Math.abs(z);
+  if (az >= w.z0 && az <= w.z1 && x >= w.x0 && x <= w.x1) return RAMP.high + (w.rise * (w.x1 - x)) / (w.x1 - w.x0);
+  return RAMP.high;
 };
 
 // Gateway (589, blocker a2; wiki high_ground.png: on the platform two square grid blocks stand either side of a gate, each
