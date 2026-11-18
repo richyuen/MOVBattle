@@ -170,7 +170,7 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
       for (const [a, b] of pieces) {
         const cx = (a + b) / 2, w = b - a;
         const back = rimZ(Math.min(51, Math.max(Math.abs(a), Math.abs(b)))) * 0.95;
-        const front = k === 0 ? t.front : t.front + (seeded(seed, 22) - 0.4) * 3.5;
+        const front = k === 0 ? t.front + seeded(seed, 22) * 2.8 : t.front + (seeded(seed, 22) - 0.4) * 3.5;
         const h = k === 0 ? t.h + seeded(seed, 23) * 1.2 : t.h + (seeded(seed, 24) - 0.5) * 3;
         if (back - front < 3) continue;
         box("stone", w + 0.02, h, back - front, cx, h / 2, (front + back) / 2);
@@ -179,6 +179,21 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
         box("shade", 0.2, h * 0.92, 0.12, a + 0.08, h / 2, front - 0.05);
         // A course line part way up the wall
         box("shade", w * 0.96, 0.14, 0.1, cx, h * (0.45 + seeded(seed, 26) * 0.2), front - 0.05);
+        // Ground-level porticos break the blank retaining band into small shrines and columned recesses.
+        // All sit behind the original collision line z24; projecting plinths alternate with deep dark doorways.
+        if (k === 0 && w > 3) {
+          const pw = w * 0.82, ph = 2.8 + seeded(seed, 51) * 1.2, pz = front + 0.25;
+          box("shade", pw, ph, 0.18, cx, ph / 2 + 0.3, pz);
+          box("pale", pw + 0.4, 0.35, 2.2, cx, 0.18, pz - 0.8);
+          for (let c = 0; c < 4; c++) {
+            const col = MeshBuilder.CreateCylinder("ancient2FrontPortico", {height: ph, diameter: 0.4, tessellation: 8}, scene);
+            col.position.set(cx - pw / 2 + c * pw / 3, ph / 2 + 0.35, pz - 1.55);
+            lists.pale.push(col);
+          }
+          box("stone", pw + 0.6, 0.45, 2.3, cx, ph + 0.55, pz - 0.75);
+          if (i % 2 === 0) temple(cx, ph + 0.8, pz + 1.3, Math.min(5.8, pw), seed + 200);
+          else box("moss", pw, 0.3, 2.1, cx, ph + 0.9, pz - 0.6);
+        }
         const room = back - front - lip;
         const pick = seeded(seed, 27);
         if (pick < 0.66 && w > 4.6 && room > 6) {
