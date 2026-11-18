@@ -339,6 +339,123 @@ function sandIsland(scene: Scene, built: Set<unknown>): void {
   oval("pirateSandBelly", 1.6, 0.56, 14, -6.3, 64, 58, sand);
 }
 
+// Outer beach ring (596, blocker a3; pirate_beach.png: the round island is closed all round by a band of golden sand with
+// clumps of palms, the turquoise shallows lying inside it round the hourglass beach, and the island's side below it is a
+// thick sandy drum, not the sea disc's bare edge). Spec: an elliptical ring 8 m wide, outer half sizes 63 x 57 (just past
+// the shallow-sea disc, 62 x 56), 64 sides; its section a wet lip rising from under the water (y -0.2) at the inner edge to
+// a crown at y 0.3 two metres in, flat to 0.6 m from the outer edge, then rounding over into the drum: a sandy side falling
+// 7 m at 0.97 of the size, a belly to y -13 at 0.82 and a point at y -21 at 0.42. Ring top in the beach's golden sand, the
+// side and belly in a browner self-lit sand (.66,.46,.22) self .45 so it reads in the island shot; both out of the glow.
+// Nine palm clumps (2-4 palms, 4.5-7.5 m, leaning in toward the lagoon, seven drooping fronds) on the crown, none by the
+// bell mountain (34, 38). Drawn only: the ring lies in the sea round the field, no unit's zone reaches it.
+function beachRing(scene: Scene): void {
+  const RX = 63, RZ = 57, W = 8, SIDES = 64;
+  const prof: Array<[number, number]> = [[W + 0.5, -0.2], [W - 2, 0.3], [0.6, 0.3], [0, 0.05]];
+  const lower: Array<[number, number]> = [[0.97, -7], [0.82, -13], [0.42, -21]];
+  const positions: number[] = [], indices: number[] = [];
+  const rows: Array<Array<[number, number, number]>> = [];
+  for (const [inset, y] of prof) rows.push(Array.from({ length: SIDES }, (_, i) => {
+    const a = (i / SIDES) * Math.PI * 2;
+    return [Math.cos(a) * (RX - inset), y, Math.sin(a) * (RZ - inset)];
+  }));
+  for (const [f, y] of lower) rows.push(Array.from({ length: SIDES }, (_, i) => {
+    const a = (i / SIDES) * Math.PI * 2;
+    return [Math.cos(a) * RX * f, y, Math.sin(a) * RZ * f];
+  }));
+  for (const row of rows) for (const p of row) positions.push(...p);
+  const strip = (r: number) => {
+    const out: number[] = [];
+    for (let i = 0; i < SIDES; i++) {
+      const a = r * SIDES + i, b = r * SIDES + (i + 1) % SIDES, c = a + SIDES, d = b + SIDES;
+      out.push(a, b, c, b, d, c);
+    }
+    return out;
+  };
+  const mkMesh = (name: string, from: number, to: number, mat: StandardMaterial) => {
+    let idx: number[] = [];
+    for (let r = from; r < to; r++) idx = idx.concat(strip(r));
+    const normals: number[] = [];
+    VertexData.ComputeNormals(positions, idx, normals);
+    // the crown must face up (the lip's first vertex normal); else turn every triangle over
+    if (normals[(from * SIDES) * 3 + 1] < 0 && from === 0) for (let t = 0; t < idx.length; t += 3) [idx[t + 1], idx[t + 2]] = [idx[t + 2], idx[t + 1]];
+    const data = new VertexData();
+    data.positions = positions.slice();
+    data.indices = idx;
+    const n2: number[] = [];
+    VertexData.ComputeNormals(positions, idx, n2);
+    data.normals = n2;
+    const m = new Mesh(name, scene);
+    data.applyToMesh(m);
+    m.convertToFlatShadedMesh();
+    m.material = mat;
+    m.receiveShadows = true;
+    m.isPickable = false;
+    m.applyFog = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+    return m;
+  };
+  const gold = scene.getMaterialByName("pirateGoldenSand") as StandardMaterial | null;
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    m.backFaceCulling = false;
+    return m;
+  };
+  const side = mk("pirateRingSide", new Color3(0.66, 0.46, 0.22), 0.45);
+  const top = mkMesh("pirateBeachRing", 0, prof.length - 1, gold ?? side);
+  const drum = mkMesh("pirateRingDrum", prof.length - 1, rows.length - 1, side);
+  // the side must face outward: compare a side vertex's normal with its radial direction
+  const sn = drum.getVerticesData("normal"), sp = drum.getVerticesData("position");
+  if (sn && sp && sn[0] * sp[0] + sn[2] * sp[2] < 0) drum.flipFaces(true);
+  void top;
+  // palm clumps on the crown
+  const trunkMat = mk("pirateRingPalmTrunk", new Color3(0.42, 0.29, 0.16), 0.18);
+  const leafMat = mk("pirateRingPalmLeaf", new Color3(0.16, 0.5, 0.22), 0.22);
+  const trunks: Mesh[] = [], leaves: Mesh[] = [];
+  let seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (const deg of [150, 182, 205, 232, 262, 292, 318, 345, 110]) {
+    const a = (deg * Math.PI) / 180;
+    const count = 2 + Math.floor(rnd() * 3);
+    for (let k = 0; k < count; k++) {
+      const aa = a + (k - count / 2) * 0.035, inset = 2.5 + rnd() * 3;
+      const px = Math.cos(aa) * (RX - inset), pz = Math.sin(aa) * (RZ - inset);
+      const inward = new Vector3(-px, 0, -pz).normalize();
+      const tall = 4.5 + rnd() * 3, lean = 0.18 + rnd() * 0.22, segs = 5;
+      let p = new Vector3(px, 0.25, pz);
+      for (let s = 0; s < segs; s++) {
+        const tilt = lean * (s + 1) / segs;
+        const dir = new Vector3(inward.x * Math.sin(tilt), Math.cos(tilt), inward.z * Math.sin(tilt));
+        const len = tall / segs;
+        const seg = MeshBuilder.CreateCylinder("pirateRingPalm", { height: len * 1.05, diameterBottom: 0.5 - s * 0.05, diameterTop: 0.45 - s * 0.05, tessellation: 6 }, scene);
+        seg.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
+        seg.position.copyFrom(p.add(dir.scale(len / 2)));
+        trunks.push(seg);
+        p = p.add(dir.scale(len));
+      }
+      const spin = rnd() * Math.PI;
+      for (let f = 0; f < 7; f++) {
+        const yaw = spin + (f / 7) * Math.PI * 2;
+        const frond = MeshBuilder.CreateBox("pirateRingPalm", { width: 0.9, height: 0.08, depth: 3.4 }, scene);
+        frond.rotation.set(0.42, yaw, 0);
+        frond.position.set(p.x + Math.sin(yaw) * 1.5, p.y - 0.55, p.z + Math.cos(yaw) * 1.5);
+        leaves.push(frond);
+      }
+    }
+  }
+  for (const [list, mat, name] of [[trunks, trunkMat, "pirateRingPalmTrunks"], [leaves, leafMat, "pirateRingPalmLeaves"]] as const) {
+    const merged = Mesh.MergeMeshes(list, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
 export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -364,6 +481,7 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   sandIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   hourglassBeach(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), obstacles);
   bellMountain(scene, obstacles);
+  beachRing(scene);
   openShore(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   const baseHeight = result.height;
   const height = (x: number, z: number) => Math.max(baseHeight?.(x, z) ?? 0, deckHeight(x, z));
