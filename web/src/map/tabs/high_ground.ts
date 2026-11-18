@@ -21,13 +21,40 @@ const RAMP = { foot: -24, top: 10, high: 12 };
 // face (x 36), drawn in the sheet's own height field so its sides fall as grid faces; units walking there are drawn on it.
 const WALL_RAMP = { z0: 8, z1: 17, x0: 36, x1: 48, rise: 7 };
 
+// Wall tops (591, blocker b2; wiki high_ground.png: the defenders' catapults stand up on the two gate walls, their crews on top,
+// reached by the wall ramps). Spec: the gate walls' tops are standable plateaus in the height field (strictly inside x 28..36,
+// 5 < |z| < 20, at the walls' 7 m), so a unit there is drawn on the wall; the sheet is faceted at 1 m so the plateau's edge
+// wedges stay inside the wall blocks. The walls' box colliders become thin face colliders: front (x 28), gate side (|z| 5),
+// outer side (|z| 20), back beside the ramp (x 36 at |z| 5..8 and 17..20), and both sides of each wall ramp where it stands
+// over 2 m (x 36..44), so the top is reached only up the ramps. A team-1 zone over the right wall top comes first, so the
+// map's skirmish puts units up there.
+const onWallTop = (x: number, az: number) => x > 28 && x < 36 && az > 5 && az < 20;
+
 export const highGroundHeight: HeightField = (x, z) => {
   if (x <= RAMP.foot) return 0;
   if (x < RAMP.top) return ((x - RAMP.foot) / (RAMP.top - RAMP.foot)) * RAMP.high;
   const w = WALL_RAMP, az = Math.abs(z);
+  if (onWallTop(x, az)) return RAMP.high + w.rise;
   if (az >= w.z0 && az <= w.z1 && x >= w.x0 && x <= w.x1) return RAMP.high + (w.rise * (w.x1 - x)) / (w.x1 - w.x0);
   return RAMP.high;
 };
+
+function wallFaceColliders(): MapBuildResult["obstacles"] {
+  const t = 0.4, out: MapBuildResult["obstacles"] = [];
+  const box = (x0: number, x1: number, z0: number, z1: number) =>
+    out.push({ type: "box", center: new Vector3((x0 + x1) / 2, 0, (z0 + z1) / 2), halfX: (x1 - x0) / 2, halfZ: (z1 - z0) / 2 });
+  for (const s of [-1, 1]) {
+    const zs = (a: number, b: number): [number, number] => (s > 0 ? [a, b] : [-b, -a]);
+    box(28 - t, 28 + t, ...zs(5, 20));
+    box(28, 36, ...zs(5 - t, 5 + t));
+    box(28, 36, ...zs(20 - t, 20 + t));
+    box(36 - t, 36 + t, ...zs(5, 8));
+    box(36 - t, 36 + t, ...zs(17, 20));
+    box(36, 44, ...zs(8 - t, 8 + t));
+    box(36, 44, ...zs(17 - t, 17 + t));
+  }
+  return out;
+}
 
 // Gateway (589, blocker a2; wiki high_ground.png: on the platform two square grid blocks stand either side of a gate, each
 // about as tall as the ramp's rise and twice as wide as the gate, and a thinner bar spans the gate between their tops, its
@@ -40,12 +67,7 @@ function gateWalls(scene: Scene): MapBuildResult["obstacles"] {
   const walls: Rect[] = [-1, 1].map((s) => ({ x0: g.x0, x1: g.x1, z0: s > 0 ? g.gate : -g.side, z1: s > 0 ? g.side : -g.gate }));
   for (const r of walls) gridBlock(scene, "highGroundWall", r, floor + g.wallH, floor);
   gridBlock(scene, "highGroundBar", { x0: g.x0, x1: g.x1, z0: -g.gate, z1: g.gate }, floor + g.wallH, floor + g.barUnder);
-  return walls.map((r) => ({
-    type: "box" as const,
-    center: new Vector3((r.x0 + r.x1) / 2, 0, (r.z0 + r.z1) / 2),
-    halfX: (r.x1 - r.x0) / 2,
-    halfZ: (r.z1 - r.z0) / 2,
-  }));
+  return wallFaceColliders();
 }
 
 export function buildHighGround(scene: Scene, base: () => MapBuildResult): MapBuildResult {
@@ -57,7 +79,7 @@ export function buildHighGround(scene: Scene, base: () => MapBuildResult): MapBu
     width: SHEET.x1 - SHEET.x0,
     depth: SHEET.z1 - SHEET.z0,
     cx: (SHEET.x0 + SHEET.x1) / 2,
-    step: 2,
+    step: 1,
     skirt: 400,
     material: mat,
   });
@@ -65,7 +87,7 @@ export function buildHighGround(scene: Scene, base: () => MapBuildResult): MapBu
   const obstacles = [...result.obstacles, ...gateWalls(scene)];
   centreLine(scene, SHEET.z0, SHEET.z1, highGroundHeight(0, 0));
   const hazards = [...kept, ...voidAround([SHEET], { x0: -90, x1: 90, z0: -60, z1: 60 })];
-  const placementZones = zonesOn([{ ...SHEET, x1: -1, team: 0 }, { ...SHEET, x0: 1, team: 1 }]);
+  const placementZones = zonesOn([{ ...SHEET, x1: -1, team: 0 }, { x0: 28, x1: 36, z0: 5, z1: 20, team: 1 }, { ...SHEET, x0: 1, team: 1 }]);
   const restoreSky = paleSky(scene);
   // Clouds (590, blocker a4; wiki high_ground.png: large heaped white clouds left and right behind the platform): kit banks at
   // z 200-230 inside the island shot's sky band, as on Hill.
