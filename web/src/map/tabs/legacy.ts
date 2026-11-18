@@ -8,7 +8,7 @@
 // (0.15, 0.35, 0.15) every other cone; beside each, two more pines 1.8-3.8 m along the ring and up to 2.5 m in or 1 m out (drawn
 // only) so the band reads dense; all merged
 // per material, in the glow pass (dark solids), receiving shadows.
-import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 function seeded(i: number, seed: number): number {
@@ -96,12 +96,29 @@ function meadow(scene: Scene, built: Set<unknown>): void {
       mesh.material.emissiveColor.set(0.08, 0.09, 0.03);
     }
   }
+  // Fine tufts (583, legacy.a_tank.png: the meadow is a smooth readable lawn with thin low grass, nothing standing in it
+  // like a stone). Each tuft is six thin blades fanning from one root, a unit 1 m high that the instances scale to
+  // 0.2-0.38 m; the blades carry up-facing normals so they shade like the lawn under them, and stand in drifts on a
+  // 0.8 m grid with about a third of the cells left bare.
+  const tuftData = new VertexData();
+  const tuftPositions: number[] = [], tuftIndices: number[] = [], tuftNormals: number[] = [];
+  for (let b = 0; b < 6; b++) {
+    const a = b * 1.047 + (b % 2) * 0.4, lean = 0.3 + (b % 3) * 0.2, cx = Math.cos(a), cz = Math.sin(a);
+    tuftPositions.push(cx * 0.1 - cz * 0.07, 0, cz * 0.1 + cx * 0.07, cx * 0.1 + cz * 0.07, 0, cz * 0.1 - cx * 0.07, cx * (0.1 + lean), 0.7 + (b % 2) * 0.3, cz * (0.1 + lean));
+    tuftIndices.push(b * 3, b * 3 + 1, b * 3 + 2);
+    tuftNormals.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
+  }
+  tuftData.positions = tuftPositions;
+  tuftData.indices = tuftIndices;
+  tuftData.normals = tuftNormals;
   const clump = (name: string, colour: Color3) => {
-    const mesh = MeshBuilder.CreateIcoSphere(name, { radius: 0.5, subdivisions: 1, flat: true }, scene);
+    const mesh = new Mesh(name, scene);
+    tuftData.applyToMesh(mesh);
     const mat = new StandardMaterial(name, scene);
     mat.diffuseColor = colour;
     mat.emissiveColor = colour.scale(0.24);
     mat.specularColor = Color3.Black();
+    mat.backFaceCulling = false;
     mesh.material = mat;
     mesh.isPickable = false;
     mesh.receiveShadows = true;
@@ -109,16 +126,16 @@ function meadow(scene: Scene, built: Set<unknown>): void {
   };
   const grass = [clump("legacyMeadowLight", new Color3(0.62, 0.72, 0.2)), clump("legacyMeadowDark", new Color3(0.48, 0.6, 0.15))];
   let i = 0;
-  for (let z = -46; z < 46; z += 1.1) {
-    for (let x = -52; x < 52; x += 1.1) {
+  for (let z = -46; z < 46; z += 0.8) {
+    for (let x = -52; x < 52; x += 0.8) {
       i += 1;
       const jx = seeded(i, 41), jz = seeded(i, 43);
-      const px = x + (jx - 0.5) * 0.9, pz = z + (jz - 0.5) * 0.9;
+      const px = x + (jx - 0.5) * 0.7, pz = z + (jz - 0.5) * 0.7;
       if (Math.abs(px / 52) ** 3 + Math.abs(pz / 46) ** 3 > 1) continue;
       const swathe = Math.sin(px * 0.08 + 0.7) * Math.cos(pz * 0.11 + 1.9) + Math.sin((px - pz) * 0.05) * 0.6;
-      const w = 0.35 + jx * 0.25, h = 0.7 + jz * 0.4;
-      const at = new Vector3(px, h * 0.35, pz);
-      grass[swathe + jz * 0.4 > 0.4 ? 1 : 0].m.push(...Matrix.Compose(new Vector3(w, h, w * (0.8 + jz * 0.3)), Quaternion.RotationAxis(Vector3.Up(), jx * 6.28), at).m);
+      if (Math.sin(px * 0.31 + pz * 0.17) + Math.sin(pz * 0.29 - px * 0.11 + 2.1) + (seeded(i, 45) - 0.5) * 1.4 < -0.55) continue;
+      const w = 0.8 + jx * 0.5, h = 0.2 + jz * 0.18;
+      grass[swathe + jz * 0.4 > 0.4 ? 1 : 0].m.push(...Matrix.Compose(new Vector3(w, h, w), Quaternion.RotationAxis(Vector3.Up(), jx * 6.28), new Vector3(px, 0.01, pz)).m);
     }
   }
   for (const { mesh, m } of grass) mesh.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
