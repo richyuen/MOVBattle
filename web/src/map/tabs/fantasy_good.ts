@@ -666,6 +666,63 @@ function pitShafts(scene: Scene): void {
   }
 }
 
+// Waterfalls (597, blocker a3; wiki fantasy_good.png, card Overview "several waterfalls": bright blue water runs in channels
+// down the gate faces and across the paving, pouring over the lips of the pits and off the deck's edge). Spec: from the foot of
+// each gate's inner-leg waterfall (x +-31.8, z 26.8) a channel 1.8 m wide, 3 cm proud between 15 cm white lips, runs -z then
+// across to the nearest back pit (left: z 22 to the tree pit's x -26; right: z 24 to the obelisk pit's x 16) and falls 2.4 m
+// wide down that pit's inner wall to its floor; at the front three channels run from the front pits' kerbs (x -24, 7, 31) to
+// the stepped edge (z -36) and fall 30 m down the rim wall's face (2.6 m wide, a white foam lip at the top). Water unlit
+// (.25,.62,1.05), foam (.9,.96,1), both out of the glow. Drawn only: no hazards, units walk over the channels.
+function waterfalls(scene: Scene): void {
+  const mk = (name: string, c: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = Color3.Black();
+    m.emissiveColor = c;
+    m.specularColor = Color3.Black();
+    m.disableLighting = true;
+    return m;
+  };
+  const water = mk("heavenFallWater", new Color3(0.25, 0.62, 1.05)), foam = mk("heavenFallFoam", new Color3(0.9, 0.96, 1));
+  const lipMat = scene.getMaterialByName("heavenStone") as StandardMaterial;
+  const parts: { water: Mesh[]; foam: Mesh[]; lip: Mesh[] } = { water: [], foam: [], lip: [] };
+  const box = (k: keyof typeof parts, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("heavenFallPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.bakeCurrentTransformIntoVertices();
+    parts[k].push(b);
+  };
+  /** A deck channel from (x0,z0) to (x1,z1), axis-aligned. */
+  const channel = (x0: number, z0: number, x1: number, z1: number) => {
+    const alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0), len = alongX ? Math.abs(x1 - x0) : Math.abs(z1 - z0);
+    const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2, W = 1.8;
+    box("water", alongX ? len + W : W, 0.06, alongX ? W : len + W, mx, 0.03, mz);
+    for (const s of [-1, 1]) box("lip", alongX ? len + W : 0.2, 0.15, alongX ? 0.2 : len + W, mx + (alongX ? 0 : s * (W / 2 + 0.1)), 0.075, mz + (alongX ? s * (W / 2 + 0.1) : 0));
+  };
+  // back: tower foot -> pit, falling down the pit's inner wall
+  channel(-31.8, 26.8, -31.8, 22); channel(-31.8, 22, -26, 22);
+  box("water", 0.12, PIT_DEPTH, 2.4, -26 + 0.66, -PIT_DEPTH / 2, 22);
+  box("foam", 0.3, 0.3, 2.6, -26 + 0.5, 0.05, 22);
+  channel(31.8, 26.8, 31.8, 24); channel(31.8, 24, 16, 24);
+  box("water", 0.12, PIT_DEPTH, 2.4, 16 - 0.66, -PIT_DEPTH / 2, 24);
+  box("foam", 0.3, 0.3, 2.6, 16 - 0.5, 0.05, 24);
+  // front: pit kerb -> stepped edge, falling down the rim wall's face
+  for (const [x, z0] of [[-24, -32.6], [7, -30.6], [31, -32.6]] as const) {
+    const edge = -(DECK.z - notchDepth(-1, x));
+    channel(x, z0, x, edge + 0.9);
+    box("water", 2.6, 30, 0.12, x, -15, edge - 0.15);
+    box("foam", 2.9, 0.35, 0.5, x, 0.1, edge - 0.1);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const [k, mat] of [["water", water], ["foam", foam], ["lip", lipMat]] as const) {
+    const m = Mesh.MergeMeshes(parts[k], true, true);
+    if (!m) continue;
+    m.name = `heavenFall_${k}`;
+    m.material = mat;
+    m.isPickable = false;
+    if (k !== "lip") glow?.addExcludedMesh(m); else m.receiveShadows = true;
+  }
+}
+
 export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -673,6 +730,7 @@ export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapB
   const restoreSky = heavenSky(scene, built);
   const { stone, gold } = marbleDeck(scene, built);
   viaductUnderside(scene, built, stone);
+  waterfalls(scene);
   sideIslets(scene, stone, gold);
   const opened = openCentre(scene, built, result, stone, gold);
   const walled = parapets(scene, built, opened, stone, gold);
