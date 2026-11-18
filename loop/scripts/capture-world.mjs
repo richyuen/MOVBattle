@@ -176,10 +176,14 @@ async function mapScene(page, item) {
         if (window.game.spawnUnit(id, team, { x, z: zz })) ok++;
       }
     }
-    window.game.startBattleImmediate();
-    window.advanceTime(5000);
     return ok;
   }, layout.zones);
+  // High Ground: the placed armies before the start (593), so the defenders show on the wall tops before they walk off
+  if (item === "map.high_ground") {
+    await frame(page, POSE_OVERRIDE[item].battle);
+    await shot(page, `${p}placed`);
+  }
+  await page.evaluate(() => { window.game.startBattleImmediate(); window.advanceTime(5000); });
   // Ancient 1: the low pose sees only roofs; frame the player army's box from an elevated player-side diagonal (574)
   let battleView = POSE_OVERRIDE[item]?.battle ?? POSE.ground;
   if (item === "map.ancient_1") {
