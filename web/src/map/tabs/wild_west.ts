@@ -11,7 +11,7 @@
 // porch roof on every other building; windows 1 x 1.4 m, four per floor; sign board 5.5 x 1.1 m under the false-front top. The base's
 // two black boxes (houses at (4,-16) and (6,16)) go with their colliders; one box collider per building plus its porch. Both armies'
 // zones (|x| 27..61, |z| 9..27) and the stage armies (x 28.6..35.5, z -25..-11) stay clear.
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
@@ -218,6 +218,59 @@ function desertRim(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]): vo
   }
 }
 
+// Sunset sky (578, wild_west.bullets_and_chains.png: the town stands under a warm orange-peach haze, a big pale sun low over the
+// horizon flooding the field with warm light and long shadows; no grey range and no clouds). Spec: clear colour (0.95, 0.66, 0.44)
+// and fog (0.97, 0.72, 0.5); the base's mountain* range and clouds hidden; the directional light low (elevation ~17 deg) from +x,
+// warm (1.25, 0.85, 0.55) at 1.1; the hemispheric light warm (1, 0.8, 0.62) over a rust ground (0.45, 0.3, 0.22); a sun disc 22 m
+// across 190 m out along the light, with a soft halo, unlit, out of fog and glow; lights and colours restored on dispose.
+function sunsetSky(scene: Scene, built: Set<unknown>): () => void {
+  const oldClear = scene.clearColor.clone();
+  const oldFog = scene.fogColor.clone();
+  scene.clearColor.set(0.95, 0.66, 0.44, 1);
+  scene.fogColor = new Color3(0.97, 0.72, 0.5);
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && (mesh.name.startsWith("mountain") || mesh.name.startsWith("cloud"))) mesh.setEnabled(false);
+  }
+  const hemi = scene.getLightByName("hemi") as HemisphericLight | null;
+  const dir = scene.getLightByName("dir") as DirectionalLight | null;
+  const saved = {
+    hemi: hemi ? [hemi.intensity, hemi.diffuse.clone(), hemi.groundColor.clone()] as const : null,
+    dir: dir ? [dir.intensity, dir.diffuse.clone(), dir.direction.clone()] as const : null,
+  };
+  const toward = new Vector3(-0.9, -0.3, 0.32).normalize();
+  if (hemi) {
+    hemi.diffuse = new Color3(1, 0.8, 0.62);
+    hemi.groundColor = new Color3(0.45, 0.3, 0.22);
+  }
+  if (dir) {
+    dir.intensity = 1.1;
+    dir.diffuse = new Color3(1.25, 0.85, 0.55);
+    dir.direction.copyFrom(toward);
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  const disc = (name: string, d: number, c: Color3, alpha: number, back: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = Color3.Black();
+    m.emissiveColor = c;
+    m.disableLighting = true;
+    m.alpha = alpha;
+    const s = MeshBuilder.CreateSphere(name, { diameter: d, segments: 16 }, scene);
+    s.position = toward.scale(-(190 + back));
+    s.material = m;
+    s.applyFog = false;
+    s.isPickable = false;
+    glow?.addExcludedMesh(s);
+  };
+  disc("wildWestSun", 22, new Color3(1, 0.97, 0.86), 1, 0);
+  disc("wildWestSunHalo", 44, new Color3(1, 0.85, 0.6), 0.3, 6);
+  return () => {
+    scene.clearColor.copyFrom(oldClear);
+    scene.fogColor.copyFrom(oldFog);
+    if (hemi && saved.hemi) [hemi.intensity, hemi.diffuse, hemi.groundColor] = [saved.hemi[0], saved.hemi[1], saved.hemi[2]];
+    if (dir && saved.dir) [dir.intensity, dir.diffuse, dir.direction] = [saved.dir[0], saved.dir[1], saved.dir[2]];
+  };
+}
+
 export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -242,5 +295,6 @@ export function buildWildWest(scene: Scene, base: () => MapBuildResult): MapBuil
   const kept = obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
   town(scene, kept);
   desertRim(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), kept);
-  return { ...result, obstacles: kept };
+  const restoreSky = sunsetSky(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
+  return { ...result, obstacles: kept, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
