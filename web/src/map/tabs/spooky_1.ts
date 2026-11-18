@@ -24,6 +24,8 @@ const SHORE = [
   [5, 4, 53], [18, 6, 49], [31, 8, 40], [40, 13, 25],
 ] as const;
 
+const SKIRT_INSET = 5;
+
 function onPlateau(x: number, z: number): boolean {
   for (let i = 1; i < SHORE.length; i++) {
     const [front, near, far] = SHORE[i - 1];
@@ -67,13 +69,15 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
     const a = points[i], b = points[(i + 1) % points.length];
     const span = Vector3.Distance(a, b);
     const at = skirtPositions.length / 3;
-    skirtPositions.push(a.x, -0.05, a.z, b.x, -0.05, b.z, b.x, -24, b.z, a.x, -24, a.z);
-    skirtIndices.push(at, at + 1, at + 2, at, at + 2, at + 3);
     const nx = side * (a.z - b.z) / span, nz = side * (b.x - a.x) / span;
     const tx = (b.x - a.x) / span, tz = (b.z - a.z) / span;
     const yaw = Math.atan2(a.z - b.z, b.x - a.x);
     // The ravine's own faces (the first SHORE.length - 1 edges) carry cliff blocks only: the fog hides what is below
     const ravine = i < SHORE.length - 1;
+    // 585: the outer skirt stands SKIRT_INSET metres inside the outline, behind the masses' backs, so it never shows as a band
+    const inset = ravine ? 0 : SKIRT_INSET;
+    skirtPositions.push(a.x - nx * inset, -0.6, a.z - nz * inset, b.x - nx * inset, -0.6, b.z - nz * inset, b.x - nx * inset, -24, b.z - nz * inset, a.x - nx * inset, -24, a.z - nz * inset);
+    skirtIndices.push(at, at + 1, at + 2, at, at + 2, at + 3);
     // A mass whose face stands `proud` metres outside the outline at distance `mid` along the edge, its top at `top`
     const mass = (shape: "block" | "boulder" | "root", w: number, h: number, d: number, mid: number, proud: number, top: number, turn: number, tip: number) => {
       const rock = shape === "boulder"
@@ -90,16 +94,31 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
       const x = a.x + tx * mid, z = a.z + tz * mid;
       return side < 0 && x > -17 && z > -25 && z < 7;
     };
-    // Cliff blocks, 7-12 m of edge each (a remainder under 4 m joins the last)
+    // Upper tier (585 rebuild, spec below buildSpooky1): stepping masses 4.5-7.5 m of edge each (a remainder under 3 m joins
+    // the last), deep enough that their backs reach inside the inset skirt; out-steps and in-steps alternate
+    let k = 0;
     for (let from = 0; from < span - 0.01;) {
       n++;
       const r = (s: number) => seeded(n, 500 + s);
-      let len = 7 + r(1) * 5;
-      if (span - from - len < 4) len = span - from;
+      let len = 4.5 + r(1) * 3;
+      if (span - from - len < 3) len = span - from;
       const mid = from + len / 2;
       from += len;
-      if (inRecess(mid)) continue;
-      mass(r(2) < 0.3 ? "boulder" : "block", len * (1.12 + r(3) * 0.2), 8 + r(4) * 6, 6 + r(5) * 4, mid, (ravine ? 0.2 : 0.4) + r(6) * (ravine ? 0.9 : 2.2), -0.2 - r(7) * 0.5, (r(8) - 0.5) * 0.5, (r(9) - 0.5) * 0.12);
+      const out = k++ % 2 === 0;
+      const shape = r(2) < 0.3 ? "boulder" : "block";
+      if (inRecess(mid)) {
+        // The descent's wall: a plain rock face 1.2 m proud, clear of the path's walls at x -13.1
+        mass("block", len * 1.3, 7 + r(4) * 3, 9, mid, 1.2, -0.3, (r(8) - 0.5) * 0.2, 0);
+        continue;
+      }
+      if (ravine) {
+        mass(shape, len * (1.3 + r(3) * 0.2), 8 + r(4) * 6, 8 + r(5) * 3, mid, 0.2 + r(6) * 0.9, -0.2 - r(7) * 0.5, (r(8) - 0.5) * 0.5, (r(9) - 0.5) * 0.12);
+        continue;
+      }
+      const proud = out ? 1.6 + r(6) * 2.2 : -0.6 + r(6) * 1.2;
+      const top = out ? -0.35 - r(7) * 2.5 : -0.15 - r(7) * 0.3;
+      const h = out ? 10 + r(4) * 6 : 6 + r(4) * 3;
+      mass(shape, len * (1.3 + r(3) * 0.25), h, SKIRT_INSET + proud + 2.5 + r(5) * 3, mid, proud, top, (r(8) - 0.5) * 0.45, (r(9) - 0.5) * 0.14);
       // A buttress stepping out below the block on about two stations in three
       if (!ravine && r(10) < 0.66) mass(r(11) < 0.5 ? "boulder" : "block", len * (0.55 + r(12) * 0.4), 7 + r(13) * 4, 6 + r(14) * 3, mid + (r(15) - 0.5) * len * 0.4, 2.8 + r(16) * 3, -3.4 - r(17) * 4.2, (r(18) - 0.5) * 0.9, (r(19) - 0.5) * 0.25);
     }
@@ -132,6 +151,9 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
   skirtData.applyToMesh(skirt);
   const skirtStone = stone.clone("spooky1CliffSkirtStone");
   skirtStone.backFaceCulling = false;
+  // Where it shows between masses it is a crevice in shadow, not a lit wall
+  skirtStone.diffuseColor = stone.diffuseColor.scale(0.45);
+  skirtStone.emissiveColor = stone.emissiveColor.scale(0.45);
   skirt.material = skirtStone;
   skirt.isPickable = false;
   const merged = Mesh.MergeMeshes(rocks, true, true);
@@ -515,6 +537,18 @@ export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuild
 // - Turf: soft blade tufts, not lumps: fans of six thin blades with up-facing normals (the Legacy meadow's tuft), 0.28-0.5 m
 //   high and 0.9-1.4 m across on a 0.8 m grid over seven cells in ten, two blue-greys a shade paler than the floor.
 // - Fog: three sheets of dim mist (0.1, 0.125, 0.26), no brighter than the turf.
+//
+// Upper tier rebuild (585, [R] on a2: 584's upper blocks read as one flat wall band with the skirt showing between them and
+// two black strips at the descent; reference/maps/spooky_1.png shows the rim as narrow chunky columns stepping in and out,
+// with ledges at different heights under the turf). Spec:
+// - The outer skirt stands 5 m inside the outline (the ravine's stays on it), 0.6 m under the turf, at 0.45 of the stone's
+//   light, so any gap reads as a dark crevice, never as a band.
+// - Upper masses every 4.5-7.5 m of edge (twice as many as 584), each 1.3-1.55x its station wide so neighbours overlap,
+//   deep enough that the back stands 2.5-5.5 m behind the skirt. They alternate: out-steps 1.6-3.8 m proud, 10-16 m high,
+//   tops 0.35-2.85 m under the turf (ledges); in-steps -0.6..+0.6 m proud, 6-9 m high, tops 0.15-0.45 m under. Turned up to
+//   13 degrees, tipped up to 4. Three in ten are faceted boulders, the rest tapering six-sided blocks.
+// - The descent's recess gets a plain rock face 1.2 m proud of x -15 (clear of the path's wall at -13.1), tops 0.3 m down.
+// - Buttresses, the lower shelf, roots and the ravine faces keep 584's spec.
 function duskyMeadow(scene: Scene): void {
   const tones = [[0.19, 0.24, 0.4], [0.25, 0.31, 0.5]] as const;
   const matrices: number[][] = [[], []];
