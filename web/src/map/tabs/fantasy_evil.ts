@@ -54,8 +54,9 @@ const blockLevel = (x: number, z: number) => {
 // (|x| 24..28) from z 8 to the rim at z 44, leaving the side approaches at |z| < 8 (where the armies meet) whole. No block
 // stands in a crevice; its floor is an acid-green self-lit plate (1.0 x (.15,.9,.2)) with a glow strip along the foot of
 // each wall, out of the glow pass; each crevice is a void hazard, so nobody walks in.
+// 595: the two crossings widen to the stair flights, |x| 8..16
 const CHASMS = [
-  { x0: -28, x1: -14, z0: -10, z1: -6 }, { x0: -10, x1: 10, z0: -10, z1: -6 }, { x0: 14, x1: 28, z0: -10, z1: -6 },
+  { x0: -28, x1: -16, z0: -10, z1: -6 }, { x0: -8, x1: 8, z0: -10, z1: -6 }, { x0: 16, x1: 28, z0: -10, z1: -6 },
   { x0: -28, x1: -24, z0: 8, z1: 44 }, { x0: 24, x1: 28, z0: 8, z1: 44 },
 ];
 const inChasm = (x: number, z: number) => CHASMS.some((c) => x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1);
@@ -96,7 +97,56 @@ function chasms(scene: Scene): MapBuildResult["hazards"] {
 
 /** The terrace under a point: the level of the 2 m block it stands on (blocks are centred on odd metres). */
 const blockCentre = (v: number) => 2 * Math.floor(v / 2) + 1;
-export const fantasyEvilHeight: HeightField = (x, z) => blockLevel(blockCentre(x), blockCentre(z));
+export const fantasyEvilHeight: HeightField = (x, z) => stairLevel(x, z) ?? blockLevel(blockCentre(x), blockCentre(z));
+
+// Stair flights (595, blocker b2; wiki fantasy_evil.png lower centre: two broad stone stairs climb from the front level, across
+// the crevice, to the raised plateau, one each side of the shrine, many fine treads between stepped stone cheeks). Spec: flights
+// 8 m wide at |x| 8..16, running z -16 (front level, 0 m) to z -6 (plateau edge, 3 m) in 12 treads of 0.25 m rise and 0.83 m
+// going; no basalt block stands on them; a cheek wall 0.7 m thick along each side, its top stepped 0.7 m over the treads;
+// treads paler slate (.2,.25,.27) than the blocks, nosings dark; drawn height follows the treads (visual only).
+const STAIRS = { x0: 8, x1: 16, z0: -16, z1: -6, steps: 12 };
+const inStair = (x: number, z: number) => Math.abs(x) > STAIRS.x0 && Math.abs(x) < STAIRS.x1 && z > STAIRS.z0 && z < STAIRS.z1;
+function stairLevel(x: number, z: number): number | undefined {
+  if (!inStair(x, z)) return undefined;
+  const going = (STAIRS.z1 - STAIRS.z0) / STAIRS.steps;
+  return (PLATEAU.top / STAIRS.steps) * Math.min(STAIRS.steps, Math.floor((z - STAIRS.z0) / going) + 1);
+}
+
+function stairFlights(scene: Scene): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const parts: Record<"tread" | "nose" | "cheek", Mesh[]> = { tread: [], nose: [], cheek: [] };
+  const box = (k: keyof typeof parts, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("voidStairPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.bakeCurrentTransformIntoVertices();
+    parts[k].push(b);
+  };
+  const going = (STAIRS.z1 - STAIRS.z0) / STAIRS.steps, rise = PLATEAU.top / STAIRS.steps, w = STAIRS.x1 - STAIRS.x0;
+  for (const s of [-1, 1]) {
+    const cx = s * (STAIRS.x0 + STAIRS.x1) / 2;
+    for (let i = 0; i < STAIRS.steps; i++) {
+      const top = rise * (i + 1), z = STAIRS.z0 + going * (i + 0.5);
+      box("tread", w - 1.4, top + 0.5, going, cx, (top - 0.5) / 2, z);
+      box("nose", w - 1.4, 0.06, 0.12, cx, top + 0.01, z - going / 2 + 0.06);
+      for (const e of [STAIRS.x0 + 0.35, STAIRS.x1 - 0.35]) box("cheek", 0.7, top + 1.2, going + 0.02, s * e, (top + 0.7 - 0.5) / 2, z);
+    }
+  }
+  const mats = { tread: mk("voidStairTread", new Color3(0.2, 0.25, 0.27), 0.18), nose: mk("voidStairNose", new Color3(0.03, 0.04, 0.05), 0.2), cheek: mk("voidStairCheek", new Color3(0.11, 0.15, 0.17), 0.2) };
+  for (const k of Object.keys(parts) as Array<keyof typeof parts>) {
+    const merged = Mesh.MergeMeshes(parts[k], true, true);
+    if (!merged) continue;
+    merged.name = `voidStairs_${k}`;
+    merged.material = mats[k];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
 
 function basaltFloor(scene: Scene, built: Set<unknown>): void {
   for (const m of scene.meshes) {
@@ -123,7 +173,7 @@ function basaltFloor(scene: Scene, built: Set<unknown>): void {
   for (let x = -53; x <= 53; x += 2) {
     for (let z = -47; z <= 47; z += 2) {
       if (!inside(x, z) || !inside(x + 1, z + 1) || !inside(x - 1, z - 1) || !inside(x + 1, z - 1) || !inside(x - 1, z + 1)) continue;
-      if (inChasm(x, z)) continue;
+      if (inChasm(x, z) || inStair(x, z)) continue;
       const lift = blockLevel(x, z);
       const top = 0.02 + rnd() * 0.2 + lift, h = 0.5 + top;
       mats.push(...Matrix.Compose(new Vector3(1.85, h, 1.85), Quaternion.Identity(), new Vector3(x, top - h / 2, z)).asArray());
@@ -442,6 +492,7 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   basaltFloor(scene, built);
+  stairFlights(scene);
   rockRing(scene, built);
   // seat the base's small props (bones, crystals, rocks, ring trunks) on the terrace under them (drawn only; colliders unchanged)
   for (const m of scene.meshes) {
