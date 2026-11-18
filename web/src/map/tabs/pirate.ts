@@ -246,8 +246,8 @@ function bellMountain(scene: Scene, obstacles: Obstacle[]): void {
     return m;
   };
   const mats = {
-    rock: mk("pirateMountainRock", new Color3(0.5, 0.43, 0.32), 0.35),
-    grass: mk("pirateMountainGrass", new Color3(0.3, 0.5, 0.13), 0.35),
+    rock: mk("pirateMountainRock", new Color3(0.5, 0.43, 0.32), 0.6),
+    grass: mk("pirateMountainGrass", new Color3(0.3, 0.5, 0.13), 0.6),
     trunk: mk("pirateMountainPalmTrunk", new Color3(0.42, 0.3, 0.18), 0.35),
     frond: mk("pirateMountainPalmFrond", new Color3(0.14, 0.42, 0.11), 0.35),
     water: mk("pirateMountainFall", new Color3(0.78, 0.94, 0.98), 0.7),
@@ -338,7 +338,8 @@ function bellMountain(scene: Scene, obstacles: Obstacle[]): void {
     merged.name = `pirateMountain_${key}`;
     merged.convertToFlatShadedMesh();
     merged.material = mats[key];
-    merged.receiveShadows = true;
+    // No received shadows: the heap shadowed itself to near black from the island camera.
+    merged.receiveShadows = false;
     merged.isPickable = false;
     glow?.addExcludedMesh(merged);
   }
