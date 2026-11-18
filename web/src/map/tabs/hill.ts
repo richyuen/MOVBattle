@@ -10,7 +10,7 @@
 import type { Mesh, Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import { terrainMesh, type HeightField } from "../terrain";
-import { bareField, centreLine, gridMaterial, gridUVs, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
+import { bareField, centreLine, cloudBanks, gridMaterial, gridUVs, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
 
 const RIDGE = { foot: -24, crest0: 22, crest1: 28, back: 40, top: 10, low: 4, end: 76, depth: 56, step: 2 };
 
@@ -54,6 +54,9 @@ export function buildHill(scene: Scene, base: () => MapBuildResult): MapBuildRes
   });
   const restoreSky = gridAndSky(scene, ridge);
   centreLine(scene, SHEET.z0, SHEET.z1, height(0, 0));
+  // Clouds (590, blocker a3; wiki hill.png: big soft white cloud heaps fill the sky behind the crest): three banks 130-190 m
+  // wide at z 200-230, standing from y ~-25 to ~30 so the island shot sees them above the far edge (simKit cloudBanks).
+  cloudBanks(scene, [[-110, -18, 200, 170], [60, -12, 230, 190], [190, -20, 210, 130]]);
   const hazards = [...kept, ...voidAround([SHEET], { x0: -90, x1: 100, z0: -60, z1: 60 })];
   const placementZones = zonesOn([{ ...SHEET, x1: -1, team: 0 }, { ...SHEET, x0: 1, team: 1 }]);
   return { ...result, hazards, placementZones, height, dispose: () => { restoreSky(); result.dispose?.(); } };

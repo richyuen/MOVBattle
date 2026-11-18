@@ -120,6 +120,61 @@ export function zonesOn(rects: Array<Rect & { team: number }>): PlacementZone[] 
   return rects.map((r) => ({ team: r.team, center: new Vector3((r.x0 + r.x1) / 2, 0, (r.z0 + r.z1) / 2), size: new Vector3(r.x1 - r.x0, 100, r.z1 - r.z0) }));
 }
 
+/** Soft cloud banks standing in the haze behind the field (wiki hill.png, high_ground.png: big heaped white clouds whose
+ *  undersides shade to a cool grey-blue). The island shot's camera sits ~113 m in front of the field at ~33 m up, looking down
+ *  0.37 rad, so its sky band spans elevations about -0.2..+0.03: a bank at z ~200 must stand between y ~-25 and ~35 to show
+ *  above the field's far edge (589's banks at y 40-80, z 450+ were out of frame). Each bank `[x, y, z, width]`: a base row of
+ *  overlapping flattened puffs, a smaller crown row heaped on its middle; unlit vertex colours white on top to (.8,.87,.93)
+ *  at the base, fog-free, opaque, out of the glow. Its meshes go with the map build (trackMapBuild). */
+export function cloudBanks(scene: Scene, banks: Array<[number, number, number, number]>): Mesh | null {
+  const puffs: Mesh[] = [];
+  const puff = (x: number, y: number, z: number, r: number) => {
+    const m = MeshBuilder.CreateSphere("simKitCloudPuff", { diameter: 2 * r, segments: 12 }, scene);
+    m.scaling.set(1.2, 0.62, 0.45);
+    m.position.set(x, y, z);
+    m.bakeCurrentTransformIntoVertices();
+    puffs.push(m);
+  };
+  for (const [cx, cy, cz, w] of banks) {
+    const n = Math.max(4, Math.round(w / 22));
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1) - 0.5;
+      const r = (0.62 - Math.abs(t) * 0.7) * w * 0.32;
+      puff(cx + t * w * 0.95, cy + r * 0.25, cz + (i % 2) * 6, r);
+    }
+    for (let i = 0; i < 3; i++) {
+      const t = (i - 1) * 0.22;
+      const r = w * (i === 1 ? 0.17 : 0.12);
+      puff(cx + t * w + w * 0.04, cy + w * 0.13 + (i === 1 ? w * 0.05 : 0), cz - 4, r);
+    }
+  }
+  const merged = Mesh.MergeMeshes(puffs, true, true);
+  if (!merged) return null;
+  const pos = merged.getVerticesData(VertexBuffer.PositionKind) ?? [];
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 1; i < pos.length; i += 3) { lo = Math.min(lo, pos[i]); hi = Math.max(hi, pos[i]); }
+  const cols: number[] = [];
+  for (let i = 0; i < pos.length; i += 3) {
+    const t0 = Math.max(0, Math.min(1, (pos[i + 1] - lo) / Math.max(1, hi - lo) * 1.6));
+    const t = t0 * t0 * (3 - 2 * t0);
+    cols.push(0.8 + 0.2 * t, 0.87 + 0.13 * t, 0.93 + 0.07 * t, 1);
+  }
+  merged.setVerticesData(VertexBuffer.ColorKind, cols);
+  const mat = new StandardMaterial("simKitCloud", scene);
+  mat.disableLighting = true;
+  mat.diffuseColor = Color3.Black();
+  mat.emissiveColor = Color3.White();
+  mat.specularColor = Color3.Black();
+  mat.fogEnabled = false;
+  merged.name = "simKitClouds";
+  merged.material = mat;
+  merged.applyFog = false;
+  merged.isPickable = false;
+  merged.receiveShadows = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
+  return merged;
+}
+
 // Kit haze (589): cyan-white (.74,.93,.97) reaching the blue by 15 deg up, so the island shot's band above the horizon reads pale cyan
 export function paleSky(scene: Scene, blue = new Color3(0.38, 0.68, 0.76), haze = new Color3(0.74, 0.93, 0.97), span = 0.15): () => void {
   const dome = scene.getMeshByName("skyDome"), domeOn = dome?.isEnabled();
