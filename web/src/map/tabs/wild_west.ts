@@ -22,10 +22,10 @@ function seeded(i: number, seed: number): number {
 
 const ROWS: Array<{ z: number; face: number; from: number; to: number }> = [
   { z: 35.5, face: -1, from: -27, to: 27 },
-  { z: -35.5, face: 1, from: 1, to: 27 },
+  { z: -38, face: 1, from: 1, to: 36 },
 ];
 const DEPTH = 9;
-const ALLEY = 1.4;
+const ALLEY = 3.2;
 
 function town(scene: Scene, obstacles: Obstacle[]): void {
   const mk = (name: string, c: Color3, self: number) => {
@@ -48,7 +48,7 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
   const parts: Record<keyof typeof mats, Mesh[]> = { board: [], boardAlt: [], seam: [], trim: [], roof: [], window: [], plank: [], sign: [] };
   let k = 0;
   for (const row of ROWS) {
-    const count = Math.round((row.to - row.from + ALLEY) / (9.8 + ALLEY));
+    const count = row.face < 0 ? 5 : 3;
     const each = (row.to - row.from - ALLEY * (count - 1)) / count;
     for (let i = 0; i < count; i++, k++) {
       const w = each - seeded(k, 1) * 0.8;
@@ -56,7 +56,9 @@ function town(scene: Scene, obstacles: Obstacle[]): void {
       const h = 6 + seeded(k, 2) * 1.5;
       const f = row.face;
       // In local terms: u along the street (x), v toward the street (f * -z offset from the row line)
-      const at = (u: number, v: number) => [cx + u, row.z + f * v] as const;
+      // Stagger rear walls and porches so the row has real alley mouths and a broad street frontage.
+      const setback = (i % 2) * 1.8;
+      const at = (u: number, v: number) => [cx + u, row.z + f * (v - setback)] as const;
       const box = (key: keyof typeof mats, bw: number, bh: number, bd: number, u: number, y: number, v: number) => {
         const b = MeshBuilder.CreateBox("wildWestPart", { width: bw, height: bh, depth: bd }, scene);
         const [x, z] = at(u, v);
