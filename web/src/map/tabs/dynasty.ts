@@ -332,11 +332,81 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   canalSpurs(scene, result);
   canalPools(scene, result);
   sideBridges(scene, result);
+  canalOutlets(scene, result, obstacles);
   // platform and stair (z 7 .. 26.5)
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, (7 + PAGODA.z + PAGODA.size / 2) / 2), halfX: PAGODA.size / 2, halfZ: (PAGODA.z + PAGODA.size / 2 - 7) / 2 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Canal outlets (595, blocker b2; reference/maps/dynasty.png front left, wiki dynasty.png bottom: the canals do not stop inside
+// the field but run on through the rim and pour off the island's front edge as waterfalls, each crossed near the edge by a
+// round-arched stone bridge carrying the path, the cliff opened where the water falls). Spec: the two front spurs (x -34 and
+// 17, ending at the dry crossing z -30) run on to the edge (z -47.6) as 3.6 m channels: turquoise water 4 cm proud between stone
+// kerbs 0.6 m high; ring trees and props over them go with their colliders; at z -39 (the loop path) a stone bridge 5 m wide
+// across the channel, its deck rising 1.3 m over a round arch, low parapets; at the edge a waterfall 3.4 m wide falls 12 m
+// down the front face (pale turquoise, self-lit, out of the glow) with a foam lip, and the cliff columns leave a gap round it.
+// Water hazards under the channel except under the bridge; units crossing are drawn on the deck.
+const OUTLETS = [-34, 17];
+const OUTLET = { z0: -30, z1: -47.6, bridgeZ: -39, half: 1.8 };
+function canalOutlets(scene: Scene, result: MapBuildResult, obstacles: MapBuildResult["obstacles"]): void {
+  const water = scene.getMaterialByName("dynastyCanalTurquoise")!;
+  const stone = scene.getMaterialByName("dynastyLawnStone")!;
+  const glow = scene.getGlowLayerByName("glow");
+  const near = (x: number, z: number, pad: number) => z < OUTLET.z0 + 1 && OUTLETS.some((o) => Math.abs(x - o) < OUTLET.half + pad);
+  const gone: Vector3[] = [];
+  for (const m of scene.meshes) {
+    if (m.parent || !m.isEnabled() || !/^(trunk|Dynasty Garden_)/.test(m.name)) continue;
+    if (near(m.position.x, m.position.z, 2.5)) { gone.push(m.position.clone()); m.setEnabled(false); }
+  }
+  for (let i = obstacles.length - 1; i >= 0; i--) if (gone.some((p) => Math.hypot(obstacles[i].center.x - p.x, obstacles[i].center.z - p.z) < 1)) obstacles.splice(i, 1);
+  const fall = new StandardMaterial("dynastyWaterfall", scene);
+  fall.diffuseColor = Color3.Black(); fall.disableLighting = true;
+  fall.emissiveColor = new Color3(0.55, 0.9, 0.9); fall.specularColor = Color3.Black();
+  const foam = new StandardMaterial("dynastyWaterfallFoam", scene);
+  foam.diffuseColor = Color3.Black(); foam.disableLighting = true;
+  foam.emissiveColor = new Color3(0.92, 0.98, 0.98); foam.specularColor = Color3.Black();
+  const parts: { stone: Mesh[]; water: Mesh[]; fall: Mesh[]; foam: Mesh[] } = { stone: [], water: [], fall: [], foam: [] };
+  const box = (k: keyof typeof parts, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("dynastyOutletPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    parts[k].push(b);
+  };
+  const len = OUTLET.z0 - OUTLET.z1, zc = (OUTLET.z0 + OUTLET.z1) / 2;
+  const deckY = (x: number, xs: number) => 1.3 * Math.cos(Math.min(1, Math.abs(x - xs) / 4.5) * Math.PI / 2) + 0.15;
+  for (const xs of OUTLETS) {
+    box("water", 2 * OUTLET.half, 0.08, len, xs, 0.04, zc);
+    for (const s of [-1, 1]) box("stone", 0.5, 0.6, len, xs + s * (OUTLET.half + 0.25), 0.3, zc);
+    // the bridge: slices across x, deck following the arch, an opening under the middle
+    for (let i = 0; i < 18; i++) {
+      const x = xs - 4.5 + (i + 0.5) * 0.5, y = deckY(x, xs), u = (x - xs) / (OUTLET.half + 0.5);
+      const under = Math.abs(u) < 1 ? Math.sqrt(1 - u * u) * 1.1 : 0;
+      box("stone", 0.52, 0.3, 5, x, y - 0.15, OUTLET.bridgeZ);
+      if (y - 0.3 - under > 0.05) box("stone", 0.52, y - 0.3 - under, 4.4, x, under + (y - 0.3 - under) / 2, OUTLET.bridgeZ);
+      for (const s of [-1, 1]) box("stone", 0.52, 0.55, 0.3, x, y + 0.27, OUTLET.bridgeZ + s * 2.35);
+    }
+    box("fall", 3.4, 12, 0.5, xs, -6, OUTLET.z1 - 0.2);
+    box("foam", 3.8, 0.35, 1, xs, 0.1, OUTLET.z1 + 0.2);
+    box("foam", 4.6, 0.6, 1.4, xs, -12, OUTLET.z1 - 0.3);
+    result.hazards.push({ shape: "box", kind: "water", center: new Vector3(xs, 0, (OUTLET.z0 + OUTLET.bridgeZ + 2.6) / 2), halfX: OUTLET.half - 0.3, halfZ: (OUTLET.z0 - OUTLET.bridgeZ - 2.6) / 2 });
+    result.hazards.push({ shape: "box", kind: "water", center: new Vector3(xs, 0, (OUTLET.bridgeZ - 2.6 + OUTLET.z1) / 2), halfX: OUTLET.half - 0.3, halfZ: (OUTLET.bridgeZ - 2.6 - OUTLET.z1) / 2 });
+  }
+  const mats = { stone, water, fall, foam };
+  for (const k of Object.keys(parts) as Array<keyof typeof parts>) {
+    const merged = Mesh.MergeMeshes(parts[k], true);
+    if (!merged) continue;
+    merged.name = `dynastyOutlets_${k}`;
+    merged.material = mats[k];
+    merged.receiveShadows = k === "stone";
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+  const oldHeight = result.height;
+  result.height = (x, z) => {
+    if (Math.abs(z - OUTLET.bridgeZ) < 2.5) for (const xs of OUTLETS) if (Math.abs(x - xs) < 4.5) return Math.max(deckY(x, xs), oldHeight?.(x, z) ?? 0);
+    return oldHeight?.(x, z) ?? 0;
+  };
 }
 
 // The pagoda's two side bridges (594, spec at PAGODA): z 7 .. 18.2 at x +-12.5.
@@ -392,6 +462,7 @@ function columnCliffs(scene: Scene, built: Set<unknown>): void {
     const [ax,az]=edge[e-1],[bx,bz]=edge[e],n=Math.ceil(Math.hypot(bx-ax,bz-az)/3);
     for(let j=0;j<n;j++,k++) {
       const t=(j+0.5)/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t,h=10+Math.sin(k*1.7)*2.5;
+      if(z<-46&&OUTLETS.some((o)=>Math.abs(x-o)<2.6))continue; // 595: the cliff opens round each waterfall
       const c=MeshBuilder.CreateCylinder("dynastyCliffColumn",{height:h,diameterTop:4.4,diameterBottom:3.8,tessellation:5},scene);
       c.position.set(x,-h/2-0.15,z);c.rotation.y=k*0.7;rocks.push(c);
       if(k%3===0) {
