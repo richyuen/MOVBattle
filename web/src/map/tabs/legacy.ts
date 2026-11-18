@@ -115,10 +115,22 @@ function meadow(scene: Scene, built: Set<unknown>): void {
   for (const { mesh, m } of grass) mesh.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
 }
 
+// Open glade (578, the wiki shot and legacy.the_war.png: the meadow between the two armies is open grass with only small
+// scattered boulders; nothing stands across the middle). Spec: the base's dark barricade box at (22, 0) and its collider go.
+function openGlade(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const atBar = (x: number, z: number) => Math.hypot(x - 22, z) < 0.5;
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && mesh.name === "Legacy Parade Grounds_box" && atBar(mesh.position.x, mesh.position.z)) mesh.setEnabled(false);
+  }
+  result.obstacles = result.obstacles.filter(({ center }) => !atBar(center.x, center.z));
+}
+
 export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
+  openGlade(scene, built, result);
+
   pineForest(scene, built);
   meadow(scene, built);
   return result;
