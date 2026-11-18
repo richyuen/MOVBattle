@@ -470,9 +470,9 @@ function deadTrees(scene: Scene, built: Set<unknown>): void {
 //   square column 1.5 m thick and 10.5 m high on a 2.4 m plinth, leaning 4 degrees, its top snapped: a tilted capital block
 //   1.8 x 1.1 x 1.8 m hangs off one side; a fallen drum 1.4 x 2.8 m lies at its foot. Grey stone (0.3, 0.32, 0.4) self 0.3, in
 //   the glow pass. Collider r 1.4.
-// - Light pools: the only pools are the candles' small orange flames. The large soft red discs on the grass were the glow
-//   layer's bloom of the pumpkin bodies (orange-red self-light): the bodies leave the glow pass, the lit eyes, mouths and
-//   flames stay in it.
+// - Light pools: the only pools are the candles' small orange flames. The large soft red discs on the grass are the base's four
+//   "hill" mounds at (+-40, +-30) and (+-35, +-25), whose grass material carries a red self-light (0.09, 0.04, 0.06): they are
+//   hidden (587.1b). The pumpkin bodies also leave the glow pass, so they never bloom red; the lit eyes, mouths and flames stay.
 const RIM_PIECES = [
   { x: 33, z: 33.5, clear: 5 },
   { x: 47, z: 7, clear: 4 },
@@ -485,7 +485,10 @@ function rimSetPieces(scene: Scene, result: MapBuildResult): void {
     return m;
   };
   const glow = scene.getGlowLayerByName("glow");
-  for (const mesh of scene.meshes) if (mesh.name === "spooky1JackOLantern") glow?.addExcludedMesh(mesh as Mesh);
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "spooky1JackOLantern") glow?.addExcludedMesh(mesh as Mesh);
+    if (mesh.name === "hill") mesh.setEnabled(false);
+  }
 
   const box = (parts: Mesh[], w: number, h: number, d: number, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
     const b = MeshBuilder.CreateBox("spooky1RimPart", { width: w, height: h, depth: d }, scene);
