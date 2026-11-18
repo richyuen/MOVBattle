@@ -167,10 +167,11 @@ function sandIsland(scene: Scene, built: Set<unknown>): void {
     c.material = mat;
     c.receiveShadows = true;
     c.isPickable = false;
+    c.applyFog = false;
     return c;
   };
   oval("pirateShallowSea", 2, 2, 0.3, -0.04, 62, 56, mk("pirateShallowSea", new Color3(0.2, 0.8, 0.75), 0.45));
-  const sand = mk("pirateSandDrum", new Color3(0.84, 0.68, 0.42), 0.6);
+  const sand = mk("pirateSandDrum", new Color3(0.72, 0.52, 0.28), 0.4);
   oval("pirateSandDrum", 2, 1.6, 6, -0.3, 64, 58, sand);
   oval("pirateSandBelly", 1.6, 0.56, 14, -6.3, 64, 58, sand);
 }
