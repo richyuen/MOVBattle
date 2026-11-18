@@ -11,7 +11,7 @@
 // each team places on its own pad; the red line crosses the slot.
 import { Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
-import { bareField, centreLine, gridBlock, voidAround, zonesOn, type Rect } from "./simKit";
+import { bareField, centreLine, gridBlock, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
 
 const DEPTH = 400, WALL_H = 7, PAD: Rect = { x0: 8, x1: 38, z0: -15, z1: 15 };
 const WALL = { half: 8, len: 26, slot: 2 };
@@ -36,5 +36,7 @@ export function buildCorridor(scene: Scene, base: () => MapBuildResult): MapBuil
   ];
   const hazards = [...kept, ...voidAround([left, slot, PAD], { x0: -90, x1: 90, z0: -60, z1: 60 })];
   const placementZones = zonesOn([{ ...left, team: 0 }, { ...PAD, team: 1 }]);
-  return { ...result, obstacles, hazards, placementZones };
+  // Pale haze (588, blocker a4; wiki corridor.png: the cross of blocks stands in pale cyan haze): the simulation sky
+  const restoreSky = paleSky(scene);
+  return { ...result, obstacles, hazards, placementZones, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
