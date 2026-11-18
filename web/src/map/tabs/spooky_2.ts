@@ -13,7 +13,7 @@
 // +-12, 10 m deep, walkable as there): a navy channel bed, three stacked pale-blue fog sheets (alpha 0.3, y 0.25/0.8/1.4) and
 // blue-grey stone kerbs 0.5 m high along both banks with gaps at x 0 and x +-44 where the paths cross. The outer loop path is
 // 3.5 m of blue-grey flagstone at x +-44 / z +-38, stepping in round the notch (x 32, z 26).
-import { Color3, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene, type HemisphericLight, type DirectionalLight } from "@babylonjs/core";
+import { Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, Texture, Vector3, type Scene, type HemisphericLight, type DirectionalLight } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 const NOTCH = { x: 36, z: 30 };
@@ -90,13 +90,7 @@ function fogChannels(scene: Scene): void {
       for (const [from, to] of [[-41.5, -2.5], [2.5, 41.5]]) box("stone", to - from, 0.5, 0.5, (from + to) / 2, 0.25, bank);
     }
   }
-  // Outer loop path, stepping in round the notch
-  const loop: Array<[number, number]> = [[-44, -38], [44, -38], [44, 26], [32, 26], [32, 38], [-44, 38], [-44, -38]];
-  for (let i = 1; i < loop.length; i++) {
-    const [ax, az] = loop[i - 1], [bx, bz] = loop[i];
-    const len = Math.hypot(bx - ax, bz - az) + 3.5;
-    box("path", ax === bx ? 3.5 : len, 0.08, ax === bx ? len : 3.5, (ax + bx) / 2, 0.04, (az + bz) / 2);
-  }
+  cobbleLoop(scene);
   const glow = scene.getGlowLayerByName("glow");
   for (const key of Object.keys(parts) as Array<keyof typeof parts>) {
     const merged = Mesh.MergeMeshes(parts[key], true);
@@ -109,6 +103,73 @@ function fogChannels(scene: Scene): void {
       glow?.addExcludedMesh(merged);
     } else merged.receiveShadows = true;
   }
+}
+
+// Cobble loop (592, blocker b1 outer loop path; wiki spooky_2.png: a broad path of pale grey-blue cobbles with dark joints
+// winds right round the field inside the rim, its corners rounded, past the torii, the shrine and over the channel bridges;
+// the 578 path was 3.5 m flat boxes darkened to the turf's tone and never showed). Spec: the same loop (x +-44, z +-38,
+// stepping in round the back-right notch at x 32 / z 26), its corners rounded by three Chaikin passes, laid as one flat ribbon
+// 5.5 m wide 6 cm proud (units walk over it); a 512 px tile per 4 m of jittered rounded cobbles ~0.45 m, stone (96,106,140)
+// varied +-10 on joints (28,32,50), uvs in metres along and across; lit stone with a cool self-light so it reads at night.
+function cobbleLoop(scene: Scene): void {
+  let pts: Array<[number, number]> = [[-44, -38], [44, -38], [44, 26], [32, 26], [32, 38], [-44, 38]];
+  for (let pass = 0; pass < 3; pass++) {
+    const next: Array<[number, number]> = [];
+    for (let i = 0; i < pts.length; i++) {
+      const [ax, az] = pts[i], [bx, bz] = pts[(i + 1) % pts.length];
+      next.push([ax * 0.75 + bx * 0.25, az * 0.75 + bz * 0.25], [ax * 0.25 + bx * 0.75, az * 0.25 + bz * 0.75]);
+    }
+    pts = next;
+  }
+  pts.push(pts[0]);
+  const half = 2.75, y = 0.06, left: Vector3[] = [], right: Vector3[] = [], along: number[] = [];
+  let run = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const [px, pz] = pts[i];
+    const [ax, az] = pts[Math.max(0, i - 1)], [bx, bz] = pts[Math.min(pts.length - 1, i + 1)];
+    const dx = bx - ax, dz = bz - az, l = Math.hypot(dx, dz) || 1;
+    const nx = -dz / l, nz = dx / l;
+    if (i > 0) run += Math.hypot(px - pts[i - 1][0], pz - pts[i - 1][1]);
+    along.push(run);
+    left.push(new Vector3(px + nx * half, y, pz + nz * half));
+    right.push(new Vector3(px - nx * half, y, pz - nz * half));
+  }
+  const ribbon = MeshBuilder.CreateRibbon("spooky2CobbleLoop", { pathArray: [left, right] }, scene);
+  const uv: number[] = [];
+  for (const v of [0, 1]) for (let i = 0; i < pts.length; i++) uv.push(along[i] / 4, (v * 2 * half) / 4);
+  ribbon.setVerticesData("uv", uv);
+  // face up whichever way the loop runs
+  const nrm = ribbon.getVerticesData("normal") ?? [];
+  if ((nrm[1] ?? 1) < 0) ribbon.flipFaces(true);
+  const px = 512, tex = new DynamicTexture("spooky2Cobble_tex", { width: px, height: px }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  const ctx = tex.getContext();
+  ctx.fillStyle = "rgb(28,32,50)";
+  ctx.fillRect(0, 0, px, px);
+  let seed = 0x6c0b;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const cell = px / 9;
+  for (let j = -1; j <= 9; j++) for (let i = -1; i <= 9; i++) {
+    const cx = (i + 0.5 + (rnd() - 0.5) * 0.35) * cell, cy = (j + 0.5 + (rnd() - 0.5) * 0.35) * cell;
+    const r = cell * (0.4 + rnd() * 0.06), v = Math.round((rnd() - 0.5) * 20);
+    ctx.fillStyle = `rgb(${96 + v},${106 + v},${140 + v})`;
+    for (const [ox, oy] of [[0, 0], [px, 0], [-px, 0], [0, px], [0, -px]]) {
+      ctx.beginPath();
+      ctx.arc(cx + ox, cy + oy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  tex.update(true);
+  tex.wrapU = Texture.WRAP_ADDRESSMODE;
+  tex.wrapV = Texture.WRAP_ADDRESSMODE;
+  tex.anisotropicFilteringLevel = 16;
+  const mat = new StandardMaterial("spooky2Cobble", scene);
+  mat.diffuseTexture = tex;
+  mat.diffuseColor = Color3.White();
+  mat.emissiveColor = new Color3(0.12, 0.13, 0.19);
+  mat.specularColor = Color3.Black();
+  ribbon.material = mat;
+  ribbon.receiveShadows = true;
+  ribbon.isPickable = false;
 }
 
 // Night turf replaces the daylight floor and warm team tint; dense low faceted tufts break the bare plane.
