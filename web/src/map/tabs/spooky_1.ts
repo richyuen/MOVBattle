@@ -220,7 +220,88 @@ function nightSky(scene: Scene, built: Set<unknown>): () => void {
   };
 }
 
-// Night grass (577, wiki spooky_1.png: the grass is a dark navy-grey under the blue night, its tufts a shade lighter where
+// Graveyard (578, spooky_1.png and card Overview: the graveyard is on the right plateau only, at its back, a grid of pale
+// headstones and crosses behind a black iron fence; the left plateau has none). Spec: every base tomb, gravestone and grave
+// light (and the base tree standing in the plot) goes, colliders with them; on the right plateau a plot x 13..31, z 13..29 is
+// fenced in black iron (0.12, 0.12, 0.16): posts 1.6 m every 1.5 m with spear tips, two rails, a 4 m gate gap in the front side
+// at x 20..24; inside, 4 rows of 6 headstones (z 16..26.5, x 15.5..30.5), alternately round-topped slabs and crosses, pale
+// blue-grey (0.55, 0.58, 0.7) self-lit 0.4, leaning a little. Drawn only (the base's stones did not block either).
+const PLOT = { x0: 13, x1: 31, z0: 13, z1: 29 };
+function graveyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const gone: Vector3[] = [];
+  const inPlot = (p: Vector3) => p.x > PLOT.x0 - 1 && p.x < PLOT.x1 + 1 && p.z > PLOT.z0 - 1 && p.z < PLOT.z1 + 1;
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.parent) continue;
+    const grave = /^Spooky Graveyard_(tomb|graveLight|graveLightPool)$/.test(mesh.name);
+    const stone = mesh.name === "Spooky Graveyard_box" && Math.abs(Math.abs(mesh.position.x) - 21) < 1.5 && Math.abs(Math.abs(mesh.position.z) - 16) < 0.5;
+    const inside = /^(Spooky Graveyard_|trunk$)/.test(mesh.name) && inPlot(mesh.position);
+    if (grave || stone || inside || (mesh.name === "Spooky Graveyard_cyl" && built.has(mesh) && scene.meshes.some((m) => m.name === "Spooky Graveyard_graveLight" && Math.hypot(m.position.x - mesh.position.x, m.position.z - mesh.position.z) < 0.3))) {
+      gone.push(mesh.position.clone());
+      mesh.setEnabled(false);
+    }
+  }
+  result.obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const iron = mk("spooky1Iron", new Color3(0.12, 0.12, 0.16), 0.3);
+  const pale = mk("spooky1Headstone", new Color3(0.55, 0.58, 0.7), 0.4);
+  const fence: Mesh[] = [], stones: Mesh[] = [];
+  const box = (into: Mesh[], w: number, h: number, d: number, x: number, y: number, z: number, lean = 0) => {
+    const b = MeshBuilder.CreateBox("spooky1GravePart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.rotation.x = lean;
+    into.push(b);
+    return b;
+  };
+  const side = (ax: number, az: number, bx: number, bz: number) => {
+    const len = Math.hypot(bx - ax, bz - az), n = Math.round(len / 1.5);
+    for (let i = 0; i <= n; i++) {
+      const x = ax + ((bx - ax) * i) / n, z = az + ((bz - az) * i) / n;
+      box(fence, 0.12, 1.6, 0.12, x, 0.8, z);
+      const tip = MeshBuilder.CreateCylinder("spooky1GraveTip", { height: 0.35, diameterBottom: 0.2, diameterTop: 0, tessellation: 4 }, scene);
+      tip.position.set(x, 1.77, z);
+      fence.push(tip);
+    }
+    for (const y of [0.5, 1.3]) box(fence, ax === bx ? 0.06 : len, 0.07, ax === bx ? len : 0.06, (ax + bx) / 2, y, (az + bz) / 2);
+  };
+  side(PLOT.x0, PLOT.z0, 20, PLOT.z0);
+  side(24, PLOT.z0, PLOT.x1, PLOT.z0);
+  side(PLOT.x1, PLOT.z0, PLOT.x1, PLOT.z1);
+  side(PLOT.x0, PLOT.z1, PLOT.x1, PLOT.z1);
+  side(PLOT.x0, PLOT.z0, PLOT.x0, PLOT.z1);
+  let k = 0;
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 6; c++) {
+      k++;
+      const x = 15.5 + c * 3, z = 16 + r * 3.5, lean = (seeded(k, 91) - 0.5) * 0.25;
+      if ((r + c) % 2) {
+        box(stones, 0.22, 1.5, 0.22, x, 0.75, z, lean);
+        box(stones, 0.9, 0.22, 0.22, x, 1.1, z, lean);
+      } else {
+        box(stones, 1, 1, 0.3, x, 0.5, z, lean);
+        const cap = MeshBuilder.CreateCylinder("spooky1GraveCap", { height: 0.3, diameter: 1, tessellation: 10 }, scene);
+        cap.rotation.set(Math.PI / 2 + lean, 0, 0);
+        cap.position.set(x, 1, z);
+        stones.push(cap);
+      }
+    }
+  }
+  for (const [parts, mat, name] of [[fence, iron, "spooky1GraveFence"], [stones, pale, "spooky1GraveStones"]] as const) {
+    const merged = Mesh.MergeMeshes([...parts], true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.material = mat;
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+}
+
+// Night grass (577,wiki spooky_1.png: the grass is a dark navy-grey under the blue night, its tufts a shade lighter where
 // the moon catches them; no red or blue tint across the two halves). Spec: the translucent team-zone slabs
 // (campaign_zone_overlay_* / border_*, the maroon and blue sheets reaching past the island) hidden; the floor ("ground",
 // "centerGrass") navy-grey (0.2, 0.24, 0.38) with a cold self-light (0.05, 0.06, 0.11); the base's grass blades and tufts
@@ -297,5 +378,6 @@ export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuild
   deadTrees(scene, built);
   const result = fogChasm(scene, built, base0);
   const restore = nightSky(scene, built);
+  graveyard(scene, built, result);
   return { ...result, dispose: () => { restore(); result.dispose?.(); } };
 }
