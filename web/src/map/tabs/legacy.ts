@@ -37,11 +37,11 @@ function pineForest(scene: Scene, built: Set<unknown>, result: MapBuildResult): 
     mesh.setEnabled(false);
   }
   let k = 0;
-  const pine = (x: number, z: number) => {
+  const pine = (x: number, z: number, low = 9, high = 14) => {
     k++;
     // The ruined building occupies a clearing in the right forest belt.
     if(x>28&&x<51&&z>19&&z<42) return;
-    const tall = 9 + seeded(k, 21) * 5, wide = tall * (0.36 + seeded(k, 22) * 0.06);
+    const tall = low + seeded(k, 21) * (high - low), wide = tall * (0.3 + seeded(k, 22) * 0.16);
     const trunk = MeshBuilder.CreateCylinder("legacyPineTrunk", { height: tall * 0.2, diameter: wide * 0.14, tessellation: 6 }, scene);
     trunk.position.set(x, tall * 0.1, z);
     parts.bark.push(trunk);
@@ -62,16 +62,21 @@ function pineForest(scene: Scene, built: Set<unknown>, result: MapBuildResult): 
     const radius = Math.max(52, length);
     const x = spot[0] / length * radius, z = spot[1] / length * radius;
     for (const obstacle of result.obstacles) if (Vector3.Distance(obstacle.center,old)<0.6) obstacle.center.set(x,0,z);
-    pine(x, z);
+    // Irregular forest (583, wiki legacy.png: separate conifers of every size, saplings to tall firs, stand several deep
+    // with grass between them and thin out into the glade; no even wall). Each ring spot keeps one tree on its collider,
+    // 5-15 m; around it stand, drawn only: one tree 3.5-8 m out and 2-5 m to a side (4-13 m), on two spots in three a
+    // tree 9-16 m out (5-14 m) so the wood is three ranks deep, and on one spot in four a 3.5-6 m sapling 2-5 m inside the
+    // ring. Crown width varies 0.3-0.46 of the height.
+    pine(x, z, 5, 15);
     const out = Math.hypot(x, z) || 1;
-    for (let j = 0; j < 2; j++) {
-      // along the ring and a little in or out (never far out: the ring stands near the rim)
-      const d = -2.5 + seeded(k, 31 + j) * 3.5, side = (j ? 1 : -1) * (1.8 + seeded(k, 33 + j) * 2);
-      pine(x + (x / out) * d - (z / out) * side, z + (z / out) * d + (x / out) * side);
-    }
+    const beside = (d: number, side: number, low: number, high: number) => pine(x + (x / out) * d - (z / out) * side, z + (z / out) * d + (x / out) * side, low, high);
+    const s = spots.indexOf(spot);
+    beside(3.5 + seeded(s, 31) * 4.5, (s % 2 ? 1 : -1) * (2 + seeded(s, 33) * 3), 4, 13);
+    if (s % 3 !== 0) beside(9 + seeded(s, 35) * 7, (seeded(s, 36) - 0.5) * 7, 5, 14);
+    if (s % 4 === 1) beside(-2 - seeded(s, 37) * 3, (seeded(s, 38) - 0.5) * 6, 3.5, 6);
   }
   for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
-    const merged = Mesh.MergeMeshes(parts[key], true);
+    const merged = Mesh.MergeMeshes(parts[key], true, true);
     if (!merged) continue;
     merged.name = `legacyPines_${key}`;
     merged.convertToFlatShadedMesh();
