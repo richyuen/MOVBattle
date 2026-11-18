@@ -10,6 +10,21 @@
 // 19 m at the eaves, 4 m high, corner tips 2 m curling up; storey 2 7.5 m square, 3.8 m high, 8 columns; roof 2 13 m, 3.2 m high; finial
 // 3.5 m. The base's small pagoda at (0, 29) goes with its collider; one box collider for the platform (outside both armies' zones,
 // which end at |x| 29 / z 32 and leave x 8..26 free behind the courtyard).
+//
+// Garden look rebuild (597 [R], criterion a plateau; reference/maps/dynasty.png, wiki dynasty.png, stages/wild_west.shogun_s_samurai):
+// - Lawn (a1): soft pale pastel green, sRGB about (150,200,125): turf (.32,.55,.24) self .3 (was saturated (.12,.38,.14)).
+// - Cobble loop (a2): the cherries over it thinned (every 4th ring tree, not every 3rd) and their limbs lean outward, so
+//   the pale grey 5 m loop shows between them from the top camera.
+// - Blossom shrubs (a3): low rows of lilac-pink shrub clumps (2-3 faceted balls r .7-1.2 m every ~2.3 m, (.9,.68,.9) self
+//   .45) along the canal-side lip of each outer lawn and both cheeks of each terrace stair, runs broken at stairs, bridges
+//   and spurs; drawn only (no colliders: units may stand in them, as on the four stages).
+// - Cliffs (a4): the boulder courses teal grey-blue (.22,.36,.44) self ~.4 (were pale lavender), bright moss (.26,.52,.2)
+//   lying on the upper outer shoulder of every 2nd top boulder and every 3rd lower one, where the island camera sees it.
+// - Cherries (a5): crowns pale pink-lilac (.94,.72,.88) self .46, bark tan-brown (.42,.28,.16); every 4th ring tree, so
+//   they stand apart.
+// - Pagoda (a6): an open frame: no white walls or lattice panels; a wooden floor in each storey, pink-red (.82,.1,.3)
+//   columns with a low red rail (open at the front), a dark lattice frieze and ceiling under the beam; platform darker
+//   blue-grey stone (.34,.4,.46). Site, size, stair and collider unchanged (b, c).
 import { Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, Texture, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
@@ -33,10 +48,10 @@ function pagoda(scene: Scene): void {
     return m;
   };
   const mats = {
-    stone: mk("dynastyPagodaStone", new Color3(0.62, 0.64, 0.68), 0.45),
-    kerb: mk("dynastyPagodaKerb", new Color3(0.42, 0.44, 0.5), 0.45),
+    stone: mk("dynastyPagodaStone", new Color3(0.34, 0.4, 0.46), 0.45),
+    kerb: mk("dynastyPagodaKerb", new Color3(0.26, 0.3, 0.36), 0.45),
     wood: mk("dynastyPagodaStair", new Color3(0.58, 0.4, 0.24), 0.4),
-    red: mk("dynastyPagodaRed", new Color3(0.85, 0.12, 0.16), 0.45),
+    red: mk("dynastyPagodaRed", new Color3(0.82, 0.1, 0.3), 0.45),
     wall: mk("dynastyPagodaWall", new Color3(0.93, 0.86, 0.72), 0.5),
     lattice: mk("dynastyPagodaLattice", new Color3(0.32, 0.12, 0.12), 0.4),
     slate: mk("dynastyPagodaSlate", new Color3(0.17, 0.19, 0.28), 0.55),
@@ -68,20 +83,21 @@ function pagoda(scene: Scene): void {
     box(s % 2 ? "wood" : "kerb", 7, h, run / steps, 0, h / 2, front - run + (s + 0.5) * run / steps);
   }
   for (const sx of [-1, 1]) box("red", 0.4, 1.4, run, sx * 3.7, P * 0.55, front - run / 2);
-  // A storey: columns round a pale wall with lattice panels, a beam on top
+  // A storey (597 [R], blocker a6): an open frame, no walls: a wooden floor, a ring of pink-red columns with a low red rail
+  // between them (open at the front), a shallow lattice frieze hung under the beam, a dark ceiling seen through the columns
   const storey = (y: number, w: number, h: number, posts: number) => {
-    box("wall", w * 0.82, h, w * 0.82, 0, y + h / 2, 0);
+    box("wood", w - 0.2, 0.3, w - 0.2, 0, y + 0.15, 0);
+    box("lattice", w - 1, 0.2, w - 1, 0, y + h - 0.1, 0);
     for (const [fx, fz] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
-      for (let i = 0; i < 2; i++) {
-        const along = (i - 0.5) * w * 0.4;
-        box("lattice", fz ? w * 0.26 : 0.1, h * 0.55, fz ? 0.1 : w * 0.26, fx * w * 0.415 + (fz ? along : 0), y + h * 0.5, fz * w * 0.415 + (fx ? along : 0));
-      }
+      box("lattice", fz ? w - 0.6 : 0.12, 0.7, fz ? 0.12 : w - 0.6, fx * (w / 2 - 0.05), y + h - 0.45, fz * (w / 2 - 0.05));
+      if (fz === -1) continue;
+      box("red", fz ? w - 0.6 : 0.16, 0.16, fz ? 0.16 : w - 0.6, fx * (w / 2), y + 1.1, fz * (w / 2));
     }
     for (let i = 0; i < posts; i++) {
       const t = i / posts * 4, side = Math.floor(t), f = t - side;
       const u = -w / 2 + f * w;
       const [px, pz] = [[u, -w / 2], [w / 2, u], [-u, w / 2], [-w / 2, -u]][side];
-      cyl("red", 0.55, h, px, y + h / 2, pz);
+      cyl("red", 0.6, h, px, y + h / 2, pz);
     }
     box("red", w + 0.3, 0.5, w + 0.3, 0, y + h + 0.25, 0);
   };
@@ -116,6 +132,7 @@ function pagoda(scene: Scene): void {
   for (let i = 0; i < 3; i++) cyl("gold", 1.1 - i * 0.25, 0.25, 0, up + 7.9 + i * 0.9, 0);
   const glow = scene.getGlowLayerByName("glow");
   for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    if (!parts[key].length) continue;
     const merged = Mesh.MergeMeshes(parts[key], true);
     if (!merged) continue;
     merged.name = `dynastyPagoda_${key}`;
@@ -338,6 +355,7 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   cherryGrove(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result, obstacles);
+  blossomShrubs(scene, result);
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
 
@@ -357,8 +375,9 @@ function cherryGrove(scene: Scene, built: Set<unknown>, result: MapBuildResult, 
     m.specularColor = Color3.Black();
     return m;
   };
-  const bark = mk("dynastyCherryBark", new Color3(0.3, 0.19, 0.1), 0.25);
-  const bloom = mk("dynastyCherryBloom", new Color3(0.8, 0.52, 0.84), 0.42);
+  // 597 [R] blocker a5: pale pink-lilac crowns (the 596 ones read violet), lighter bark, every 4th tree (a closed wall at 3rd)
+  const bark = mk("dynastyCherryBark", new Color3(0.42, 0.28, 0.16), 0.25);
+  const bloom = mk("dynastyCherryBloom", new Color3(0.94, 0.72, 0.88), 0.46);
   const hash = (i: number, s: number) => { const v = Math.sin(i * 17.31 + s * 61.7) * 43758.5453; return v - Math.floor(v); };
   const trunks: Mesh[] = [], crowns: Mesh[] = [];
   const seg = (from: Vector3, dir: Vector3, len: number, d0: number, d1: number) => {
@@ -375,7 +394,7 @@ function cherryGrove(scene: Scene, built: Set<unknown>, result: MapBuildResult, 
   for (const m of scene.meshes) {
     if (!built.has(m) || m.name !== "trunk" || m.parent || !m.isEnabled()) continue;
     m.setEnabled(false);
-    if (k++ % 3 === 0) feet.push(m.position.clone());
+    if (k++ % 4 === 0) feet.push(m.position.clone());
     else for (let o = obstacles.length - 1; o >= 0; o--) if (Math.hypot(obstacles[o].center.x - m.position.x, obstacles[o].center.z - m.position.z) < 0.6) obstacles.splice(o, 1);
   }
   feet.forEach((foot, i) => {
@@ -390,9 +409,11 @@ function cherryGrove(scene: Scene, built: Set<unknown>, result: MapBuildResult, 
       p = seg(p, dir, tall / 4, 0.9 - s * 0.13, 0.9 - (s + 1) * 0.13);
     }
     const spin = hash(i, 13) * 6.28;
+    // 597: limbs lean outward (off the cobble loop inside the ring)
+    const rl = Math.hypot(foot.x, foot.z) || 1, ox = foot.x / rl, oz = foot.z / rl;
     for (let l = 0; l < 3; l++) {
       const a = spin + (l * Math.PI * 2) / 3, reach = 2.2 + hash(i * 3 + l, 14) * 1.2;
-      const dir = new Vector3(Math.cos(a) * 0.8, 0.6, Math.sin(a) * 0.8).normalize();
+      const dir = new Vector3(Math.cos(a) * 0.8 + ox * 0.6, 0.6, Math.sin(a) * 0.8 + oz * 0.6).normalize();
       const end = seg(p, dir, reach, 0.36, 0.2);
       const balls = 3 + Math.floor(hash(i * 3 + l, 15) * 2);
       for (let b = 0; b < balls; b++) {
@@ -415,6 +436,52 @@ function cherryGrove(scene: Scene, built: Set<unknown>, result: MapBuildResult, 
     merged.isPickable = false;
     if (name === "dynastyCherryCrowns") { merged.applyFog = false; glow?.addExcludedMesh(merged); }
   }
+}
+
+// Blossom shrubs (597 [R], blocker a3; spec at the head of this file): clumps along each outer lawn's canal-side lip
+// (|z| 19.4, x 10.6..39.4 per side) broken at the terrace stairs (|x - 27| < 4.8), the back side bridges (|x - 12.5| < 3)
+// and the spurs (|x - spur| < 3.2), plus a clump at each cheek of every stair's foot (middle lawn, |z| 6) and head.
+function blossomShrubs(scene: Scene, result: MapBuildResult): void {
+  const mat = new StandardMaterial("dynastyBlossomShrub", scene);
+  mat.diffuseColor = new Color3(0.9, 0.68, 0.9);
+  mat.emissiveColor = mat.diffuseColor.scale(0.45);
+  mat.specularColor = Color3.Black();
+  const hash = (i: number, s: number) => { const v = Math.sin(i * 23.17 + s * 41.3) * 43758.5453; return v - Math.floor(v); };
+  const balls: Mesh[] = [];
+  let n = 0;
+  const clump = (x: number, z: number) => {
+    const y = result.height?.(x, z) ?? 0, i = n++, k = 2 + Math.floor(hash(i, 1) * 2);
+    for (let b = 0; b < k; b++) {
+      const r = 0.7 + hash(i * 3 + b, 2) * 0.5, a = hash(i * 3 + b, 3) * 6.28;
+      const ball = MeshBuilder.CreateIcoSphere("dynastyBlossomShrub", { radius: r, subdivisions: 1, flat: true }, scene);
+      ball.scaling.set(1.15, 0.8, 1.15);
+      ball.position.set(x + Math.cos(a) * 0.6 * b, y + r * 0.6, z + Math.sin(a) * 0.6 * b);
+      ball.bakeCurrentTransformIntoVertices();
+      balls.push(ball);
+    }
+  };
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    for (let u = 10.8; u <= 39.4; u += 2.3) {
+      const x = sx * u;
+      if (Math.abs(u - 27) < 4.8) continue;
+      if (sz > 0 && Math.abs(u - 12.5) < 3) continue;
+      if (SPURS.some(([spx, spz]) => spz === sz && Math.abs(x - spx) < 3.2)) continue;
+      clump(x, sz * 19.4);
+    }
+    for (const side of [-1, 1]) {
+      clump(sx * 27 + side * 5.4, sz * 5.8);
+      clump(sx * 27 + side * 5.4, sz * 19.4);
+    }
+  }
+  const merged = Mesh.MergeMeshes(balls, true, true);
+  if (!merged) return;
+  merged.name = "dynastyBlossomShrubs";
+  merged.convertToFlatShadedMesh();
+  merged.material = mat;
+  merged.receiveShadows = true;
+  merged.isPickable = false;
+  merged.applyFog = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
 }
 
 // Canal outlets (595, blocker b2; reference/maps/dynasty.png front left, wiki dynasty.png bottom: the canals do not stop inside
@@ -538,8 +605,10 @@ function columnCliffs(scene: Scene, built: Set<unknown>): void {
   // received. Moss: on every second top-course boulder and every fourth lower one a flattened green ball on its top ledge
   // (the lawn material). The cliff still opens round each waterfall (|x - outlet| < 2.6 + 0.8 r on the front face).
   const stone=new StandardMaterial("dynastyCliffBoulder",scene);
-  stone.diffuseColor.set(0.42,0.52,0.58);stone.emissiveColor.set(0.17,0.21,0.23);stone.specularColor=Color3.Black();
-  const turf=scene.getMaterialByName("dynastyGreenLawn")!;
+  // 597 [R] blocker a4: teal grey-blue (the 596 rocks read pale lavender), moss its own brighter green on the outer shoulders
+  stone.diffuseColor.set(0.22,0.36,0.44);stone.emissiveColor.set(0.09,0.145,0.18);stone.specularColor=Color3.Black();
+  const turf=new StandardMaterial("dynastyCliffMoss",scene);
+  turf.diffuseColor.set(0.26,0.52,0.2);turf.emissiveColor.set(0.1,0.2,0.08);turf.specularColor=Color3.Black();
   const rocks: Mesh[]=[],caps: Mesh[]=[];
   const edge=[[-36,-30],[-36,-47],[41,-47],[53,-36],[53,36],[41,47],[-41,47],[-53,36],[-53,-30],[-36,-30]];
   const hash=(i:number,s:number)=>{const v=Math.sin(i*12.9898+s*78.233)*43758.5453;return v-Math.floor(v);};
@@ -563,10 +632,12 @@ function columnCliffs(scene: Scene, built: Set<unknown>): void {
         b.position.set(px,top-r*sy,pz);
         b.bakeCurrentTransformIntoVertices();
         rocks.push(b);
-        if((c===0&&k%2===0)||(c>0&&k%4===0)) {
-          const cap=MeshBuilder.CreateIcoSphere("dynastyCliffMoss",{radius:r*0.75,subdivisions:1,flat:true},scene);
-          cap.scaling.set(1.1,0.25,1.1);
-          cap.position.set(px,top-0.1-(c===0?0.25:0),pz);
+        if((c===0&&k%2===0)||(c>0&&k%3===0)) {
+          // 597: on the boulder's upper outer shoulder, where the island camera sees it (596's sat under the lawn lip)
+          const cap=MeshBuilder.CreateIcoSphere("dynastyCliffMoss",{radius:r*0.6,subdivisions:1,flat:true},scene);
+          cap.scaling.set(1.1,0.3,1.1);
+          cap.rotation.set((z/rl)*0.5,0,-(x/rl)*0.5);
+          cap.position.set(px+(x/rl)*r*0.55,top-r*sy*0.35,pz+(z/rl)*r*0.55);
           cap.bakeCurrentTransformIntoVertices();
           caps.push(cap);
         }
@@ -741,7 +812,8 @@ function courtApproaches(scene: Scene, result: MapBuildResult): void {
 // Four middle lawns x11..40, |z|<7, and outer lawns z18..30 rise on low stone retaining faces.
 function lawnTerraces(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
   const turf=new StandardMaterial("dynastyGreenLawn",scene);
-  turf.diffuseColor.set(0.12,0.38,0.14);turf.emissiveColor.set(0.035,0.11,0.04);turf.specularColor=Color3.Black();
+  // 597 [R] blocker a1: soft pale pastel green, not saturated pure green
+  turf.diffuseColor.set(0.32,0.55,0.24);turf.emissiveColor.set(0.1,0.165,0.072);turf.specularColor=Color3.Black();
   const stone=new StandardMaterial("dynastyLawnStone",scene);
   stone.diffuseColor.set(0.3,0.35,0.36);stone.emissiveColor.set(0.08,0.095,0.1);stone.specularColor=Color3.Black();
   for(const mesh of scene.meshes) if(built.has(mesh)) {
