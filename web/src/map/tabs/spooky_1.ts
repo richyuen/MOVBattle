@@ -7,7 +7,7 @@
 // mountain* range and clouds hidden; the hemispheric light at 0.3 with a blue sky (0.42, 0.52, 1.1) and dark ground (0.1, 0.1, 0.25),
 // the directional moonlight 0.65 pale blue from the front left; a moon 14 m across at 175 m high in the back left with a faint halo; 300
 // star specks on a 170-200 m dome; all unlit, out of fog and glow. The lights are put back on dispose (a build does not reset them).
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexData, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type DirectionalLight, type HemisphericLight, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 // Fog chasm (577, spooky_1.png: the island is Medieval 1's, two raised plateaus of stacked rock columns split front to back by a
@@ -243,11 +243,58 @@ function nightGrass(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+// Dead trees (578, card Overview and the wiki shot: every tree is black and leafless, a crooked trunk splitting into a few
+// gnarled limbs that twist up and out, forking again into bare twigs; no round crowns anywhere). Spec: every base ring tree on a
+// plateau (an unparented "trunk", its crown as children) goes, its collider kept; in its place a dead tree 4-6.5 m: a trunk
+// leaning up to 12 degrees, two or three limbs from its top 2-3.4 m long at 35-60 degrees from upright, each with two twigs
+// 0.9-1.6 m flaring further out; all near-black navy (0.07, 0.07, 0.11), barely self-lit, merged, in the glow pass (dark solid).
+function deadTrees(scene: Scene, built: Set<unknown>): void {
+  const bark = new StandardMaterial("spooky1DeadBark", scene);
+  bark.diffuseColor = new Color3(0.07, 0.07, 0.11);
+  bark.emissiveColor = new Color3(0.028, 0.028, 0.045);
+  bark.specularColor = Color3.Black();
+  const parts: Mesh[] = [];
+  const up = Vector3.Up();
+  const limb = (from: Vector3, len: number, d: number, yaw: number, tilt: number): Vector3 => {
+    const dir = new Vector3(Math.sin(tilt) * Math.cos(yaw), Math.cos(tilt), Math.sin(tilt) * Math.sin(yaw));
+    const c = MeshBuilder.CreateCylinder("spooky1DeadLimb", { height: len, diameterBottom: d, diameterTop: d * 0.55, tessellation: 5 }, scene);
+    c.rotationQuaternion = Quaternion.Identity();
+    Quaternion.FromUnitVectorsToRef(up, dir, c.rotationQuaternion);
+    c.position = from.add(dir.scale(len / 2));
+    parts.push(c);
+    return from.add(dir.scale(len * 0.95));
+  };
+  let k = 0;
+  for (const mesh of scene.meshes) {
+    if (!built.has(mesh) || mesh.name !== "trunk" || mesh.parent || !mesh.isEnabled()) continue;
+    const { x, z } = mesh.position;
+    if (!onPlateau(x, z)) continue;
+    mesh.setEnabled(false);
+    k++;
+    const tall = 4 + seeded(k, 71) * 2.5;
+    const top = limb(new Vector3(x, 0, z), tall * 0.6, 0.55, seeded(k, 72) * 6.28, seeded(k, 73) * 0.2);
+    const limbs = seeded(k, 74) < 0.5 ? 2 : 3;
+    for (let j = 0; j < limbs; j++) {
+      const yaw = seeded(k, 75) * 6.28 + (j * 6.28) / limbs;
+      const end = limb(top, 2 + seeded(k + j, 76) * 1.4, 0.32, yaw, 0.6 + seeded(k + j, 77) * 0.45);
+      for (const s of [-1, 1]) limb(end, 0.9 + seeded(k + j, 78 + s) * 0.7, 0.15, yaw + s * 0.7, 0.9 + seeded(k + j, 80) * 0.3);
+    }
+  }
+  const merged = Mesh.MergeMeshes(parts, true);
+  if (!merged) return;
+  merged.name = "spooky1DeadTrees";
+  merged.convertToFlatShadedMesh();
+  merged.material = bark;
+  merged.receiveShadows = true;
+  merged.isPickable = false;
+}
+
 export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const base0 = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   nightGrass(scene, built);
+  deadTrees(scene, built);
   const result = fogChasm(scene, built, base0);
   const restore = nightSky(scene, built);
   return { ...result, dispose: () => { restore(); result.dispose?.(); } };
