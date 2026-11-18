@@ -3,6 +3,11 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+593 | 738ad5c3 (+evidence 5848b4ac) | map.high_ground.a1 | approve, struck a1 (a PASS); b2 wall-top clause struck; CONFIRM passed a, b
+593 | 1f3aa7be, 4b047cbf (+9319c5b6) | map.fantasy_good.b4, a2 | approve, struck b4, a2, a6
+593 | c6dfd275 (+0a50ce06) | map.pirate.a2 | approve, struck a1 (bow cleared; stern left)
+593 | 18fff580, a0acf189 | map.fantasy_evil.b4, a3 | approve, struck both
+593 | 0097f9bc, 84011b8a | map.dynasty.a2, map.spooky_2.a5 | approve; dyn no strike (side legs hidden), sp struck a5
 592 | 52bed45f, 9dcd3891, 395d7f38 | map.low_ground.a1, map.defend_the_castle.b1, a1 | approve, struck all; CONFIRM -> both D
 592 | af385087 | map.pirate.b3 | approve, struck b3; CONFIRM failed a (hulls, rim), b (ships per team)
 592 | e1ab8d1b (+feb60ff9), 0ee4c12c | map.fantasy_good.b2, map.fantasy_evil.b1 | approve, struck fg b2+b6, fe b1
@@ -18,16 +23,11 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 590 | b1715d8e | map.high_ground.b3 | approve, struck b3
 590 | 19067a56 (+bb704a1c) | map.spooky_2.a6 | approve, struck a6
 590 | 9bfb373f | map.fantasy_evil.a1 | approve, struck a1
-589 | 07d52058 | map.bridge.b2 | approve, struck b2 (critic b PASS; early CONFIRM unused would fail b: blocks not square)
-589 | 90341a4e | map.hill.b1 | approve, struck b1 (b PASS); evidence 00cf09ce+cc5ef659 re-aimed ground, a1 struck
+589 | 07d52058, 90341a4e | map.bridge.b2, map.hill.b1 | approve, struck both (both since D)
 589 | de48f83f | map.hill.a3 | reject, reverted 5093c46c (clouds z 450-540 never rendered)
 589 | 41f10807, 2177a9ad | map.high_ground.b1, a2 | approve, struck b1, a1, a2, a3
 589 | f2467ab3, 57155431 | map.defend_the_castle.b1, a2 | approve, struck b1, b4, a1, a2, a3
-588 | 334b790d | map.dynasty.b3 | approve, struck b3 (critic b PASS); CONFIRM failed a, b (new lists)
-588 | fded3015, fdee4e69 | map.bridge.b1, a3 | approve, struck b1, b3, a1, a2, a4
-588 | c20c50bb, 5e870bb6 | map.corridor.b2, a4 | approve, struck b1-b3 (b PASS), a1-a3
-588 | ae6ad36b, 98ebf959 | map.low_ground.b1, a4 | approve, struck b1-b3 (b PASS), a1-a3
-588 | ec25b08c, 1eb72e07 (+cfd5d291) | map.hill.b2, a1 | approve, struck b2, b3, a2
+588 | 334b790d | map.dynasty.b3 | approve, struck b3; CONFIRM failed a, b. Also bridge, corridor, low_ground, hill: 8 approved (all since D)
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584): rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
@@ -37,6 +37,11 @@ simulation, hill, bridge, corridor (587-591): grid floor, empty centre, sky unto
 low_ground, defend_the_castle (588-592): trough slab x +-60 |z|<=22, banks to 7 m, bank normals bent to (0,.96,-.28); castle sheet step 1, three ramps with V chasms (lanes |z| 5..16, front |z| 8..15, -40 m), plain wall runs 18/15 m, pillars (29,+-12), front platforms. All approved and CONFIRMed.
 
 ## Tuned values
+web/src/map/tabs/high_ground.ts:gateBlock | x 27..37 |z|<=5.5 from 4.5 to 11.5 m over the platform, crown .5 m proud; drawn only | 593 | approve, struck a1 | bar |z|<=5 4.5..7 m
+web/src/map/tabs/fantasy_good.ts:openCentre and parapets | temple boxes + collider hidden; gold ring 8.5 m, star 2x4.2 m boxes; ring trunks + hazeTreeline hidden, wall .8x1.2 m, merlons 1.2x.7 m every 2.4 m, drawn only | 593 | approve, struck b4, a2, a6 | base temple, tree ring
+web/src/map/tabs/fantasy_evil.ts:chasms and rockRing | crevices 4 m: front z -10..-6 |x|<=28 gaps |x| 10..14, sides |x| 24..28 z 8..44, void hazards, glow (.15,.9,.2) unlit out of glow; clumps 2-3 pentagonal prisms 4-10 m, every 4th a broken pillar, (.09,.12,.14) | 593 | approve, struck b4, a3 (columns read near-black) | tree ring
+web/src/map/tabs/dynasty.ts:clearLoop | ring trunks within 4.6 m of the loop line set back to 4.6 m on their side, colliders moved | 593 | approve, no strike (side legs still hidden) | trees on the loop
+web/src/map/tabs/spooky_2.ts:deadPropTrees | "_tree_canopy" + "_cyl" hidden, 7 m black dead tree (spooky2DeadBark) | 593 | approve, struck a5 | round crown tree
 web/src/map/tabs/fantasy_good.ts:pits | x 6..30 z 9..30 mirrored, 10 m deep, white walls .6 m, floor (.24,.3,.42) self (.06,.08,.12), gold kerb .6 m, 2 teal trees + spire/halo each; deck top split, rim body 12 m; base pools, islandUnder/Shelf hidden | 592 | approve, struck b2, b6 (floors read bright) | flat deck
 web/src/map/tabs/fantasy_evil.ts:plateau | |x|<=24 z -6..34 at 3 m, 0.75 m per 2 m block outward; height field fantasyEvilHeight; props seated | 592 | approve, struck b1 (even ziggurat) | flat
 web/src/map/tabs/spooky_2.ts:cobbleLoop | ribbon 5.5 m on loop x+-44 z+-38 (notch), 3 Chaikin passes, cobbles (96,106,140) joints (28,32,50), self (.12,.13,.19) | 592 | approve, struck b1 loop clause (near-ellipse) | 578: 3.5 m boxes darkened to turf
@@ -61,7 +66,7 @@ web/src/map/tabs/dynasty.ts:lawnTerraces outer h | 2.4 m | 583 | approve (in sco
 web/src/map/tabs/dynasty.ts:perimeterFlagstones | 5 m cobble ribbon, route x .88 (corners x+-40 z+-31), 3 Chaikin passes, rides terrace height; cobbles (176,180,182) joints (112,118,124) | 592 | approve, no strike (ring trees stand on it) | 582: three rows .82 m dark slate flags at x+-46 z+-35
 web/src/map/tabs/pirate.ts:hourglassBeach | 12 stations, points (-61,3) and (61,2), +x half narrows 24@23 -> 20@38 -> 12@50; waist 21 at x9 | 592 | approve, struck b3 | 582: 10 stations, blunt ends (-58,7)/(56,10), +x swelled to 31
 web/src/map/tabs/pirate.ts:goldenSand | beach diffuse (.82,.56,.2) self (.3,.18,.04) out of glow; ripple V strokes .22 m, kink .25-.8 m, lines 1.3-2.1 m apart, (.62,.44,.2) self (.2,.13,.05) | 586 | approve, struck a5 | 586.5: (.8,.6,.3)/(.3,.21,.09), regular 1.6 m chevron grid; earlier base ground material
-web/src/map/tabs/pirate.ts:galleons | four tapered hull courses (.62..1 beam), hull (.36,.21,.1) self .45, strakes, gold sheer rails, forecastle, stern castle 8/6/4.2 m with windows, masts 19/23/17 with three yards 13/10.5/7.5 m, rolls 1.15 m, shrouds; dark solids in the glow pass | 586 | approve, struck a1 | 576: box hull (.45,.26,.13), full-width gold slabs, two yards, masts 17/20/15
+web/src/map/tabs/pirate.ts:galleons | 593: hull lofted shell u -13..15 (superellipse 2.6, bow quarter-ellipse from u 3, keel rises forward, raked aft), bands for strakes/sheer/wale, hull (.24,.11,.04) self .14, two-sided lighting: approve, struck a1 (stern still boxes) | 593 | approve | 586: four tapered hull courses (.62..1 beam), hull (.36,.21,.1) self .45, strakes, gold sheer rails, forecastle, stern castle 8/6/4.2 m with windows, masts 19/23/17 with three yards 13/10.5/7.5 m, rolls 1.15 m, shrouds; dark solids in the glow pass | 586 | approve, struck a1 | 576: box hull (.45,.26,.13), full-width gold slabs, two yards, masts 17/20/15
 web/src/map/tabs/pirate.ts:gangplanks | 3.2 m x 12.5 m run, fanned, cream deck mat | 585 | approve, struck b2 | 576: 1.6 m x 6.2 m planks into the water
 web/src/map/tabs/pirate.ts:bellMountain | (34,38), 4 boulder tiers to 19 m, rock (.64,.5,.31), caps on every upper boulder, fall on -z face, 6 m bell in a 13 m A-frame | 584 | approve, struck a2 | 583: (60,0), rock (.5,.43,.32), 3.2 m bell
 web/src/map/tabs/*:skies 585 | pirate tropicSky (.55,.84,.93): backdrop sphere, range hidden; pirate hazeTreeline hidden + 6 crates | 585 | approve, struck pir a4, a6 | dome + range

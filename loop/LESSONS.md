@@ -31,12 +31,12 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - A set piece inside a merged tree belt needs a clearing before the trees merge (580).
 - Base crowns read pale because CanopyAerialPlugin and scene fog mix them toward sky-white: fresh crown materials made after base() (diffuse = emissive = c*0.55), applyFog false, out of the glow, stay saturated (tribal_1 556).
 - Every material a map build makes is disposed with the build (trackMapBuild), so a builder may recolour base materials by name ("grass", "groundMat", blades) without leaking to other maps; hide blades by mesh name fieldBlades_*/grassTuft. Base theme props are named `<displayName>_cyl|_box|_totem_top` with colliders at the same x,z.
-- Dense crops: thin instances; keep them under waist height or armies vanish (556).
+- Dense crops: thin instances; keep them under waist height or armies vanish (556). Static base meshes need setVerticesData to upload reshaped geometry (573).
 - Scene lights (hemi, dir) are not reset by a map build (clearColor and fogColor are, by the theme): a builder that changes them saves and restores them in its MapBuildResult.dispose, chained to the base's (farmer_snow 557). The far range and second slab are base meshes mountainBase/Cap/Root, clouds are "cloud": hide them by name.
 - The map ground pose (alpha pi, target x 12) looks +x from x -29 across z ~0: props in a front or back corner never show in it; name the top shot for those.
 - The translucent box framing maps in the top shot is those zone slabs too (createPlacementGuides), a map mesh. Island underside = islandUnder + islandShelf + islandCliff (merged crags); farmer_1's earthBowl replaces them. MeshBuilder.CreatePolygon needs earcut (absent): fan a ribbon to a hub instead.
 - The island shot (radius 120, elevation ~16 deg) foreshortens the underside hard: make it ~0.3-0.4 of the island width deep or it reads as a thin band (farmer_1's 22 m bowl shows ~7 m, 559).
-- A `*/` inside a doc comment closes it (tsc parse errors).
+- A `*/` in a doc comment closes it.
 - Round island (560): base lawn ("ground", "centerGrass") and underside follow islandRim (superellipse 54x48, power 3); remap radially. hazeTreeline (merged grey balls at |z| 37.5-40.5) reads as a boulder chain: hide it whole (pirate 585). Base trunks are unparented.
 - Scene fog is linear and re-keyed every frame by main.ts (fogStart/End from the camera radius): a map's fogDensity does nothing. Draw haze instead (inside-facing translucent mist walls, viking 572).
 - Farmer base ring trees are oaks ("oakCrown" lumps on oakLeaves/oakLeavesDark): recolour those, not canopy (561). A raised drawn-only set piece can carry units via MapBuildResult.height (farmer_1 bridgeHeight).
@@ -45,7 +45,6 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns or a palisade (563): a rock mass wants heaped faceted boulders or tilted slabs, few and large, of unequal size (spooky_1 583: equal rocks read as an even band).
 - Stage enemy positions are validated against the map's team-1 zone, hazards and obstacles (game.checkStage): a map change can misplace a stage's army (the checkpoint re-judges every stage on a finished map batch).
 - campaign.challenge dressing: "wallStone", "boulder", "hayBale", "hill", "stump", pit hazards, "<displayName>_box|_cyl" junk. loadMapForCapture needs "map.". Probe before claiming a thing gone (564).
-- Static base meshes need setVerticesData to upload reshaped geometry (573-574).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
@@ -53,7 +52,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Run captures unsandboxed. A CONFIRM can fail on set pieces no list named (585, 588, 592). Island cam's sky band: backdrop at z~200 must sit at y -25..35 (590).
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six thin blades with up-facing normals read as grass (legacy 583); flattened IcoSpheres read fuzzy from afar but as paving stones from a stage's low camera (spooky_1 583), upright ones as stones; leaf cards as beige flags (571).
-- Mesh.MergeMeshes returns null past 65536 vertices (parts stay unmerged, default white) unless 32-bit: (parts, true, true) (582).
+- MergeMeshes: null past 65536 verts unless (parts,true,true); throws on mixed attributes (VertexData needs uvs); a throwing build leaks into later maps (593).
 - A boulder heap receiving shadows goes near black: receiveShadows false, self-light 0.6 (583). Back cliff ledges with a skirt; through gaps it reads as a flat band (584).
 - Buildings near a stage's line hide its army (Ancient 1; wild_west 583): the stage camera sits ~24 m west of the army.
 - Builder hazards get no overlay: draw them (578). Self-lit meshes in the glow pass bloom white: exclude them (584; rocks 590).
