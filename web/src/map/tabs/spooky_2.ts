@@ -303,6 +303,79 @@ function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult
   }
 }
 
+// Channel bridges (585, wiki spooky_2.png: big stone bridges arch over the fog channels where the outer path crosses them,
+// and a wide wooden stair-bridge crosses at the middle between the court and each bank). Spec: on both channels (z +-12,
+// banks at |z| 7 and 17), at x +-44 a stone bridge 4.4 m wide spanning |z| 5.5..18.5, its deck a 12-segment arch rising
+// 1.4 m, a 0.6 m parapet each side, a pier under each end and a dark arch opening under the middle; at x 0 a timber
+// bridge 5 m wide, a flat deck 1 m up over |z| 6.5..17.5 on four posts, with four steps down at each end. Drawn only (no
+// colliders; the channels are drawn only too); the decks carry units through the map's height field.
+function channelBridges(scene: Scene): (x: number, z: number) => number {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = {
+    stone: mk("spooky2BridgeStone", new Color3(0.4, 0.45, 0.6), 0.4),
+    dark: mk("spooky2BridgeDark", new Color3(0.03, 0.04, 0.09), 0.3),
+    wood: mk("spooky2BridgeWood", new Color3(0.34, 0.3, 0.32), 0.35),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { stone: [], dark: [], wood: [] };
+  const box = (k: keyof typeof mats, w: number, h: number, d: number, x: number, y: number, z: number, tilt = 0) => {
+    const b = MeshBuilder.CreateBox("spooky2BridgePart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.rotation.x = tilt;
+    parts[k].push(b);
+  };
+  const HALF = 6.5, RISE = 1.4, SEGS = 12;
+  const arch = (dz: number) => RISE * Math.max(0, 1 - (dz / HALF) ** 2);
+  for (const sz of [-1, 1]) {
+    const cz = sz * 12;
+    for (const x of [-44, 44]) {
+      for (let s = 0; s < SEGS; s++) {
+        const z0 = -HALF + (s * 2 * HALF) / SEGS, z1 = z0 + (2 * HALF) / SEGS;
+        const y0 = arch(z0), y1 = arch(z1), len = Math.hypot(z1 - z0, y1 - y0) + 0.05;
+        const tilt = -Math.atan2(y1 - y0, z1 - z0);
+        box("stone", 4.4, 0.45, len, x, (y0 + y1) / 2 - 0.2, cz + (z0 + z1) / 2, tilt);
+        for (const side of [-1, 1]) box("stone", 0.4, 0.6, len, x + side * 2, (y0 + y1) / 2 + 0.3, cz + (z0 + z1) / 2, tilt);
+      }
+      for (const end of [-1, 1]) box("stone", 4.6, 2.2, 1.6, x, -0.9, cz + end * (HALF - 1.4));
+      box("dark", 3.6, 0.7, 5, x, 0.25, cz);
+    }
+    // Timber bridge at the middle: deck, posts, side beams and steps
+    box("wood", 5, 0.25, 11, 0, 0.88, cz);
+    for (const side of [-1, 1]) box("wood", 0.3, 0.5, 11, side * 2.4, 1.2, cz);
+    for (const [px, pz] of [[-2, -3.5], [2, -3.5], [-2, 3.5], [2, 3.5]]) box("dark", 0.4, 1.2, 0.4, px, 0.2, cz + pz);
+    for (const end of [-1, 1]) for (let k = 0; k < 4; k++) {
+      const h = 0.25 * (4 - k);
+      box("wood", 5, h, 0.5, 0, h / 2, cz + end * (5.5 + 0.5 * (k + 1)));
+    }
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true);
+    if (!merged) continue;
+    merged.name = `spooky2Bridges_${key}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+  return (x, z) => {
+    const dz = Math.abs(z) - 12;
+    if (Math.abs(dz) > 8) return 0;
+    if (Math.abs(Math.abs(x) - 44) < 2.2) return arch(dz);
+    if (Math.abs(x) < 2.5) {
+      const off = Math.abs(dz);
+      return off <= 5.5 ? 1 : Math.max(0, 1 - Math.ceil((off - 5.5) / 0.5) * 0.25 + 0.25);
+    }
+    return 0;
+  };
+}
+
 // Night void and cold moonlight, no daylight range/clouds. Restore shared lights when changing maps.
 function nightSky(scene: Scene, built: Set<unknown>): () => void {
   const clear=scene.clearColor.clone(), fog=scene.fogColor.clone();
@@ -329,6 +402,8 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   nightTurf(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   gratedCourt(scene);
   pumpkinShrine(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
+
+  result.height = channelBridges(scene);
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return {...result,dispose:()=>{restore();result.dispose?.();}};
 }
