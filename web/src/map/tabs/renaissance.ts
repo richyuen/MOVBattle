@@ -357,20 +357,59 @@ function cornerPalazzo(scene: Scene, result: MapBuildResult, sideFrom: number): 
   );
 }
 
-// Large close-set cream slabs replace the coarse blue-grey paving and wide dark grout.
+// Flagstone checker (586, renaissance.balloons.png: the square is laid with large warm cream flagstones of unequal length in
+// offset courses, each a slightly different shade, the joints thin and lighter than the stones, never dark grout). Spec: the
+// base paving and zone slabs hidden; a continuous pale-cream joint bed (0.86, 0.79, 0.62) over x +-43.5, z -24.45..29.55;
+// on it courses 2.6-3.6 m deep (along z), each cut into flagstones 2.4-5.2 m long (along x), course starts offset by the
+// random first length, 0.07 m joints; four warm cream shades (diffuse ~(0.72, 0.62, 0.45) +-0.05, warm self-light) chosen
+// so no two neighbours in a course match; all out of the glow, receiving shadows.
 function creamPavement(scene: Scene, built: Set<unknown>): void {
-  for(const m of scene.meshes) if(built.has(m)&&(/^(plazaStones|campaign_zone_)/.test(m.name))) m.setEnabled(false);
-  const mats=[0,1,2].map(i=>{
-    const mat=new StandardMaterial(`renaissanceCreamSlab${i}`,scene);
-    mat.diffuseColor.set(0.71+i*0.035,0.68+i*0.035,0.58+i*0.035);
-    mat.emissiveColor.set(0.28,0.265,0.22);mat.specularColor=Color3.Black();return mat;
-  });
-  const parts:Mesh[][]=[[],[],[]];
-  for(let row=0;row<18;row++) for(let col=0;col<29;col++) {
-    const tile=MeshBuilder.CreateBox("renaissanceCreamTile",{width:2.965,height:0.05,depth:2.965},scene);
-    tile.position.set(-42+col*3,0.062,-22.95+row*3);parts[(row+col)%3].push(tile);
+  for (const m of scene.meshes) if (built.has(m) && /^(plazaStones|campaign_zone_)/.test(m.name)) m.setEnabled(false);
+  const glow = scene.getGlowLayerByName("glow");
+  const mat = (name: string, d: Color3, self: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = d;
+    m.emissiveColor = self;
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const shades = [
+    [0.74, 0.64, 0.47], [0.69, 0.58, 0.41], [0.78, 0.69, 0.52], [0.66, 0.57, 0.43],
+  ].map(([r, g, b], i) => mat(`renaissanceFlagstone${i}`, new Color3(r, g, b), new Color3(r * 0.4, g * 0.38, b * 0.34)));
+  const X0 = -43.5, X1 = 43.5, Z0 = -24.45, Z1 = 29.55, JOINT = 0.07;
+  const bed = MeshBuilder.CreateBox("renaissanceFlagBed", { width: X1 - X0, height: 0.04, depth: Z1 - Z0 }, scene);
+  bed.position.set((X0 + X1) / 2, 0.045, (Z0 + Z1) / 2);
+  bed.material = mat("renaissanceFlagBed", new Color3(0.86, 0.79, 0.62), new Color3(0.4, 0.36, 0.28));
+  bed.receiveShadows = true;
+  bed.isPickable = false;
+  glow?.addExcludedMesh(bed);
+  const parts: Mesh[][] = shades.map(() => []);
+  let n = 0;
+  const rnd = () => { n++; const v = Math.sin(n * 91.345 + 7.13) * 24634.6345; return v - Math.floor(v); };
+  for (let z = Z0; Z1 - z > 0.5;) {
+    const deep = Math.min(2.6 + rnd() * 1, Z1 - z);
+    let last = -1;
+    for (let x = X0; X1 - x > 0.3;) {
+      const long = Math.min(x === X0 ? 1.2 + rnd() * 3.6 : 2.4 + rnd() * 2.8, X1 - x);
+      let s = Math.floor(rnd() * shades.length);
+      if (s === last) s = (s + 1) % shades.length;
+      last = s;
+      const slab = MeshBuilder.CreateBox("renaissanceFlagstone", { width: long - JOINT, height: 0.05, depth: deep - JOINT }, scene);
+      slab.position.set(x + long / 2, 0.075, z + deep / 2);
+      parts[s].push(slab);
+      x += long;
+    }
+    z += deep;
   }
-  for(let i=0;i<3;i++) {const m=Mesh.MergeMeshes(parts[i],true);if(m){m.name="renaissanceCreamPavement";m.material=mats[i];m.receiveShadows=true;scene.getGlowLayerByName("glow")?.addExcludedMesh(m);}}
+  parts.forEach((group, i) => {
+    const m = Mesh.MergeMeshes(group, true);
+    if (!m) return;
+    m.name = "renaissanceCreamPavement";
+    m.material = shades[i];
+    m.receiveShadows = true;
+    m.isPickable = false;
+    glow?.addExcludedMesh(m);
+  });
 }
 
 // Canal immediately behind the front house terrace, with quays and two short arched crossings.
