@@ -120,7 +120,8 @@ export function zonesOn(rects: Array<Rect & { team: number }>): PlacementZone[] 
   return rects.map((r) => ({ team: r.team, center: new Vector3((r.x0 + r.x1) / 2, 0, (r.z0 + r.z1) / 2), size: new Vector3(r.x1 - r.x0, 100, r.z1 - r.z0) }));
 }
 
-export function paleSky(scene: Scene, blue = new Color3(0.38, 0.68, 0.76), haze = new Color3(0.86, 0.9, 0.9), span = 0.57): () => void {
+// Kit haze (589): cyan-white (.74,.93,.97) reaching the blue by 15 deg up, so the island shot's band above the horizon reads pale cyan
+export function paleSky(scene: Scene, blue = new Color3(0.38, 0.68, 0.76), haze = new Color3(0.74, 0.93, 0.97), span = 0.15): () => void {
   const dome = scene.getMeshByName("skyDome"), domeOn = dome?.isEnabled();
   dome?.setEnabled(false);
   const oldFog = scene.fogColor.clone(), oldClear = scene.clearColor.clone();
