@@ -418,6 +418,46 @@ function thornThickets(scene: Scene, result: MapBuildResult): void {
   merged.isPickable = false;
 }
 
+// Dark torii (587, reference/maps/wiki/spooky_2.png: a black torii stands at the back-left corner of the island, its curved
+// top beam overhanging the posts; Dynasty's rim torii rotated 180 degrees with the map). Spec: at (-40, 33), spanning x; two
+// round posts 0.75 m thick and 7.2 m high, 5.6 m apart, on 1.1 m square plinths; the nuki tie beam 7.4 m long at 5.4 m; the
+// kasagi top 9.6 m long, two stacked beams whose ends sweep up 0.5 m, with a short gakuzuka strut between the beams. Near-black
+// navy (0.05, 0.05, 0.08), barely self-lit, in the glow pass. A small collider round each post.
+function darkTorii(scene: Scene, result: MapBuildResult): void {
+  const mat = new StandardMaterial("spooky2Torii", scene);
+  mat.diffuseColor = new Color3(0.05, 0.05, 0.08);
+  mat.emissiveColor = new Color3(0.02, 0.02, 0.035);
+  mat.specularColor = Color3.Black();
+  const [tx, tz] = [-40, 33];
+  const parts: Mesh[] = [];
+  const box = (w: number, h: number, d: number, x: number, y: number, z: number, rz = 0) => {
+    const b = MeshBuilder.CreateBox("spooky2ToriiPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z); b.rotation.z = rz;
+    parts.push(b);
+  };
+  for (const s of [-1, 1]) {
+    const post = MeshBuilder.CreateCylinder("spooky2ToriiPart", { height: 7.2, diameterBottom: 0.8, diameterTop: 0.68, tessellation: 10 }, scene);
+    post.position.set(tx + s * 2.8, 3.6, tz);
+    parts.push(post);
+    box(1.1, 0.6, 1.1, tx + s * 2.8, 0.3, tz);
+    // kasagi ends sweep up
+    box(1.6, 0.42, 0.75, tx + s * 4.1, 7.55, tz, s * 0.3);
+    box(1.6, 0.34, 0.65, tx + s * 4.05, 7.1, tz, s * 0.26);
+    result.obstacles.push({ type: "cylinder", center: new Vector3(tx + s * 2.8, 0, tz), radius: 0.6 });
+  }
+  box(7.4, 0.45, 0.4, tx, 5.4, tz);
+  box(6.8, 0.36, 0.62, tx, 6.95, tz);
+  box(6.9, 0.42, 0.72, tx, 7.4, tz);
+  box(0.4, 1.1, 0.35, tx, 6.2, tz);
+  const merged = Mesh.MergeMeshes(parts, true, true);
+  if (!merged) return;
+  merged.name = "spooky2DarkTorii";
+  merged.convertToFlatShadedMesh();
+  merged.material = mat;
+  merged.receiveShadows = true;
+  merged.isPickable = false;
+}
+
 const STONE_X = 30;
 function channelBridges(scene: Scene): (x: number, z: number) => number {
   const mk = (name: string, c: Color3, self: number) => {
@@ -520,6 +560,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   pumpkinShrine(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   blackTrees(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   thornThickets(scene, result);
+  darkTorii(scene, result);
 
   result.height = channelBridges(scene);
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
