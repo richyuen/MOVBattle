@@ -316,6 +316,7 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   gardenCanals(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   lawnTerraces(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),result);
   courtApproaches(scene,result);
+  terraceBranches(scene,result);
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
@@ -349,6 +350,39 @@ function columnCliffs(scene: Scene, built: Set<unknown>): void {
     const merged=Mesh.MergeMeshes(parts,true);if(!merged)continue;
     merged.material=mat;merged.name=name;merged.convertToFlatShadedMesh();merged.receiveShadows=true;
   }
+}
+
+// The wiki's waterways wrap raised lawns rather than ending as parallel strips.
+// Join them at each side, and give the middle/outer lawns wide stepped crossings.
+function terraceBranches(scene: Scene, result: MapBuildResult): void {
+  const water=scene.getMaterialByName("dynastyCanalTurquoise")!;
+  const stone=scene.getMaterialByName("dynastyLawnStone")!;
+  const put=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,mat=stone)=>{
+    const m=MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},scene);m.position.set(x,y,z);m.material=mat;m.receiveShadows=true;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  };
+  for(const sign of [-1,1]) {
+    put("dynastyBranchWater",3,0.1,14,sign*42,0.15,0,water);
+    for(const x of [40.4,43.6])put("dynastyBranchBank",0.35,1.05,14,sign*x,0.5,0);
+    // The dry crossing at z0 keeps the outer loop connected to the middle lawn.
+    put("dynastyBranchCrossing",3.8,1.05,4.8,sign*42,0.525,0);
+    for(const z of [-4.7,4.7])result.hazards.push({shape:"box",kind:"water",center:new Vector3(sign*42,0,z),halfX:1.5,halfZ:2.3});
+  }
+  for(const sx of [-1,1])for(const sz of [-1,1])for(let i=0;i<12;i++) {
+    const h=0.97+(i+1)/12*0.55,z=sz*(7+(i+0.5)*11/12);
+    put("dynastyTerraceStair",8,h,11/12+0.03,sx*27,h/2,z);
+  }
+  // Carve the four new dry flights out of the existing canal hazards.
+  result.hazards=result.hazards.flatMap(h=>{
+    if(h.shape!=="box"||h.kind!=="water"||Math.abs(Math.abs(h.center.z)-12)>0.1||h.halfX<40)return [h];
+    return [[-46,-31],[-23,23],[31,46]].map(([a,b])=>({...h,center:new Vector3((a+b)/2,0,h.center.z),halfX:(b-a)/2}));
+  });
+  const oldHeight=result.height;
+  result.height=(x,z)=>{
+    if(Math.abs(Math.abs(x)-27)<4&&Math.abs(z)>=7&&Math.abs(z)<=18)return 0.97+Math.ceil((Math.abs(z)-7)/11*12)/12*0.55;
+    if(Math.abs(Math.abs(x)-42)<1.9&&Math.abs(z)<2.4)return 1.05;
+    return oldHeight?.(x,z)??0;
+  };
 }
 
 // Four separate stone bridge/stair approaches over the water ring around the square courtyard.
