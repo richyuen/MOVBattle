@@ -317,5 +317,14 @@ export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildR
   valleyFloor(scene,built);
   snowMountains(scene,built);
   sandstoneRuin(scene,result);
-  return result;
+  const restoreSky = paleBlueSky(scene);
+  return {...result, dispose: () => { restoreSky(); result.dispose?.(); }};
+}
+
+// Clear pale blue above the snowy valley, as in legacy.a_tank; no grey-white sky dome.
+function paleBlueSky(scene: Scene): () => void {
+  const clear = scene.clearColor.clone(), fog = scene.fogColor.clone();
+  scene.clearColor.set(0.52, 0.77, 0.88, 1);
+  scene.fogColor.set(0.67, 0.82, 0.88);
+  return () => {scene.clearColor.copyFrom(clear); scene.fogColor.copyFrom(fog);};
 }
