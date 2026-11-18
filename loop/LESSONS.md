@@ -15,7 +15,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 
 ## Capture and probes
 - capture-world.mjs boots like capture.mjs: mulberry32 0x4d4f5642 reseeded at every resetBattle, time only through advanceTime, setup renders at 1/8 size (__setupScale 8). It re-adds body.capture-mode before every shot (the game drops it on loads).
-- Never capture with a test --iter: pruneOld strips iterations older than 10 to summary.json; test into look/ (no --iter).
+- Never capture with a test --iter (pruneOld); test into look/. Near-black set pieces vanish into black tree rings: use lit dark blue-grey (587).
 - A capture wipes iter-N unless --add: save audit/critic files after the step's last capture (audit iterations: step 5 with --add). A step-5 capture takes ~12 min: background it.
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
 - Probes (loop/scripts/probes/, --build after source changes) were written for units: read one before trusting it on a map.
@@ -25,7 +25,8 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - The sim's ground is flat (body.root at y 0); terrain.ts lifts every dynamic root node by MapBuildResult.height at draw time and recomputes its world matrices after, so battles are identical with or without height (checked on Hill). Map meshes are marked static by trackMapBuild: a map builder seats its own props at groundHeightAt(). Nav and placement still come from zones, obstacles and hazards. An effect whose root sits at the origin with world-placed children is lifted by the height at the origin: give such roots their own position.
 - terrainMesh winds its grid to face +y; skirts are double-sided. The placement centre line and zone overlays stay flat (they are map meshes).
 - A TABS map without a builder in web/src/map/tabs/ is its base map (tabsMaps.ts); several maps share a base, so a base edit moves all of them and the regression scenarios on campaign.adventure.
-- Clear base props by name after base(), removing only their colliders (ring trees have them too). Keep builders self-contained so reverts never conflict.
+- Clear base props by name after base(), removing only their colliders (ring trees have them too). Keep builders self-contained so reverts never conflict. Base "hill" mounds read position and bounds 0 at build time: hide by name or computeWorldMatrix(true) first (587).
+- Unexplained ground discs are base meshes: campaign.spooky's "hill" mounds wear red self-lit grass (red discs, 587); campaign.simulation's grey centre disc is its 8 m void hazard overlay campaign_hazard_cyl_void.
 - A set piece inside a merged tree belt needs a clearing before the trees merge; adding walls behind it can leave them invisible (580).
 - Base crowns read pale because CanopyAerialPlugin and scene fog mix them toward sky-white: fresh crown materials made after base() (diffuse = emissive = c*0.55), applyFog false, out of the glow, stay saturated (tribal_1 556).
 - Every material a map build makes is disposed with the build (trackMapBuild), so a builder may recolour base materials by name ("grass", "groundMat", blades) without leaking to other maps; hide blades by mesh name fieldBlades_*/grassTuft. Base theme props are named `<displayName>_cyl|_box|_totem_top` with colliders at the same x,z.
@@ -39,21 +40,19 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - Scene fog is linear and re-keyed every frame by main.ts (fogStart/End from the camera radius): a map's fogDensity does nothing. Draw haze instead (inside-facing translucent mist walls, viking 572).
 - Farmer base ring trees are oaks ("oakCrown" lumps on oakLeaves/oakLeavesDark): recolour those, not canopy (561). A raised drawn-only set piece can carry units via MapBuildResult.height (farmer_1 bridgeHeight).
 - A ribbon's facing follows its path order (SSAO greys a DOUBLESIDE one's inward faces): a down-facing deck renders black; check the first normal after convertToFlatShadedMesh and flipFaces(true) when wrong (561; viking bankFace 574 went near black). An underside facing away from the sun needs self-light ~1x its colour or it reads near black.
-- Read stage armies from the stage files, not from Notes: tribal_2's "team 1 at x <= 40" was really x <= 24.4 (563), which freed 15 m for the massif. The campaign.challenge base's placement zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones (centre/size) inside it.
+- Read stage armies from the stage files, not Notes (tribal_2 563). campaign.challenge zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones inside it.
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns or a palisade (563): a rock mass wants heaped faceted boulders or tilted slabs, few and large, of unequal size (spooky_1 583: equal rocks read as an even band).
 - Stage enemy positions are validated against the map's team-1 zone, hazards and obstacles (game.checkStage): a map change can misplace a stage's army (the checkpoint re-judges every stage on a finished map batch).
-- campaign.challenge base dressing: "wallStone", "boulder", "hayBale", "hill", "stump", pit hazards (campaign_hazard_box_pit) and "<displayName>_box|_cyl|_totem_top" junk. loadMapForCapture needs the "map." prefix. Probe what is near a spot before claiming it gone (564).
-- Static base meshes need setVerticesData to upload reshaped geometry (573-574).
+- campaign.challenge dressing: "wallStone", "boulder", "hayBale", "hill", "stump", pit hazards, "<displayName>_box|_cyl" junk. loadMapForCapture needs "map.". Probe before claiming a thing gone (564).
+- Static base meshes need setVerticesData to upload reshaped geometry (573-574). Grate embers show only between flat bars 4 cm proud (579, 584).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
 - Night snow under blue moonlight: warm the diffuse to cancel the light's tint, carry the pale tone in self-light, and drop the field from the glow (farmer_snow 573, CONFIRM passed).
 - Turf caps on cliff columns flicker when their top faces share a plane with the cliff or meadow. Set the cap slightly below the meadow and the shaft top inside the cap (Medieval 1, 567).
 - Run captures unsandboxed (the sandbox blocks loopback to Vite). A CONFIRM can fail on set pieces no list named (585).
 - Grass: thin-instance fans of six thin blades with up-facing normals read as grass (legacy 583); flattened IcoSpheres read fuzzy from afar but as paving stones from a stage's low camera (spooky_1 583), upright ones as stones; leaf cards as beige flags (571).
-- Mesh.MergeMeshes returns null past 65536 vertices unless allow32BitsIndices is passed, leaving every part unmerged on the default white material: use (parts, true, true) for big merges (spooky_1's white trees, 582).
-- A boulder heap receiving shadows shadows itself near black: receiveShadows false, self-light 0.6 (pirate 583).
-- Back cliff ledges with a skirt or sky shows below; where blocks leave gaps the skirt reads as a flat band (584).
+- Mesh.MergeMeshes returns null past 65536 vertices (parts stay unmerged, default white) unless 32-bit: (parts, true, true) (582).
+- A boulder heap receiving shadows goes near black: receiveShadows false, self-light 0.6 (583). Back cliff ledges with a skirt; through gaps it reads as a flat band (584).
 - Buildings near a stage's line hide its army (Ancient 1; wild_west 583): the stage camera sits ~24 m west of the army.
 - Hazards a builder adds get no overlay: draw them (578). A self-lit floor in the glow pass blooms white: exclude it (wild_west 584).
 - Recess a descent before merging cliff columns (579). A concave bank needs longitudinal strips: a hub fan can cross the recess and invert triangles (581).
-- Grate embers show only between flat bars 4 cm proud; 0.2 m bars hid the bed (579, 584).

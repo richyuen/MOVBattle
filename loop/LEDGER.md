@@ -3,13 +3,17 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+587 | 7542093c (+80297d4f) [R] | map.spooky_1.a1-3 | approve, struck a1, a2, a3; CONFIRM a PASS -> D
+587 | 22ba62eb (+evidence fc94485f), 4ace43d4 | map.pirate.b5, b3 | approve, struck b5; b3 no strike; CONFIRM failed a, b (fresh lists)
+587 | cb026095 (+858d6a2e, 95f26b5d) | map.spooky_2.a3 | approve, no strike (thickets not legible from the top)
+587 | 76101bad (+7189ff78, 9ad673bd) | map.spooky_2.a7 | approve, struck a7
+587 | b23e942c, 9fed27e5 (+40c4de96), bafe8f20 | map.simulation.a1, a2, a3 | approve, struck a1, a4, a2, a5
 586 | f70a3686 [R] | map.wild_west.a1,a2 | approve, struck a1, a2; CONFIRM a PASS -> D
 586 | 1932bf22 | map.ancient_2.a3 | approve, struck a3; CONFIRM -> D
 586 | 531d6ed4, 36ee3119 | map.renaissance.a5, a3 | approve, struck a5, a3; CONFIRM a, b PASS -> D
 586 | 05e50f52 (+bb77a558), f49048a8 (+f3ee1295) | map.pirate.a5, a1 | approve, struck a5, a1 (critic a PASS)
 586 | 6afd6a09 | map.spooky_2.b2 | approve, struck b2
 586 | 974a3c2d | map.spooky_2.a5 | approve, no strike (one round tree left)
-585 | d6e6dbce [R] | map.spooky_1.a2 | approve, struck a2 (critic a PASS); CONFIRM a FAIL, fresh list -> plateau
 585 | 7325dec5, 2cfb1cf0 | map.renaissance.a6, a4 | approve, struck a6, a4; a67a7d56 [E] struck b6 (b PASS)
 585 | 07e0b708 | map.pirate.b2 | approve, struck b2
 585 | 26b8a6d7, 8f023e21 | map.pirate.a6, a4 | approve, struck a6, a4
@@ -26,26 +30,24 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 583 | 4f1cb063 | map.dynasty.b3 | approve, no strike
 583 | bf9994ed | map.dynasty.b5 | approve, struck b5
 583 | 1bac6c2d, 36dabe6f | map.pirate.a2 | approve, no strike
-582 | 229f9b4d | map.dynasty.a3 | approve, struck a3
-582 | 5b6181bc | map.dynasty.b3 | rejected-kept, revert conflicted with later approved path; aborted
-582 | 0c7d7a4e | map.dynasty.b4 | approve, struck b4
-582 | fe776d2a | map.spooky_1.a1 | approve, struck a1; CONFIRM a FAIL
-582 | 1c4f83cd | map.spooky_1.a2 | approve, struck a2; second failed a CONFIRM -> plateau
-582 | ca76875d, 013ff74f | map.pirate.b3 | approve, no strike
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584): rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
-wild_west (576-586): town rows/storefronts/inner rank, sand street, round plaza, desert rim, mesas, arches, chapel, sandstone base, sunset backdrop sphere (peach (1,.55,.28) to cream (1,.9,.6)); town dark solids in the glow pass. ancient_2 (565-586): round rim, lawn, ring wall, drum, propylon, pavilions, terraced mound + six temple towers (dark stone (.58,.53,.44)). renaissance (576-586): palace + arcade, rectangular piazza, front terrace, canal, corner palazzo, covered bridge, plinth, haze sky, facade kit, flagstone checker (four shades ~(.72,.62,.45), pale bed). All approved and CONFIRMed.
+wild_west (576-586): town rows/storefronts/inner rank, sand street, round plaza, desert rim, mesas, arches, chapel, sandstone base, sunset backdrop sphere (peach (1,.55,.28) to cream (1,.9,.6)); town dark solids in the glow pass. ancient_2 (565-586): round rim, lawn, ring wall, drum, propylon, pavilions, terraced mound + six temple towers (dark stone (.58,.53,.44)). renaissance (576-586): palace + arcade, rectangular piazza, front terrace, canal, corner palazzo, covered bridge, plinth, haze sky, facade kit, flagstone checker (four shades ~(.72,.62,.45), pale bed). All approved and CONFIRMed. spooky_1 (576-587): night sky, night grass/dusky meadow blades, fog chasm, dead trees, rock cliffs (inset skirt, stepped masses), graveyard, rim offerings, left descent, rim set pieces (watchtower (33,33.5) 13 m dark stone with 11 lit windows; broken grey pillar (47,7) 10.5 m; base "hill" mounds hidden; pumpkin bodies out of glow).
 
 ## Tuned values
+web/src/map/tabs/pirate.ts:deckHeight and rails | deck y 3.6 inside |x|<=14.6, plank height 4.15 m falling over 12.5 m; hull box collider split into seaward/end rails and beach rails with 3.6 m mouths at u -9, 0, 9 | 587 | approve, struck b5 | one hull box collider
+web/src/map/tabs/pirate.ts:hourglassBeach base hidden | sandSpit, sandWet, seaShore, fieldBlades_*, grassTuft, Pirate Cove_waterfall hidden; trunk/bush/prop roots past the outline + 1 m pruned | 587 | approve, no strike | base oval shown over the hourglass
+web/src/map/tabs/spooky_2.ts:thornThickets | x +-44, 30 vines 7-10 m, 6 segments, root .95, tilt .05-.25 + .2-.38/joint, navy (.1,.11,.19) self .3; collider 3.5 x 7 | 587 | approve, no strike | absent
+web/src/map/tabs/spooky_2.ts:darkTorii | (-40,33), posts 7.2 m 5.6 apart, kasagi 9.6 m swept, stone (.2,.21,.28) self .35, 6 m clearing | 587 | approve, struck a7 | absent
+web/src/map/tabs/simulation.ts:gridFloor | 5 m tile 512 px, base (228,222,212), 1 m lines (190,186,182) 2 px, 5 m (172,168,165) 3 px, self (.18,.17,.16); base "ground" hidden | 587 | approve, struck a1, a4 | base lilac lawn
+web/src/map/tabs/simulation.ts:emptyCentre | centerGrass hidden, centre void hazard (r 8) and its overlay removed | 587 | approve, struck a2 | void disc at origin
+web/src/map/tabs/simulation.ts:paleSky | backdrop sphere blue (.38,.68,.76) to haze (.86,.9,.9) smoothstep over up .57, fog = haze, dome off | 587 | approve, struck a5 (hue reads slate) | grey skyDome
 web/src/map/tabs/dynasty.ts:columnCliffs | continuous 5-sided columns h7.5..12.5m, square/notched rim, green ledges | 582 | approve | hanging stalactite underside
 web/src/map/tabs/dynasty.ts:canalSpurs | four 4.4 m spurs x34/-17 (back) -34/17 (front), |z|17.6..27, outer lawn and canal wall split, 3 m dry crossing | 583 | approve, no strike | absent
 web/src/map/tabs/dynasty.ts:terraceBranches | side channels x+-42; flights x+-27: flat deck |z|7..13 at .97, ten .5 m treads to the outer lawn, stepped cheeks | 583 | approve, struck b5 | 582 (rejected-kept): twelve .046 m steps z7..18
 web/src/map/tabs/dynasty.ts:lawnTerraces outer h | 2.4 m | 583 | approve (in scope of the stairs; no [P] re-tune) | 1.4 (581)
 web/src/map/tabs/dynasty.ts:perimeterFlagstones | three-course loop x+-46 z+-35 around notch and existing bridges | 582 | approve | no connected outer path
-web/src/map/tabs/spooky_1.ts:duskyMeadow | six-blade fans h .28-.5 m, .8 m grid, 7 cells in 10, tones (.19,.24,.4)/(.25,.31,.5); floor (.13,.16,.28) | 584 | approve, struck a4 | 583: flattened lumps (read as paving)
-web/src/map/tabs/spooky_1.ts:deadTrees | 3 of 5 ring spots; root 1.7 m, 5.5-9 m, bark (.035,.035,.055); 32-bit merge | 583 | approve, struck a1 | 582: every spot, root 1.35, merge failed (white)
-web/src/map/tabs/spooky_1.ts:rockCliffs | skirt inset 5 m at .45 light; upper masses 4.5-7.5 m alternating out 1.6-3.8 / in -.6..+.6; descent face 1.2 m proud | 585 | approve, struck a2 | 584: blocks 7-12 m, skirt on the outline (flat band)
 web/src/map/tabs/pirate.ts:hourglassBeach | 10 shore stations, halfwidth 7..32 m, waist at x9; two matching shore courses | 582 | approve, no strike | base rectangular field, oval drum
 web/src/map/tabs/pirate.ts:goldenSand | beach diffuse (.82,.56,.2) self (.3,.18,.04) out of glow; ripple V strokes .22 m, kink .25-.8 m, lines 1.3-2.1 m apart, (.62,.44,.2) self (.2,.13,.05) | 586 | approve, struck a5 | 586.5: (.8,.6,.3)/(.3,.21,.09), regular 1.6 m chevron grid; earlier base ground material
 web/src/map/tabs/pirate.ts:galleons | four tapered hull courses (.62..1 beam), hull (.36,.21,.1) self .45, strakes, gold sheer rails, forecastle, stern castle 8/6/4.2 m with windows, masts 19/23/17 with three yards 13/10.5/7.5 m, rolls 1.15 m, shrouds; dark solids in the glow pass | 586 | approve, struck a1 | 576: box hull (.45,.26,.13), full-width gold slabs, two yards, masts 17/20/15
@@ -56,7 +58,6 @@ web/src/map/tabs/spooky_2.ts:channelBridges | stone 4.4 m at x +-30, half 7, ris
 web/src/map/tabs/spooky_2.ts:blackTrees | every ring "trunk" hidden, 3 of 4 spots get a black tree 6-9.5 m (root 1.6), bark (.035,.035,.055), 32-bit merge | 586 | approve, no strike | base round-crowned ring trees
 web/src/map/tabs/pirate.ts:pirateGalleonStern | hull (0.45,0.26,0.13) self 0.42 (kept) | 577 | rejected, reverted (P attempt 1: (0.2,0.11,0.055) self 0.3 did not show; gold cap slabs cover the tops) | -
 web/src/map/tabs/pirate.ts:drainLagoon | z +-24 water hazards and sheets removed | 577 | approved | two water bands
-web/src/map/tabs/spooky_1.ts:rimOfferings | 12 lantern clusters, 6 candles each; orange (0.45,0.09,0.008), flame (1,0.42,0.1) self 2 | 579 | approve | absent
 web/src/map/tabs/spooky_2.ts:nightSky and nightTurf | navy (0.025,0.04,0.12), hemi 0.3 dir 0.65; turf (0.09,0.12,0.21), stone (0.17,0.21,0.31), cone tufts | 579 | approve | day sky, maroon/green floor, pale kerbs
 web/src/map/tabs/spooky_2.ts:gratedCourt | 15 m flush court, 7 m ember plate (1.6,.5,.06) in the glow, 9 flat bars each way .22 m x 4 cm, kerb lanterns, no colliders | 584 | approve, struck b3 | 579: .2 m bars hid the bed (dropped)
 web/src/map/tabs/dynasty.ts:gardenCanals | 92 x 10 m stone-lined turquoise sheets with lily pads | 579 | approve | grey-olive overlays
@@ -67,11 +68,6 @@ web/src/map/tabs/dynasty.ts:squareIsland | superellipse 54 x 48 power 8, notch x
 web/src/map/tabs/dynasty.ts:lawnTerraces | eight green lawn blocks h.85/1.4 m, stone faces and offset flagstone edges, draw height | 581 | approve | olive-brown flat floor
 web/src/map/tabs/dynasty.ts:courtApproaches | N/S spans7..17 E/W7..10, four curved decks and six-step approaches each end, draw height | 581 | approve | incomplete ring approaches
 web/src/map/tabs/dynasty.ts:courtyard | court |x|,|z| <= 7, pave (0.4,0.41,0.4) self 0.2; pit box half 3; E/W moats |x| 7..10 water hazards | 578 | approved, no strike | pit cyl r 5; pave (0.62,0.62,0.58) self 0.4 (too white)
-web/src/map/tabs/spooky_1.ts:nightSky | clear/fog (0.035,0.05,0.13); hemi 0.3, dir 0.65; moon, 300 stars | 576 | approved | grey day sky, mountains
-web/src/map/tabs/spooky_1.ts:nightGrass | floor (0.2,0.24,0.38) self (0.05,0.06,0.11); blades (0.26,0.31,0.46); zone slabs hidden | 577 | approved | inherited dark green under maroon/blue slabs
-web/src/map/tabs/spooky_1.ts:fogChasm | Medieval 1 SHORE plateaus, 3 fog sheets (.1,.125,.26) alpha .34 at -1.5/-4.5/-8, bridge z 1, void hazards | 584 | approve | fog (.42,.48,.78) alpha .32 (brightest band)
-web/src/map/tabs/spooky_1.ts:leftDescent | left cliff recessed to x-15, path x-10.5 z-23..0 y0..-6, broken room entrance | 581 | approve | absent
-web/src/map/tabs/spooky_1.ts:graveyard | plot x 13..31 z 13..29, 24 stones | 578 | approved, struck b2 | base tombs both halves
 web/src/map/tabs/spooky_2.ts:squareIsland and fogChannels | power 8, notch x > 36 z > 30; fog z +-12 drawn only; loop path x +-44 z +-38 | 578 | approved, no strike, kerbs/path glow | base oval
 web/src/map/tabs/spooky_2.ts:pumpkinShrine | (14,38), 16 m mound, trunks 1.7 m | 585 | approve, no strike (mound dark, trees thin) | 584: (-17,-38), 13 m mound
 web/src/map/tabs/pirate.ts:sandIsland | sea ring 62 x 56 (0.2,0.8,0.75); drum 64 x 58, 6 m + belly 14 m (0.72,0.52,0.28) self 0.4, no fog | 578 | approved, struck a3, drum reads thin | stalactite underside

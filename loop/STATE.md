@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 586   Batch: maps_3   Consecutive empty: 0   Done: 16/99   Parked: 0
+Iteration: 587   Batch: maps_3+maps_4   Consecutive empty: 0   Done: 17/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<id>):
 # <id>
@@ -18,8 +18,8 @@ Marks: one per criterion a b c (+ pass, - fail, ? unscored); map a look, b layou
 ## Scoreboard (a b c as + pass, - fail, ? unscored; status q queued, o open, D done, p parked)
 maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox +++ D | farmer_1 +++ D | farmer_2 +++ D | farmer_snow +++ D
 maps_2: medieval_1 +++ D | medieval_2 +++ D | ancient_1 +++ D | ancient_2 +++ D | ancient_sandbox +++ D | viking +++ D | viking_sandbox +++ D
-maps_3: dynasty +-+ o | renaissance +++ D | pirate +-+ o | spooky_1 -++ o | spooky_2 --+ o | wild_west +++ D | legacy +++ D
-maps_4: fantasy_good ??? q | fantasy_evil ??? q | simulation ??? q | bridge ??? q | hill ??? q | corridor ??? q | defend_the_castle ??? q | high_ground ??? q | low_ground ??? q
+maps_3: dynasty +-+ o | renaissance +++ D | pirate --+ o | spooky_1 +++ D | spooky_2 --+ o | wild_west +++ D | legacy +++ D
+maps_4: fantasy_good --+ o | fantasy_evil --+ o | simulation -++ o | bridge --+ o | hill --+ o | corridor --+ o | defend_the_castle --+ o | high_ground --+ o | low_ground --+ o
 stages_introduction: clubs ??? q | army ??? q | hay_and_pitchforks ??? q | basic_formation ??? q | ice_archers_only_almost ??? q | longships ??? q
 stages_adventure: tree_tribe ??? q | the_tiniest_attack ??? q | sneaky_tribe ??? q | tree_mammoths ??? q | final_destination_wheelbarrow ??? q | a_fierce_rider ??? q
 stages_challenge: ice_archer_and_friends ??? q | knights_and_priests ??? q | a_warm_welcome ??? q | zeus ??? q | twin_lords ??? q | big_brawl ??? q
@@ -33,47 +33,47 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 586: maps_2+maps_3, 1 [R] + 7 [S]; BASE 766bce84)
-- [R] map.wild_west.a blockers 1, 2 (f70a3686) APPROVE, struck a1, a2; CONFIRM a PASS -> D
-- [S] map.ancient_2.a blocker 3, starvation (1932bf22) APPROVE, struck a3 -> D
-- [S] map.renaissance.a blocker 5 (531d6ed4) APPROVE, struck a5
-- [S] map.renaissance.a blocker 3 (36ee3119) APPROVE, struck a3; CONFIRM a, b PASS -> D
-- [S] map.pirate.a blocker 5 (05e50f52 + bb77a558) APPROVE, struck a5
-- [S] map.spooky_2.b blocker 2 (6afd6a09) APPROVE, struck b2
-- [S] map.spooky_2.a blocker 5 (974a3c2d) APPROVE, no strike (one round tree left)
-- [S] map.pirate.a blocker 1 (f49048a8 + f3ee1295) APPROVE, struck a1 (critic a PASS)
-- 8/8, 8 struck
+## Focus (iter 587: maps_3+maps_4 (tail overlap, maps_4 audited), 1 [R] + 7 [S]; BASE 8a9d2327)
+- [R] map.spooky_1.a blockers 1-3 (7542093c + 80297d4f) APPROVE, struck a1, a2, a3; CONFIRM a PASS -> D
+- [S] map.pirate.b blocker 5 (22ba62eb; evidence fc94485f map_pirate_deck) APPROVE, struck b5
+- [S] map.pirate.b blocker 3 (4ace43d4) APPROVE, no strike; CONFIRM failed pirate a, b (fresh lists)
+- [S] map.spooky_2.a blocker 3 (cb026095 + 858d6a2e + 95f26b5d) APPROVE, no strike
+- [S] map.spooky_2.a blocker 7 (76101bad + 7189ff78 + 9ad673bd) APPROVE, struck a7
+- [S] map.simulation.a blocker 1 (b23e942c) APPROVE, struck a1, a4
+- [S] map.simulation.a blocker 2 (9fed27e5 + 40c4de96) APPROVE, struck a2
+- [S] map.simulation.a blocker 3 (bafe8f20) APPROVE, struck a5
+- 8/8, 7 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [R] map.wild_west (f70a3686)
+GAP: [R] map.spooky_1 (7542093c, 80297d4f)
 VERDICT: APPROVE
-CRITERION: map.wild_west.a PASS   (previous: FAIL, plateau)
-GAP: [S] map.ancient_2 (1932bf22)
+CRITERION: map.spooky_1.a PASS   (previous: FAIL)
+GAP: [S] map.pirate (22ba62eb, evidence fc94485f)
 VERDICT: APPROVE
-CRITERION: map.ancient_2.a PASS   (previous: FAIL)
-GAP: [S] map.renaissance (531d6ed4)
+CRITERION: map.pirate.b FAIL   (previous: FAIL)
+GAP: [S] map.pirate (4ace43d4)
 VERDICT: APPROVE
-CRITERION: map.renaissance.a FAIL   (previous: FAIL)
-GAP: [S] map.renaissance (36ee3119)
-VERDICT: APPROVE
-CRITERION: map.renaissance.a PASS   (previous: FAIL)
-GAP: [S] map.pirate (05e50f52 + bb77a558)
-VERDICT: APPROVE
-CRITERION: map.pirate.a FAIL   (previous: FAIL)
-GAP: [S] map.spooky_2 (6afd6a09)
-VERDICT: APPROVE
-CRITERION: map.spooky_2.b FAIL   (previous: FAIL)
-GAP: [S] map.spooky_2 (974a3c2d)
+CRITERION: map.pirate.b FAIL   (previous: FAIL)
+GAP: [S] map.spooky_2 (cb026095, 858d6a2e, 95f26b5d)
 VERDICT: APPROVE
 CRITERION: map.spooky_2.a FAIL   (previous: FAIL)
-GAP: [S] map.pirate (f49048a8 + f3ee1295)
+GAP: [S] map.spooky_2 (76101bad, 7189ff78, 9ad673bd)
 VERDICT: APPROVE
-CRITERION: map.pirate.a PASS   (previous: FAIL)
+CRITERION: map.spooky_2.a FAIL   (previous: FAIL)
+GAP: [S] map.simulation (b23e942c)
+VERDICT: APPROVE
+CRITERION: map.simulation.a FAIL   (previous: FAIL)
+GAP: [S] map.simulation (9fed27e5, 40c4de96)
+VERDICT: APPROVE
+CRITERION: map.simulation.a FAIL   (previous: FAIL)
+GAP: [S] map.simulation (bafe8f20)
+VERDICT: APPROVE
+CRITERION: map.simulation.a FAIL   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 586: 69+ shots, zero page errors, all 37 step-5 script criteria PASS; 8/8 approved; wild_west, ancient_2, renaissance D (CONFIRM passed). maps_2 checkpoint: regression 12/12 green, its 23 stages 46/46 PASS; maps_2 dropped from Batch.
-- 587: spooky_1 a plateau [R] (far-rim watchtower, broken pillar, red ground discs; 585 confirm.md). maps_3 has under 9 pickable [S] (pirate b3, b5; spooky_2 a3, a7, b1, a5): tail overlap - audit maps_4 in step 2 and pick from both.
-- Pirate a PASS awaits CONFIRM (would-be-done only when b passes): remove the blue slab off the right rim (base waterfall prop at (58,0)?) first. b5 decks need zones or an evidence re-aim to show units on a deck. [P] ripple tone is eligible fallout of 05e50f52.
-- Unpickable: dynasty b3 until 588 (starvation), spooky_2 a4 (2 attempts; starvation 590). Dynasty early CONFIRM list (583) in its item Notes.
-- A capture-world --add run rewrites summary.json with its own items only (PNGs kept): judge step 5 before any later --add capture.
+- 587: maps_4 audited (output/loop/iter-587/audit.md, audit2.md): all 9 maps c PASS; simulation b PASS; the five plane maps (bridge, corridor, defend_the_castle, high_ground, low_ground) have no builder and render the bare simulation plane; fantasy_good/evil are the old meadow ovals.
+- 587 step 5: 26/26 script criteria PASS, zero page errors; spooky_1 D (CONFIRM passed a, b). Pirate CONFIRM (first) failed a and b: ships rotated 90 deg from TABS (each should sit behind one army), hull colour/shape, missing sand drum, sky tone.
+- Eligible [P] (fallout within 3 iterations): simulation paleSky hue (bafe8f20), spooky_2 thorn heaps (cb026095). Simulation a has one blocker left: its [P] could finish it, then CONFIRM.
+- Spooky_2: the base "hill" mound under the torii still shows (bounds test read 0: computeWorldMatrix first); all four mounds are red discs.
+- Unpickable: dynasty b3 until 588 (starvation), spooky_2 a4 (starvation 590), pirate b3 (2 attempts; its outline blocker is now CONFIRM b2).
