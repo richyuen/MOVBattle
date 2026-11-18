@@ -108,7 +108,11 @@ const POSE = {
 const TRIBAL_SANDBOX_OVERVIEW = { island: 218, top: 176 };
 // Hill: the default ground pose sits at the ramp's foot looking into its face, so the slope never shows; a low view from the
 // left flat's front corner up the ramp to the crest, the block's -z side face in profile, as wiki hill.png (589)
-const POSE_OVERRIDE = { "map.hill": { ground: { target: { x: 12, y: 6, z: 0 }, radius: 64, alpha: -2.8, beta: 1.4 } } };
+const POSE_OVERRIDE = {
+  "map.hill": { ground: { target: { x: 12, y: 6, z: 0 }, radius: 64, alpha: -2.8, beta: 1.4 } },
+  // 591: the skirmish puts team 1 on the right gate wall top (19 m up): an elevated diagonal from the attackers side sees it
+  "map.high_ground": { battle: { target: { x: 24, y: 12, z: 8 }, radius: 58, alpha: Math.PI + 0.35, beta: 0.95 } },
+};
 const frame = (page, p) => page.evaluate((q) => window.game.frameCamera(q.target, q.radius, q.alpha, q.beta, q.radiusLimit), p);
 
 /** Battle on to a result in 2 s steps; the state, the time, and anyone left standing in a hazard. */
@@ -177,7 +181,7 @@ async function mapScene(page, item) {
     return ok;
   }, layout.zones);
   // Ancient 1: the low pose sees only roofs; frame the player army's box from an elevated player-side diagonal (574)
-  let battleView = POSE.ground;
+  let battleView = POSE_OVERRIDE[item]?.battle ?? POSE.ground;
   if (item === "map.ancient_1") {
     const box = await page.evaluate(() => {
       const us = window.game.listLiveUnits().filter((u) => u.team === 0);
