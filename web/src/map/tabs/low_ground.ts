@@ -11,7 +11,7 @@
 import type { Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import { terrainMesh, type HeightField } from "../terrain";
-import { bareField, centreLine, gridMaterial, gridUVs, voidAround, zonesOn, type Rect } from "./simKit";
+import { bareField, centreLine, gridMaterial, gridUVs, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
 
 const SLAB: Rect = { x0: -60, x1: 60, z0: -22, z1: 22 };
 const TROUGH = { floor: 10, bank: 20, high: 7 };
@@ -40,5 +40,7 @@ export function buildLowGround(scene: Scene, base: () => MapBuildResult): MapBui
   centreLine(scene, SLAB.z0, SLAB.z1);
   const hazards = [...kept, ...voidAround([SLAB], { x0: -90, x1: 90, z0: -60, z1: 60 })];
   const placementZones = zonesOn([{ ...SLAB, x1: -1, team: 0 }, { ...SLAB, x0: 1, team: 1 }]);
-  return { ...result, hazards, placementZones, height };
+  // Pale haze (588, blocker a4; wiki low_ground.png: pale cyan haze beyond the slab's edges): the simulation sky
+  const restoreSky = paleSky(scene);
+  return { ...result, hazards, placementZones, height, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
