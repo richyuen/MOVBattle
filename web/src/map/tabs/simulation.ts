@@ -44,8 +44,15 @@ function gridFloor(scene: Scene): void {
   plane.material = mat;
 }
 
+// Empty centre (587, blocker a2; reference/maps/simulation.png: nothing stands on the plane but the red line). Spec: the base's
+// kept centre disc ("centerGrass", a darker grey lawn disc at the origin) is hidden; the line runs uninterrupted through it.
+function emptyCentre(scene: Scene): void {
+  for (const mesh of scene.meshes) if (mesh.name === "centerGrass") mesh.setEnabled(false);
+}
+
 export function buildSimulation(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const result = base();
   gridFloor(scene);
+  emptyCentre(scene);
   return result;
 }
