@@ -315,9 +315,42 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   courtyard(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   gardenCanals(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   lawnTerraces(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),result);
+  courtApproaches(scene,result);
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Four separate stone bridge/stair approaches over the water ring around the square courtyard.
+// N/S spans z7..17; E/W spans x7..10. Curved decks rise at their centres, with low parapets.
+function courtApproaches(scene: Scene, result: MapBuildResult): void {
+  const stone=new StandardMaterial("dynastyApproachStone",scene);
+  stone.diffuseColor.set(0.3,0.35,0.38);stone.emissiveColor.set(0.09,0.1,0.12);stone.specularColor=Color3.Black();
+  const box=(w:number,h:number,d:number,x:number,y:number,z:number)=>{
+    const m=MeshBuilder.CreateBox("dynastyCourtApproach",{width:w,height:h,depth:d},scene);m.position.set(x,y,z);m.material=stone;m.receiveShadows=true;
+  };
+  for(const ns of [true,false]) for(const sign of [-1,1]) {
+    const start=7,end=ns?17:10,span=end-start,n=16;
+    for(let i=0;i<n;i++) {
+      const t=(i+0.5)/n,along=sign*(start+t*span),y=0.7+Math.sin(t*Math.PI)*0.65;
+      box(ns?4.8:span/n+0.03,0.35,ns?span/n+0.03:4.8,ns?0:along,y-0.175,ns?along:0);
+      for(const side of [-1,1]) box(ns?0.25:span/n+0.04,0.65,ns?span/n+0.04:0.25,ns?side*2.3:along,y+0.25,ns?along:side*2.3);
+    }
+    for(const endSide of [-1,1]) for(let i=0;i<6;i++) {
+      const along=sign*((endSide<0?start:end)+endSide*(i+0.5)*0.45),y=0.7*(1-(i+0.5)/6);
+      box(ns?4.8:0.48,y+0.12,ns?0.48:4.8,ns?0:along,y/2,ns?along:0);
+    }
+  }
+  const oldHeight=result.height;
+  result.height=(x,z)=>{
+    for(const ns of [true,false]) {
+      const across=Math.abs(ns?x:z),along=Math.abs(ns?z:x),end=ns?17:10;
+      if(across<2.4&&along>=7&&along<=end)return 0.7+Math.sin((along-7)/(end-7)*Math.PI)*0.65;
+      if(across<2.4&&along>4.3&&along<7)return 0.7*(along-4.3)/2.7;
+      if(across<2.4&&along>end&&along<end+2.7)return 0.7*(end+2.7-along)/2.7;
+    }
+    return oldHeight?.(x,z)??0;
+  };
 }
 
 // Green lawn blocks separated from the canals by grey flagstone edges (shogun_s_samurai).
