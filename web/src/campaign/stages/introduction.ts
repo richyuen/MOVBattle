@@ -148,9 +148,10 @@ export const STAGES: TabsStageDef[] = [
     playerUnits: { factions: ["ancient"] },
     enemy: [
       // 597 (blocker b2; ice_archers_only_almost.thumb.png: two trios of Brawlers apart, front-left and front-centre)
-      ["viking.brawler", 29.5, -15.3],
-      ["viking.brawler", 29, -14.1],
-      ["viking.brawler", 29.5, -12.9],
+      // 598 [P]: the off-centre trio on +z, which the player's camera shows on the left
+      ["viking.brawler", 29.5, 12.9],
+      ["viking.brawler", 29, 14.1],
+      ["viking.brawler", 29.5, 15.3],
       ["viking.brawler", 29.5, -1.2],
       ["viking.brawler", 29, 0],
       ["viking.brawler", 29.5, 1.2],
