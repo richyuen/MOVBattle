@@ -723,11 +723,57 @@ function waterfalls(scene: Scene): void {
   }
 }
 
+// Front ledge (597, blocker b2; wiki fantasy_good.png bottom left, heaven_good.png: below the deck's front rim runs a lower
+// walkway, a ledge a storey down with its own gold-kerbed parapet, reached by stairs, so the outline steps twice, not one
+// flat rectangle). Spec: a 6 m ledge along the whole front (x -52..52, z -46..-40), its top 2 m below the deck, a 0.6 m
+// white slab on corbels (1.2 x 1.6 m, 3 m deep) every 6 m, a gold kerb and gold merlons (0.9 m every 2.4 m) on its outer
+// edge; the deck's notched bays stay open above it. Two stairs down to it in the plain stretches (x -50..-44 and 14..20),
+// 2.4 m wide against the rim, 6 treads. Drawn only: the sim's field ends at the deck (zones and colliders unchanged).
+function frontLedge(scene: Scene): void {
+  // own materials, matching marbleDeck's stone and gold (this runs before it)
+  const white = new StandardMaterial("heavenLedgeStone", scene);
+  white.diffuseColor = new Color3(0.86, 0.89, 0.93);
+  white.emissiveColor = new Color3(0.2, 0.21, 0.24);
+  white.specularColor = Color3.Black();
+  const gold = new StandardMaterial("heavenLedgeGold", scene);
+  gold.diffuseColor = new Color3(0.78, 0.62, 0.1);
+  gold.emissiveColor = new Color3(0.22, 0.17, 0.02);
+  gold.specularColor = new Color3(0.2, 0.18, 0.08);
+  const parts: { white: Mesh[]; gold: Mesh[] } = { white: [], gold: [] };
+  const box = (k: keyof typeof parts, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("heavenLedgePart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.bakeCurrentTransformIntoVertices();
+    parts[k].push(b);
+  };
+  const Y = -2, z0 = -DECK.z, z1 = -DECK.z - 6, W = 2 * DECK.x;
+  box("white", W, 0.6, 6, 0, Y - 0.3, (z0 + z1) / 2);
+  for (let x = -DECK.x + 3; x <= DECK.x - 3 + 1e-6; x += 6) box("white", 1.2, 3, 1.6, x, Y - 2.1, z0 - 0.8);
+  box("gold", W, 0.35, 0.6, 0, Y + 0.175, z1 + 0.3);
+  for (let x = -DECK.x + 1.2; x <= DECK.x - 1; x += 2.4) box("gold", 0.9, 0.6, 0.5, x, Y + 0.65, z1 + 0.3);
+  for (const s of [-1, 1]) box("gold", 0.6, 0.35, 6, s * (DECK.x - 0.3), Y + 0.175, (z0 + z1) / 2);
+  for (const xa of [-50, 14]) {
+    for (let i = 0; i < 6; i++) {
+      const top = -(i + 1) * (2 / 6);
+      box("white", 1, top - Y + 0.05, 2.4, xa + i + 0.5, (top + Y) / 2, z0 - 1.2);
+    }
+  }
+  for (const [k, mat] of [["white", white], ["gold", gold]] as const) {
+    const m = Mesh.MergeMeshes(parts[k], true, true);
+    if (!m) continue;
+    m.name = `heavenLedge_${k}`;
+    m.material = mat;
+    m.receiveShadows = true;
+    m.isPickable = false;
+  }
+}
+
 export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   const restoreSky = heavenSky(scene, built);
+  frontLedge(scene);
   const { stone, gold } = marbleDeck(scene, built);
   viaductUnderside(scene, built, stone);
   waterfalls(scene);
