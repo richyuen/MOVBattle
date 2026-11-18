@@ -135,12 +135,13 @@ export const STAGES: TabsStageDef[] = [
     budget: 3500,
     playerUnits: { factions: ["ancient"] },
     enemy: [
-      ["viking.brawler", 29, -4.5],
-      ["viking.brawler", 29, -2.7],
-      ["viking.brawler", 29, -0.9],
-      ["viking.brawler", 29, 0.9],
-      ["viking.brawler", 29, 2.7],
-      ["viking.brawler", 29, 4.5],
+      // 597 (blocker b2; ice_archers_only_almost.thumb.png: two trios of Brawlers apart, front-left and front-centre)
+      ["viking.brawler", 29.5, -15.3],
+      ["viking.brawler", 29, -14.1],
+      ["viking.brawler", 29.5, -12.9],
+      ["viking.brawler", 29.5, -1.2],
+      ["viking.brawler", 29, 0],
+      ["viking.brawler", 29.5, 1.2],
       // 597 (blocker b1; ice_archers_only_almost.png: three separate 2x2 groups of four, left, centre and right, wide gaps)
       ["viking.ice_archer", 33, -15],
       ["viking.ice_archer", 33, -13.2],
