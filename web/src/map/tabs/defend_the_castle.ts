@@ -66,6 +66,18 @@ function buildCastle(scene: Scene): MapBuildResult["obstacles"] {
   }));
 }
 
+// Archer poles (589, blocker a2; wiki defend_the_castle.png and stages/simulation.siege.thumb.png: two tall square grid pillars
+// stand on the forecourt before the gate, a little apart, each about a third as wide as tall, tops above the castle walls'
+// height). Spec: 3 x 3 m pillars at (29, +-12), between the siege armies' ranks (nearest unit 3.6 m away), rising 11 m above
+// the forecourt to 21 m; box colliders.
+function archerPoles(scene: Scene): MapBuildResult["obstacles"] {
+  return [-1, 1].map((s) => {
+    const r: Rect = { x0: 27.5, x1: 30.5, z0: s * 12 - 1.5, z1: s * 12 + 1.5 };
+    gridBlock(scene, "castlePole", r, APPROACH.high + 11, APPROACH.high);
+    return { type: "box" as const, center: new Vector3(29, 0, s * 12), halfX: 1.5, halfZ: 1.5 };
+  });
+}
+
 export function buildDefendTheCastle(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const result = base();
   const kept = bareField(scene, result);
@@ -80,7 +92,7 @@ export function buildDefendTheCastle(scene: Scene, base: () => MapBuildResult): 
     material: mat,
   });
   gridUVs(sheet);
-  const obstacles = [...result.obstacles, ...buildCastle(scene)];
+  const obstacles = [...result.obstacles, ...buildCastle(scene), ...archerPoles(scene)];
   centreLine(scene, SHEET.z0, SHEET.z1, castleHeight(0, 0));
   const hazards = [...kept, ...voidAround([SHEET], { x0: -90, x1: 90, z0: -60, z1: 60 })];
   const placementZones = zonesOn([
