@@ -141,11 +141,68 @@ function basaltFloor(scene: Scene, built: Set<unknown>): void {
   seam.isPickable = false;
 }
 
+// Rock ring (593, blocker a3; wiki fantasy_evil.png: no trees anywhere; the field's edge is ringed by jagged dark rock
+// columns, leaning basalt prisms in clumps of different heights, with here and there a broken square pillar). Spec: every
+// base ring tree (an unparented "trunk", crowns its children) and the haze treeline are hidden, the trees' colliders kept;
+// at each tree spot outside the crevices a clump of two or three five-sided prisms 1.4-2.6 m across, 4-10 m tall, leaning
+// 0.05-0.25 rad, flat tops cut at a slant; every fourth spot a broken square pillar instead (1.6 m, 3-6 m, a tilted cap
+// block); seated on the terrace under them; dark slate (.09,.12,.14) self (.02,.03,.035), flat shaded, in the glow pass.
+function rockRing(scene: Scene, built: Set<unknown>): void {
+  let seed = 0x7c3d;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const mat = new StandardMaterial("voidRockRing", scene);
+  mat.diffuseColor = new Color3(0.09, 0.12, 0.14);
+  mat.emissiveColor = new Color3(0.02, 0.03, 0.035);
+  mat.specularColor = new Color3(0.03, 0.04, 0.04);
+  const parts: Mesh[] = [];
+  let k = 0;
+  for (const m of scene.meshes) {
+    if (!built.has(m)) continue;
+    if (m.name === "hazeTreeline") { m.setEnabled(false); continue; }
+    if (m.name !== "trunk" || m.parent || !m.isEnabled()) continue;
+    m.setEnabled(false);
+    const { x, z } = m.position;
+    if (inChasm(x, z)) continue;
+    const y0 = fantasyEvilHeight(x, z) - 0.3;
+    if (k++ % 4 === 3) {
+      const h = 3 + rnd() * 3;
+      const p = MeshBuilder.CreateBox("voidRockPart", { width: 1.6, depth: 1.6, height: h }, scene);
+      p.rotation.set((rnd() - 0.5) * 0.12, rnd() * 3, (rnd() - 0.5) * 0.12);
+      p.position.set(x, y0 + h / 2, z);
+      p.bakeCurrentTransformIntoVertices();
+      parts.push(p);
+      const cap = MeshBuilder.CreateBox("voidRockPart", { width: 2.1, depth: 2.1, height: 0.5 }, scene);
+      cap.rotation.set(0.35, rnd() * 3, 0.2);
+      cap.position.set(x + 0.3, y0 + h + 0.1, z - 0.2);
+      cap.bakeCurrentTransformIntoVertices();
+      parts.push(cap);
+      continue;
+    }
+    const n = 2 + Math.floor(rnd() * 2);
+    for (let i = 0; i < n; i++) {
+      const h = 4 + rnd() * 6, d = 1.4 + rnd() * 1.2, a = rnd() * 6.28, r = i === 0 ? 0 : 1.2 + rnd() * 0.8;
+      const c = MeshBuilder.CreateCylinder("voidRockPart", { height: h, diameterTop: d * 0.8, diameterBottom: d, tessellation: 5 }, scene);
+      c.rotation.set((rnd() - 0.5) * 0.5, rnd() * 6.28, (rnd() - 0.5) * 0.5);
+      c.position.set(x + Math.cos(a) * r, y0 + h / 2, z + Math.sin(a) * r);
+      c.bakeCurrentTransformIntoVertices();
+      parts.push(c);
+    }
+  }
+  const merged = Mesh.MergeMeshes(parts, true, true);
+  if (!merged) return;
+  merged.name = "voidRockRing";
+  merged.convertToFlatShadedMesh();
+  merged.material = mat;
+  merged.receiveShadows = true;
+  merged.isPickable = false;
+}
+
 export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   basaltFloor(scene, built);
+  rockRing(scene, built);
   // seat the base's small props (bones, crystals, rocks, ring trunks) on the terrace under them (drawn only; colliders unchanged)
   for (const m of scene.meshes) {
     if (!built.has(m) || m.parent || !m.isEnabled() || m.name === "basaltBlocks" || m.name === "basaltSeams") continue;
