@@ -370,13 +370,15 @@ function blackTrees(scene: Scene, built: Set<unknown>): void {
 // the root to 0.15 m), 7-10 m of vine leaning out only 3-14 degrees at the root and bending 12-22 degrees per joint around a
 // turning axis, so they stand 5-7 m high before they curl over (587.4b: 25-45 degree bends kept the first heap under 3 m,
 // lost in the tree ring);
-// a hooked cone spike 0.5-0.8 m off every other joint. Near-black (0.03, 0.03, 0.05), barely self-lit, merged (32-bit), in the
+// a hooked cone spike 0.5-0.8 m off every other joint. Dark navy (0.1, 0.11, 0.19) self 0.3, merged (32-bit), in the
 // glow pass (dark solid). A box collider 3 x 6 m half size blocks each path.
 function thornThickets(scene: Scene, result: MapBuildResult): void {
   const hash = (i: number, s: number) => { const v = Math.sin(i * 91.7 + s * 47.31) * 24634.6345; return v - Math.floor(v); };
+  // (587.4c) dark navy-blue, a shade above the black ring trees (near-black vines vanished into them): the wiki's thorns read
+  // as blue-shadowed tangles under the moonlight
   const mat = new StandardMaterial("spooky2Thorn", scene);
-  mat.diffuseColor = new Color3(0.03, 0.03, 0.05);
-  mat.emissiveColor = new Color3(0.012, 0.012, 0.022);
+  mat.diffuseColor = new Color3(0.1, 0.11, 0.19);
+  mat.emissiveColor = new Color3(0.1, 0.11, 0.19).scale(0.3);
   mat.specularColor = Color3.Black();
   const parts: Mesh[] = [];
   const up = Vector3.Up();
