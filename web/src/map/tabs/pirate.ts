@@ -246,11 +246,11 @@ function bellMountain(scene: Scene, obstacles: Obstacle[]): void {
     return m;
   };
   const mats = {
-    rock: mk("pirateMountainRock", new Color3(0.5, 0.43, 0.32), 0.6),
-    grass: mk("pirateMountainGrass", new Color3(0.3, 0.5, 0.13), 0.6),
+    rock: mk("pirateMountainRock", new Color3(0.64, 0.5, 0.31), 0.6),
+    grass: mk("pirateMountainGrass", new Color3(0.36, 0.56, 0.14), 0.6),
     trunk: mk("pirateMountainPalmTrunk", new Color3(0.42, 0.3, 0.18), 0.35),
     frond: mk("pirateMountainPalmFrond", new Color3(0.14, 0.42, 0.11), 0.35),
-    water: mk("pirateMountainFall", new Color3(0.78, 0.94, 0.98), 0.7),
+    water: mk("pirateMountainFall", new Color3(0.95, 0.98, 1), 0.85),
     bell: mk("pirateMountainBell", new Color3(0.3, 0.19, 0.1), 0.35),
     gold: mk("pirateMountainBellRim", new Color3(0.9, 0.68, 0.22), 0.45),
   };
@@ -259,7 +259,20 @@ function bellMountain(scene: Scene, obstacles: Obstacle[]): void {
     const raw = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453;
     return raw - Math.floor(raw);
   };
-  const CX = 60, CZ = 0;
+  // 584 re-site (wiki pirate.png: the mountain stands on the island behind the beach, between the ships' bows, tan rock
+  // with a green cap on every ledge, a white fall down its beach face and a bell as wide as its summit). It stands at
+  // the back (34, 38), inside the island's rim beside the far ship's bow, behind the right zone (z <= 27) and the stage
+  // armies; its palms, fall and bell frame face the beach (-z).
+  const CX = 34, CZ = 38;
+  // The base's ring palms and props under its foot go with their colliders
+  for (const mesh of scene.meshes) {
+    if (mesh.parent || !mesh.isEnabled() || !/^(trunk|Pirate Cove_)/.test(mesh.name)) continue;
+    if (Math.hypot(mesh.position.x - CX, mesh.position.z - CZ) > 11.5) continue;
+    mesh.setEnabled(false);
+    for (let o = obstacles.length - 1; o >= 0; o--) {
+      if (Math.hypot(obstacles[o].center.x - mesh.position.x, obstacles[o].center.z - mesh.position.z) < 0.6) obstacles.splice(o, 1);
+    }
+  }
   const lump = (key: keyof typeof mats, sx: number, sy: number, sz: number, x: number, y: number, z: number, i: number) => {
     const m = MeshBuilder.CreateIcoSphere("pirateMountainPart", { radius: 0.5, subdivisions: 1 }, scene);
     m.scaling.set(sx, sy, sz);
@@ -274,7 +287,7 @@ function bellMountain(scene: Scene, obstacles: Obstacle[]): void {
     for (let j = 0; j < count; j++) {
       const a = (j / count) * 6.28 + t * 0.7, r = ring * (0.55 + rnd(++k, 1) * 0.35);
       lump("rock", size * (1.1 + rnd(k, 2) * 0.5), size * (1 + rnd(k, 3) * 0.6), size * (1 + rnd(k, 4) * 0.4), CX + Math.cos(a) * r, y + size * 0.35, CZ + Math.sin(a) * r, k);
-      if (t < 3 && j % 2 === 0) lump("grass", size * 0.85, 0.7, size * 0.75, CX + Math.cos(a + 0.3) * r * 1.05, y + size * 0.92, CZ + Math.sin(a + 0.3) * r * 1.05, k + 40);
+      if (t > 0 || j % 2 === 0) lump("grass", size * 0.85, 0.7, size * 0.75, CX + Math.cos(a + 0.3) * r * 1.05, y + size * 0.92, CZ + Math.sin(a + 0.3) * r * 1.05, k + 40);
     }
   });
   lump("grass", 4.2, 0.8, 4.2, CX, 18.4, CZ, 90);
@@ -303,33 +316,33 @@ function bellMountain(scene: Scene, obstacles: Obstacle[]): void {
     }
   };
   [[-10.5, 0, 6, 6], [-9.5, 0, -7.5, 5.2], [-3, 0, 12, 6.5], [-6.5, 7.5, -4, 5], [-3.5, 8, 7, 4.8], [4, 9, -6.5, 5.5], [-2.5, 14, -2.5, 4.5]]
-    .forEach(([dx, y, dz, tall], i) => palm(CX + dx, y, CZ + dz, tall, i + 1));
-  // The fall down the beach face, and its foam
-  for (const [x, y, len, tilt] of [[-5.4, 10, 7, -0.5], [-8.3, 3.6, 8, -0.22]]) {
-    const run = MeshBuilder.CreateBox("pirateMountainFall", { width: 0.35, height: len, depth: 1.8 }, scene);
-    run.rotation.z = tilt;
-    run.position.set(CX + x, y, CZ + 1.5);
+    .forEach(([dx, y, dz, tall], i) => palm(CX + dz, y, CZ + dx, tall, i + 1));
+  // The fall down the beach face (-z), 2.6 m wide, and its foam
+  for (const [z, y, len, tilt] of [[-5.4, 10, 7, 0.5], [-8.3, 3.6, 8, 0.22]]) {
+    const run = MeshBuilder.CreateBox("pirateMountainFall", { width: 2.6, height: len, depth: 0.4 }, scene);
+    run.rotation.x = tilt;
+    run.position.set(CX + 1.5, y, CZ + z);
     parts.water.push(run);
   }
-  lump("water", 4.5, 0.5, 5, CX - 10, 0.15, CZ + 1.5, 95);
-  // The bell in its frame on the summit
+  lump("water", 5, 0.5, 4.5, CX + 1.5, 0.15, CZ - 10, 95);
+  // The bell, 6 m across, in an A-frame standing across the summit (seen whole from the beach)
   for (const s of [-1, 1]) {
-    const post = MeshBuilder.CreateCylinder("pirateMountainBellPost", { height: 5.6, diameter: 0.4, tessellation: 6 }, scene);
-    post.rotation.x = s * 0.3;
-    post.position.set(CX - 0.5, 20.6, CZ + s * 1.9);
+    const post = MeshBuilder.CreateCylinder("pirateMountainBellPost", { height: 13, diameter: 0.6, tessellation: 6 }, scene);
+    post.rotation.z = s * 0.2;
+    post.position.set(CX + s * 3.9, 22, CZ - 0.5);
     parts.bell.push(post);
   }
-  const beam = MeshBuilder.CreateBox("pirateMountainBellBeam", { width: 0.45, height: 0.45, depth: 3.6 }, scene);
-  beam.position.set(CX - 0.5, 23.2, CZ);
+  const beam = MeshBuilder.CreateBox("pirateMountainBellBeam", { width: 6.6, height: 0.6, depth: 0.6 }, scene);
+  beam.position.set(CX, 28.3, CZ - 0.5);
   parts.bell.push(beam);
-  const bell = MeshBuilder.CreateCylinder("pirateMountainBell", { height: 2.8, diameterTop: 1.3, diameterBottom: 3.2, tessellation: 10 }, scene);
-  bell.position.set(CX - 0.5, 21.2, CZ);
+  const bell = MeshBuilder.CreateCylinder("pirateMountainBell", { height: 5.2, diameterTop: 2.4, diameterBottom: 6, tessellation: 10 }, scene);
+  bell.position.set(CX, 25.2, CZ - 0.5);
   parts.bell.push(bell);
-  const crown = MeshBuilder.CreateSphere("pirateMountainBellCrown", { diameter: 1.4, segments: 6 }, scene);
-  crown.position.set(CX - 0.5, 22.6, CZ);
+  const crown = MeshBuilder.CreateSphere("pirateMountainBellCrown", { diameter: 2.5, segments: 6 }, scene);
+  crown.position.set(CX, 27.7, CZ - 0.5);
   parts.bell.push(crown);
-  const rim = MeshBuilder.CreateCylinder("pirateMountainBellRim", { height: 0.3, diameter: 3.45, tessellation: 10 }, scene);
-  rim.position.set(CX - 0.5, 19.85, CZ);
+  const rim = MeshBuilder.CreateCylinder("pirateMountainBellRim", { height: 0.5, diameter: 6.4, tessellation: 10 }, scene);
+  rim.position.set(CX, 22.7, CZ - 0.5);
   parts.gold.push(rim);
   const glow = scene.getGlowLayerByName("glow");
   for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
