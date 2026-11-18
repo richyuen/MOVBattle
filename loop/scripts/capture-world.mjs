@@ -136,6 +136,14 @@ async function mapScene(page, item) {
     await frame(page, radius ? { ...view, radius, radiusLimit: radius } : view);
     await shot(page, `${p}${pose}`);
   }
+  // Renaissance: the palace's walk-in ground arcade (card Appearance) shows in no pose; a low shot from the piazza at its front,
+  // six clubbers standing in the bays, then a full reset before the skirmish (585)
+  if (item === "map.renaissance") {
+    await page.evaluate(() => { for (const x of [-11.25, -6.75, -2.25, 2.25, 6.75, 11.25]) window.game.spawnUnit("tribal.clubber", 0, { x, z: 32.6 }); window.advanceTime(50); });
+    await frame(page, { target: { x: 0, y: 3, z: 33 }, radius: 24, alpha: -Math.PI / 2 - 0.25, beta: 1.42 });
+    await shot(page, `${p}arcade`);
+    await page.evaluate(() => { window.game.resetBattle(); window.advanceTime(50); });
+  }
   // Skirmish: 8 clubbers and 4 archers a side at each team's first zone centre, in two ranks
   const placed = await page.evaluate((zones) => {
     let ok = 0;
