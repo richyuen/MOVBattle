@@ -64,6 +64,8 @@ function loftHull(scene: Scene, parts: Record<string, Mesh[]>, at: (u: number, v
     const normals: number[] = [];
     VertexData.ComputeNormals(pos, idx, normals);
     vd.normals = normals;
+    // (593.4b) uvs too, or it cannot merge with the boxes (MergeMeshes needs one set of attributes)
+    vd.uvs = new Array((pos.length / 3) * 2).fill(0);
     vd.applyToMesh(m);
     return m;
   };
