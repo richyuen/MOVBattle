@@ -65,17 +65,48 @@ for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
 const PIT_DEPTH = 10;
 const inPit = (x: number, z: number, pad = 0) => PITS.some((p) => x > p.x0 - pad && x < p.x1 + pad && z > p.z0 - pad && z < p.z1 + pad);
 
+// Stepped edge (595, blocker b1; wiki fantasy_good.png: the deck's long sides do not run straight but step in and out in
+// square notches, the gold kerb and the crenellated parapet following every step). Spec: along the front (z -40) the edge
+// steps in 4 m over x -36..-20, -4..12 and 28..44 (16 m bays, 16 m apart), the back edge the same turned 180 degrees; the
+// corners and the tower legs (z 27..33) and pits (to z 30) untouched; deck top, rim wall, kerb and parapet follow the steps;
+// each notch is a box collider (nobody walks onto the air), outside both zones (|z| <= 20).
+const EDGE_STEPS: Array<[number, number, number]> = [[-36, -20, 4], [-4, 12, 4], [28, 44, 4]];
+/** How far the long edge on side s (-1 front, +1 back) steps in at x. */
+const notchDepth = (s: number, x: number) => { const u = s < 0 ? x : -x; return EDGE_STEPS.find(([a, b]) => u > a && u < b)?.[2] ?? 0; };
+const EDGE_XS = [...new Set([-DECK.x, DECK.x, ...EDGE_STEPS.flatMap(([a, b]) => [a, b, -a, -b])])].sort((a, b) => a - b);
+/** The long side s's outline: runs along x at the edge's z, and steps across z at the x where the depth changes. */
+function edgeSegments(s: number): Array<{ x0: number; x1: number; z0: number; z1: number }> {
+  const out: Array<{ x0: number; x1: number; z0: number; z1: number }> = [];
+  for (let i = 0; i < EDGE_XS.length - 1; i++) {
+    const x0 = EDGE_XS[i], x1 = EDGE_XS[i + 1], z = s * (DECK.z - notchDepth(s, (x0 + x1) / 2));
+    out.push({ x0, x1, z0: z, z1: z });
+    if (i < EDGE_XS.length - 2) {
+      const zn = s * (DECK.z - notchDepth(s, (x1 + EDGE_XS[i + 2]) / 2));
+      if (zn !== z) out.push({ x0: x1, x1, z0: Math.min(z, zn), z1: Math.max(z, zn) });
+    }
+  }
+  return out;
+}
+
 /** Deck top pieces around the pits: x bands split at the pits' edges, each band's z runs outside every pit. */
 function deckPieces(): Array<{ x0: number; x1: number; z0: number; z1: number }> {
-  const xs = [-DECK.x, -30, -6, 6, 30, DECK.x], out: Array<{ x0: number; x1: number; z0: number; z1: number }> = [];
+  const xs = [...new Set([-30, -6, 6, 30, ...EDGE_XS])].sort((a, b) => a - b), out: Array<{ x0: number; x1: number; z0: number; z1: number }> = [];
   for (let i = 0; i < xs.length - 1; i++) {
     const x0 = xs[i], x1 = xs[i + 1], mid = (x0 + x1) / 2;
     const cuts = PITS.filter((p) => p.x0 < mid && p.x1 > mid).map((p) => [p.z0, p.z1]).sort((a, b) => a[0] - b[0]);
-    let z = -DECK.z;
+    let z = -DECK.z + notchDepth(-1, mid);
+    const end = DECK.z - notchDepth(1, mid);
     for (const [a, b] of cuts) { if (a > z) out.push({ x0, x1, z0: z, z1: a }); z = Math.max(z, b); }
-    if (z < DECK.z) out.push({ x0, x1, z0: z, z1: DECK.z });
+    if (z < end) out.push({ x0, x1, z0: z, z1: end });
   }
   return out;
+}
+
+/** Boxes along a long side's outline, `w` thick, its outer face on the outline (horizontal runs) or centred on the step. */
+function alongEdge(s: number, w: number, inset: number): Array<{ w: number; d: number; x: number; z: number }> {
+  return edgeSegments(s).map((g) => g.z0 === g.z1
+    ? { w: g.x1 - g.x0 + (g.x0 === -DECK.x || g.x1 === DECK.x ? 0 : w), d: w, x: (g.x0 + g.x1) / 2, z: g.z0 - s * inset }
+    : { w, d: g.z1 - g.z0, x: g.x0, z: (g.z0 + g.z1) / 2 });
 }
 
 function pits(scene: Scene, built: Set<unknown>, result: MapBuildResult, stone: StandardMaterial, gold: StandardMaterial): MapBuildResult {
@@ -195,8 +226,9 @@ function marbleDeck(scene: Scene, built: Set<unknown>): { stone: StandardMateria
   stone.specularColor = Color3.Black();
   // the deck body: a rim wall 12 m deep round the deck's edge (its top would cover the pits), a floor plate under the pits
   const deep = PIT_DEPTH + 2, rim = 1;
+  // 595: the long rims follow the stepped edge
   const body = Mesh.MergeMeshes([
-    [2 * DECK.x, rim, 0, DECK.z - rim / 2], [2 * DECK.x, rim, 0, -DECK.z + rim / 2],
+    ...[-1, 1].flatMap((s) => alongEdge(s, rim, rim / 2).map((r) => [r.w, r.d, r.x, r.z])),
     [rim, 2 * DECK.z, DECK.x - rim / 2, 0], [rim, 2 * DECK.z, -DECK.x + rim / 2, 0],
   ].map(([w, dd, x, z]) => {
     const b = MeshBuilder.CreateBox("heavenDeckBody", { width: w, height: deep, depth: dd }, scene);
@@ -204,7 +236,7 @@ function marbleDeck(scene: Scene, built: Set<unknown>): { stone: StandardMateria
     b.bakeCurrentTransformIntoVertices();
     return b;
   }).concat([(() => {
-    const b = MeshBuilder.CreateBox("heavenDeckBody", { width: 2 * DECK.x, height: 1, depth: 2 * DECK.z }, scene);
+    const b = MeshBuilder.CreateBox("heavenDeckBody", { width: 2 * DECK.x, height: 1, depth: 2 * DECK.z - 8 }, scene);
     b.position.y = -deep - 0.5;
     b.bakeCurrentTransformIntoVertices();
     return b;
@@ -216,8 +248,8 @@ function marbleDeck(scene: Scene, built: Set<unknown>): { stone: StandardMateria
   gold.specularColor = new Color3(0.2, 0.18, 0.08);
   const k = DECK.kerbW, kh = DECK.kerbH;
   const kerbs = [
-    { w: 2 * DECK.x, d: k, x: 0, z: DECK.z - k / 2 },
-    { w: 2 * DECK.x, d: k, x: 0, z: -DECK.z + k / 2 },
+    ...alongEdge(1, k, k / 2),
+    ...alongEdge(-1, k, k / 2),
     { w: k, d: 2 * DECK.z - 2 * k, x: DECK.x - k / 2, z: 0 },
     { w: k, d: 2 * DECK.z - 2 * k, x: -DECK.x + k / 2, z: 0 },
   ].map((r, i) => {
@@ -290,10 +322,22 @@ function parapets(scene: Scene, built: Set<unknown>, result: MapBuildResult, sto
     into.push(b);
   };
   for (const s of [-1, 1]) {
-    const z = s * (DECK.z - inset), x = s * (DECK.x - inset);
-    box(walls, 2 * DECK.x, h, t, 0, h / 2, z);
+    const x = s * (DECK.x - inset);
+    // 595: the long walls follow the stepped edge, merlons every pitch along each run and step
+    for (const r of alongEdge(s, t, inset)) {
+      box(walls, r.w, h, r.d, r.x, h / 2, r.z);
+      const runX = r.w >= r.d, len = runX ? r.w : r.d, n = Math.max(1, Math.round(len / pitch));
+      for (let i = 0; i < n; i++) {
+        const u = -len / 2 + (i + 0.5) * (len / n);
+        if (runX) box(merlons, mw, mh, t, r.x + u, h + mh / 2, r.z);
+        else box(merlons, t, mh, mw, r.x, h + mh / 2, r.z + u);
+      }
+      // the notch is air: a collider fills it
+      if (!runX) continue;
+      const depth = notchDepth(s, r.x);
+      if (depth > 0) obstacles.push({ type: "box", center: new Vector3(r.x, 0, s * (DECK.z - depth / 2)), halfX: r.w / 2, halfZ: depth / 2 });
+    }
     box(walls, t, h, 2 * DECK.z, x, h / 2, 0);
-    for (let u = -DECK.x + pitch / 2; u <= DECK.x - pitch / 2 + 1e-6; u += pitch) box(merlons, mw, mh, t, u, h + mh / 2, z);
     for (let u = -DECK.z + pitch / 2; u <= DECK.z - pitch / 2 + 1e-6; u += pitch) box(merlons, t, mh, mw, x, h + mh / 2, u);
   }
   const wall = Mesh.MergeMeshes(walls, true, true);
