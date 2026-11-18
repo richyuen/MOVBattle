@@ -623,17 +623,18 @@ function rockMass(scene: Scene, built: Set<unknown>): void {
   for (const x of [-38, -14, 18, 36]) {
     const z = -47 * (1 - Math.abs(x / 53) ** 3) ** (1 / 3) - 1.5;
     const drop = 8 + rnd() * 10;
-    for (let j = 0; j * 1.1 < drop; j++) {
-      const l = MeshBuilder.CreateTorus("voidRimChain", { diameter: 1.1, thickness: 0.28, tessellation: 8 }, scene);
+    for (let j = 0; j * 1.5 < drop; j++) {
+      const l = MeshBuilder.CreateTorus("voidRimChain", { diameter: 1.6, thickness: 0.4, tessellation: 8 }, scene);
       l.rotation.set(0, j % 2 ? Math.PI / 2 : 0, Math.PI / 2);
-      l.position.set(x, -1 - j * 1.1, z - 1);
+      l.position.set(x, -1 - j * 1.5, z - 1);
       l.bakeCurrentTransformIntoVertices();
       links.push(l);
     }
   }
   const rock = new StandardMaterial("voidRockMass", scene);
-  rock.diffuseColor = new Color3(0.09, 0.12, 0.14);
-  rock.emissiveColor = new Color3(0.03, 0.04, 0.045);
+  // 596 [P]: slate (.09,.12,.14) vanished against the black void (critic 595): a lighter grey-teal, self-lit more
+  rock.diffuseColor = new Color3(0.2, 0.26, 0.32);
+  rock.emissiveColor = new Color3(0.07, 0.09, 0.11);
   rock.specularColor = Color3.Black();
   const iron = new StandardMaterial("voidRimChain", scene);
   iron.diffuseColor = new Color3(0.16, 0.18, 0.2);
