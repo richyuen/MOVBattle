@@ -13,7 +13,10 @@ import type { MapBuildResult } from "../mapBuilder";
 import { bareField, centreLine, gridBlock, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
 
 const DEPTH = 400;
-const BLOCK: Rect = { x0: 18, x1: 64, z0: -25, z1: 25 };
+// Proportions (589, blocker b2; wiki bridge.png: each block a squat square pillar whose side is shorter than the bridge, the
+// bridge the longest thing in the shot): block 22 x 46 m (x 18..40, |z| <= 23; simulation.bridge_battle stands x 20..27.2,
+// |z| <= 22), so the 36 m span is well over half again a block's depth along the battle axis.
+const BLOCK: Rect = { x0: 18, x1: 40, z0: -23, z1: 23 };
 const SPAN: Rect = { x0: -18, x1: 18, z0: -2.5, z1: 2.5 };
 
 export function buildBridge(scene: Scene, base: () => MapBuildResult): MapBuildResult {
