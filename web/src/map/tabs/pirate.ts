@@ -304,7 +304,8 @@ function goldenSand(scene: Scene, beach: Mesh, stations: number[][]): void {
     m.specularColor = Color3.Black();
     return m;
   };
-  beach.material = mk("pirateGoldenSand", new Color3(0.8, 0.6, 0.3), new Color3(0.3, 0.21, 0.09));
+  // (586.5b) the first gold read pale cream under ACES: a deeper, browner gold with less blue in the self-light
+  beach.material = mk("pirateGoldenSand", new Color3(0.82, 0.56, 0.2), new Color3(0.3, 0.18, 0.04));
   glow?.addExcludedMesh(beach);
   const half = (x: number) => {
     for (let i = 0; i < stations.length - 1; i++) {
@@ -321,18 +322,22 @@ function goldenSand(scene: Scene, beach: Mesh, stations: number[][]): void {
   const m: number[] = [];
   let k = 0;
   const rnd = () => { k++; const v = Math.sin(k * 37.719 + 3.1) * 14375.13; return v - Math.floor(v); };
-  for (let x = -55; x < 54; x += 1.6) {
+  // (586.5b) irregular: lines 1.3-2.1 m apart, each stroke drifting along x, its kink 0.25-0.8 m either way, so the strokes
+  // join into long wavy lines rather than a chevron grid
+  for (let x = -55; x < 54; x += 1.3 + rnd() * 0.8) {
     const w = half(x) - 1.5;
+    let drift = 0;
     for (let z = -w + rnd() * 2; z < w - 2.6;) {
-      const len = 1.6 + rnd() * 1;
-      const x0 = x + (rnd() - 0.5) * 0.6;
+      const len = 1.6 + rnd() * 1.4;
+      drift = Math.max(-0.7, Math.min(0.7, drift + (rnd() - 0.5) * 0.5));
+      const x0 = x + drift;
       // a V: (x0, z) -> (x0 + dx, z + len/2) -> (x0, z + len)
-      const dx = 0.5, seg = Math.hypot(dx, len / 2), yaw = Math.atan2(dx, len / 2);
+      const dx = (rnd() < 0.5 ? -1 : 1) * (0.25 + rnd() * 0.55), seg = Math.hypot(dx, len / 2), yaw = Math.atan2(dx, len / 2);
       for (const s of [1, -1]) {
         m.push(...Matrix.Compose(new Vector3(1, 1, seg), Quaternion.RotationAxis(Vector3.Up(), s * yaw),
           new Vector3(x0 + dx / 2, 0.105, z + len * (s > 0 ? 0.25 : 0.75))).m);
       }
-      z += len + rnd() * 0.8;
+      z += len + rnd() * 0.25;
     }
   }
   ripple.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
