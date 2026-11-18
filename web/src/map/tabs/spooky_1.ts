@@ -356,13 +356,21 @@ function deadTrees(scene: Scene, built: Set<unknown>): void {
     if (!onPlateau(x, z)) continue;
     mesh.setEnabled(false);
     k++;
-    const tall = 4 + seeded(k, 71) * 2.5;
-    const top = limb(new Vector3(x, 0, z), tall * 0.6, 0.55, seeded(k, 72) * 6.28, seeded(k, 73) * 0.2);
-    const limbs = seeded(k, 74) < 0.5 ? 2 : 3;
+    const tall = 4.8 + seeded(k, 71) * 3.2;
+    const twist = seeded(k, 72)*6.28;
+    // A crooked three-section trunk with a broad root flare, and asymmetric
+    // low limbs. Branches bend at elbows rather than forming repeated Ys.
+    const knee = limb(new Vector3(x, 0, z), tall*0.28, 1.35, twist,0.25);
+    const shoulder = limb(knee,tall*0.25,0.95,twist+1.3,0.4);
+    const top = limb(shoulder,tall*0.2,0.68,twist-0.7,0.3);
+    const limbs = 3+Math.floor(seeded(k,74)*2);
     for (let j = 0; j < limbs; j++) {
-      const yaw = seeded(k, 75) * 6.28 + (j * 6.28) / limbs;
-      const end = limb(top, 2 + seeded(k + j, 76) * 1.4, 0.32, yaw, 0.6 + seeded(k + j, 77) * 0.45);
-      for (const s of [-1, 1]) limb(end, 0.9 + seeded(k + j, 78 + s) * 0.7, 0.15, yaw + s * 0.7, 0.9 + seeded(k + j, 80) * 0.3);
+      const yaw = twist+j*2.4+seeded(k+j,75)*0.7;
+      const start=j===0?knee:j===1?shoulder:top;
+      const elbow=limb(start,1.5+seeded(k+j,76)*1.5,0.58,yaw,0.95+seeded(k+j,77)*0.6);
+      const end=limb(elbow,1.1+seeded(k+j,78)*1.2,0.34,yaw+0.65,0.45+seeded(k+j,79)*0.8);
+      limb(end,0.7+seeded(k+j,80),0.17,yaw-0.7,0.7);
+      if(j%2===0)limb(elbow,1.2,0.2,yaw-0.85,1.25);
     }
   }
   const merged = Mesh.MergeMeshes(parts, true);
