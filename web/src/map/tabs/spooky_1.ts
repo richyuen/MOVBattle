@@ -37,7 +37,7 @@ function onPlateau(x: number, z: number): boolean {
 
 function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: StandardMaterial): void {
   const points = [
-    ...SHORE.map(([z, inside]) => new Vector3(side * inside, 0, z)),
+    ...SHORE.map(([z, inside]) => new Vector3(side * (side < 0 && z >= -23 && z <= 5 ? 15 : inside), 0, z)),
     ...[...SHORE].reverse().map(([z, , outside]) => new Vector3(side * outside, 0, z)),
   ];
   const mesh = new Mesh("spooky1Plateau", scene);
@@ -64,6 +64,8 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
     const nx = side * (a.z - b.z) / span, nz = side * (b.x - a.x) / span;
     for (let j = 0; j < count; j++) {
       const p = Vector3.Lerp(a, b, (j + 0.5) / count);
+      // Leave the recessed secret passage open before the cliff columns merge.
+      if (side < 0 && p.x > -17 && p.z > -25 && p.z < 7) continue;
       const width = span / count;
       const upper = 6 + ((i * 3 + j * 5) % 7);
       for (const [height, top, offset] of [[upper, 0, 0.35], [19 - upper, -upper, 1.65 + j % 3]]) {
@@ -417,5 +419,32 @@ export function buildSpooky1(scene: Scene, base: () => MapBuildResult): MapBuild
   const restore = nightSky(scene, built);
   graveyard(scene, built, result);
   rimOfferings(scene);
+  leftDescent(scene, result);
   return { ...result, dispose: () => { restore(); result.dispose?.(); } };
+}
+
+// A walled descent in a recess on the left bank, ending at the broken room beneath the bridge.
+// The 4 m path drops 6 m over z -23..0; the cliff columns above it are omitted in plateau().
+function leftDescent(scene: Scene, result: MapBuildResult): void {
+  const stone = new StandardMaterial("spooky1PassageStone",scene);
+  stone.diffuseColor.set(0.22,0.25,0.36);stone.emissiveColor.set(0.11,0.13,0.2);
+  const dark = new StandardMaterial("spooky1RoomDark",scene);
+  dark.diffuseColor.set(0.015,0.018,0.035);dark.emissiveColor.set(0.006,0.008,0.02);
+  const box=(w:number,h:number,d:number,x:number,y:number,z:number,mat=stone)=>{
+    const m=MeshBuilder.CreateBox("spooky1LeftDescent",{width:w,height:h,depth:d},scene);
+    m.position.set(x,y,z);m.material=mat;m.receiveShadows=true;return m;
+  };
+  for(let i=0;i<24;i++) {
+    const z=-23+i, y=-i/23*6;
+    box(4.8,0.45,1.08,-10.5,y-0.23,z);
+    for(const x of [-13.1,-7.9]) box(0.45,0.85,1.08,x,y+0.2,z);
+  }
+  box(8.5,0.5,5,-8,-6.3,1);
+  box(0.5,5.7,6,-14.6,-2.85,1);
+  box(0.3,3.7,3.4,-3.9,-4.4,1,dark);
+  for(const z of [-1.2,3.2]) box(1.2,4,0.75,-4.7,-4.1,z);
+  box(1.4,0.75,5.2,-4.7,-2.2,1);
+  for(let i=0;i<4;i++) {const plank=box(0.18,2.4-i*0.4,0.3,-5.5,-4.7,-0.5+i*0.9,dark);plank.rotation.x=0.25-i*0.2;}
+  // Keep the lowered secret corridor separated from the ordinary combat meadow.
+  result.obstacles.push({type:"box",center:new Vector3(-15,0,-12),halfX:0.5,halfZ:10});
 }
