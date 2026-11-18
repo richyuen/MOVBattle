@@ -268,13 +268,22 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
 // ground with their cannon batteries). Spec: a unit inside a galleon's rails (|x| <= 14.6, within 3.9 m of its keel line) is
 // drawn on the deck (y 3.6); on a gangplank (within 1.6 m of its centre line, 0..12.5 m from the rail toward the beach) it
 // is drawn on the plank, falling from 4.15 m at the rail to the sand. The sim stays flat (terrain.ts).
+// 596: a unit over the forecastle (u 3..8) is drawn on its roof (+1.4 m), over the stern castle's tiers (from u -13.5 to
+// -5.5 / -7.5 / -9.3) on the top tier it stands over (+2.2 / +4 / +5.4 m), so a stage army on the deck never stands inside them.
 function deckHeight(x: number, z: number): number {
   const top = HULL - SINK;
   let h = 0;
   for (const { x: SX, z: Z, bow } of SHIPS) {
     const toBeach = -Math.sign(Z);
     const v = (z - Z) * toBeach;
-    if (Math.abs(x - SX) <= 14.6 && Math.abs(v) <= BEAM / 2 - 0.1) return top;
+    if (Math.abs(x - SX) <= 14.6 && Math.abs(v) <= BEAM / 2 - 0.1) {
+      const u = (x - SX) * bow;
+      if (u >= 3 && u <= 8 && Math.abs(v) <= hullHalfBeam(8) - 0.1) return top + 1.4;
+      if (u >= -13.5 && u <= -9.3) return top + 5.4;
+      if (u >= -13.5 && u <= -7.5) return top + 4;
+      if (u >= -13.5 && u <= -5.5) return top + 2.2;
+      return top;
+    }
     for (const [u, fan] of [[-9, -0.18], [0, 0.04], [9, 0.16]] as const) {
       const yaw = Math.atan2(Math.sin(fan) * bow, toBeach * Math.cos(fan));
       const rx = SX + u * bow, rz = Z + (BEAM / 2) * toBeach;
@@ -358,7 +367,16 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   openShore(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   const baseHeight = result.height;
   const height = (x: number, z: number) => Math.max(baseHeight?.(x, z) ?? 0, deckHeight(x, z));
-  return { ...result, obstacles, hazards, height, dispose: () => { restoreSky(); result.dispose?.(); } };
+  // Team 1's deck (596, blocker b2; reference/stages/pirate.x_marks_the_spot.png, spooky.plunder.png: the enemy army stands on
+  // its own galleon's deck and gangplanks, not on the open sand). Spec: a team-1 zone over the -z galleon (x 2..32) from its
+  // seaward rail (z -41) across the deck and down the gangplanks to z -20, after the base zones so a default placement still
+  // lands on the sand; the stage armies are authored on the deck in ranks along the keel, their leaders at the plank heads.
+  const deck = SHIPS.find((s) => s.z < 0)!;
+  const placementZones = [
+    ...(result.placementZones ?? result.zones),
+    { team: 1, center: new Vector3(deck.x, 0, -30.5), size: new Vector3(30, 100, 21) },
+  ];
+  return { ...result, obstacles, hazards, height, placementZones, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
 
 // Tropic sky (585, pirate_beach.png and the wiki shot: the island floats in a bright sky-blue haze with soft white clouds, no
