@@ -41,11 +41,13 @@ function plateau(scene: Scene, side: number, grass: StandardMaterial, stone: Sta
     ...[...SHORE].reverse().map(([z, , outside]) => new Vector3(side * outside, 0, z)),
   ];
   const mesh = new Mesh("spooky1Plateau", scene);
-  const positions = [side * 25, 0, 0, ...points.flatMap((p) => [p.x, p.y, p.z])];
-  const indices = points.flatMap((_, i) => {
-    const j = (i + 1) % points.length;
-    return side > 0 ? [0, j + 1, i + 1] : [0, i + 1, j + 1];
-  });
+  // Longitudinal strips triangulate the concave recess without a fan crossing its mouth.
+  const positions = points.flatMap((p) => [p.x, p.y, p.z]);
+  const indices: number[] = [];
+  for(let i=0;i<SHORE.length-1;i++) {
+    const a=i,b=i+1,c=points.length-1-i,d=c-1;
+    indices.push(...(side>0?[a,b,c,b,d,c]:[a,c,b,b,c,d]));
+  }
   const normals: number[] = [];
   VertexData.ComputeNormals(positions, indices, normals);
   const data = new VertexData();
