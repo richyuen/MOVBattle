@@ -370,9 +370,19 @@ function terraceBranches(scene: Scene, result: MapBuildResult): void {
     put("dynastyBranchCrossing",3.8,1.05,4.8,sign*42,0.525,0);
     for(const z of [-4.7,4.7])result.hazards.push({shape:"box",kind:"water",center:new Vector3(sign*42,0,z),halfX:1.5,halfZ:2.3});
   }
-  for(const sx of [-1,1])for(const sz of [-1,1])for(let i=0;i<12;i++) {
-    const h=0.97+(i+1)/12*0.55,z=sz*(7+(i+0.5)*11/12);
-    put("dynastyTerraceStair",8,h,11/12+0.03,sx*27,h/2,z);
+  // Terrace stairs (583, shogun_s_samurai: wide stone stairs climb from the middle lawns to the higher outer lawns). Each
+  // flight is a flat 8 m deck over the canal's near 6 m (|z| 7..13) at the middle lawn's level, then ten 0.5 m treads
+  // climbing to the outer lawn's top at |z| 18, between stepped cheek walls.
+  const outer=scene.meshes.find(m=>m.name==="dynastyLawnRetaining"&&Math.abs(m.position.z)>20);
+  const DECK=0.97,TOP=(outer?outer.position.y*2:1.4)+0.12;
+  for(const sx of [-1,1])for(const sz of [-1,1]) {
+    put("dynastyTerraceStair",8,DECK,6,sx*27,DECK/2,sz*10);
+    for(const side of [-1,1])put("dynastyTerraceStairCheek",0.5,DECK+0.45,6,sx*27+side*4.25,(DECK+0.45)/2,sz*10);
+    for(let i=0;i<10;i++) {
+      const h=DECK+(i+1)/10*(TOP-DECK),z=sz*(13+(i+0.5)*0.5);
+      put("dynastyTerraceStair",8,h,0.53,sx*27,h/2,z);
+      if(i%2===0)for(const side of [-1,1])put("dynastyTerraceStairCheek",0.5,h+0.75,1.03,sx*27+side*4.25,(h+0.75)/2,z+sz*0.25);
+    }
   }
   // Carve the four new dry flights out of the existing canal hazards.
   result.hazards=result.hazards.flatMap(h=>{
@@ -381,7 +391,7 @@ function terraceBranches(scene: Scene, result: MapBuildResult): void {
   });
   const oldHeight=result.height;
   result.height=(x,z)=>{
-    if(Math.abs(Math.abs(x)-27)<4&&Math.abs(z)>=7&&Math.abs(z)<=18)return 0.97+Math.ceil((Math.abs(z)-7)/11*12)/12*0.55;
+    if(Math.abs(Math.abs(x)-27)<4&&Math.abs(z)>=7&&Math.abs(z)<=18)return Math.abs(z)<=13?DECK:DECK+Math.ceil((Math.abs(z)-13)/5*10)/10*(TOP-DECK);
     if(Math.abs(Math.abs(x)-42)<1.9&&Math.abs(z)<2.4)return 1.05;
     return oldHeight?.(x,z)??0;
   };
@@ -461,7 +471,7 @@ function lawnTerraces(scene: Scene, built: Set<unknown>, result: MapBuildResult)
   };
   for(const sx of [-1,1]) for(const sz of [-1,1]) {
     blocks.push({x:sx*26,z:sz*3.7,w:29,d:6.3,h:0.85});
-    blocks.push({x:sx*25,z:sz*24,w:30,d:12,h:1.4});
+    blocks.push({x:sx*25,z:sz*24,w:30,d:12,h:2.4});
   }
   for(const b of blocks) {
     box("dynastyLawnRetaining",b.w,b.h,b.d,b.x,b.h/2,b.z);
