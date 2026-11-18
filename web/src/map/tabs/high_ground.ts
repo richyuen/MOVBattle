@@ -11,7 +11,7 @@
 import { Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import { terrainMesh, type HeightField } from "../terrain";
-import { bareField, centreLine, gridBlock, gridMaterial, gridUVs, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
+import { bareField, centreLine, cloudBanks, gridBlock, gridMaterial, gridUVs, paleSky, voidAround, zonesOn, type Rect } from "./simKit";
 
 const SHEET: Rect = { x0: -60, x1: 48, z0: -22, z1: 22 };
 const RAMP = { foot: -24, top: 10, high: 12 };
@@ -67,5 +67,8 @@ export function buildHighGround(scene: Scene, base: () => MapBuildResult): MapBu
   const hazards = [...kept, ...voidAround([SHEET], { x0: -90, x1: 90, z0: -60, z1: 60 })];
   const placementZones = zonesOn([{ ...SHEET, x1: -1, team: 0 }, { ...SHEET, x0: 1, team: 1 }]);
   const restoreSky = paleSky(scene);
+  // Clouds (590, blocker a4; wiki high_ground.png: large heaped white clouds left and right behind the platform): kit banks at
+  // z 200-230 inside the island shot's sky band, as on Hill.
+  cloudBanks(scene, [[-130, -16, 210, 180], [20, -22, 240, 120], [150, -12, 205, 190]]);
   return { ...result, obstacles, hazards, placementZones, height: highGroundHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
