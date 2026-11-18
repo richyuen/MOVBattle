@@ -137,6 +137,61 @@ function nightTurf(scene: Scene, built: Set<unknown>): void {
   }
 }
 
+// Grated court (584, wiki spooky_2.png and wild_west.spooky_army.png: the Dynasty pit at the island's centre is sealed by a
+// square iron grate, an orange glow showing through every opening, set in a paved stone court with lanterns at its corners).
+// Spec: a 15 m paved court, flush (0.1 m, units walk over it), with path tongues to the four kerb gaps; a 7 m ember plate at
+// 0.14 m, unlit orange (1.6, 0.5, 0.06) and inside the glow pass; over it a flat lattice of nine 0.22 m bars each way on a
+// 0.85 m pitch, only 4 cm proud so the low battle camera still sees the embers between them (579's 0.2 m bars hid the bed
+// from every camera), a 0.55 m iron frame, and four corner plinths 1.1 m high carrying a flame (a 0.8 m collider each).
+function gratedCourt(scene: Scene, result: MapBuildResult): void {
+  const mk = (name: string, c: Color3, self: Color3, unlit = false) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = unlit ? Color3.Black() : c;
+    m.emissiveColor = self;
+    m.specularColor = Color3.Black();
+    m.disableLighting = unlit;
+    return m;
+  };
+  const mats = {
+    stone: mk("spooky2CourtStone", new Color3(0.2, 0.24, 0.35), new Color3(0.055, 0.065, 0.11)),
+    iron: mk("spooky2GrateIron", new Color3(0.035, 0.04, 0.06), new Color3(0.012, 0.014, 0.025)),
+    ember: mk("spooky2GrateEmber", Color3.Black(), new Color3(1.6, 0.5, 0.06), true),
+  };
+  const parts: Record<keyof typeof mats, Mesh[]> = { stone: [], iron: [], ember: [] };
+  const box = (k: keyof typeof mats, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("spooky2CourtPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    parts[k].push(b);
+  };
+  box("stone", 15, 0.1, 15, 0, 0.05, 0);
+  for (const s of [-1, 1]) {
+    box("stone", 4.6, 0.08, 4, 0, 0.04, s * 9.2);
+    box("stone", 6, 0.08, 4.6, s * 10.4, 0.04, 0);
+    for (const t of [-1, 1]) {
+      box("stone", 1.3, 1.1, 1.3, s * 6.6, 0.55, t * 6.6);
+      box("stone", 1.6, 0.18, 1.6, s * 6.6, 1.15, t * 6.6);
+      box("ember", 0.5, 0.6, 0.5, s * 6.6, 1.54, t * 6.6);
+      result.obstacles.push({ type: "cylinder", center: new Vector3(s * 6.6, 0, t * 6.6), radius: 0.8 });
+    }
+    box("iron", 8.1, 0.2, 0.55, 0, 0.1, s * 3.78);
+    box("iron", 0.55, 0.2, 8.1, s * 3.78, 0.1, 0);
+  }
+  box("ember", 7, 0.04, 7, 0, 0.14, 0);
+  for (let i = -4; i <= 4; i++) {
+    box("iron", 0.22, 0.04, 7, i * 0.85, 0.18, 0);
+    box("iron", 7, 0.04, 0.22, 0, 0.18, i * 0.85);
+  }
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true);
+    if (!merged) continue;
+    merged.name = `spooky2Court_${key}`;
+    merged.material = mats[key];
+    merged.isPickable = false;
+    if (key === "ember") merged.applyFog = false;
+    else merged.receiveShadows = true;
+  }
+}
+
 // Night void and cold moonlight, no daylight range/clouds. Restore shared lights when changing maps.
 function nightSky(scene: Scene, built: Set<unknown>): () => void {
   const clear=scene.clearColor.clone(), fog=scene.fogColor.clone();
@@ -161,6 +216,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   squareIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   fogChannels(scene);
   nightTurf(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
+  gratedCourt(scene, result);
   const restore=nightSky(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   return {...result,dispose:()=>{restore();result.dispose?.();}};
 }
