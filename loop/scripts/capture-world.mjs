@@ -198,6 +198,22 @@ async function mapScene(page, item) {
   }
   await frame(page, battleView);
   await shot(page, `${p}battle`);
+  // High Ground: a unit of the attackers inside the gate passage (598): the bar crown is a standable height, so the gate shot
+  // shows how a unit walking through the gate is drawn; steps 100 ms (cap 40 s) until one is in x 27.5..36.5, |z| < 4.6
+  if (item === "map.high_ground") {
+    const inGate = await page.evaluate(() => {
+      for (let i = 0; i < 400; i++) {
+        const u = window.game.listLiveUnits().find((q) => q.team === 0 && q.position.x > 27.5 && q.position.x < 36.5 && Math.abs(q.position.z) < 4.6);
+        if (u) return true;
+        window.advanceTime(100);
+      }
+      return false;
+    });
+    if (inGate) {
+      await frame(page, { target: { x: 30, y: 16, z: 0 }, radius: 42, alpha: Math.PI + 0.5, beta: 1.2 });
+      await shot(page, `${p}gate`);
+    } else summary.notes.push(`${item}: no unit reached the gate passage in 40 s, gate shot skipped`);
+  }
   rec.skirmish ={ placed, ...(await runToResult(page, 5000)) };
   summary.items[item] = rec;
 }
