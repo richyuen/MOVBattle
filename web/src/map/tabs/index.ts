@@ -12,6 +12,7 @@ import { buildCorridor } from "./corridor";
 import { buildTribal2 } from "./tribal_2";
 import { buildTribal1 } from "./tribal_1";
 import { buildViking } from "./viking";
+import { buildLowGround } from "./low_ground";
 import { buildTribalSandbox } from "./tribal_sandbox";
 import { buildFarmerSnow } from "./farmer_snow";
 import { buildMedieval2 } from "./medieval_2";
@@ -36,6 +37,7 @@ export const TABS_MAP_BUILDERS: Partial<Record<TabsMapId, TabsMapBuilder>> = {
   hill: buildHill,
   bridge: buildBridge,
   viking: buildViking,
+  low_ground: buildLowGround,
   farmer_1: buildFarmer1,
   farmer_2: buildFarmer2,
   corridor: buildCorridor,
