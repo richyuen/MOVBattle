@@ -130,7 +130,11 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
     return m;
   };
   const walls = [new Color3(0.93, 0.7, 0.42), new Color3(0.9, 0.58, 0.52), new Color3(0.95, 0.88, 0.74), new Color3(0.95, 0.8, 0.52)].map((c, i) => mk(`renaissanceRowWall${i}`, c));
-  const mats = { roof: mk("renaissanceRowRoof", new Color3(0.84, 0.42, 0.26)), stone: mk("renaissanceRowStone", new Color3(0.92, 0.89, 0.82)), dark: mk("renaissanceRowDark", new Color3(0.3, 0.24, 0.24), 0.2) };
+  const mats = {
+    roof: mk("renaissanceRowRoof", new Color3(0.84, 0.42, 0.26)), stone: mk("renaissanceRowStone", new Color3(0.92, 0.89, 0.82)), dark: mk("renaissanceRowDark", new Color3(0.3, 0.24, 0.24), 0.2),
+    shutter: mk("renaissanceRowShutter", new Color3(0.26, 0.5, 0.42)), planter: mk("renaissanceRowPlanter", new Color3(0.72, 0.36, 0.22)),
+    leaf: mk("renaissanceRowLeaf", new Color3(0.3, 0.56, 0.2), 0.35), bloom: mk("renaissanceRowBloom", new Color3(0.95, 0.22, 0.25), 0.5),
+  };
   const parts = new Map<StandardMaterial, Mesh[]>();
   let k = 0;
   const r = (n: number) => Math.abs((Math.sin(k * 23.117 + n * 41.37) * 31337.77) % 1);
@@ -160,13 +164,32 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
       put(mats.roof, row, wide * 0.6, 0.9, D * 0.5, u, tall + 2, D / 2);
     } else {
       // a crenellated parapet along the front
-      for (let m = -wide / 2 + 0.5; m <= wide / 2 - 0.4; m += 1.4) put(mats.stone, row, 0.6, 0.9, 0.5, u + m, tall + 0.85, 0.3);
+      // (586) a solid parapet course with tall merlons and swallow gaps, the Venetian crenellation read from the square
+      put(mats.stone, row, wide * 1.02, 0.6, 0.55, u, tall + 0.6, 0.25);
+      for (let m = -wide / 2 + 0.45; m <= wide / 2 - 0.4; m += 1.3) put(mats.stone, row, 0.7, 1.1, 0.55, u + m, tall + 1.45, 0.25);
     }
     const arches = Math.max(2, Math.floor(wide / 2.6));
     for (let i = 0; i < arches; i++) put(mats.dark, row, 1.5, 2.4, 0.2, u + (i + 0.5 - arches / 2) * (wide / arches), 1.2, -0.05);
     const panes = Math.max(2, Math.floor(wide / 2.4));
     for (let f = 1; f < floors; f++) {
-      for (let i = 0; i < panes; i++) put(mats.dark, row, 0.8, 1.5, 0.16, u + (i + 0.5 - panes / 2) * (wide / panes), f * 3.2 + 1.4, -0.03);
+      // A floor's cornice band, then each window: a cream frame, a pair of green shutters, and under it either a balcony
+      // (stone slab, dark rail on posts) or a terracotta planter with greenery and red flowers, or a plain sill (586)
+      put(mats.stone, row, wide * 1.01, 0.18, 0.3, u, f * 3.2 + 0.3, -0.1);
+      for (let i = 0; i < panes; i++) {
+        const wu = u + (i + 0.5 - panes / 2) * (wide / panes), y = f * 3.2 + 1.4, base = f * 3.2 + 0.6, pick = r(10 + f * 7 + i);
+        put(mats.dark, row, 0.8, 1.5, 0.16, wu, y, -0.03);
+        put(mats.stone, row, 1.08, 1.78, 0.1, wu, y, -0.01);
+        for (const s of [-1, 1]) put(mats.shutter, row, 0.4, 1.55, 0.08, wu + s * 0.78, y, -0.08);
+        if (pick < 0.35) {
+          put(mats.stone, row, 1.9, 0.18, 0.95, wu, base, -0.47);
+          put(mats.dark, row, 1.9, 0.08, 0.08, wu, base + 0.95, -0.9);
+          for (let p = 0; p < 6; p++) put(mats.dark, row, 0.07, 0.9, 0.07, wu - 0.9 + p * 0.36, base + 0.5, -0.9);
+        } else if (pick < 0.75) {
+          put(mats.planter, row, 1.05, 0.32, 0.4, wu, base + 0.05, -0.25);
+          put(mats.leaf, row, 1.0, 0.26, 0.36, wu, base + 0.32, -0.25);
+          for (let p = 0; p < 3; p++) put(mats.bloom, row, 0.16, 0.16, 0.16, wu - 0.32 + p * 0.32, base + 0.5, -0.36);
+        } else put(mats.stone, row, 1.2, 0.14, 0.3, wu, base, -0.15);
+      }
     }
     if (r(5) < 0.55) {
       put(mats.stone, row, wide * 0.55, 0.2, 0.9, u, 3.8, -0.45);
