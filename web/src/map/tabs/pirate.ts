@@ -115,11 +115,8 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     gold: mk("pirateGalleonGold", new Color3(0.95, 0.72, 0.25), 0.5),
     sail: mk("pirateGalleonSail", new Color3(0.96, 0.93, 0.85), 0.55),
     iron: mk("pirateGalleonIron", new Color3(0.2, 0.2, 0.24), 0.35),
-    glass: mk("pirateGalleonGlass", new Color3(0.62, 0.8, 1.05), 1),
   };
-  mats.glass.diffuseColor = Color3.Black();
-  mats.glass.disableLighting = true;
-  const parts: Record<keyof typeof mats, Mesh[]> = { hull: [], dark: [], deck: [], gold: [], sail: [], iron: [], glass: [] };
+  const parts: Record<keyof typeof mats, Mesh[]> = { hull: [], dark: [], deck: [], gold: [], sail: [], iron: [] };
   for (const { z: Z, bow } of SHIPS) {
     // u: along the hull toward the bow; v: across, toward the beach (+v points at z 0)
     const toBeach = -Math.sign(Z);
@@ -162,36 +159,19 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     box("hull", 5, 1.4, 2 * hullHalfBeam(8) - 0.1, foreU, top + 0.7, 0);
     for (const s of [-1, 1]) box("gold", 5.1, 0.2, 0.14, foreU, top + 1.45, s * (hullHalfBeam(8) - 0.05));
     // Stern castle in three tiers with gold edge rails and gold-framed windows on its stern face
-    // Stern castle (594, blocker a2; wiki pirate.png, the right galleon's stern: a tall flat transom raked aft and flaring at
-    // the top, framed in gold, a gallery rail across it, two rows of lit pale-blue stern windows in gold frames, a gold top
-    // rail). Spec: castle body u -13..-5, 4.4 m over the deck, 7.4 m beam, a poop tier 5 m long, 1.3 m on it; the transom a
-    // 7.8 x 6.4 m slab 0.4 m thick at u -13.2 from 1.4 m under the deck to 5 m over it, raked 0.2 rad (top aft); on it gold
-    // corner pilasters, a gold top rail, two gold gallery rails, five windows at 1.1 m and four at 2.6 m over the slab centre,
-    // each a gold frame 1.1 x 1 m round an unlit pale-blue pane (.62,.8,1.05) 0.85 x 0.75 m.
     const sternU = -LONG * 0.45 + 4;
-    box("hull", 8, 4.4, 7.4, sternU - 4 + 4, top + 2.2, 0);
-    for (const s of [-1, 1]) box("gold", 8.1, 0.22, 0.14, sternU, top + 4.45, s * 3.7);
-    box("hull", 5, 1.3, 6.6, sternU - 4 + 2.5, top + 4.4 + 0.65, 0);
-    for (const s of [-1, 1]) box("gold", 5.1, 0.2, 0.14, sternU - 1.5, top + 5.75, s * 3.3);
-    const base = top + 5.7;
-    const th = bow * 0.2, yAx = [-Math.sin(th), Math.cos(th)], aftN = [-bow * Math.cos(th), -bow * Math.sin(th)];
-    const [tcx] = at(-13.2, 0), tcy = top + 1.8;
-    const slab = (k: keyof typeof mats, w: number, h: number, thick: number, hc: number, out: number, v: number) => {
-      const m = MeshBuilder.CreateBox("pirateGalleonTransom", { width: thick, height: h, depth: w }, scene);
-      m.rotation.z = th;
-      m.position.set(tcx + yAx[0] * hc + aftN[0] * out, tcy + yAx[1] * hc + aftN[1] * out, Z + v * toBeach);
-      parts[k].push(m);
-    };
-    slab("hull", 7.8, 6.4, 0.4, 0, 0, 0);
-    for (const s of [-1, 1]) slab("gold", 0.35, 6.4, 0.12, 0, 0.24, s * 3.85);
-    slab("gold", 8.2, 0.35, 0.14, 3.1, 0.24, 0);
-    for (const hc of [0.35, 1.95]) slab("gold", 7.6, 0.2, 0.3, hc, 0.3, 0);
-    for (const [hc, n] of [[1.1, 5], [2.6, 4]] as const) {
-      for (let w = 0; w < n; w++) {
-        const v = (w + 0.5 - n / 2) * 1.4;
-        slab("gold", 1.1, 1, 0.1, hc, 0.25, v);
-        slab("glass", 0.85, 0.75, 0.1, hc, 0.31, v);
+    let base = top;
+    for (const [len, rise, wins] of [[8, 2.2, 4], [6, 1.8, 3], [4.2, 1.4, 0]] as const) {
+      const cu = sternU - 4 + len / 2, beam = BEAM * (1.02 - (8 - len) * 0.025);
+      box("hull", len, rise, beam, cu, base + rise / 2, 0);
+      for (const s of [-1, 1]) box("gold", len + 0.1, 0.2, 0.14, cu, base + rise + 0.05, s * beam / 2);
+      box("gold", 0.14, 0.2, beam, sternU - 4.03, base + rise + 0.05, 0);
+      for (let w = 0; w < wins; w++) {
+        const v = (w + 0.5 - wins / 2) * (beam / wins);
+        box("gold", 0.08, rise * 0.62, 1.25, sternU - 4.04, base + rise * 0.5, v);
+        box("dark", 0.1, rise * 0.48, 0.95, sternU - 4.07, base + rise * 0.5, v);
       }
+      base += rise;
     }
     for (const s of [-1, 1]) {
       const lamp = MeshBuilder.CreateCylinder("pirateGalleonLamp", { diameter: 0.6, height: 1, tessellation: 6 }, scene);
@@ -277,7 +257,7 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     merged.isPickable = false;
     // (586.8b) dark solids stay in the glow pass so they occlude the glow behind them (excluded, the near hull wore the
     // sea's glow as a pale veil); only the bright gold and sails leave it
-    if (key === "gold" || key === "sail" || key === "glass") glow?.addExcludedMesh(merged);
+    if (key === "gold" || key === "sail") glow?.addExcludedMesh(merged);
   }
 }
 
