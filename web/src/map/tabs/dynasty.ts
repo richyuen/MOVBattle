@@ -246,6 +246,28 @@ function courtyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): v
   }
 }
 
+// Two rim torii diagonally opposite the pagoda; preserve the base gate geometry and move its post colliders.
+function rimTorii(scene: Scene, built: Set<unknown>, obstacles: MapBuildResult["obstacles"]): void {
+  const gate=scene.getMeshByName("Dynasty Garden_torii");
+  if(!gate) return;
+  const old=gate.position.clone(), yaw=gate.rotation.y;
+  for(let i=obstacles.length-1;i>=0;i--) {
+    if([-1,1].some(s=>Math.hypot(obstacles[i].center.x-(old.x+s*Math.cos(yaw)*2.7),obstacles[i].center.z-(old.z-s*Math.sin(yaw)*2.7))<0.5)) obstacles.splice(i,1);
+  }
+  const twin=gate.clone("dynastyRimToriiTwin",null);
+  const gates=[gate,twin];
+  for(const [i,[x,z]] of [[-43,28],[40,-33]].entries()) {
+    const g=gates[i];if(!g) continue;
+    g.position.set(x,0,z);g.rotation.y=0;
+    for(const m of scene.meshes) {
+      if(!built.has(m)||m.name!=="trunk"||m.parent||Math.hypot(m.position.x-x,m.position.z-z)>5) continue;
+      m.setEnabled(false);
+      for(let j=obstacles.length-1;j>=0;j--) if(Vector3.Distance(obstacles[j].center,m.position)<0.6) obstacles.splice(j,1);
+    }
+    for(const s of [-1,1]) obstacles.push({type:"cylinder",center:new Vector3(x+s*2.7,0,z),radius:0.36});
+  }
+}
+
 // Turquoise canals: two 92 x 10 m stone-lined channels, lily groups kept clear of the six bridges.
 function gardenCanals(scene: Scene, built: Set<unknown>): void {
   for(const m of scene.meshes) if(built.has(m)&&m.name==="campaign_hazard_box_water") m.setEnabled(false);
@@ -293,5 +315,6 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   courtyard(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   gardenCanals(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, PAGODA.z - 1.4), halfX: 8.5, halfZ: 9.9 });
+  rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
