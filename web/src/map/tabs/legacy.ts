@@ -115,7 +115,77 @@ function meadow(scene: Scene, built: Set<unknown>): void {
   for (const { mesh, m } of grass) mesh.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
 }
 
-// Open glade (578, the wiki shot and legacy.the_war.png: the meadow between the two armies is open grass with only small
+// Church (578, legacy.png: at the back of the glade stands the dark grey stone church of St. Wobbly Horse: a long nave under a
+// steep dark slate gable roof, a side transept, and at its left end a tall square tower with belfry openings under a very steep
+// pointed spire, the highest thing in the glade). Spec: the base church (a dark box at (-20, 20) with its side cylinder) goes with
+// its colliders; the new one at the back centre: nave x -4..10, z 28.5..35.5, walls 6 m, a gable roof 4.5 m high overhanging 0.5
+// m; a transept 5 x 10 m across the nave at x 5 with its own gable; the tower 4.4 m square at x -6.5, 14 m to its parapet, belfry
+// slits, a four-sided spire 9 m; pointed dark windows along the nave. Stone (0.24, 0.24, 0.28) and slate (0.13, 0.14, 0.19),
+// self-lit 0.35, in the glow pass (dark solids). One box collider for nave and tower, one for the transept.
+function church(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const old = (x: number, z: number) => Math.abs(z - 20) < 0.5 && x > -23.5 && x < -19.5;
+  const gone: Vector3[] = [];
+  for (const mesh of scene.meshes) {
+    if (built.has(mesh) && !mesh.parent && /^Legacy Parade Grounds_(box|cyl)$/.test(mesh.name) && old(mesh.position.x, mesh.position.z)) {
+      gone.push(mesh.position.clone());
+      mesh.setEnabled(false);
+    }
+  }
+  result.obstacles = result.obstacles.filter(({ center }) => !gone.some((p) => Math.hypot(center.x - p.x, center.z - p.z) < 0.6));
+  const mk = (name: string, c: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(0.35);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const mats = { stone: mk("legacyChurchStone", new Color3(0.24, 0.24, 0.28)), slate: mk("legacyChurchSlate", new Color3(0.13, 0.14, 0.19)), dark: mk("legacyChurchDark", new Color3(0.05, 0.05, 0.07)) };
+  const parts: Record<keyof typeof mats, Mesh[]> = { stone: [], slate: [], dark: [] };
+  const box = (k: keyof typeof mats, w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("legacyChurchPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    parts[k].push(b);
+  };
+  // A gable roof with its ridge along x (or along z): two slate slabs leaning together over the span
+  const gable = (len: number, span: number, h: number, x: number, y: number, z: number, alongZ: boolean) => {
+    const slope = Math.hypot(span / 2, h), tilt = Math.atan2(h, span / 2);
+    for (const s of [-1, 1]) {
+      const slab = MeshBuilder.CreateBox("legacyChurchRoof", { width: alongZ ? slope : len, height: 0.35, depth: alongZ ? len : slope }, scene);
+      if (alongZ) slab.rotation.z = -s * tilt;
+      else slab.rotation.x = s * tilt;
+      slab.position.set(x + (alongZ ? s * span / 4 : 0), y + h / 2, z + (alongZ ? 0 : s * span / 4));
+      parts.slate.push(slab);
+    }
+  };
+  const Z = 32;
+  box("stone", 14, 6, 7, 3, 3, Z);
+  gable(15, 8, 4.5, 3, 6, Z, false);
+  box("stone", 5, 6, 10, 5, 3, Z);
+  gable(11, 6, 4.5, 5, 6, Z, true);
+  for (let i = 0; i < 4; i++) box("dark", 0.9, 2.6, 0.2, -2 + i * 3.4, 3.4, Z - 3.55);
+  box("dark", 1.8, 3.2, 0.2, 5, 1.6, Z - 5.05);
+  box("stone", 4.4, 14, 4.4, -6.5, 7, Z);
+  box("stone", 5, 0.6, 5, -6.5, 14.2, Z);
+  for (const [dx, dz] of [[0, -2.25], [0, 2.25], [-2.25, 0], [2.25, 0]]) box("dark", dx ? 0.2 : 1, 2.4, dz ? 0.2 : 1, -6.5 + dx, 11.6, Z + dz);
+  box("dark", 1.6, 2.8, 0.2, -6.5, 1.4, Z - 2.25);
+  const spire = MeshBuilder.CreateCylinder("legacyChurchSpire", { height: 9, diameterBottom: 4.6 * Math.SQRT2, diameterTop: 0.05, tessellation: 4 }, scene);
+  spire.rotation.y = Math.PI / 4;
+  spire.position.set(-6.5, 14.5 + 4.5, Z);
+  parts.slate.push(spire);
+  for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
+    const merged = Mesh.MergeMeshes(parts[key], true);
+    if (!merged) continue;
+    merged.name = `legacyChurch_${key}`;
+    merged.convertToFlatShadedMesh();
+    merged.material = mats[key];
+    merged.receiveShadows = true;
+    merged.isPickable = false;
+  }
+  result.obstacles.push({ type: "box", center: new Vector3(1.5, 0, Z), halfX: 9.5, halfZ: 3.6 });
+  result.obstacles.push({ type: "box", center: new Vector3(5, 0, Z), halfX: 2.6, halfZ: 5.1 });
+}
+
+// Open glade (578,the wiki shot and legacy.the_war.png: the meadow between the two armies is open grass with only small
 // scattered boulders; nothing stands across the middle). Spec: the base's dark barricade box at (22, 0) and its collider go.
 function openGlade(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
   const atBar = (x: number, z: number) => Math.hypot(x - 22, z) < 0.5;
@@ -133,5 +203,6 @@ export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildR
 
   pineForest(scene, built);
   meadow(scene, built);
+  church(scene, built, result);
   return result;
 }
