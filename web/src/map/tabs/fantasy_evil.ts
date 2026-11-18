@@ -487,12 +487,95 @@ const shrineHeight: HeightField = (x, z) => {
   return base;
 };
 
+// Green-glow rim (595, blocker a4; wiki fantasy_evil.png: the island's edge is no smooth pale slab but a jagged ring of dark rock
+// blocks, acid-green light glowing out of the cracks between them and along their lips, green glowing mushroom clusters on the
+// edge). Spec: the base slab (islandUnder, islandShelf) hidden, its pale band gone; round the basalt oval (superellipse 53 x 47,
+// power 3) every ~3 m of rim a dark five-sided rock 3.4-5 m across, its top 0.2-2.2 m over the floor (every fifth a 3-4 m
+// tooth), reaching 7 m down, slate (.09,.12,.14) in the glow pass; in each crack an acid-green plate (.15,.9,.2) 0.3 m wide,
+// 5 m tall on the outer face and a green lip strip on every second rock's top, unlit, out of the glow; six mushroom clusters
+// (3-5 green self-lit caps on pale stems) on the rim. Drawn only (outside the field).
+function greenRim(scene: Scene, built: Set<unknown>): void {
+  for (const m of scene.meshes) if (built.has(m) && (m.name === "islandUnder" || m.name === "islandShelf")) m.setEnabled(false);
+  let seed = 0x3e11;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const edge = (a: number) => {
+    const c = Math.cos(a), s = Math.sin(a), r = 1 / (Math.abs(c / 53) ** 3 + Math.abs(s / 47) ** 3) ** (1 / 3);
+    return { x: c * r, z: s * r, nx: c, nz: s };
+  };
+  const rocks: Mesh[] = [], glows: Mesh[] = [], caps: Mesh[] = [], stems: Mesh[] = [];
+  const N = 112;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2, e = edge(a);
+    const d = 3.4 + rnd() * 1.6, top = i % 5 === 0 ? 3 + rnd() : 0.2 + rnd() * 2, h = top + 7;
+    const r = MeshBuilder.CreateCylinder("voidRimRock", { height: h, diameterTop: d * 0.8, diameterBottom: d * 0.55, tessellation: 5 }, scene);
+    r.position.set(e.x + e.nx * 1.2, top - h / 2, e.z + e.nz * 1.2);
+    r.rotation.set((rnd() - 0.5) * 0.2, rnd() * 6.28, (rnd() - 0.5) * 0.2);
+    r.bakeCurrentTransformIntoVertices();
+    rocks.push(r);
+    // the crack after this rock: a green plate on the outer face
+    const b = edge(a + Math.PI / N);
+    const g = MeshBuilder.CreateBox("voidRimGlow", { width: 0.3, height: 5, depth: 1.2 }, scene);
+    g.position.set(b.x + b.nx * 2.9, -2.2, b.z + b.nz * 2.9);
+    g.rotation.y = -Math.atan2(b.nz, b.nx);
+    g.bakeCurrentTransformIntoVertices();
+    glows.push(g);
+    if (i % 2 === 0) {
+      const lip = MeshBuilder.CreateBox("voidRimLip", { width: 0.35, height: 0.12, depth: d * 0.7 }, scene);
+      lip.position.set(e.x + e.nx * 2.6, top - 0.1, e.z + e.nz * 2.6);
+      lip.rotation.y = -Math.atan2(e.nz, e.nx);
+      lip.bakeCurrentTransformIntoVertices();
+      glows.push(lip);
+    }
+  }
+  for (let c = 0; c < 6; c++) {
+    const e = edge(0.5 + c * 1.05), n = 3 + Math.floor(rnd() * 3);
+    for (let j = 0; j < n; j++) {
+      const ox = (rnd() - 0.5) * 2.4, oz = (rnd() - 0.5) * 2.4, tall = 0.5 + rnd() * 0.9, w = 0.7 + rnd() * 0.8;
+      const x = e.x - e.nx * 1.5 + ox, z = e.z - e.nz * 1.5 + oz, y0 = fantasyEvilHeight(x, z) + 0.2;
+      const stem = MeshBuilder.CreateCylinder("voidMushStem", { height: tall, diameter: 0.18, tessellation: 5 }, scene);
+      stem.position.set(x, y0 + tall / 2, z);
+      stem.bakeCurrentTransformIntoVertices();
+      stems.push(stem);
+      const cap = MeshBuilder.CreateSphere("voidMushCap", { diameter: w, segments: 4, slice: 0.5 }, scene);
+      cap.scaling.y = 0.6;
+      cap.position.set(x, y0 + tall, z);
+      cap.bakeCurrentTransformIntoVertices();
+      caps.push(cap);
+    }
+  }
+  const rock = new StandardMaterial("voidRimRock", scene);
+  rock.diffuseColor = new Color3(0.09, 0.12, 0.14);
+  rock.emissiveColor = new Color3(0.02, 0.03, 0.035);
+  rock.specularColor = Color3.Black();
+  const acid = new StandardMaterial("voidRimGlow", scene);
+  acid.diffuseColor = Color3.Black();
+  acid.emissiveColor = new Color3(0.15, 0.9, 0.2);
+  acid.specularColor = Color3.Black();
+  acid.disableLighting = true;
+  const stemMat = new StandardMaterial("voidMushStem", scene);
+  stemMat.diffuseColor = Color3.Black();
+  stemMat.emissiveColor = new Color3(0.55, 0.65, 0.5);
+  stemMat.disableLighting = true;
+  const glowLayer = scene.getGlowLayerByName("glow");
+  for (const [parts, mat, name, flat, excl] of [[rocks, rock, "voidRimRocks", true, false], [glows, acid, "voidRimGlow", false, true], [caps, acid, "voidMushCaps", false, true], [stems, stemMat, "voidMushStems", false, true]] as const) {
+    const merged = Mesh.MergeMeshes(parts, true, true);
+    if (!merged) continue;
+    merged.name = name;
+    if (flat) merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.isPickable = false;
+    merged.receiveShadows = flat;
+    if (excl) glowLayer?.addExcludedMesh(merged);
+  }
+}
+
 export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
   const built = new Set<unknown>(scene.meshes.filter((m) => !prior.has(m)));
   basaltFloor(scene, built);
   stairFlights(scene);
+  greenRim(scene, built);
   rockRing(scene, built);
   // seat the base's small props (bones, crystals, rocks, ring trunks) on the terrace under them (drawn only; colliders unchanged)
   for (const m of scene.meshes) {
