@@ -195,6 +195,33 @@ function openGlade(scene: Scene, built: Set<unknown>, result: MapBuildResult): v
   result.obstacles = result.obstacles.filter(({ center }) => !atBar(center.x, center.z));
 }
 
+// Small ridge-tent camps inside the pine band: blue on the left, red on the right, six tents per side.
+function tentCamps(scene: Scene): void {
+  const pole=new StandardMaterial("legacyTentPole",scene);
+  pole.diffuseColor.set(0.23,0.15,0.08);pole.emissiveColor.set(0.05,0.03,0.01);
+  for(const side of [-1,1]) {
+    const cloth=new StandardMaterial(side<0?"legacyBlueCamp":"legacyRedCamp",scene);
+    cloth.diffuseColor=side<0?new Color3(0.035,0.16,0.4):new Color3(0.5,0.045,0.025);
+    cloth.emissiveColor=cloth.diffuseColor.scale(0.35);cloth.specularColor=Color3.Black();
+    const dark=new StandardMaterial("legacyTentOpening",scene);
+    dark.diffuseColor.set(0.025,0.025,0.03);
+    for(let i=0;i<6;i++) {
+      const x=side*(35+(i%2)*6), z=-14+Math.floor(i/2)*10;
+      const root=new Mesh("legacyCampTent",scene);root.position.set(x,0,z);root.rotation.y=side*0.25+(i%2)*0.3;
+      for(const s of [-1,1]) {
+        const roof=MeshBuilder.CreateBox("legacyTentCanvas",{width:2.5,height:0.09,depth:3.8},scene);
+        roof.parent=root;roof.position.set(s*0.8,1.05,0);roof.rotation.z=-s*0.87;roof.material=cloth;
+      }
+      const back=MeshBuilder.CreateCylinder("legacyTentBack",{height:0.1,diameter:3.7,tessellation:3},scene);
+      back.parent=root;back.rotation.x=Math.PI/2;back.rotation.y=Math.PI;back.scaling.y=0.85;back.position.set(0,0.87,1.8);back.material=cloth;
+      const opening=MeshBuilder.CreateBox("legacyTentInterior",{width:2.5,height:1.6,depth:0.08},scene);
+      opening.parent=root;opening.position.set(0,0.8,1.65);opening.material=dark;
+      const mast=MeshBuilder.CreateCylinder("legacyTentFrontPole",{height:2.05,diameter:0.09,tessellation:5},scene);
+      mast.parent=root;mast.position.set(0,1.02,-1.8);mast.material=pole;
+    }
+  }
+}
+
 // Churchyard: irregular headstone ranks flank both sides of the nave, connected by a sandy winding approach.
 function churchyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
   const stone=new StandardMaterial("legacyHeadstone",scene);
@@ -233,5 +260,6 @@ export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildR
   meadow(scene, built);
   church(scene, built, result);
   churchyard(scene,built,result);
+  tentCamps(scene);
   return result;
 }
