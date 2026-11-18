@@ -253,6 +253,8 @@ export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapB
   dogesPalace(scene);
   frontCanal(scene);
   creamPavement(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
-  const obstacles = [...result.obstacles, { type: "box" as const, center: new Vector3(0, 0, PALACE.z + PALACE.deep / 2), halfX: PALACE.wide / 2, halfZ: PALACE.deep / 2 }];
+  // The circular object in the reference battle is a unit: the piazza itself has no fountain.
+  for(const m of scene.meshes) if(!prior.has(m)&&m.name.startsWith("plazaFountain")) m.setEnabled(false);
+  const obstacles = [...result.obstacles.filter(o=>!(o.type==="cylinder"&&Math.hypot(o.center.x,o.center.z)<0.1&&o.radius===3.5)), { type: "box" as const, center: new Vector3(0, 0, PALACE.z + PALACE.deep / 2), halfX: PALACE.wide / 2, halfZ: PALACE.deep / 2 }];
   return { ...result, obstacles };
 }
