@@ -101,7 +101,8 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
   const pale = mk("ancient2Marble", new Color3(0.86, 0.82, 0.72), 0.7);
   const moss = mk("ancient2Moss", new Color3(0.42, 0.6, 0.18), 0.45);
   const shade = mk("ancient2Shade", new Color3(0.42, 0.37, 0.3), 0.6);
-  const lists: Record<"stone" | "pale" | "moss" | "shade", Mesh[]> = { stone: [], pale: [], moss: [], shade: [] };
+  const dark = mk("ancient2StoneDark", new Color3(0.58, 0.53, 0.44), 0.62);
+  const lists: Record<"stone" | "pale" | "moss" | "shade" | "dark", Mesh[]> = { stone: [], pale: [], moss: [], shade: [], dark: [] };
   const box = (list: keyof typeof lists, w: number, h: number, d: number, x: number, y: number, z: number) => {
     const b = MeshBuilder.CreateBox("ancient2Part", { width: w, height: h, depth: d }, scene);
     b.position.set(x, y, z);
@@ -254,6 +255,28 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
     const z0 = TERRACES[0].front + (s / steps) * run;
     box(s % 2 === 0 ? "pale" : "stone", STAIR_HALF * 2, y, run - (z0 - TERRACES[0].front), 0, y / 2, (z0 + TERRACES[0].front + run) / 2);
   }
+  // Temple-front towers (586, wiki ancient_2.png: the mound is not banded; big temple blocks of different heights stand
+  // proud of the terraces at irregular places, each a sheer greyer mass with a dark doorway and a full temple on its top,
+  // so the eye climbs block on block). Spec: six towers, 6.5-8 m wide and up to 8 m deep, fronts at z 25-30.5 (behind the
+  // field's collision line z 24), tops 9.5-16.5 m, i.e. above the terrace they stand in, unmirrored (x -36, -25, -13, 12.5,
+  // 24, 34); a darker stone (0.58, 0.53, 0.44) than the terraces, shade pilasters at both front corners, a dark doorway a
+  // third of the width and half the height (min 4 m), a pale cornice, a moss lip and a temple as wide as the tower on top.
+  // Their footprints lie inside terrace 1's box colliders, so the field and colliders are unchanged.
+  const TOWERS: Array<[number, number, number, number]> = [
+    [-36, 25.5, 7, 9.5], [-25, 30.5, 8, 15.5], [-13, 25, 6.5, 11], [12.5, 30, 7.5, 16.5], [24, 25.2, 7, 10.5], [34, 29.5, 6.5, 13],
+  ];
+  TOWERS.forEach(([x, front, w, h], n) => {
+    const back = Math.min(front + 8, rimZ(Math.abs(x) + w / 2) * 0.95);
+    if (back - front < 4) return;
+    const d = back - front, cz = (front + back) / 2;
+    box("dark", w, h, d, x, h / 2, cz);
+    for (const s of [-1, 1]) box("shade", 0.35, h * 0.96, 0.2, x + s * (w / 2 - 0.15), h / 2, front - 0.08);
+    const door = Math.min(h * 0.5, 4.5);
+    box("shade", w / 3, door, 0.2, x, door / 2, front - 0.08);
+    box("pale", w + 0.5, 0.45, d + 0.4, x, h + 0.2, cz);
+    box("moss", w, 0.3, 1.4, x, h + 0.55, front + 0.8);
+    temple(x, h + 0.4, front + 1.6 + (w - 0.6) * 0.45, w - 0.6, 300 + n);
+  });
   // Two statues flanking the stair foot
   for (const [x, z] of STATUES) {
     box("stone", 3, 1.6, 3, x, 0.8, z);
@@ -270,7 +293,7 @@ function templeComplex(scene: Scene, obstacles: Obstacle[]): void {
     obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.8 });
   }
   const glow = scene.getGlowLayerByName("glow");
-  for (const [key, mat] of [["stone", stone], ["pale", pale], ["moss", moss], ["shade", shade]] as const) {
+  for (const [key, mat] of [["stone", stone], ["pale", pale], ["moss", moss], ["shade", shade], ["dark", dark]] as const) {
     const merged = Mesh.MergeMeshes(lists[key], true);
     if (!merged) continue;
     merged.name = `ancient2Temples_${key}`;
