@@ -195,6 +195,34 @@ function openGlade(scene: Scene, built: Set<unknown>, result: MapBuildResult): v
   result.obstacles = result.obstacles.filter(({ center }) => !atBar(center.x, center.z));
 }
 
+// Churchyard: irregular headstone ranks flank both sides of the nave, connected by a sandy winding approach.
+function churchyard(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
+  const stone=new StandardMaterial("legacyHeadstone",scene);
+  stone.diffuseColor.set(0.38,0.39,0.37);stone.emissiveColor.set(0.1,0.1,0.09);stone.specularColor=Color3.Black();
+  const sand=new StandardMaterial("legacyChurchPath",scene);
+  sand.diffuseColor.set(0.56,0.45,0.25);sand.emissiveColor.set(0.1,0.08,0.04);sand.specularColor=Color3.Black();
+  const gone:Vector3[]=[];
+  for(const m of scene.meshes) if(built.has(m)&&!m.parent&&Math.hypot(m.position.x,m.position.z-24)<1&&/Legacy Parade Grounds_/.test(m.name)) {
+    gone.push(m.position.clone());m.setEnabled(false);
+  }
+  result.obstacles=result.obstacles.filter(o=>!gone.some(p=>Vector3.Distance(p,o.center)<0.6));
+  for(const side of [-1,1]) for(let row=0;row<3;row++) for(let col=0;col<5;col++) {
+    const x=side*(13+col*2.8),z=24+row*4;
+    const h=1+seeded(row*5+col,101)*0.65;
+    const slab=MeshBuilder.CreateBox("legacyChurchHeadstone",{width:0.85,height:h,depth:0.32},scene);
+    slab.position.set(x,h/2,z);slab.rotation.z=(seeded(col+row*5,102)-0.5)*0.18;slab.material=stone;
+    const top=MeshBuilder.CreateCylinder("legacyHeadstoneRound",{height:0.33,diameter:0.85,tessellation:8},scene);
+    top.rotation.x=Math.PI/2;top.position.set(x,h,z);top.material=stone;
+  }
+  const path=[[-3,6],[-6,12],[-3,18],[5,22],[5,26.8]];
+  for(let i=1;i<path.length;i++) {
+    const [ax,az]=path[i-1],[bx,bz]=path[i];
+    const m=MeshBuilder.CreateBox("legacyWindingChurchPath",{width:2.4,height:0.06,depth:Math.hypot(bx-ax,bz-az)+1},scene);
+    m.position.set((ax+bx)/2,0.045,(az+bz)/2);m.rotation.y=Math.atan2(bx-ax,bz-az);m.material=sand;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  }
+}
+
 export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildResult {
   const prior = new Set(scene.meshes);
   const result = base();
@@ -204,5 +232,6 @@ export function buildLegacy(scene: Scene, base: () => MapBuildResult): MapBuildR
   pineForest(scene, built);
   meadow(scene, built);
   church(scene, built, result);
+  churchyard(scene,built,result);
   return result;
 }
