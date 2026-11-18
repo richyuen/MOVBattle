@@ -339,6 +339,8 @@ function blackTrees(scene: Scene, built: Set<unknown>): void {
     mesh.setEnabled(false);
     k++;
     if (k % 4 === 2) continue;
+    // the torii stands in a clearing of the ring (587.5b)
+    if (Math.hypot(x - TORII.x, z - TORII.z) < 6) continue;
     const tall = 6 + hash(k, 71) * 3.5, twist = hash(k, 72) * 6.28;
     const knee = limb(new Vector3(x, 0, z), tall * 0.3, 1.6, twist, 0.26);
     const shoulder = limb(knee, tall * 0.26, 1.15, twist + 1.3, 0.42);
@@ -424,13 +426,18 @@ function thornThickets(scene: Scene, result: MapBuildResult): void {
 // top beam overhanging the posts; Dynasty's rim torii rotated 180 degrees with the map). Spec: at (-40, 33), spanning x; two
 // round posts 0.75 m thick and 7.2 m high, 5.6 m apart, on 1.1 m square plinths; the nuki tie beam 7.4 m long at 5.4 m; the
 // kasagi top 9.6 m long, two stacked beams whose ends sweep up 0.5 m, with a short gakuzuka strut between the beams. Near-black
-// navy (0.05, 0.05, 0.08), barely self-lit, in the glow pass. A small collider round each post.
+// navy (0.05, 0.05, 0.08), barely self-lit, in the glow pass. A small collider round each post. (587.5b) It stands in a clearing:
+// no ring tree within 6 m, and the base's low "hill" mound under it (a red self-lit grass lump at (-40, 30)) is hidden.
+const TORII = { x: -40, z: 33 };
 function darkTorii(scene: Scene, result: MapBuildResult): void {
+  for (const mesh of scene.meshes) {
+    if (mesh.name === "hill" && Math.hypot(mesh.position.x - TORII.x, mesh.position.z - TORII.z) < 6) mesh.setEnabled(false);
+  }
   const mat = new StandardMaterial("spooky2Torii", scene);
   mat.diffuseColor = new Color3(0.05, 0.05, 0.08);
   mat.emissiveColor = new Color3(0.02, 0.02, 0.035);
   mat.specularColor = Color3.Black();
-  const [tx, tz] = [-40, 33];
+  const [tx, tz] = [TORII.x, TORII.z];
   const parts: Mesh[] = [];
   const box = (w: number, h: number, d: number, x: number, y: number, z: number, rz = 0) => {
     const b = MeshBuilder.CreateBox("spooky2ToriiPart", { width: w, height: h, depth: d }, scene);
