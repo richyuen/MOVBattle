@@ -1,5 +1,5 @@
 # Loop state (v10: maps then stages; two batch audits merged; up to 9 structural/rebuild gaps + 1 eligible polish; fresh CONFIRM before done)
-Iteration: 593   Batch: maps_3+maps_4   Consecutive empty: 0   Done: 23/99   Parked: 0
+Iteration: 594   Batch: maps_3+maps_4   Consecutive empty: 0   Done: 23/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item file template, loop/items/<id>.md (map: map.<id>; stage: <campaign>.<id>):
 # <id>
@@ -33,47 +33,46 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter 593: maps_3+maps_4, 8 [S]; BASE 5848b4ac; evidence 5848b4ac high_ground placed shot)
-- [S] map.high_ground.a blocker 1, gate block (738ad5c3) APPROVE, struck a1 (a PASS); b2 wall-top clause struck
-- [S] map.fantasy_good.b blocker 4, open centre medallion (1f3aa7be) APPROVE, struck b4, a6
-- [S] map.fantasy_good.a blocker 2, parapets (4b047cbf + 9319c5b6) APPROVE, struck a2
-- [S] map.pirate.a blocker 2, lofted dark hull (c6dfd275 + 0a50ce06) APPROVE, struck a1 (bow clause of a2 cleared)
-- [S] map.fantasy_evil.b blocker 4, chasms (18fff580) APPROVE, struck b4
-- [S] map.dynasty.a blocker 2, loop clear (0097f9bc) APPROVE, no strike
-- [S] map.spooky_2.a blocker 5, dead prop trees (84011b8a) APPROVE, struck a5
-- [S] map.fantasy_evil.a blocker 3, rock ring (a0acf189) APPROVE, struck a3
-- 8/8, 7 struck; CONFIRM high_ground passed a, b (critic still fails b: archers on the bar)
+## Focus (iter 594: maps_3+maps_4, 7 [S] + 1 [P]; BASE 5cceedb8)
+- [S] map.dynasty.b blocker 1 (starving), pagoda over the north canal (4612ee6b) APPROVE, struck b1
+- [S] map.fantasy_evil.b blocker 3, shrine ring + portal altar (a41b2f35) APPROVE, struck b3
+- [S] map.fantasy_evil.a blocker 5, chained statue + spire (b4c03bd0 + 64abe9e0) APPROVE, no strike
+- [S] map.fantasy_good.b blocker 3, gate towers (b993ae0a) APPROVE, struck b3
+- [S] map.fantasy_good.a blocker 5, heaven sky (7b828924) APPROVE, struck a5
+- [S] map.pirate.a blocker 2, stern transom (29222f58) REJECT, reverted b4a3cdd9
+- [S] map.spooky_2.b blocker 1, terraces (db5cd84b) APPROVE, no strike (terraces clause cleared)
+- [P] map.fantasy_evil.a seam bed unlit (932a5b35) APPROVE
+- 7/8, 4 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] map.high_ground.a blocker 1 (738ad5c3)
+GAP: [S] map.dynasty (4612ee6b)
 VERDICT: APPROVE
-CRITERION: map.high_ground.a PASS   (previous: FAIL)
-CRITERION: map.high_ground.b FAIL   (previous: FAIL)
-GAP: [S] map.fantasy_good.b blocker 4 (1f3aa7be)
-VERDICT: APPROVE
-CRITERION: map.fantasy_good.b FAIL   (previous: FAIL)
-GAP: [S] map.fantasy_good.a blocker 2 (4b047cbf + 9319c5b6)
-VERDICT: APPROVE
-CRITERION: map.fantasy_good.a FAIL   (previous: FAIL)
-GAP: [S] map.pirate.a blocker 2 (c6dfd275 + 0a50ce06)
-VERDICT: APPROVE
-CRITERION: map.pirate.a FAIL   (previous: FAIL)
-GAP: [S] map.fantasy_evil.b blocker 4 (18fff580)
+CRITERION: map.dynasty.b FAIL   (previous: FAIL)
+GAP: [S] map.fantasy_evil (a41b2f35)
 VERDICT: APPROVE
 CRITERION: map.fantasy_evil.b FAIL   (previous: FAIL)
-GAP: [S] map.dynasty.a blocker 2 (0097f9bc)
+GAP: [S] map.fantasy_evil (b4c03bd0 + 64abe9e0)
 VERDICT: APPROVE
-CRITERION: map.dynasty.a FAIL   (previous: FAIL)
-GAP: [S] map.spooky_2.a blocker 5 (84011b8a)
+CRITERION: map.fantasy_evil.a FAIL   (previous: FAIL)
+GAP: [S] map.fantasy_good (b993ae0a)
 VERDICT: APPROVE
-CRITERION: map.spooky_2.a FAIL   (previous: FAIL)
-GAP: [S] map.fantasy_evil.a blocker 3 (a0acf189)
+CRITERION: map.fantasy_good.b FAIL   (previous: FAIL)
+GAP: [S] map.fantasy_good (7b828924)
+VERDICT: APPROVE
+CRITERION: map.fantasy_good.a FAIL   (previous: FAIL)
+GAP: [S] map.pirate (29222f58)
+VERDICT: REJECT
+CRITERION: map.pirate.a FAIL   (previous: FAIL)
+GAP: [S] map.spooky_2 (db5cd84b)
+VERDICT: APPROVE
+CRITERION: map.spooky_2.b FAIL   (previous: FAIL)
+GAP: [P] map.fantasy_evil (932a5b35)
 VERDICT: APPROVE
 CRITERION: map.fantasy_evil.a FAIL   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max 5 lines)
-- 593: 28/28 script criteria PASS (6 maps + 11 stages), 0 page errors. high_ground: a PASS (both critics), b needs archers on the bar (b2 has 2 attempts: starvation or [R]).
-- Starving at 594: dynasty b (last b attempt 588): pagoda over the north canal; check-only the four dynasty stages after the commit.
-- dynasty a: 2 approved [S] in a row without a strike (592, 593); a third makes it plateau. pirate a/b hold first CONFIRM lists.
-- Next [S]: fantasy_evil shrine, statue + spire, stairs; fantasy_good gate towers, sky, islets; pirate stern castle, ships per team, beach ring; spooky_2 terraces, thickets.
+- 594: 25/25 script criteria PASS (5 maps + 10 stages), 0 page errors. No CONFIRM (no item would be done).
+- high_ground b2 (2 attempts, last 593) starves at 598; until then [R] only. pirate a2, spooky_2 a4 and b1, dynasty a2: 2 attempts each.
+- Next [S]: pirate b1 ships per team (re-aim map_pirate_deck on the stern quarter alongside), fantasy_evil b2 stairs + a4 green rim, fantasy_good b1 stepped edge + a4 viaduct, dynasty b2 canal outlets, spooky_2 b4 square outline.
+- [P] eligible to 597: fantasy_evil statue to (0,24) + heavier lit chains; fantasy_good waterfalls on the legs' front faces. pirate palm prune to 595.

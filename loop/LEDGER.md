@@ -3,6 +3,11 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+594 | 4612ee6b | map.dynasty.b1 | approve, struck b1
+594 | a41b2f35, b4c03bd0 (+64abe9e0) | map.fantasy_evil.b3, a5 | approve; struck b3, a5 no strike (statue off the ground shot)
+594 | b993ae0a, 7b828924 | map.fantasy_good.b3, a5 | approve, struck both
+594 | 29222f58 | map.pirate.a2 | reject, reverted b4a3cdd9 (transom faces +-x, unseen)
+594 | db5cd84b | map.spooky_2.b1 | approve, no strike (terraces clause cleared)
 593 | 738ad5c3 (+evidence 5848b4ac) | map.high_ground.a1 | approve, struck a1 (a PASS); b2 wall-top clause struck; CONFIRM passed a, b
 593 | 1f3aa7be, 4b047cbf (+9319c5b6) | map.fantasy_good.b4, a2 | approve, struck b4, a2, a6
 593 | c6dfd275 (+0a50ce06) | map.pirate.a2 | approve, struck a1 (bow cleared; stern left)
@@ -23,20 +28,17 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 590 | b1715d8e | map.high_ground.b3 | approve, struck b3
 590 | 19067a56 (+bb704a1c) | map.spooky_2.a6 | approve, struck a6
 590 | 9bfb373f | map.fantasy_evil.a1 | approve, struck a1
-589 | 07d52058, 90341a4e | map.bridge.b2, map.hill.b1 | approve, struck both (both since D)
-589 | de48f83f | map.hill.a3 | reject, reverted 5093c46c (clouds z 450-540 never rendered)
-589 | 41f10807, 2177a9ad | map.high_ground.b1, a2 | approve, struck b1, a1, a2, a3
-589 | f2467ab3, 57155431 | map.defend_the_castle.b1, a2 | approve, struck b1, b4, a1, a2, a3
-588 | 334b790d | map.dynasty.b3 | approve, struck b3; CONFIRM failed a, b. Also bridge, corridor, low_ground, hill: 8 approved (all since D)
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584): rows (outlines, rings, crops, cliffs, skies, set pieces) all approved; see git log `loop(5xx)` for values.
-wild_west (576-586): town rows/storefronts/inner rank, sand street, round plaza, desert rim, mesas, arches, chapel, sandstone base, sunset backdrop sphere (peach (1,.55,.28) to cream (1,.9,.6)); town dark solids in the glow pass. ancient_2 (565-586): round rim, lawn, ring wall, drum, propylon, pavilions, terraced mound + six temple towers (dark stone (.58,.53,.44)). renaissance (576-586): palace + arcade, rectangular piazza, front terrace, canal, corner palazzo, covered bridge, plinth, haze sky, facade kit, flagstone checker (four shades ~(.72,.62,.45), pale bed). All approved and CONFIRMed. spooky_1 (576-587): night sky, night grass/dusky meadow blades, fog chasm, dead trees, rock cliffs (inset skirt, stepped masses), graveyard, rim offerings, left descent, rim set pieces (watchtower (33,33.5) 13 m dark stone with 11 lit windows; broken grey pillar (47,7) 10.5 m; base "hill" mounds hidden; pumpkin bodies out of glow).
-
-simulation, hill, bridge, corridor (587-591): grid floor, empty centre, sky untoned (183,218,219)/(211,226,219); hill ridge sheet + clouds; bridge blocks x +-18..40 |z|<=23 + 5 m span; corridor pads + 7 m wall + 4 m slot. All approved and CONFIRMed.
-low_ground, defend_the_castle (588-592): trough slab x +-60 |z|<=22, banks to 7 m, bank normals bent to (0,.96,-.28); castle sheet step 1, three ramps with V chasms (lanes |z| 5..16, front |z| 8..15, -40 m), plain wall runs 18/15 m, pillars (29,+-12), front platforms. All approved and CONFIRMed.
+wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
+web/src/map/tabs/dynasty.ts:PAGODA and sideBridges | (0,19) platform 15, 8-step stair to z 7 (north approach dropped), collider z 7..26.5; bridges x +-12.5 z 7..18.2 .97->2.52 m + .8 arch; back pool x -19.6..16, hazard cut under bridges | 594 | approve, struck b1 | 576: (17,37) platform 17
+web/src/map/tabs/fantasy_evil.ts:shrine and chainedStatue | ring r 6.2 x 4.5 m, 16 segs (+-x open), dais .8, pillars+spikes; altar (0,12) blue disc/crystals; base voids + plank gone. Statue (8,26) 12 m winged, spire (36,40) 40 m lean .3, chains torus 1.3/.34 (.22,.24,.27); out of glow; seams bed unlit (.012,.018,.022) | 594 | approve (b3 struck; a5 no strike) | void disc r 10 + plank
+web/src/map/tabs/fantasy_good.ts:gateTowers and heavenSky | towers (+-40,30) legs 6 m x 19 m, gap 6, arch 12.5-17.5, gold bands/merlons, glass (1,.9,.6), water (.3,.7,1.1) down outer face, spire+ring; sky paleSky (112,182,228)/(198,224,240) .3, 5 cloudBanks z 90-230 | 594 | approve, struck b3, a5 | base haze + range
+web/src/map/tabs/spooky_2.ts:terraces | middle |z| .8..6.4 h .7, outer 18.6..29.5 h 1.6, x 9/4..27.6 + 32.4..41/40; stone (.17,.21,.31) self .35, turf (.09,.12,.21); .35 m treads inward; props lifted | 594 | approve, no strike | flat turf
+web/src/map/tabs/pirate.ts:stern transom | 594 [S] raked .2 slab, gold frame, 2 window rows (.62,.8,1.05): rejected, reverted (faces +-x, unseen) | 594 | reject | 586 three box tiers kept
 web/src/map/tabs/high_ground.ts:gateBlock | x 27..37 |z|<=5.5 from 4.5 to 11.5 m over the platform, crown .5 m proud; drawn only | 593 | approve, struck a1 | bar |z|<=5 4.5..7 m
 web/src/map/tabs/fantasy_good.ts:openCentre and parapets | temple boxes + collider hidden; gold ring 8.5 m, star 2x4.2 m boxes; ring trunks + hazeTreeline hidden, wall .8x1.2 m, merlons 1.2x.7 m every 2.4 m, drawn only | 593 | approve, struck b4, a2, a6 | base temple, tree ring
 web/src/map/tabs/fantasy_evil.ts:chasms and rockRing | crevices 4 m: front z -10..-6 |x|<=28 gaps |x| 10..14, sides |x| 24..28 z 8..44, void hazards, glow (.15,.9,.2) unlit out of glow; clumps 2-3 pentagonal prisms 4-10 m, every 4th a broken pillar, (.09,.12,.14) | 593 | approve, struck b4, a3 (columns read near-black) | tree ring
@@ -78,7 +80,6 @@ web/src/map/tabs/spooky_2.ts:nightSky and nightTurf | navy (0.025,0.04,0.12), he
 web/src/map/tabs/spooky_2.ts:gratedCourt | 15 m flush court, 7 m ember plate (1.6,.5,.06) in the glow, 9 flat bars each way .22 m x 4 cm, kerb lanterns, no colliders | 584 | approve, struck b3 | 579: .2 m bars hid the bed (dropped)
 web/src/map/tabs/dynasty.ts:gardenCanals | 92 x 10 m stone-lined turquoise sheets with lily pads | 579 | approve | grey-olive overlays
 web/src/map/tabs/dynasty.ts:rimTorii | (-43,28), (40,-33), yaw 0, post colliders moved | 579 | approve | (-17,25), yaw 0.35
-web/src/map/tabs/dynasty.ts:pagoda | (17,37), platform 17x17x3, storeys 11/7.5 m, roofs 19/13 m frustums | 576 | approved | base pagoda (0,29) scale 0.9
 web/src/map/tabs/dynasty.ts:mintSky | clear (0.68,0.86,0.74), fog (0.76,0.9,0.8), mountain* hidden | 577 | approved | inherited (0.72,0.76,0.66) with range
 web/src/map/tabs/dynasty.ts:squareIsland | superellipse 54 x 48 power 8, notch x < -36 and z < -30, zone slabs hidden | 577 | approved | power 3 rounded oval
 web/src/map/tabs/dynasty.ts:lawnTerraces | eight green lawn blocks h.85/1.4 m, stone faces and offset flagstone edges, draw height | 581 | approve | olive-brown flat floor
