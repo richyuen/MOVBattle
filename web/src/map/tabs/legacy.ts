@@ -107,7 +107,7 @@ function meadow(scene: Scene, built: Set<unknown>): void {
       const px = x + (jx - 0.5) * 0.9, pz = z + (jz - 0.5) * 0.9;
       if (Math.abs(px / 52) ** 3 + Math.abs(pz / 46) ** 3 > 1) continue;
       const swathe = Math.sin(px * 0.08 + 0.7) * Math.cos(pz * 0.11 + 1.9) + Math.sin((px - pz) * 0.05) * 0.6;
-      const w = 0.8 + jx * 0.6, h = 0.35 + jz * 0.25;
+      const w = 0.35 + jx * 0.25, h = 0.7 + jz * 0.4;
       const at = new Vector3(px, h * 0.35, pz);
       grass[swathe + jz * 0.4 > 0.4 ? 1 : 0].m.push(...Matrix.Compose(new Vector3(w, h, w * (0.8 + jz * 0.3)), Quaternion.RotationAxis(Vector3.Up(), jx * 6.28), at).m);
     }
