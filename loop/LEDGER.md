@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+583 | 8094db6e [R] | map.spooky_1.a1-3 | approve, struck a1, a3; added a4
+583 | 4f1cb063 | map.dynasty.b3 | approve, no strike
+583 | bf9994ed | map.dynasty.b5 | approve, struck b5
+583 | 92ad5b14 | map.legacy.a1 | approve, struck a1
+583 | 414198c9 | map.legacy.a2 | approve, no strike
+583 | f8143bfb | map.legacy.a3 | approve, struck a3
+583 | 17a180c4, b25c16e2 | map.wild_west.a1 | approve, struck a1
+583 | 35137805 | map.wild_west.b1 | approve, struck b1; added b2
+583 | 1bac6c2d, 36dabe6f | map.pirate.a2 | approve, no strike
 582 | 229f9b4d | map.dynasty.a3 | approve, struck a3
 582 | 5b6181bc | map.dynasty.b3 | rejected-kept, revert conflicted with later approved path; aborted
 582 | 0c7d7a4e | map.dynasty.b4 | approve, struck b4
@@ -38,12 +47,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 579 | 6fce1036 | map.dynasty.b | approve, struck b6
 579 | 0167e0b6 | map.legacy.b | approve, struck b1, b4
 579 | 2f5b6c6f | map.legacy.a | approve, struck a6
-577 | 6141b061 | map.pirate.b | approve
-577 | fc2afb16, 4b99d78f | map.wild_west.b, map.wild_west.a | approve
-577 | 1d4cd558 | map.legacy.a | approve
-577 | 6259e76b, 479af4ee | map.spooky_1.a, map.spooky_1.b | approve
-577 | b1711009, 83c9ca4a | map.dynasty.a, map.dynasty.b | approve
-577 | aa80ffb9 | map.renaissance.b | approve
 578 | 5adcb485, 486e6428 | map.legacy.b, map.legacy.a | approve (P 30f467e1 approve)
 578 | 61f64ff8 (+d3dab59a) | map.dynasty.b | approve, no strike
 578 | 43348d28 | map.spooky_2.b | approve, no strike
@@ -57,10 +60,13 @@ tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1,
 
 ## Tuned values
 web/src/map/tabs/dynasty.ts:columnCliffs | continuous 5-sided columns h7.5..12.5m, square/notched rim, green ledges | 582 | approve | hanging stalactite underside
-web/src/map/tabs/dynasty.ts:terraceBranches | side channels x+-42 z+-7, dry z0 crossings; four 8m stair flights x+-27 z7..18; hazard gaps | 582 | rejected-kept (revert conflict); no visible network advance | two parallel water strips
+web/src/map/tabs/dynasty.ts:canalSpurs | four 4.4 m spurs x34/-17 (back) -34/17 (front), |z|17.6..27, outer lawn and canal wall split, 3 m dry crossing | 583 | approve, no strike | absent
+web/src/map/tabs/dynasty.ts:terraceBranches | side channels x+-42; flights x+-27: flat deck |z|7..13 at .97, ten .5 m treads to the outer lawn, stepped cheeks | 583 | approve, struck b5 | 582 (rejected-kept): twelve .046 m steps z7..18
+web/src/map/tabs/dynasty.ts:lawnTerraces outer h | 2.4 m | 583 | approve (in scope of the stairs; no [P] re-tune) | 1.4 (581)
 web/src/map/tabs/dynasty.ts:perimeterFlagstones | three-course loop x+-46 z+-35 around notch and existing bridges | 582 | approve | no connected outer path
-web/src/map/tabs/spooky_1.ts:duskyMeadow | thin-instance faceted tufts at .78 m grid, h .32..0.62 m, plateau-tested, descent excluded | 582 | approve; CONFIRM surface FAIL | smooth banks
-web/src/map/tabs/spooky_1.ts:deadTrees | three bent trunk sections, root diameter1.35, 3-4 elbowed spreading limbs | 582 | approve; CONFIRM bark FAIL | thin straight trunk and 2-3 Y forks
+web/src/map/tabs/spooky_1.ts:duskyMeadow | flattened lumps .9-1.7 m x .14-.26 m, .95 m grid, ~half the cells in drifts, two tones; floor (.13,.16,.28) | 583 | approve, struck a3; lumps read as paving (a4) | 582: upright tufts h .32-.62 on .78 m grid
+web/src/map/tabs/spooky_1.ts:deadTrees | 3 of 5 ring spots; root 1.7 m, 5.5-9 m, bark (.035,.035,.055); 32-bit merge | 583 | approve, struck a1 | 582: every spot, root 1.35, merge failed (white)
+web/src/map/tabs/spooky_1.ts:rockCliffs | skirt wall to -20 m; 3 tiers of boulders/5-sided blocks per 4.2 m, stone (.22,.25,.4) self (.04,.046,.085) | 583 | approve, no strike on a2 (even band, level bottom) | hex columns, stone (.3,.33,.48) self .1
 web/src/map/tabs/renaissance.ts:coveredBridge | x18..30 z34, deck7.3, broad lower arch, four upper bays, orange roof, pink house | 582 | approve | contiguous solid rear house row
 web/src/map/tabs/legacy.ts:valleySkyBackdrop | own 1800 m unlit fog-free sphere, emissive (.65,.88,.95); shared dome restored on dispose | 582 | approve | shared grey-white dome over clearColor; initial (.2,.55,.65) too teal
 web/src/map/tabs/wild_west.ts:sandstoneArches | three offset pier courses, three faceted crown boulders, segmented pointed spires | 582 | approve | 581: two straight-pier arches12/16m, box lintels, flat spires13..21m; previously absent
@@ -72,7 +78,9 @@ web/src/map/tabs/ancient_2.ts:frontPorticos | 4-column recesses, 2.8-4 m high, a
 web/src/map/tabs/legacy.ts:paleBlueSky | clear (.52,.77,.88), fog (.67,.82,.88), restored on dispose | 581 | approve, no strike | inherited grey-white
 web/src/map/tabs/legacy.ts:innerGlade | pine centres at radius >=52, colliders moved; 24 sparse low boulders at r37..46 | 581 | approve | pinched oval inner belt
 web/src/map/tabs/spooky_1.ts:leftDescent | left cliff recessed to x-15, path x-10.5 z-23..0 y0..-6, broken room entrance | 581 | approve | absent
-web/src/map/tabs/wild_west.ts:townRows | five rear + three front-right; 3.2 m alleys, 1.8 m alternating setbacks; front row z-38 x1..36 | 581 | approve | five rear + two front-right, alleys1.4, z-35.5 x1..27
+web/src/map/tabs/wild_west.ts:townRows | five rear + three front-right (z-38 x1..36) + inner rank of two at z-23.5 x2..23.4; 3.2 m alleys | 583 | approve, struck b1; rank too near the enemy line (b2) | 581: no inner rank
+web/src/map/tabs/wild_west.ts:storefronts | h 7.6-10 m; board (.17,.21,.31), trim (.58,.56,.52), panes (.5,.68,.82) out of glow; framed 4-pane sashes, pilasters, .36 m posts; stepped/gabled/arched tops | 583 | approve, struck a1 | h 6-7.5, board (.36,.41,.53), glowing window bands
+web/src/map/tabs/pirate.ts:bellMountain | (60,0), 4 boulder tiers to 19 m, 7 palms, fall on -x face, 3.2 m bell; rock (.5,.43,.32) self .6, no received shadows | 583 | approve, no strike (grey, off the island, small bell) | absent
 web/src/map/tabs/wild_west.ts:chapel | (39,35), 7x11 m nave, 8 m wall, 18.5 m steeple | 580 | approve | absent
 web/src/map/tabs/wild_west.ts:mesaRidge | five overlapping three-tier hexagonal terraces, x -43..-19, z 43..46.2 | 580 | approve | three isolated small mesas (kept)
 web/src/map/tabs/wild_west.ts:sandstoneBase | 111/106 m diameters, 9 m deep, 20 facets, sandstone (.65,.46,.28) | 580 | approve | stalactite underside
@@ -101,9 +109,7 @@ web/src/map/tabs/dynasty.ts:squareIsland | superellipse 54 x 48 power 8, notch x
 web/src/map/tabs/spooky_1.ts:nightSky | clear/fog (0.035,0.05,0.13); hemi 0.3, dir 0.65; moon, 300 stars | 576 | approved | grey day sky, mountains
 web/src/map/tabs/spooky_1.ts:nightGrass | floor (0.2,0.24,0.38) self (0.05,0.06,0.11); blades (0.26,0.31,0.46); zone slabs hidden | 577 | approved | inherited dark green under maroon/blue slabs
 web/src/map/tabs/spooky_1.ts:fogChasm | Medieval 1 SHORE plateaus, cliff stone (0.3,0.33,0.48), 3 fog sheets alpha 0.32 at -1.5/-4.5/-8, bridge z 1, void hazards | 577 | approved | flat disc, void band z -26
-web/src/map/tabs/legacy.ts:pineForest | pine 9-14 m per ring trunk + 2 beside, (0.1,0.27,0.12)/(0.15,0.35,0.15) | 576 | approved, too saturated | round leafy ring
 web/src/map/tabs/legacy.ts:meadow | floor (0.56,0.64,0.2); clumps 0.8-1.4 x 0.35-0.6 m on 1.1 m grid, (0.62,0.72,0.2)/(0.48,0.6,0.15); zone slabs hidden | 577 | approved | lilac-grey floor
-web/src/map/tabs/wild_west.ts:town | 5 back (z 35.5) + 2 front-right (z -35.5) false fronts, board (0.36,0.41,0.53) self-lit 0.5 | 576 | approved, too cornflower | 2 base boxes
 web/src/map/tabs/wild_west.ts:openStreet | centre barricade and collider removed | 577 | approved | dark box at (0,0)
 web/src/map/tabs/wild_west.ts:desertRim | ~60% saguaro 3-5.5 m, else dead tree 4-6 m; mesas (-36,32) (-30,-36) (38,-32), tiers r 4.5/3.4/2.2, (0.72,0.33,0.18) | 577 | approved | pale leafy ring
 web/src/map/tabs/pirate.ts:galleons | 30 m hulls at z +-37 along x, 3 gangplanks each | 576 | approved, sterns cream | base ships at (+-20,20)
@@ -111,10 +117,12 @@ web/src/map/tabs/pirate.ts:pirateGalleonStern | hull (0.45,0.26,0.13) self 0.42 
 web/src/map/tabs/pirate.ts:drainLagoon | z +-24 water hazards and sheets removed | 577 | approved | two water bands
 web/src/map/tabs/renaissance.ts:dogesPalace | 36 x 21 m facade, front z 31 | 576 | approved | absent
 web/src/map/tabs/renaissance.ts:rectangularPiazza | rows x +-44 (6 m deep, z -28..24), z 31 (|x| 18..40), corners (+-44.5,28); front terrace z -30.5, 5.5 m deep, 2-3 storeys (578); zones |x| <= 43 | 578 | approved, struck b4 | oval townRing; low front wall (577)
-web/src/map/tabs/legacy.ts:meadow clump | w 0.35-0.6, h 0.7-1.1 m | 578 | approved, struck a2 | 0.8-1.4 x 0.35-0.6 (577)
-web/src/map/tabs/legacy.ts:openGlade and church | barricade (22,0) gone; church nave x -4..10 z 28.5..35.5, tower x -6.5 14 m + spire 9 m, stone (0.24,0.24,0.28) | 578 | approved, struck b5, a3 | base box (-20,20)
+web/src/map/tabs/legacy.ts:meadow tufts | six-blade fans .2-.38 m, .8 m grid, ~2/3 of cells | 583 | approve, struck a1 | ico clumps w .35-.6 h .7-1.1 (578)
+web/src/map/tabs/legacy.ts:pineForest ranks | ring tree 5-15 m + one beside + outer rank on 2/3 + sapling on 1/4; width .3-.46 h | 583 | approve, no strike (still a wall) | three 9-14 m pines per spot
+web/src/map/tabs/legacy.ts:church ruin | nave in 3 pieces with a 2.5 m breach, 4 open roof bays with rafters, open transept quarter, eave teeth, 16 rubble blocks | 583 | approve, struck a3 | intact nave and roof
+web/src/map/tabs/legacy.ts:openGlade and church | barricade (22,0) gone; nave x -4..10 z 28.5..35.5, tower x -6.5 14 m + spire 9 m | 578 | approved | base box (-20,20)
 web/src/map/tabs/dynasty.ts:courtyard | court |x|,|z| <= 7, pave (0.4,0.41,0.4) self 0.2; pit box half 3; E/W moats |x| 7..10 water hazards | 578 | approved, no strike | pit cyl r 5; pave (0.62,0.62,0.58) self 0.4 (too white)
 web/src/map/tabs/spooky_2.ts:squareIsland and fogChannels | power 8, notch x > 36 z > 30; fog z +-12 drawn only; loop path x +-44 z +-38 | 578 | approved, no strike, kerbs/path glow | base oval
-web/src/map/tabs/spooky_1.ts:deadTrees and graveyard | bark (0.07,0.07,0.11); plot x 13..31 z 13..29, 24 stones | 578 | approved, struck a3, b2 | ring crowns; base tombs both halves
+web/src/map/tabs/spooky_1.ts:graveyard | plot x 13..31 z 13..29, 24 stones | 578 | approved, struck b2 | base tombs both halves
 web/src/map/tabs/pirate.ts:sandIsland | sea ring 62 x 56 (0.2,0.8,0.75); drum 64 x 58, 6 m + belly 14 m (0.72,0.52,0.28) self 0.4, no fog | 578 | approved, struck a3, drum reads thin | stalactite underside
 web/src/map/tabs/wild_west.ts:sunsetSky | clear (0.95,0.66,0.44), fog (0.97,0.72,0.5); dir (-0.9,-0.3,0.32) 1.1 warm; sun disc 22 m | 578 | approved, struck a4 | beige-grey with range
