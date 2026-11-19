@@ -377,7 +377,22 @@ function parapets(scene: Scene, built: Set<unknown>, result: MapBuildResult, sto
 // pointed top); water channel 1.6 m wide, 0.4 m deep, along the arch top and down each leg's outer face to a 4 x 3 m pool at its
 // foot (2 x 4 m; unlit blue (.3,.7,1.1), out of the glow); a spire 9 m (four-sided, white) with a gold ring on the outer leg. White
 // (.93,.95,.98) self .3, gold the kerb's material. Colliders: one box per leg and pool; the gate passage stays open.
-const TOWERS = [{ x: -40, z: 30 }, { x: 40, z: -30 }];
+// [R] Multi-bay gates (606, a plateau; CONFIRM 601 a1 "massive multi-bay white-and-gold gates with substantial stepped buttresses
+// and broad gold arch faces, rather than thin single-opening rectangular portals"; b2 "gates occupy opposing ends of the field
+// across the well-and-walkway layout, rather than both portals standing together along the same rear edge"; wiki
+// fantasy_good.png: one gate at the back-left, the other at the front-right, each a broad white gatehouse of a tall central
+// arch between lower side arches, heavy piers, stepped buttresses at its ends, every arch framed in broad gold, a raised
+// crenellated centre with a gold gable, crystal spires over the piers, water running off it). Spec: gates at (-40, 30) and
+// (40, -30) (diagonally opposite, outside both zones), each spanning 25 m along x, 7 m deep: a centre bay 6.4 m wide, 15 m to
+// its springing, round head; inner piers 2 m; side bays 2.8 m, 10 m to the springing; outer piers 2 m; at each end a stepped
+// buttress (1.5 m x 16 m, then 1 m x 8 m, each a metre deeper); body 24 m high, the centre raised to 27 m with two nested gold
+// gable crests; broad gold arch rings (tube r .45) round every opening on both faces with gold jambs; gold bands at 8 and 24 m on
+// the piers; gold merlons along every top; a stained-glass lancet on each outer pier's two faces; a crystal spire pair and a
+// gold halo on each outer pier; a water channel along the top that pours down the field face of the pier nearest its well
+// (waterfalls() carries it on to the well). Colliders: piers and buttresses; the three bays stay open.
+const GATES = [{ x: -40, z: 30 }, { x: 40, z: -30 }];
+/** Where a gate's water reaches the deck: the field face of its outer pier on the well side. */
+const gateSpill = (g: { x: number; z: number }) => ({ x: g.x - Math.sign(g.x) * 9, z: g.z - Math.sign(g.z) * 4.5 });
 function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMaterial, gold: StandardMaterial): MapBuildResult {
   const mk = (name: string, c: Color3) => {
     const m = new StandardMaterial(name, scene);
@@ -391,93 +406,83 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
   white.diffuseColor = new Color3(0.93, 0.95, 0.98);
   white.emissiveColor = new Color3(0.28, 0.29, 0.3);
   white.specularColor = Color3.Black();
-  const mats = { white, gold, glass: mk("heavenTowerGlass", new Color3(1, 0.9, 0.6)), water: mk("heavenTowerWater", new Color3(0.3, 0.7, 1.1)), crystal:mk("heavenTowerCrystal",new Color3(0.25,0.62,1.05)) };
-  const parts: Record<keyof typeof mats, Mesh[]> = { white: [], gold: [], glass: [], water: [], crystal:[] };
+  const mats = { white, gold, glass: mk("heavenTowerGlass", new Color3(1, 0.9, 0.6)), water: mk("heavenTowerWater", new Color3(0.3, 0.75, 1.15)), crystal: mk("heavenTowerCrystal", new Color3(0.25, 0.62, 1.05)) };
+  const parts: Record<keyof typeof mats, Mesh[]> = { white: [], gold: [], glass: [], water: [], crystal: [] };
   const obstacles = [...result.obstacles];
-  // 599 a2: monumental gates, long gold-framed lancets and three pale-blue
-  // crystal spires per outer leg (18/11/9 m), as in the wiki's tall skyline.
-  const LEG = 6, GAP = 6, H = 32;
-  for (const { x: tx, z: Z } of TOWERS) {
-    const out = Math.sign(tx);
-    const box = (k: keyof typeof mats, w: number, h: number, d: number, x: number, y: number, z: number, ry = 0) => {
+  const D = 7, H = 24, HC = 27;
+  for (const g of GATES) {
+    const field = -Math.sign(g.z), well = -Math.sign(g.x);
+    const box = (k: keyof typeof mats, w: number, h: number, d: number, u: number, y: number, v: number) => {
       const b = MeshBuilder.CreateBox("heavenTowerPart", { width: w, height: h, depth: d }, scene);
-      b.rotation.y = ry;
-      b.position.set(tx + x, y, Z + z);
+      b.position.set(g.x + u, y, g.z + v);
       b.bakeCurrentTransformIntoVertices();
       parts[k].push(b);
     };
-    for (const side of [-1, 1]) {
-      const lx = side * (GAP + LEG) / 2;
-      box("white", LEG, H, LEG, lx, H / 2, 0);
-      for (const y of [8, 20, H]) box("gold", LEG + 0.3, 0.4, LEG + 0.3, lx, y, 0);
-      for (let u = -LEG / 2 + 0.55; u <= LEG / 2 - 0.5; u += 2) {
-        for (const s of [-1, 1]) {
-          box("gold", 1.1, 1, 0.5, lx + u, H + 0.7, s * (LEG / 2 - 0.25));
-          box("gold", 0.5, 1, 1.1, lx + s * (LEG / 2 - 0.25), H + 0.7, u);
-        }
+    const tube = (k: keyof typeof mats, pts: Array<[number, number]>, v: number, r: number) => {
+      const t = MeshBuilder.CreateTube("heavenGateGold", { path: pts.map(([u, y]) => new Vector3(g.x + u, y, g.z + v)), radius: r, tessellation: 4, cap: Mesh.CAP_ALL }, scene);
+      t.bakeCurrentTransformIntoVertices();
+      parts[k].push(t);
+    };
+    /** an arch bay between u0 and u1: the body over it with a stepped round head, gold ring and jambs on both faces */
+    const bay = (u0: number, u1: number, spring: number, top: number) => {
+      const r = (u1 - u0) / 2, c = (u0 + u1) / 2, n = 10;
+      for (let i = 0; i < n; i++) {
+        const u = -r + (i + 0.5) * (2 * r / n), under = spring + Math.sqrt(Math.max(0, r * r - u * u));
+        box("white", 2 * r / n + 0.02, top - under, D, c + u, (top + under) / 2, 0);
       }
-      // stained-glass windows on the front (-z) face and the outer face of the outer leg
-      const faces: Array<[number, number, number]> = [[lx, -LEG / 2 - 0.08, 0]];
-      if (side === out) faces.push([lx + out * (LEG / 2 + 0.08), 0, Math.PI / 2]);
-      for (const [fx, fz, ry] of faces) {
-        // 600 a2: pointed lancet surrounds, a coloured leaded mosaic and
-        // radial tracery replace the rectangular yellow gridded plates.
-        const point = (u: number, y: number, offset = 0.18) => new Vector3(tx + fx + Math.cos(ry) * u + Math.sin(ry) * offset, y, Z + fz - Math.sin(ry) * u - Math.cos(ry) * offset);
-        box("glass", 2.3, 12, 0.16, fx, 16, fz, ry);
-        const cap = MeshBuilder.CreateRibbon("heavenLancetCap", { pathArray: [[point(-1.15, 22), point(1.15, 22)], [point(0, 25), point(0, 25)]], sideOrientation: Mesh.DOUBLESIDE }, scene);
-        cap.bakeCurrentTransformIntoVertices(); parts.glass.push(cap);
-        for (let row = 0; row < 6; row++) for (let col = 0; col < 3; col++) {
-          const u = (col - 1) * 0.72, p = point(u, 11 + row * 1.9, 0.23);
-          const pane = MeshBuilder.CreateBox("heavenGlassPane", { width: 0.6, height: 1.65, depth: 0.04 }, scene);
-          pane.rotation.y = ry; pane.position.copyFrom(p); pane.bakeCurrentTransformIntoVertices();
-          parts[(row + col) % 3 === 0 ? "crystal" : (row + col) % 3 === 1 ? "water" : "glass"].push(pane);
-        }
-        for (const path of [
-          [[-1.45, 10], [-1.45, 22], [0, 25.5], [1.45, 22], [1.45, 10], [-1.45, 10]],
-          [[0, 10], [0, 25]], [[-1.3, 19], [0, 21.5], [1.3, 19]],
-        ]) {
-          const frame = MeshBuilder.CreateTube("heavenLancetLead", { path: path.map(([u, y]) => point(u, y, 0.29)), radius: 0.12, tessellation: 4, cap: Mesh.CAP_ALL }, scene);
-          frame.bakeCurrentTransformIntoVertices(); parts.gold.push(frame);
-        }
+      for (const v of [-D / 2 - 0.12, D / 2 + 0.12]) {
+        tube("gold", Array.from({ length: 15 }, (_, j) => { const a = Math.PI * j / 14; return [c + Math.cos(a) * (r + 0.3), spring + Math.sin(a) * (r + 0.3)] as [number, number]; }), v, 0.45);
+        for (const s of [-1, 1]) tube("gold", [[c + s * (r + 0.3), 0.2], [c + s * (r + 0.3), spring]], v, 0.35);
       }
-      // 595 [P]: a 1.2 m waterfall down each leg's front (-z) face, beside the window
-      box("water", 1.2, H, 0.3, lx + Math.sign(lx) * 2.2, H / 2, -LEG / 2 - 0.2);
-      obstacles.push({ type: "box", center: new Vector3(tx + lx, 0, Z), halfX: LEG / 2, halfZ: LEG / 2 });
+    };
+    // piers
+    for (const s of [-1, 1]) {
+      for (const [uc, w] of [[s * 4.2, 2], [s * 9, 2]] as const) {
+        box("white", w, H, D, uc, H / 2, 0);
+        for (const y of [8, H]) box("gold", w + 0.3, 0.45, D + 0.3, uc, y, 0);
+        obstacles.push({ type: "box", center: new Vector3(g.x + uc, 0, g.z), halfX: w / 2, halfZ: D / 2 });
+      }
+      // stepped buttress at the end
+      box("white", 1.5, 16, D + 1, s * 10.75, 8, 0);
+      box("gold", 1.8, 0.4, D + 1.3, s * 10.75, 16, 0);
+      box("white", 1, 8, D + 2, s * 12, 4, 0);
+      box("gold", 1.3, 0.4, D + 2.3, s * 12, 8, 0);
+      obstacles.push({ type: "box", center: new Vector3(g.x + s * 11.25, 0, g.z), halfX: 1.25, halfZ: D / 2 + 1 });
+      // side bay
+      bay(s > 0 ? 5.2 : -8, s > 0 ? 8 : -5.2, 10, H);
+      // lancet on the outer pier's two faces
+      for (const v of [-D / 2 - 0.1, D / 2 + 0.1]) {
+        box("glass", 1.2, 8, 0.12, s * 9, 15, v);
+        tube("gold", [[s * 9 - 0.75, 11], [s * 9 - 0.75, 19], [s * 9, 20.4], [s * 9 + 0.75, 19], [s * 9 + 0.75, 11], [s * 9 - 0.75, 11]], v + Math.sign(v) * 0.06, 0.16);
+      }
+      // crystal spires and a halo on the outer pier
+      for (const [du, h, d] of [[0, 14, 2.2], [s * 0.9, 8, 1.3]] as const) {
+        const sp = MeshBuilder.CreateCylinder("heavenTowerPart", { diameterBottom: d, diameterTop: 0, height: h, tessellation: 5 }, scene);
+        sp.position.set(g.x + s * 9 + du, H + 0.4 + h / 2, g.z);
+        sp.rotation.y = Math.PI / 4;
+        sp.bakeCurrentTransformIntoVertices();
+        parts.crystal.push(sp);
+      }
+      const ring = MeshBuilder.CreateTorus("heavenTowerPart", { diameter: 2.8, thickness: 0.16, tessellation: 20 }, scene);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(g.x + s * 9, H + 11, g.z);
+      ring.bakeCurrentTransformIntoVertices();
+      parts.gold.push(ring);
     }
-    // the arch body over the gate, its underside a stepped half-disc
-    const n = 12, r = GAP / 2;
-    for (let i = 0; i < n; i++) {
-      const u = -r + (i + 0.5) * (2 * r / n), under = 23 - 3 + Math.sqrt(Math.max(0, r * r - u * u));
-      box("white", 2 * r / n + 0.02, 30.5 - under, LEG, u, (30.5 + under) / 2, 0);
+    // centre bay, raised centre and its gold gables
+    bay(-3.2, 3.2, 15, HC);
+    box("white", 10.4, HC - H, D, 0, (H + HC) / 2, 0);
+    box("gold", 10.7, 0.45, D + 0.3, 0, HC, 0);
+    for (const v of [-D / 2 - 0.15, D / 2 + 0.15]) for (const dy of [0, -1.3]) tube("gold", [[-5.6, HC + dy + 0.3], [0, HC + 4.5 + dy], [5.6, HC + dy + 0.3]], v, 0.3);
+    // merlons along the tops (outer runs at H, centre at HC)
+    for (let u = -10 + 0.6; u <= 10; u += 2) {
+      const top = Math.abs(u) < 5.2 ? HC : H;
+      for (const v of [-D / 2 + 0.25, D / 2 - 0.25]) box("gold", 1.1, 1, 0.5, u, top + 0.7, v);
     }
-    box("white", GAP + 0.2, 1.5, LEG, 0, 31.25, 0);
-    box("gold", GAP + 0.3, 0.4, LEG + 0.3, 0, 30.5, 0);
-    for (let u = -GAP / 2 + 0.5; u <= GAP / 2; u += 2) for (const s of [-1, 1]) box("gold", 1.1, 1, 0.5, u, 32.5, s * (LEG / 2 - 0.25));
-    // Three nested peaked bands across both gate faces, with an elevated
-    // central crest and stepped shoulders as in the wiki's ornate frontage.
-    for (const s of [-1, 1]) for (const dy of [0, -1.2, -2.4]) {
-      const path = [[-8.7, 31.7], [-4.5, 31.7], [0, 36], [4.5, 31.7], [8.7, 31.7]].map(([x, y]) => new Vector3(tx + x, y + dy, Z + s * 3.18));
-      const crest = MeshBuilder.CreateTube("heavenGateCrest", { path, radius: 0.27, tessellation: 4, cap: Mesh.CAP_ALL }, scene);
-      crest.bakeCurrentTransformIntoVertices(); parts.gold.push(crest);
-    }
-    // the water channel: along the arch top and down the outer leg's outer face into a pool
-    box("water", GAP + LEG * 2 - 1, 0.4, 1.6, 0, H + 0.25, 0);
-    const ox = out * (GAP / 2 + LEG + 0.25);
-    box("water", 0.5, H, 1.6, ox, H / 2, 0);
-    box("white", 2, 0.6, 4, ox + out * 0.9, 0.3, 0);
-    box("water", 1.5, 0.08, 3.4, ox + out * 0.9, 0.62, 0);
-    obstacles.push({ type: "box", center: new Vector3(tx + ox + out * 0.9, 0, Z), halfX: 1, halfZ: 2 });
-    // white spire with a gold ring on the outer leg
-    const sx = tx + out * (GAP + LEG) / 2;
-    for(const [dx,h,d]of [[0,18,2.6],[-1.8,11,1.6],[1.8,9,1.4]]){
-      const spire=MeshBuilder.CreateCylinder("heavenTowerPart",{diameterBottom:d,diameterTop:0,height:h,tessellation:5},scene);
-      spire.position.set(sx+dx,H+h/2,Z);spire.rotation.y=Math.PI/4;spire.bakeCurrentTransformIntoVertices();parts.crystal.push(spire);
-    }
-    const ring = MeshBuilder.CreateTorus("heavenTowerPart", { diameter: 3.2, thickness: 0.18, tessellation: 20 }, scene);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.set(sx, H + 13, Z);
-    ring.bakeCurrentTransformIntoVertices();
-    parts.gold.push(ring);
+    // water: a channel along the top, pouring down the field face of the pier on the well side
+    box("water", 20, 0.4, 1.4, 0, H + 0.3, 0);
+    box("water", 1.6, H, 0.3, well * 9, H / 2, field * (D / 2 + 0.2));
+    box("water", 1.8, 0.1, 2.2, well * 9, 0.06, field * (D / 2 + 1.1));
   }
   const glow = scene.getGlowLayerByName("glow");
   for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
@@ -733,19 +738,31 @@ function waterfalls(scene: Scene): void {
     parts[k].push(b);
   };
   /** A deck channel from (x0,z0) to (x1,z1), axis-aligned. */
-  const channel = (x0: number, z0: number, x1: number, z1: number) => {
+  const channel = (x0: number, z0: number, x1: number, z1: number, W = 1.8) => {
     const alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0), len = alongX ? Math.abs(x1 - x0) : Math.abs(z1 - z0);
-    const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2, W = 1.8;
+    const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
     box("water", alongX ? len + W : W, 0.06, alongX ? W : len + W, mx, 0.03, mz);
     for (const s of [-1, 1]) box("lip", alongX ? len + W : 0.2, 0.15, alongX ? 0.2 : len + W, mx + (alongX ? 0 : s * (W / 2 + 0.1)), 0.075, mz + (alongX ? s * (W / 2 + 0.1) : 0));
   };
-  // 606 [R] b: each gate's channel runs from its well-side foot to the nearest well and falls down that well's outer wall
-  for (const [x0, z0, wallX, zc] of [[-31.8, 26.8, -27, 22], [31.8, -26.8, 27, -22]] as const) {
-    const s = Math.sign(wallX);
-    channel(x0, z0, x0, zc); channel(x0, zc, wallX, zc);
-    box("water", 0.12, PIT_DEPTH, 2.4, wallX - s * 0.66, -PIT_DEPTH / 2, zc);
-    box("foam", 0.3, 0.3, 2.6, wallX - s * 0.5, 0.05, zc);
-  }
+  // 606 [R] a2: from each gate's spill a 3.5 m channel runs to the nearest well and drops down a wall of it as a 6 m cascade:
+  // a sheet broken by foam ledges every 2.5 m, a foam lip at the top and a cyan pool spreading on the well floor. Left gate:
+  // down the back-left well's outer (x -27) wall; right gate: along the cross walkway to the front-right well's far (z -6)
+  // wall, which faces the cameras.
+  /** a cascade down a well wall: ax the wall's fixed axis, at its coordinate, s the step into the well, c the centre along it */
+  const cascade = (ax: "x" | "z", at: number, s: number, c: number, W = 6) => {
+    const put = (k: "water" | "foam", n: number, h: number, w: number, off: number, y: number) =>
+      ax === "x" ? box(k, n, h, w, at + s * off, y, c) : box(k, w, h, n, c, y, at + s * off);
+    put("water", 0.14, PIT_DEPTH, W, 0.68, -PIT_DEPTH / 2);
+    for (let y = -2.5; y > -PIT_DEPTH; y -= 2.5) put("foam", 0.5, 0.25, W + 0.3, 0.85, y);
+    put("foam", 0.4, 0.35, W + 0.4, 0.45, 0.08);
+    put("water", 7, 0.1, W + 3, 3.9, -PIT_DEPTH + 0.06);
+    put("foam", 1.4, 0.14, W + 0.6, 1.3, -PIT_DEPTH + 0.12);
+  };
+  const L = gateSpill(GATES[0]), Rt = gateSpill(GATES[1]);
+  channel(L.x, L.z, L.x, 22, 3.5); channel(L.x, 22, -27, 22, 3.5);
+  cascade("x", -27, 1, 22);
+  channel(Rt.x, Rt.z, Rt.x, -3.5, 3.5); channel(Rt.x, -3.5, 16, -3.5, 3.5); channel(16, -3.5, 16, -6, 3.5);
+  cascade("z", -6, -1, 16);
   // front: well kerb -> front edge, falling down the rim wall's face
   for (const [x, z0] of [[-17, -31.6], [17, -31.6]] as const) {
     const edge = -(DECK.z - notchDepth(-1, x));
