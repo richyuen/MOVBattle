@@ -739,7 +739,7 @@ function waterfalls(scene: Scene): void {
   water.fogEnabled = false;
   foam.fogEnabled = false;
   const lipMat = scene.getMaterialByName("heavenStone") as StandardMaterial;
-  const parts: { water: Mesh[]; foam: Mesh[]; lip: Mesh[] } = { water: [], foam: [], lip: [] };
+  const parts: { water: Mesh[]; foam: Mesh[]; lip: Mesh[]; rock: Mesh[] } = { water: [], foam: [], lip: [], rock: [] };
   const box = (k: keyof typeof parts, w: number, h: number, d: number, x: number, y: number, z: number) => {
     const b = MeshBuilder.CreateBox("heavenFallPart", { width: w, height: h, depth: d }, scene);
     b.position.set(x, y, z);
@@ -775,16 +775,45 @@ function waterfalls(scene: Scene): void {
     put("water", 7, 0.1, W + 3, 3.9, -PIT_DEPTH + 0.06);
     put("foam", 1.4, 0.14, W + 0.6, 1.3, -PIT_DEPTH + 0.12);
   };
-  // 607 [R] a2: the left gate's curtain lands behind the back-left well (z 31..34) and runs along the rim to fall 8 m wide down
-  // the well's far wall (z 31), the face the top camera looks at; the right gate's lands in the front-right well's corner
-  // beside it and also feeds the walkway channel to that well's far wall (z -6); both falls 8 m wide, full depth.
-  channel(-27.4, 32.6, -12, 32.6, 3); cascade("z", 31, -1, -14, 8);
+  // 607 r3 [R] a2 (CRITIC 607 r2: the wall-sheet falls read as flat cyan panels from above; wiki fantasy_good.png lower right:
+  // beside the gate a cyan stream pours off the gate's base and steps down a cluster of hex rock columns into the well, white
+  // foam at every step). Spec: per gate a 3 m channel from its end buttress's field-side foot along the deck strip beside the
+  // well to a rim crossing, then four ledges of hex columns (each 4 m along the flow, 5 m across, tops 1.5, 4, 6.5 and 9 m
+  // down) stepping into the well away from the gate's side wall, each with a cyan pool on its top, a cyan drop face at its
+  // upstream edge, a foam lip over it and a foam cap at its foot, then a last drop to a pool on the floor. The flow runs across
+  // the camera (left gate east at z 17, right gate west at z -11.5), so its drop faces turn toward the top camera and every
+  // ledge stands in the well's open back half, clear of the trees and thorn vines. The 607 r1 end curtains stay.
   box("water", 0.35, PIT_DEPTH, 4, 26.3, -PIT_DEPTH / 2, -28.8);
   for (const e of [-2.1, 2.1]) box("foam", 0.45, PIT_DEPTH, 0.25, 26.2, -PIT_DEPTH / 2, -28.8 + e);
   box("water", 6, 0.1, 6, 23.4, -PIT_DEPTH + 0.06, -27.5);
-  const Rt = { x: 31, z: -25.5 };
-  channel(Rt.x, Rt.z, Rt.x, -3.5, 3.5); channel(Rt.x, -3.5, 16, -3.5, 3.5); channel(16, -3.5, 16, -6, 3.5);
-  cascade("z", -6, -1, 16, 8);
+  const steps = (rim: number, dir: number, zc: number) => {
+    const L = 4, Wd = 5, tops = [-1.5, -4, -6.5, -9];
+    let prev = 0;
+    tops.forEach((top, i) => {
+      const xa = rim + dir * L * i, xc = xa + dir * L / 2;
+      for (const [dx, dz, r] of [[-0.9, -1.3, 1.5], [0.8, 0.2, 1.7], [-0.6, 1.5, 1.4], [1, -1.6, 1.2]] as const) {
+        const h = top + PIT_DEPTH - 0.05;
+        const col = MeshBuilder.CreateCylinder("heavenCascadeRock", { height: h, diameterTop: 2 * r, diameterBottom: 2 * r * 1.1, tessellation: 6 }, scene);
+        col.position.set(xc + dx, -PIT_DEPTH + h / 2, zc + dz);
+        col.rotation.y = i * 0.6 + dx;
+        col.bakeCurrentTransformIntoVertices();
+        parts.rock.push(col);
+      }
+      box("water", L + 0.6, 0.12, Wd + 0.8, xc, top + 0.06, zc);
+      box("water", 0.16, prev - top, Wd, xa + dir * 0.1, (prev + top) / 2, zc);
+      box("foam", 0.3, 0.3, Wd + 0.3, xa + dir * 0.15, prev + 0.08, zc);
+      box("foam", 0.35, 0.18, Wd + 0.2, xa + dir * 0.45, top + 0.14, zc);
+      for (const e of [-1.4, 0.3, 1.6]) box("foam", 0.22, prev - top, 0.3, xa + dir * 0.2, (prev + top) / 2, zc + e);
+      prev = top;
+    });
+    const xe = rim + dir * L * tops.length;
+    box("water", 0.16, PIT_DEPTH + prev, Wd, xe + dir * 0.1, (prev - PIT_DEPTH) / 2, zc);
+    box("foam", 0.5, 0.3, Wd + 0.3, xe + dir * 0.15, prev + 0.08, zc);
+    box("water", 6, 0.1, Wd + 2, xe + dir * 3, -PIT_DEPTH + 0.06, zc);
+    box("foam", 1.2, 0.14, Wd + 1, xe + dir * 0.8, -PIT_DEPTH + 0.12, zc);
+  };
+  channel(-28.2, 25.3, -28.2, 17, 3); channel(-28.2, 17, -27, 17, 3); steps(-27, 1, 17);
+  channel(28.2, -25.3, 28.2, -11.5, 3); channel(28.2, -11.5, 27, -11.5, 3); steps(27, -1, -11.5);
   // front: well kerb -> front edge, falling down the rim wall's face
   for (const [x, z0] of [[-17, -31.6], [17, -31.6]] as const) {
     const edge = -(DECK.z - notchDepth(-1, x));
@@ -797,6 +826,12 @@ function waterfalls(scene: Scene): void {
     box("foam", 2.9, 0.35, 0.5, x, 0.1, edge - 0.1);
   }
   const glow = scene.getGlowLayerByName("glow");
+  const rockMat = new StandardMaterial("heavenCascadeRock", scene);
+  rockMat.diffuseColor = new Color3(0.55, 0.62, 0.72);
+  rockMat.emissiveColor = rockMat.diffuseColor.scale(0.3);
+  rockMat.specularColor = Color3.Black();
+  const rocks = Mesh.MergeMeshes(parts.rock, true, true);
+  if (rocks) { rocks.name = "heavenCascadeRocks"; rocks.convertToFlatShadedMesh(); rocks.material = rockMat; rocks.receiveShadows = true; rocks.isPickable = false; }
   for (const [k, mat] of [["water", water], ["foam", foam], ["lip", lipMat]] as const) {
     const m = Mesh.MergeMeshes(parts[k], true, true);
     if (!m) continue;
@@ -884,7 +919,7 @@ function corruptedPits(scene: Scene): void {
     const shard=MeshBuilder.CreateCylinder("heavenBrokenBlackCap",{height:h,diameterBottom:1.8,diameterTop:0,tessellation:4},scene);
     shard.position.set(17+dx,8+h/2,-19);shard.rotation.z=tilt;shard.material=dark;
   }
-  for(const [i,[x,z]]of [[12,-25],[22,-13],[-13,19],[21,-26]].entries()){
+  for(const [i,[x,z]]of [[12,-25],[13,-20],[-24,9],[21,-26]].entries()){
     for(let branch=0;branch<3;branch++){
       const path:Vector3[]=[];
       for(let j=0;j<=10;j++){
