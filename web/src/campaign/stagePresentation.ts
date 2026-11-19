@@ -366,6 +366,69 @@ function zeusHouse(scene: Scene): void {
   };
 }
 
+/**
+ * Survey "there's Fencers in the large cornered building ... ready to step down the stairs" (reference/stages/renaissance.renaissance_fencer.png:
+ * cream arcaded buildings round the square, the Musketeers alone on the open paving). The Fencers must stand in the team-1 zone, so for this
+ * stage a corner building of the piazza's make stands in team 1's back corner with them inside it. Spec: x 33.5..40.5, z 20.5..28.5; a ground
+ * loggia open to the player (-x) on five columns, its floor 0.6 m up with three steps down the whole front; solid side and back walls in
+ * cream, the inside a shade darker; an upper storey with three windows, a cornice and a low orange roof (13 m). Height field lifts the floor
+ * and steps. Drawn only.
+ */
+const LOGGIA = { x0: 33.5, x1: 40.5, z0: 20.5, z1: 28.5, floor: 0.6 };
+function fencerLoggia(scene: Scene, base: HeightField | null): void {
+  const mk = (name: string, c: Color3, self: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = c;
+    m.emissiveColor = c.scale(self);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const cream = mk("fencerLoggiaCream", new Color3(0.93, 0.86, 0.72), 0.45);
+  const shade = mk("fencerLoggiaShade", new Color3(0.45, 0.38, 0.33), 0.3);
+  const stone = mk("fencerLoggiaStone", new Color3(0.82, 0.78, 0.72), 0.35);
+  const roof = mk("fencerLoggiaRoof", new Color3(0.78, 0.36, 0.2), 0.3);
+  const dark = mk("fencerLoggiaWindow", new Color3(0.16, 0.14, 0.16), 0.1);
+  const meshes: Mesh[] = [];
+  const box = (w: number, h: number, d: number, x: number, y: number, z: number, mat: StandardMaterial) => {
+    const m = MeshBuilder.CreateBox("fencerLoggia", { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z);
+    m.material = mat;
+    m.receiveShadows = true;
+    m.isPickable = false;
+    meshes.push(m);
+  };
+  const { x0, x1, z0, z1, floor: F } = LOGGIA;
+  const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const G = 4.4, U = 4.6;
+  box(w, F, d, cx, F / 2, cz, stone);
+  for (let i = 0; i < 3; i++) box(0.35, F * (3 - i) / 4, d, x0 - 0.175 - 0.35 * i, F * (3 - i) / 8, cz, stone);
+  // back and side walls of the ground loggia, the inside face darker
+  box(0.4, G, d, x1 - 0.2, F + G / 2, cz, cream);
+  box(0.06, G - 0.2, d - 0.8, x1 - 0.43, F + G / 2, cz, shade);
+  for (const z of [z0 + 0.2, z1 - 0.2]) box(w, G, 0.4, cx, F + G / 2, z, cream);
+  box(w - 0.6, 0.06, d - 0.8, cx + 0.1, F + G - 0.05, cz, shade);
+  // five columns and the beam over the open front
+  for (let i = 0; i < 5; i++) box(0.5, G - 0.6, 0.5, x0 + 0.3, F + (G - 0.6) / 2, z0 + 0.4 + i * (d - 0.8) / 4, cream);
+  box(0.7, 0.6, d, x0 + 0.3, F + G - 0.3, cz, cream);
+  // upper storey with windows, cornice and roof
+  box(w, U, d, cx, F + G + U / 2, cz, cream);
+  for (const z of [cz - 2.4, cz, cz + 2.4]) box(0.08, 1.9, 1.0, x0 - 0.02, F + G + 2.2, z, dark);
+  box(w + 0.5, 0.35, d + 0.5, cx, F + G + U + 0.17, cz, stone);
+  box(w + 0.2, 1.2, d + 0.2, cx, F + G + U + 0.95, cz, roof);
+  markStatic(meshes);
+  const ground = (x: number, z: number) => base?.(x, z) ?? 0;
+  setActiveHeightField((x, z) => {
+    if (z < z0 + 0.4 || z > z1 - 0.4 || x > x1 || x < x0 - 1.05) return ground(x, z);
+    if (x >= x0) return Math.max(ground(x, z), F);
+    const step = Math.floor((x0 - x) / 0.35);
+    return Math.max(ground(x, z), F * (3 - step) / 4);
+  });
+  cleanup = () => {
+    for (const m of meshes) if (!m.isDisposed()) m.dispose();
+    setActiveHeightField(base);
+  };
+}
+
 export function clearStagePresentation(): void {
   cleanup?.();
   cleanup = null;
@@ -483,6 +546,10 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
   }
   if (id === "dynasty.zeus_and_other_folks") {
     zeusHouse(scene);
+    return;
+  }
+  if (id === "renaissance.renaissance_fencer") {
+    fencerLoggia(scene, base);
     return;
   }
   const perch = PERCHES[id];
