@@ -1,6 +1,6 @@
 // Curated levels sometimes start actors on scenery. Presentation stays separate
 // from flat deterministic battle coordinates and is removed whenever a level resets.
-import { MeshBuilder, Vector3, type Mesh, type Scene } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene, type ShadowGenerator } from "@babylonjs/core";
 import { markStatic, setActiveHeightField, terrainMesh, type HeightField } from "../map/terrain";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 
@@ -23,6 +23,105 @@ const PERCH_CROWNS = ["tribal1CrownOrange", "tribal1CrownRed", "tribal1CrownOran
 function seeded(i: number, seed: number): number {
   const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
   return raw - Math.floor(raw);
+}
+
+/**
+ * Survey "a dim cave ... hiding inside, enjoying the fire" (reference/stages/adventure.sneaky_tribe.png): a dark mouth in a wall of
+ * faceted grey rock, a boulder either side of it and flat slabs on the ground before it. Spec: the tribe stands 6 x 6 at 1.4 m in
+ * x 19..26, z -23.5..-16.5 (adventure.ts), on the front-right ridge's foot; round it a rock shell open to -x (the player): side walls at
+ * z -26 and -14 (6-7 m), a back wall at x 30, a 1.8 m roof over x 16..32 whose lip hangs to 3.4 m at the mouth, a crag on top, the
+ * inside lined near-black and the roof casting shadow, a fire at the back. Drawn only: no colliders, the battle stays flat.
+ */
+function tribeCave(scene: Scene): void {
+  const rock = scene.getMaterialByName("tribal1Cliff");
+  const dark = new StandardMaterial("caveDark", scene);
+  dark.diffuseColor = new Color3(0.07, 0.055, 0.055);
+  dark.emissiveColor = new Color3(0.02, 0.015, 0.015);
+  dark.specularColor = Color3.Black();
+  const flame = new StandardMaterial("caveFire", scene);
+  flame.diffuseColor = Color3.Black();
+  flame.emissiveColor = new Color3(1.2, 0.5, 0.08);
+  flame.disableLighting = true;
+  const parts: Mesh[] = [];
+  const block = (w: number, h: number, d: number, x: number, y: number, z: number, k: number) => {
+    const b = MeshBuilder.CreateCylinder("caveRock", { diameterTop: w * 0.82, diameterBottom: w, height: h, tessellation: 6 }, scene);
+    b.scaling.z = d / w;
+    b.position.set(x, y, z);
+    b.rotation.set((seeded(k, 71) - 0.5) * 0.12, (seeded(k, 72) - 0.5) * 0.5, (seeded(k, 73) - 0.5) * 0.1);
+    parts.push(b);
+  };
+  let k = 0;
+  // side walls: three masses each, stepping down toward the mouth
+  for (const side of [-1, 1]) {
+    const z = -20 + side * 6.3;
+    for (const [x, h] of [[18, 5.6], [23, 6.6], [28, 7]] as const) block(5.6, h, 3.2, x, h / 2, z + side * seeded(++k, 74) * 0.6, k);
+  }
+  // back wall and the roof slab with its lip, a crag on top
+  block(5, 7.4, 13.5, 30.6, 3.7, -20, ++k);
+  const roof = MeshBuilder.CreateBox("caveRoof", { width: 16, height: 1.8, depth: 14.5 }, scene);
+  roof.position.set(24, 5.3, -20);
+  roof.rotation.set(0.04, 0, -0.06);
+  parts.push(roof);
+  block(4, 1.6, 13.5, 16.6, 4.2, -20, ++k);
+  block(5.5, 4.5, 5, 26, 8.2, -21.5, ++k);
+  block(3.5, 3, 3.5, 21, 7, -17, ++k);
+  // a boulder either side of the mouth, flat slabs before it
+  for (const [x, z, r] of [[15.2, -25.4, 1.7], [15.6, -14.8, 1.4]] as const) {
+    const b = MeshBuilder.CreateIcoSphere("caveRock", { radius: r, subdivisions: 1 }, scene);
+    b.position.set(x, r * 0.6, z);
+    b.scaling.y = 0.8;
+    parts.push(b);
+  }
+  for (const [x, z, w, d, yaw] of [[12.5, -21.5, 3.2, 2.2, 0.4], [14, -17.8, 2.6, 1.8, -0.3], [10.8, -18.6, 2, 1.5, 0.9]] as const) {
+    const s = MeshBuilder.CreateCylinder("caveRock", { diameter: w, height: 0.35, tessellation: 5 }, scene);
+    s.scaling.z = d / w;
+    s.position.set(x, 0.1, z);
+    s.rotation.set(0.05, yaw, 0.04);
+    parts.push(s);
+  }
+  const shell = Mesh.MergeMeshes(parts, true);
+  const meshes: Mesh[] = [];
+  if (shell) {
+    shell.name = "tribeCave";
+    shell.convertToFlatShadedMesh();
+    shell.material = rock;
+    meshes.push(shell);
+  }
+  // the dark inside: a liner on the back wall, both side walls and under the roof
+  const liner = [
+    MeshBuilder.CreatePlane("caveLiner", { width: 12, height: 6 }, scene),
+    MeshBuilder.CreatePlane("caveLiner", { width: 12.5, height: 6 }, scene),
+    MeshBuilder.CreatePlane("caveLiner", { width: 12.5, height: 6 }, scene),
+    MeshBuilder.CreatePlane("caveLiner", { width: 14, height: 11.5 }, scene),
+  ];
+  liner[0].position.set(28.05, 3, -20);
+  liner[0].rotation.y = Math.PI / 2;
+  liner[1].position.set(22.5, 3, -24.6);
+  liner[2].position.set(22.5, 3, -15.4);
+  liner[2].rotation.y = Math.PI;
+  liner[3].position.set(23, 4.35, -20);
+  liner[3].rotation.x = -Math.PI / 2;
+  for (const m of liner) {
+    m.material = dark;
+    m.sideOrientation = Mesh.DOUBLESIDE;
+    meshes.push(m);
+  }
+  // the fire at the back
+  const fire = MeshBuilder.CreateCylinder("caveFire", { diameterTop: 0, diameterBottom: 0.9, height: 1.1, tessellation: 5 }, scene);
+  fire.position.set(27.3, 0.55, -20);
+  fire.material = flame;
+  meshes.push(fire);
+  const shadows = scene.lights.map((l) => l.getShadowGenerator() as ShadowGenerator | null).find((g) => g);
+  for (const m of meshes) {
+    m.isPickable = false;
+    m.receiveShadows = m !== fire;
+    if (m !== fire) shadows?.addShadowCaster(m);
+  }
+  markStatic(meshes);
+  cleanup = () => {
+    for (const m of meshes) if (!m.isDisposed()) m.dispose();
+    for (const mat of [dark, flame]) mat.dispose();
+  };
 }
 
 function perchCrowns(scene: Scene, units: RuntimeUnit[], base: HeightField | null, p: Perch): void {
@@ -174,6 +273,10 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
       scene.onBeforeRenderObservable.remove(before);
       scene.onAfterRenderObservable.remove(after);
     };
+    return;
+  }
+  if (id === "adventure.sneaky_tribe") {
+    tribeCave(scene);
     return;
   }
   const perch = PERCHES[id];
