@@ -71,6 +71,7 @@ import type { Obstacle } from "./map/obstacles";
 import { isPointInsideHazard } from "./map/hazards";
 import { PlacementValidator } from "./map/placementValidator";
 import { installTerrainLift, setActiveHeightField } from "./map/terrain";
+import { applyStagePresentation, clearStagePresentation } from "./campaign/stagePresentation";
 import {
   CameraController,
   type CameraViewState,
@@ -670,6 +671,7 @@ function clearPendingCampaignResolution(): void {
 }
 
 function loadMapById(mapId: BattleMapId): void {
+  clearStagePresentation();
   if (activeMapInstance.id === mapId) return;
   activeMapInstance.dispose?.();
   activeMapInstance = loadBattleMap(scene, mapId);
@@ -1381,6 +1383,7 @@ function stopBattle(): void {
   }
   if (stateMachine.currentState !== GameState.Simulation) return;
   simulation.endSimulation(worldTimeSeconds);
+  clearStagePresentation();
   playAgain();
   if (!campaignSession) showStatus("Battle stopped.");
 }
@@ -1813,6 +1816,7 @@ function loadCampaignScenario(statusMessage?: string): void {
     BATTLE_CONFIG.maxUnitsPerTeam,
   );
   applyCampaignPlacements(activeScenario.placements);
+  applyStagePresentation(scene, activeScenario.id, placedUnits, activeMapInstance.height ?? null);
   buildUnitPanel();
   updateBudgetDisplay();
   updateSelectedUnitDisplay();
