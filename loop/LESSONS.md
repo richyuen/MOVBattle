@@ -18,7 +18,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 
 ## Capture and probes
 - Serialize agents' git staging and commit pairs: their shared index can combine separate gaps into one commit.
-- Regression-only keeps PNGs but replaces summary.json: back up world evidence and keep its smoke summary separately (599).
+- Regression-only replaces summary.json: back up world evidence and keep its smoke summary separately (599).
 - capture-world: mulberry32 0x4d4f5642 reseeded each resetBattle, time via advanceTime, setupScale8; re-add body.capture-mode before shots (loads drop it).
 - Never capture with a test --iter (pruneOld): use look/. Near-black set pieces vanish in black tree rings (587).
 - Capture wipes iter-N unless --add: save reviews after the last capture; audit step5 needs --add. Background step5 (~12min).
@@ -58,6 +58,6 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
 - Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white, a lit crag on the void a blur: exclude them (584-597).
 - Stage _army: camera west of the line, -z on the right; roofs can hide ranks. Use a high view for street armies (583,599).
-- HeightField is (x, z) only: a standable roof over a walkway lifts passers-by onto it; shape the mesh by its own field (598).
+- HeightField lifts passers-by onto roofs: actor-only seats need paired render observers, restored transforms before simulation and cleanup on reset (598,601).
 - The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Notches: ~8 m hide under trees/rocks; pushing radial floor verts to a cut's nearest edge bevels it (596, 598).
 - Recess a descent before merging cliff columns (579). A concave bank: lengthwise strips, no hub fan (581).

@@ -1,16 +1,14 @@
 # adventure.the_tiniest_attack
-Status: open   Audited: 600 (AUDIT x2)   Done: -
+Status: done   Audited: 600 (AUDIT x2), 601 (CONFIRM: passed b)   Done: 601
 ## Verdicts
-a PASS (600 judge)
-b FAIL (600: struck 2): 1. Farmer placement in stage_adventure.the_tiniest_attack_army.png — TABS: the lone Farmer is isolated on the hill's summit; ours stands at the end of the same low rank as the Halflings (ref: reference/stages/adventure.the_tiniest_attack.png, card Survey).
-c PASS (600 judge)
-
+a PASS (601 judge)
+b PASS (601: struck1; CONFIRM601)
+c PASS (601 judge)
 ## Ranked gaps
-1. [S] b lone summit Farmer — blocker 1: stage-specific hill standing surface and existing Farmer isolated on its crest; preserve hidden ambush distribution — ref: reference/stages/adventure.the_tiniest_attack.png — ours: stage_adventure.the_tiniest_attack_army.png
-
 ## Attempts (iter | gap | criterion | verdict)
-600 | [S] hidden wheat groups ffe2e899,defaf4dd | b2 | APPROVE, struck2; followup cleared two obstacles
+601 | [S] summit Farmer c283afb0 | b1 | APPROVE,struck1; CONFIRM PASS -> D
+600 | [S] hidden wheat groups ffe2e899,defaf4dd | b2 | APPROVE,struck2; followup cleared obstacles
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- 31 Halflings: fifteen upper and sixteen lower crop pockets; Farmer unchanged. Final a/c PASS, zero misplaced.
-- Farmer2 has no summit beneath the Farmer; next gap needs its matching drawn standing surface.
+- One Farmer on6.5m crest at(20,-9.9),31 Halflings in irregular wheat pockets. Stage-only hill/height field clears on map reload.
+- Both critics passed formation; script counts/placement/battle PASS601.
