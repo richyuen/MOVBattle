@@ -1,14 +1,16 @@
 # map.pirate
-Status: open   Audited: 576 (AUDIT x2), 592 (CONFIRM: passed none; failed a, b)   Done: -
+Status: open   Audited: 576 (AUDIT x2), 592 (CONFIRM: failed a,b), 599 (CONFIRM: failed a,b)   Done: -
 ## Verdicts
-a FAIL (596: struck 3): 2. ship hull shape in map_pirate_deck.png is a flat-sided box with a square stern block — TABS: a curved, tapering galleon hull with a high ornate stern castle and rows of stern windows (ref: reference/maps/wiki/pirate.png)
-b PASS (596: struck 2; CONFIRM pending)
-c PASS (596 judge)
+a FAIL (plateau; 0 since 599): 1. Ships in output/loop/iter-599/map_pirate_island.png — TABS: large, deep, tiered hulls with elaborate raised sterns and broad crow's nests dominate both shores; ours read as shallow narrow boats with box cabins (ref: reference/maps/wiki/pirate.png). 2. Mountain summit in output/loop/iter-599/map_pirate_top.png — TABS: a stranded wooden ship hull sits on the grassy crag; ours has an oversized bell-shaped object on an exposed rock pile (ref: reference/maps/wiki/pirate.png). 3. Shore vegetation in output/loop/iter-599/map_pirate_ground.png — TABS: dense, irregular palms and broad green undergrowth close the ends of the beach; ours has evenly spaced low palm rows with sparse tall trees (ref: reference/maps/wiki/pirate.png).
+b FAIL (plateau; 0 since 599): 1. Ship-to-field proportions in output/loop/iter-599/map_pirate_top.png — TABS: each ship runs along most of its beach shore, closely framing the fighting ground; ours has short ships beside a disproportionately broad central sand field (ref: reference/maps/wiki/pirate.png).
+c PASS (599 judge)
 
 ## Ranked gaps
-1. a2 stern (2 attempts: starvation pick or [R] only): loft the stern castle as a tapered, raked shell continuing the hull's superellipse, two window rows on its sides and quarter, seen in map_pirate_deck — ref: wiki/pirate.png
+1. [R] a galleon/shore look — blockers 1-3: deep elaborate hulls, sterns and crow's nests; wreck on grassy summit; dense irregular palms/undergrowth; preserve 592's dark planks/gold trim and sandy palm rim — ref: reference/maps/wiki/pirate.png, reference/maps/pirate_beach.png — ours: map_pirate_island.png, _top, _ground
+2. [R] b shore proportions — blocker 1: rescale ships to frame each shore and the sand field; preserve 592's one ship per team and standable decks/gangplanks — ref: reference/maps/wiki/pirate.png — ours: map_pirate_top.png
 
 ## Attempts (iter | gap | criterion | verdict)
+599 | [S] stern galleries 9b680d9d (starvation) | a2 | APPROVE, struck a2; second failed a/b CONFIRM -> both plateau
 596 | [S] team-1 deck zone, castle tops standable, 3 stage armies on the -z deck ca380e64 | b2 | APPROVE, struck b2 (b PASS)
 596 | [S] outer sand ring with palm clumps and sandy drum side ffb7e7ad (+8e8d3c20) | a3 | APPROVE, struck a3
 595 | [S] one galleon per team side (x -17 / +17) b3ba566f; evidence deck shot 637bc25c | b1 | APPROVE, struck b1
@@ -17,8 +19,8 @@ c PASS (596 judge)
 576-592 | [S] galleons, lagoon, sand island, bell mountain, beach, gangplanks, shore, sky, golden sand, decks, spit | a, b | struck a1-a6, b1-b5; CONFIRM 592 failed a, b
 
 ## Rejected (last 4)
-594 | [S] a2 29222f58 | transom windows face +-x, invisible in deck/top/island shots; stern still a square block side-on
+594 | [S] a2 29222f58 | transom faced +-x, invisible; reverted b4a3cdd9
 
 ## Notes (max 3 lines)
-- Stages: pirate.x_marks_the_spot, a_rival_captain, spooky.plunder: now on the -z deck (keel z -37, x 8..26, plank heads z -30.5). SHIPS {x -17, z 37, bow 1}, {x 17, z -37, bow -1}; deck zone x 2..32 z -41..-20 appended after base zones.
-- Critic 596: the deck crews hide under the sail rolls in the _field shots (stage b work). A 2nd CONFIRM fail on a or b makes it plateau.
+- Stages: pirate.x_marks_the_spot, a_rival_captain, spooky.plunder, on -z deck x8..26; zone x2..32 z-41..-20.
+- Both R specs include CONFIRM lists at iter-592/confirm.md:12-16 and iter-599/confirm.md. One waiting R takes iteration600's slot.

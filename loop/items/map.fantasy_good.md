@@ -1,17 +1,19 @@
 # map.fantasy_good
-Status: open   Audited: 587 (AUDIT x2), 595 (CONFIRM: passed none; failed a, b)   Done: -
+Status: open   Audited: 587 (AUDIT x2), 595 (CONFIRM: failed a,b)   Done: -
 ## Verdicts
-a FAIL (597: struck 3, 4): 1. Underside of the slab in map_fantasy_good_island: a flat white wall with square dark windows over short grey stub pillars — TABS: arcaded viaduct arches over hanging grey basalt column clusters with teal trees, clouds below (ref: reference/maps/wiki/fantasy_good.png, reference/maps/heaven_good.png) 2. The two gate arches in map_fantasy_good_island and _top: small plain boxes with one round arch and a thin spike — TABS: huge ornate gate towers with stained-glass windows and tall pale-blue crystal spires (ref: reference/maps/wiki/fantasy_good.png) 5. Corrupted-darkness pieces in map_fantasy_good_top: none — TABS: black thorn vines and a dark corrupted obelisk in the pits beside the light statues (ref: reference/maps/wiki/fantasy_good.png, card Overview)
-b FAIL (597: "lower ledge walkway along the front rim" clause cleared, no strike): 2. Deck outline in map_fantasy_good_top: a plain rectangle with a notched front edge — TABS: a stepped outline with a lower ledge walkway along the front rim and an angled jog at the back (ref: reference/maps/wiki/fantasy_good.png, reference/maps/heaven_good.png)
-c PASS (597 judge)
+a FAIL (599: struck 5; a2 scale/spires clauses cleared): 1. Underside of the slab in map_fantasy_good_island: a flat white wall with square dark windows over short grey stub pillars — TABS: arcaded viaduct arches over hanging grey basalt column clusters with teal trees, clouds below (ref: reference/maps/wiki/fantasy_good.png, reference/maps/heaven_good.png) 2. The two gate arches in map_fantasy_good_island and _top: small plain boxes with one round arch — TABS: huge ornate gate towers with stained-glass windows (ref: reference/maps/wiki/fantasy_good.png)
+b PASS (599: struck 2; CONFIRM pending)
+c PASS (599 judge)
 
 ## Ranked gaps
-1. [S] a5 corruption: 3-4 black thorn vine clusters (arched tubes 4-8 m) and a dark obelisk with a cracked black cap in the front-centre pit beside the light spire — ours: map_fantasy_good_top.png
-2. [S] b2 back jog: a diagonal jog cut into the back rim at x 12..28 (deck edge drops ~6 m), parapet, kerb and colliders following it (EDGE_STEPS/edgeSegments) — ref: heaven_good.png — ours: map_fantasy_good_top.png
-3. [S] a2 gate towers 2x taller, gold-trimmed stained-glass lancets, pale-blue crystal spire cluster each — ours: map_fantasy_good_island.png
-4. [P] fallout of 10bafbf2 / cfe386c3 (to 600): front falls pierce the ledge: start them past the ledge's outer edge or spill over it; falls fade (mist) at the bottom — ours: map_fantasy_good_island.png
+1. [S] a open viaduct — blocker 1: open bays above long irregular basalt support clusters — ref: reference/maps/heaven_good.png — ours: map_fantasy_good_island.png
+2. [S] a ornate gate facades — blocker 2: pointed stained-glass heads, shaped gold framing and crowns on the tall gates — ref: reference/maps/wiki/fantasy_good.png — ours: map_fantasy_good_island.png, _top
+3. [P] fallout of 10bafbf2/cfe386c3 (to600): start front falls past the ledge or spill over it; fade at bottom — ours: map_fantasy_good_island.png
 
 ## Attempts (iter | gap | criterion | verdict)
+599 | [S] corruption ab0886e6, e8517b58 | a5 | APPROVE, struck a5
+599 | [S] rear jog 368eeb98 | b2 | APPROVE, struck b2 (b PASS)
+599 | [S] gate towers 9a80277f | a2 | APPROVE, no strike; huge scale/blue spires clauses cleared (attempt1)
 597 | [S] pit shafts: dark floors, navy liners, basalt columns 6bbd3b7d | a4 | APPROVE, struck a4
 597 | [S] waterfalls: gate channels into back pits, 3 front falls 10bafbf2 | a3 | APPROVE, struck a3
 597 | [S] lower front ledge walkway with parapet and stairs cfe386c3 | b2 | APPROVE, no strike (ledge clause cleared) (attempt 1)
@@ -21,5 +23,6 @@ c PASS (597 judge)
 ## Rejected (last 4)
 
 ## Notes (max 3 lines)
-- tabs/fantasy_good.ts: deck x+-52 z+-40, EDGE_STEPS, PITS (5), TOWERS (+-40,30); frontLedge (first, own materials), waterfalls (after viaduct), pitShafts (last). No stage. 2nd CONFIRM fail -> plateau.
-- Critic 597: basalt columns uniform pale posts; deck channels thin and pale from _top.
+- No stage. Deck x+-52 z+-40, PITS5, TOWERS+-40 atz30. rearJog shears edge owners atx12..28 abovez32, with colliders.
+- 599 evidence71731f5f frames taller gates; a/b were reopened (already FAIL). Corruption and jog clear; facade tracery and underside remain.
+- First CONFIRM failure595; a second counted failure -> plateau.

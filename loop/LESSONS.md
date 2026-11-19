@@ -1,6 +1,6 @@
 # Lessons (loop v10): facts about the pipeline, the capture and the renderer that outlive one item
 
-Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress lessons are in `loop/archive/v4/LESSONS.md` (not read by the loop).
+Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 
 ## Rendering (swiftshader + PBR + SSAO + ACES + glow)
 - PBR colours are linear: an sRGB target c needs ~c^2.2 as the code. Pick values off `output/loop/palette.png` (`capture.mjs --palette`).
@@ -12,18 +12,20 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - An excluded mesh does not occlude the glow: a dark one out of the pass wears the glow behind it as a pale veil (562, 586). Keep dark solids in.
 - IcoSphere subdivisions 0 is falsy (becomes 4): use 1. A half-disc (arc .5) at rotation (PI/2,0,PI/2) faces +-x (595).
 - Lit thin-instance wheat reads gold above, brown low: two unlit glow-excluded instance meshes sharing one matrix buffer.
-- Image processing is a full-frame post-process: code c renders contrast(gamma(ACES(1.05*c^2.2))), white -> (210,210,210); simKit untoned() inverts it for skies/clouds (591); an unlit textured sheet missed its target (591).
+- Full-frame image processing: contrast(gamma(ACES(1.05*c^2.2))); white renders210. simKit untoned() inverts it for skies/clouds (591).
 - Sun dir (-.52,-.669,-.53) lights +x-facing slopes; a -x-facing one goes lilac. Bend its flat-shaded normals (after gridUVs) to one shared normal, not an unlit sheet (592).
 - A pit below y 0 is lidded by the base slab (islandUnder/islandShelf, y -0.02): hide them (592).
 
 ## Capture and probes
+- Regression-only keeps PNGs but replaces summary.json: back up world evidence and keep its smoke summary separately (599).
 - capture-world.mjs boots like capture.mjs: mulberry32 0x4d4f5642 reseeded at every resetBattle, time only through advanceTime, setup renders at 1/8 size (__setupScale 8). It re-adds body.capture-mode before every shot (the game drops it on loads).
 - Never capture with a test --iter (pruneOld): use look/. Near-black set pieces vanish in black tree rings (587).
 - A capture wipes iter-N unless --add: save audit/critic files after the step's last capture (audit iterations: step 5 with --add). A step-5 capture takes ~12 min: background it.
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
-- In-page probe on the dev server (5173): import the @babylonjs_core.js?v=... URL from performance.getEntriesByType("resource"); its EngineStore.LastCreatedScene is the live scene after game.loadMapForCapture(id).
+- Dev probe (5173): import the Babylon resource URL; EngineStore.LastCreatedScene is the live map scene.
 
 ## Maps and stages
+- Inherited placement zones can omit clear streets or inner ice. Append valid side-specific strips, keeping the original skirmish zone first (599).
 - The sim's ground is flat (body.root at y 0); terrain.ts lifts every dynamic root node by MapBuildResult.height at draw time and recomputes its world matrices after, so battles are identical with or without height (checked on Hill). Map meshes are marked static by trackMapBuild: a map builder seats its own props at groundHeightAt(). Nav and placement still come from zones, obstacles and hazards. An effect whose root sits at the origin with world-placed children is lifted by the height at the origin: give such roots their own position.
 - terrainMesh winds its grid to face +y; skirts are double-sided. The placement centre line and zone overlays stay flat (they are map meshes).
 - A TABS map without a builder in web/src/map/tabs/ is its base map (tabsMaps.ts); several maps share a base, so a base edit moves all of them and the regression scenarios on campaign.adventure.
@@ -54,7 +56,7 @@ Read at step 1; one fact a line, merge near cap. The unit phase's rig and dress 
 - MergeMeshes: null past 65536 verts unless (parts,true,true); throws on mixed attributes (VertexData needs uvs); a throwing build leaks into later maps (593).
 - A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
 - Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white, a lit crag on the void a blur: exclude them (584-597).
-- Stage _army shot: camera ~24 m west (-x) of the line, -z on the right; buildings near the line hide it (583); viking team-1 zones from ~x 27 (597).
+- Stage _army: camera west of the line, -z on the right; roofs can hide ranks. Use a high view for street armies (583,599).
 - HeightField is (x, z) only: a standable roof over a walkway lifts passers-by onto it; shape the mesh by its own field (598).
 - The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Notches: ~8 m hide under trees/rocks; pushing radial floor verts to a cut's nearest edge bevels it (596, 598).
 - Recess a descent before merging cliff columns (579). A concave bank: lengthwise strips, no hub fan (581).
