@@ -3,6 +3,10 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+606 | [R] 57397d50 | map.fantasy_good.b1-2 | approve,struck1,2 (quadrant wells, diagonal gates); CONFIRM a,b PASS
+606 | [R] 6d627f50 | map.fantasy_good.a1-2 | approve,struck1 (multi-bay gatehouses)
+606 | [R] 9b0909fd | map.fantasy_good.a2 | approve, no strike (fog-off cyan sheets)
+606 | [R] 628c2755 | map.fantasy_good.a2 | reject, reverted 639fec40 (curtains read as pale glass in _top)
 605 | [R] fc3db046 | map.fantasy_evil.b1 | reject, rejected-kept (revert conflicts); 6 m routes, edge chambers; centre stayed solid
 605 | [R] 18965679 | map.fantasy_evil.a1-2 | approve,struck2 (ledge mushroom pads); a1 slab/gate/no-monument clauses cleared
 605 | [R] 89f441c4 | map.fantasy_evil.b1 | approve,struck1 (sunken central pit, front/back chambers, 8 m causeways)
@@ -22,14 +26,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 601 | c283afb0 | adventure.the_tiniest_attack.b1 | approve,struck1; CONFIRM D
 601 | a744ccde,c0d6c20a,799d316d | adventure.a_fierce_rider.b2 | approve,struck2; CONFIRM D
 601 | 5f92ad8a | adventure.final_destination_wheelbarrow.b1 | approve,struck1; CONFIRM D
-600 | [R] f99eb4fd | map.pirate.a1-3 | approve, struck a2,a3; a1 deep hull/nest clauses cleared
-600 | 4834759a | map.fantasy_good.a1 | approve, no strike; stub-pillar clause cleared
-600 | 79aae0c6 | map.fantasy_good.a2 | approve, struck a2
-600 | bb5ee8bb | map.fantasy_evil.b1 | approve, no strike; multiple shelves clause cleared
-600 | d0fccfc5 | map.fantasy_evil.a2 | approve, struck a2
-600 | ff505e0b, b79bc009 | map.fantasy_evil.a1 | approve, struck a1
-600 | d4289c91 | adventure.a_fierce_rider.b1 | approve, struck b1
-600 | ffe2e899, defaf4dd | adventure.the_tiniest_attack.b2 | approve, struck b2
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.

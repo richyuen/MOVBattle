@@ -1,21 +1,20 @@
 # map.fantasy_good
-Status: open   Audited: 587 (AUDIT x2), 595 (CONFIRM: failed a,b), 601 (CONFIRM: failed a,b)   Done: -
+Status: open   Audited: 587 (AUDIT x2), 595 (CONFIRM: failed a,b), 601 (CONFIRM: failed a,b), 606 (CONFIRM: passed a, b)   Done: -
 ## Verdicts
-a FAIL (plateau; 0 since601): 1. Shrine gate silhouettes in map_fantasy_good_island.png — TABS: massive multi-bay white-and-gold gates with substantial stepped buttresses and broad gold arch faces, rather than thin single-opening rectangular portals (ref: reference/maps/wiki/fantasy_good.png and reference/maps/heaven_good.png). 2. Shrine waterfalls in map_fantasy_good_top.png — TABS: conspicuous cyan channels descending beside the gates into the deep wells, rather than only small flat blue strips beside otherwise dry portals (ref: reference/maps/wiki/fantasy_good.png).
-b FAIL (plateau; 0 since601): 1. Well footprint in map_fantasy_good_top.png — TABS: four large quadrant wells leaving a defined cross of walkways, rather than six small holes surrounded by a broad continuous plaza (ref: reference/maps/wiki/fantasy_good.png). 2. Gate placement in map_fantasy_good_island.png — TABS: gates occupy opposing ends of the field across the well-and-walkway layout, rather than both portals standing together along the same rear edge (ref: reference/maps/wiki/fantasy_good.png and reference/maps/heaven_good.png).
-c PASS (601 judge)
+a FAIL (plateau; 0 since601; list from CONFIRM 601; CONFIRM 606 passed a on this list): s1. Shrine gate silhouettes in map_fantasy_good_island.png (struck 606) 2. Shrine waterfalls in map_fantasy_good_top.png — TABS: conspicuous cyan channels descending beside the gates into the deep wells, rather than only small flat blue strips beside otherwise dry portals (ref: reference/maps/wiki/fantasy_good.png).
+b PASS (606: struck 1, 2; CONFIRM 606)
+c PASS (606 judge)
 ## Ranked gaps
-1. [R] a shrine/waterfall mechanism — blockers1,2: multi-bay buttressed gates and large cyan falls into wells; spec from CONFIRM595+601 — ref: reference/maps/wiki/fantasy_good.png, reference/maps/heaven_good.png — ours: map_fantasy_good_island.png
-2. [R] b wells/walkways/gates — blockers1,2: four broad quadrant wells, cross routes, opposing gates; spec from CONFIRM595+601 — ref: reference/maps/wiki/fantasy_good.png — ours: map_fantasy_good_top.png
+1. [R] a2 gate water — opaque saturated cyan (emissive ~(.05,.55,.9), no alpha) with foam edges; a crest strip ABOVE the merlon line; a fall down the gate well's FAR wall (the one facing the top camera: z 31 for back-left is unreachable past the gate, so the well's +z wall via a channel, or the x wall nearest the frame edge) to a cyan floor pool, both gates — ref: reference/maps/wiki/fantasy_good.png — ours: map_fantasy_good_top.png
 ## Attempts (iter | gap | criterion | verdict)
-601 | [S] arcade9e419281 | a1(old list) | APPROVE,struck1; a PASS -> second CONFIRM faileda,b
-600 | arcade4834759a/gates79aae0c6/[P]spilla44979d1 | a | APPROVE,strucka2; a1 pillar clause cleared
-599 | corruptionab0886e6/e8517b58; jog368eeb98; towers9a80277f | a5,b2,a2 | APPROVE,strucka5,b2
-597 | pits6bbd3b7d/falls10bafbf2/ledgecfe386c3 | a4,a3,b2 | APPROVE,strucka4,a3
-596 | pits65479838/deck788ad169 | b1,a6 | APPROVE,struckboth
-591-595 | builder/deck/pits/parapets/towers/sky/steps/islets | a,b | APPROVE; CONFIRM595 faileda,b
+606 r3 | [R] crest channel, gate-end curtains into wells 628c2755 | a2 | REJECT (pale see-through panes in _top), reverted 639fec40
+606 r2 | [R] saturated sheets, fog off, unbroken falls 9b0909fd | a2 | APPROVE, no strike
+606 | [R] multi-bay gatehouses, wide cascades 6d627f50 | a1,a2 | APPROVE, struck a1
+606 | [R] quadrant wells |x| 6..27 |z| 6..31, gates at (-40,30),(40,-30) 57397d50 | b1,b2 | APPROVE, struck b1,b2; CONFIRM a,b PASS
+591-601 | builder/deck/pits/parapets/towers/sky/islets/arcade/corruption | a,b | old lists struck; CONFIRM 595, 601 failed a,b
 ## Rejected (last 4)
+606 r3 | [R] a2 628c2755 | gate curtains read as translucent pale glass from the top camera; crest hidden by merlons
 ## Notes (max 3 lines)
-- No stage. Both a/b plateau after second counted CONFIRM failure601; older Pirate b R has priority.
-- CONFIRM well-count wording retained verbatim; current PITS/ledger has five, not six. Reconcile in R spec.
-- Keep exposed front arcade, continuous front spill and connected ledge during rebuild.
+- No stage. b confirmed (606). a: when the critic passes a2, a is already CONFIRMed (606) -> D without another CONFIRM.
+- The top camera (alpha -pi/2) sees -z faces and x faces near the frame edge only; 606 r2 cascade (far wall z -6 of the front-right well, fed along the walkway) read best.
+- CONFIRM notes (not blockers): gold arch faces are thin trims, wells rectangular with plain plaza flanks, water paler than wiki cyan.
