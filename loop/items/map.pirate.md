@@ -1,26 +1,20 @@
 # map.pirate
-Status: open   Audited: 576 (AUDIT x2), 592 (CONFIRM: failed a,b), 599 (CONFIRM: failed a,b)   Done: -
+Status: done   Audited: 576 (AUDIT x2), 592 (CONFIRM: failed a,b), 599 (CONFIRM: failed a,b), 602 (CONFIRM: passed a; passed b, round 2)   Done: 602
 ## Verdicts
-a FAIL (601: no strike; list from599): 1. Ships in output/loop/iter-599/map_pirate_island.png — TABS: large, deep, tiered hulls with elaborate raised sterns and broad crow's nests dominate both shores; ours read as shallow narrow boats with box cabins (ref: reference/maps/wiki/pirate.png).
-b FAIL (plateau; 0 since 599): 1. Ship-to-field proportions in output/loop/iter-599/map_pirate_top.png — TABS: each ship runs along most of its beach shore, closely framing the fighting ground; ours has short ships beside a disproportionately broad central sand field (ref: reference/maps/wiki/pirate.png).
-c PASS (601 judge)
+a PASS (602: struck 1; CONFIRM 602)
+b PASS (602: struck 1 [R], 2 [S]; CONFIRM 602 r2)
+c PASS (602 judge)
 ## Ranked gaps
-1. [R] b shore-and-ship footprint — blocker1: replace hourglassBeach and galleon layout together, ships framing most of both shores; preserve deck approaches/armies — ref: reference/maps/wiki/pirate.png — ours: map_pirate_top.png
-2. [S] a open stern terrace (2 attempts; starvation/new plateau only) — blocker1: upward-sweeping deck and integrated quarter galleries — ref: reference/maps/wiki/pirate.png — ours: map_pirate_island.png, map_pirate_deck.png
+(none)
 ## Attempts (iter | gap | criterion | verdict)
-601 | [R] layout e0ec78a8 | b1 | REJECT, reverted d62511b6 (R attempt1)
-601 | [S] curved galleries632a9f8c | a1 | APPROVE, no strike (attempt2)
-600 | [R] galleonsf99eb4fd | a | APPROVE, strucka2,a3; hull/nest clauses cleared; a plateau lifted
-599 | [S] galleries9b680d9d | a2 | APPROVE, strucka2; second failed CONFIRM -> plateau
-596 | deckca380e64; shoreffb7e7ad/8e8d3c20 | b2,a3 | APPROVE, struckboth
-595 | teamshipsb3ba566f | b1 | APPROVE, struckb1
-594 | transom29222f58 | a2 | REJECT,revertedb4a3cdd9
-593 | hullc6dfd275/0a50ce06 | a2 | APPROVE, strucka1/bow
-576-592 | mechanisms | a,b | old lists struck; CONFIRM592 faileda,b
+602 | [R] z-strip galleons 92afd9c8 (+evidence a499d822) | b1 | APPROVE, struck b1; critic added b2 (base palms on the turned strip)
+602 | [S] rising stern castle 264c9d94/36a587e7 | a1 | APPROVE, struck a1; CONFIRM a PASS
+602 | [S] open sand c3b103ee (+evidence 8a51d844 ground/battle pose) | b2 | APPROVE, struck b2; CONFIRM b PASS -> D
+601 | [R] layout e0ec78a8 | b1 | REJECT, reverted d62511b6
+576-601 | hull/galleons/shore/deck/stern | a,b | old lists struck; CONFIRM592/599 failed a,b
 ## Rejected (last 4)
 601 | [R] b1 e0ec78a8 | longer hulls leave broad empty shore; R clears no blocker; reverted
 594 | [S] a2 29222f58 | transom faced +-x, invisible; reverted
 ## Notes (max 3 lines)
-- Stages: pirate.x_marks_the_spot, a_rival_captain, spooky.plunder; -z deck armies/zones retained; post-revert a/c all PASS601.
-- b R waiting since599, one rejection. a1 next starvation606.
-- Early601 CONFIRM unused: not would-be-done. Reviewed pre-revert shots saved iter-601/reviewed/; root shots post-revert.
+- Done 602 (solo, 2 rounds). Ships: local frame baked by SHIP_S 1.5 at x +-29 keel along z; strip stations along z; zones per team: strip half then own deck.
+- Stage armies on +x deck (x 19..32); capture army target y 8.2 matches deck 8.4. CONFIRM notes for later: mirror-symmetric ships, cylinder sails, strip straight.
