@@ -709,7 +709,9 @@ function hourglassBeach(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
   for (const m of scene.meshes) {
     if (!built.has(m) || m.parent || !m.isEnabled() || !/^(trunk$|bush$|Pirate Cove_)/.test(m.name)) continue;
     const { x, z } = m.position;
-    if (Math.abs(x) <= halfAt(z) + 1) continue;
+    // 602 b2 (wiki pirate.png: the sand between and before the ships is open, palms only on its shore edges): a base palm,
+    // bush or prop stays only on the shore band, within 4 m inside to 1 m outside the waterline
+    if (Math.abs(x) <= halfAt(z) + 1 && Math.abs(x) >= halfAt(z) - 4) continue;
     m.setEnabled(false);
     for (let o = obstacles.length - 1; o >= 0; o--) {
       if (Math.hypot(obstacles[o].center.x - x, obstacles[o].center.z - z) < 0.6) obstacles.splice(o, 1);
