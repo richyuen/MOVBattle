@@ -99,7 +99,7 @@ export const STAGES: TabsStageDef[] = [
       ["medieval.knight", 19.2, 0.4],
       ["medieval.knight", 19.6, 2.4],
       ["medieval.knight", 19.2, 4.4],
-      ["medieval.archer", 33, -8],
+      ["medieval.archer", 33.6, -8],
       ["medieval.archer", 33.2, -6.2],
       ["medieval.archer", 33, -4.4],
       ["medieval.archer", 33.2, -2.6],
