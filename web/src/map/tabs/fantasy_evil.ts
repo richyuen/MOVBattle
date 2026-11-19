@@ -547,6 +547,16 @@ const shrineHeight: HeightField = (x, z) => {
 // (3-5 green self-lit caps on pale stems) on the rim. Drawn only (outside the field).
 function greenRim(scene: Scene, built: Set<unknown>): void {
   for (const m of scene.meshes) if (built.has(m) && (m.name === "islandUnder" || m.name === "islandShelf")) m.setEnabled(false);
+  // 601 a3: the base's broad rounded hills read as giant purple caps in the
+  // void palette. Replace their domes with rock hosts and small toadstools;
+  // retain the base hill collision footprint under the new rock clusters.
+  const hosts: { x: number; z: number; radius: number }[] = [];
+  for (const m of scene.meshes) if (built.has(m) && m.name === "hill") {
+    m.computeWorldMatrix(true);
+    const bb = m.getBoundingInfo().boundingBox;
+    hosts.push({ x: m.position.x, z: m.position.z, radius: Math.min(bb.extendSizeWorld.x, bb.extendSizeWorld.z) * 0.55 });
+    m.setEnabled(false);
+  }
   let seed = 0x3e11;
   const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
   const edge = (a: number) => {
@@ -582,11 +592,24 @@ function greenRim(scene: Scene, built: Set<unknown>): void {
       glows.push(lip);
     }
   }
-  for (let c = 0; c < 6; c++) {
-    const e = edge(0.5 + c * 1.05), n = 3 + Math.floor(rnd() * 3);
+  const clusters = Array.from({ length: 8 }, (_, c) => {
+    const e = edge(0.5 + c * Math.PI / 4);
+    return { x: e.x - e.nx * 1.5, z: e.z - e.nz * 1.5, lift: 0 };
+  });
+  for (const h of hosts) {
+    const y0 = fantasyEvilHeight(h.x, h.z);
+    for (let j = 0; j < 3; j++) {
+      const r = MeshBuilder.CreateCylinder("voidMushRockHost", { height: 2.8, diameterTop: h.radius * 1.2, diameterBottom: h.radius * 1.5, tessellation: 5 }, scene);
+      r.position.set(h.x + Math.cos(j * 2.1) * h.radius * 0.35, y0 + 0.5, h.z + Math.sin(j * 2.1) * h.radius * 0.35);
+      r.rotation.y = j * 0.7; r.bakeCurrentTransformIntoVertices(); rocks.push(r);
+    }
+    clusters.push({ x: h.x, z: h.z, lift: 1.9 });
+  }
+  for (const e of clusters) {
+    const n = 4 + Math.floor(rnd() * 3);
     for (let j = 0; j < n; j++) {
-      const ox = (rnd() - 0.5) * 2.4, oz = (rnd() - 0.5) * 2.4, tall = 0.5 + rnd() * 0.9, w = 0.7 + rnd() * 0.8;
-      const x = e.x - e.nx * 1.5 + ox, z = e.z - e.nz * 1.5 + oz, y0 = fantasyEvilHeight(x, z) + 0.2;
+      const ox = (rnd() - 0.5) * 2.4, oz = (rnd() - 0.5) * 2.4, tall = 0.4 + rnd() * 0.6, w = 0.55 + rnd() * 0.65;
+      const x = e.x + ox, z = e.z + oz, y0 = fantasyEvilHeight(x, z) + e.lift + 0.2;
       const stem = MeshBuilder.CreateCylinder("voidMushStem", { height: tall, diameter: 0.18, tessellation: 5 }, scene);
       stem.position.set(x, y0 + tall / 2, z);
       stem.bakeCurrentTransformIntoVertices();
