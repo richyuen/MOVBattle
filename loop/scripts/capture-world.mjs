@@ -112,6 +112,12 @@ const POSE_OVERRIDE = {
   "map.fantasy_evil": { island: { target: { x: 0, y: 16, z: 0 }, radius: 230, alpha: -Math.PI / 2, beta: 1.2 }, top: { target: { x: 0, y: 12, z: 0 }, radius: 160, alpha: -Math.PI / 2, beta: 0.72 } },
   "map.fantasy_good": { island: { target: { x: 0, y: 8, z: 0 }, radius: 220, alpha: -Math.PI / 2, beta: 1.2 }, top: { target: { x: 0, y: 8, z: 0 }, radius: 165, alpha: -Math.PI / 2, beta: 0.72 } },
   "map.hill": { ground: { target: { x: 12, y: 6, z: 0 }, radius: 64, alpha: -2.8, beta: 1.4 } },
+  // 602: the turned galleons lie along z at x +-29, so the default ground camera (x -30) stood inside team 0's hull; a low view
+  // from the strip's near end up its centre line, both hulls framing the waist and the mountain beyond (ground, battle, stages)
+  "map.pirate": {
+    ground: { target: { x: 0, y: 3, z: 0 }, radius: 46, alpha: -Math.PI / 2 + 0.3, beta: 1.36 },
+    battle: { target: { x: 0, y: 3, z: 0 }, radius: 46, alpha: -Math.PI / 2 + 0.3, beta: 1.36 },
+  },
   // 591: the skirmish puts team 1 on the right gate wall top (19 m up): an elevated diagonal from the attackers side sees it
   "map.high_ground": { battle: { target: { x: 24, y: 12, z: 8 }, radius: 58, alpha: Math.PI + 0.35, beta: 0.95 } },
 };
@@ -263,7 +269,7 @@ async function stageScene(page, item) {
   await frame(page, streets ? { ...POSE.top, beta: 0.2 } : POSE.top);
   await shot(page, `${p}field`);
   await page.evaluate(({ c, s }) => { window.game.runCampaignSmokeCheck(c, s, { advanceMs: 5000 }); }, { c: st.campaign, s: item });
-  await frame(page, POSE.ground);
+  await frame(page, st.map === "pirate" ? POSE_OVERRIDE["map.pirate"].battle : POSE.ground);
   await shot(page, `${p}battle`);
   rec.battle = await runToResult(page, 5000);
   summary.items[item] = rec;
