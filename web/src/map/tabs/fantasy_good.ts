@@ -712,6 +712,11 @@ function waterfalls(scene: Scene): void {
     const b = MeshBuilder.CreateBox("heavenFallPart", { width: w, height: h, depth: d }, scene);
     b.position.set(x, y, z);
     b.bakeCurrentTransformIntoVertices();
+    if (k === "water") {
+      const p = b.getVerticesData(VertexBuffer.PositionKind) ?? [], colours: number[] = [];
+      for (let i = 0; i < p.length; i += 3) colours.push(1, 1, 1, Math.max(0, Math.min(1, (p[i + 1] + 30) / 6)));
+      b.setVerticesData(VertexBuffer.ColorKind, colours); b.hasVertexAlpha = true;
+    }
     parts[k].push(b);
   };
   /** A deck channel from (x0,z0) to (x1,z1), axis-aligned. */
@@ -732,7 +737,11 @@ function waterfalls(scene: Scene): void {
   for (const [x, z0] of [[-24, -32.6], [7, -30.6], [31, -32.6]] as const) {
     const edge = -(DECK.z - notchDepth(-1, x));
     channel(x, z0, x, edge + 0.9);
-    box("water", 2.6, 30, 0.12, x, -15, edge - 0.15);
+    const spill = -DECK.z - 6.35;
+    box("water", 2.6, 2, 0.12, x, -1, edge - 0.15);
+    box("water", 2.6, 0.08, edge - spill, x, -1.94, (edge + spill) / 2);
+    box("water", 2.6, 22, 0.12, x, -13, spill);
+    box("water", 2.6, 6, 0.12, x, -27, spill);
     box("foam", 2.9, 0.35, 0.5, x, 0.1, edge - 0.1);
   }
   const glow = scene.getGlowLayerByName("glow");
@@ -741,6 +750,7 @@ function waterfalls(scene: Scene): void {
     if (!m) continue;
     m.name = `heavenFall_${k}`;
     m.material = mat;
+    m.hasVertexAlpha = k === "water";
     m.isPickable = false;
     if (k !== "lip") glow?.addExcludedMesh(m); else m.receiveShadows = true;
   }
