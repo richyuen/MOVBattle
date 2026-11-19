@@ -35,7 +35,7 @@ function allowedUnits(stage: TabsStageDef): string[] {
 
 function toScenario(stage: TabsStageDef, index: number, count: number): CampaignScenarioDefinition {
   const last = index === count - 1;
-  const placements: CampaignPlacementSpec[] = stage.enemy.map(([unitId, x, z]) => ({ unitId, team: 1, position: { x, z }, locked: true }));
+  const placements: CampaignPlacementSpec[] = stage.enemy.map(([unitId, x, z, yaw]) => ({ unitId, team: 1, position: { x, z }, locked: true, ...(yaw ? { yaw } : {}) }));
   return {
     id: stage.id,
     displayName: stage.title,

@@ -11,6 +11,6 @@ export interface TabsStageDef {
   budget: number;
   /** What the player may place: every unit, whole factions, or a unit list */
   playerUnits: "all" | { factions: string[] } | { units: string[] };
-  /** Team 1's locked army: [unitId, x, z] */
-  enemy: Array<[string, number, number]>;
+  /** Team 1's locked army: [unitId, x, z], or [unitId, x, z, yaw] where yaw (degrees, + turns the front toward +z) is added to the team's starting facing */
+  enemy: Array<[string, number, number] | [string, number, number, number]>;
 }

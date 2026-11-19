@@ -932,6 +932,8 @@ function applyCampaignPlacements(placements: CampaignPlacementSpec[]): void {
       },
     );
     if (!spawned) continue;
+    // A stage's per-unit yaw (degrees): rotation.y grows toward +z from the team's starting facing
+    if (placement.yaw) spawned.body.root.rotation.y += (placement.yaw * Math.PI) / 180;
     if (placement.locked) {
       lockedCampaignRootIds.add(spawned.runtimeId);
     }

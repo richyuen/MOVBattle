@@ -103,9 +103,9 @@ export const STAGES: TabsStageDef[] = [
     budget: 2100,
     playerUnits: { factions: ["dynasty"] },
     enemy: [
-      ["medieval.catapult", 8.5, -1.2],
-      ["medieval.catapult", 10.3, 0.5],
-      ["medieval.catapult", 12.1, 2.2],
+      ["medieval.catapult", 8.5, -1.2, -70],
+      ["medieval.catapult", 10.3, 0.5, -70],
+      ["medieval.catapult", 12.1, 2.2, -70],
     ],
   },
   {
