@@ -524,9 +524,10 @@ function viaductUnderside(scene: Scene, built: Set<unknown>, stone: StandardMate
   // Each 7m bay has a 5.4m opening, semicircular stone head and two piers
   // down to -12.5m. Basalt fingers hang a further 12-27m, like the references.
   const arches: Mesh[] = [], cols: Mesh[] = [], crowns: Mesh[] = [];
-  const W = 5.4, top = -1.6, spring = top - W / 2;
+  const W = 5.4;
   /** Arch bays along a run from (x0,z0) to (x1,z1), facing outward along (nx,nz). */
-  const run = (x0: number, z0: number, x1: number, z1: number, nx: number, nz: number) => {
+  const run = (x0: number, z0: number, x1: number, z1: number, nx: number, nz: number, top = -1.6) => {
+    const spring = top - W / 2, foot = top - 10.9;
     const len = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.floor(len / 7));
     if (n < 1) return;
     for (let i = 0; i < n; i++) {
@@ -534,8 +535,8 @@ function viaductUnderside(scene: Scene, built: Set<unknown>, stone: StandardMate
       const tangent = new Vector3(nz, 0, -nx), centre = new Vector3(x, spring, z);
       for (const side of [-1, 1]) {
         const p = centre.add(tangent.scale(side * (W / 2 + 0.55)));
-        const pier = MeshBuilder.CreateBox("heavenArcadePier", { width: 1.1, height: 12.5 + spring, depth: 1.3 }, scene);
-        pier.rotation.y = yaw; pier.position.set(p.x, (spring - 12.5) / 2, p.z);
+        const pier = MeshBuilder.CreateBox("heavenArcadePier", { width: 1.1, height: spring - foot, depth: 1.3 }, scene);
+        pier.rotation.y = yaw; pier.position.set(p.x, (spring + foot) / 2, p.z);
         pier.bakeCurrentTransformIntoVertices(); arches.push(pier);
       }
       const path = Array.from({ length: 13 }, (_, j) => {
@@ -547,9 +548,14 @@ function viaductUnderside(scene: Scene, built: Set<unknown>, stone: StandardMate
     }
   };
   for (const s of [-1, 1]) {
-    for (const g of edgeSegments(s)) if (g.z0 === g.z1) run(g.x0, g.z0, g.x1, g.z1, 0, s);
+    // The lower front walkway masks a deck-edge arch head. Its own outside
+    // edge now owns the complete arcade: crown under the slab at -2.6m,
+    // spring at -5.9m and piers reaching -14.1m, six metres forward.
+    if (s > 0) for (const g of edgeSegments(s)) if (g.z0 === g.z1) run(g.x0, g.z0, g.x1, g.z1, 0, s);
     run(s * DECK.x, -DECK.z, s * DECK.x, DECK.z, s, 0);
+    run(s * DECK.x, -DECK.z - 6, s * DECK.x, -DECK.z, s, 0, -3.2);
   }
+  run(-DECK.x, -DECK.z - 6, DECK.x, -DECK.z - 6, 0, -1, -3.2);
   let seed = 0x6a77;
   const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
   const floorY = -PIT_DEPTH - 2.5;
