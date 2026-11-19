@@ -404,7 +404,7 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
   white.diffuseColor = new Color3(0.93, 0.95, 0.98);
   white.emissiveColor = new Color3(0.28, 0.29, 0.3);
   white.specularColor = Color3.Black();
-  const mats = { white, gold, glass: mk("heavenTowerGlass", new Color3(1, 0.9, 0.6)), water: mk("heavenTowerWater", new Color3(0.05, 0.55, 0.9)), crystal: mk("heavenTowerCrystal", new Color3(0.25, 0.62, 1.05)), foam: mk("heavenTowerFoam", new Color3(0.92, 0.97, 1)) };
+  const mats = { white, gold, glass: mk("heavenTowerGlass", new Color3(1, 0.9, 0.6)), water: mk("heavenTowerWater", new Color3(0, 0.5, 0.95)), crystal: mk("heavenTowerCrystal", new Color3(0.25, 0.62, 1.05)), foam: mk("heavenTowerFoam", new Color3(0.92, 0.97, 1)) };
   // 606 r2: the water and foam keep their colour through the pale fog, so they read saturated from across the map
   mats.water.fogEnabled = false;
   mats.foam.fogEnabled = false;
@@ -503,7 +503,8 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
     merged.material = mats[key];
     merged.receiveShadows = key === "white" || key === "gold";
     merged.isPickable = false;
-    if (key === "glass" || key === "water" || key === "crystal" || key === "foam") glow?.addExcludedMesh(merged);
+    // 607 r2: the white and gold stone out of the glow pass too: its bloom laid a pale veil over the gate water
+    glow?.addExcludedMesh(merged);
   }
   void stone;
   return { ...result, obstacles };
@@ -735,7 +736,7 @@ function waterfalls(scene: Scene): void {
     return m;
   };
   // 606 r2 [R] a2: saturated cyan, out of the fog (it read pale sky-blue against the marble)
-  const water = mk("heavenFallWater", new Color3(0.05, 0.55, 0.9)), foam = mk("heavenFallFoam", new Color3(0.92, 0.97, 1));
+  const water = mk("heavenFallWater", new Color3(0, 0.5, 0.95)), foam = mk("heavenFallFoam", new Color3(0.92, 0.97, 1));
   water.fogEnabled = false;
   foam.fogEnabled = false;
   const lipMat = scene.getMaterialByName("heavenStone") as StandardMaterial;
@@ -767,6 +768,11 @@ function waterfalls(scene: Scene): void {
     const put = (k: "water" | "foam", n: number, h: number, w: number, off: number, y: number) =>
       ax === "x" ? box(k, n, h, w, at + s * off, y, c) : box(k, w, h, n, c, y, at + s * off);
     put("water", 0.14, PIT_DEPTH, W, 0.68, -PIT_DEPTH / 2);
+    // 607 r2: three vertical foam streaks down each fall, so it reads as moving water
+    for (const e of [-W / 4, 0, W / 4]) {
+      if (ax === "x") box("foam", 0.2, PIT_DEPTH - 1, 0.35, at + s * 0.55, -PIT_DEPTH / 2 - 0.5, c + e);
+      else box("foam", 0.35, PIT_DEPTH - 1, 0.2, c + e, -PIT_DEPTH / 2 - 0.5, at + s * 0.55);
+    }
     for (const e of [-W / 2, W / 2]) {
       if (ax === "x") box("foam", 0.24, PIT_DEPTH, 0.3, at + s * 0.6, -PIT_DEPTH / 2, c + e);
       else box("foam", 0.3, PIT_DEPTH, 0.24, c + e, -PIT_DEPTH / 2, at + s * 0.6);
@@ -779,6 +785,8 @@ function waterfalls(scene: Scene): void {
   // the well's far wall (z 31), the face the top camera looks at; the right gate's lands in the front-right well's corner
   // beside it and also feeds the walkway channel to that well's far wall (z -6); both falls 8 m wide, full depth.
   channel(-27.4, 32.6, -12, 32.6, 3); cascade("z", 31, -1, -14, 8);
+  // 607 r2: and from the pool at the left gate's front sheet a short channel over the well's west rim, a 5 m fall down it
+  channel(-29.2, 24.4, -27, 24.4, 3); cascade("x", -27, 1, 24.4, 5);
   box("water", 0.35, PIT_DEPTH, 4, 26.3, -PIT_DEPTH / 2, -28.8);
   for (const e of [-2.1, 2.1]) box("foam", 0.45, PIT_DEPTH, 0.25, 26.2, -PIT_DEPTH / 2, -28.8 + e);
   box("water", 6, 0.1, 6, 23.4, -PIT_DEPTH + 0.06, -27.5);
