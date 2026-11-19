@@ -10,7 +10,7 @@
 // white (236,240,244) varied by +-3 levels, 3 px seams (196,208,220), one pavers in ~14 a pale teal (176,222,226); its sides
 // plain white stone. A gold kerb 0.7 m wide, 0.35 m high runs round the deck's top edge, gold (.78,.62,.1) lit with a warm
 // self-light (.22,.17,.02). The deck's corners overhang the base island's oval (drawn only; the base's hazards are unchanged).
-import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, Vector3, VertexBuffer, type Scene } from "@babylonjs/core";
+import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, Vector3, VertexBuffer, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import { cloudBanks, paleSky } from "./simKit";
 
@@ -82,7 +82,7 @@ const inPit = (x: number, z: number, pad = 0) => PITS.some((p) => x > p.x0 - pad
 // each notch is a box collider (nobody walks onto the air), outside both zones (|z| <= 20).
 const EDGE_STEPS: Array<[number, number, number]> = [[-36, -20, 4], [-4, 12, 4], [28, 44, 4]];
 /** How far the long edge on side s (-1 front, +1 back) steps in at x. */
-const notchDepth = (s: number, x: number) => { const u = s < 0 ? x : -x; return EDGE_STEPS.find(([a, b]) => u > a && u < b)?.[2] ?? 0; };
+const notchDepth = (s: number, x: number) => { if(s>0&&x>=12&&x<=28)return 0; const u = s < 0 ? x : -x; return EDGE_STEPS.find(([a, b]) => u > a && u < b)?.[2] ?? 0; };
 const EDGE_XS = [...new Set([-DECK.x, DECK.x, ...EDGE_STEPS.flatMap(([a, b]) => [a, b, -a, -b])])].sort((a, b) => a - b);
 /** The long side s's outline: runs along x at the edge's z, and steps across z at the x where the depth changes. */
 function edgeSegments(s: number): Array<{ x0: number; x1: number; z0: number; z1: number }> {
@@ -784,6 +784,7 @@ export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapB
   cleanDeck(scene, built, done);
   pitShafts(scene);
   corruptedPits(scene);
+  rearJog(scene,done);
   return { ...done, dispose: () => { restoreSky(); done.dispose?.(); } };
 }
 
@@ -812,6 +813,27 @@ function corruptedPits(scene: Scene): void {
       }
     }
   }
+}
+
+// 599 b2, heaven_good: the back rim has an angled jog. All edge owners are
+// split at x12/28 by EDGE_XS, then their shared z32..40 band is sheared inward
+// by six metres at x12, tapering to zero at x28. Pits and gate legs stay fixed.
+function rearJog(scene: Scene,result:MapBuildResult):void{
+  const inset=(x:number)=>x>=12&&x<=28?6*(28-x)/16:0;
+  for(const mesh of scene.meshes){
+    if(!(mesh instanceof Mesh)||!/^heaven(Deck|Kerb|Parapet|Merlon|Arch|Viaduct|Basalt|Under)/.test(mesh.name))continue;
+    mesh.computeWorldMatrix(true);
+    const world=mesh.getWorldMatrix(),inv=world.clone().invert(),pos=mesh.getVerticesData(VertexBuffer.PositionKind);
+    if(!pos)continue;let changed=false;
+    for(let i=0;i<pos.length;i+=3){
+      const p=Vector3.TransformCoordinates(new Vector3(pos[i],pos[i+1],pos[i+2]),world),d=inset(p.x);
+      if(d===0||p.z<=32)continue;
+      p.z-=d*Math.min(1,(p.z-32)/8);
+      const q=Vector3.TransformCoordinates(p,inv);pos[i]=q.x;pos[i+1]=q.y;pos[i+2]=q.z;changed=true;
+    }
+    if(changed){const normals:number[]=[];VertexData.ComputeNormals(pos,mesh.getIndices()??[],normals);mesh.setVerticesData(VertexBuffer.PositionKind,pos,false);mesh.setVerticesData(VertexBuffer.NormalKind,normals,false);mesh.refreshBoundingInfo();}
+  }
+  for(let x=12.25;x<28;x+=0.5){const d=inset(x);result.obstacles.push({type:"box",center:new Vector3(x,0,40-d/2),halfX:0.26,halfZ:d/2});}
 }
 
 // Clean deck (596, blocker a6; wiki fantasy_good.png: the marble deck is clean blue-grey paving with small teal inlay tiles
