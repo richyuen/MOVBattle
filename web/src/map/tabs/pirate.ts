@@ -14,17 +14,35 @@ import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector
 import type { MapBuildResult } from "../mapBuilder";
 import type { Obstacle } from "../obstacles";
 
-// Ships per team (595, blocker b1; wiki pirate.png and pirate_beach.png: one galleon moored on each team's side of the sand, the
-// red army by one and the blue by the other, not both straddling the centre line). Spec: the +z galleon slides to x -17 (team 0's
-// half, x -30..-2 bow inward), the -z one to x +17 (team 1's half, x 2..30 bow inward); decks, planks, rails and prunes follow x.
-const SHIPS = [{ x: -17, z: 37, bow: 1 }, { x: 17, z: -37, bow: -1 }];
+// Rebuild 602 b (plateau, blocker b1; wiki pirate.png: the camera looks down a long sand strip toward the mountain; a big galleon
+// lies along each long side of the strip, both bows toward the mountain, each running along most of its shore and framing the
+// fighting ground closely; the red army stands by one ship and the blue by the other, facing across the strip; three gangplanks
+// from each deck reach a third of the way into the sand). Our teams split on x and the top camera looks along +z, so:
+// - the strip runs along z (z -56..48), half width 25-27 m in the near bulb (z -46..-34), pinching to 18.5 m between the ships
+//   (z -26..14), 21-22 m past their bows, closing under the mountain (z 44..48);
+// - each galleon is the old local ship scaled 1.5x (42 m stern to stem, 18 m beam, deck 8.4 m up, masts to ~38 m, 6 m nests),
+//   its keel along z at x -29 (team 0, beach to +x) and x +29 (team 1, beach to -x), stern z -24, bow z +18, 1.5 m of water
+//   between hull and sand; planks 13 m long land at |x| ~7;
+// - placement: each team on its half of the strip (|x| 1.5..17.5, z -40..20) and on its own deck (|x| 17.5..38.5, z -27..18);
+//   the stage armies, authored on the old -z deck, keep their deck-local places on the +x deck (x' = 29 - 1.5 (z + 37),
+//   z' = -4.5 + 1.5 (17 - x));
+// - the mountain moves to the strip's far end (4, 47), between the bows.
+// The ship is built in its own frame (u along the keel to the bow, v across toward the beach) and baked into the world by SHIP_S.
+const SHIP_S = 1.5, SHIP_CZ = -4.5;
+const SHIPS = [{ x: -29, beach: 1 }, { x: 29, beach: -1 }];
+/** A ship-local point (u, v) in the world. */
+const shipWorld = (s: { x: number; beach: number }, u: number, v: number) => [s.x + s.beach * SHIP_S * v, SHIP_CZ + SHIP_S * u] as const;
+/** A world point in a ship's frame. */
+const shipLocal = (s: { x: number; beach: number }, x: number, z: number) => [(z - SHIP_CZ) / SHIP_S, ((x - s.x) * s.beach) / SHIP_S] as const;
+const PLANK_RUN = 8.7;
 // Rebuild600 a (wiki pirate.png, CONFIRM592/599): broad deep galleons dominate
 // both shores, dark planks with gold strakes, tall raked windowed sterns and
 // open 4m crow's nests. Keep the 28m mooring footprint and every plank mouth;
 // increase the visible shell to 7.2m deep and its beam to 12m, drawing actors
 // on the same newly raised decks. The summit carries an open wrecked bow,
 // not a bell. Irregular 8..16m palms and broad leaf rosettes close shore ends.
-const LONG = 30, BEAM = 12, HULL = 8, SINK = 0.8;
+// 602: sunk 2.4 m (local) so the 1.5x deck stands 8.4 m over the sand
+const LONG = 30, BEAM = 12, HULL = 8, SINK = 2.4;
 
 // Curved hull (593, blocker a2; wiki pirate.png: the galleon hull is one smooth dark planked shell, its sides rounding in to the
 // keel, its bow drawing to a point, its stern raked under a high transom; dark chocolate brown with gold bands at the sheer and
@@ -126,10 +144,12 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     iron: mk("pirateGalleonIron", new Color3(0.2, 0.2, 0.24), 0.35),
   };
   const parts: Record<keyof typeof mats, Mesh[]> = { hull: [], dark: [], deck: [], gold: [], sail: [], iron: [] };
-  for (const { x: SX, z: Z, bow } of SHIPS) {
-    // u: along the hull toward the bow; v: across, toward the beach (+v points at z 0)
-    const toBeach = -Math.sign(Z);
+  for (const ship of SHIPS) {
+    // u: along the hull toward the bow; v: across, toward the beach. 602: built in the ship's own frame (x = u, z = v), then
+    // every part made for this ship is baked into the world by the ship's matrix (scale SHIP_S, keel along z).
+    const SX = 0, Z = 0, bow = 1, toBeach = 1;
     const at = (u: number, v: number) => [SX + u * bow, Z + v * toBeach] as const;
+    const first = Object.fromEntries(Object.entries(parts).map(([k, list]) => [k, list.length])) as Record<keyof typeof mats, number>;
     const box = (k: keyof typeof mats, l: number, h: number, b: number, u: number, y: number, v: number, yaw = 0) => {
       const m = MeshBuilder.CreateBox("pirateGalleonPart", { width: l, height: h, depth: b }, scene);
       const [x, z] = at(u, v);
@@ -279,7 +299,7 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     // fanned a little): 3.2 m wide, 12.5 m run from the rail (|z| 33) to |z| ~20.5, each turned up to 0.18 rad off square, dark
     // cleats every metre and a dark rail beam along both edges.
     for (const [u, fan] of [[-9, -0.18], [0, 0.04], [9, 0.16]] as const) {
-      const run = 12.5, drop = top + 0.6, len = Math.hypot(run, drop), slope = Math.atan2(drop, run);
+      const run = PLANK_RUN, drop = top + 0.6, len = Math.hypot(run, drop), slope = Math.atan2(drop, run);
       const [rx, rz] = at(u, hullHalfBeam(u));
       const yaw = Math.atan2(Math.sin(fan) * bow, toBeach * Math.cos(fan));
       const piece = (k: keyof typeof mats, w: number, h: number, along: number, across: number, lift: number) => {
@@ -297,16 +317,28 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     }
     // Standable deck (587): the hull's one box collider becomes rails round the deck: the seaward side, both ends, and the
     // beach side broken by the three gangplank mouths (u -9, 0, 9, 3.6 m wide), so units walk up a plank onto the deck.
-    const rail = (u0: number, u1: number, v: number, halfV: number) => {
-      const [cx, cz] = at((u0 + u1) / 2, v);
-      obstacles.push({ type: "box", center: new Vector3(cx, 0, cz), halfX: Math.abs(u1 - u0) / 2, halfZ: halfV });
+    // 602: a local box (half halfU along the keel, halfV across) in the world: the keel runs along z
+    const localBox = (u: number, v: number, halfU: number, halfV: number) => {
+      const [cx, cz] = shipWorld(ship, u, v);
+      obstacles.push({ type: "box", center: new Vector3(cx, 0, cz), halfX: halfV * SHIP_S, halfZ: halfU * SHIP_S });
     };
+    const rail = (u0: number, u1: number, v: number, halfV: number) => localBox((u0 + u1) / 2, v, Math.abs(u1 - u0) / 2, halfV);
     rail(-15, 15, -BEAM / 2 - 0.1, 0.4);
-    for (const s of [-1, 1]) {
-      const [ex, ez] = at(s * 15, 0);
-      obstacles.push({ type: "box", center: new Vector3(ex, 0, ez), halfX: 0.5, halfZ: BEAM / 2 + 0.5 });
-    }
+    for (const s of [-1, 1]) localBox(s * 15, 0, 0.5, BEAM / 2 + 0.5);
     for (const [u0, u1] of [[-15, -10.8], [-7.2, -1.8], [1.8, 7.2], [10.8, 15]]) rail(u0, u1, BEAM / 2 + 0.1, 0.4);
+    // local x = u, z = v  ->  world x = ship.x + beach S v, z = SHIP_CZ + S u (rows are the images of local x, y, z)
+    const toWorld = Matrix.FromValues(
+      0, 0, SHIP_S, 0,
+      0, SHIP_S, 0, 0,
+      ship.beach * SHIP_S, 0, 0, 0,
+      ship.x, 0, SHIP_CZ, 1,
+    );
+    for (const key of Object.keys(parts) as Array<keyof typeof mats>) {
+      for (const m of parts[key].slice(first[key])) {
+        m.bakeCurrentTransformIntoVertices();
+        m.bakeTransformIntoVertices(toWorld);
+      }
+    }
   }
   const glow = scene.getGlowLayerByName("glow");
   for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
@@ -329,27 +361,25 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
 // is drawn on the plank, falling from 4.15 m at the rail to the sand. The sim stays flat (terrain.ts).
 // 596: a unit over the forecastle (u 3..8) is drawn on its roof (+1.4 m), over the stern castle's tiers (from u -13.5 to
 // -5.5 / -7.5 / -9.3) on the top tier it stands over (+2.2 / +4 / +5.4 m), so a stage army on the deck never stands inside them.
+// 602: read in each ship's own frame (shipLocal) and scaled by SHIP_S; planks PLANK_RUN long.
 function deckHeight(x: number, z: number): number {
   const top = HULL - SINK;
   let h = 0;
-  for (const { x: SX, z: Z, bow } of SHIPS) {
-    const toBeach = -Math.sign(Z);
-    const v = (z - Z) * toBeach;
-    if (Math.abs(x - SX) <= 14.6 && Math.abs(v) <= BEAM / 2 - 0.1) {
-      const u = (x - SX) * bow;
-      if (u >= 3 && u <= 8 && Math.abs(v) <= hullHalfBeam(8) - 0.1) return top + 1.4;
-      if (u >= -14.4 && u <= -9.3) return top + 5.4 + 0.85*((-9.3-u)/4.2)**2;
-      if (u >= -13.5 && u <= -7.5) return top + 4;
-      if (u >= -13.5 && u <= -5.5) return top + 2.2;
-      return top;
+  for (const ship of SHIPS) {
+    const [u, v] = shipLocal(ship, x, z);
+    if (Math.abs(u) <= 14.6 && Math.abs(v) <= BEAM / 2 - 0.1) {
+      if (u >= 3 && u <= 8 && Math.abs(v) <= hullHalfBeam(8) - 0.1) return SHIP_S * (top + 1.4);
+      if (u >= -14.4 && u <= -9.3) return SHIP_S * (top + 5.4 + 0.85*((-9.3-u)/4.2)**2);
+      if (u >= -13.5 && u <= -7.5) return SHIP_S * (top + 4);
+      if (u >= -13.5 && u <= -5.5) return SHIP_S * (top + 2.2);
+      return SHIP_S * top;
     }
-    for (const [u, fan] of [[-9, -0.18], [0, 0.04], [9, 0.16]] as const) {
-      const yaw = Math.atan2(Math.sin(fan) * bow, toBeach * Math.cos(fan));
-      const rx = SX + u * bow, rz = Z + (BEAM / 2) * toBeach;
-      const dx = x - rx, dz = z - rz;
-      const d = dx * Math.sin(yaw) + dz * Math.cos(yaw);
-      const a = dx * Math.cos(yaw) - dz * Math.sin(yaw);
-      if (Math.abs(a) <= 1.6 && d >= -0.1 && d <= 12.5) h = Math.max(h, (top + 0.55) * (1 - Math.max(0, d) / 12.5));
+    for (const [pu, fan] of [[-9, -0.18], [0, 0.04], [9, 0.16]] as const) {
+      const yaw = Math.atan2(Math.sin(fan), Math.cos(fan));
+      const du = u - pu, dv = v - BEAM / 2;
+      const d = du * Math.sin(yaw) + dv * Math.cos(yaw);
+      const a = du * Math.cos(yaw) - dv * Math.sin(yaw);
+      if (Math.abs(a) <= 1.6 && d >= -0.1 && d <= PLANK_RUN) h = Math.max(h, SHIP_S * (top + 0.55) * (1 - Math.max(0, d) / PLANK_RUN));
     }
   }
   return h;
@@ -542,7 +572,10 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
     const p = mesh.position;
     const bridge = mesh.name === "Pirate Cove_box" && bridges.some(([x, z]) => Math.hypot(p.x - x, p.z - z) < 0.5);
     // and any palm or rock standing where a galleon now lies
-    const underShip = /^(trunk|Pirate Cove_)/.test(mesh.name) && SHIPS.some(({ x, z }) => Math.abs(p.x - x) < LONG / 2 + 2 && Math.abs(p.z - z) < BEAM / 2 + 7);
+    const underShip = /^(trunk|Pirate Cove_)/.test(mesh.name) && SHIPS.some((s) => {
+      const [u, v] = shipLocal(s, p.x, p.z);
+      return Math.abs(u) < LONG / 2 + 2 && Math.abs(v) < BEAM / 2 + PLANK_RUN;
+    });
     if (mesh.name === "Pirate Cove_ship" || bridge || underShip) {
       gone.push(p.clone());
       mesh.setEnabled(false);
@@ -557,15 +590,17 @@ export function buildPirate(scene: Scene, base: () => MapBuildResult): MapBuildR
   openShore(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   const baseHeight = result.height;
   const height = (x: number, z: number) => Math.max(baseHeight?.(x, z) ?? 0, deckHeight(x, z));
-  // Team 1's deck (596, blocker b2; reference/stages/pirate.x_marks_the_spot.png, spooky.plunder.png: the enemy army stands on
-  // its own galleon's deck and gangplanks, not on the open sand). Spec: a team-1 zone over the -z galleon (x 2..32) from its
-  // seaward rail (z -41) across the deck and down the gangplanks to z -20, after the base zones so a default placement still
-  // lands on the sand; the stage armies are authored on the deck in ranks along the keel, their leaders at the plank heads.
-  const deck = SHIPS.find((s) => s.z < 0)!;
-  const placementZones = [
-    ...(result.placementZones ?? result.zones),
-    { team: 1, center: new Vector3(deck.x, 0, -30.5), size: new Vector3(30, 100, 21) },
-  ];
+  // Team decks (596, blocker b2; reference/stages/pirate.x_marks_the_spot.png, spooky.plunder.png: the enemy army stands on
+  // its own galleon's deck and gangplanks, not on the open sand). 602: the base's island-wide zones go (they reached x +-61,
+  // now sea and hull); each team gets its half of the strip first (the default placement lands on the sand), then its own
+  // deck from the plank heads to the seaward rail (stage armies stand there in ranks along the keel).
+  const placementZones = [0, 1].flatMap((team) => {
+    const side = team === 0 ? -1 : 1;
+    return [
+      { team, center: new Vector3(side * 9.5, 0, -10), size: new Vector3(16, 100, 60) },
+      { team, center: new Vector3(side * 28, 0, -4.5), size: new Vector3(21, 100, 45) },
+    ];
+  });
   return { ...result, obstacles, hazards, height, placementZones, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
 
@@ -638,25 +673,28 @@ function hourglassBeach(scene: Scene, built: Set<unknown>, obstacles: Obstacle[]
   // back rock, its tip a rounded point in the shallows, not a blunt end). Spec: the -x end closes to a rounded point (half 14
   // at x -57, 3 at x -61); past the waist the +x half no longer swells again but narrows from 24 m at x 23 through 20 at x 38
   // (still dry for every stage army: they stand stands at x 29..41.4, |z| <= 9.9) to 12 at x 50 and a 2 m point at x 61.
-  const stations = [[-61,3],[-57,14],[-51,24],[-38,32],[-23,30],[-7,25],[9,21],[23,24],[38,20],[50,12],[56,7],[61,2]];
-  const halfAt = (x: number) => {
+  // 602 rebuild: the strip runs along z (stations [z, half width in x]); see the spec at the head of the file.
+  const stations = [[-56,3],[-51,16],[-44,25],[-34,27],[-27,20],[-22,18.5],[14,18.5],[22,21],[30,22],[38,16],[44,8],[48,2]];
+  const halfAt = (s: number) => {
     for (let i = 0; i < stations.length - 1; i++) {
-      const [xa, wa] = stations[i], [xb, wb] = stations[i + 1];
-      if (x >= xa && x <= xb) return wa + (wb - wa) * (x - xa) / (xb - xa);
+      const [sa, wa] = stations[i], [sb, wb] = stations[i + 1];
+      if (s >= sa && s <= sb) return wa + (wb - wa) * (s - sa) / (sb - sa);
     }
     return 0;
   };
   for (const m of scene.meshes) {
     if (!built.has(m) || m.parent || !m.isEnabled() || !/^(trunk$|bush$|Pirate Cove_)/.test(m.name)) continue;
     const { x, z } = m.position;
-    if (Math.abs(z) <= halfAt(x) + 1) continue;
+    if (Math.abs(x) <= halfAt(z) + 1) continue;
     m.setEnabled(false);
     for (let o = obstacles.length - 1; o >= 0; o--) {
       if (Math.hypot(obstacles[o].center.x - x, obstacles[o].center.z - z) < 0.6) obstacles.splice(o, 1);
     }
   }
-  for(const [x,w] of stations) outline.push([x,-w]);
-  for(const [x,w] of [...stations].reverse()) outline.push([x,w]);
+  // [x, z]: the +x shore from the near tip to the far one, then the -x shore back (the old x-long outline turned 90 degrees, so
+  // the fan keeps its winding)
+  for(const [s,w] of stations) outline.push([w,s]);
+  for(const [s,w] of [...stations].reverse()) outline.push([-w,s]);
   const positions = [0,0.1,0], indices: number[] = [];
   for(const [x,z] of outline) positions.push(x,0.1,z);
   const n=outline.length;
@@ -692,10 +730,11 @@ function goldenSand(scene: Scene, beach: Mesh, stations: number[][]): void {
   // (586.5b) the first gold read pale cream under ACES: a deeper, browner gold with less blue in the self-light
   beach.material = mk("pirateGoldenSand", new Color3(0.82, 0.56, 0.2), new Color3(0.3, 0.18, 0.04));
   glow?.addExcludedMesh(beach);
-  const half = (x: number) => {
+  // 602: stations are [z, half width in x]; the ripple lines run across the strip (along x), stacked along z
+  const half = (s: number) => {
     for (let i = 0; i < stations.length - 1; i++) {
-      const [xa, wa] = stations[i], [xb, wb] = stations[i + 1];
-      if (x >= xa && x <= xb) return wa + (wb - wa) * (x - xa) / (xb - xa);
+      const [sa, wa] = stations[i], [sb, wb] = stations[i + 1];
+      if (s >= sa && s <= sb) return wa + (wb - wa) * (s - sa) / (sb - sa);
     }
     return 0;
   };
@@ -709,20 +748,21 @@ function goldenSand(scene: Scene, beach: Mesh, stations: number[][]): void {
   const rnd = () => { k++; const v = Math.sin(k * 37.719 + 3.1) * 14375.13; return v - Math.floor(v); };
   // (586.5b) irregular: lines 1.3-2.1 m apart, each stroke drifting along x, its kink 0.25-0.8 m either way, so the strokes
   // join into long wavy lines rather than a chevron grid
-  for (let x = -55; x < 54; x += 1.3 + rnd() * 0.8) {
-    const w = half(x) - 1.5;
+  for (let z = -52; z < 45; z += 1.3 + rnd() * 0.8) {
+    const w = half(z) - 1.5;
     let drift = 0;
-    for (let z = -w + rnd() * 2; z < w - 2.6;) {
+    for (let x = -w + rnd() * 2; x < w - 2.6;) {
       const len = 1.6 + rnd() * 1.4;
       drift = Math.max(-0.7, Math.min(0.7, drift + (rnd() - 0.5) * 0.5));
-      const x0 = x + drift;
-      // a V: (x0, z) -> (x0 + dx, z + len/2) -> (x0, z + len)
-      const dx = (rnd() < 0.5 ? -1 : 1) * (0.25 + rnd() * 0.55), seg = Math.hypot(dx, len / 2), yaw = Math.atan2(dx, len / 2);
+      const z0 = z + drift;
+      // a V: (x, z0) -> (x + len/2, z0 + dz) -> (x + len, z0); a box's long side (local z) turned by yaw points (sin, cos)
+      const dz = (rnd() < 0.5 ? -1 : 1) * (0.25 + rnd() * 0.55), seg = Math.hypot(dz, len / 2);
       for (const s of [1, -1]) {
-        m.push(...Matrix.Compose(new Vector3(1, 1, seg), Quaternion.RotationAxis(Vector3.Up(), s * yaw),
-          new Vector3(x0 + dx / 2, 0.105, z + len * (s > 0 ? 0.25 : 0.75))).m);
+        const yaw = Math.atan2(len / 2, s * dz);
+        m.push(...Matrix.Compose(new Vector3(1, 1, seg), Quaternion.RotationAxis(Vector3.Up(), yaw),
+          new Vector3(x + len * (s > 0 ? 0.25 : 0.75), 0.105, z0 + dz / 2)).m);
       }
-      z += len + rnd() * 0.25;
+      x += len + rnd() * 0.25;
     }
   }
   ripple.thinInstanceSetBuffer("matrix", new Float32Array(m), 16);
@@ -762,7 +802,8 @@ function bellMountain(scene: Scene, obstacles: Obstacle[]): void {
   // with a green cap on every ledge, a white fall down its beach face and a bell as wide as its summit). It stands at
   // the back (34, 38), inside the island's rim beside the far ship's bow, behind the right zone (z <= 27) and the stage
   // armies; its palms, fall and bell frame face the beach (-z).
-  const CX = 34, CZ = 38;
+  // 602: at the strip's far end between the two bows (spec at the head of the file)
+  const CX = 4, CZ = 47;
   // The base's ring palms and props under its foot go with their colliders
   for (const mesh of scene.meshes) {
     if (mesh.parent || !mesh.isEnabled() || !/^(trunk|Pirate Cove_)/.test(mesh.name)) continue;
