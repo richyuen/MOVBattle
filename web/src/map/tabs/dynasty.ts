@@ -607,7 +607,7 @@ function columnCliffs(scene: Scene, built: Set<unknown>): void {
   // (the lawn material). The cliff still opens round each waterfall (|x - outlet| < 2.6 + 0.8 r on the front face).
   const stone=new StandardMaterial("dynastyCliffBoulder",scene);
   // 597 [R] blocker a4: teal grey-blue (the 596 rocks read pale lavender), moss its own brighter green on the outer shoulders
-  stone.diffuseColor.set(0.22,0.36,0.44);stone.emissiveColor.set(0.09,0.145,0.18);stone.specularColor=Color3.Black();
+  stone.diffuseColor.set(0.4,0.52,0.58);stone.emissiveColor.set(0.18,0.24,0.27);stone.specularColor=Color3.Black();
   const turf=new StandardMaterial("dynastyCliffMoss",scene);
   turf.diffuseColor.set(0.26,0.52,0.2);turf.emissiveColor.set(0.1,0.2,0.08);turf.specularColor=Color3.Black();
   const rocks: Mesh[]=[],caps: Mesh[]=[];
@@ -629,7 +629,7 @@ function columnCliffs(scene: Scene, built: Set<unknown>): void {
         const px=x-(x/rl)*inset, pz=z-(z/rl)*inset;
         const b=MeshBuilder.CreateIcoSphere("dynastyCliffBoulder",{radius:r,subdivisions:1,flat:true},scene);
         b.scaling.set(0.8+hash(k,4)*0.4,sy,0.8+hash(k,5)*0.4);
-        b.rotation.y=hash(k,6)*6.28;
+        b.rotation.set((hash(k,7)-0.5)*0.5,hash(k,6)*6.28,(hash(k,8)-0.5)*0.55);
         b.position.set(px,top-r*sy,pz);
         b.bakeCurrentTransformIntoVertices();
         rocks.push(b);
@@ -644,6 +644,17 @@ function columnCliffs(scene: Scene, built: Set<unknown>): void {
         }
       }
     }
+  }
+  // 599 a4: major overlapping headlands break up the uniform courses. Each
+  // is a fan of three unequal, tilted boulders, away from the outlet mouths.
+  for(const [anchor,[x,z]]of [[-51,5],[-16,-47],[31,-47],[52,18]].entries())for(let j=0;j<3;j++){
+    const r=4.6+hash(anchor*3+j,21)*2.3,rl=Math.hypot(x,z),t=(j-1)*3.4;
+    const px=x-z/rl*t,pz=z+x/rl*t,top=-0.8-j*2.5;
+    const b=MeshBuilder.CreateIcoSphere("dynastyCliffHeadland",{radius:r,subdivisions:1,flat:true},scene);
+    b.scaling.set(1.05,1.25+j*0.12,0.9);b.rotation.set(0.2*(j-1),hash(anchor+j,22)*6.28,0.3*(1-j));
+    b.position.set(px,top-r*b.scaling.y,pz);b.bakeCurrentTransformIntoVertices();rocks.push(b);
+    const moss=MeshBuilder.CreateIcoSphere("dynastyHeadlandMoss",{radius:r*0.65,subdivisions:1,flat:true},scene);
+    moss.scaling.set(1.2,0.25,0.8);moss.position.set(px+x/rl*r*0.45,top-r*0.35,pz+z/rl*r*0.45);moss.bakeCurrentTransformIntoVertices();caps.push(moss);
   }
   for(const [parts,mat,name] of [[rocks,stone,"dynastyBoulderCliffs"],[caps,turf,"dynastyCliffMoss"]] as const) {
     const merged=Mesh.MergeMeshes(parts,true,true);if(!merged)continue;
