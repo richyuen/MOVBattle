@@ -109,7 +109,7 @@ const TRIBAL_SANDBOX_OVERVIEW = { island: 218, top: 176 };
 // Hill: the default ground pose sits at the ramp's foot looking into its face, so the slope never shows; a low view from the
 // left flat's front corner up the ramp to the crest, the block's -z side face in profile, as wiki hill.png (589)
 const POSE_OVERRIDE = {
-  "map.fantasy_evil": { island: { target: { x: 0, y: 8, z: 0 }, radius: 200, alpha: -Math.PI / 2, beta: 1.2 } },
+  "map.fantasy_evil": { island: { target: { x: 0, y: 16, z: 0 }, radius: 230, alpha: -Math.PI / 2, beta: 1.2 }, top: { target: { x: 0, y: 12, z: 0 }, radius: 160, alpha: -Math.PI / 2, beta: 0.72 } },
   "map.fantasy_good": { island: { target: { x: 0, y: 8, z: 0 }, radius: 220, alpha: -Math.PI / 2, beta: 1.2 }, top: { target: { x: 0, y: 8, z: 0 }, radius: 165, alpha: -Math.PI / 2, beta: 0.72 } },
   "map.hill": { ground: { target: { x: 12, y: 6, z: 0 }, radius: 64, alpha: -2.8, beta: 1.4 } },
   // 591: the skirmish puts team 1 on the right gate wall top (19 m up): an elevated diagonal from the attackers side sees it
