@@ -243,8 +243,8 @@ function marbleDeck(scene: Scene, built: Set<unknown>): { stone: StandardMateria
     ...[-1, 1].flatMap((s) => alongEdge(s, rim, rim / 2).map((r) => [r.w, r.d, r.x, r.z])),
     [rim, 2 * DECK.z, DECK.x - rim / 2, 0], [rim, 2 * DECK.z, -DECK.x + rim / 2, 0],
   ].map(([w, dd, x, z]) => {
-    const b = MeshBuilder.CreateBox("heavenDeckBody", { width: w, height: deep, depth: dd }, scene);
-    b.position.set(x, -deep / 2, z);
+    const b = MeshBuilder.CreateBox("heavenDeckBody", { width: w, height: 1.6, depth: dd }, scene);
+    b.position.set(x, -0.8, z);
     b.bakeCurrentTransformIntoVertices();
     return b;
   }).concat([(() => {
@@ -505,25 +505,30 @@ function viaductUnderside(scene: Scene, built: Set<unknown>, stone: StandardMate
   leaf.diffuseColor = new Color3(0.2, 0.62, 0.58);
   leaf.emissiveColor = new Color3(0.06, 0.2, 0.19);
   leaf.specularColor = Color3.Black();
+  // 600 a1: real open bays, not dark arch silhouettes pasted on a solid rim.
+  // Each 7m bay has a 5.4m opening, semicircular stone head and two piers
+  // down to -12.5m. Basalt fingers hang a further 12-27m, like the references.
   const arches: Mesh[] = [], cols: Mesh[] = [], crowns: Mesh[] = [];
-  const W = 4, H = 6.5, top = -1.6;
+  const W = 5.4, top = -1.6, spring = top - W / 2;
   /** Arch bays along a run from (x0,z0) to (x1,z1), facing outward along (nx,nz). */
   const run = (x0: number, z0: number, x1: number, z1: number, nx: number, nz: number) => {
-    const len = Math.hypot(x1 - x0, z1 - z0), n = Math.floor(len / 6);
+    const len = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.floor(len / 7));
     if (n < 1) return;
     for (let i = 0; i < n; i++) {
       const t = (i + 0.5) / n, x = x0 + (x1 - x0) * t + nx * 0.06, z = z0 + (z1 - z0) * t + nz * 0.06, yaw = Math.atan2(nx, nz);
-      const body = MeshBuilder.CreateBox("heavenArch", { width: W, height: H - W / 2, depth: 0.1 }, scene);
-      body.rotation.y = yaw;
-      body.position.set(x, top - W / 2 - (H - W / 2) / 2, z);
-      body.bakeCurrentTransformIntoVertices();
-      const head = MeshBuilder.CreateCylinder("heavenArch", { diameter: W, height: 0.1, tessellation: 16, arc: 0.5 }, scene);
-      head.rotation.set(Math.PI / 2, 0, Math.PI / 2);
-      head.bakeCurrentTransformIntoVertices();
-      head.rotation.y = yaw;
-      head.position.set(x, top - W / 2, z);
-      head.bakeCurrentTransformIntoVertices();
-      arches.push(body, head);
+      const tangent = new Vector3(nz, 0, -nx), centre = new Vector3(x, spring, z);
+      for (const side of [-1, 1]) {
+        const p = centre.add(tangent.scale(side * (W / 2 + 0.55)));
+        const pier = MeshBuilder.CreateBox("heavenArcadePier", { width: 1.1, height: 12.5 + spring, depth: 1.3 }, scene);
+        pier.rotation.y = yaw; pier.position.set(p.x, (spring - 12.5) / 2, p.z);
+        pier.bakeCurrentTransformIntoVertices(); arches.push(pier);
+      }
+      const path = Array.from({ length: 13 }, (_, j) => {
+        const a = Math.PI * j / 12;
+        return centre.add(tangent.scale(Math.cos(a) * (W / 2 + 0.25))).add(new Vector3(0, Math.sin(a) * W / 2, 0));
+      });
+      const head = MeshBuilder.CreateTube("heavenArcadeHead", { path, radius: 0.65, tessellation: 4, cap: Mesh.CAP_ALL }, scene);
+      head.bakeCurrentTransformIntoVertices(); arches.push(head);
     }
   };
   for (const s of [-1, 1]) {
@@ -538,7 +543,7 @@ function viaductUnderside(scene: Scene, built: Set<unknown>, stone: StandardMate
     const inner = 1 - Math.max(Math.abs(cx) / 52, Math.abs(cz) / 40);
     const n = 3 + Math.floor(rnd() * 3);
     for (let j = 0; j < n; j++, k++) {
-      const d = 2 + rnd() * 1.4, len = 3 + inner * 9 + rnd() * 4;
+      const d = 2.4 + rnd() * 2, len = 12 + inner * 10 + rnd() * 5;
       const x = cx + (rnd() - 0.5) * 7, z = cz + (rnd() - 0.5) * 7;
       const c = MeshBuilder.CreateCylinder("heavenBasaltCol", { height: len, diameterTop: d, diameterBottom: d * 0.85, tessellation: 6 }, scene);
       c.position.set(x, floorY - len / 2 + 0.4, z);
@@ -556,7 +561,7 @@ function viaductUnderside(scene: Scene, built: Set<unknown>, stone: StandardMate
       }
     }
   }
-  for (const [parts, mat, name] of [[arches, shade, "heavenArches"], [cols, basalt, "heavenBasaltColumns"], [crowns, leaf, "heavenUnderCrowns"]] as const) {
+  for (const [parts, mat, name] of [[arches, stone, "heavenArches"], [cols, basalt, "heavenBasaltColumns"], [crowns, leaf, "heavenUnderCrowns"]] as const) {
     const merged = Mesh.MergeMeshes(parts, true, true);
     if (!merged) continue;
     merged.name = name;
