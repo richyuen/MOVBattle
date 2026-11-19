@@ -179,29 +179,47 @@ function basaltFloor(scene: Scene, built: Set<unknown>): void {
   // 594 [P]: lit, the seams read pale lilac (sun + fog on the bed); unlit near-black
   bedMat.disableLighting = true;
   bedMat.emissiveColor = new Color3(0.012, 0.018, 0.022);
-  const block = MeshBuilder.CreateBox("basaltBlocks", { size: 1 }, scene);
+  // 600 a1: irregular fractured plates, staggered and split into broad facets.
+  // Shared jittered corners replace the square paving grid; thin dark cracks
+  // separate the plates and their deep sides join the stepped rock shelves.
+  const block = new Mesh("basaltBlocks", scene);
   const mat = new StandardMaterial("basaltBlocks", scene);
   mat.diffuseColor = new Color3(0.13, 0.2, 0.22);
   mat.emissiveColor = new Color3(0.025, 0.04, 0.045);
   mat.specularColor = new Color3(0.04, 0.05, 0.05);
   block.material = mat;
-  const mats: number[] = [], cols: number[] = [];
+  const positions: number[] = [], indices: number[] = [], colors: number[] = [];
   const seamMats: number[] = [];
-  for (let x = -53; x <= 53; x += 2) {
-    for (let z = -47; z <= 47; z += 2) {
-      if (!inside(x, z) || !inside(x + 1, z + 1) || !inside(x - 1, z - 1) || !inside(x + 1, z - 1) || !inside(x - 1, z + 1)) continue;
-      if (inChasm(x, z) || inStair(x, z)) continue;
-      const lift = blockLevel(x, z);
-      const top = 0.02 + rnd() * 0.2 + lift, h = 0.5 + top;
-      mats.push(...Matrix.Compose(new Vector3(1.85, h, 1.85), Quaternion.Identity(), new Vector3(x, top - h / 2, z)).asArray());
-      const k = 0.88 + rnd() * 0.24;
-      cols.push(k, k, k, 1);
-      // the bed sits just under this block's own top, so seams show dark between blocks of one terrace
-      seamMats.push(...Matrix.Compose(new Vector3(2, 0.1 + lift, 2), Quaternion.Identity(), new Vector3(x, (lift - 0.16) / 2, z)).asArray());
+  const point = (i: number, j: number) => {
+    const h = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
+    const f = h - Math.floor(h);
+    return new Vector3(-54 + i * 3 + (j % 2) * 1.5 + (f - .5) * 1.1, 0, -48 + j * 3 + (f - .5) * .9);
+  };
+  for (let i = 0; i < 36; i++) {
+    for (let j = 0; j < 32; j++) {
+      const corners = [point(i,j),point(i+1,j),point(i+1,j+1),point(i,j+1)];
+      const cx = corners.reduce((s,p)=>s+p.x,0)/4, cz = corners.reduce((s,p)=>s+p.z,0)/4;
+      if (!corners.every(p=>inside(p.x,p.z)) || inChasm(cx,cz) || inStair(cx,cz)) continue;
+      const k=.8+rnd()*.35, base=positions.length/3;
+      for(const p of corners){
+        p.x=cx+(p.x-cx)*.975;p.z=cz+(p.z-cz)*.975;
+        const y=fantasyEvilHeight(p.x,p.z)+.10;
+        positions.push(p.x,y,p.z);colors.push(k,k,k,1);
+      }
+      indices.push(base,base+2,base+1,base,base+3,base+2);
+      for(let e=0;e<4;e++){
+        const n=(e+1)%4,a=base+e,b=base+n,v=positions.length/3;
+        positions.push(positions[a*3],positions[a*3+1]-2,positions[a*3+2],positions[b*3],positions[b*3+1]-2,positions[b*3+2]);
+        colors.push(k*.75,k*.75,k*.75,1,k*.75,k*.75,k*.75,1);
+        indices.push(a,b,v+1,a,v+1,v);
+      }
+      const lift=blockLevel(cx,cz);
+      seamMats.push(...Matrix.Compose(new Vector3(4.5,.1+lift,3.8),Quaternion.Identity(),new Vector3(cx,(lift-.16)/2,cz)).asArray());
     }
   }
-  block.thinInstanceSetBuffer("matrix", new Float32Array(mats), 16, true);
-  block.thinInstanceSetBuffer("color", new Float32Array(cols), 4, true);
+  const data=new VertexData();data.positions=positions;data.indices=indices;data.colors=colors;data.normals=[];
+  VertexData.ComputeNormals(positions,indices,data.normals);data.applyToMesh(block);
+  block.convertToFlatShadedMesh();
   block.receiveShadows = true;
   block.isPickable = false;
   // the seams' bed: one dark 2 m tile under each block (so it follows the oval), just below the block tops
