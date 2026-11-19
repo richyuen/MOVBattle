@@ -389,8 +389,11 @@ function fencerLoggia(scene: Scene, base: HeightField | null): void {
   const roof = mk("fencerLoggiaRoof", new Color3(0.78, 0.36, 0.2), 0.3);
   const dark = mk("fencerLoggiaWindow", new Color3(0.16, 0.14, 0.16), 0.1);
   const meshes: Mesh[] = [];
+  // pale self-lit walls in the glow pass bloom near-white (LESSONS): keep the loggia out of it
+  const glow = scene.getGlowLayerByName("glow");
   const box = (w: number, h: number, d: number, x: number, y: number, z: number, mat: StandardMaterial) => {
     const m = MeshBuilder.CreateBox("fencerLoggia", { width: w, height: h, depth: d }, scene);
+    glow?.addExcludedMesh(m);
     m.position.set(x, y, z);
     m.material = mat;
     m.receiveShadows = true;
