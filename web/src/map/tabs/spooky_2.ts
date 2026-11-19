@@ -374,10 +374,15 @@ function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult
   }
   // A jack-o-lantern: a ribbed squashed ball, a stem, and a face of flame-coloured cut-outs toward `yaw`
   const lantern = (x: number, y: number, z: number, size: number, yaws: number[]) => {
-    const body = MeshBuilder.CreateSphere("spooky2ShrinePart", { diameter: size, segments: 5 }, scene);
-    body.scaling.y = 0.82;
-    body.position.set(x, y, z);
-    parts.pumpkin.push(body);
+    // 601 a4: separate swollen lobes make the shrine read as a pumpkin
+    // at top-shot distance; the old single sphere read as an orange rock.
+    for(let rib=0;rib<10;rib++){
+      const a=rib*Math.PI/5;
+      const body=MeshBuilder.CreateSphere("spooky2ShrinePart",{diameter:size,segments:6},scene);
+      body.scaling.set(0.43,0.82,0.43);
+      body.position.set(x+Math.sin(a)*size*0.29,y,z+Math.cos(a)*size*0.29);
+      parts.pumpkin.push(body);
+    }
     const stem = MeshBuilder.CreateCylinder("spooky2ShrinePart", { height: size * 0.22, diameterTop: size * 0.07, diameterBottom: size * 0.13, tessellation: 5 }, scene);
     stem.position.set(x, y + size * 0.46, z);
     parts.bark.push(stem);
@@ -399,12 +404,31 @@ function pumpkinShrine(scene: Scene, built: Set<unknown>, result: MapBuildResult
       for (const t of [-0.15, 0, 0.15]) cut(0.09, 0.09, t, -0.07, false);
     }
   };
-  lantern(AT.x, 5, AT.z, 4.6, [0, Math.PI]);
+  lantern(AT.x, 6, AT.z, 7.2, [0, Math.PI]);
   for (let i = 0; i < 9; i++) {
     const a = i * 0.698 + 0.2, r = 3.4 + rnd(i, 11) * 2.4, size = 0.9 + rnd(i, 12) * 0.6;
     lantern(AT.x + Math.cos(a) * r, 1.5 + rnd(i, 13) * 0.9 - (r - 3.4) * 0.35, AT.z + Math.sin(a) * r, size, [rnd(i, 14) * 6.28]);
   }
   const up = Vector3.Up();
+  // A single gnarled arch encloses the large lantern, with tapering bare
+  // forks above its crown, like the tree framing the wiki shrine.
+  const branch=(points:Vector3[],r:number)=>{
+    const m=MeshBuilder.CreateTube("spooky2ShrinePart",{path:points,radius:r,tessellation:5,cap:Mesh.CAP_ALL},scene);
+    parts.bark.push(m);
+  };
+  branch([new Vector3(AT.x-6,1,AT.z+1),new Vector3(AT.x-5.5,6,AT.z+1),new Vector3(AT.x-4,11,AT.z+1),new Vector3(AT.x,13,AT.z+1),new Vector3(AT.x+4.5,11,AT.z+1)],0.65);
+  for(const side of [-1,1])for(let i=0;i<3;i++){
+    const x=AT.x+side*(1+i*1.4),z=AT.z+1;
+    branch([new Vector3(x,12-i*.4,z),new Vector3(x+side*1.4,14+i*.5,z+.5),new Vector3(x+side*2.4,14.4+i*.6,z-1)],0.17);
+  }
+  for(let i=0;i<15;i++){
+    const a=Math.PI+(i/14)*Math.PI,r=4.3+(i%3)*.8;
+    const x=AT.x+Math.cos(a)*r,z=AT.z+Math.sin(a)*r;
+    const candle=MeshBuilder.CreateCylinder("spooky2ShrinePart",{height:.65+(i%3)*.18,diameter:.22,tessellation:5},scene);
+    candle.position.set(x,1.7,z);parts.flame.push(candle);
+    const tip=MeshBuilder.CreateIcoSphere("spooky2ShrinePart",{radius:.18,subdivisions:1},scene);
+    tip.scaling.y=2;tip.position.set(x,2.2+(i%3)*.09,z);parts.flame.push(tip);
+  }
   [[-5.2, 1.5, 9.5, 0.9], [5.4, -1.2, 8, 2.6], [1, 5, 7, 4.4]].forEach(([dx, dz, tall, lean], t) => {
     let at = new Vector3(AT.x + dx, 0.4, AT.z + dz);
     for (let s = 0; s < 3; s++) {
