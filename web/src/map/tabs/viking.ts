@@ -527,5 +527,8 @@ export function buildViking(scene: Scene, base: () => MapBuildResult): MapBuildR
   shoreLip(scene);
   frozenWaterfall(scene, result.obstacles);
   const restoreSky = winterHaze(scene, built);
-  return { ...result, height: bankHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
+  // The inherited Challenge zones omit the inner half of this map's clear lake.
+  // Include that ice so authored formations can spread forward from the shore.
+  const innerIce=([0,1] as const).map(team=>({team,center:new Vector3((team===0?-1:1)*14,0,0),size:new Vector3(26,100,40)}));
+  return { ...result, placementZones: [...(result.placementZones??result.zones),...innerIce], height: bankHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }

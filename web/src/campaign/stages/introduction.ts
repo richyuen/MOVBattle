@@ -150,27 +150,28 @@ export const STAGES: TabsStageDef[] = [
     enemy: [
       // 597 (blocker b2; ice_archers_only_almost.thumb.png: two trios of Brawlers apart, front-left and front-centre)
       // 598 [P]: the off-centre trio on +z, which the player's camera shows on the left
-      ["viking.brawler", 29.5, 12.9],
-      ["viking.brawler", 29, 14.1],
-      ["viking.brawler", 29.5, 15.3],
-      ["viking.brawler", 29.5, -1.2],
-      ["viking.brawler", 29, 0],
-      ["viking.brawler", 29.5, 1.2],
+      ["viking.brawler", 19, 12.9],
+      ["viking.brawler", 18.5, 14.1],
+      ["viking.brawler", 19, 15.3],
+      ["viking.brawler", 22, -1.2],
+      ["viking.brawler", 21.5, 0],
+      ["viking.brawler", 22, 1.2],
       // 597 (blocker b1; ice_archers_only_almost.png: three separate 2x2 groups of four, left, centre and right, wide gaps)
       // 598 (blocker b3; ice_archers_only_almost.png: the groups spread over most of the half's width at different depths, each a
       // loose slanting line of four ~2 m apart: the left one (+z) nearest, the centre one deepest, the right one between)
-      ["viking.ice_archer", 33.5, -13],
-      ["viking.ice_archer", 34, -15],
-      ["viking.ice_archer", 34.5, -17],
-      ["viking.ice_archer", 35, -19],
-      ["viking.ice_archer", 35.6, -3],
-      ["viking.ice_archer", 36, -1],
-      ["viking.ice_archer", 36.2, 1],
-      ["viking.ice_archer", 36.6, 3],
-      ["viking.ice_archer", 31, 13],
-      ["viking.ice_archer", 31.5, 15],
-      ["viking.ice_archer", 32, 17],
-      ["viking.ice_archer", 32.5, 19],
+      // 599 b3: three depths 5-7 m apart, with the trios forward on open ice.
+      ["viking.ice_archer", 33, -13],
+      ["viking.ice_archer", 33.5, -15],
+      ["viking.ice_archer", 34, -17],
+      ["viking.ice_archer", 34.5, -19],
+      ["viking.ice_archer", 39, -3],
+      ["viking.ice_archer", 39.5, -1],
+      ["viking.ice_archer", 40, 1],
+      ["viking.ice_archer", 40.5, 3],
+      ["viking.ice_archer", 28, 13],
+      ["viking.ice_archer", 28.5, 15],
+      ["viking.ice_archer", 29, 17],
+      ["viking.ice_archer", 29.5, 19],
     ],
   },
   {
