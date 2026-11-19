@@ -271,7 +271,10 @@ async function stageScene(page, item) {
     beta: archCart ? 1 : streets ? 0.24 : city ? 0.77 : 1.2,
   });
   await shot(page, `${p}army`);
-  await frame(page, streets ? { ...POSE.top, beta: 0.2 } : POSE.top);
+  // 611: on the dynasty map the 135 m top view loses the army among the pagodas and canopies (AUDIT 610): frame the right half
+  // round the army instead, from the same high oblique
+  const dynastyField = st.map === "dynasty" ? { ...POSE.top, target: { x: box.cx, y: 0, z: box.cz }, radius: 70 } : null;
+  await frame(page, streets ? { ...POSE.top, beta: 0.2 } : dynastyField ?? POSE.top);
   await shot(page, `${p}field`);
   await page.evaluate(({ c, s }) => { window.game.runCampaignSmokeCheck(c, s, { advanceMs: 5000 }); }, { c: st.campaign, s: item });
   await frame(page, st.map === "pirate" ? POSE_OVERRIDE["map.pirate"].battle : POSE.ground);
