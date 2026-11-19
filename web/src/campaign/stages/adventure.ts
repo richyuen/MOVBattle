@@ -146,11 +146,11 @@ export const STAGES: TabsStageDef[] = [
     budget: 6500,
     playerUnits: "all",
     enemy: [
-      ["tribal.mammoth", 20, -8],
-      ["tribal.mammoth", 20, -4],
-      ["tribal.mammoth", 20, 0],
-      ["tribal.mammoth", 20, 4],
-      ["tribal.mammoth", 20, 8],
+      ["tribal.mammoth", 29.6, -13.6],
+      ["tribal.mammoth", 34.2, -7.1],
+      ["tribal.mammoth", 31, 0],
+      ["tribal.mammoth", 34.2, 7.1],
+      ["tribal.mammoth", 29.6, 13.6],
     ],
   },
   {

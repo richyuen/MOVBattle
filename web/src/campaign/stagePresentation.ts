@@ -1,10 +1,76 @@
 // Curated levels sometimes start actors on scenery. Presentation stays separate
 // from flat deterministic battle coordinates and is removed whenever a level resets.
-import { MeshBuilder, Vector3, type Scene } from "@babylonjs/core";
+import { MeshBuilder, Vector3, type Mesh, type Scene } from "@babylonjs/core";
 import { markStatic, setActiveHeightField, terrainMesh, type HeightField } from "../map/terrain";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 
 let cleanup: (() => void) | null = null;
+
+/**
+ * Survey "perched on the trees" (reference/stages/adventure.tree_mammoths.png): every enemy starts on its own big ball crown on a white
+ * birch trunk, the tribal_1 ring's crowns at perch size, set along the enemy arc of the ring. Spec: one crown under each team-1 unit's
+ * spawn, radius r, its standing top at y top..top+vary (seeded per unit). The height field is flat over the crown (flat m from its
+ * centre) and ramps to the ground by r + ramp, so a unit that walks off slides down the crown. Drawn only: the battle stays flat.
+ */
+interface Perch { r: number; top: number; vary: number; flat: number; ramp: number }
+const PERCHES: Record<string, Perch> = {
+  "adventure.tree_mammoths": { r: 3.6, top: 6.5, vary: 1.5, flat: 2.4, ramp: 3.2 },
+};
+const PERCH_CROWNS = ["tribal1CrownOrange", "tribal1CrownRed", "tribal1CrownOrange2", "tribal1CrownYellow", "tribal1CrownRed2"];
+
+function seeded(i: number, seed: number): number {
+  const raw = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
+  return raw - Math.floor(raw);
+}
+
+function perchCrowns(scene: Scene, units: RuntimeUnit[], base: HeightField | null, p: Perch): void {
+  const crowns = PERCH_CROWNS.map((n) => scene.getMaterialByName(n));
+  const bark = scene.getMaterialByName("tribal1Birch");
+  const glow = scene.getGlowLayerByName("glow");
+  const seats: Array<{ x: number; z: number; h: number }> = [];
+  const meshes: Mesh[] = [];
+  units.filter((u) => u.team === 1 && !u.linkedParent).forEach((u, i) => {
+    const x = u.position.x, z = u.position.z;
+    const h = p.top + seeded(i, 61) * p.vary;
+    const centre = h - p.r * 0.8;
+    const trunk = MeshBuilder.CreateCylinder("perchTrunk", { height: centre, diameterTop: 0.3 + p.r * 0.06, diameterBottom: 0.45 + p.r * 0.1, tessellation: 6 }, scene);
+    trunk.position.set(x, centre / 2, z);
+    trunk.material = bark;
+    const ball = MeshBuilder.CreateIcoSphere("perchCrown", { radius: p.r, subdivisions: 1 }, scene);
+    ball.scaling.y = 0.92;
+    ball.rotation.y = seeded(i, 62) * Math.PI;
+    ball.position.set(x, centre, z);
+    ball.convertToFlatShadedMesh();
+    ball.material = crowns[Math.floor(seeded(i, 63) * crowns.length)];
+    ball.applyFog = false;
+    glow?.addExcludedMesh(ball);
+    for (const m of [trunk, ball]) {
+      m.receiveShadows = true;
+      m.isPickable = false;
+      meshes.push(m);
+    }
+    seats.push({ x, z, h });
+  });
+  markStatic(meshes);
+  const reach = p.r + p.ramp;
+  const perched: HeightField = (x, z) => {
+    let best = 0;
+    for (const s of seats) {
+      const dx = x - s.x, dz = z - s.z;
+      if (Math.abs(dx) > reach || Math.abs(dz) > reach) continue;
+      const d = Math.hypot(dx, dz);
+      if (d >= reach) continue;
+      const e = d <= p.flat ? 1 : 1 - (d - p.flat) / (reach - p.flat);
+      best = Math.max(best, s.h * e * e * (3 - 2 * e));
+    }
+    return best;
+  };
+  setActiveHeightField((x, z) => Math.max(base?.(x, z) ?? 0, perched(x, z)));
+  cleanup = () => {
+    for (const m of meshes) if (!m.isDisposed()) m.dispose();
+    setActiveHeightField(base);
+  };
+}
 export function clearStagePresentation(): void {
   cleanup?.();
   cleanup = null;
@@ -106,6 +172,11 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
       scene.onBeforeRenderObservable.remove(before);
       scene.onAfterRenderObservable.remove(after);
     };
+    return;
+  }
+  const perch = PERCHES[id];
+  if (perch) {
+    perchCrowns(scene, units, base, perch);
     return;
   }
   if (id !== "adventure.the_tiniest_attack") return;
