@@ -345,11 +345,12 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   lawnTerraces(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),result);
   courtApproaches(scene,result);
   terraceBranches(scene,result);
-  perimeterFlagstones(scene,result);
   canalSpurs(scene, result);
   canalPools(scene, result);
   sideBridges(scene, result);
   canalOutlets(scene, result, obstacles);
+  // 603: after the outlets, so the loop rides their bridge decks
+  perimeterFlagstones(scene,result);
   // platform and stair (z 7 .. 26.5)
   obstacles.push({ type: "box", center: new Vector3(PAGODA.x, 0, (7 + PAGODA.z + PAGODA.size / 2) / 2), halfX: PAGODA.size / 2, halfZ: (PAGODA.z + PAGODA.size / 2 - 7) / 2 });
   rimTorii(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))),obstacles);
@@ -713,21 +714,28 @@ function terraceBranches(scene: Scene, result: MapBuildResult): void {
 // Spec: the same route pulled ~5 m in from under the ring (corners x 0.88; at x 0.95 the trees still stood on it), rounded by three Chaikin passes, laid as one ribbon
 // 5 m wide sampled every ~1 m, each vertex riding the terraces' drawn height (at least 0.22 m) + 8 cm; a 512 px tile per 4 m
 // of jittered cobbles ~0.45 m, stone (176,180,182) varied +-12 on joints (112,118,124); uvs in metres along and across.
+// Loop re-laid (603, blocker a2; wiki dynasty.png: the cobble path is one continuous level ring at grade on the outer lawn,
+// outside the raised terraces and inside the cherries, crossing the canal outlets on their bridges and the front-left gap on a
+// stone bridge of its own; the 592 loop at 0.88 scale ran along the outer terraces' edges (|x| 40, |z| 30), tilted half onto
+// the 2.4 m turf and sank under it, so only its near run showed). Spec: a rounded rectangle, centre line x +-46, z -39..37,
+// corners radius 7, sampled every ~1 m; 5 m wide and level across (each section at the highest drawn ground under its centre
+// and both edges, at least 0.22 m, + 8 cm), so it rides the outlet bridges at z -39; where its centre lies over the notch
+// (x < -36, z < -30, no island) the section stands at 0.9 m on a stone slab 0.7 m deep with low parapets both sides. Drawn
+// only (the zones end at |x| 29); called after the outlets so their bridge heights are known.
 function perimeterFlagstones(scene: Scene, result: MapBuildResult): void {
-  const route=[[-32,-26],[-32,-35],[41,-35],[46,-29],[46,30],[39,35],[-39,35],[-46,29],[-46,-26]].map(([x,z])=>[x*0.88,z*0.88] as [number,number]);
-  let pts=route;
-  for(let pass=0;pass<3;pass++){
-    const next:Array<[number,number]>=[];
-    for(let i=0;i<pts.length;i++){const [ax,az]=pts[i],[bx,bz]=pts[(i+1)%pts.length];next.push([ax*.75+bx*.25,az*.75+bz*.25],[ax*.25+bx*.75,az*.25+bz*.75]);}
-    pts=next;
-  }
-  // resample to ~1 m so the ribbon follows the terraces' heights
+  const X=46,Z0=-39,Z1=37,R=7;
+  const corners:Array<[number,number,number]>=[[X-R,Z1-R,0],[-X+R,Z1-R,Math.PI/2],[-X+R,Z0+R,Math.PI],[X-R,Z0+R,Math.PI*1.5]];
+  const pts:Array<[number,number]>=[];
+  for(const [cx,cz,a0] of corners)for(let k=0;k<=8;k++){const a=a0+(k/8)*Math.PI/2;pts.push([cx+Math.cos(a)*R,cz+Math.sin(a)*R]);}
+  // resample to ~1 m so the ribbon follows the ground's heights
   const dense:Array<[number,number]>=[];
   for(let i=0;i<pts.length;i++){const [ax,az]=pts[i],[bx,bz]=pts[(i+1)%pts.length],n=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az)));for(let k=0;k<n;k++)dense.push([ax+(bx-ax)*k/n,az+(bz-az)*k/n]);}
   dense.push(dense[0]);
   const oldHeight=result.height;
-  const pathHeight=(x:number,z:number)=>Math.max(0.22,oldHeight?.(x,z)??0)+0.08;
+  const inNotch=(x:number,z:number)=>x<NOTCH.x&&z<NOTCH.z;
+  const ground=(x:number,z:number)=>Math.max(0.22,oldHeight?.(x,z)??0);
   const half=2.5,left:Vector3[]=[],right:Vector3[]=[],along:number[]=[];
+  const slab:Mesh[]=[];
   let run=0;
   for(let i=0;i<dense.length;i++){
     const [px,pz]=dense[i],[ax,az]=dense[Math.max(0,i-1)],[bx,bz]=dense[Math.min(dense.length-1,i+1)];
@@ -735,7 +743,28 @@ function perimeterFlagstones(scene: Scene, result: MapBuildResult): void {
     if(i>0)run+=Math.hypot(px-dense[i-1][0],pz-dense[i-1][1]);
     along.push(run);
     const lx=px+nx*half,lz=pz+nz*half,rx=px-nx*half,rz=pz-nz*half;
-    left.push(new Vector3(lx,pathHeight(lx,lz),lz));right.push(new Vector3(rx,pathHeight(rx,rz),rz));
+    const over=inNotch(px,pz);
+    const y=(over?0.9:Math.max(ground(px,pz),ground(lx,lz),ground(rx,rz)))+0.08;
+    left.push(new Vector3(lx,y,lz));right.push(new Vector3(rx,y,rz));
+    if(over&&i<dense.length-1){
+      // the bridge under this metre: a slab and a parapet on each side, turned along the path
+      const yaw=Math.atan2(bx-ax,bz-az);
+      const part=(w:number,h:number,d:number,ox:number,oy:number)=>{
+        const m=MeshBuilder.CreateBox("dynastyLoopBridge",{width:w,height:h,depth:d},scene);
+        m.rotation.y=yaw;m.position.set(px+nx*ox,oy,pz+nz*ox);slab.push(m);
+      };
+      part(2*half+0.4,0.7,1.15,0,0.9-0.35);
+      for(const s of [-1,1])part(0.35,0.6,1.15,s*(half+0.05),0.9+0.38);
+    }
+  }
+  if(slab.length){
+    const merged=Mesh.MergeMeshes(slab,true);
+    if(merged){
+      merged.name="dynastyLoopBridge";
+      merged.material=scene.getMaterialByName("dynastyLawnStone");
+      merged.receiveShadows=true;merged.isPickable=false;
+      scene.getGlowLayerByName("glow")?.addExcludedMesh(merged);
+    }
   }
   const ribbon=MeshBuilder.CreateRibbon("dynastyPerimeterLoop",{pathArray:[left,right]},scene);
   const uv:number[]=[];
