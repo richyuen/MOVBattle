@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+612 | [S] d4881493 | dynasty.samurai.b4 | approve,struck4 (stage scenery samuraiPath: flagstone path + stair, torii turned face-on); CONFIRM -> D
+612 | [S] 38cd6195 | dynasty.zeus_and_other_folks.b4 | approve,struck4 (stage scenery zeusHouse behind the phalanx); CONFIRM -> D
+612 | [S] 01ec6438 | dynasty.catapults.b1 | approve,struck1,2 (echelon at the bridge east foot, 2.5 m)
+612 | [S] 25d54b72 | dynasty.catapults.b3 | approve,struck3 (stage enemy tuple yaw, -70 deg); CONFIRM -> D
+612 | [S] d90f4a8b | dynasty.art_of_war.b1 | approve,struck1-4 (diamond on crossing (42,0), pickets z +-8); CONFIRM -> D
+612 | [S] 1bf29290 | renaissance.renaissance_fencer.b3 | approve,struck3 (+farmer_1 b2, ancient_2 b5: balloon rig disposed with its unit)
+612 | [S] 90b49f49 | renaissance.renaissance_vs_ancient_2.b1 | approve,struck1-4 (two shield groups, Minotaur bunch, Zeus 2+2); b6 left
+612 | [S] 0683b60e | renaissance.renaissance_vs_dynasty_3.b1 | approve,struck1-3 (three pickets)
+612 | [S] 3393211e | renaissance.renaissance_vs_farmer_1.b3 | approve,struck1,3 (band at the bridge end, Harvesters behind)
 611 | [S] 9abb8611 | dynasty.area_of_effect.b1 | approve,struck1-5 (before the massif, Stoner V); CONFIRM -> D
 611 | [S] 034b8c68 | dynasty.viking_army.b1 | approve,struck1-4 (two Berserker groups, Jarls in the gap, ship behind each); CONFIRM -> D
 611 | [S] f8dcc5b9 | dynasty.zeus_and_other_folks.b1 | approve,struck1-3 (3x2 shield block); b4 building at the back left
