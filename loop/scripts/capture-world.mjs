@@ -247,14 +247,15 @@ async function stageScene(page, item) {
   // Ancient 1's rooftop rooms can occlude the enemy from the player's side.
   // Stay on that side, using an elevated diagonal over the central street.
   const city = st.map === "ancient_1";
+  const streets = item === "introduction.basic_formation";
   await frame(page, {
     target: { x: box.cx, y: 1, z: box.cz },
     radius: Math.max(16, Math.max(box.w, box.d) * 1.25 + 8),
     alpha: city ? Math.PI + 0.42 : Math.PI,
-    beta: city ? 0.77 : 1.2,
+    beta: streets ? 0.24 : city ? 0.77 : 1.2,
   });
   await shot(page, `${p}army`);
-  await frame(page, POSE.top);
+  await frame(page, streets ? { ...POSE.top, beta: 0.2 } : POSE.top);
   await shot(page, `${p}field`);
   await page.evaluate(({ c, s }) => { window.game.runCampaignSmokeCheck(c, s, { advanceMs: 5000 }); }, { c: st.campaign, s: item });
   await frame(page, POSE.ground);
