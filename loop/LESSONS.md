@@ -45,7 +45,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A ribbon faces by path order (SSAO greys a DOUBLESIDE one inside): a down-facing deck renders black; check the first normal after convertToFlatShadedMesh, flipFaces(true) if wrong (561, 574). An underside away from the sun needs self-light ~1x its colour.
 - Read stage armies from the stage files, not Notes (tribal_2 563). campaign.challenge zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones inside it.
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns or a palisade (563): a rock mass wants heaped faceted boulders or tilted slabs, few and large, of unequal size (spooky_1 583: equal rocks read as an even band).
-- Stage enemy positions are validated against the map's team-1 zone, hazards and obstacles (game.checkStage): a map change can misplace a stage's army (the checkpoint re-judges every stage on a finished map batch).
+- Stage enemies are validated vs team-1 zone, hazards, obstacles (game.checkStage); a map change can misplace them. Check a re-lay before committing: dynasty zone is x>=29, canal spur ~(31.5,7.9) (611).
 - campaign.challenge dressing: wallStone, boulder, hayBale, hill, stump, pits, "<name>_box|_cyl". loadMapForCapture needs "map." (564).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).

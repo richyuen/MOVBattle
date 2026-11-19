@@ -3,6 +3,12 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+611 | [S] 9abb8611 | dynasty.area_of_effect.b1 | approve,struck1-5 (before the massif, Stoner V); CONFIRM -> D
+611 | [S] 034b8c68 | dynasty.viking_army.b1 | approve,struck1-4 (two Berserker groups, Jarls in the gap, ship behind each); CONFIRM -> D
+611 | [S] f8dcc5b9 | dynasty.zeus_and_other_folks.b1 | approve,struck1-3 (3x2 shield block); b4 building at the back left
+611 | [S] 6faa88dd | dynasty.catapults.b1 | approve,no strike (echelon receding left, not yet touching)
+611 | [S] ac07417e+71cdb10a | dynasty.samurai.b1 | approve,struck1-3 (3:3 round the Monk, flank groups); b4 path left
+611 | [S] 611.6/6b/6c reverted | dynasty.art_of_war.b1 | dropped (outside team-1 zone, then a Ninja in the canal spur)
 610 | [S] e19bf480 | challenge.twin_lords.b1 | approve,struck1-6 (under the castle wall, re-laid); CONFIRM -> D
 610 | [S] e3db6089 | challenge.zeus.b5 | approve,struck5 (phalanx 48 deg)
 610 | [S] 6e6423a2 | challenge.zeus.b3 | approve,struck3 (Hoplites hinged back); [P] 05b84fcd spacing 0.98 m struck1; CONFIRM -> D
