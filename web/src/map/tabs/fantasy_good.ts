@@ -65,12 +65,19 @@ function marbleMaterial(scene: Scene): StandardMaterial {
 // the stepped edges and clear of the tower legs (x +-31..49, z 27..33). Tree pits keep two teal trees and a spire, open and
 // obelisk pits one spire on a plinth. The walkway between them steps from 24 m wide (x -12..2) to 31 m (x 12..22).
 type Pit = { x0: number; x1: number; z0: number; z1: number; kind: "tree" | "obelisk" | "open" };
+// [R] Quadrant wells (606, b plateau; CONFIRM 595/601 b1 "four large quadrant wells leaving a defined cross of walkways,
+// rather than six small holes surrounded by a broad continuous plaza" (the 596 layout had five); b2 "gates occupy opposing ends
+// of the field across the well-and-walkway layout"; wiki fantasy_good.png: big sunken wells fill the quarters, the paving left
+// is a cross of walkways and a rim, a gate at the back-left and another at the front-right). Spec: four wells, one per
+// quarter, |x| 6..27, |z| 6..31 (21 x 25 m, 10 m deep): the cross walkways are 12 m wide (|x| < 6 and |z| < 6), the rim
+// 9 m and more; both zones (|x| 29..59, |z| <= 20) stay paving. Back-left and front-left tree wells, back-right obelisk,
+// front-right open (the corrupted obelisk). The gates move to opposite corners (-40, 30) and (40, -30); their channels
+// run to the nearest well, the front spills from the front wells to the front edge.
 const PITS: Pit[] = [
-  { x0: -34, x1: -12, z0: -32, z1: -12, kind: "tree" },
-  { x0: 2, x1: 12, z0: -30, z1: -19, kind: "obelisk" },
-  { x0: 22, x1: 40, z0: -32, z1: -15, kind: "open" },
-  { x0: -26, x1: -8, z0: 13, z1: 30, kind: "tree" },
-  { x0: 6, x1: 16, z0: 19, z1: 31, kind: "obelisk" },
+  { x0: -27, x1: -6, z0: -31, z1: -6, kind: "tree" },
+  { x0: 6, x1: 27, z0: -31, z1: -6, kind: "open" },
+  { x0: -27, x1: -6, z0: 6, z1: 31, kind: "tree" },
+  { x0: 6, x1: 27, z0: 6, z1: 31, kind: "obelisk" },
 ];
 const PIT_DEPTH = 10;
 const inPit = (x: number, z: number, pad = 0) => PITS.some((p) => x > p.x0 - pad && x < p.x1 + pad && z > p.z0 - pad && z < p.z1 + pad);
@@ -370,7 +377,7 @@ function parapets(scene: Scene, built: Set<unknown>, result: MapBuildResult, sto
 // pointed top); water channel 1.6 m wide, 0.4 m deep, along the arch top and down each leg's outer face to a 4 x 3 m pool at its
 // foot (2 x 4 m; unlit blue (.3,.7,1.1), out of the glow); a spire 9 m (four-sided, white) with a gold ring on the outer leg. White
 // (.93,.95,.98) self .3, gold the kerb's material. Colliders: one box per leg and pool; the gate passage stays open.
-const TOWERS = [-40, 40];
+const TOWERS = [{ x: -40, z: 30 }, { x: 40, z: -30 }];
 function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMaterial, gold: StandardMaterial): MapBuildResult {
   const mk = (name: string, c: Color3) => {
     const m = new StandardMaterial(name, scene);
@@ -389,8 +396,8 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
   const obstacles = [...result.obstacles];
   // 599 a2: monumental gates, long gold-framed lancets and three pale-blue
   // crystal spires per outer leg (18/11/9 m), as in the wiki's tall skyline.
-  const Z = 30, LEG = 6, GAP = 6, H = 32;
-  for (const tx of TOWERS) {
+  const LEG = 6, GAP = 6, H = 32;
+  for (const { x: tx, z: Z } of TOWERS) {
     const out = Math.sign(tx);
     const box = (k: keyof typeof mats, w: number, h: number, d: number, x: number, y: number, z: number, ry = 0) => {
       const b = MeshBuilder.CreateBox("heavenTowerPart", { width: w, height: h, depth: d }, scene);
@@ -732,15 +739,15 @@ function waterfalls(scene: Scene): void {
     box("water", alongX ? len + W : W, 0.06, alongX ? W : len + W, mx, 0.03, mz);
     for (const s of [-1, 1]) box("lip", alongX ? len + W : 0.2, 0.15, alongX ? 0.2 : len + W, mx + (alongX ? 0 : s * (W / 2 + 0.1)), 0.075, mz + (alongX ? s * (W / 2 + 0.1) : 0));
   };
-  // back: tower foot -> pit, falling down the pit's inner wall
-  channel(-31.8, 26.8, -31.8, 22); channel(-31.8, 22, -26, 22);
-  box("water", 0.12, PIT_DEPTH, 2.4, -26 + 0.66, -PIT_DEPTH / 2, 22);
-  box("foam", 0.3, 0.3, 2.6, -26 + 0.5, 0.05, 22);
-  channel(31.8, 26.8, 31.8, 24); channel(31.8, 24, 16, 24);
-  box("water", 0.12, PIT_DEPTH, 2.4, 16 - 0.66, -PIT_DEPTH / 2, 24);
-  box("foam", 0.3, 0.3, 2.6, 16 - 0.5, 0.05, 24);
-  // front: pit kerb -> stepped edge, falling down the rim wall's face
-  for (const [x, z0] of [[-24, -32.6], [7, -30.6], [31, -32.6]] as const) {
+  // 606 [R] b: each gate's channel runs from its well-side foot to the nearest well and falls down that well's outer wall
+  for (const [x0, z0, wallX, zc] of [[-31.8, 26.8, -27, 22], [31.8, -26.8, 27, -22]] as const) {
+    const s = Math.sign(wallX);
+    channel(x0, z0, x0, zc); channel(x0, zc, wallX, zc);
+    box("water", 0.12, PIT_DEPTH, 2.4, wallX - s * 0.66, -PIT_DEPTH / 2, zc);
+    box("foam", 0.3, 0.3, 2.6, wallX - s * 0.5, 0.05, zc);
+  }
+  // front: well kerb -> front edge, falling down the rim wall's face
+  for (const [x, z0] of [[-17, -31.6], [17, -31.6]] as const) {
     const edge = -(DECK.z - notchDepth(-1, x));
     channel(x, z0, x, edge + 0.9);
     const spill = -DECK.z - 6.35;
@@ -833,12 +840,12 @@ function corruptedPits(scene: Scene): void {
   const dark=new StandardMaterial("heavenCorruption",scene);
   dark.diffuseColor.set(0.035,0.025,0.055);dark.emissiveColor.set(0.018,0.012,0.027);dark.specularColor=Color3.Black();
   const obelisk=MeshBuilder.CreateCylinder("heavenCorruptObelisk",{height:17,diameterBottom:2.8,diameterTop:1.4,tessellation:4},scene);
-  obelisk.position.set(7,-0.5,-24);obelisk.rotation.y=Math.PI/4;obelisk.material=dark;
+  obelisk.position.set(17,-0.5,-19);obelisk.rotation.y=Math.PI/4;obelisk.material=dark;
   for(const [dx,h,tilt]of [[-0.6,3,-0.18],[0.6,4.5,0.22]]){
     const shard=MeshBuilder.CreateCylinder("heavenBrokenBlackCap",{height:h,diameterBottom:1.8,diameterTop:0,tessellation:4},scene);
-    shard.position.set(7+dx,8+h/2,-24);shard.rotation.z=tilt;shard.material=dark;
+    shard.position.set(17+dx,8+h/2,-19);shard.rotation.z=tilt;shard.material=dark;
   }
-  for(const [i,[x,z]]of [[3,-25],[10,-23],[-13,19],[25,-20]].entries()){
+  for(const [i,[x,z]]of [[12,-25],[22,-13],[-13,19],[21,-26]].entries()){
     for(let branch=0;branch<3;branch++){
       const path:Vector3[]=[];
       for(let j=0;j<=10;j++){
