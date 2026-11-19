@@ -3,6 +3,10 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+610 | [S] e19bf480 | challenge.twin_lords.b1 | approve,struck1-6 (under the castle wall, re-laid); CONFIRM -> D
+610 | [S] e3db6089 | challenge.zeus.b5 | approve,struck5 (phalanx 48 deg)
+610 | [S] 6e6423a2 | challenge.zeus.b3 | approve,struck3 (Hoplites hinged back); [P] 05b84fcd spacing 0.98 m struck1; CONFIRM -> D
+610 | [S] 3348b58f+1cb4aa72+579db65e | challenge.a_warm_welcome.b1 | approve,struck1-6 (drawn boulder cave welcomeCave); CONFIRM -> D
 609 | [S] 08421589+c3b30ff4 | adventure.tree_mammoths.b1 | approve,struck1 (perch crowns, stagePresentation PERCHES); CONFIRM -> D
 609 | [S] ff209a0c+093c86aa | adventure.tree_tribe.b1 | approve,struck1 (one man to a perch crown, 3 rows on enemy arc); CONFIRM -> D
 609 | [S] 55676eea | adventure.sneaky_tribe.b1 | approve,struck1 (drawn rock cave, 6x6 inside); CONFIRM -> D
