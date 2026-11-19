@@ -71,7 +71,10 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
       facing.copyFrom(body.root.rotation);
       joints.forEach((joint, i) => rotations[i].copyFrom(joint.rotation));
       host.body.torso.computeWorldMatrix(true);
-      const seat = Vector3.TransformCoordinates(new Vector3(0, 0.72, -0.12), host.body.torso.getWorldMatrix());
+      // The skull is raised .32 and grown1.28 above the neck(.2,.88):
+      // its crown/mane reaches torso-local y1.5. Seat above that shoulder
+      // instead of at the barrel's y.72, where the enlarged head hid the rider.
+      const seat = Vector3.TransformCoordinates(new Vector3(0, 1.52, 0.8), host.body.torso.getWorldMatrix());
       body.root.position.copyFrom(seat);
       body.root.position.y -= body.hip.position.y;
       body.root.rotation.copyFrom(host.body.root.rotation);
