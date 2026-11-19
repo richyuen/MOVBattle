@@ -389,24 +389,25 @@ function cherryGrove(scene: Scene, built: Set<unknown>, result: MapBuildResult, 
     trunks.push(c);
     return from.add(dir.scale(len));
   };
-  const feet: Vector3[] = [];
-  let k = 0;
+  // 599 a5: ten large separated trees, with open sky between canopies. The
+  // former every-fourth sample of the dense ring still formed a wall of puffs.
+  const feet = [[-43,-26],[-24,-40],[13,-42],[40,-31],[49,-6],[45,26],[27,40],[-13,43],[-40,31],[-50,4]].map(([x,z])=>new Vector3(x,0,z));
   for (const m of scene.meshes) {
     if (!built.has(m) || m.name !== "trunk" || m.parent || !m.isEnabled()) continue;
     m.setEnabled(false);
-    if (k++ % 4 === 0) feet.push(m.position.clone());
-    else for (let o = obstacles.length - 1; o >= 0; o--) if (Math.hypot(obstacles[o].center.x - m.position.x, obstacles[o].center.z - m.position.z) < 0.6) obstacles.splice(o, 1);
+    for (let o = obstacles.length - 1; o >= 0; o--) if (Math.hypot(obstacles[o].center.x - m.position.x, obstacles[o].center.z - m.position.z) < 0.6) obstacles.splice(o, 1);
   }
   feet.forEach((foot, i) => {
+    obstacles.push({type:"cylinder",center:foot.clone(),radius:0.9});
     const y0 = result.height?.(foot.x, foot.z) ?? 0;
     let p = new Vector3(foot.x, y0 - 0.2, foot.z);
-    const tall = 5.5 + hash(i, 1) * 2.5;
+    const tall = 9 + hash(i, 1) * 4;
     let yaw = hash(i, 2) * 6.28;
     for (let s = 0; s < 4; s++) {
       const tilt = 0.18 + hash(i, 3 + s) * 0.22;
       yaw += 1.4 + hash(i, 8 + s) * 1.6;
       const dir = new Vector3(Math.sin(tilt) * Math.cos(yaw), Math.cos(tilt), Math.sin(tilt) * Math.sin(yaw));
-      p = seg(p, dir, tall / 4, 0.9 - s * 0.13, 0.9 - (s + 1) * 0.13);
+      p = seg(p, dir, tall / 4, 1.3 - s * 0.2, 1.3 - (s + 1) * 0.2);
     }
     const spin = hash(i, 13) * 6.28;
     // 597: limbs lean outward (off the cobble loop inside the ring)
@@ -417,7 +418,7 @@ function cherryGrove(scene: Scene, built: Set<unknown>, result: MapBuildResult, 
       const end = seg(p, dir, reach, 0.36, 0.2);
       const balls = 3 + Math.floor(hash(i * 3 + l, 15) * 2);
       for (let b = 0; b < balls; b++) {
-        const r = 1.4 + hash(i * 7 + l * 3 + b, 16) * 1, ba = a + (b - balls / 2) * 1.1;
+        const r = 2.3 + hash(i * 7 + l * 3 + b, 16) * 1.3, ba = a + (b - balls / 2) * 1.1;
         const ball = MeshBuilder.CreateIcoSphere("dynastyCherryCrown", { radius: r, subdivisions: 1, flat: true }, scene);
         ball.scaling.set(1, 0.82, 1);
         ball.position.set(end.x + Math.cos(ba) * r * 0.55, end.y + 0.4 + (b % 2) * 0.7, end.z + Math.sin(ba) * r * 0.55);
