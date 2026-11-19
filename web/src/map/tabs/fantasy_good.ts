@@ -413,16 +413,24 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
       const faces: Array<[number, number, number]> = [[lx, -LEG / 2 - 0.08, 0]];
       if (side === out) faces.push([lx + out * (LEG / 2 + 0.08), 0, Math.PI / 2]);
       for (const [fx, fz, ry] of faces) {
-        box("gold", 3, 14, 0.12, fx, 17, fz, ry);
-        box("glass", 2.3, 12.6, 0.16, fx, 16.9, fz, ry);
-        box("gold",0.13,12.8,0.2,fx,17,fz,ry);
-        for(const y of [13,18,22])box("gold",2.4,0.14,0.2,fx,y,fz,ry);
-        for (const s of [-1, 1]) {
-          const tip = MeshBuilder.CreateBox("heavenTowerPart", { width: 1.3, height: 0.25, depth: 0.2 }, scene);
-          tip.rotation.set(0, ry, s * 0.75);
-          tip.position.set(tx + fx + (ry ? 0 : s * 0.45), 24, Z + fz + (ry ? s * 0.45 : 0));
-          tip.bakeCurrentTransformIntoVertices();
-          parts.gold.push(tip);
+        // 600 a2: pointed lancet surrounds, a coloured leaded mosaic and
+        // radial tracery replace the rectangular yellow gridded plates.
+        const point = (u: number, y: number, offset = 0.18) => new Vector3(tx + fx + Math.cos(ry) * u + Math.sin(ry) * offset, y, Z + fz - Math.sin(ry) * u - Math.cos(ry) * offset);
+        box("glass", 2.3, 12, 0.16, fx, 16, fz, ry);
+        const cap = MeshBuilder.CreateRibbon("heavenLancetCap", { pathArray: [[point(-1.15, 22), point(1.15, 22)], [point(0, 25), point(0, 25)]], sideOrientation: Mesh.DOUBLESIDE }, scene);
+        cap.bakeCurrentTransformIntoVertices(); parts.glass.push(cap);
+        for (let row = 0; row < 6; row++) for (let col = 0; col < 3; col++) {
+          const u = (col - 1) * 0.72, p = point(u, 11 + row * 1.9, 0.23);
+          const pane = MeshBuilder.CreateBox("heavenGlassPane", { width: 0.6, height: 1.65, depth: 0.04 }, scene);
+          pane.rotation.y = ry; pane.position.copyFrom(p); pane.bakeCurrentTransformIntoVertices();
+          parts[(row + col) % 3 === 0 ? "crystal" : (row + col) % 3 === 1 ? "water" : "glass"].push(pane);
+        }
+        for (const path of [
+          [[-1.45, 10], [-1.45, 22], [0, 25.5], [1.45, 22], [1.45, 10], [-1.45, 10]],
+          [[0, 10], [0, 25]], [[-1.3, 19], [0, 21.5], [1.3, 19]],
+        ]) {
+          const frame = MeshBuilder.CreateTube("heavenLancetLead", { path: path.map(([u, y]) => point(u, y, 0.29)), radius: 0.12, tessellation: 4, cap: Mesh.CAP_ALL }, scene);
+          frame.bakeCurrentTransformIntoVertices(); parts.gold.push(frame);
         }
       }
       // 595 [P]: a 1.2 m waterfall down each leg's front (-z) face, beside the window
@@ -438,6 +446,13 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
     box("white", GAP + 0.2, 1.5, LEG, 0, 31.25, 0);
     box("gold", GAP + 0.3, 0.4, LEG + 0.3, 0, 30.5, 0);
     for (let u = -GAP / 2 + 0.5; u <= GAP / 2; u += 2) for (const s of [-1, 1]) box("gold", 1.1, 1, 0.5, u, 32.5, s * (LEG / 2 - 0.25));
+    // Three nested peaked bands across both gate faces, with an elevated
+    // central crest and stepped shoulders as in the wiki's ornate frontage.
+    for (const s of [-1, 1]) for (const dy of [0, -1.2, -2.4]) {
+      const path = [[-8.7, 31.7], [-4.5, 31.7], [0, 36], [4.5, 31.7], [8.7, 31.7]].map(([x, y]) => new Vector3(tx + x, y + dy, Z + s * 3.18));
+      const crest = MeshBuilder.CreateTube("heavenGateCrest", { path, radius: 0.27, tessellation: 4, cap: Mesh.CAP_ALL }, scene);
+      crest.bakeCurrentTransformIntoVertices(); parts.gold.push(crest);
+    }
     // the water channel: along the arch top and down the outer leg's outer face into a pool
     box("water", GAP + LEG * 2 - 1, 0.4, 1.6, 0, H + 0.25, 0);
     const ox = out * (GAP / 2 + LEG + 0.25);
