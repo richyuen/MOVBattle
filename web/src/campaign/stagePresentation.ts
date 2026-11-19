@@ -124,6 +124,72 @@ function tribeCave(scene: Scene): void {
   };
 }
 
+/**
+ * challenge.a_warm_welcome (card Survey; reference/stages/challenge.a_warm_welcome.thumb.png): a big dark cave in tribal_2's boulder
+ * massif, a third of the cliff's height, holding most of the army, with two lines of Chieftains outside its mouth. The map's own mouth
+ * is a one-man notch at the foot (x 31, z 6) and the massif's colliders start there, so the cave is built out from the foot: boulder
+ * side walls at z 0.2 and 11.8 from x 22.5 to 31, a boulder roof over them (its underside at 4.6 m, a lintel at the mouth x 22), and
+ * the inside lined near-black and shadowed; the army stands in x 23.4..29.6, z 1.5..10.5 (challenge.ts). Drawn only: no colliders.
+ */
+function welcomeCave(scene: Scene): void {
+  const rock = scene.getMaterialByName("tribal2Mountain");
+  const dark = scene.getMaterialByName("tribal2Cave");
+  const parts: Mesh[] = [];
+  const boulder = (r: number, x: number, y: number, z: number, k: number) => {
+    const b = MeshBuilder.CreateIcoSphere("welcomeCaveRock", { radius: r, subdivisions: 1 }, scene);
+    b.position.set(x, y, z);
+    b.scaling.set(1, 0.85 + seeded(k, 81) * 0.3, 1);
+    b.rotation.set(seeded(k, 82) * 3, seeded(k, 83) * 3, seeded(k, 84) * 3);
+    parts.push(b);
+  };
+  let k = 0;
+  for (const z of [-0.4, 12.4]) {
+    for (let x = 22.6; x <= 31; x += 2.8) {
+      boulder(2.2 + seeded(++k, 85) * 0.6, x, 1.6, z, k);
+      boulder(1.9 + seeded(++k, 85) * 0.5, x + 1.2, 4.4, z + (z < 6 ? 0.4 : -0.4), k);
+    }
+  }
+  for (let x = 22.4; x <= 31; x += 2.6) {
+    for (const z of [1.8, 4.6, 7.4, 10.2]) boulder(1.8 + seeded(++k, 86) * 0.7, x, 6.6 + seeded(k, 87) * 0.8, z, k);
+  }
+  // the lintel: a row of boulders hanging lower across the mouth
+  for (const z of [1.2, 3.6, 6, 8.4, 10.8]) boulder(1.5 + seeded(++k, 88) * 0.4, 21.9, 5.4, z, k);
+  const shell = Mesh.MergeMeshes(parts, true);
+  const meshes: Mesh[] = [];
+  if (shell) {
+    shell.name = "welcomeCave";
+    shell.convertToFlatShadedMesh();
+    shell.material = rock;
+    meshes.push(shell);
+  }
+  const ceiling = MeshBuilder.CreatePlane("welcomeCaveLiner", { width: 9.5, height: 11.6 }, scene);
+  ceiling.position.set(26.8, 4.6, 6);
+  ceiling.rotation.x = -Math.PI / 2;
+  const left = MeshBuilder.CreatePlane("welcomeCaveLiner", { width: 9, height: 4.6 }, scene);
+  left.position.set(26.8, 2.3, 0.75);
+  const right = MeshBuilder.CreatePlane("welcomeCaveLiner", { width: 9, height: 4.6 }, scene);
+  right.position.set(26.8, 2.3, 11.25);
+  right.rotation.y = Math.PI;
+  const back = MeshBuilder.CreatePlane("welcomeCaveLiner", { width: 11, height: 4.6 }, scene);
+  back.position.set(30.9, 2.3, 6);
+  back.rotation.y = Math.PI / 2;
+  for (const m of [ceiling, left, right, back]) {
+    m.material = dark;
+    m.sideOrientation = Mesh.DOUBLESIDE;
+    meshes.push(m);
+  }
+  const shadows = scene.lights.map((l) => l.getShadowGenerator() as ShadowGenerator | null).find((g) => g);
+  for (const m of meshes) {
+    m.isPickable = false;
+    m.receiveShadows = true;
+    shadows?.addShadowCaster(m);
+  }
+  markStatic(meshes);
+  cleanup = () => {
+    for (const m of meshes) if (!m.isDisposed()) m.dispose();
+  };
+}
+
 function perchCrowns(scene: Scene, units: RuntimeUnit[], base: HeightField | null, p: Perch): void {
   const crowns = PERCH_CROWNS.map((n) => scene.getMaterialByName(n));
   const bark = scene.getMaterialByName("tribal1Birch");
@@ -276,6 +342,10 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
       scene.onBeforeRenderObservable.remove(before);
       scene.onAfterRenderObservable.remove(after);
     };
+    return;
+  }
+  if (id === "challenge.a_warm_welcome") {
+    welcomeCave(scene);
     return;
   }
   if (id === "adventure.sneaky_tribe") {
