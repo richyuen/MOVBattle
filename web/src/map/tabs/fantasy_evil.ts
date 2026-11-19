@@ -43,8 +43,25 @@ function voidSky(scene: Scene, built: Set<unknown>): () => void {
 const PLATEAU = { x: 24, z0: -6, z1: 34, top: 3, tread: 2, rise: 0.75 };
 
 const blockLevel = (x: number, z: number) => {
-  const dx = Math.max(0, Math.abs(x) - PLATEAU.x), dz = Math.max(0, PLATEAU.z0 - z, z - PLATEAU.z1);
-  return Math.max(0, PLATEAU.top - PLATEAU.rise * Math.ceil(Math.max(dx, dz) / PLATEAU.tread));
+  // 600 b1: three broken shelves around the shrine, separated by low routes.
+  // Wiki: shrine on a central island; high side shelves, broad flights into
+  // the lower foreground. Each exposed edge descends in .75m treads rather
+  // than a vertical walk-through cliff; green chasms retain their hazards.
+  const shelves = [
+    { x: 0, z: 10, rx: 17, rz: 18, h: 3 },
+    { x: -37, z: 20, rx: 9, rz: 15, h: 6 },
+    { x: 37, z: 24, rx: 9, rz: 12, h: 6 },
+    { x: -12, z: -29, rx: 13, rz: 7, h: 3 },
+    { x: 20, z: -31, rx: 11, rz: 7, h: 4.5 },
+  ];
+  let y = 0;
+  for (const s of shelves) {
+    const u = Math.abs(x - s.x), v = Math.abs(z - s.z);
+    // Clipped shoulders break the rectangular outline, with generous stairs.
+    const d = Math.max(0, u - s.rx, v - s.rz, (u + v - s.rx - s.rz + 5) * 0.7);
+    y = Math.max(y, s.h - 0.75 * Math.ceil(d / 1.5));
+  }
+  return Math.max(0, y);
 };
 
 // Chasms (593, blocker b4; wiki fantasy_evil.png: the plateau does not run out into the side ground but is cut off from it by
