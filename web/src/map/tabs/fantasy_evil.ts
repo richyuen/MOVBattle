@@ -337,7 +337,10 @@ function rockRing(scene: Scene, built: Set<unknown>): void {
     m.setEnabled(false);
     const { x, z } = m.position;
     const y0 = fantasyEvilHeight(x, z) - 0.3;
-    if (k++ % 4 === 3) {
+    // 605 [R] a: the post ring thins to every other spot, and none in a chamber, on a flight or by a shrine, gate or slab
+    const spot = k++;
+    if (spot % 2 === 1 || inChamber(x, z) || inStair(x, z) || PERIMETER_KEEP_OUT.some(([px, pz]) => Math.hypot(x - px, z - pz) < 8)) continue;
+    if (spot % 4 === 2) {
       const h = 3 + rnd() * 3;
       const p = MeshBuilder.CreateBox("voidRockPart", { width: 1.6, depth: 1.6, height: h }, scene);
       p.rotation.set((rnd() - 0.5) * 0.12, rnd() * 3, (rnd() - 0.5) * 0.12);
@@ -504,7 +507,8 @@ function shrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): Pick
 // 596.1b: at 1.25x its horns left the top of the ground frame and its camera-facing side, turned from the sun, read black:
 // 1.05x, and the statue's stone self-lit 0.75 of its colour with no shadows received, so its shaded front reads grey-teal.
 const STATUE = { x: 18, z: 15, scale: 1.05, yaw: 1.27 };
-const SPIRE = { x: 36, z: 40 };
+// 605 [R] a: the hidden spire's collider moves out past the rim with the giant slab
+const SPIRE = { x: 56, z: 34 };
 function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
   const mk = (name: string, c: Color3, self: number) => {
     const m = new StandardMaterial(name, scene);
@@ -575,14 +579,9 @@ function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): vo
   shard(18, 7, SPIRE.x + 6, SPIRE.z - 7, -0.2, 0.15, 3);
   shard(12, 5, SPIRE.x - 4, SPIRE.z + 5, 0.1, 0.35, 2);
   obstacles.push({ type: "cylinder", center: new Vector3(SPIRE.x, 0, SPIRE.z), radius: 6.5 });
-  // a point up the leaning spire's axis: the foot at -6 m, the axis turned by the shard's pitch and roll
-  const onSpire = (up: number) => {
-    const axis = Vector3.TransformNormal(new Vector3(0, 1, 0), Matrix.RotationYawPitchRoll(0.4, -0.12, 0.3));
-    return new Vector3(SPIRE.x, -6, SPIRE.z).add(axis.scale(up + 6));
-  };
   const link = MeshBuilder.CreateTorus("voidChainLink", { diameter: 1.3, thickness: 0.34, tessellation: 8 }, scene);
-  for (const [s, up] of [[-1, 20], [1, 26]] as const) {
-    const a = Vector3.TransformCoordinates(new Vector3(X + s * 3.5, foot + 10.4, Z), pose), b = onSpire(up);
+  for (const s of [-1, 1]) {
+    const a = Vector3.TransformCoordinates(new Vector3(X + s * 3.5, foot + 10.4, Z), pose), b = slabAnchor(s);
     const n = Math.ceil(Vector3.Distance(a, b) / 1.0);
     for (let i = 0; i <= n; i++) {
       const t = i / n, p = Vector3.Lerp(a, b, t);
@@ -885,55 +884,205 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
   brokenCliffs(scene, shrined.obstacles);
   chainedStatue(scene, shrined.obstacles);
   backdropCrag(scene);
-  leaningSpire(scene);
+  giantSlab(scene);
+  fracturedShrines(scene, shrined.obstacles);
+  ledgeMushrooms(scene);
   chamberWalls(scene, shrined.obstacles);
   const hazards = shrined.hazards;
   return { ...result, hazards, obstacles: shrined.obstacles, height: shrineHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
 }
 
-// 599 a6, void_evil: one lone leaning slab rises well above the crag. Two
-// heavy chains cross its field-facing side to the statue, rather than hanging
-// behind the rock heap. Base (36,40), peak toward (23,31), height45 m.
-function leaningSpire(scene: Scene): void {
+// [R] Fractured shrine perimeter (605, a plateau; CONFIRM 601 a1 "several towering fractured slab shrines around the perimeter,
+// including the large jagged shrine at the right and the broken left gate, rather than a near-uniform ring of basalt posts
+// dominated by one giant winged figure", a2 "conspicuous groups of pale green mushroom caps on ledges throughout the ruins";
+// wiki fantasy_evil.png: the right side is one colossal jagged rock slab leaning over the field, the chained statue's chains
+// run to it; at the back-left a broken gate of two tall slab pillars with a fallen lintel and hanging chains; tall fractured
+// slab clusters stand round the rim; bright pale-green mushroom pads sit on ledges all over the ruins). Spec:
+// - The 600 winged monument (47 m robed figure at x 32) and its two front chains go. In its place GIANT_SLAB: a six-sided
+//   prism 60 m long, narrowing to 0.6, foot at (62, -10, 44) out past the rim (26 m wide in x, 20 deep), leaning 0.22 rad over the
+//   field (-x), with two lesser shards (40 m and 30 m) beside it; flat shaded grey-teal stone, out of the glow pass. The hidden
+//   spire's collider moves out with it (SPIRE (56, 34)), and the statue's two chains run to anchors on the slab's field face.
+// - Broken gate at the back-left: pillars 2.6 x 2 m, 16 m and 12 m tall at (-38, 38) and (-27, 41), tops cut on a slant; a
+//   lintel 13 m long resting on the tall one and fallen onto the short one's foot; three chains hanging 6-9 m off it.
+// - Fractured slab shrines at (-8, 42), (14, 41), (-40, -31), (40, -31): each 3-4 thin slabs (1-1.4 m thick, 2.5-4.5 m wide,
+//   7-18 m tall) leaning apart from a heap of fallen blocks, broken tops, a blue-lit slot in the tallest.
+// - The rim's basalt post ring thins to every other spot, none within 8 m of a shrine, gate or slab.
+// - Mushroom pads (a2): 16 clusters of 5-8 pale-green self-lit caps (.6, 1, .5) on pale stems, each on a 1.6 m acid-green
+//   glow pad, on ledges throughout: route margins round the chambers, the chamber floors, both island tops, the back route.
+// Colliders: a cylinder per gate pillar and shrine heap (route); the slab stands outside the rim.
+const GIANT_SLAB = { x: 62, z: 44, lean: 0.22 };
+/** the slab's -z (field-facing) side at height y: its half depth narrows 40% over its 60 m */
+const slabFaceZ = (y: number) => GIANT_SLAB.z - 10 * (1 - 0.4 * (y + 10) / 60);
+const SHRINE_SPOTS = [[-8, 42], [14, 41], [-40, -31], [40, -31]] as const;
+const GATE = [[-38, 38, 16], [-27, 41, 12]] as const;
+const PERIMETER_KEEP_OUT: Array<[number, number]> = [...SHRINE_SPOTS.map(([x, z]) => [x, z] as [number, number]), ...GATE.map(([x, z]) => [x, z] as [number, number]), [52, 36]];
+/** Where the statue's chains meet the slab's field face (s = the wrist's side). */
+const slabAnchor = (s: number) => s < 0 ? new Vector3(52, 30, slabFaceZ(30) + 0.3) : new Vector3(49, 22, slabFaceZ(22) + 0.3);
+
+function stoneMat(scene: Scene, name: string, c: Color3, self: number): StandardMaterial {
+  const m = new StandardMaterial(name, scene);
+  m.diffuseColor = c;
+  m.emissiveColor = c.scale(self);
+  m.specularColor = Color3.Black();
+  return m;
+}
+
+function giantSlab(scene: Scene): void {
   scene.getMeshByName("voidStatue_spire")?.setEnabled(false);
-  const stone=new StandardMaterial("voidLeaningSpire",scene);
-  stone.diffuseColor.set(0.2,0.3,0.36);stone.emissiveColor.set(0.11,0.17,0.21);stone.specularColor=Color3.Black();
-  // 600 a2: monumental horned winged figure on the right crag. Wiki silhouette:
-  // a long triangular robe, small hood, raised arms and two great angular wings.
-  // The wings occupy the sky above the heap (y30..48), rather than hiding in it.
-  const place = (m: Mesh) => {
-    m.material=stone;m.receiveShadows=false;m.isPickable=false;
-    m.convertToFlatShadedMesh();scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  const parts: Mesh[] = [];
+  const prism = (h: number, wx: number, wz: number, top: number, x: number, z: number, footY: number, lean: number, yaw: number, tess = 6) => {
+    const c = MeshBuilder.CreateCylinder("voidGiantSlabPart", { height: h, diameterBottom: 1, diameterTop: top, tessellation: tess }, scene);
+    c.scaling.set(wx, 1, wz);
+    c.rotation.set(0, yaw, lean);
+    c.position.set(x - Math.sin(lean) * h / 2, footY + Math.cos(lean) * h / 2, z);
+    c.bakeCurrentTransformIntoVertices();
+    parts.push(c);
   };
-  const robe=MeshBuilder.CreateCylinder("voidMonumentRobe",{height:29,diameterBottom:13,diameterTop:4,tessellation:5},scene);
-  robe.scaling.z=.52;robe.position.set(32,27,38);place(robe);
-  const chest=MeshBuilder.CreateBox("voidMonumentChest",{width:7,height:5,depth:3.5},scene);
-  chest.position.set(32,42,38);place(chest);
-  const head=MeshBuilder.CreateIcoSphere("voidMonumentHood",{radius:2,subdivisions:1},scene);
-  head.scaling.set(.8,1.4,.8);head.position.set(32,47,38);place(head);
-  for(const s of [-1,1]){
-    const horn=MeshBuilder.CreateCylinder("voidMonumentHorn",{height:5,diameterBottom:1.2,diameterTop:.05,tessellation:4},scene);
-    horn.position.set(32+s*1.8,49,38);horn.rotation.z=-s*.4;place(horn);
-    const arm=MeshBuilder.CreateBox("voidMonumentArm",{width:2,height:10,depth:2},scene);
-    arm.position.set(32+s*5,43,37);arm.rotation.z=-s*.65;place(arm);
-    const wing=new Mesh("voidMonumentWing",scene);
-    const outline=[[2,38],[7,44],[18,50],[16,42],[13,39],[13,34],[9,36],[8,31],[4,34]];
-    const pos=outline.flatMap(([x,y])=>[32+s*x,y,40+Math.abs(x)*.16]);
-    const idx:number[]=[];
-    for(let i=1;i<outline.length-1;i++)idx.push(0,i,i+1,0,i+1,i);
-    const vd=new VertexData();vd.positions=pos;vd.indices=idx;vd.normals=[];
-    VertexData.ComputeNormals(pos,idx,vd.normals);vd.applyToMesh(wing);place(wing);
+  prism(60, 26, 20, 0.6, GIANT_SLAB.x, GIANT_SLAB.z, -10, GIANT_SLAB.lean, 0.1);
+  prism(40, 10, 12, 0.35, 68, 24, -8, 0.25, -0.2, 5);
+  prism(30, 12, 10, 0.3, 46, 60, -6, 0.12, 0.5, 5);
+  // a few broken facets scabbed onto the field face so it reads jagged, not a smooth column
+  for (const [y, dx, w, h, t] of [[14, -6, 5, 9, 0.35], [26, 4, 4, 7, -0.3], [36, -2, 3.5, 6, 0.25], [8, 7, 4.5, 6, -0.2]] as const) {
+    const b = MeshBuilder.CreateBox("voidGiantSlabPart", { width: w, height: h, depth: 2.2 }, scene);
+    b.rotation.set(t, 0.15, GIANT_SLAB.lean);
+    b.position.set(GIANT_SLAB.x - (y + 10) * Math.tan(GIANT_SLAB.lean) + dx, y, slabFaceZ(y) + 0.4);
+    b.bakeCurrentTransformIntoVertices();
+    parts.push(b);
   }
-  const iron=new StandardMaterial("voidSpireFrontChain",scene);
-  iron.diffuseColor.set(0.3,0.36,0.4);iron.emissiveColor.set(0.16,0.2,0.23);iron.specularColor=Color3.Black();
-  for(const side of [-1,1]){
-    const a=new Vector3(24+side*2.5,35,30),b=new Vector3(STATUE.x+side*3.5,PLATEAU.top+13,STATUE.z);
-    const n=25;
-    for(let i=0;i<=n;i++){
-      const t=i/n,p=Vector3.Lerp(a,b,t);p.y-=Math.sin(t*Math.PI)*7;
-      const ring=MeshBuilder.CreateTorus("voidSpireFrontLink",{diameter:1.6,thickness:0.35,tessellation:8},scene);
-      ring.rotation.set(Math.PI/2,i%2?Math.PI/2:0,0.15);ring.position.copyFrom(p);ring.material=iron;ring.receiveShadows=false;
-      scene.getGlowLayerByName("glow")?.addExcludedMesh(ring);
+  const slab = Mesh.MergeMeshes(parts, true, true);
+  if (!slab) return;
+  slab.name = "voidGiantSlab";
+  slab.convertToFlatShadedMesh();
+  slab.material = stoneMat(scene, "voidGiantSlab", new Color3(0.2, 0.29, 0.34), 0.5);
+  slab.receiveShadows = false;
+  slab.isPickable = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(slab);
+}
+
+function fracturedShrines(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  let seed = 0x6e3f;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const stone: Mesh[] = [], slots: Mesh[] = [], chains: Mesh[] = [];
+  const box = (into: Mesh[], w: number, h: number, d: number, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
+    const b = MeshBuilder.CreateBox("voidShrineSlabPart", { width: w, height: h, depth: d }, scene);
+    b.rotation.set(rx, ry, rz);
+    b.position.set(x, y, z);
+    b.bakeCurrentTransformIntoVertices();
+    into.push(b);
+    return b;
+  };
+  /** a slab standing from y0 with a slanted broken top (a turned cap block bitten into it) */
+  const slab = (w: number, t: number, h: number, x: number, y0: number, z: number, yaw: number, lean: number) => {
+    box(stone, w, h, t, x - Math.sin(lean) * h / 2 * Math.cos(yaw), y0 + h / 2, z + Math.sin(lean) * h / 2 * Math.sin(yaw), 0, yaw, lean);
+    box(stone, w * 0.7, w * 0.5, t * 1.05, x - Math.sin(lean) * h * Math.cos(yaw), y0 + h - w * 0.1, z + Math.sin(lean) * h * Math.sin(yaw), 0, yaw, lean + 0.6 + rnd() * 0.4);
+  };
+  for (const [x, z] of SHRINE_SPOTS) {
+    const y0 = fantasyEvilHeight(x, z) - 0.3, face = Math.atan2(-x, -z);
+    // heap of fallen blocks
+    for (let i = 0; i < 6; i++) {
+      const s = 1.2 + rnd() * 1.6;
+      box(stone, s, s * 0.7, s * 1.1, x + (rnd() - 0.5) * 6, y0 + s * 0.3, z + (rnd() - 0.5) * 5, rnd() * 0.5, rnd() * 3, rnd() * 0.4);
     }
+    const n = 3 + Math.floor(rnd() * 2);
+    for (let i = 0; i < n; i++) {
+      const h = i === 0 ? 15 + rnd() * 3 : 7 + rnd() * 7, w = 2.5 + rnd() * 2, off = (i - (n - 1) / 2) * 2.6;
+      slab(w, 1 + rnd() * 0.4, h, x + Math.cos(face) * off, y0, z - Math.sin(face) * off, face + (rnd() - 0.5) * 0.5, (i - (n - 1) / 2) * 0.12 + (rnd() - 0.5) * 0.08);
+      if (i === 0) box(slots, w * 0.25, h * 0.3, 1.6, x + Math.cos(face) * off, y0 + h * 0.55, z - Math.sin(face) * off, 0, face, 0);
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 3.6 });
+  }
+  // broken gate
+  for (const [x, z, h] of GATE) {
+    const y0 = fantasyEvilHeight(x, z) - 0.3;
+    box(stone, 2.6, h, 2, x, y0 + h / 2, z, 0, 0.3, (rnd() - 0.5) * 0.06);
+    box(stone, 3, 1.6, 2.4, x, y0 + h + 0.2, z, 0.25, 0.3, 0.35);
+    box(stone, 3.6, 1, 3, x, y0 + 0.5, z, 0, 0.3, 0);
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 1.9 });
+  }
+  const [[ax, az, ah], [bx, bz, bh]] = GATE;
+  const ya = fantasyEvilHeight(ax, az) + ah - 0.3, yb = fantasyEvilHeight(bx, bz) + 1.2;
+  const len = Math.hypot(bx - ax, bz - az), pitch = Math.atan2(ya - yb, len);
+  const mx = (ax + bx) / 2, mz = (az + bz) / 2, my = (ya + yb) / 2;
+  box(stone, Math.hypot(len, ya - yb) + 1.5, 1.4, 1.8, mx, my, mz, 0, -Math.atan2(bz - az, bx - ax), -pitch);
+  for (const f of [0.2, 0.45, 0.7]) {
+    const px = ax + (bx - ax) * f, pz = az + (bz - az) * f, py = ya + (yb - ya) * f - 0.8, drop = 6 + f * 4;
+    for (let j = 0; j * 1.1 < drop && py - j * 1.1 > fantasyEvilHeight(px, pz) + 0.6; j++) {
+      const l = MeshBuilder.CreateTorus("voidGateChain", { diameter: 1.1, thickness: 0.28, tessellation: 8 }, scene);
+      l.rotation.set(0, j % 2 ? Math.PI / 2 : 0, Math.PI / 2);
+      l.position.set(px, py - j * 1.1, pz);
+      l.bakeCurrentTransformIntoVertices();
+      chains.push(l);
+    }
+  }
+  const glow = scene.getGlowLayerByName("glow");
+  const slotMat = new StandardMaterial("voidShrineSlot", scene);
+  slotMat.diffuseColor = Color3.Black();
+  slotMat.emissiveColor = new Color3(0.15, 0.5, 1.1);
+  slotMat.disableLighting = true;
+  for (const [parts, mat, name] of [
+    [stone, stoneMat(scene, "voidShrineSlab", new Color3(0.17, 0.24, 0.28), 0.45), "voidShrineSlabs"],
+    [slots, slotMat, "voidShrineSlots"],
+    [chains, stoneMat(scene, "voidGateChain", new Color3(0.28, 0.31, 0.35), 0.4), "voidGateChains"],
+  ] as const) {
+    const merged = Mesh.MergeMeshes(parts, true, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.convertToFlatShadedMesh();
+    merged.material = mat;
+    merged.receiveShadows = false;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
+  }
+}
+
+const MUSHROOM_LEDGES: Array<[number, number]> = [
+  [-20, -38], [4, -39], [22, -37], [-32, -12], [33, -13], [-18, -30], [19, -31], [-3, -22],
+  [-27, 33], [27, 34], [-44, 27], [44, 28], [-15, 31], [16, 33], [-4, 38], [9, 24],
+];
+function ledgeMushrooms(scene: Scene): void {
+  let seed = 0x51a3;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const caps: Mesh[] = [], stems: Mesh[] = [], pads: Mesh[] = [];
+  for (const [cx, cz] of MUSHROOM_LEDGES) {
+    const base = fantasyEvilHeight(cx, cz) + 0.12;
+    const pad = MeshBuilder.CreateCylinder("voidLedgePad", { diameter: 3.2 + rnd(), height: 0.05, tessellation: 12 }, scene);
+    pad.position.set(cx, base + 0.03, cz);
+    pad.bakeCurrentTransformIntoVertices();
+    pads.push(pad);
+    const n = 5 + Math.floor(rnd() * 4);
+    for (let j = 0; j < n; j++) {
+      const a = rnd() * 6.28, r = rnd() * 1.4, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
+      const tall = 0.35 + rnd() * 0.7, w = 0.6 + rnd() * 0.8;
+      const stem = MeshBuilder.CreateCylinder("voidLedgeStem", { height: tall, diameter: 0.2, tessellation: 5 }, scene);
+      stem.position.set(x, base + tall / 2, z);
+      stem.bakeCurrentTransformIntoVertices();
+      stems.push(stem);
+      const cap = MeshBuilder.CreateSphere("voidLedgeCap", { diameter: w, segments: 4, slice: 0.5 }, scene);
+      cap.scaling.y = 0.55;
+      cap.position.set(x, base + tall, z);
+      cap.bakeCurrentTransformIntoVertices();
+      caps.push(cap);
+    }
+  }
+  const unlit = (name: string, c: Color3) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = Color3.Black();
+    m.emissiveColor = c;
+    m.specularColor = Color3.Black();
+    m.disableLighting = true;
+    return m;
+  };
+  const glow = scene.getGlowLayerByName("glow");
+  for (const [parts, mat, name] of [
+    [caps, unlit("voidLedgeCap", new Color3(0.6, 1, 0.5)), "voidLedgeCaps"],
+    [stems, unlit("voidLedgeStem", new Color3(0.55, 0.65, 0.5)), "voidLedgeStems"],
+    [pads, unlit("voidLedgePad", new Color3(0.15, 0.75, 0.2)), "voidLedgePads"],
+  ] as const) {
+    const merged = Mesh.MergeMeshes(parts, true, true);
+    if (!merged) continue;
+    merged.name = name;
+    merged.material = mat;
+    merged.isPickable = false;
+    glow?.addExcludedMesh(merged);
   }
 }
