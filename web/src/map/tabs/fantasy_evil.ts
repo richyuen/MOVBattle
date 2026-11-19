@@ -217,6 +217,8 @@ function basaltFloor(scene: Scene, built: Set<unknown>): void {
       seamMats.push(...Matrix.Compose(new Vector3(4.5,.1+lift,3.8),Quaternion.Identity(),new Vector3(cx,(lift-.16)/2,cz)).asArray());
     }
   }
+  // Babylon's left-handed winding: top faces and cliff sides face outward.
+  for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
   const data=new VertexData();data.positions=positions;data.indices=indices;data.colors=colors;data.normals=[];
   VertexData.ComputeNormals(positions,indices,data.normals);data.applyToMesh(block);
   block.convertToFlatShadedMesh();
