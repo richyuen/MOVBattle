@@ -6,7 +6,7 @@
 // mountain range, no horizon glow). Spec: the shared sky dome, the base's clouds ("cloud*") and far range ("mountain*") are
 // hidden; clear colour and fog colour become near-black violet (.02, .012, .035), so the field's far edge fades into the void
 // rather than into daylight haze. Dome, clear and fog colours are put back on dispose.
-import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Vector3, VertexData, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 import type { HeightField } from "../terrain";
 
@@ -770,9 +770,32 @@ function leaningSpire(scene: Scene): void {
   scene.getMeshByName("voidStatue_spire")?.setEnabled(false);
   const stone=new StandardMaterial("voidLeaningSpire",scene);
   stone.diffuseColor.set(0.2,0.3,0.36);stone.emissiveColor.set(0.11,0.17,0.21);stone.specularColor=Color3.Black();
-  const slab=MeshBuilder.CreateCylinder("voidLeaningSpire",{height:47,diameterBottom:12,diameterTop:3,tessellation:5},scene);
-  slab.scaling.z=0.44;slab.rotation.set(-0.18,0.2,0.28);slab.position.set(29.5,20.5,35.5);slab.material=stone;slab.receiveShadows=false;slab.convertToFlatShadedMesh();
-  scene.getGlowLayerByName("glow")?.addExcludedMesh(slab);
+  // 600 a2: monumental horned winged figure on the right crag. Wiki silhouette:
+  // a long triangular robe, small hood, raised arms and two great angular wings.
+  // The wings occupy the sky above the heap (y30..48), rather than hiding in it.
+  const place = (m: Mesh) => {
+    m.material=stone;m.receiveShadows=false;m.isPickable=false;
+    m.convertToFlatShadedMesh();scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+  };
+  const robe=MeshBuilder.CreateCylinder("voidMonumentRobe",{height:29,diameterBottom:13,diameterTop:4,tessellation:5},scene);
+  robe.scaling.z=.52;robe.position.set(32,27,38);place(robe);
+  const chest=MeshBuilder.CreateBox("voidMonumentChest",{width:7,height:5,depth:3.5},scene);
+  chest.position.set(32,42,38);place(chest);
+  const head=MeshBuilder.CreateIcoSphere("voidMonumentHood",{radius:2,subdivisions:1},scene);
+  head.scaling.set(.8,1.4,.8);head.position.set(32,47,38);place(head);
+  for(const s of [-1,1]){
+    const horn=MeshBuilder.CreateCylinder("voidMonumentHorn",{height:5,diameterBottom:1.2,diameterTop:.05,tessellation:4},scene);
+    horn.position.set(32+s*1.8,49,38);horn.rotation.z=-s*.4;place(horn);
+    const arm=MeshBuilder.CreateBox("voidMonumentArm",{width:2,height:10,depth:2},scene);
+    arm.position.set(32+s*5,43,37);arm.rotation.z=-s*.65;place(arm);
+    const wing=new Mesh("voidMonumentWing",scene);
+    const outline=[[2,38],[7,44],[18,50],[16,42],[13,39],[13,34],[9,36],[8,31],[4,34]];
+    const pos=outline.flatMap(([x,y])=>[32+s*x,y,40+Math.abs(x)*.16]);
+    const idx:number[]=[];
+    for(let i=1;i<outline.length-1;i++)idx.push(0,i,i+1,0,i+1,i);
+    const vd=new VertexData();vd.positions=pos;vd.indices=idx;vd.normals=[];
+    VertexData.ComputeNormals(pos,idx,vd.normals);vd.applyToMesh(wing);place(wing);
+  }
   const iron=new StandardMaterial("voidSpireFrontChain",scene);
   iron.diffuseColor.set(0.3,0.36,0.4);iron.emissiveColor.set(0.16,0.2,0.23);iron.specularColor=Color3.Black();
   for(const side of [-1,1]){
