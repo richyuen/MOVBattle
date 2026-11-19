@@ -149,7 +149,7 @@ export const STAGES: TabsStageDef[] = [
       ["tribal.mammoth", 29.6, -13.6],
       ["tribal.mammoth", 34.2, -7.1],
       ["tribal.mammoth", 31, 0],
-      ["tribal.mammoth", 34.2, 7.1],
+      ["tribal.mammoth", 33.4, 7.1],
       ["tribal.mammoth", 29.6, 13.6],
     ],
   },

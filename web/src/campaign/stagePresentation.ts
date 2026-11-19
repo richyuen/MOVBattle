@@ -134,8 +134,11 @@ function perchCrowns(scene: Scene, units: RuntimeUnit[], base: HeightField | nul
     const x = u.position.x, z = u.position.z;
     const h = p.top + seeded(i, 61) * p.vary;
     const centre = h - p.r * 0.8;
-    const trunk = MeshBuilder.CreateCylinder("perchTrunk", { height: centre, diameterTop: 0.3 + p.r * 0.06, diameterBottom: 0.45 + p.r * 0.1, tessellation: 6 }, scene);
-    trunk.position.set(x, centre / 2, z);
+    // the trunk stops inside the ball's underside and stays out of the glow: its bloom showed through the crown as a pale veil
+    const stem = centre - p.r * 0.55;
+    const trunk = MeshBuilder.CreateCylinder("perchTrunk", { height: stem, diameterTop: 0.3 + p.r * 0.06, diameterBottom: 0.45 + p.r * 0.1, tessellation: 6 }, scene);
+    trunk.position.set(x, stem / 2, z);
+    glow?.addExcludedMesh(trunk);
     trunk.material = bark;
     const ball = MeshBuilder.CreateIcoSphere("perchCrown", { radius: p.r, subdivisions: 1 }, scene);
     ball.scaling.y = 0.92;
