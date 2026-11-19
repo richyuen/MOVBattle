@@ -357,26 +357,14 @@ function rockRing(scene: Scene, built: Set<unknown>): void {
     const y0 = fantasyEvilHeight(x, z) - 0.3;
     // 605 [R] a: the post ring thins to every other spot, and none in a chamber, on a flight or by a shrine, gate or slab
     const spot = k++;
-    if (spot % 2 === 1 || inChamber(x, z) || inStair(x, z) || PERIMETER_KEEP_OUT.some(([px, pz]) => Math.hypot(x - px, z - pz) < 8)) continue;
-    if (spot % 4 === 2) {
-      const h = 3 + rnd() * 3;
-      const p = MeshBuilder.CreateBox("voidRockPart", { width: 1.6, depth: 1.6, height: h }, scene);
-      p.rotation.set((rnd() - 0.5) * 0.12, rnd() * 3, (rnd() - 0.5) * 0.12);
-      p.position.set(x, y0 + h / 2, z);
-      p.bakeCurrentTransformIntoVertices();
-      parts.push(p);
-      const cap = MeshBuilder.CreateBox("voidRockPart", { width: 2.1, depth: 2.1, height: 0.5 }, scene);
-      cap.rotation.set(0.35, rnd() * 3, 0.2);
-      cap.position.set(x + 0.3, y0 + h + 0.1, z - 0.2);
-      cap.bakeCurrentTransformIntoVertices();
-      parts.push(cap);
-      continue;
-    }
-    const n = 2 + Math.floor(rnd() * 2);
+    // 605 round 2 [R] a: irregular column masses of mixed heights, a third of the spots left bare; none in a chamber, on a
+    // flight or by a shrine, gate or slab
+    if (spot % 3 === 1 || inChamber(x, z) || inStair(x, z) || PERIMETER_KEEP_OUT.some(([px, pz]) => Math.hypot(x - px, z - pz) < 8)) continue;
+    const mass = 0.4 + rnd() * 0.9, n = 3 + Math.floor(rnd() * 4);
     for (let i = 0; i < n; i++) {
-      const h = 4 + rnd() * 6, d = 1.4 + rnd() * 1.2, a = rnd() * 6.28, r = i === 0 ? 0 : 1.2 + rnd() * 0.8;
+      const h = Math.min(12, Math.max(3, (4 + rnd() * 8) * mass)), d = 1.5 + rnd() * 1.6, a = rnd() * 6.28, r = i === 0 ? 0 : 1 + rnd() * 1.8;
       const c = MeshBuilder.CreateCylinder("voidRockPart", { height: h, diameterTop: d * 0.8, diameterBottom: d, tessellation: 5 }, scene);
-      c.rotation.set((rnd() - 0.5) * 0.5, rnd() * 6.28, (rnd() - 0.5) * 0.5);
+      c.rotation.set((rnd() - 0.5) * 0.3, rnd() * 6.28, (rnd() - 0.5) * 0.3);
       c.position.set(x + Math.cos(a) * r, y0 + h / 2, z + Math.sin(a) * r);
       c.bakeCurrentTransformIntoVertices();
       parts.push(c);
@@ -933,7 +921,13 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
 const GIANT_SLAB = { x: 62, z: 44, lean: 0.22 };
 /** the slab's -z (field-facing) side at height y: its half depth narrows 40% over its 60 m */
 const slabFaceZ = (y: number) => GIANT_SLAB.z - 10 * (1 - 0.4 * (y + 10) / 60);
-const SHRINE_SPOTS = [[-8, 42], [14, 41], [-40, -31], [40, -31]] as const;
+// [R] round 2 (605, a1 kept: "the four shrines read as lone slim posts barely taller than the ring", "the rim is still a
+// near-uniform row of evenly sized posts"; void_evil.png left, wiki back-centre: each shrine a cluster of broad broken slabs
+// towering over the rim columns). Spec: seven clusters (back two, back-left, four along the front rim), each on a three-tier
+// stepped plinth 7.5 / 5.8 / 4.4 m, 3-5 slabs 3-6 m wide, 1.2-1.7 m thick, 14-24 m tall (2-3x the rim masses), broken tops at
+// varied lean, a blue slot in the tallest, fallen blocks round the foot; collider r 4.2. The post ring becomes irregular
+// masses of 3-6 columns 3-12 m tall (a per-mass height scale), a third of the spots bare.
+const SHRINE_SPOTS = [[-8, 42], [14, 41], [-40, -31], [40, -31], [-50, 24], [-20, -43], [22, -43]] as const;
 const GATE = [[-38, 38, 16], [-27, 41, 12]] as const;
 const PERIMETER_KEEP_OUT: Array<[number, number]> = [...SHRINE_SPOTS.map(([x, z]) => [x, z] as [number, number]), ...GATE.map(([x, z]) => [x, z] as [number, number]), [52, 36]];
 /** Where the statue's chains meet the slab's field face (s = the wrist's side). */
@@ -997,19 +991,25 @@ function fracturedShrines(scene: Scene, obstacles: MapBuildResult["obstacles"]):
     box(stone, w * 0.7, w * 0.5, t * 1.05, x - Math.sin(lean) * h * Math.cos(yaw), y0 + h - w * 0.1, z + Math.sin(lean) * h * Math.sin(yaw), 0, yaw, lean + 0.6 + rnd() * 0.4);
   };
   for (const [x, z] of SHRINE_SPOTS) {
-    const y0 = fantasyEvilHeight(x, z) - 0.3, face = Math.atan2(-x, -z);
-    // heap of fallen blocks
-    for (let i = 0; i < 6; i++) {
-      const s = 1.2 + rnd() * 1.6;
-      box(stone, s, s * 0.7, s * 1.1, x + (rnd() - 0.5) * 6, y0 + s * 0.3, z + (rnd() - 0.5) * 5, rnd() * 0.5, rnd() * 3, rnd() * 0.4);
+    const face = Math.atan2(-x, -z);
+    // 605 round 2 [R] a: a stepped plinth of three tiers, then 3-5 broad broken slabs 14-24 m tall, 2-3x the rim columns
+    let y0 = fantasyEvilHeight(x, z) - 0.3;
+    for (const [sz, th] of [[7.5, 1.4], [5.8, 1.4], [4.4, 1.2]] as const) {
+      box(stone, sz, th, sz, x, y0 + th / 2, z, 0, face + rnd() * 0.3, 0);
+      y0 += th;
     }
-    const n = 3 + Math.floor(rnd() * 2);
+    const n = 3 + Math.floor(rnd() * 3);
     for (let i = 0; i < n; i++) {
-      const h = i === 0 ? 15 + rnd() * 3 : 7 + rnd() * 7, w = 2.5 + rnd() * 2, off = (i - (n - 1) / 2) * 2.6;
-      slab(w, 1 + rnd() * 0.4, h, x + Math.cos(face) * off, y0, z - Math.sin(face) * off, face + (rnd() - 0.5) * 0.5, (i - (n - 1) / 2) * 0.12 + (rnd() - 0.5) * 0.08);
-      if (i === 0) box(slots, w * 0.25, h * 0.3, 1.6, x + Math.cos(face) * off, y0 + h * 0.55, z - Math.sin(face) * off, 0, face, 0);
+      const h = i === 0 ? 20 + rnd() * 4 : 14 + rnd() * 8, w = 3 + rnd() * 3, off = (i - (n - 1) / 2) * 2.4, base = i === 0 ? y0 : y0 - 1.2;
+      const sx = x + Math.cos(face) * off, sz = z - Math.sin(face) * off;
+      slab(w, 1.2 + rnd() * 0.5, h, sx, base, sz, face + (rnd() - 0.5) * 0.6, (i - (n - 1) / 2) * 0.1 + (rnd() - 0.5) * 0.12);
+      if (i === 0) box(slots, w * 0.22, h * 0.3, 1.9, sx, base + h * 0.5, sz, 0, face, 0);
     }
-    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 3.6 });
+    for (let i = 0; i < 4; i++) {
+      const s = 1.2 + rnd() * 1.8;
+      box(stone, s, s * 0.7, s * 1.1, x + (rnd() - 0.5) * 9, fantasyEvilHeight(x, z) + s * 0.25, z + (rnd() - 0.5) * 8, rnd() * 0.5, rnd() * 3, rnd() * 0.4);
+    }
+    obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 4.2 });
   }
   // broken gate
   for (const [x, z, h] of GATE) {
@@ -1056,7 +1056,7 @@ function fracturedShrines(scene: Scene, obstacles: MapBuildResult["obstacles"]):
 }
 
 const MUSHROOM_LEDGES: Array<[number, number]> = [
-  [-20, -40], [8, -41], [24, -40], [-32, -12], [33, -13], [-18, -30], [19, -31], [-5, -10],
+  [-10, -41], [8, -41], [32, -38], [-32, -12], [33, -13], [-18, -30], [19, -31], [-5, -10],
   [-12, 14], [12, 16], [-30, 33], [30, 34], [-15, 31], [16, 33], [-4, 40], [-46, 30], [46, 8],
 ]
 function ledgeMushrooms(scene: Scene): void {
