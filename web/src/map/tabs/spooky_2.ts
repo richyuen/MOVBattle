@@ -13,7 +13,7 @@
 // +-12, 10 m deep, walkable as there): a navy channel bed, three stacked pale-blue fog sheets (alpha 0.3, y 0.25/0.8/1.4) and
 // blue-grey stone kerbs 0.5 m high along both banks with gaps at x 0 and x +-44 where the paths cross. The outer loop path is
 // 3.5 m of blue-grey flagstone at x +-44 / z +-38, stepping in round the notch (x 32, z 26).
-import { Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, Texture, Vector3, type Scene, type HemisphericLight, type DirectionalLight } from "@babylonjs/core";
+import { Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, Texture, Vector3, VertexData, type Scene, type HemisphericLight, type DirectionalLight } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 const NOTCH = { x: 36, z: 30 };
@@ -243,6 +243,78 @@ function cobbleLoop(scene: Scene): void {
   ribbon.material = mat;
   ribbon.receiveShadows = true;
   ribbon.isPickable = false;
+}
+
+// Outline deck (604, blocker b4; reference/maps/spooky_2.png: a hard-edged slab whose every corner steps back in a clean square
+// notch and whose canal mouths cut square bites out of both sides; ours still read as an octagon because the base floor's
+// vertices lie on radial rings, so after the max-norm remap no vertex sits at a cut's inner corner and each corner was chorded
+// off). Spec: the base floor ("ground", "centerGrass") is hidden and a new deck is drawn from OUTLINE itself, so every one of
+// its 28 corners is a vertex: the top an ear-clipped polygon at the floor's height in the floor's (night grass) material, uvs
+// in metres / 4; a stone wall 4 m deep down every outline edge (the side slab the island camera sees above the rock skirt),
+// both faces lit. Drawn only: placement, nav and hazards are unchanged.
+function outlineDeck(scene: Scene, built: Set<unknown>): void {
+  const floors = scene.meshes.filter((m) => built.has(m) && (m.name === "ground" || m.name === "centerGrass"));
+  const ground = floors.find((m) => m.name === "ground");
+  if (!ground) return;
+  ground.computeWorldMatrix(true);
+  const top = ground.getBoundingInfo().boundingBox.maximumWorld.y;
+  const material = ground.material;
+  for (const m of floors) m.setEnabled(false);
+  // ear clipping over the outline (counter-clockwise in x-z)
+  const pts = OUTLINE;
+  const idx: number[] = [];
+  const left = pts.map((_, i) => i);
+  const cross = (a: number, b: number, c: number) => (pts[b][0] - pts[a][0]) * (pts[c][1] - pts[a][1]) - (pts[b][1] - pts[a][1]) * (pts[c][0] - pts[a][0]);
+  const inside = (p: number, a: number, b: number, c: number) => cross(a, b, p) > 0 && cross(b, c, p) > 0 && cross(c, a, p) > 0;
+  let guard = 0;
+  while (left.length > 3 && guard++ < 2000) {
+    let clipped = false;
+    for (let i = 0; i < left.length; i++) {
+      const a = left[(i + left.length - 1) % left.length], b = left[i], c = left[(i + 1) % left.length];
+      if (cross(a, b, c) <= 0) continue;
+      if (left.some((p) => p !== a && p !== b && p !== c && inside(p, a, b, c))) continue;
+      idx.push(a, b, c);
+      left.splice(i, 1);
+      clipped = true;
+      break;
+    }
+    if (!clipped) break;
+  }
+  if (left.length === 3) idx.push(left[0], left[1], left[2]);
+  const pos: number[] = [], uv: number[] = [];
+  for (const [x, z] of pts) { pos.push(x, top, z); uv.push(x / 4, z / 4); }
+  const normals: number[] = [];
+  VertexData.ComputeNormals(pos, idx, normals);
+  if (normals[1] < 0) for (let t = 0; t < idx.length; t += 3) [idx[t + 1], idx[t + 2]] = [idx[t + 2], idx[t + 1]];
+  const data = new VertexData();
+  data.positions = pos; data.indices = idx; data.uvs = uv;
+  const n2: number[] = [];
+  VertexData.ComputeNormals(pos, idx, n2);
+  data.normals = n2;
+  const deck = new Mesh("spooky2OutlineDeck", scene);
+  data.applyToMesh(deck);
+  deck.material = material;
+  deck.receiveShadows = true;
+  deck.isPickable = false;
+  // the side walls
+  const wallPos: number[] = [], wallIdx: number[] = [];
+  for (let e = 0; e < pts.length; e++) {
+    const [ax, az] = pts[e], [bx, bz] = pts[(e + 1) % pts.length], k = wallPos.length / 3;
+    wallPos.push(ax, top, az, bx, top, bz, bx, top - 4, bz, ax, top - 4, az);
+    wallIdx.push(k, k + 1, k + 2, k, k + 2, k + 3);
+  }
+  const wallData = new VertexData();
+  wallData.positions = wallPos; wallData.indices = wallIdx;
+  const wn: number[] = [];
+  VertexData.ComputeNormals(wallPos, wallIdx, wn);
+  wallData.normals = wn;
+  const wall = new Mesh("spooky2OutlineWall", scene);
+  wallData.applyToMesh(wall);
+  const stone = (scene.getMaterialByName("spooky2Stone") as StandardMaterial | null)?.clone("spooky2OutlineWallStone");
+  if (stone) { stone.backFaceCulling = false; stone.twoSidedLighting = true; wall.material = stone; }
+  wall.convertToFlatShadedMesh();
+  wall.receiveShadows = true;
+  wall.isPickable = false;
 }
 
 // Night turf replaces the daylight floor and warm team tint; dense low faceted tufts break the bare plane.
@@ -946,6 +1018,7 @@ export function buildSpooky2(scene: Scene, base: () => MapBuildResult): MapBuild
   squareIsland(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   fogChannels(scene);
   nightTurf(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
+  outlineDeck(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   gratedCourt(scene);
   pumpkinShrine(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
   blackTrees(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result);
