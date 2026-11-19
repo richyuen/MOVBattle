@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+613 | [S] 4fd62091+c5116a82 | renaissance.renaissance_fencer.b1 | approve,struck1 (stage scenery fencerLoggia, Fencers inside)
+613 | [S] 959a5f15 | renaissance.renaissance_fencer.b2 | approve,no strike (Musketeers spread, only half the width)
+613 | [S] bfa72ff9 | renaissance.renaissance_vs_ancient_2.b6 | reject (shift to -z: path on the wrong side, city further); reverted 55e63609
+613 | [S] 13b240c7 | renaissance.balloons.b1 | approve,struck1-3 (three groups, chevron, back line)
+613 | [S] 2336f932 | renaissance.balloons.b4 | approve,no strike (street mouth behind the left group)
+613 | [S] f855c237 | renaissance.a_new_art_wave.b1 | approve,struck1-4 (numeral 2); b5 off-centre
+613 | [S] 0e162335 | pirate.arrows_and_arrow.b1 | approve,struck1 (Brawler blob)
+613 | [S] ef2073e7 | pirate.arrows_and_arrow.b3 | approve,struck4 (flank groups)
+613 | [S] c635404b | pirate.boom_and_the_units_go_down.b1 | approve,struck1,3 (three loose layers)
 612 | [S] d4881493 | dynasty.samurai.b4 | approve,struck4 (stage scenery samuraiPath: flagstone path + stair, torii turned face-on); CONFIRM -> D
 612 | [S] 38cd6195 | dynasty.zeus_and_other_folks.b4 | approve,struck4 (stage scenery zeusHouse behind the phalanx); CONFIRM -> D
 612 | [S] 01ec6438 | dynasty.catapults.b1 | approve,struck1,2 (echelon at the bridge east foot, 2.5 m)
