@@ -1,6 +1,6 @@
 // Curated levels sometimes start actors on scenery. Presentation stays separate
 // from flat deterministic battle coordinates and is removed whenever a level resets.
-import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, type Scene, type ShadowGenerator } from "@babylonjs/core";
+import { Color3, Mesh, MeshBuilder, StandardMaterial, TransformNode, Vector3, type Scene, type ShadowGenerator } from "@babylonjs/core";
 import { markStatic, setActiveHeightField, terrainMesh, type HeightField } from "../map/terrain";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 
@@ -367,6 +367,45 @@ function zeusHouse(scene: Scene): void {
 }
 
 /**
+ * Survey "the three Knights are positioned on the land arch" (reference/stages/pirate.you_won_t_make_us_walk_the_plank.png:
+ * a leaning ruined stone arch at frame-left of the three Knights). medieval_1 has no arch in the team-1 half, so one is drawn
+ * here beside the Knights: two broken stone piers leaning toward the army and a cracked lintel, no collider.
+ */
+function plankArch(scene: Scene): void {
+  const stone = scene.getMaterialByName("medieval1Cliff");
+  const coping = scene.getMaterialByName("medieval1RuinedCoping");
+  const meshes: Mesh[] = [];
+  const root = new TransformNode("plankArchRoot", scene);
+  root.position.set(19.4, 0, 6.2);
+  root.rotation.x = -0.2; // lean toward -z, over the Knights
+  root.rotation.y = 0.35;
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat: typeof stone, rz = 0) => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z);
+    m.rotation.z = rz;
+    m.material = mat;
+    m.parent = root;
+    m.receiveShadows = true;
+    m.isPickable = false;
+    meshes.push(m);
+  };
+  // two piers built of offset courses, the east one broken short
+  for (const [x, courses] of [[-1.9, 6], [1.9, 4]] as const) {
+    for (let i = 0; i < courses; i++) box("plankArchCourse", 1.25, 1.02, 1.35, x + ((i * 5) % 3 - 1) * 0.08, 0.51 + i * 1.03, 0, stone, ((i % 3) - 1) * 0.03);
+  }
+  // the lintel resting on the tall pier and slumped onto the broken one
+  box("plankArchLintel", 5.2, 0.9, 1.4, 0.2, 5.25, 0, stone, -0.23);
+  box("plankArchCoping", 2.4, 0.32, 1.5, -1.5, 5.95, 0, coping, -0.23);
+  box("plankArchRubble", 1.1, 0.55, 0.9, 3.2, 0.27, 1.1, stone, 0.3);
+  box("plankArchRubble", 0.8, 0.4, 0.8, -3.0, 0.2, -0.9, stone, -0.2);
+  markStatic(meshes);
+  cleanup = () => {
+    for (const m of meshes) if (!m.isDisposed()) m.dispose();
+    root.dispose();
+  };
+}
+
+/**
  * Survey "there's Fencers in the large cornered building ... ready to step down the stairs" (reference/stages/renaissance.renaissance_fencer.png:
  * cream arcaded buildings round the square, the Musketeers alone on the open paving). The Fencers must stand in the team-1 zone, so for this
  * stage a corner building of the piazza's make stands in team 1's back corner with them inside it. Spec: x 33.5..40.5, z 20.5..28.5; a ground
@@ -553,6 +592,10 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
   }
   if (id === "renaissance.renaissance_fencer") {
     fencerLoggia(scene, base);
+    return;
+  }
+  if (id === "pirate.you_won_t_make_us_walk_the_plank") {
+    plankArch(scene);
     return;
   }
   const perch = PERCHES[id];
