@@ -15,6 +15,8 @@ let cleanup: (() => void) | null = null;
 interface Perch { r: number; top: number; vary: number; flat: number; ramp: number }
 const PERCHES: Record<string, Perch> = {
   "adventure.tree_mammoths": { r: 3.6, top: 6.5, vary: 1.5, flat: 2.4, ramp: 3.2 },
+  // reference/stages/adventure.tree_tribe.png: the tribe stands one man to a crown, crowns 3-4 m across at 5-7.5 m, three loose rows
+  "adventure.tree_tribe": { r: 1.6, top: 5, vary: 2.5, flat: 0.9, ramp: 1.6 },
 };
 const PERCH_CROWNS = ["tribal1CrownOrange", "tribal1CrownRed", "tribal1CrownOrange2", "tribal1CrownYellow", "tribal1CrownRed2"];
 
