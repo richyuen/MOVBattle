@@ -3334,6 +3334,10 @@ export class RuntimeUnit {
   dispose(): void {
     this._iceBlock?.dispose(false, false);
     this._iceBlock = null;
+    // The balloon rig is a scene-root node (not under body.root): a man disposed while floating left his balloons in the next stage
+    this._balloonRig?.dispose(false, false);
+    this._balloonRig = null;
+    this._balloons = [];
     for (const whip of this._chainWhips ?? []) whip.dispose();
     this._chainWhips = null;
     this._spinnerMaces?.dispose(); this._spinnerMaces = null;
