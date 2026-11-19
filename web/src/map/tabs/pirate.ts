@@ -182,17 +182,20 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     let base = top;
     for (const [len, rise, wins] of [[8, 2.2, 4], [6, 1.8, 3], [4.2, 1.4, 0]] as const) {
       const beam = BEAM * (1.02 - (8 - len) * 0.025), aft=sternU-4, fore=aft+len;
-      const width=(u:number)=>beam/2*(0.68+0.32*Math.sin(Math.min(1,Math.max(0,(u-aft)/len))*Math.PI/2));
+      // 601 a1: rounded projecting quarter galleries, a strongly raked
+      // transom and a rising poop deck replace flat stacked cabin lids.
+      const width=(u:number)=>beam/2*(0.8+0.2*Math.sin(Math.min(1,Math.max(0,(u-aft)/len))*Math.PI));
+      const deckRise=(u:number)=>0.85*((fore-u)/len)**2;
       const outline:Array<[number,number]>=[];
       for(let i=0;i<=8;i++){const u=aft+len*i/8;outline.push([u,-width(u)]);}
       for(let i=8;i>=0;i--){const u=aft+len*i/8;outline.push([u,width(u)]);}
       const pos:number[]=[],idx:number[]=[],n=outline.length;
       for(const upper of [false,true])for(const [u,v]of outline){
-        const [x,z]=at(u-(upper?0.35*(fore-u)/len:0),v*(upper?1:0.9));
-        pos.push(x,base+(upper?rise:0),z);
+        const [x,z]=at(u-(upper?0.9*(fore-u)/len:0),v*(upper?1:0.84));
+        pos.push(x,base+(upper?rise+deckRise(u):0),z);
       }
       for(let i=0;i<n;i++){const j=(i+1)%n;idx.push(i,j,n+i,j,n+j,n+i);}
-      const [cx,cz]=at((aft+fore)/2,0);const hub=pos.length/3;pos.push(cx,base+rise,cz);
+      const [cx,cz]=at((aft+fore)/2,0);const hub=pos.length/3;pos.push(cx,base+rise+deckRise((aft+fore)/2),cz);
       for(let i=0;i<n;i++)idx.push(hub,n+i,n+(i+1)%n);
       const shell=new Mesh("pirateSternGallery",scene),data=new VertexData(),normals:number[]=[];
       VertexData.ComputeNormals(pos,idx,normals);data.positions=pos;data.indices=idx;data.normals=normals;data.uvs=new Array(pos.length/3*2).fill(0);data.applyToMesh(shell);
@@ -201,14 +204,27 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
       // from the island/deck poses; the aft face alone points out of those views.
       for(const side of [-1,1])for(let i=0;i<8;i++){
         const u=aft+(i+0.5)*len/8,v=side*(width(u)+0.04);
-        box("gold",len/8+0.06,0.18,0.14,u,base+rise+0.04,v);
+        const railY=base+rise+deckRise(u)+0.15;
+        rod("gold",world(u-len/16,railY,side*(width(u-len/16)+0.1)),world(u+len/16,base+rise+deckRise(u+len/16)+0.15,side*(width(u+len/16)+0.1)),0.22);
         if(wins&&i>0&&i<7&&i%2===1){
           box("gold",0.95,rise*0.65,0.16,u,base+rise*0.5,v);
           box("sail",0.68,rise*0.44,0.19,u,base+rise*0.5,v+side*0.06);
           box("dark",0.07,rise*0.47,0.21,u,base+rise*0.5,v+side*0.08);
         }
       }
-      box("gold",0.15,0.2,beam*0.68,aft-0.36,base+rise+0.05,0);
+      box("gold",0.15,0.22,beam*0.8,aft-0.9,base+rise+1,0);
+      // Gold-framed quarter balcony projects beyond the hull; its curved
+      // rail faces both island cameras instead of only the outward transom.
+      for(const side of [-1,1]){
+        let previous:Vector3|undefined;
+        for(let i=0;i<=10;i++){
+          const angle=Math.PI*i/10,u=aft+0.3+Math.sin(angle)*1.5;
+          const v=side*(beam*0.4+Math.sin(angle)*1.1),p=world(u,base+rise*0.7,v);
+          if(previous)rod("gold",previous,p,0.18);
+          rod("gold",p,world(u,base+0.2,v),0.1);
+          previous=p;
+        }
+      }
       for (let w = 0; w < wins; w++) {
         const v = (w + 0.5 - wins / 2) * (beam*0.68 / wins);
         box("gold",0.12,rise*0.62,0.85,aft-0.22,base+rise*0.5,v);
@@ -331,7 +347,7 @@ function deckHeight(x: number, z: number): number {
     const u = stationU((x - SX) * bow);
     if (u >= HULL_U0 && u <= HULL_U1 && Math.abs(v) <= hullHalfBeam(u) - 0.1) {
       if (u >= 3 && u <= 8 && Math.abs(v) <= hullHalfBeam(8) - 0.1) return top + 1.4;
-      if (u >= -13.5 && u <= -9.3) return top + 5.4;
+      if (u >= -14.4 && u <= -9.3) return top + 5.4 + 0.85*((-9.3-u)/4.2)**2;
       if (u >= -13.5 && u <= -7.5) return top + 4;
       if (u >= -13.5 && u <= -5.5) return top + 2.2;
       return top;
