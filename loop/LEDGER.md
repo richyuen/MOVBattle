@@ -3,6 +3,9 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+607 | [R] 0911dd25 | map.fantasy_good.a2 | approve, no strike (opaque gate water, far-wall falls)
+607 | [R] 5fcb8b7d | map.fantasy_good.a2 | reject, reverted ab3f294e (flat panels; colour re-nudge of 9b0909fd)
+607 | [R] b8072e41 | map.fantasy_good.a2 | approve, no strike (stepped hex-column cascades)
 606 | [R] 57397d50 | map.fantasy_good.b1-2 | approve,struck1,2 (quadrant wells, diagonal gates); CONFIRM a,b PASS
 606 | [R] 6d627f50 | map.fantasy_good.a1-2 | approve,struck1 (multi-bay gatehouses)
 606 | [R] 9b0909fd | map.fantasy_good.a2 | approve, no strike (fog-off cyan sheets)
@@ -17,15 +20,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 602 | [R] 92afd9c8 | map.pirate.b1 | approve,struck1; critic added b2 (base palms on the turned strip)
 602 | 264c9d94,36a587e7 | map.pirate.a1 | approve,struck1; CONFIRM a PASS
 602 | c3b103ee | map.pirate.b2 | approve,struck2; CONFIRM b PASS -> D
-601 | [R] e0ec78a8 | map.pirate.b1 | reject,reverted d62511b6; R attempt1
-601 | 632a9f8c | map.pirate.a1 | approve,no strike
-601 | bba97442 | map.spooky_2.a4 | approve,struck4
-601 | 9e419281 | map.fantasy_good.a1 | approve,struck1; second CONFIRM a/b FAIL -> plateau
-601 | e40ca4f6 | map.fantasy_evil.a3 | approve,struck3; second CONFIRM a/b FAIL -> plateau
-601 | 12ddab5e | map.fantasy_evil.b1 | approve,struck1
-601 | c283afb0 | adventure.the_tiniest_attack.b1 | approve,struck1; CONFIRM D
-601 | a744ccde,c0d6c20a,799d316d | adventure.a_fierce_rider.b2 | approve,struck2; CONFIRM D
-601 | 5f92ad8a | adventure.final_destination_wheelbarrow.b1 | approve,struck1; CONFIRM D
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.

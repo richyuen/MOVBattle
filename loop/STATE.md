@@ -1,6 +1,6 @@
 # Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
-Iteration: 606   Batch: maps_4+stages_adventure   Consecutive empty: 0   Done: 37/99   Parked: 0
-Solo: map.fantasy_good   Queue: (empty)   Rounds: 3   Dry: 2
+Iteration: 607   Batch: maps_4+stages_adventure   Consecutive empty: 0   Done: 37/99   Parked: 0
+Solo: map.fantasy_good   Queue: (empty)   Rounds: 6   Dry: 5
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
 ## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
@@ -26,19 +26,18 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter606 solo map.fantasy_good, 3 rounds: 4 [R]; BASE 0eb18fdb)
-- r1 [R] b1,b2 (57397d50) APPROVE, struck both (quadrant wells, diagonal gates); [R] a1,a2 (6d627f50) APPROVE, struck a1; CONFIRM a,b PASS -> b PASS
-- r2 [R] a2 (9b0909fd) APPROVE, no strike; r3 [R] a2 (628c2755) REJECT, reverted 639fec40
-- 3/4, 3 struck
+## Focus (iter607 solo map.fantasy_good, 3 rounds: 3 [R]; BASE dfe21e11)
+- r1 [R] a2 (0911dd25) APPROVE, no strike; r2 [R] a2 (5fcb8b7d) REJECT, reverted ab3f294e; r3 [R] a2 (b8072e41) APPROVE, no strike
+- 2/3, 0 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [R] map.fantasy_good (628c2755)
-VERDICT: REJECT
+GAP: [R] map.fantasy_good (b8072e41)
+VERDICT: APPROVE
 CRITERION: map.fantasy_good.a FAIL   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max5lines)
-- 606 solo fantasy_good 3 rounds (iter-606/critic.md, -r2, -r3, confirm.md): b PASS confirmed; a1 struck; a2 (gate waterfalls) left. CONFIRM 606 passed a, so a critic PASS on a makes it D.
-- Next round: [R] a2 per the item's Ranked gap (opaque saturated cyan, crest strip above the merlons, fall on a well wall the top camera faces). Rounds 3, Dry 2 (breaker at Dry 6).
+- 607 solo fantasy_good (iter-607/critic.md, -r2, -r3): a2 (gate waterfalls) still open; b confirmed; a CONFIRMed 606, so a critic PASS on a2 makes it D.
+- Dry 5: the next round with no strike parks a (p). Next: [R] a2 per the item's Ranked gap (one continuous stream, vines out, foam at lips only; no colour-only change).
 - When fantasy_good is D or p: drop Solo, run the maps_4 checkpoint (step 8), batch mode resumes at stages_adventure (3 open).
 - v11 (user, 2026-11-19): solo mode to D or Dry:6 park. CONFIRM notes on done maps live in their item files, not blockers.
