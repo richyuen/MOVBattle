@@ -251,7 +251,7 @@ async function stageScene(page, item) {
   const city = st.map === "ancient_1";
   const streets = item === "introduction.basic_formation";
   await frame(page, {
-    target: { x: box.cx, y: 1, z: box.cz },
+    target: { x: box.cx, y: st.map === "pirate" ? 8.2 : 1, z: box.cz },
     radius: Math.max(16, Math.max(box.w, box.d) * 1.25 + 8),
     alpha: city ? Math.PI + 0.42 : Math.PI,
     beta: streets ? 0.24 : city ? 0.77 : 1.2,
