@@ -17,10 +17,11 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A pit below y 0 is lidded by the base slab (islandUnder/islandShelf, y -0.02): hide them (592).
 
 ## Capture and probes
+- Serialize agents' git staging and commit pairs: their shared index can combine separate gaps into one commit.
 - Regression-only keeps PNGs but replaces summary.json: back up world evidence and keep its smoke summary separately (599).
-- capture-world.mjs boots like capture.mjs: mulberry32 0x4d4f5642 reseeded at every resetBattle, time only through advanceTime, setup renders at 1/8 size (__setupScale 8). It re-adds body.capture-mode before every shot (the game drops it on loads).
+- capture-world: mulberry32 0x4d4f5642 reseeded each resetBattle, time via advanceTime, setupScale8; re-add body.capture-mode before shots (loads drop it).
 - Never capture with a test --iter (pruneOld): use look/. Near-black set pieces vanish in black tree rings (587).
-- A capture wipes iter-N unless --add: save audit/critic files after the step's last capture (audit iterations: step 5 with --add). A step-5 capture takes ~12 min: background it.
+- Capture wipes iter-N unless --add: save reviews after the last capture; audit step5 needs --add. Background step5 (~12min).
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
 - Dev probe (5173): import the Babylon resource URL; EngineStore.LastCreatedScene is the live map scene.
 

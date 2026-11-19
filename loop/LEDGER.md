@@ -3,6 +3,14 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+600 | [R] f99eb4fd | map.pirate.a1-3 | approve, struck a2,a3; a1 deep hull/nest clauses cleared
+600 | 4834759a | map.fantasy_good.a1 | approve, no strike; stub-pillar clause cleared
+600 | 79aae0c6 | map.fantasy_good.a2 | approve, struck a2
+600 | bb5ee8bb | map.fantasy_evil.b1 | approve, no strike; multiple shelves clause cleared
+600 | d0fccfc5 | map.fantasy_evil.a2 | approve, struck a2
+600 | ff505e0b, b79bc009 | map.fantasy_evil.a1 | approve, struck a1
+600 | d4289c91 | adventure.a_fierce_rider.b1 | approve, struck b1
+600 | ffe2e899, defaf4dd | adventure.the_tiniest_attack.b2 | approve, struck b2
 599 | 9b680d9d | map.pirate.a2 | approve, struck a2; second failed a/b CONFIRM -> plateau
 599 | a144846a, 4ab2e5aa | introduction.basic_formation.b3 | approve, struck b3; CONFIRM PASS -> D
 599 | af027c37 | introduction.ice_archers_only_almost.b3 | approve, struck b3; CONFIRM PASS -> D
@@ -24,12 +32,22 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 596 | 2fb7605e, 534e1920 | map.dynasty.a5, a4 | approve, no strike (clauses cleared); a plateau
 596 | 65479838, 788ad169 | map.fantasy_good.b1, a6 | approve, struck both
 595 | b3ba566f; da55aaca, 27e30aa2, 3b0cd8d4; 3ea9ae23, 79c9305c, d777e226 (+[P] 725faf2f); 1d0481dd; 65195d10 | pirate.b1; fantasy_evil.b2, a4, a6; fantasy_good.b1, b5, a4, a3; spooky_2.b4; dynasty.b2 | approve all; struck all but spooky_2 b4; CONFIRM fantasy_good failed a, b
-594 | 4612ee6b; a41b2f35, b4c03bd0; b993ae0a, 7b828924; 29222f58; db5cd84b | dynasty.b1; fantasy_evil.b3, a5; fantasy_good.b3, a5; pirate.a2; spooky_2.b1 | approve but pirate a2 reject (reverted b4a3cdd9)
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
+loop/scripts/capture-world.mjs:fantasyEvil poses, pirate army | island targety16 radius230, top targety12 radius160; Pirate stage army targety8.2 | 600 | evidence685f65a9,ce687e96 validated | Evil island targety8 radius200, top default; Pirate army targety1
+web/src/map/tabs/pirate.ts:galleon shell, nests | beam12m hull8m, 3gold strakes, open4.2m nest floors with4m hoops/posts | 600 | approve f99eb4fd [R], a1 clauses cleared, no strike | beam8 hull4.4, 1gold strake, closed1.8m nests
+web/src/map/tabs/pirate.ts:shore palms, summitWreck | 15irregular clumps of3..6 palms8..16m, pointed fronds/rosettes; open9m wrecked bow, ribs, mast and grass on summit | 600 | approve f99eb4fd [R], struck a2,a3 | 9clumps of2..4 palms4.5..7.5m; summit bell
+web/src/map/tabs/fantasy_good.ts:openArcade | 1.6m rim beam; real5.4m openings/~7m pitch, 1.1x1.3m piers to-12.5, stone arch tubes r.65; basalt12..27m | 600 | approve4834759a, no strike | 12m solid rim with dark arch plates; basalt3..16m
+web/src/map/tabs/fantasy_good.ts:gateFacades | lancets10..25.5m, 18mosaic panes/window, pointed gold frame, triple peaked bands31.7..36m on both faces | 600 | approve79aae0c6, struck a2 | rectangular yellow panes with grid and tiny diagonal tips; gate size/spires unchanged
+web/src/map/tabs/fantasy_good.ts:frontFallSpill | 2m fall to ledge, spill toz-46.35, 22m opaque drop +6m alpha fade | 600 | approve a44979d1 [P], no strike; spill visible, fade uncredited | continuous30m drop at deck rim through ledge
+web/src/map/tabs/fantasy_evil.ts:blockLevel | five clipped shelves: central(0,10)h3, side(+/-37,20/24)h6, front(-12,-29)h3/(20,-31)h4.5; .75m treads/1.5m runs | 600 | approve bb5ee8bb, no strike | one rectangular plateau x+-24,z-6..34,h3 with2m runs
+web/src/map/tabs/fantasy_evil.ts:wingedMonument | robe29m at(32,27,38), hoody47, horns/raised arms, angular wings span36m at y31..50 | 600 | approve d0fccfc5, struck a2 | leaning47m tapered slab at(29.5,20.5,35.5); front chains retained
+web/src/map/tabs/fantasy_evil.ts:fracturedFloor | shared jittered3m staggered corners, .975 inset fractured plates with2m sides, outward winding, heights follow shelves | 600 | approve ff505e0b,b79bc009, struck a1 | regular2m grid of1.85m square instanced blocks
+web/src/campaign/stages/adventure.ts:a_fierce_rider | Mammoth leaderx2,z0, wingsx3.5,z+-4.6, rearx7,z-5.6/0/5.6; Halfling unchanged | 600 | approve d4289c91, struck b1 | Mammoths line atx2,z-12..8 step4
+web/src/campaign/stages/adventure.ts:the_tiniest_attack | 15upper+16lower irregular crop pockets x9..41,z-25..17; two obstacle clearances; Farmer unchanged | 600 | approve ffe2e899,defaf4dd, struck b2 | Halflings regular ranks x20/22.2/24.4,z+-9.9
 loop/scripts/capture-world.mjs:evidence poses | gate runtimeId departure at20ms, radius32; Basic army beta.24/field.2; Evil island targety8; Good island220/y8, top165/y8 | 599 | evidence validated; High b CONFIRM | gate attacker never arrived; Basic .77/.72; island200/y-10, top135/y0
 web/src/map/tabs/pirate.ts:sternGallery | raked .35m, aft beam .68, lofted tiers8/6/4.2m, side/quarter window rows | 599 | approve, struck a2; CONFIRM a/b FAIL -> plateau | three full-beam box tiers
 web/src/map/tabs/fantasy_evil.ts:leaningSpire | lone47m tapered slab at(29.5,20.5,35.5), two25-link front chains to statue plinth | 599 | approve, struck a6,a5; CONFIRM a/b FAIL | spire merged into crag, chains behind
