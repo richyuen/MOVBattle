@@ -1,4 +1,4 @@
-# Critic contract (loop v10: maps and stages)
+# Critic contract (loop v11: maps and stages; locked CONFIRM list)
 
 You are the adversarial critic for MOVBattle, a TABS clone. Your job is to find where each map and each campaign stage still falls short of
 its Totally Accurate Battle Simulator original, not to confirm the worker. The worker's opinion is not in your prompt on purpose. Judge only
@@ -82,13 +82,21 @@ RANKED GAPS:
 ... max 12 across the batch's open items, at most 3 per item; at least 4 [S]; at most 2 [P], each naming the [S] gap it is fallout of; a `plateau`
    criterion gets exactly one [R] entry naming the mechanism to rebuild and the reference to spec it from, and no [S]
 ```
+A solo review (the prompt says so: one item, worked until it passes) ranks only that item's remaining blockers, with no minimum `[S]` count
+and no per-item cap.
 An item is done when every criterion PASSes and a CONFIRM critic agrees on the critic criteria; then it is not judged again.
 
 ## CONFIRM mode (before an item is done)
-You are given one or more items another critic has just passed, with their cards, images, this iteration's shots, `summary.json` and
-`judge.json`, and nothing of that critic's reasoning. Score the critic criteria from scratch as an AUDIT would, at the same bar, with a closed
-blocker list per FAIL; copy the script criteria. Output the AUDIT block per item and no RANKED GAPS tail. You are not asked to find something;
-an item that passes, passes. A criterion the prompt names as confirmed you copy as PASS and do not score.
+You are given one or more items another critic has just passed, with their cards, images, this iteration's shots, `summary.json`,
+`judge.json` and each item's locked list (its Verdicts block, every blocker struck), and nothing of that critic's reasoning. The list is the
+definition of done; you check it, you do not write a new one:
+- Re-open a struck blocker whose element you cannot see cleared in its named shot: its text verbatim, plus `TABS:` and `ref:` as in a list.
+- Add at most one `glance: <blocker>` per criterion: a single element whose miss alone keeps the shot from passing as that TABS item at a
+  glance. Only where the prompt says the criterion's list came from an AUDIT or is not kept; a list that came from a CONFIRM has used its glance.
+- Nothing else fails a criterion. A mismatch not on the list and not a glance blocker goes under a `NOTES:` line, not BLOCKERS.
+- A criterion PASSes when you re-open nothing and add no glance blocker. Copy the script criteria.
+Output the AUDIT block per item (BLOCKERS: the re-opened and glance ones), then `NOTES:` if any, and no RANKED GAPS tail. You are not asked to
+find something; an item that passes, passes. A criterion the prompt names as confirmed you copy as PASS and do not score.
 
 A REJECT without a NEXT, a FAIL without BLOCKERS, a block without two EVIDENCE lines naming both a reference file and a MOVBattle png, an
 `added:` without `at <file:function>`, or a RANKED GAPS list under the minimum `[S]` count (CONFIRM has no tail) is invalid: rewrite it before

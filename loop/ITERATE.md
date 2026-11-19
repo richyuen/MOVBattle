@@ -1,4 +1,4 @@
-# Improvement loop v10: one iteration (maps and stages)
+# Improvement loop v11: one iteration (maps and stages; solo mode)
 
 You are the worker. Make each MOVBattle map look and play like its TABS original, then make each curated campaign stage field the TABS level's
 army in the TABS level's formation, one batch at a time (a group of maps, or one campaign's stages). An adversarial critic judges look,
@@ -14,6 +14,25 @@ layout and formation against the wiki images; scripts judge the rest; you never 
   hazard). Shots `stage_<id>_army|field|battle`.
 - Script verdicts come from `node loop/scripts/world-judge.mjs --iter N` (reads the capture's `summary.json`, writes `judge.json`): a script
   FAIL's reasons are its blockers, verbatim. A criterion is PASS for an item only when its judge (critic + CONFIRM, or script) passes it.
+
+## Solo mode (v11): one item until it passes
+STATE's `Solo:` line names one item, a `Queue:` of the items after it, and two counters: `Rounds` (rounds run on the item) and `Dry` (rounds in
+a row with no strike and no criterion flipped). While `Solo:` names an item, the iteration works that item alone and these rules override 1-8:
+- Step 1 reads only that item's file. Step 2 and the batch's other items wait (no audit, no tail overlap, no starvation picks elsewhere).
+- Rounds: up to 3 rounds of steps 3-7 on the item, one after another; memory (step 9) is written once at the end. Commits continue the
+  iteration's `loop(N.k)` numbering. Round 1 captures `--iter N --items <the item and the stages fought on it>`, later rounds the same with
+  `--add`; answers are saved as `critic.md`, `confirm.md`, then `critic-r2.md`, `confirm-r2.md`... Stop early when the item is `D` or `p`,
+  or after a round with no approved gap.
+- Picks (step 3): up to 4 gaps per round, each on a different blocker of a FAIL criterion: `[S]`, or on a `plateau` criterion one `[R]` (in
+  the next round after it is marked). The 2-attempt cap, the per-item cap, starvation and the one-`[R]`-per-iteration limit do not apply; a
+  blocker whose last 2 attempts were rejected is tried with a mechanism its Rejected lines do not name. No sub-batch looks: step 5's capture
+  is the look. A rejected `[R]` never parks a criterion here (the breaker below is the only exit besides `D`).
+- Critic: its prompt says this is a solo review of one item: rank only that item's remaining blockers, no minimum `[S]` count.
+- Done: when the critic passes every criterion, CONFIRM runs in the same round (step 7, locked list); a passed CONFIRM makes the item `D`.
+- Breaker: after each round set `Dry` (0 on any strike or flip, else +1) and `Rounds` +1. At `Dry: 6` the item's FAIL criteria are `parked`
+  (status `p`), its Notes naming the blockers left. Consecutive empty and its STOP are not counted in solo mode.
+- Next: when the item is `D` or `p`, move the first `Queue:` item to `Solo:` (Rounds 0, Dry 0), run step 8 if its batch has no open item
+  left, and end the iteration. When the Queue is empty, drop the `Solo:` line: batch mode resumes at STATE's `Batch:`.
 
 ## 0. Preflight
 - `git branch --show-current` must print `main`. `git status --porcelain` must be empty. No file named `STOP` in the repo root. `node loop/scripts/budget.mjs` must pass.
@@ -61,17 +80,17 @@ Spawn a fresh `Agent` (general-purpose, default model). Its prompt lists the evi
 - Each REJECT: `git revert --no-edit <sha>`. If the revert conflicts, `git revert --abort`, keep the code, mark it `rejected-kept`. Record it in the item file's Attempts and Rejected with attempts+1 and the top defect.
 - Set each touched LEDGER row's verdict, and the gap's Structural attempts line, to the critic's verdict. A row attempted twice as `[P]` without approval becomes `spent`.
 - Apply the critic's blocker strikes and additions to the item file's Verdicts, and the judge's script verdicts. Blockers not struck keep their text verbatim: a critic block that rewords or narrows one is applied as kept. A blocker joining two elements with "and" whose CLOSER says one clause cleared is split at the "and" and that clause struck. An added blocker is applied only when its `introduced by <sha> at <file:function>` names a hunk of this iteration's diff; otherwise it goes to the item's Notes. A criterion with 2 rejected `[S]` since its list was written, or 3 approved `[S]` in a row on it with no strike among them, is `plateau` (next pick on it is one `[R]`); an `[R]` rejected twice parks the criterion (`parked`). A criterion the CONFIRM critic has failed twice is `plateau` too, its `[R]` specified from every CONFIRM list it got. An item is `D` when every criterion PASSes (critic ones confirmed); `p` when every FAIL criterion it has is parked.
-- CONFIRM before `D`: in the iteration an item would become `D` (this step or step 2's audit), spawn one more fresh `Agent` (general-purpose, default model) in CONFIRM mode on the would-be-done items alone. Spawned early in step 6 for items likely to be done (every FAIL blocker left is claimed by a gap this iteration), its answer counts only for items that end would-be-done; a would-be-done item it did not cover gets its own CONFIRM here. Its prompt lists the evidence pack for those items, their PNGs only; it says these items are proposed done and nothing about the first critic's verdicts, and names each criterion an earlier CONFIRM passed (the item file's Audited line) as confirmed. A criterion is PASS only when both critics pass it; a criterion the confirmer fails takes the confirmer's blocker list (FAIL, 0 since N) and the item stays open. Save its answer verbatim to `output/loop/iter-N/confirm.md`; the item file's Audited line gets `N (CONFIRM: passed a; failed b)`.
+- CONFIRM before `D`: in the iteration an item would become `D` (this step or step 2's audit), spawn one more fresh `Agent` (general-purpose, default model) in CONFIRM mode on the would-be-done items alone. Spawned early in step 6 for items likely to be done (every FAIL blocker left is claimed by a gap this iteration), its answer counts only for items that end would-be-done; a would-be-done item it did not cover gets its own CONFIRM here. Its prompt lists the evidence pack for those items, their PNGs only; it says these items are proposed done and nothing about the first critic's verdicts, and names each criterion an earlier CONFIRM passed (the item file's Audited line) as confirmed. Locked list: it gives each item's Verdicts block (the struck lists) and says per critic criterion whether its list came from an AUDIT, from a CONFIRM, or is not kept (a pre-v11 PASS). A criterion is PASS only when both critics pass it; a criterion the confirmer fails gets back the blockers it re-opened plus its `glance:` blocker, if any (FAIL, 0 since N, list `from CONFIRM N`), and the item stays open; anything else the confirmer names goes to the item's Notes, not its list. Save its answer verbatim to `output/loop/iter-N/confirm.md`; the item file's Audited line gets `N (CONFIRM: passed a; failed b)`.
 - Consecutive empty: reset to 0 if any gap struck a blocker or flipped a criterion, else +1. At 5, write the reason into a file named `STOP`.
 
 ## 8. Batch checkpoint
 When this iteration leaves no item of a batch named on `Batch:` open (all `D` or `p`): `node loop/scripts/capture.mjs --iter N --regression-only` once (the unit-phase smoke suite: a scenario that errors, hangs or never ends goes into STATE Notes as the required first commit of the next iteration). After a map batch, also capture `--iter N --items <every stage fought on that batch's maps> --add`: a stage whose a or c a map change broke is re-opened (`o`) in its Scoreboard row with the judge's reasons as blockers. Then drop the name from `Batch:`. When `Batch:` would be empty, advance it to the next name in STATE's batch list; its items are unaudited (step 2 next iteration).
 
 ## 9. Write memory and commit
-- Rewrite every touched `loop/items/<id>.md` (cap 3200 bytes: Verdicts, Ranked gaps left, Attempts, Rejected last 4, Notes max 3 lines). Attempts older than 10 iterations compact to one range line per criterion.
+- Rewrite every touched `loop/items/<id>.md` (cap 3200 bytes: Verdicts, Ranked gaps left, Attempts, Rejected last 4, Notes max 3 lines). A struck blocker stays in Verdicts until the item is `D`, short: `s<n>. <element> in <shot> (struck N)` (the locked list CONFIRM re-checks). Attempts older than 10 iterations compact to one range line per criterion.
 - In LEDGER drop Structural attempts older than 5 iterations and rows untouched for 25.
 - Append to `loop/LESSONS.md` (one line under its heading) anything learned this iteration that is not about one item: a rendering or capture behaviour, a camera rule, a pattern that failed twice. Near its cap, merge duplicates.
-- Rewrite `loop/STATE.md` fully: Iteration N, Batch, counters, Scoreboard (every item's marks and status), Focus with shas and verdicts ending in `- <approved>/<total>, <struck> struck`, Last verdicts (critic header lines verbatim), Notes (max 5 lines).
+- Rewrite `loop/STATE.md` fully: Iteration N, Batch, counters, the `Solo:` line (item, Queue, Rounds, Dry) while solo mode lasts, Scoreboard (every item's marks and status), Focus with shas and verdicts ending in `- <approved>/<total>, <struck> struck`, Last verdicts (critic header lines verbatim), Notes (max 5 lines).
 - Each map that became `D` this iteration: `node loop/scripts/map-thumbs.mjs --items map.<id>[,map.<id>]` (its sandbox map-picker picture in `web/public/maps/thumbs/`; a failure goes to STATE Notes), committed with the docs.
 - `node loop/scripts/budget.mjs` must pass (read its output before committing). Commit the docs: subject `loop(N): <batch> <approved>/<total> gaps approved`.
 - `git push` (bare, no arguments). If it fails, note it in STATE Notes and carry on; the commit is what counts.

@@ -1,8 +1,9 @@
-# Loop state (v10: maps then stages; dual audits; up to9 structural/rebuild gaps; fresh CONFIRM before done)
+# Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
 Iteration: 601   Batch: maps_3+maps_4+stages_adventure   Consecutive empty: 0   Done: 33/99   Parked: 0
+Solo: map.pirate   Queue: map.dynasty, map.spooky_2, map.fantasy_evil, map.fantasy_good   Rounds: 0   Dry: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
-## Verdicts: a FAIL (0 since N): 1. <blocker verbatim> / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
+## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
 ## Ranked gaps: 1. [S|P|R] <id>.<letter> <gap> — blocker n: <mechanism> — ref: <file> — ours: <png>
 ## Attempts (iter | gap | criterion | verdict); ## Rejected (last4); ## Notes(max3lines).
 Marks per a b c: + pass,- fail,? unscored. Status q queued,o open,D done,p parked. Map a look,b layout,c play; stage a army,b formation,c battle. -->
@@ -69,8 +70,8 @@ CRITERION: adventure.final_destination_wheelbarrow.b PASS (previous: FAIL)
 REGRESSIONS: none. All 44 final PNGs were inspected. judge.json: map.pirate.c, map.spooky_2.c, map.fantasy_good.c, map.fantasy_evil.c PASS; a and c PASS for all nine captured stages (22/22 script criteria). summary.json has no console/page errors; its two --add notes only record recaptures. The absent full references for pirate.a_rival_captain and fantasy_good.vicious_terror were reviewed using their extant thumbs and cards.
 
 ## Notes for next iteration (max5lines)
+- v11 (user, 2026-11-19): solo mode from 602, maps one at a time to D or Dry:6 park; adventure stages wait for the empty Queue. Locked list: pirate a/b, fantasy a/b, dynasty a lists are from CONFIRM (no glance); dynasty b, spooky_2 a not kept (glance only); spooky_2 b from AUDIT. Pirate b [R] in round 1.
 - 601: 44PNGs,22/22scriptPASS,zero page/console errors; post-revert Pirate+3stages recaptured PASS; tsc/build/budget and four changed-map thumbnails PASS. Reviews iter-601/critic.md,confirm.md; reviewed pre-revert pack iter-601/reviewed/.
 - Three Adventure stages confirmed D ->33/99; no batch checkpoint. Remaining Adventure: canopy tribe, cave tribe, canopy Mammoths (AUDIT600).
 - Pirate b R rejected/revertedd62511b6, attempt1; oldest plateau since599 takes next R. Rebuild shore+ships together. a1 attempt2, next starvation606. Early Pirate CONFIRM unused.
 - Good a/b second counted CONFIRM595/601 and Evil a/b599/601 ->plateau. New blocker lists in items; R specs need all respective CONFIRM lists. Good CONFIRM well-count wording sayssix, owning arrayfive: reconcile in spec.
-- Spooky2 a PASS; b4 starves603. Dynasty a1/a2 remain2+attempts, next a starvation604. Next R priority: Pirate b before four new fantasy plateau criteria.
