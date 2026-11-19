@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+614 | [S] 09e189d5 | pirate.you_won_t_make_us_walk_the_plank.b1 | approve,struck1,2 (stage scenery plankArch, Healers behind)
+614 | [S] 4dbbd64c+ff4b17f9 | pirate.you_won_t_make_us_walk_the_plank.b3 | approve,struck4 (two 4-archer lines 14 m back); CONFIRM failed b3: arch hides the +z line
+614 | [S] a5ea15f0 | pirate.a_small_tribe.b1 | approve,struck1 (Protector ahead, Chieftain arc)
+614 | [S] 40345484 | pirate.a_small_tribe.b3 | approve,struck3,4 (Mage + 2 Stoners per wing)
+614 | [S] 090d6a67 | pirate.boom_and_the_units_go_down.b4 | approve,no strike (z -4..28; zone stops at z -5)
+614 | [S] 546a125c | pirate.boom_and_the_units_go_down.b2 | approve,struck2 (Musketeer V)
+614 | [S] f135fc9e | renaissance.renaissance_fencer.b2 | approve,no strike (Musketeers z -4.5..27.6; zone stops at z -5)
+614 | [S] ccebe571 | renaissance.a_new_art_wave.b5 | approve,struck5 (the 2 mid-square) -> D
+614 | [S] 85977a0e | renaissance.balloons.b4 | approve,struck4 (stage scenery balloonStreet) -> D
 613 | [S] 4fd62091+c5116a82 | renaissance.renaissance_fencer.b1 | approve,struck1 (stage scenery fencerLoggia, Fencers inside)
 613 | [S] 959a5f15 | renaissance.renaissance_fencer.b2 | approve,no strike (Musketeers spread, only half the width)
 613 | [S] bfa72ff9 | renaissance.renaissance_vs_ancient_2.b6 | reject (shift to -z: path on the wrong side, city further); reverted 55e63609
@@ -38,17 +47,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 609 | [S] 4e382b32+29e3a14d | challenge.zeus.b4 | approve,struck2,4 (slanted phalanx ~23 deg, Zeus centre); b1,3,5 left
 609 | [S] aaf6e1bf | challenge.big_brawl.b1 | approve,struck1-7 (Brawler V, Longship back centre); CONFIRM -> D
 609 | [S] 3dc7a176 | challenge.knights_and_priests.b1 | approve,struck1-3 (under the castle wall, Knight arrow); CONFIRM -> D
-608 | [R] cff61026 | map.fantasy_good.a2 | approve,struck2 (field-side gate sheets into deck channels, gates out of glow); CONFIRM 606 a -> D
-605 | [R] fc3db046 | map.fantasy_evil.b1 | reject, rejected-kept (revert conflicts); 6 m routes, edge chambers; centre stayed solid
-605 | [R] 18965679 | map.fantasy_evil.a1-2 | approve,struck2 (ledge mushroom pads); a1 slab/gate/no-monument clauses cleared
-605 | [R] 89f441c4 | map.fantasy_evil.b1 | approve,struck1 (sunken central pit, front/back chambers, 8 m causeways)
-605 | [R] 01db5cf0 | map.fantasy_evil.a1 | approve,struck1 (seven slab shrines on plinths, mixed rim masses); CONFIRM a,b PASS -> D
-604 | 50cccd39 | map.spooky_2.b4 | approve,struck4 (deck from OUTLINE); CONFIRM a,b PASS -> D
-603 | 21d6f4ee | map.dynasty.a2 | approve,struck2 (level loop at grade, notch bridge)
-603 | 11e518f9 | map.dynasty.a1 | approve,struck1 (lawn tufts, turf (.4,.6,.33)); CONFIRM a,b PASS -> D
-602 | [R] 92afd9c8 | map.pirate.b1 | approve,struck1; critic added b2 (base palms on the turned strip)
-602 | 264c9d94,36a587e7 | map.pirate.a1 | approve,struck1; CONFIRM a PASS
-602 | c3b103ee | map.pirate.b2 | approve,struck2; CONFIRM b PASS -> D
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605), fantasy_good (587-608): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.

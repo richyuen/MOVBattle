@@ -25,7 +25,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - Dev probe (5173): import the Babylon resource URL; EngineStore.LastCreatedScene is the live map scene.
 
 ## Maps and stages
-- Stage scenery (caves, paths, houses) is drawn per stage id in stagePresentation.ts, no colliders, up all battle; may move a map mesh if restored (609,612). Enemy tuple [id,x,z,yaw] turns a unit at spawn.
+- Stage scenery is drawn per stage id in stagePresentation.ts, no colliders; may move a map mesh if restored. [id,x,z,yaw] turns a unit. Scenery on a rank's -x sight line hides it in _army (614).
 - Inherited placement zones can omit clear streets or inner ice. Append valid side-specific strips, keeping the original skirmish zone first (599).
 - The sim ground is flat (root y 0); terrain.ts lifts dynamic roots by MapBuildResult.height at draw time and recomputes world matrices after, so battles are identical with or without height (Hill). Map meshes are static (trackMapBuild): a builder seats props at groundHeightAt(). Nav/placement come from zones, obstacles, hazards. An effect rooted at the origin with world-placed children is lifted by the origin height: give such roots their own position.
 - terrainMesh winds its grid to face +y; skirts are double-sided. The placement centre line and zone overlays stay flat (they are map meshes).
