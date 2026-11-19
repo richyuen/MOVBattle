@@ -241,6 +241,86 @@ function perchCrowns(scene: Scene, units: RuntimeUnit[], base: HeightField | nul
     setActiveHeightField(base);
   };
 }
+/**
+ * Survey + reference/stages/dynasty.samurai.png: loose files of Samurai stand on a winding grey flagstone path that climbs a few
+ * stairs to a torii seen face-on beyond them, the Monk at the top of the stairs. Spec: the rim torii at (40, -33) is turned to face
+ * the player (yaw PI/2) and set on the cobble loop at (44.5, -24) for this stage, on a 3 x 6.4 m stone landing; four 0.18 m treads,
+ * 0.7 m deep and 2.8 m wide, climb to it from x 41; from the stair foot the path forks into two winding arms (2.2 m wide) that run
+ * to the front along z -21.3 and z -26.7, out to x 29.5. Flagstones 0.75-1.1 m, two across, seeded jitter. Height field lifts the
+ * treads and landing only. Drawn only: the torii's post colliders and the battle stay as they are.
+ */
+const SAMURAI_TORII = { x: 44.5, z: -24 };
+function samuraiPath(scene: Scene, base: HeightField | null): void {
+  const meshes: Mesh[] = [];
+  const glow = scene.getGlowLayerByName("glow");
+  const stone = new StandardMaterial("samuraiPathStone", scene);
+  stone.diffuseColor = new Color3(0.5, 0.51, 0.53);
+  stone.emissiveColor = new Color3(0.07, 0.07, 0.075);
+  stone.specularColor = Color3.Black();
+  const ground = (x: number, z: number) => base?.(x, z) ?? 0;
+  const RISE = 0.18, FOOT = 41, TREAD = 0.7, TREADS = 4;
+  const top = ground(SAMURAI_TORII.x, SAMURAI_TORII.z) + RISE * TREADS;
+  const slab = (w: number, h: number, d: number, x: number, y: number, z: number, yaw: number) => {
+    const m = MeshBuilder.CreateBox("samuraiPathStone", { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z);
+    m.rotation.y = yaw;
+    m.material = stone;
+    m.receiveShadows = true;
+    m.isPickable = false;
+    glow?.addExcludedMesh(m);
+    meshes.push(m);
+  };
+  // the stair and the landing under the torii
+  for (let i = 0; i < TREADS; i++) {
+    const h = ground(FOOT + (i + 0.5) * TREAD, SAMURAI_TORII.z) + RISE * (i + 1);
+    slab(TREAD + 0.04, h, 2.8, FOOT + (i + 0.5) * TREAD, h / 2, SAMURAI_TORII.z, 0);
+  }
+  slab(3, top, 6.4, SAMURAI_TORII.x + 0.1, top / 2, SAMURAI_TORII.z, 0);
+  // two winding arms from the stair foot to the front
+  let k = 0;
+  for (const side of [1, -1]) {
+    const pts: Array<[number, number]> = [[FOOT, -24], [39.6, -24 + side * 1.4], [38.6, -24 + side * 2.7], [36.4, -24 + side * 2.9], [33.6, -24 + side * 2.4], [31.2, -24 + side * 3.1], [29.5, -24 + side * 2.7]];
+    for (let s = 0; s < pts.length - 1; s++) {
+      const [ax, az] = pts[s], [bx, bz] = pts[s + 1];
+      const len = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.round(len / 0.95));
+      const yaw = Math.atan2(bx - ax, bz - az), nx = (bz - az) / len, nz = -(bx - ax) / len;
+      for (let j = 0; j < n; j++) {
+        const t = (j + 0.5) / n, cx = ax + (bx - ax) * t, cz = az + (bz - az) * t;
+        for (const across of [-0.52, 0.52]) {
+          k++;
+          const w = 0.75 + seeded(k, 81) * 0.3, d = 0.75 + seeded(k, 82) * 0.3;
+          const x = cx + nx * across + (seeded(k, 83) - 0.5) * 0.18, z = cz + nz * across + (seeded(k, 84) - 0.5) * 0.18;
+          slab(w, 0.12, d, x, ground(x, z) + 0.01, z, yaw + (seeded(k, 85) - 0.5) * 0.5);
+        }
+      }
+    }
+  }
+  markStatic(meshes);
+  // the torii, turned to face the player and stood on the landing
+  const gate = scene.getMeshByName("dynastyRimToriiTwin");
+  const saved = gate ? { p: gate.position.clone(), r: gate.rotation.y } : null;
+  if (gate) {
+    gate.position.set(SAMURAI_TORII.x, top, SAMURAI_TORII.z);
+    gate.rotation.y = Math.PI / 2;
+    gate.computeWorldMatrix(true);
+  }
+  setActiveHeightField((x, z) => {
+    const g = ground(x, z);
+    if (Math.abs(z - SAMURAI_TORII.z) > 1.4 && !(Math.abs(z - SAMURAI_TORII.z) < 3.2 && x > SAMURAI_TORII.x - 1.4)) return g;
+    if (x < FOOT || x > SAMURAI_TORII.x + 1.6) return g;
+    const i = Math.min(TREADS - 1, Math.floor((x - FOOT) / TREAD));
+    return Math.max(g, x >= FOOT + TREADS * TREAD ? top : g + RISE * (i + 1));
+  });
+  cleanup = () => {
+    for (const m of meshes) if (!m.isDisposed()) m.dispose();
+    if (gate && saved && !gate.isDisposed()) {
+      gate.position.copyFrom(saved.p);
+      gate.rotation.y = saved.r;
+    }
+    setActiveHeightField(base);
+  };
+}
+
 export function clearStagePresentation(): void {
   cleanup?.();
   cleanup = null;
@@ -350,6 +430,10 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
   }
   if (id === "adventure.sneaky_tribe") {
     tribeCave(scene);
+    return;
+  }
+  if (id === "dynasty.samurai") {
+    samuraiPath(scene, base);
     return;
   }
   const perch = PERCHES[id];
