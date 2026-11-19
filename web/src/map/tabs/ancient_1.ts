@@ -739,10 +739,15 @@ export function buildAncient1(scene: Scene, base: () => MapBuildResult): MapBuil
   parapetWall(scene);
   townDressing(scene);
   const restoreSky = clearSky(scene);
+  const zones = result.zones.map((zone) => ({ ...zone, center: new Vector3(Math.sign(zone.center.x) * 40, 0, 0), size: new Vector3(30, zone.size.y, 40) }));
+  // Basic Formation occupies the two existing streets beside the central block.
+  // Keep the open plazas, adding only each side's clear four-metre street strips.
+  const streets = ([0,1] as const).flatMap(team => [-10,10].map(z => ({team,center:new Vector3((team===0?-1:1)*13.5,0,z),size:new Vector3(23,100,4)})));
   return {
     ...result,
     dispose: () => { restoreSky(); result.dispose?.(); },
-    zones: result.zones.map((zone) => ({ ...zone, center: new Vector3(Math.sign(zone.center.x) * 40, 0, 0), size: new Vector3(30, zone.size.y, 40) })),
+    zones,
+    placementZones: [...zones,...streets],
     obstacles,
     hazards: [],
   };
