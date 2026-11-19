@@ -490,10 +490,14 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
     box("water", 0.35, H + 1.6, 3, well * 13.1, (H + 1.6) / 2, 0);
     box("foam", 0.6, 0.4, 3.4, well * 13.1, H + 1.6, 0);
     for (const e of [-1.6, 1.6]) box("foam", 0.45, H + 1.6, 0.25, well * 13.1, (H + 1.6) / 2, e);
-    box("water", 3.2, H, 0.3, well * 11.5, H / 2, -(D / 2 + 1.25));
-    for (const e of [-1.7, 1.7]) box("foam", 0.25, H, 0.35, well * 11.5 + e, H / 2, -(D / 2 + 1.25));
-    box("foam", 3.6, 0.45, 0.7, well * 11.5, H + 0.2, -(D / 2 + 1.2));
-    box("water", 4.4, 0.1, 2.6, well * 11.5, 0.06, -(D / 2 + 2.6));
+    // 608 [R] a2 (CRITIC 607 r3: the stream must leave the gate where it starts): a 3 m sheet down the end buttress's field-side
+    // face straight into the deck channel's head (waterfalls()), so gate, channel and cascade read as one stream; the right
+    // gate keeps a second sheet on its camera-facing (-z) face. Foam only at the lips.
+    for (const v of field < 0 ? [-1] : [1, -1]) {
+      box("water", 3, H, 0.3, well * 11.8, H / 2, v * (D / 2 + 1.25));
+      box("foam", 3.4, 0.45, 0.7, well * 11.8, H + 0.2, v * (D / 2 + 1.2));
+      box("foam", 3.4, 0.2, 0.9, well * 11.8, 0.12, v * (D / 2 + 1.5));
+    }
   }
   const glow = scene.getGlowLayerByName("glow");
   for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
@@ -503,7 +507,8 @@ function gateTowers(scene: Scene, result: MapBuildResult, stone: StandardMateria
     merged.material = mats[key];
     merged.receiveShadows = key === "white" || key === "gold";
     merged.isPickable = false;
-    if (key === "glass" || key === "water" || key === "crystal" || key === "foam") glow?.addExcludedMesh(merged);
+    // 608: every gate part out of the glow pass: the white and gold stone's bloom laid a pale veil over the gate water
+    glow?.addExcludedMesh(merged);
   }
   void stone;
   return { ...result, obstacles };
@@ -803,7 +808,6 @@ function waterfalls(scene: Scene): void {
       box("water", 0.16, prev - top, Wd, xa + dir * 0.1, (prev + top) / 2, zc);
       box("foam", 0.3, 0.3, Wd + 0.3, xa + dir * 0.15, prev + 0.08, zc);
       box("foam", 0.35, 0.18, Wd + 0.2, xa + dir * 0.45, top + 0.14, zc);
-      for (const e of [-1.4, 0.3, 1.6]) box("foam", 0.22, prev - top, 0.3, xa + dir * 0.2, (prev + top) / 2, zc + e);
       prev = top;
     });
     const xe = rim + dir * L * tops.length;
@@ -827,8 +831,9 @@ function waterfalls(scene: Scene): void {
   }
   const glow = scene.getGlowLayerByName("glow");
   const rockMat = new StandardMaterial("heavenCascadeRock", scene);
-  rockMat.diffuseColor = new Color3(0.55, 0.62, 0.72);
-  rockMat.emissiveColor = rockMat.diffuseColor.scale(0.3);
+  // 608: mid-grey basalt, so the cyan pools read against it
+  rockMat.diffuseColor = new Color3(0.4, 0.45, 0.52);
+  rockMat.emissiveColor = rockMat.diffuseColor.scale(0.22);
   rockMat.specularColor = Color3.Black();
   const rocks = Mesh.MergeMeshes(parts.rock, true, true);
   if (rocks) { rocks.name = "heavenCascadeRocks"; rocks.convertToFlatShadedMesh(); rocks.material = rockMat; rocks.receiveShadows = true; rocks.isPickable = false; }
@@ -908,18 +913,19 @@ export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapB
   return { ...done, dispose: () => { restoreSky(); done.dispose?.(); } };
 }
 
+// 608: all of it moved into the back-right obelisk well, out of the two gate cascades (critic 607 r3).
 // 599 a5: black thorn tendrils and a fractured dark obelisk beside the light
 // statues (wiki overview). Root all pieces inside the existing pit hazards.
 function corruptedPits(scene: Scene): void {
   const dark=new StandardMaterial("heavenCorruption",scene);
   dark.diffuseColor.set(0.035,0.025,0.055);dark.emissiveColor.set(0.018,0.012,0.027);dark.specularColor=Color3.Black();
   const obelisk=MeshBuilder.CreateCylinder("heavenCorruptObelisk",{height:17,diameterBottom:2.8,diameterTop:1.4,tessellation:4},scene);
-  obelisk.position.set(17,-0.5,-19);obelisk.rotation.y=Math.PI/4;obelisk.material=dark;
+  obelisk.position.set(20,-0.5,22);obelisk.rotation.y=Math.PI/4;obelisk.material=dark;
   for(const [dx,h,tilt]of [[-0.6,3,-0.18],[0.6,4.5,0.22]]){
     const shard=MeshBuilder.CreateCylinder("heavenBrokenBlackCap",{height:h,diameterBottom:1.8,diameterTop:0,tessellation:4},scene);
-    shard.position.set(17+dx,8+h/2,-19);shard.rotation.z=tilt;shard.material=dark;
+    shard.position.set(20+dx,8+h/2,22);shard.rotation.z=tilt;shard.material=dark;
   }
-  for(const [i,[x,z]]of [[12,-25],[13,-20],[-24,9],[21,-26]].entries()){
+  for(const [i,[x,z]]of [[10,12],[23,11],[11,27],[24,26]].entries()){
     for(let branch=0;branch<3;branch++){
       const path:Vector3[]=[];
       for(let j=0;j<=10;j++){
