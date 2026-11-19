@@ -1,17 +1,14 @@
 # adventure.sneaky_tribe
-Status: open   Audited: 600 (AUDIT x2)   Done: -
+Status: done   Audited: 600 (AUDIT x2), 609 (CONFIRM: passed b)   Done: 609
 ## Verdicts
-a PASS (600 judge)
-b FAIL (0 since 600): 1. Army location in stage_adventure.sneaky_tribe_army.png and _field.png — TABS: the tribe is hidden inside the dark cave; ours stands fully exposed in straight ranks on the central field (ref: reference/stages/adventure.sneaky_tribe.png, card Survey).
-c PASS (600 judge)
-
+a PASS (609 judge)
+b PASS (609: struck 1; CONFIRM 609)
+c PASS (609 judge)
 ## Ranked gaps
-1. [S] b cave ambush — blocker 1: group the existing army inside the rim cave with the mouth concealing its ranks — ref: reference/stages/adventure.sneaky_tribe.png — ours: stage_adventure.sneaky_tribe_army.png, _field.png
-
+(none)
 ## Attempts (iter | gap | criterion | verdict)
-
+609 | [S] tribe 6 x 6 inside a drawn rock cave on the front-right ridge 55676eea | b1 | APPROVE, struck 1 -> D
 ## Rejected (last 4)
-
 ## Notes (max 3 lines)
-- AUDIT2 named the same hidden-placement element; no extra blocker added.
-- Map: tribal_1. Preserve the scripted army counts.
+- The cave is drawn in stagePresentation.ts tribeCave (no colliders).
+- Polish notes: the lit front rank of six shows at the mouth; the cave is a freestanding mound, not a cut in the rim cliff.

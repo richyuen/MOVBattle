@@ -25,6 +25,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - Dev probe (5173): import the Babylon resource URL; EngineStore.LastCreatedScene is the live map scene.
 
 ## Maps and stages
+- Stage scenery (perches, caves) is drawn per stage id in campaign/stagePresentation.ts; raise units with the height field, not colliders (609).
 - Inherited placement zones can omit clear streets or inner ice. Append valid side-specific strips, keeping the original skirmish zone first (599).
 - The sim ground is flat (root y 0); terrain.ts lifts dynamic roots by MapBuildResult.height at draw time and recomputes world matrices after, so battles are identical with or without height (Hill). Map meshes are static (trackMapBuild): a builder seats props at groundHeightAt(). Nav/placement come from zones, obstacles, hazards. An effect rooted at the origin with world-placed children is lifted by the origin height: give such roots their own position.
 - terrainMesh winds its grid to face +y; skirts are double-sided. The placement centre line and zone overlays stay flat (they are map meshes).
@@ -32,9 +33,9 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - Clear base props by name after base(), removing only their colliders (ring trees have them too). Keep builders self-contained so reverts never conflict. Base "hill" mounds and odd ground discs are base meshes: hide by name (587).
 - A set piece inside a merged tree belt needs a clearing before the trees merge (580).
 - Base crowns read pale because CanopyAerialPlugin and scene fog mix them toward sky-white: fresh crown materials made after base() (diffuse = emissive = c*0.55), applyFog false, out of the glow, stay saturated (tribal_1 556).
-- Every material a map build makes is disposed with the build (trackMapBuild), so a builder may recolour base materials by name ("grass", "groundMat", blades) without leaking to other maps; hide blades by mesh name fieldBlades_*/grassTuft. Base theme props are named `<displayName>_cyl|_box|_totem_top` with colliders at the same x,z.
+- A map build disposes every material it makes (trackMapBuild), so a builder may recolour base materials by name ("grass", "groundMat", blades); hide blades by name fieldBlades_*/grassTuft. Base props are `<displayName>_cyl|_box|_totem_top`, colliders at the same x,z.
 - Dense crops: thin instances; keep them under waist height or armies vanish (556). Static base meshes need setVerticesData to upload reshaped geometry (573).
-- Scene lights (hemi, dir) are not reset by a map build (clearColor and fogColor are, by the theme): a builder that changes them saves and restores them in its MapBuildResult.dispose, chained to the base's (farmer_snow 557). The far range and second slab are base meshes mountainBase/Cap/Root, clouds are "cloud": hide them by name.
+- A map build does not reset scene lights (hemi, dir); a builder that changes them restores them in its MapBuildResult.dispose, chained to the base's (557). The far range and second slab are base meshes mountainBase/Cap/Root, clouds are "cloud": hide them by name.
 - Ground pose (from x -30 looking +x) frames |z| < ~20 at x 0: place set pieces there or name the top shot. A face pointing +-x (a stern) shows in no shot (594).
 - The translucent box framing maps in the top shot is those zone slabs too (createPlacementGuides), a map mesh. Island underside = islandUnder + islandShelf + islandCliff (merged crags); farmer_1's earthBowl replaces them. MeshBuilder.CreatePolygon needs earcut (absent): fan a ribbon to a hub instead.
 - The island shot (radius 120, elevation ~16 deg) foreshortens the underside hard: make it ~0.3-0.4 of the island width deep or it reads as a thin band (farmer_1's 22 m bowl shows ~7 m, 559).

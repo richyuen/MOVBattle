@@ -3,6 +3,13 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+609 | [S] 08421589+c3b30ff4 | adventure.tree_mammoths.b1 | approve,struck1 (perch crowns, stagePresentation PERCHES); CONFIRM -> D
+609 | [S] ff209a0c+093c86aa | adventure.tree_tribe.b1 | approve,struck1 (one man to a perch crown, 3 rows on enemy arc); CONFIRM -> D
+609 | [S] 55676eea | adventure.sneaky_tribe.b1 | approve,struck1 (drawn rock cave, 6x6 inside); CONFIRM -> D
+609 | [S] fceec30c | challenge.ice_archer_and_friends.b1 | approve,struck1-4 (five groups, archer arrow); CONFIRM -> D
+609 | [S] 4e382b32+29e3a14d | challenge.zeus.b4 | approve,struck2,4 (slanted phalanx ~23 deg, Zeus centre); b1,3,5 left
+609 | [S] aaf6e1bf | challenge.big_brawl.b1 | approve,struck1-7 (Brawler V, Longship back centre); CONFIRM -> D
+609 | [S] 3dc7a176 | challenge.knights_and_priests.b1 | approve,struck1-3 (under the castle wall, Knight arrow); CONFIRM -> D
 608 | [R] cff61026 | map.fantasy_good.a2 | approve,struck2 (field-side gate sheets into deck channels, gates out of glow); CONFIRM 606 a -> D
 605 | [R] fc3db046 | map.fantasy_evil.b1 | reject, rejected-kept (revert conflicts); 6 m routes, edge chambers; centre stayed solid
 605 | [R] 18965679 | map.fantasy_evil.a1-2 | approve,struck2 (ledge mushroom pads); a1 slab/gate/no-monument clauses cleared

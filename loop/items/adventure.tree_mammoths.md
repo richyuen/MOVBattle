@@ -1,17 +1,14 @@
 # adventure.tree_mammoths
-Status: open   Audited: 600 (AUDIT x2)   Done: -
+Status: done   Audited: 600 (AUDIT x2), 609 (CONFIRM: passed b)   Done: 609
 ## Verdicts
-a PASS (600 judge)
-b FAIL (0 since 600): 1. Herd placement in stage_adventure.tree_mammoths_army.png and _field.png — TABS: five Mammoths perch separately on tree crowns along the rim; ours stands shoulder to shoulder in one ground-level row in the central field (ref: reference/stages/adventure.tree_mammoths.png, card Survey).
-c PASS (600 judge)
-
+a PASS (609 judge)
+b PASS (609: struck 1; CONFIRM 609)
+c PASS (609 judge)
 ## Ranked gaps
-1. [S] b canopy herd — blocker 1: distribute the five Mammoths along separate rim tree crowns and seat them at crown height — ref: reference/stages/adventure.tree_mammoths.png — ours: stage_adventure.tree_mammoths_army.png, _field.png
-
+(none)
 ## Attempts (iter | gap | criterion | verdict)
-
+609 | [S] five Mammoths on separate rim perch crowns 08421589 (+c3b30ff4) | b1 | APPROVE, struck 1 -> D
 ## Rejected (last 4)
-
 ## Notes (max 3 lines)
-- AUDIT2's elevation/distribution blockers name the same placement element; no extra blocker added.
-- Map: tribal_1. Preserve five Mammoths.
+- Perches are drawn in web/src/campaign/stagePresentation.ts (PERCHES, perchCrowns): one crown under each spawn, height field ramps off it.
+- CONFIRM/critic polish notes: crowns at near-equal height in an even row; TABS staggers height and depth.
