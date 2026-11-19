@@ -741,6 +741,31 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
   const shrined = shrine(scene, built, result);
   chainedStatue(scene, shrined.obstacles);
   backdropCrag(scene);
+  leaningSpire(scene);
   const hazards = [...shrined.hazards, ...chasms(scene)];
   return { ...result, hazards, obstacles: shrined.obstacles, height: shrineHeight, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// 599 a6, void_evil: one lone leaning slab rises well above the crag. Two
+// heavy chains cross its field-facing side to the statue, rather than hanging
+// behind the rock heap. Base (36,40), peak toward (23,31), height45 m.
+function leaningSpire(scene: Scene): void {
+  scene.getMeshByName("voidStatue_spire")?.setEnabled(false);
+  const stone=new StandardMaterial("voidLeaningSpire",scene);
+  stone.diffuseColor.set(0.2,0.3,0.36);stone.emissiveColor.set(0.11,0.17,0.21);stone.specularColor=Color3.Black();
+  const slab=MeshBuilder.CreateCylinder("voidLeaningSpire",{height:47,diameterBottom:12,diameterTop:3,tessellation:5},scene);
+  slab.scaling.z=0.44;slab.rotation.set(-0.18,0.2,0.28);slab.position.set(29.5,20.5,35.5);slab.material=stone;slab.receiveShadows=false;slab.convertToFlatShadedMesh();
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(slab);
+  const iron=new StandardMaterial("voidSpireFrontChain",scene);
+  iron.diffuseColor.set(0.3,0.36,0.4);iron.emissiveColor.set(0.16,0.2,0.23);iron.specularColor=Color3.Black();
+  for(const side of [-1,1]){
+    const a=new Vector3(24+side*2.5,35,30),b=new Vector3(STATUE.x+side*3.5,7,STATUE.z);
+    const n=25;
+    for(let i=0;i<=n;i++){
+      const t=i/n,p=Vector3.Lerp(a,b,t);p.y-=Math.sin(t*Math.PI)*7;
+      const ring=MeshBuilder.CreateTorus("voidSpireFrontLink",{diameter:1.6,thickness:0.35,tessellation:8},scene);
+      ring.rotation.set(Math.PI/2,i%2?Math.PI/2:0,0.15);ring.position.copyFrom(p);ring.material=iron;ring.receiveShadows=false;
+      scene.getGlowLayerByName("glow")?.addExcludedMesh(ring);
+    }
+  }
 }
