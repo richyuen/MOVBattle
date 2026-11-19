@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CAPS = {
-  "loop/ITERATE.md": 16_600, // v7: +600 for CONFIRM beside the critic; v9: +400 for the context rules; v10: +300 for the map-picker thumbnail refresh, then -700 when the capture command, evidence pack and CONFIRM were each stated once
+  "loop/ITERATE.md": 19_600, // v7: +600 for CONFIRM beside the critic; v9: +400 for the context rules; v10: +300 for the map-picker thumbnail refresh, then -700 when the capture command, evidence pack and CONFIRM were each stated once; v11: +3000 for solo mode and the locked CONFIRM list
   "loop/STATE.md": 12_000,
   "loop/LEDGER.md": 16_000,
   "loop/LESSONS.md": 10_000,
