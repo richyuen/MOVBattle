@@ -161,7 +161,7 @@ export const STAGES: TabsStageDef[] = [
     budget: 1000,
     playerUnits: "all",
     enemy: [
-      ["farmer.wheelbarrow", 29, 0],
+      ["farmer.wheelbarrow", 2.6, 10],
     ],
   },
   {

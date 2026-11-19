@@ -1,6 +1,6 @@
 // Curated levels sometimes start actors on scenery. Presentation stays separate
 // from flat deterministic battle coordinates and is removed whenever a level resets.
-import { Vector3, type Scene } from "@babylonjs/core";
+import { MeshBuilder, Vector3, type Scene } from "@babylonjs/core";
 import { markStatic, setActiveHeightField, terrainMesh, type HeightField } from "../map/terrain";
 import type { RuntimeUnit } from "../units/runtimeUnit";
 
@@ -12,6 +12,47 @@ export function clearStagePresentation(): void {
 
 export function applyStagePresentation(scene: Scene, id: string, units: RuntimeUnit[], base: HeightField | null): void {
   clearStagePresentation();
+  if (id === "adventure.final_destination_wheelbarrow") {
+    const cart = units.find(unit => unit.team === 1 && unit.definition.id === "farmer.wheelbarrow");
+    if (!cart) return;
+    // The existing arch spans the back street at (0,10), its apex at y7.2.
+    // A contiguous 8 x 3.6 m crown gives the cart a full-width standing approach
+    // before the statue, with the pavement below remaining available to passers.
+    const cap = MeshBuilder.CreateBox("wheelbarrowArchCrown", { width: 8, height: 0.5, depth: 3.6 }, scene);
+    cap.position.set(1.2, 7.15, 10);
+    cap.material = scene.getMaterialByName("ancient1Whitewash");
+    cap.receiveShadows = true;
+    markStatic([cap]);
+    const crew = units.filter(unit => unit === cart || unit.linkedParent === cart);
+    const heights = new Map<RuntimeUnit, number>();
+    const before = scene.onBeforeRenderObservable.add(() => {
+      if (cart.isDead || cart.body.root.isDisposed()) return;
+      const p = cart.position;
+      if (p.x < -2.8 || p.x > 5.2 || Math.abs(p.z - 10) > 1.8) return;
+      for (const unit of crew) {
+        if (unit.body.root.isDisposed()) continue;
+        heights.set(unit, unit.position.y);
+        unit.position.y += 7.4;
+      }
+    });
+    const restore = () => {
+      for (const [unit, y] of heights) {
+        if (unit.body.root.isDisposed()) continue;
+        unit.position.y = y;
+        unit.body.root.computeWorldMatrix(true);
+        for (const node of unit.body.root.getDescendants(false)) node.computeWorldMatrix(true);
+      }
+      heights.clear();
+    };
+    const after = scene.onAfterRenderObservable.add(restore);
+    cleanup = () => {
+      restore();
+      scene.onBeforeRenderObservable.remove(before);
+      scene.onAfterRenderObservable.remove(after);
+      if (!cap.isDisposed()) cap.dispose();
+    };
+    return;
+  }
   if (id === "adventure.a_fierce_rider") {
     const host = units.find(unit => unit.team === 1 && unit.definition.id === "tribal.mammoth");
     const rider = units.find(unit => unit.team === 1 && unit.definition.id === "farmer.halfling");
