@@ -70,11 +70,18 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
       saved.copyFrom(body.root.position);
       facing.copyFrom(body.root.rotation);
       joints.forEach((joint, i) => rotations[i].copyFrom(joint.rotation));
-      host.body.torso.computeWorldMatrix(true);
-      // The skull is raised .32 and grown1.28 above the neck(.2,.88):
-      // its crown/mane reaches torso-local y1.5. Seat above that shoulder
-      // instead of at the barrel's y.72, where the enlarged head hid the rider.
-      const seat = Vector3.TransformCoordinates(new Vector3(0, 1.52, 0.8), host.body.torso.getWorldMatrix());
+      // Anchor to the actual enlarged head and mane bounds. The torso-space
+      // shoulder is behind the projecting skull and occludes a tiny Halfling
+      // even at its nominal crown height. Seat the pelvis on the visible crest.
+      host.body.headMesh.computeWorldMatrix(true);
+      const seat = host.body.headMesh.getAbsolutePosition().clone();
+      let crown = -Infinity;
+      for (const mesh of host.body.allMeshes) {
+        if (mesh !== host.body.headMesh && mesh.name !== "crest") continue;
+        mesh.computeWorldMatrix(true);
+        crown = Math.max(crown, mesh.getBoundingInfo().boundingBox.maximumWorld.y);
+      }
+      seat.y = crown + 0.08;
       body.root.position.copyFrom(seat);
       body.root.position.y -= body.hip.position.y;
       body.root.rotation.copyFrom(host.body.root.rotation);
