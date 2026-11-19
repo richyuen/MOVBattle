@@ -270,8 +270,9 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     const base = top + STERN_RISE + 0.9;
     for (const s of [-1, 1]) {
       const lamp = MeshBuilder.CreateCylinder("pirateGalleonLamp", { diameter: 0.6, height: 1, tessellation: 6 }, scene);
-      const [x, z] = at(sternU - 3.8, s * BEAM * 0.4);
-      lamp.position.set(x, base + 0.6, z);
+      // 602.2b: on the raked transom's handrail corners, not floating over the old upright transom
+      const [x, z] = at(aft - 0.9 + 0.25, s * (width(aft) - 0.15));
+      lamp.position.set(x, base + 0.5, z);
       parts.gold.push(lamp);
     }
     // Bowsprit
