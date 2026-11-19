@@ -1,6 +1,6 @@
 # Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
-Iteration: 602   Batch: maps_3+maps_4+stages_adventure   Consecutive empty: 0   Done: 34/99   Parked: 0
-Solo: map.dynasty   Queue: map.spooky_2, map.fantasy_evil, map.fantasy_good   Rounds: 0   Dry: 0
+Iteration: 603   Batch: maps_3+maps_4+stages_adventure   Consecutive empty: 0   Done: 35/99   Parked: 0
+Solo: map.spooky_2   Queue: map.fantasy_evil, map.fantasy_good   Rounds: 0   Dry: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
 ## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
@@ -11,7 +11,7 @@ Marks per a b c: + pass,- fail,? unscored. Status q queued,o open,D done,p parke
 ## Scoreboard
 maps_1: tribal_1 +++ D | tribal_2 +++ D | tribal_sandbox +++ D | farmer_1 +++ D | farmer_2 +++ D | farmer_snow +++ D
 maps_2: medieval_1 +++ D | medieval_2 +++ D | ancient_1 +++ D | ancient_2 +++ D | ancient_sandbox +++ D | viking +++ D | viking_sandbox +++ D
-maps_3: dynasty -++ o | renaissance +++ D | pirate +++ D | spooky_1 +++ D | spooky_2 +-+ o | wild_west +++ D | legacy +++ D
+maps_3: dynasty +++ D | renaissance +++ D | pirate +++ D | spooky_1 +++ D | spooky_2 +-+ o | wild_west +++ D | legacy +++ D
 maps_4: fantasy_good --+ o | fantasy_evil --+ o | simulation +++ D | bridge +++ D | hill +++ D | corridor +++ D | defend_the_castle +++ D | high_ground +++ D | low_ground +++ D
 stages_introduction: clubs +++ D | army +++ D | hay_and_pitchforks +++ D | basic_formation +++ D | ice_archers_only_almost +++ D | longships +++ D
 stages_adventure: tree_tribe +-+ o | the_tiniest_attack +++ D | sneaky_tribe +-+ o | tree_mammoths +-+ o | final_destination_wheelbarrow +++ D | a_fierce_rider +++ D
@@ -26,27 +26,22 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter602 solo map.pirate, 2 rounds: 1 [R] +2 [S]; BASE e2870814 + v11 rules 7d1dbd41)
-Evidence a499d822 (deck shot on the turned team-0 ship), 8a51d844 (ground/battle cam up the strip centre line, also stage battle shots).
-- r1 [R] map.pirate.b blocker1 (92afd9c8) APPROVE, struck1; critic added b2 (base palms left on the turned strip)
-- r1 [S] map.pirate.a blocker1 (264c9d94, 36a587e7) APPROVE, struck1; a PASS; CONFIRM a PASS
-- r2 [S] map.pirate.b blocker2 (c3b103ee) APPROVE, struck2; b PASS; CONFIRM b PASS -> D
-- 3/3, 3 struck
+## Focus (iter603 solo map.dynasty, 1 round: 2 [S]; BASE 00a9da5a)
+- r1 [S] map.dynasty.a blocker2 (21d6f4ee) APPROVE, struck2 (level cobble loop at grade x+-46 z-39..37, notch bridge)
+- r1 [S] map.dynasty.a blocker1 (11e518f9) APPROVE, struck1; a PASS; CONFIRM a,b PASS -> D
+- 2/2, 2 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [R] map.pirate (92afd9c8)
+GAP: [S] map.dynasty (21d6f4ee)
 VERDICT: APPROVE
-CRITERION: map.pirate.b FAIL   (previous: FAIL)
-GAP: [S] map.pirate (264c9d94, follow-up 36a587e7)
+CRITERION: map.dynasty.a FAIL   (previous: FAIL)
+GAP: [S] map.dynasty (11e518f9)
 VERDICT: APPROVE
-CRITERION: map.pirate.a PASS   (previous: FAIL)
-GAP: [S] map.pirate (c3b103ee)
-VERDICT: APPROVE
-CRITERION: map.pirate.b PASS   (previous: FAIL)
-REGRESSIONS: none. judge.json: map.pirate.c and all three stages' a and c PASS (x_marks_the_spot, a_rival_captain, spooky.plunder; armies moved onto the +x deck). CONFIRM (locked list) passed a in r1, b in r2.
+CRITERION: map.dynasty.a PASS   (previous: FAIL)
+REGRESSIONS: none. judge.json: map.dynasty.c and all four stages' a/c PASS. CONFIRM (locked list) passed a and b (b not kept: no glance blocker added).
 
 ## Notes for next iteration (max5lines)
-- 602 solo pirate D in 2 rounds (reviews iter-602/critic.md, critic-r2.md, confirm.md, confirm-r2.md); thumbnail refreshed. Next solo: map.dynasty (a FAIL a1 turf, a2 cobble loop, list from CONFIRM 588: no glance; b PASS not kept: glance allowed).
-- Dynasty has a waiting [P] fallout (shrub cheeks in stage armies) and stages dynasty.samurai, art_of_war, renaissance_vs_dynasty_3, wild_west.shogun_s_samurai to capture with it.
-- v11 (user, 2026-11-19): solo mode, maps one at a time to D or Dry:6 park; adventure stages wait for the empty Queue. Locked list: fantasy a/b lists from CONFIRM (no glance); spooky_2 a not kept (glance only), b from AUDIT.
-- Pirate CONFIRM notes (not blockers): mirror-symmetric ships, cylinder sails, straight strip, rubble rows on the strip.
+- 603 solo dynasty D in 1 round (iter-603/critic.md, confirm.md); thumbnail refreshed. 602 pirate D in 2 rounds.
+- Next solo: map.spooky_2 (b FAIL b4 field outline square with notched corners, list from AUDIT 576: glance allowed on b; a PASS not kept: glance allowed). Stages: spooky.war, wild_west.spooky_army, fantasy_good.vicious_terror.
+- v11 (user, 2026-11-19): solo mode, maps one at a time to D or Dry:6 park; adventure stages wait for the empty Queue. fantasy a/b lists from CONFIRM (no glance).
+- Dynasty CONFIRM notes (not blockers): lavender sparse cherries, front hedge row, plain outline, small pagoda. Pirate: symmetric ships, cylinder sails.

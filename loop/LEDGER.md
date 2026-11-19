@@ -3,6 +3,8 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+603 | 21d6f4ee | map.dynasty.a2 | approve,struck2 (level loop at grade, notch bridge)
+603 | 11e518f9 | map.dynasty.a1 | approve,struck1 (lawn tufts, turf (.4,.6,.33)); CONFIRM a,b PASS -> D
 602 | [R] 92afd9c8 | map.pirate.b1 | approve,struck1; critic added b2 (base palms on the turned strip)
 602 | 264c9d94,36a587e7 | map.pirate.a1 | approve,struck1; CONFIRM a PASS
 602 | c3b103ee | map.pirate.b2 | approve,struck2; CONFIRM b PASS -> D
@@ -35,12 +37,9 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 598 | [R] d4fd09be | map.spooky_2.b | approve, struck b1 (plateau lifted); b4 corners bevelled
 598 | 26e5a09e (+ evidence 598.0 gate shot) | map.high_ground.b2 | approve, struck b2 (b PASS); gate passage draws passers on the crown; CONFIRM599 b PASS -> D
 598 | 7decadec, 6f225d65; 023a7c90, aff6a657, e0b923c7; 7e502bad, 2638f64f; edb92610 (+[P] 3ba5d947) | clubs.b2, b1; hay.b3, b1, b2; basic.b1, b2; ice.b3 (b2) | approve all; struck all but ice b3 (width clause); clubs, hay D
-597 | [R] 5e04109e | map.dynasty.a | approve, struck a3, a6 (plateau cleared)
-597 | 89b4f29e (+4818fb5b); 6bbd3b7d, 10bafbf2, cfe386c3 | map.fantasy_evil.a6; fantasy_good.a4, a3, b2 | approve all; struck a4, a3; a6 rock-mass and b2 ledge clauses cleared
-597 | 426bae72; 275c58c7 (+a137190f), e141277b; 2a5b6349, 0ff32508 | introduction.army.b1; longships.b1, b2; ice_archers.b1, b2 | approve all; struck army b2 b3, longships all (D), ice b1
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
-tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
+tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
 web/src/map/tabs/spooky_2.ts:pumpkinShrine | ten lobes,main7.2m y6; arch13m/forks,15candles | 601 | approve bba97442 | single4.6m sphere y5,3trees
@@ -70,14 +69,10 @@ web/src/map/tabs/fantasy_evil.ts:rockMass | (.09,.12,.14) self (.03,.04,.045); r
 web/src/map/tabs/fantasy_evil.ts:STAIRS/shrine/chasms/voidSky | flights |x|8..16 z-16..-6; shrine r6.2(0,1),altar(0,12); chasms4m acid(.15,.9,.2); void(.02,.012,.035); replaced floor/rim/monument in newer rows | 595 | approve590-595 | tree ring/maroon lawn/mauve sky
 web/src/map/tabs/spooky_2.ts:thornThickets | per side 16 lumps r 1.8-3.2 (.055,.06,.1) self .35 + 52 arching vines 3-7 m, rise 2-4.5 m, navy (.1,.11,.19) self .3; collider 3.5 x 7 kept | 596 | approve, struck a3 | 587: 30 upright vines 7-10 m
 web/src/map/tabs/spooky_2.ts:squareRingSpot, terraces, deadPropTrees, blackTrees, rockSkirt, channelBridges, gratedCourt, darkTorii, pumpkinShrine, nightSky | ring on power-8 rim; terraces |z| .8..6.4 h .7, 18.6..29.5 h 1.6; dead trees 6-9.5 m bark (.035,.035,.055); skirt 4 courses (.3,.34,.48); bridges x +-30 rise 3; ember court 15 m; torii (-40,33); shrine (14,38) 16 m mound; navy sky | 595 | approve (578-595) | base oval day map
-web/src/map/tabs/dynasty.ts:cherryGrove | ten rim trees, trunks9..13m d1.3, crowns r2.3..3.6; original ring colliders replaced | 599 | approve, struck a5 | 597: every4th base tree, trunk5.5..8m, crown r1.4..2.4; colours unchanged
-web/src/map/tabs/dynasty.ts:columnCliffs | tilted courses + four 3-boulder headlands r4.6..6.9; stone (.4,.52,.58) self(.18,.24,.27), moss | 599 | approve, struck a4 | 597: regular courses, cobalt (.22,.36,.44), shoulder moss; 596 pale lavender
-web/src/map/tabs/dynasty.ts:turf, pagoda, blossomShrubs | turf (.32,.55,.24) self .3; pagoda open frame, red (.82,.1,.3), stone (.34,.4,.46); shrub clumps (.9,.68,.9) self .45 at |z| 19.4 lips and stair cheeks |z| 5.8 (in stage armies) | 597 | approve ([R]) | turf (.12,.38,.14); white walls + lattice
 web/src/map/tabs/fantasy_evil.ts:backdropCrag | 26 boulders 3 tiers tops 8/18/30 m x 22..56 z 46..62, (.2,.26,.32) self .35, out of glow; spire re-lit with it; 4 ledge chains (unseen) | 597 | approve | -
 web/src/map/tabs/fantasy_good.ts:pitShafts, waterfalls, frontLedge | floor (.08,.1,.16); navy liners; 6-10 hex columns r 1-2.1 tops -1.2..-6.5 (.55,.62,.72) self .3; channels 1.8 m to back pits, 3 front falls 30 m (.25,.62,1.05); ledge z -46..-40 at y -2, stairs x -50, 14 | 597 | approve | -
 web/src/campaign/stages/introduction.ts:all6 stages | approved + CONFIRMed D597-599; final formations in source/git loop(597..599); rows compacted | 599 | approve | scaffold rows
 web/src/map/tabs/spooky_2.ts:CUTS, RIM, OUTLINE, rockSkirt, cobbleLoop | max-norm rim 54 x 48; cuts big (36,30), corners 42/36, mouths 47.5 z 7..17; skirt boulders inset r*1.1+4k, r <= outline dist/1.35; loop steps 39.25/33.25; fog to 47.5 + 2 falling sheets | 598 | approve ([R]) | 596: power-8 rim, notches 44.5/38.5, loop 41.25/35.25
-web/src/map/tabs/dynasty.ts:canalOutlets, PAGODA, sideBridges, clearLoop, perimeterFlagstones, canalPools, 577-583 set | outlets x -34, 17 to z -47.6, falls 3.4 x 12 m; pagoda (0,19) platform 15; bridges x +-12.5; loop 5 m cobbles 3 Chaikin passes; trees 4.6 m off the loop; mintSky (.68,.86,.74); lawn terraces .85/2.4 m (outer h never [P]) | 595 | approve (577-595) | base theme
 web/src/map/tabs/fantasy_good.ts:PITS | 5 pits: tree x -34..-12 z -32..-12, obelisk 2..12 z -30..-19, open 22..40 z -32..-15, tree -26..-8 z 13..30, obelisk 6..16 z 19..31; 10 m deep, floor (.24,.3,.42) self (.06,.08,.12) | 596 | approve, struck b1 | 592: four x 6..30 z 9..30
 web/src/map/tabs/fantasy_good.ts:cleanDeck | boulder/hill/wallStone/pebble/stump/hayBale/Sanctum junk hidden with colliders; 16 inlay patches 4 x 3 x 1 m, ~half teal (.2,.62,.6), some aqua (.45,.78,.76), self .35 | 596 | approve, struck a6 | dressing on the deck
 web/src/map/tabs/fantasy_good.ts:EDGE_STEPS, viaductUnderside, sideIslets, gateTowers, openCentre, parapets, marbleDeck, heavenSky | long edges step 4 m at u -36..-20, -4..12, 28..44; arches 4 x 6.5 m every 6 m; 5 islets; towers (+-40,30) legs 6 x 19 m, glass, water; gold ring 8.5 m; merlons every 2.4 m; pavers (236,240,244); sky (112,182,228) | 595 | approve (591-595); [P] eligible to 598: arch heads rotation (PI/2,0,0), columns longer | base temple, tree ring
