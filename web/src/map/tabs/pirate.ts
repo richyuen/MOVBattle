@@ -18,7 +18,13 @@ import type { Obstacle } from "../obstacles";
 // red army by one and the blue by the other, not both straddling the centre line). Spec: the +z galleon slides to x -17 (team 0's
 // half, x -30..-2 bow inward), the -z one to x +17 (team 1's half, x 2..30 bow inward); decks, planks, rails and prunes follow x.
 const SHIPS = [{ x: -17, z: 37, bow: 1 }, { x: 17, z: -37, bow: -1 }];
-const LONG = 30, BEAM = 8, HULL = 4.4, SINK = 0.8;
+// Rebuild600 a (wiki pirate.png, CONFIRM592/599): broad deep galleons dominate
+// both shores, dark planks with gold strakes, tall raked windowed sterns and
+// open 4m crow's nests. Keep the 28m mooring footprint and every plank mouth;
+// increase the visible shell to 7.2m deep and its beam to 12m, drawing actors
+// on the same newly raised decks. The summit carries an open wrecked bow,
+// not a bell. Irregular 8..16m palms and broad leaf rosettes close shore ends.
+const LONG = 30, BEAM = 12, HULL = 8, SINK = 0.8;
 
 // Curved hull (593, blocker a2; wiki pirate.png: the galleon hull is one smooth dark planked shell, its sides rounding in to the
 // keel, its bow drawing to a point, its stern raked under a high transom; dark chocolate brown with gold bands at the sheer and
@@ -97,7 +103,7 @@ function loftHull(scene: Scene, parts: Record<string, Mesh[]>, at: (u: number, v
   };
   for (let y = top - 0.6; y > top - HULL + 0.9; y -= 0.6) band("dark", y, 0.07, 0.03);
   band("gold", top + BULWARK + 0.1, 0.28, 0.06);
-  band("gold", top - 1.9, 0.22, 0.05);
+  for (const drop of [1.9, 4.1, 6]) band("gold", top - drop, 0.22, 0.05);
 }
 
 function galleons(scene: Scene, obstacles: Obstacle[]): void {
@@ -230,9 +236,20 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
         for (let g = 0; g < 4; g++) box("dark", 1.25, 1.25, 0.18, u, y - 0.62, (g - 1.5) * span * 0.24);
       }
       for (const s of [-1, 1]) for (const du of [-1.4, 0, 1.4]) rod("dark", world(u + du, top + 0.9, s * BEAM * 0.47), world(u, top + tall * 0.8, 0), 0.07);
-      const nest = MeshBuilder.CreateCylinder("pirateGalleonNest", { height: 0.9, diameter: 1.8, tessellation: 8 }, scene);
-      nest.position.set(mx, top + tall * 0.88, mz);
-      parts.hull.push(nest);
+      const nestY = top + tall * 0.88;
+      const nest = MeshBuilder.CreateCylinder("pirateGalleonNest", { height: 0.25, diameter: 4.2, tessellation: 10 }, scene);
+      nest.position.set(mx, nestY, mz);
+      parts.dark.push(nest);
+      for (const lift of [0.2, 1.2]) {
+        const hoop = MeshBuilder.CreateTorus("pirateGalleonNestRail", { diameter: 4, thickness: 0.2, tessellation: 10 }, scene);
+        hoop.position.set(mx, nestY + lift, mz);
+        parts.hull.push(hoop);
+      }
+      for (let post = 0; post < 10; post++) {
+        const a = post * Math.PI / 5;
+        rod("dark", new Vector3(mx + Math.cos(a) * 2, nestY + 0.2, mz + Math.sin(a) * 2),
+          new Vector3(mx + Math.cos(a) * 2, nestY + 1.2, mz + Math.sin(a) * 2), 0.16);
+      }
     }
     // Cannons along the beach rail
     for (let c = 0; c < 6; c++) {
@@ -443,14 +460,14 @@ function beachRing(scene: Scene): void {
   const trunks: Mesh[] = [], leaves: Mesh[] = [];
   let seed = 7;
   const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-  for (const deg of [150, 182, 205, 232, 262, 292, 318, 345, 110]) {
+  for (const deg of [116, 121, 145, 153, 160, 178, 186, 203, 211, 226, 293, 307, 315, 327, 339]) {
     const a = (deg * Math.PI) / 180;
-    const count = 2 + Math.floor(rnd() * 3);
+    const count = 3 + Math.floor(rnd() * 4);
     for (let k = 0; k < count; k++) {
-      const aa = a + (k - count / 2) * 0.035, inset = 2.5 + rnd() * 3;
+      const aa = a + (rnd() - 0.5) * 0.13, inset = 1.5 + rnd() * 5.5;
       const px = Math.cos(aa) * (RX - inset), pz = Math.sin(aa) * (RZ - inset);
       const inward = new Vector3(-px, 0, -pz).normalize();
-      const tall = 4.5 + rnd() * 3, lean = 0.18 + rnd() * 0.22, segs = 5;
+      const tall = 8 + rnd() * 8, lean = 0.18 + rnd() * 0.32, segs = 5;
       let p = new Vector3(px, 0.25, pz);
       for (let s = 0; s < segs; s++) {
         const tilt = lean * (s + 1) / segs;
@@ -465,10 +482,22 @@ function beachRing(scene: Scene): void {
       const spin = rnd() * Math.PI;
       for (let f = 0; f < 7; f++) {
         const yaw = spin + (f / 7) * Math.PI * 2;
-        const frond = MeshBuilder.CreateBox("pirateRingPalm", { width: 0.9, height: 0.08, depth: 3.4 }, scene);
-        frond.rotation.set(0.42, yaw, 0);
-        frond.position.set(p.x + Math.sin(yaw) * 1.5, p.y - 0.55, p.z + Math.cos(yaw) * 1.5);
+        const frond = MeshBuilder.CreateCylinder("pirateRingPalm", { height: 4.5, diameterBottom: 1.8, diameterTop: 0, tessellation: 4 }, scene);
+        frond.scaling.z = 0.16;
+        const dir = new Vector3(Math.sin(yaw), -0.4, Math.cos(yaw)).normalize();
+        frond.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
+        frond.position.copyFrom(p.add(dir.scale(2.15)));
         leaves.push(frond);
+      }
+      // Wide pointed tropical leaves rather than another row of miniature palms.
+      for (let f = 0; f < 9; f++) {
+        const yaw = spin + f * Math.PI * 2 / 9;
+        const blade = MeshBuilder.CreateCylinder("pirateShoreRosette", { height: 3.5 + rnd() * 2, diameterBottom: 2.4, diameterTop: 0, tessellation: 4 }, scene);
+        blade.scaling.z = 0.12;
+        const dir = new Vector3(Math.cos(yaw), 0.6 + rnd(), Math.sin(yaw)).normalize();
+        blade.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir, new Quaternion());
+        blade.position.set(px + dir.x * 1.6, 0.4 + dir.y * 1.6, pz + dir.z * 1.6);
+        leaves.push(blade);
       }
     }
   }
@@ -779,25 +808,47 @@ function bellMountain(scene: Scene, obstacles: Obstacle[]): void {
     parts.water.push(run);
   }
   lump("water", 5, 0.5, 4.5, CX + 1.5, 0.15, CZ - 10, 95);
-  // The bell, 6 m across, in an A-frame standing across the summit (seen whole from the beach)
-  for (const s of [-1, 1]) {
-    const post = MeshBuilder.CreateCylinder("pirateMountainBellPost", { height: 13, diameter: 0.6, tessellation: 6 }, scene);
-    post.rotation.z = s * 0.2;
-    post.position.set(CX + s * 3.9, 22, CZ - 0.5);
-    parts.bell.push(post);
+  // The wreck is an open U-shaped bow, tilted upright on the summit. Its open
+  // broken cross-section faces the beach; longitudinal boards and curved ribs
+  // read as a boat even from the high map shot, unlike a closed conical bell.
+  const wreckPoint = (depth: number, theta: number) => {
+    const radius = 4.8 * (1 - 0.72 * depth / 9);
+    return new Vector3(CX + Math.cos(theta) * radius,
+      23.5 - Math.sin(theta) * radius + depth * 0.38, CZ - 3 + depth);
+  };
+  const wreckRod = (a: Vector3, b: Vector3, diameter: number, key: "bell" | "gold") => {
+    const dir = b.subtract(a), len = dir.length();
+    const beam = MeshBuilder.CreateCylinder("pirateWreckBoard", { height: len, diameter, tessellation: 4 }, scene);
+    beam.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), dir.normalize(), new Quaternion());
+    beam.position.copyFrom(Vector3.Center(a, b));
+    parts[key].push(beam);
+  };
+  const pos: number[] = [], idx: number[] = [], steps = 16, rows = 9;
+  for (let row = 0; row <= rows; row++) for (let j = 0; j <= steps; j++) {
+    const theta = Math.PI * j / steps, p = wreckPoint(row, theta);
+    pos.push(p.x, p.y, p.z);
+    if (row < rows && j < steps) {
+      const v = row * (steps + 1) + j;
+      idx.push(v, v + steps + 1, v + 1, v + 1, v + steps + 1, v + steps + 2);
+    }
   }
-  const beam = MeshBuilder.CreateBox("pirateMountainBellBeam", { width: 6.6, height: 0.6, depth: 0.6 }, scene);
-  beam.position.set(CX, 28.3, CZ - 0.5);
-  parts.bell.push(beam);
-  const bell = MeshBuilder.CreateCylinder("pirateMountainBell", { height: 5.2, diameterTop: 2.4, diameterBottom: 6, tessellation: 10 }, scene);
-  bell.position.set(CX, 25.2, CZ - 0.5);
-  parts.bell.push(bell);
-  const crown = MeshBuilder.CreateSphere("pirateMountainBellCrown", { diameter: 2.5, segments: 6 }, scene);
-  crown.position.set(CX, 27.7, CZ - 0.5);
-  parts.bell.push(crown);
-  const rim = MeshBuilder.CreateCylinder("pirateMountainBellRim", { height: 0.5, diameter: 6.4, tessellation: 10 }, scene);
-  rim.position.set(CX, 22.7, CZ - 0.5);
-  parts.gold.push(rim);
+  const shell = new Mesh("pirateSummitWreck", scene), data = new VertexData(), normals: number[] = [];
+  VertexData.ComputeNormals(pos, idx, normals);
+  data.positions = pos; data.indices = idx; data.normals = normals;
+  data.uvs = new Array(pos.length / 3 * 2).fill(0); data.applyToMesh(shell);
+  parts.bell.push(shell); mats.bell.backFaceCulling = false; mats.bell.twoSidedLighting = true;
+  for (let j = 0; j <= steps; j++) {
+    const theta = Math.PI * j / steps;
+    wreckRod(wreckPoint(0, theta), wreckPoint(9, theta), 0.14, "gold");
+  }
+  for (const depth of [0, 3, 6, 9]) for (let j = 0; j < steps; j++) {
+    wreckRod(wreckPoint(depth, Math.PI * j / steps), wreckPoint(depth, Math.PI * (j + 1) / steps), 0.3, "bell");
+  }
+  wreckRod(new Vector3(CX, 24.5, CZ + 3), new Vector3(CX - 1, 34, CZ + 5), 0.35, "bell");
+  // More grassy shoulders around the stranded hull, with plants breaking its base.
+  lump("grass", 10, 0.9, 8, CX, 18.5, CZ, 201);
+  palm(CX - 5, 18, CZ + 1, 6.5, 202);
+  palm(CX + 5, 17, CZ - 1, 7.8, 203);
   const glow = scene.getGlowLayerByName("glow");
   for (const key of Object.keys(mats) as Array<keyof typeof mats>) {
     const merged = Mesh.MergeMeshes(parts[key], true, true);
