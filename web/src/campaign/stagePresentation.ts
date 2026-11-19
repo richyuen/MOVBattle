@@ -367,6 +367,50 @@ function zeusHouse(scene: Scene): void {
 }
 
 /**
+ * reference/stages/renaissance.balloons.thumb.png: the army stands at the back of the plaza with the street mouth between a
+ * pink and a yellow townhouse right behind its centre. The east row (fronts at x = 44) is one unbroken terrace, so the two
+ * house fronts and the dark street between them are drawn here on its face behind the centre chevron (z 12), no collider.
+ */
+function balloonStreet(scene: Scene): void {
+  const mat = (name: string, r: number, g: number, b: number) => {
+    const m = new StandardMaterial(name, scene);
+    m.diffuseColor = new Color3(r, g, b).scale(0.72);
+    m.emissiveColor = new Color3(r, g, b).scale(0.28);
+    m.specularColor = Color3.Black();
+    return m;
+  };
+  const pink = mat("balloonStreetPink", 0.88, 0.58, 0.56);
+  const yellow = mat("balloonStreetYellow", 0.93, 0.79, 0.42);
+  const shade = mat("balloonStreetShade", 0.16, 0.13, 0.12);
+  const roof = mat("balloonStreetRoof", 0.78, 0.36, 0.2);
+  const glow = scene.getGlowLayerByName("glow");
+  const meshes: Mesh[] = [];
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, m: StandardMaterial) => {
+    const b = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z);
+    b.material = m;
+    b.receiveShadows = true;
+    b.isPickable = false;
+    glow?.addExcludedMesh(b);
+    meshes.push(b);
+  };
+  const Z = 12, GAP = 3.6, W = 5.2, H = 9.5;
+  // the street: a dark slot running back between the houses, its floor paving the same shade
+  box("balloonStreetMouth", 0.3, H - 0.5, GAP, 43.8, (H - 0.5) / 2, Z, shade);
+  for (const [side, m, h] of [[-1, pink, H], [1, yellow, H - 1.2]] as const) {
+    const zc = Z + side * (GAP + W) / 2;
+    box("balloonStreetFront", 0.4, h, W, 43.75, h / 2, zc, m);
+    box("balloonStreetEave", 1.0, 0.45, W + 0.3, 43.55, h + 0.1, zc, roof);
+    for (const dz of [-1.4, 1.4]) for (const y of [2.2, 5.2]) box("balloonStreetWindow", 0.1, 1.3, 0.8, 43.5, y, zc + dz, shade);
+  }
+  markStatic(meshes);
+  cleanup = () => {
+    for (const m of meshes) if (!m.isDisposed()) m.dispose();
+    for (const m of [pink, yellow, shade, roof]) m.dispose();
+  };
+}
+
+/**
  * Survey "the three Knights are positioned on the land arch" (reference/stages/pirate.you_won_t_make_us_walk_the_plank.png:
  * a leaning ruined stone arch at frame-left of the three Knights). medieval_1 has no arch in the team-1 half, so one is drawn
  * here beside the Knights: two broken stone piers leaning toward the army and a cracked lintel, no collider.
@@ -592,6 +636,10 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
   }
   if (id === "renaissance.renaissance_fencer") {
     fencerLoggia(scene, base);
+    return;
+  }
+  if (id === "renaissance.balloons") {
+    balloonStreet(scene);
     return;
   }
   if (id === "pirate.you_won_t_make_us_walk_the_plank") {
