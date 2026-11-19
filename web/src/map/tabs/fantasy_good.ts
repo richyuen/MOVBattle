@@ -783,7 +783,35 @@ export function buildFantasyGood(scene: Scene, base: () => MapBuildResult): MapB
   const done = gateTowers(scene, pits(scene, built, walled, stone, gold), stone, gold);
   cleanDeck(scene, built, done);
   pitShafts(scene);
+  corruptedPits(scene);
   return { ...done, dispose: () => { restoreSky(); done.dispose?.(); } };
+}
+
+// 599 a5: black thorn tendrils and a fractured dark obelisk beside the light
+// statues (wiki overview). Root all pieces inside the existing pit hazards.
+function corruptedPits(scene: Scene): void {
+  const dark=new StandardMaterial("heavenCorruption",scene);
+  dark.diffuseColor.set(0.035,0.025,0.055);dark.emissiveColor.set(0.018,0.012,0.027);dark.specularColor=Color3.Black();
+  const obelisk=MeshBuilder.CreateCylinder("heavenCorruptObelisk",{height:17,diameterBottom:2.8,diameterTop:1.4,tessellation:4},scene);
+  obelisk.position.set(7,-0.5,-24);obelisk.rotation.y=Math.PI/4;obelisk.material=dark;
+  for(const [dx,h,tilt]of [[-0.6,3,-0.18],[0.6,4.5,0.22]]){
+    const shard=MeshBuilder.CreateCylinder("heavenBrokenBlackCap",{height:h,diameterBottom:1.8,diameterTop:0,tessellation:4},scene);
+    shard.position.set(7+dx,8+h/2,-24);shard.rotation.z=tilt;shard.material=dark;
+  }
+  for(const [i,[x,z]]of [[3,-25],[10,-23],[-13,19],[25,-20]].entries()){
+    for(let branch=0;branch<3;branch++){
+      const path:Vector3[]=[];
+      for(let j=0;j<=10;j++){
+        const t=j/10;
+        path.push(new Vector3(x+Math.sin(t*4+branch)*1.1+branch*0.5,-4+t*(8+branch),z+Math.sin(t*3+i)*1.4));
+      }
+      const vine=MeshBuilder.CreateTube("heavenBlackThornVine",{path,radius:0.17+branch*0.04,tessellation:5,cap:Mesh.CAP_ALL},scene);vine.material=dark;
+      for(let j=2;j<10;j+=2){
+        const thorn=MeshBuilder.CreateCylinder("heavenBlackThorn",{height:0.9,diameterBottom:0.32,diameterTop:0,tessellation:4},scene);
+        thorn.position.copyFrom(path[j]);thorn.rotation.z=(j%4?1:-1)*0.9;thorn.material=dark;
+      }
+    }
+  }
 }
 
 // Clean deck (596, blocker a6; wiki fantasy_good.png: the marble deck is clean blue-grey paving with small teal inlay tiles
