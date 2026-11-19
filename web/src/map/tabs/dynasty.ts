@@ -25,7 +25,7 @@
 // - Pagoda (a6): an open frame: no white walls or lattice panels; a wooden floor in each storey, pink-red (.82,.1,.3)
 //   columns with a low red rail (open at the front), a dark lattice frieze and ceiling under the beam; platform darker
 //   blue-grey stone (.34,.4,.46). Site, size, stair and collider unchanged (b, c).
-import { Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, Texture, Vector3, type Scene } from "@babylonjs/core";
+import { Color3, DynamicTexture, Matrix, Mesh, MeshBuilder, Quaternion, StandardMaterial, Texture, Vector3, type Scene } from "@babylonjs/core";
 import type { MapBuildResult } from "../mapBuilder";
 
 // Pagoda re-sited (594, blocker b1; wiki dynasty.png: the pagoda stands over the north canal close behind the courtyard, its
@@ -357,7 +357,73 @@ export function buildDynasty(scene: Scene, base: () => MapBuildResult): MapBuild
   columnCliffs(scene,new Set<unknown>(scene.meshes.filter((m)=>!prior.has(m))));
   cherryGrove(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))), result, obstacles);
   blossomShrubs(scene, result);
+  lawnTufts(scene, result);
   return { ...result, obstacles, dispose: () => { restoreSky(); result.dispose?.(); } };
+}
+
+// Lawn texture (603, blocker a1; wiki dynasty.png, reference/stages/dynasty.art_of_war.png: the lawns are a soft pale pastel
+// green with a light, even blade texture, paler tips over a mid-green ground; ours read as a flat saturated sheet). Spec: one
+// tuft mesh (seven tapering three-sided blades 0.28-0.46 m, leaning out 0.25-0.45 rad round a 0.12 m ring), pale green
+// (.5,.74,.4) self (.19,.26,.15), flat shaded, receiving shadows, out of the glow; thin instances every ~1.1 m (jittered,
+// turned, scaled .8-1.25) over the top of every lawn turf box (terraces and pools) and over the outer lawn at grade outside
+// the terraces (|x| > 41 or |z| > 31) inside the rim, clear of the notch, of water hazards and of the cobble loop's 5 m band.
+function lawnTufts(scene: Scene, result: MapBuildResult): void {
+  const mat = new StandardMaterial("dynastyLawnTuft", scene);
+  mat.diffuseColor = new Color3(0.5, 0.74, 0.4);
+  mat.emissiveColor = new Color3(0.19, 0.26, 0.15);
+  mat.specularColor = Color3.Black();
+  mat.backFaceCulling = false;
+  const blades: Mesh[] = [];
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2 + i * 0.4, h = 0.28 + ((i * 37) % 7) / 7 * 0.18, lean = 0.25 + ((i * 3) % 5) / 5 * 0.2;
+    const b = MeshBuilder.CreateCylinder("dynastyLawnTuft", { diameterTop: 0, diameterBottom: 0.09, height: h, tessellation: 3 }, scene);
+    b.position.set(Math.cos(a) * 0.12 + Math.cos(a) * Math.sin(lean) * h / 2, Math.cos(lean) * h / 2, Math.sin(a) * 0.12 + Math.sin(a) * Math.sin(lean) * h / 2);
+    b.rotationQuaternion = Quaternion.FromUnitVectorsToRef(Vector3.Up(), new Vector3(Math.cos(a) * Math.sin(lean), Math.cos(lean), Math.sin(a) * Math.sin(lean)), new Quaternion());
+    blades.push(b);
+  }
+  const tuft = Mesh.MergeMeshes(blades, true);
+  if (!tuft) return;
+  tuft.name = "dynastyLawnTufts";
+  tuft.convertToFlatShadedMesh();
+  tuft.material = mat;
+  tuft.receiveShadows = true;
+  tuft.isPickable = false;
+  scene.getGlowLayerByName("glow")?.addExcludedMesh(tuft);
+  const matrices: number[] = [];
+  let k = 0;
+  const rnd = (s: number) => { const v = Math.sin(k * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); };
+  const put = (x: number, y: number, z: number) => {
+    const sc = 0.8 + rnd(3) * 0.45;
+    Matrix.Compose(new Vector3(sc, sc, sc), Quaternion.RotationYawPitchRoll(rnd(4) * Math.PI * 2, 0, 0), new Vector3(x, y, z)).copyToArray(matrices, matrices.length);
+  };
+  const wet = (x: number, z: number) => result.hazards.some((h) => h.shape === "box" && Math.abs(x - h.center.x) < h.halfX + 0.5 && Math.abs(z - h.center.z) < h.halfZ + 0.5);
+  // the turf boxes' tops
+  for (const m of scene.meshes) {
+    if (!m.isEnabled() || !/^dynasty(Pool)?LawnTurf$/.test(m.name)) continue;
+    m.computeWorldMatrix(true);
+    const { minimumWorld: lo, maximumWorld: hi } = m.getBoundingInfo().boundingBox;
+    for (let x = lo.x + 0.4; x < hi.x - 0.4; x += 1.1) for (let z = lo.z + 0.4; z < hi.z - 0.4; z += 1.1) {
+      k++;
+      const px = Math.min(hi.x - 0.3, x + (rnd(1) - 0.5) * 0.8), pz = Math.min(hi.z - 0.3, z + (rnd(2) - 0.5) * 0.8);
+      if (wet(px, pz)) continue;
+      put(px, hi.y, pz);
+    }
+  }
+  // the outer lawn at grade: outside the terraces, inside the rim, off the notch, the water and the cobble loop
+  const loopDist = (x: number, z: number) => {
+    const qx = Math.abs(x) - (46 - 7), qz = Math.abs(z + 1) - (38 - 7);
+    return Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0) - 7;
+  };
+  for (let x = -52; x <= 52; x += 1.1) for (let z = -46; z <= 46; z += 1.1) {
+    k++;
+    const px = x + (rnd(1) - 0.5) * 0.8, pz = z + (rnd(2) - 0.5) * 0.8;
+    if (Math.abs(px) < 41 && Math.abs(pz) < 31) continue;
+    if ((px / 52) ** 8 + (pz / 46) ** 8 > 1) continue;
+    if (px < NOTCH.x + 1 && pz < NOTCH.z + 1) continue;
+    if (Math.abs(loopDist(px, pz)) < 3.1 || wet(px, pz)) continue;
+    put(px, result.height?.(px, pz) ?? 0, pz);
+  }
+  tuft.thinInstanceSetBuffer("matrix", new Float32Array(matrices), 16);
 }
 
 // Cherry grove (596, blocker a5; reference/maps/dynasty.png: the ring is a loose grove of big cherry trees standing apart, each
@@ -853,8 +919,8 @@ function courtApproaches(scene: Scene, result: MapBuildResult): void {
 // Four middle lawns x11..40, |z|<7, and outer lawns z18..30 rise on low stone retaining faces.
 function lawnTerraces(scene: Scene, built: Set<unknown>, result: MapBuildResult): void {
   const turf=new StandardMaterial("dynastyGreenLawn",scene);
-  // 597 [R] blocker a1: soft pale pastel green, not saturated pure green
-  turf.diffuseColor.set(0.32,0.55,0.24);turf.emissiveColor.set(0.1,0.165,0.072);turf.specularColor=Color3.Black();
+  // 597 [R] blocker a1: soft pale pastel green, not saturated pure green; 603: paler and greyer still (under lawnTufts)
+  turf.diffuseColor.set(0.4,0.6,0.33);turf.emissiveColor.set(0.15,0.21,0.12);turf.specularColor=Color3.Black();
   const stone=new StandardMaterial("dynastyLawnStone",scene);
   stone.diffuseColor.set(0.3,0.35,0.36);stone.emissiveColor.set(0.08,0.095,0.1);stone.specularColor=Color3.Black();
   for(const mesh of scene.meshes) if(built.has(mesh)) {
