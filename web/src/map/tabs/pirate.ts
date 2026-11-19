@@ -42,7 +42,7 @@ const PLANK_RUN = 8.7;
 // on the same newly raised decks. The summit carries an open wrecked bow,
 // not a bell. Irregular 8..16m palms and broad leaf rosettes close shore ends.
 // 602: sunk 2.4 m (local) so the 1.5x deck stands 8.4 m over the sand
-const LONG = 30, BEAM = 12, HULL = 8, SINK = 2.4;
+const LONG = 30, BEAM = 12, HULL = 8, SINK = 2.4, STERN_RISE = 5.6;
 
 // Curved hull (593, blocker a2; wiki pirate.png: the galleon hull is one smooth dark planked shell, its sides rounding in to the
 // keel, its bow drawing to a point, its stern raked under a high transom; dark chocolate brown with gold bands at the sheer and
@@ -187,63 +187,87 @@ function galleons(scene: Scene, obstacles: Obstacle[]): void {
     const foreU = 5.5;
     box("hull", 5, 1.4, 2 * hullHalfBeam(8) - 0.1, foreU, top + 0.7, 0);
     for (const s of [-1, 1]) box("gold", 5.1, 0.2, 0.14, foreU, top + 1.45, s * (hullHalfBeam(8) - 0.05));
-    // 599 a2: the wiki stern is a raked, rounded continuation of the hull,
-    // not stacked full-beam boxes. Three lofted galleries narrow aft and rise
-    // 2.2/1.8/1.4 m; side/quarter windows face the deck camera as well as aft.
+    // Rising stern (602, blocker a1; wiki pirate.png: the stern is one high castle whose deck sweeps up from the waist to a tall
+    // raked transom, its sides walled with two rows of gold-framed windows and topped by an open baluster railing; no stack of
+    // flat cabin lids). Spec: one lofted castle from the transom (u -13.5) to the waist (u -5.5), its deck rising on
+    // STERN_RISE * t^1.4 (t = 0 at the waist, 1 at the transom; 5.6 m), its sides the old gallery plan (0.8..1 of 12.2 m), the
+    // transom raked 0.9 m aft at the top; side windows in two rows where the wall stands over 2.5 m, four by two on the transom;
+    // balusters every 0.5 m along both top edges and the transom with a gold handrail 0.9 m up; the quarter balconies kept, one
+    // per side at 2.5 m.
     const sternU = -LONG * 0.45 + 4;
-    let base = top;
-    for (const [len, rise, wins] of [[8, 2.2, 4], [6, 1.8, 3], [4.2, 1.4, 0]] as const) {
-      const beam = BEAM * (1.02 - (8 - len) * 0.025), aft=sternU-4, fore=aft+len;
-      // 601 a1: rounded projecting quarter galleries, a strongly raked
-      // transom and a rising poop deck replace flat stacked cabin lids.
-      const width=(u:number)=>beam/2*(0.8+0.2*Math.sin(Math.min(1,Math.max(0,(u-aft)/len))*Math.PI));
-      const deckRise=(u:number)=>0.85*((fore-u)/len)**2;
-      const outline:Array<[number,number]>=[];
-      for(let i=0;i<=8;i++){const u=aft+len*i/8;outline.push([u,-width(u)]);}
-      for(let i=8;i>=0;i--){const u=aft+len*i/8;outline.push([u,width(u)]);}
-      const pos:number[]=[],idx:number[]=[],n=outline.length;
-      for(const upper of [false,true])for(const [u,v]of outline){
-        const [x,z]=at(u-(upper?0.9*(fore-u)/len:0),v*(upper?1:0.84));
-        pos.push(x,base+(upper?rise+deckRise(u):0),z);
+    const aft = sternU - 4, fore = -5.5, len = fore - aft, beam = BEAM * 1.02;
+    const width = (u: number) => beam / 2 * (0.8 + 0.2 * Math.sin(Math.min(1, Math.max(0, (u - aft) / len)) * Math.PI));
+    const sternT = (u: number) => Math.min(1, Math.max(0, (fore - u) / len));
+    const rake = (u: number) => 0.9 * sternT(u);
+    const H = (u: number) => STERN_RISE * sternT(u) ** 1.4;
+    {
+      const N = 16, outline: Array<[number, number]> = [];
+      for (let i = 0; i <= N; i++) { const u = aft + (len * i) / N; outline.push([u, -width(u)]); }
+      for (let i = N; i >= 0; i--) { const u = aft + (len * i) / N; outline.push([u, width(u)]); }
+      const pos: number[] = [], idx: number[] = [], n = outline.length;
+      for (const upper of [false, true]) for (const [u, v] of outline) {
+        const [x, z] = at(u - (upper ? rake(u) : 0), v * (upper ? 1 : 0.84));
+        pos.push(x, top + (upper ? H(u) : 0), z);
       }
-      for(let i=0;i<n;i++){const j=(i+1)%n;idx.push(i,j,n+i,j,n+j,n+i);}
-      const [cx,cz]=at((aft+fore)/2,0);const hub=pos.length/3;pos.push(cx,base+rise+deckRise((aft+fore)/2),cz);
-      for(let i=0;i<n;i++)idx.push(hub,n+i,n+(i+1)%n);
-      const shell=new Mesh("pirateSternGallery",scene),data=new VertexData(),normals:number[]=[];
-      VertexData.ComputeNormals(pos,idx,normals);data.positions=pos;data.indices=idx;data.normals=normals;data.uvs=new Array(pos.length/3*2).fill(0);data.applyToMesh(shell);
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n; idx.push(i, j, n + i, j, n + j, n + i); }
+      // the sweeping deck: a strip between the two upper edges (outline i and its mirror n-1-i)
+      for (let i = 0; i < N; i++) {
+        const a = n + i, b = n + i + 1, c = n + (n - 1 - i), d = n + (n - 2 - i);
+        idx.push(a, c, b, b, c, d);
+      }
+      const shell = new Mesh("pirateSternCastle", scene), data = new VertexData(), normals: number[] = [];
+      VertexData.ComputeNormals(pos, idx, normals);
+      data.positions = pos; data.indices = idx; data.normals = normals; data.uvs = new Array((pos.length / 3) * 2).fill(0);
+      data.applyToMesh(shell);
       parts.hull.push(shell);
-      // Raked quarter galleries and two long rows of side windows are visible
-      // from the island/deck poses; the aft face alone points out of those views.
-      for(const side of [-1,1])for(let i=0;i<8;i++){
-        const u=aft+(i+0.5)*len/8,v=side*(width(u)+0.04);
-        const railY=base+rise+deckRise(u)+0.15;
-        rod("gold",world(u-len/16,railY,side*(width(u-len/16)+0.1)),world(u+len/16,base+rise+deckRise(u+len/16)+0.15,side*(width(u+len/16)+0.1)),0.22);
-        if(wins&&i>0&&i<7&&i%2===1){
-          box("gold",0.95,rise*0.65,0.16,u,base+rise*0.5,v);
-          box("sail",0.68,rise*0.44,0.19,u,base+rise*0.5,v+side*0.06);
-          box("dark",0.07,rise*0.47,0.21,u,base+rise*0.5,v+side*0.08);
-        }
-      }
-      box("gold",0.15,0.22,beam*0.8,aft-0.9,base+rise+1,0);
-      // Gold-framed quarter balcony projects beyond the hull; its curved
-      // rail faces both island cameras instead of only the outward transom.
-      for(const side of [-1,1]){
-        let previous:Vector3|undefined;
-        for(let i=0;i<=10;i++){
-          const angle=Math.PI*i/10,u=aft+0.3+Math.sin(angle)*1.5;
-          const v=side*(beam*0.4+Math.sin(angle)*1.1),p=world(u,base+rise*0.7,v);
-          if(previous)rod("gold",previous,p,0.18);
-          rod("gold",p,world(u,base+0.2,v),0.1);
-          previous=p;
-        }
-      }
-      for (let w = 0; w < wins; w++) {
-        const v = (w + 0.5 - wins / 2) * (beam*0.68 / wins);
-        box("gold",0.12,rise*0.62,0.85,aft-0.22,base+rise*0.5,v);
-        box("sail",0.15,rise*0.44,0.6,aft-0.25,base+rise*0.5,v);
-      }
-      base += rise;
     }
+    // two rows of gold-framed side windows along the walls, where the wall is tall enough
+    for (const side of [-1, 1]) for (let i = 0; i < 8; i++) {
+      const u = aft + 0.6 + i, h = H(u);
+      if (h < 2.5) continue;
+      for (const f of [0.32, 0.68]) {
+        const v = side * (width(u) + 0.04), y = top + h * f;
+        box("gold", 0.8, 1.15, 0.16, u, y, v);
+        box("sail", 0.55, 0.8, 0.19, u, y, v + side * 0.06);
+        box("dark", 0.07, 0.85, 0.21, u, y, v + side * 0.08);
+      }
+    }
+    // the open baluster railing along both top edges and across the transom, a gold handrail on top
+    const railPoints = (side: number) => Array.from({ length: Math.round(len / 0.5) + 1 }, (_, i) => {
+      const u = aft + i * 0.5;
+      return world(u - rake(u), top + H(u), side * (width(u) - 0.15));
+    });
+    for (const side of [-1, 1]) {
+      const pts = railPoints(side);
+      pts.forEach((p, i) => {
+        rod("dark", p, p.add(new Vector3(0, 0.9, 0)), 0.12);
+        if (i > 0) rod("gold", pts[i - 1].add(new Vector3(0, 0.9, 0)), p.add(new Vector3(0, 0.9, 0)), 0.16);
+      });
+    }
+    const transomL = world(aft - 0.9, top + STERN_RISE, -(width(aft) - 0.15)), transomR = world(aft - 0.9, top + STERN_RISE, width(aft) - 0.15);
+    for (let k = 0; k <= 12; k++) {
+      const p = Vector3.Lerp(transomL, transomR, k / 12);
+      rod("dark", p, p.add(new Vector3(0, 0.9, 0)), 0.12);
+    }
+    rod("gold", transomL.add(new Vector3(0, 0.9, 0)), transomR.add(new Vector3(0, 0.9, 0)), 0.16);
+    // the transom: four by two gold-framed windows on the raked face
+    for (const f of [0.35, 0.68]) for (let w = 0; w < 4; w++) {
+      const y = top + STERN_RISE * f, u = aft - 0.9 * f - 0.12, v = (w - 1.5) * (beam * 0.18);
+      box("gold", 0.12, 1.3, 1.1, u, y, v);
+      box("sail", 0.15, 0.9, 0.8, u - 0.02, y, v);
+    }
+    // gold-framed quarter balconies projecting past the hull at the quarters, curved rails facing the island cameras
+    for (const side of [-1, 1]) {
+      let previous: Vector3 | undefined;
+      for (let i = 0; i <= 10; i++) {
+        const angle = (Math.PI * i) / 10, u = aft + 0.3 + Math.sin(angle) * 1.5;
+        const v = side * (beam * 0.4 + Math.sin(angle) * 1.1), p = world(u, top + 2.5, v);
+        if (previous) rod("gold", previous, p, 0.18);
+        rod("gold", p, world(u, top + 1.4, v), 0.1);
+        previous = p;
+      }
+    }
+    const base = top + STERN_RISE + 0.9;
     for (const s of [-1, 1]) {
       const lamp = MeshBuilder.CreateCylinder("pirateGalleonLamp", { diameter: 0.6, height: 1, tessellation: 6 }, scene);
       const [x, z] = at(sternU - 3.8, s * BEAM * 0.4);
@@ -369,9 +393,8 @@ function deckHeight(x: number, z: number): number {
     const [u, v] = shipLocal(ship, x, z);
     if (Math.abs(u) <= 14.6 && Math.abs(v) <= BEAM / 2 - 0.1) {
       if (u >= 3 && u <= 8 && Math.abs(v) <= hullHalfBeam(8) - 0.1) return SHIP_S * (top + 1.4);
-      if (u >= -14.4 && u <= -9.3) return SHIP_S * (top + 5.4 + 0.85*((-9.3-u)/4.2)**2);
-      if (u >= -13.5 && u <= -7.5) return SHIP_S * (top + 4);
-      if (u >= -13.5 && u <= -5.5) return SHIP_S * (top + 2.2);
+      // 602 a1: the stern castle's deck sweeps up from the waist (u -5.5) to the transom (u -13.5), STERN_RISE t^1.4
+      if (u >= -14.4 && u <= -5.5) return SHIP_S * (top + STERN_RISE * Math.min(1, (-5.5 - u) / 8) ** 1.4);
       return SHIP_S * top;
     }
     for (const [pu, fan] of [[-9, -0.18], [0, 0.04], [9, 0.16]] as const) {
