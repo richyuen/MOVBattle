@@ -42,17 +42,34 @@ function voidSky(scene: Scene, built: Set<unknown>): () => void {
 // unit crossing anywhere is drawn climbing; the base's small props are seated on the terrace under them.
 const PLATEAU = { x: 24, z0: -6, z1: 34, top: 3, tread: 2, rise: 0.75 };
 
+// 601 b1, wiki: four substantial side/front rock islands above lower routes,
+// sheer broken escarpments, connected through explicit broad stair mouths.
+// Central shrine stays at 3m. Side islands rise 9m, front islands 4.5/6m;
+// each clipped rectangle has a 10m-wide, 12m-long stair toward the centre.
+const CLIFF_SHELVES = [
+  { x: -37, z: 25, rx: 10, rz: 13, h: 9, dir: -1 },
+  { x: 37, z: 25, rx: 10, rz: 13, h: 9, dir: -1 },
+  { x: -12, z: -30, rx: 13, rz: 7, h: 4.5, dir: 1 },
+  { x: 20, z: -31, rx: 11, rz: 7, h: 6, dir: 1 },
+];
+const onShelf = (x: number, z: number, s: typeof CLIFF_SHELVES[number]) => {
+  const u = Math.abs(x - s.x), v = Math.abs(z - s.z);
+  return u <= s.rx && v <= s.rz && u + v <= s.rx + s.rz - 3;
+};
+const cliffStairLevel = (x: number, z: number) => {
+  for (const s of CLIFF_SHELVES) {
+    const edge = s.z + s.dir * s.rz, d = (z - edge) * s.dir;
+    if (Math.abs(x - s.x) < 5 && d >= 0 && d < 12) return s.h * Math.ceil((12 - d) / 0.75) / 16;
+  }
+  return undefined;
+};
+
 const blockLevel = (x: number, z: number) => {
-  // 600 b1: three broken shelves around the shrine, separated by low routes.
-  // Wiki: shrine on a central island; high side shelves, broad flights into
-  // the lower foreground. Each exposed edge descends in .75m treads rather
-  // than a vertical walk-through cliff; green chasms retain their hazards.
+  const stair = cliffStairLevel(x, z);
+  if (stair !== undefined) return stair;
+  for (const s of CLIFF_SHELVES) if (onShelf(x, z, s)) return s.h;
   const shelves = [
     { x: 0, z: 10, rx: 17, rz: 18, h: 3 },
-    { x: -37, z: 20, rx: 9, rz: 15, h: 6 },
-    { x: 37, z: 24, rx: 9, rz: 12, h: 6 },
-    { x: -12, z: -29, rx: 13, rz: 7, h: 3 },
-    { x: 20, z: -31, rx: 11, rz: 7, h: 4.5 },
   ];
   let y = 0;
   for (const s of shelves) {
@@ -114,7 +131,7 @@ function chasms(scene: Scene): MapBuildResult["hazards"] {
 
 /** The terrace under a point: the level of the 2 m block it stands on (blocks are centred on odd metres). */
 const blockCentre = (v: number) => 2 * Math.floor(v / 2) + 1;
-export const fantasyEvilHeight: HeightField = (x, z) => stairLevel(x, z) ?? blockLevel(blockCentre(x), blockCentre(z));
+export const fantasyEvilHeight: HeightField = (x, z) => cliffStairLevel(x, z) ?? stairLevel(x, z) ?? blockLevel(blockCentre(x), blockCentre(z));
 
 // Stair flights (595, blocker b2; wiki fantasy_evil.png lower centre: two broad stone stairs climb from the front level, across
 // the crevice, to the raised plateau, one each side of the shrine, many fine treads between stepped stone cheeks). Spec: flights
@@ -229,6 +246,45 @@ function basaltFloor(scene: Scene, built: Set<unknown>): void {
   seam.material = bedMat;
   seam.thinInstanceSetBuffer("matrix", new Float32Array(seamMats), 16, true);
   seam.isPickable = false;
+}
+
+function brokenCliffs(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
+  const parts: Mesh[] = [];
+  const stone = scene.getMaterialByName("basaltBlocks");
+  const box = (w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const b = MeshBuilder.CreateBox("voidCliffStairPart", { width: w, height: h, depth: d }, scene);
+    b.position.set(x, y, z); b.bakeCurrentTransformIntoVertices(); parts.push(b);
+  };
+  for (const s of CLIFF_SHELVES) {
+    const edge = s.z + s.dir * s.rz;
+    // Sixteen solid treads form a deliberate connection, instead of spreading
+    // a shallow staircase over every edge of every platform.
+    for (let i = 0; i < 16; i++) {
+      const h = s.h * (i + 1) / 16, z = edge + s.dir * (12 - (i + 0.5) * 0.75);
+      box(10, h + 0.3, 0.77, s.x, (h - 0.3) / 2, z);
+      for (const side of [-1, 1]) box(0.7, h + 0.8, 0.77, s.x + side * 5.35, (h + 0.2) / 2, z);
+    }
+    for (const side of [-1, 1]) obstacles.push({ type: "box", center: new Vector3(s.x + side * 5.35, 0, edge + s.dir * 6), halfX: 0.35, halfZ: 6 });
+    const polygon = [[-s.rx + 3,-s.rz],[s.rx - 3,-s.rz],[s.rx,-s.rz + 3],[s.rx,s.rz - 3],[s.rx - 3,s.rz],[-s.rx + 3,s.rz],[-s.rx,s.rz - 3],[-s.rx,-s.rz + 3]];
+    for (let j = 0; j < polygon.length; j++) {
+      const a = polygon[j], b = polygon[(j + 1) % polygon.length], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const n = Math.ceil(len / 1.5);
+      for (let k = 0; k <= n; k++) {
+        const x = s.x + a[0] + (b[0] - a[0]) * k / n, z = s.z + a[1] + (b[1] - a[1]) * k / n;
+        if (Math.abs(z - edge) < 0.1 && Math.abs(x - s.x) < 5.8) continue;
+        // Walls own these vertical faces in the flat simulation. The faceted
+        // buttresses reach the low route and make each cliff's depth visible.
+        obstacles.push({ type: "cylinder", center: new Vector3(x, 0, z), radius: 0.9 });
+        if (k % 2) continue;
+        const top = s.h + 0.15 + Math.sin(j * 3 + k) * 0.35;
+        const c = MeshBuilder.CreateCylinder("voidBrokenCliffColumn", { height: top + 2, diameterTop: 2.1 + (k % 3) * 0.35, diameterBottom: 2.7, tessellation: 5 }, scene);
+        c.position.set(x, (top - 2) / 2, z); c.rotation.y = j + k * 0.7;
+        c.bakeCurrentTransformIntoVertices(); parts.push(c);
+      }
+    }
+  }
+  const cliff = Mesh.MergeMeshes(parts, true, true);
+  if (cliff) { cliff.name = "voidBrokenCliffs"; cliff.material = stone; cliff.isPickable = false; cliff.receiveShadows = true; }
 }
 
 // Rock ring (593, blocker a3; wiki fantasy_evil.png: no trees anywhere; the field's edge is ringed by jagged dark rock
@@ -799,6 +855,7 @@ export function buildFantasyEvil(scene: Scene, base: () => MapBuildResult): MapB
   }
   const restoreSky = voidSky(scene, built);
   const shrined = shrine(scene, built, result);
+  brokenCliffs(scene, shrined.obstacles);
   chainedStatue(scene, shrined.obstacles);
   backdropCrag(scene);
   leaningSpire(scene);
