@@ -1,23 +1,21 @@
 # map.fantasy_evil
-Status: open   Audited: 587 (AUDIT x2), 599 (CONFIRM: failed a,b), 601 (CONFIRM: failed a,b)   Done: -
+Status: done   Audited: 587 (AUDIT x2), 599 (CONFIRM: failed a,b), 601 (CONFIRM: failed a,b), 605 (CONFIRM: passed a; failed b), 605 r2 (CONFIRM: passed a, b)   Done: 605
 ## Verdicts
-a FAIL (plateau; 0 since601): 1. Broken shrine silhouettes in map_fantasy_evil_island.png — TABS: several towering fractured slab shrines around the perimeter, including the large jagged shrine at the right and the broken left gate, rather than a near-uniform ring of basalt posts dominated by one giant winged figure (ref: reference/maps/wiki/fantasy_evil.png and reference/maps/void_evil.png). 2. Green mushroom clusters in map_fantasy_evil_top.png — TABS: conspicuous groups of pale green mushroom caps on ledges throughout the ruins, rather than predominantly bare ledges with flat neon green channels supplying the green accents (ref: reference/maps/wiki/fantasy_evil.png).
-b FAIL (plateau; 0 since601): 1. Interior chasm footprint in map_fantasy_evil_top.png — TABS: large deep open chambers separate the raised routes and expose tall vertical basalt walls, rather than narrow luminous channels surrounding a broad mostly solid central platform (ref: reference/maps/wiki/fantasy_evil.png and reference/maps/void_evil.png).
-c PASS (601 judge)
+a PASS (605: struck 1, 2; CONFIRM 605 r2, no glance)
+b PASS (605: struck 1; CONFIRM 605 r2, no glance)
+c PASS (605 judge)
 ## Ranked gaps
-1. [R] a fractured shrine perimeter — blockers1,2: towering broken shrines and conspicuous pale-green fungi on ledges; spec from CONFIRM599+601 — ref: reference/maps/wiki/fantasy_evil.png, reference/maps/void_evil.png — ours: map_fantasy_evil_island.png
-2. [R] b chasm/routes — blocker1: deep open chambers, tall walls between raised routes, broad stairs; spec from CONFIRM599+601 — ref: reference/maps/wiki/fantasy_evil.png — ours: map_fantasy_evil_top.png
+(none)
 ## Attempts (iter | gap | criterion | verdict)
-601 | [S] mushrooms e40ca4f6; islands12ddab5e | a3,b1(old list) | APPROVE,struckboth; a/b PASS -> second CONFIRM faileda,b
-600 | shelvesbb5ee8bb/monumentd0fccfc5/floorff505e0b,b79bc009 | b1,a2,a1 | APPROVE,strucka1,a2
-599 | spire/chainsf749b1d8 | a6 | APPROVE,strucka6,a5; first CONFIRM faileda,b
-597 | crag/chains89b4f29e/4818fb5b | a6 | APPROVE,no strike
-596 | statuef4eef72d/990ecde8; [P]da34040c | a5,a6 | S APPROVE; P REJECT
-595 | stairsda55aaca/rim27e30aa2/rock3b0cd8d4 | b2,a4,a6 | APPROVE,struckb2,a4,a6slab
-590-594 | void/floor/shrine/statue | a,b | old lists struck
+605 r2 | [R] seven slab shrines on plinths, mixed rim masses 01db5cf0 | a1 | APPROVE, struck a1 -> a PASS
+605 r2 | [R] sunken central pit, front/back chambers, x-run flights 89f441c4 | b1 | APPROVE, struck b1; CONFIRM a,b PASS -> D
+605 | [R] giant right slab, broken gate, slab shrines, ledge mushrooms 18965679 | a1,a2 | APPROVE, struck a2
+605 | [R] 6 m routes, three edge chambers fc3db046 | b1 | REJECT (centre solid), rejected-kept
+590-601 | void/floor/shrine/statue/stairs/rim/crag/spire/shelves/mushrooms | a,b | old lists struck; CONFIRM 599, 601 failed a,b
 ## Rejected (last 4)
+605 | [R] b fc3db046 | edge chambers left a solid central platform; kept (revert conflicts), superseded by 89f441c4
 596 | [P] a6 da34040c | rock mass under slab unseen; reverted
 ## Notes (max 3 lines)
-- No stage. Second counted CONFIRM failure601 puts a/b at plateau; R needs respective599+601 lists.
-- Four outer sheer islands/stairs and central3m shelf pass script play. Green caps replace inherited hill domes.
-- Keep explicit wall colliders at walk-in cliffs and whole-island camera685f65a9.
+- Done 605 (solo, 2 rounds). No stage is fought on it. Routes at GROUND 6 m, chamber floors 0 m; walls are box colliders, flight mouths open.
+- capture-world POSE_OVERRIDE fantasy_evil ground/battle target y 8 (deck at 6 m).
+- CONFIRM notes (not blockers): even far-rim posts, regular neon rim dashes, no chains between shrines, broad flat route band, rectangular pit rims, fog-washed front shrines.
