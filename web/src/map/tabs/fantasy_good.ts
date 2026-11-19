@@ -804,11 +804,11 @@ function corruptedPits(scene: Scene): void {
       const path:Vector3[]=[];
       for(let j=0;j<=10;j++){
         const t=j/10;
-        path.push(new Vector3(x+Math.sin(t*4+branch)*1.1+branch*0.5,-4+t*(8+branch),z+Math.sin(t*3+i)*1.4));
+        path.push(new Vector3(x+Math.sin(t*4+branch)*1.8+branch*0.5,-4+t*(15+branch),z+Math.sin(t*3+i)*2));
       }
-      const vine=MeshBuilder.CreateTube("heavenBlackThornVine",{path,radius:0.17+branch*0.04,tessellation:5,cap:Mesh.CAP_ALL},scene);vine.material=dark;
+      const vine=MeshBuilder.CreateTube("heavenBlackThornVine",{path,radius:0.28+branch*0.05,tessellation:5,cap:Mesh.CAP_ALL},scene);vine.material=dark;
       for(let j=2;j<10;j+=2){
-        const thorn=MeshBuilder.CreateCylinder("heavenBlackThorn",{height:0.9,diameterBottom:0.32,diameterTop:0,tessellation:4},scene);
+        const thorn=MeshBuilder.CreateCylinder("heavenBlackThorn",{height:1.3,diameterBottom:0.4,diameterTop:0,tessellation:4},scene);
         thorn.position.copyFrom(path[j]);thorn.rotation.z=(j%4?1:-1)*0.9;thorn.material=dark;
       }
     }
