@@ -40,50 +40,58 @@ function voidSky(scene: Scene, built: Set<unknown>): () => void {
 // block's height is read at its centre, so the terraces are square stairs, and each block reaches down to the bed so its
 // faces read as walls. Visual height only (MapBuildResult.height, map/terrain.ts): every side of the plateau is a stair, so a
 // unit crossing anywhere is drawn climbing; the base's small props are seated on the terrace under them.
-// [R] Chambers rebuild (605, b plateau; CONFIRM 599 b1 "substantial broken cliffs divide elevated islands and sunken routes,
-// linked by broad stairs around the central shrine" and CONFIRM 601 b1 "large deep open chambers separate the raised routes and
-// expose tall vertical basalt walls, rather than narrow luminous channels surrounding a broad mostly solid central platform";
-// wiki fantasy_evil.png, void_evil.png: the routes and the shrine stand high, and big sunken chambers open between them, their
-// sheer basalt walls glowing green at the foot, broad stairs going down into them). Spec:
-// - Route level GROUND 6 m over the whole deck (shrine, statue and both team ends on it); the chambers' floor is the base slab
-//   (0 m), so nothing digs below it. Each basalt plate is level at its centre's height and its sides reach the floor, so every
-//   chamber edge is a broken 6 m wall of plate faces.
-// - Three chambers at 0 m, wide in x so their back walls face the top camera (-z): the front chamber x -26..26, z -34..-16,
-//   entered by the two front flights (|x| 8..16, foot z -26, head z -16); a side chamber each side |x| 20..34, z 22..36,
-//   entered by a flight |x| 24..30 (head z 22, foot z 32). 16 treads each. The corridor z -16..22, where both armies place
-//   and meet, stays route; both placement zones (|x| >= 27, |z| <= 19) are clear of the chambers.
-// - The 593-601 void crevices (narrow acid-green channels and their void hazards) go; each chamber wall carries a green glow
-//   strip along its foot and a few green cracks up its face.
-// - Side rock islands move out to x +-44 (5 x 7 m half sizes, z 27) and rise to 12 m, 6 m over the route; their stair runs
-//   z 20 down to z 8; the front islands go (the front chamber takes their place).
-// - Colliders along every chamber wall and flight cheek except the flights' heads (mouths) and feet; islands keep theirs.
+// 605.1 [R] (rejected-kept): routes at 6 m, three chambers cut into the edges; rebuilt in round 2 below.
+// [R] Sunken centre (605 round 2, b plateau; CONFIRM 599 b1 "substantial broken cliffs divide elevated islands and sunken
+// routes, linked by broad stairs around the central shrine", CONFIRM 601 b1 "large deep open chambers separate the raised routes
+// and expose tall vertical basalt walls, rather than narrow luminous channels surrounding a broad mostly solid central platform";
+// wiki fantasy_evil.png: the round shrine tower stands down in a deep central pit, twin stair flights descend to it from the
+// front, raised causeways run between pits, sheer basalt walls drop into each; void_evil.png the same pits round the tower).
+// Spec (605.1 put the routes at 6 m and cut three chambers into the edges; the centre stayed solid):
+// - Route level GROUND 6 m; chamber floors are the base slab (0 m). Each basalt plate is level at its centre and its sides reach
+//   the floor, so every chamber edge is a broken 6 m wall of plate faces.
+// - Central pit x -18..18, z -14..22 with the shrine (0, 1) and the portal altar (0, 12) on its floor; twin front flights
+//   |x| 9..16 (head z -14, foot z -4) and a side flight each side, z -2..4 (head x +-18, foot x +-10), in line with the shrine's
+//   open +-x segments, so both armies can cross it.
+// - Front chamber x -26..26, z -36..-22, one central flight x -4..4 (head z -22, foot z -32); a back chamber each side,
+//   |x| 26..42, z 22..36, a flight |x| 31..37 (head z 22, foot z 32). Causeways left between them are 8 m: the front route
+//   z -22..-14, the side routes |x| 18..26, the back route behind the pit (the chained statue moves onto it, (0, 30)).
+// - The side rock islands go (the back chambers take their ground). Placement zones (|x| >= 27, |z| <= 19) stay route.
+// - Each chamber wall carries a green glow strip along its foot and a few green cracks up its face; colliders along every
+//   chamber wall and flight cheek, the flights' heads (mouths) and feet open.
 const GROUND = 6;
 const PLATEAU = { x: 24, z0: -6, z1: 34, top: GROUND, tread: 2, rise: 0.75 };
 const CHAMBERS = [
-  { x0: -26, x1: 26, z0: -34, z1: -16 },
-  { x0: -34, x1: -20, z0: 22, z1: 36 },
-  { x0: 20, x1: 34, z0: 22, z1: 36 },
+  { x0: -18, x1: 18, z0: -14, z1: 22 },
+  { x0: -26, x1: 26, z0: -36, z1: -22 },
+  { x0: -42, x1: -26, z0: 22, z1: 36 },
+  { x0: 26, x1: 42, z0: 22, z1: 36 },
 ];
 const inChamber = (x: number, z: number) => CHAMBERS.some((c) => x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1);
-/** Flights into the chambers: foot (zf, floor) to head (zt, route level), 16 treads. */
-const FLIGHTS = [
-  { x0: -16, x1: -8, zf: -26, zt: -16 }, { x0: 8, x1: 16, zf: -26, zt: -16 },
-  { x0: -30, x1: -24, zf: 32, zt: 22 }, { x0: 24, x1: 30, zf: 32, zt: 22 },
+/** Flights into the chambers, run along z or x: across c0..c1, foot at f (floor), head at t (route level), 16 treads. */
+type Flight = { ax: "z" | "x"; c0: number; c1: number; f: number; t: number };
+const FLIGHTS: Flight[] = [
+  { ax: "z", c0: -16, c1: -9, f: -4, t: -14 }, { ax: "z", c0: 9, c1: 16, f: -4, t: -14 },
+  { ax: "x", c0: -2, c1: 4, f: -10, t: -18 }, { ax: "x", c0: -2, c1: 4, f: 10, t: 18 },
+  { ax: "z", c0: -4, c1: 4, f: -32, t: -22 },
+  { ax: "z", c0: -37, c1: -31, f: 32, t: 22 }, { ax: "z", c0: 31, c1: 37, f: 32, t: 22 },
 ];
 const STEPS = 16;
-const flightAt = (x: number, z: number) => FLIGHTS.find((f) => x > f.x0 && x < f.x1 && z > Math.min(f.zf, f.zt) && z < Math.max(f.zf, f.zt));
+/** (across, along) of a point in a flight's frame */
+const uv = (f: Flight, x: number, z: number) => (f.ax === "z" ? [x, z] : [z, x]);
+const flightAt = (x: number, z: number) => FLIGHTS.find((f) => {
+  const [u, v] = uv(f, x, z);
+  return u > f.c0 && u < f.c1 && v > Math.min(f.f, f.t) && v < Math.max(f.f, f.t);
+});
 const inStair = (x: number, z: number) => flightAt(x, z) !== undefined;
 function stairLevel(x: number, z: number): number | undefined {
   const f = flightAt(x, z);
   if (!f) return undefined;
-  const t = (z - f.zf) / (f.zt - f.zf);
+  const t = (uv(f, x, z)[1] - f.f) / (f.t - f.f);
   return (GROUND / STEPS) * Math.min(STEPS, Math.floor(t * STEPS) + 1);
 }
 
-const CLIFF_SHELVES = [
-  { x: -44, z: 27, rx: 5, rz: 7, h: 12, dir: -1 },
-  { x: 44, z: 27, rx: 5, rz: 7, h: 12, dir: -1 },
-];
+// 605 round 2: the side islands are gone; the list stays empty so their helpers are inert
+const CLIFF_SHELVES: Array<{ x: number; z: number; rx: number; rz: number; h: number; dir: number }> = [];
 const onShelf = (x: number, z: number, s: typeof CLIFF_SHELVES[number]) => {
   const u = Math.abs(x - s.x), v = Math.abs(z - s.z);
   return u <= s.rx && v <= s.rz && u + v <= s.rx + s.rz - 3;
@@ -117,38 +125,45 @@ function chamberWalls(scene: Scene, obstacles: MapBuildResult["obstacles"]): voi
     if (Math.abs(x1 - x0) < 0.01 && Math.abs(z1 - z0) < 0.01) return;
     obstacles.push({ type: "box", center: new Vector3((x0 + x1) / 2, 0, (z0 + z1) / 2), halfX: Math.max(0.35, Math.abs(x1 - x0) / 2), halfZ: Math.max(0.35, Math.abs(z1 - z0) / 2) });
   };
-  /** a run along x at z, minus the gaps [a, b] */
-  const runX = (z: number, x0: number, x1: number, gaps: Array<[number, number]>) => {
-    let from = x0;
-    for (const [a, b] of [...gaps].sort((p, q) => p[0] - q[0])) { wall(from, z, a, z); from = b; }
-    wall(from, z, x1, z);
+  /** the flights whose head (mouth) is on this edge: along `ax`, at `at` */
+  const mouths = (ax: "z" | "x", at: number, lo: number, hi: number) =>
+    FLIGHTS.filter((f) => f.ax === ax && Math.abs(f.t - at) < 0.01 && f.c0 >= lo && f.c1 <= hi).map((f) => [f.c0, f.c1] as [number, number]);
+  /** a straight run from lo to hi along the edge, minus its mouths; `at` the edge's fixed coordinate */
+  const run = (ax: "z" | "x", at: number, lo: number, hi: number) => {
+    const gaps = mouths(ax, at, lo, hi).sort((p, q) => p[0] - q[0]);
+    const seg = (a: number, b: number) => (ax === "z" ? wall(a, at, b, at) : wall(at, a, at, b));
+    let from = lo;
+    for (const [a, b] of gaps) { seg(from, a); from = b; }
+    seg(from, hi);
+    return gaps;
   };
   let seed = 0x4b21;
   const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const open = (gaps: Array<[number, number]>, p: number) => gaps.some(([a, b]) => p > a - 0.5 && p < b + 0.5);
   for (const c of CHAMBERS) {
-    const gapsAt = (z: number) => FLIGHTS.filter((f) => f.x0 >= c.x0 && f.x1 <= c.x1 && Math.abs(f.zt - z) < 0.01).map((f) => [f.x0, f.x1] as [number, number]);
-    runX(c.z0, c.x0, c.x1, gapsAt(c.z0));
-    runX(c.z1, c.x0, c.x1, gapsAt(c.z1));
-    wall(c.x0, c.z0, c.x0, c.z1);
-    wall(c.x1, c.z0, c.x1, c.z1);
+    const g0 = run("z", c.z0, c.x0, c.x1), g1 = run("z", c.z1, c.x0, c.x1);
+    const gl = run("x", c.x0, c.z0, c.z1), gr = run("x", c.x1, c.z0, c.z1);
     const w = c.x1 - c.x0, d = c.z1 - c.z0, cx = (c.x0 + c.x1) / 2, cz = (c.z0 + c.z1) / 2;
     // foot strips just inside each wall
     box(w - 1.2, 0.14, 0.35, cx, 0.07, c.z0 + 0.6);
     box(w - 1.2, 0.14, 0.35, cx, 0.07, c.z1 - 0.6);
     box(0.35, 0.14, d - 1.2, c.x0 + 0.6, 0.07, cz);
     box(0.35, 0.14, d - 1.2, c.x1 - 0.6, 0.07, cz);
-    // cracks up the faces, uneven in height and spacing
+    // cracks up the faces, uneven in height and spacing, none across a mouth
     for (let x = c.x0 + 2 + rnd() * 2; x < c.x1 - 1.5; x += 3 + rnd() * 3) {
       const h = 1.2 + rnd() * 3.5;
-      if (!FLIGHTS.some((f) => x > f.x0 - 0.5 && x < f.x1 + 0.5 && Math.abs(f.zt - c.z1) < 0.01)) box(0.16 + rnd() * 0.12, h, 0.12, x, h / 2, c.z1 - 0.35);
-      if (rnd() < 0.5 && !FLIGHTS.some((f) => x > f.x0 - 0.5 && x < f.x1 + 0.5 && Math.abs(f.zt - c.z0) < 0.01)) box(0.16, h * 0.7, 0.12, x, h * 0.35, c.z0 + 0.35);
+      if (!open(g1, x)) box(0.16 + rnd() * 0.12, h, 0.12, x, h / 2, c.z1 - 0.35);
+      if (rnd() < 0.5 && !open(g0, x)) box(0.16, h * 0.7, 0.12, x, h * 0.35, c.z0 + 0.35);
     }
-    for (const sx of [c.x0 + 0.35, c.x1 - 0.35]) for (let z = c.z0 + 2 + rnd() * 2; z < c.z1 - 1.5; z += 3.5 + rnd() * 3) {
+    for (const [sx, g] of [[c.x0 + 0.35, gl], [c.x1 - 0.35, gr]] as const) for (let z = c.z0 + 2 + rnd() * 2; z < c.z1 - 1.5; z += 3.5 + rnd() * 3) {
       const h = 1.2 + rnd() * 3;
-      box(0.12, h, 0.16 + rnd() * 0.12, sx, h / 2, z);
+      if (!open(g, z)) box(0.12, h, 0.16 + rnd() * 0.12, sx, h / 2, z);
     }
   }
-  for (const f of FLIGHTS) for (const x of [f.x0, f.x1]) wall(x, Math.min(f.zf, f.zt), x, Math.max(f.zf, f.zt));
+  for (const f of FLIGHTS) for (const c of [f.c0, f.c1]) {
+    const lo = Math.min(f.f, f.t), hi = Math.max(f.f, f.t);
+    if (f.ax === "z") wall(c, lo, c, hi); else wall(lo, c, hi, c);
+  }
   const acid = new StandardMaterial("voidChamberGlow", scene);
   acid.diffuseColor = Color3.Black();
   acid.emissiveColor = new Color3(0.15, 0.9, 0.2);
@@ -190,12 +205,15 @@ function stairFlights(scene: Scene): void {
   };
   const rise = GROUND / STEPS;
   for (const f of FLIGHTS) {
-    const going = (f.zt - f.zf) / STEPS, dir = Math.sign(going), w = f.x1 - f.x0, cx = (f.x0 + f.x1) / 2;
+    const going = (f.t - f.f) / STEPS, dir = Math.sign(going), w = f.c1 - f.c0, cu = (f.c0 + f.c1) / 2;
+    // laid out as (across, along); an x-run flight swaps them
+    const put = (k: keyof typeof parts, wu: number, h: number, dv: number, u: number, y: number, v: number) =>
+      f.ax === "z" ? box(k, wu, h, dv, u, y, v) : box(k, dv, h, wu, v, y, u);
     for (let i = 0; i < STEPS; i++) {
-      const top = rise * (i + 1), z = f.zf + going * (i + 0.5);
-      box("tread", w - 1.4, top + 0.5, Math.abs(going), cx, (top - 0.5) / 2, z);
-      box("nose", w - 1.4, 0.06, 0.12, cx, top + 0.01, z - going / 2 + dir * 0.06);
-      for (const e of [f.x0 + 0.35, f.x1 - 0.35]) box("cheek", 0.7, top + 1.2, Math.abs(going) + 0.02, e, (top + 0.7 - 0.5) / 2, z);
+      const top = rise * (i + 1), v = f.f + going * (i + 0.5);
+      put("tread", w - 1.4, top + 0.5, Math.abs(going), cu, (top - 0.5) / 2, v);
+      put("nose", w - 1.4, 0.06, 0.12, cu, top + 0.01, v - going / 2 + dir * 0.06);
+      for (const e of [f.c0 + 0.35, f.c1 - 0.35]) put("cheek", 0.7, top + 1.2, Math.abs(going) + 0.02, e, (top + 0.7 - 0.5) / 2, v);
     }
   }
   const mats = { tread: mk("voidStairTread", new Color3(0.2, 0.25, 0.27), 0.18), nose: mk("voidStairNose", new Color3(0.03, 0.04, 0.05), 0.2), cheek: mk("voidStairCheek", new Color3(0.11, 0.15, 0.17), 0.2) };
@@ -412,7 +430,8 @@ function shrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): Pick
   };
   const parts: Record<keyof typeof mats, Mesh[]> = { stone: [], floor: [], recess: [], portal: [], crystal: [] };
   const put = (k: keyof typeof mats, m: Mesh) => { m.bakeCurrentTransformIntoVertices(); parts[k].push(m); };
-  const top = PLATEAU.top, Y = top + 0.8;
+  // 605 round 2: the shrine and altar stand on the central pit's floor
+  const top = 0, Y = top + 0.8;
   // dais and floor
   const dais = MeshBuilder.CreateCylinder("voidShrinePart", { diameter: SHRINE.dais * 2, height: 0.8 + 1, tessellation: 24 }, scene);
   dais.position.set(SHRINE.x, top - 0.5 + 0.4, SHRINE.z);
@@ -506,7 +525,8 @@ function shrine(scene: Scene, built: Set<unknown>, result: MapBuildResult): Pick
 // wings 21 m across) and turned 1.27 rad so it faces the camera with its wings spread across the view, not edge-on.
 // 596.1b: at 1.25x its horns left the top of the ground frame and its camera-facing side, turned from the sun, read black:
 // 1.05x, and the statue's stone self-lit 0.75 of its colour with no shadows received, so its shaded front reads grey-teal.
-const STATUE = { x: 18, z: 15, scale: 1.05, yaw: 1.27 };
+// 605 round 2: the centre is a pit, so the statue moves onto the back route behind it, facing the front
+const STATUE = { x: 0, z: 30, scale: 1.05, yaw: 0 };
 // 605 [R] a: the hidden spire's collider moves out past the rim with the giant slab
 const SPIRE = { x: 56, z: 34 };
 function chainedStatue(scene: Scene, obstacles: MapBuildResult["obstacles"]): void {
@@ -1036,9 +1056,9 @@ function fracturedShrines(scene: Scene, obstacles: MapBuildResult["obstacles"]):
 }
 
 const MUSHROOM_LEDGES: Array<[number, number]> = [
-  [-20, -38], [4, -39], [22, -37], [-32, -12], [33, -13], [-18, -30], [19, -31], [-3, -22],
-  [-27, 33], [27, 34], [-44, 27], [44, 28], [-15, 31], [16, 33], [-4, 38], [9, 24],
-];
+  [-20, -40], [8, -41], [24, -40], [-32, -12], [33, -13], [-18, -30], [19, -31], [-5, -10],
+  [-12, 14], [12, 16], [-30, 33], [30, 34], [-15, 31], [16, 33], [-4, 40], [-46, 30], [46, 8],
+]
 function ledgeMushrooms(scene: Scene): void {
   let seed = 0x51a3;
   const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
