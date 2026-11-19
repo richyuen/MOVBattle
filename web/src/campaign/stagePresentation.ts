@@ -321,6 +321,51 @@ function samuraiPath(scene: Scene, base: HeightField | null): void {
   };
 }
 
+/**
+ * reference/stages/dynasty.zeus_and_other_folks.png: the phalanx is drawn up in the street right in front of a whitewashed house,
+ * its blue door and a stair flight facing the player, Zeus apart by the door. ancient_1's houses all stand west of the team-1 plaza
+ * (their doors face the streets), so for this stage a house of the same make stands behind the army. Spec: 6 m deep (x 36.5..42.5),
+ * 10 m along z (-8..2), 3.8 m walls, blue roof band, parapet terrace, an upper room with a dome; on its west face a blue door at z -3.6
+ * two shutters toward +z, and an 8-step flight 2 m wide against the face from z -5.2 to -7.8 rising to the roof. Drawn only.
+ */
+function zeusHouse(scene: Scene): void {
+  const plaster = scene.getMaterialByName("ancient1Whitewash");
+  const blue = scene.getMaterialByName("ancient1BlueTile");
+  const meshes: Mesh[] = [];
+  const box = (name: string, w: number, h: number, d: number, x: number, y: number, z: number, mat: typeof plaster) => {
+    const m = MeshBuilder.CreateBox(name, { width: w, height: h, depth: d }, scene);
+    m.position.set(x, y, z);
+    m.material = mat;
+    m.receiveShadows = true;
+    m.isPickable = false;
+    meshes.push(m);
+  };
+  const X0 = 36.5, X1 = 42.5, Z0 = -8, Z1 = 2, H = 3.8;
+  const cx = (X0 + X1) / 2, cz = (Z0 + Z1) / 2, w = X1 - X0, d = Z1 - Z0;
+  box("zeusHouse", w, H, d, cx, H / 2, cz, plaster);
+  box("zeusHouseRoofBand", w + 0.2, 0.24, d + 0.2, cx, H - 0.24, cz, blue);
+  box("zeusHouseTerrace", w + 0.3, 0.36, d + 0.3, cx, H, cz, plaster);
+  box("zeusHouseUpper", 4.4, 2.2, 4.6, cx + 0.6, H + 1.1, cz + 1.2, plaster);
+  box("zeusHouseCoping", 4.7, 0.27, 4.9, cx + 0.6, H + 2.24, cz + 1.2, plaster);
+  const dome = MeshBuilder.CreateSphere("zeusHouseDome", { diameter: 4.4, segments: 8, slice: 0.5 }, scene);
+  dome.position.set(cx + 0.6, H + 2.3, cz + 1.2);
+  dome.material = blue;
+  dome.convertToFlatShadedMesh();
+  meshes.push(dome);
+  // door and shutters on the west (player) face
+  box("zeusHouseDoor", 0.14, 2.1, 1.3, X0 - 0.04, 1.05, -3.6, blue);
+  for (const z of [-1.6, 0.6]) box("zeusHouseShutter", 0.12, 1.1, 0.78, X0 - 0.03, 1.52, z, blue);
+  // the stair flight against the face, climbing toward -z
+  for (let i = 0; i < 8; i++) {
+    const rise = H * (i + 1) / 8;
+    box("zeusHouseStep", 2, rise, 0.34, X0 - 1, rise / 2, -5.2 - 0.33 * i, plaster);
+  }
+  markStatic(meshes);
+  cleanup = () => {
+    for (const m of meshes) if (!m.isDisposed()) m.dispose();
+  };
+}
+
 export function clearStagePresentation(): void {
   cleanup?.();
   cleanup = null;
@@ -434,6 +479,10 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
   }
   if (id === "dynasty.samurai") {
     samuraiPath(scene, base);
+    return;
+  }
+  if (id === "dynasty.zeus_and_other_folks") {
+    zeusHouse(scene);
     return;
   }
   const perch = PERCHES[id];
