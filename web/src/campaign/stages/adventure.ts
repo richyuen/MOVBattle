@@ -45,7 +45,7 @@ export const STAGES: TabsStageDef[] = [
       ["tribal.spear_thrower", 33.7, -4.3],
       ["tribal.spear_thrower", 33.7, 4.3],
       ["tribal.spear_thrower", 29.3, 12.2],
-      ["tribal.spear_thrower", 29.3, -18],
+      ["tribal.spear_thrower", 28.7, -17.4],
       ["tribal.stoner", 36.9, -9.6],
       ["tribal.stoner", 39.5, 0],
       ["tribal.stoner", 31.9, 9.6],
