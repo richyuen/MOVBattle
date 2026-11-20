@@ -178,10 +178,11 @@ export const STAGES: TabsStageDef[] = [
       ["viking.berserker", 12, -16.5, -300],
       ["viking.berserker", 18.4, -12.2, -320],
       ["viking.berserker", 22.6, -6.5, -340],
-      ["viking.jarl", 31.2, 6],
-      ["viking.jarl", 31.2, 10],
-      ["viking.jarl", 31.2, 14],
-      ["viking.jarl", 31.2, 18],
+      // Four heavy fighters stand apart on the left (+z) of the ring.
+      ["viking.jarl", -5, 24],
+      ["viking.jarl", -1.5, 25],
+      ["viking.jarl", 2, 24.5],
+      ["viking.jarl", 5.5, 23.5],
     ],
   },
   {
