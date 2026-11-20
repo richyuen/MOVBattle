@@ -19,7 +19,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 ## Capture and probes
 - Regression-only replaces summary.json: back up world evidence and keep its smoke summary separately (599).
 - capture-world: mulberry32 0x4d4f5642 reseeded each resetBattle, time via advanceTime, setupScale8; re-add body.capture-mode before shots (loads drop it).
-- Never capture with a test --iter (pruneOld): use look/. Near-black set pieces vanish in black tree rings (587).
+- Test captures use look/ (--iter prunes). Near-black props vanish in black trees (587).
 - Capture wipes iter-N unless --add: save reviews after the last capture; audit step5 needs --add. Background step5 (~12min).
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
 - Dev probe (5173): import the Babylon resource URL; EngineStore.LastCreatedScene is the live map scene.
@@ -52,7 +52,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
 - Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
-- Run captures unsandboxed. Island cam sky band: z~200, y -25..35.
+- Run captures unsandboxed; use --port if a completed preview retains its port. Island sky band: z~200,y-25..35.
 - Moving a set piece can put a fixed pose inside it (pirate 602: ground cam x -30 in a hull): view every shot after. Turn/scale one: build local, bakeTransformIntoVertices.
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six blades, normals up (583); flattened IcoSpheres read as paving from low cameras, leaf cards as beige flags (571).

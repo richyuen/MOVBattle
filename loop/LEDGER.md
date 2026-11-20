@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+616 | [S] 24dca1bb | spooky.plunder.b1 | approve,struck1
+616 | [S] f6a98d2d | spooky.bone.b1 | approve,struck1
+616 | [S] 58221731+e4ec548f | spooky.bone.b2 | approve,struck2
+616 | [S] ebca0cfd+bbcb3192 | spooky.cave.b2 | approve,struck2
+616 | [S] daec95d3+dcdff888 | spooky.breakout.b1 | approve,struck1
+616 | [S] 9b61be07 | spooky.breakout.b2 | approve,struck2
+616 | [S] 995853ac | pirate.arrows_and_arrow.b2 | approve,struck2
+616 | [S] fefdffcd | pirate.arrows_and_arrow.b3 | approve,struck3
+616 | [S] d4648d25 | spooky.cave.b1 | approve,struck1
 615 | [S] 5ff25056+b7d24ea3 | renaissance.renaissance_fencer.b2 | approve,struck2
 615 | [S] 8375f571 | pirate.boom_and_the_units_go_down.b4 | approve,struck4
 615 | [S] a1363de3 | pirate.a_small_tribe.b2 | approve,struck2
@@ -45,15 +54,19 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 611 | [S] 6faa88dd | dynasty.catapults.b1 | approve,no strike (echelon receding left, not yet touching)
 611 | [S] ac07417e+71cdb10a | dynasty.samurai.b1 | approve,struck1-3 (3:3 round the Monk, flank groups); b4 path left
 611 | [S] 611.6/6b/6c reverted | dynasty.art_of_war.b1 | dropped (outside team-1 zone, then a Ninja in the canal spur)
-610 | [S] e19bf480 | challenge.twin_lords.b1 | approve,struck1-6 (under the castle wall, re-laid); CONFIRM -> D
-610 | [S] e3db6089 | challenge.zeus.b5 | approve,struck5 (phalanx 48 deg)
-610 | [S] 6e6423a2 | challenge.zeus.b3 | approve,struck3 (Hoplites hinged back); [P] 05b84fcd spacing 0.98 m struck1; CONFIRM -> D
-610 | [S] 3348b58f+1cb4aa72+579db65e | challenge.a_warm_welcome.b1 | approve,struck1-6 (drawn boulder cave welcomeCave); CONFIRM -> D
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605), fantasy_good (587-608): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
+web/src/campaign/stages/spooky.ts:plunder Queen | sand(6.5,-4.5) | 616 | approve | deck(19.25,-4.5)
+web/src/campaign/stages/spooky.ts:bone formation | scattered x12..34.6,z4..20.5; stagePresentation.ts:boneApproach low walls and tower | 616 | approve | two ranks x20/22.2,z-9.9..9.9; no approach
+web/src/campaign/stages/spooky.ts:cave Chieftains | irregular cliff-foot pockets x24..30.1,z-14..22 | 616 | approve | two rows x20/22.2
+web/src/campaign/stages/spooky.ts:breakout Berserkers; main.ts:checkStage | inward oval24x19 at origin; stage-only enemy ice zone52x56 | 616 | approve | bank ranks x29..31.8, inherited team1 half
+web/src/campaign/stages/spooky.ts:breakout Jarls | separate x-5..5.5,z23.5..25 | 616 | approve | x31.2,z6/10/14/18
+web/src/map/tabs/viking_sandbox.ts:placementZones; stages/pirate.ts:arrows army | append inner ice x+-(1..27),z+-20; army -8x | 616 | approve | x>=27; original x27.6..34
+web/src/campaign/stages/pirate.ts:arrows right flank | archers x25..18.1,z-6..-12; Heads15.8,-14/13.5,-16 | 616 | approve | archers x26..21.8; Heads20.6/22
+web/src/campaign/stages/spooky.ts:cave Protectors | 2x3 x28.7/30.1,z4.6/6/7.4 | 616 | approve | one line x20,z-9.9..-0.9
 web/src/map/tabs/renaissance.ts:placementZones,canal | append x+-(19..43),z-24..-5; water z-29.9..-24.9 | 615 | approve | zones z-5..29; inherited water z-34..-14
 web/src/campaign/stages/renaissance.ts:renaissance_fencer Musketeers | stagger x21..28.5,z-20..27.6 | 615 | approve | 614 z-4.5..27.6
 web/src/campaign/stages/pirate.ts:boom formation | 3 layers z-20..28, V centre z4 | 615 | approve | 614 z-4..28, V centre z12
