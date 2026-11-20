@@ -502,6 +502,11 @@ export function buildVikingSandbox(scene: Scene, base: () => MapBuildResult): Ma
     const x0 = Math.max(zone.center.x - zone.size.x / 2, -INSIDE_X), x1 = Math.min(zone.center.x + zone.size.x / 2, INSIDE_X);
     return { ...zone, center: new Vector3((x0 + x1) / 2, zone.center.y, zone.center.z), size: new Vector3(x1 - x0, zone.size.y, zone.size.z) };
   });
+  // The bowl's clear inner ice is usable too; retain the outer zones first for
+  // skirmish spawning, and keep both teams on their own half of the arena.
+  for (const team of [0, 1] as const) placementZones.push({
+    team, center: new Vector3((team === 0 ? -1 : 1) * 14, 0, 0), size: new Vector3(26, 100, 40),
+  });
   return {
     ...result, obstacles, hazards: cleared.hazards, placementZones,
     dispose: () => {
