@@ -197,7 +197,7 @@ export const STAGES: TabsStageDef[] = [
       // 596: on the pirates' galleon deck (map.pirate; 602: keel x 29 along z), the leaders at the three plank heads
       ["pirate.captain", 19.7, -18],
       ["pirate.captain", 19.7, 8.55],
-      ["pirate.pirate_queen", 19.25, -4.5],
+      ["pirate.pirate_queen", 6.5, -4.5],
       ["pirate.blunderbuss", 25.4, 1.5],
       ["pirate.blunderbuss", 25.4, -1.5],
       ["pirate.blunderbuss", 25.4, -7.5],
