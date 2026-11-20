@@ -194,9 +194,9 @@ export const STAGES: TabsStageDef[] = [
     budget: 8000,
     playerUnits: { factions: ["spooky"] },
     enemy: [
-      // 596: on the pirates' galleon deck (map.pirate; 602: keel x 29 along z), the leaders at the three plank heads
-      ["pirate.captain", 19.7, -18],
-      ["pirate.captain", 19.7, 8.55],
+      // Plunder Survey: the Captains follow the Queen down the main entrance.
+      ["pirate.captain", 11, -5.3],
+      ["pirate.captain", 14, -3.7],
       ["pirate.pirate_queen", 6.5, -4.5],
       ["pirate.blunderbuss", 25.4, 1.5],
       ["pirate.blunderbuss", 25.4, -1.5],
