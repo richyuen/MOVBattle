@@ -515,6 +515,27 @@ function fencerLoggia(scene: Scene, base: HeightField | null): void {
   };
 }
 
+// Ancient 2's army stands on the approach below the city, with a pale path
+// along its front edge and returning left to the temple stair (reference:
+// renaissance.renaissance_vs_ancient_2.png). Preserve the map's general paths.
+function ancientApproach(scene: Scene): void {
+  const material = scene.getMaterialByName("ancient2PathClay");
+  const pieces = [
+    { x: 26, z: 12, w: 3.4, d: 28 },
+    { x: 13, z: 24, w: 26, d: 3.4 },
+  ].map(({ x, z, w, d }) => {
+    const m = MeshBuilder.CreateBox("ancientApproach", { width: w, height: 0.08, depth: d }, scene);
+    m.position.set(x, 0.25, z);
+    m.material = material;
+    m.receiveShadows = true;
+    m.isPickable = false;
+    scene.getGlowLayerByName("glow")?.addExcludedMesh(m);
+    return m;
+  });
+  markStatic(pieces);
+  cleanup = () => { for (const m of pieces) if (!m.isDisposed()) m.dispose(); };
+}
+
 export function clearStagePresentation(): void {
   cleanup?.();
   cleanup = null;
@@ -636,6 +657,10 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
   }
   if (id === "renaissance.renaissance_fencer") {
     fencerLoggia(scene, base);
+    return;
+  }
+  if (id === "renaissance.renaissance_vs_ancient_2") {
+    ancientApproach(scene);
     return;
   }
   if (id === "renaissance.balloons") {
