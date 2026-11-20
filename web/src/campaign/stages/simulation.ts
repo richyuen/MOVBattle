@@ -179,9 +179,10 @@ export const STAGES: TabsStageDef[] = [
       ["medieval.catapult", 31.5, 7.5],
       ["medieval.catapult", 31.5, 12.5],
       ["medieval.catapult", 31.5, 17.5],
-      ["medieval.catapult", 20, 8],
-      ["medieval.catapult", 20, 12],
-      ["medieval.catapult", 20, 16],
+      // One engine inside the gateway, two reserves further into the platform.
+      ["medieval.catapult", 32, 0],
+      ["medieval.catapult", 42, -3],
+      ["medieval.catapult", 42, 3],
     ],
   },
   {

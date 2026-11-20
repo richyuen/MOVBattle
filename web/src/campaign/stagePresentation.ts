@@ -576,6 +576,13 @@ export function clearStagePresentation(): void {
 
 export function applyStagePresentation(scene: Scene, id: string, units: RuntimeUnit[], base: HeightField | null): void {
   clearStagePresentation();
+  if (id === "simulation.catapult_castle") {
+    // This level seats an engine inside the gate, below its crown. Keep the
+    // map's normal crown height for its other stages and sandbox defenders.
+    setActiveHeightField((x, z) => x > 27.5 && x < 36.5 && Math.abs(z) < 4.6 ? 12 : base?.(x, z) ?? 0);
+    cleanup = () => setActiveHeightField(base);
+    return;
+  }
   if (id === "spooky.war") {
     // War Survey/reference: nine Vampires wait behind the central force up a
     // broad stair. Ten 1 m treads climb from x22 to a 4 m landing at x32..34.
