@@ -576,6 +576,25 @@ export function clearStagePresentation(): void {
 
 export function applyStagePresentation(scene: Scene, id: string, units: RuntimeUnit[], base: HeightField | null): void {
   clearStagePresentation();
+  if (id === "spooky.war") {
+    // War Survey/reference: nine Vampires wait behind the central force up a
+    // broad stair. Ten 1 m treads climb from x22 to a 4 m landing at x32..34.
+    const steps: Mesh[] = [];
+    const stone = scene.getMaterialByName("spooky2TerraceStone");
+    for (let i = 0; i < 12; i++) {
+      const h = Math.min(i + 1, 10) * 0.4;
+      const m = MeshBuilder.CreateBox("warRearStair", { width: 1, height: h, depth: 8 }, scene);
+      m.position.set(22.5 + i, h / 2, 0);
+      m.material = stone;
+      m.receiveShadows = true;
+      steps.push(m);
+    }
+    markStatic(steps);
+    setActiveHeightField((x, z) => x >= 22 && x < 34 && Math.abs(z) < 4
+      ? Math.min(Math.floor(x - 22) + 1, 10) * 0.4 : base?.(x, z) ?? 0);
+    cleanup = () => { setActiveHeightField(base); for (const m of steps) m.dispose(); };
+    return;
+  }
   if (id === "spooky.bone") {
     boneApproach(scene);
     return;
