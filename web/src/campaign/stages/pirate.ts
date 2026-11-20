@@ -30,11 +30,11 @@ export const STAGES: TabsStageDef[] = [
       ["pirate.flintlock", 31.5, -11],
       ["pirate.flintlock", 32.5, -12.5],
       // Two before and two behind the X, plus the lone man off its side.
-      ["pirate.flintlock", 22, -6],
-      ["pirate.flintlock", 22, -3],
-      ["pirate.flintlock", 35, -6],
-      ["pirate.flintlock", 35, -3],
-      ["pirate.flintlock", 28.5, 4.5],
+      ["pirate.flintlock", 22, -8],
+      ["pirate.flintlock", 22, -5],
+      ["pirate.flintlock", 35, -8],
+      ["pirate.flintlock", 35, -5],
+      ["pirate.flintlock", 25.5, -8.5],
     ],
   },
   {
