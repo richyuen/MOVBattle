@@ -1812,14 +1812,6 @@ function loadCampaignScenario(statusMessage?: string): void {
     suppressStatus: true,
   });
   loadMapById(activeScenario.mapId);
-  if (activeScenario.id === "spooky.breakout") {
-    // This locked army surrounds the player on the ice, crossing the sandbox's
-    // team divider. Its stage zone does not change either sandbox half.
-    activeMapInstance.placementZones = [...(activeMapInstance.placementZones ?? activeMapInstance.zones), {
-      team: 1, center: Vector3.Zero(), size: new Vector3(52, 100, 56),
-    }];
-    placementValidator = new PlacementValidator(activeMapInstance.placementZones, activeMapInstance.obstacles, activeMapInstance.hazards);
-  }
   budgetSystem = new BudgetSystem(
     campaignSession.unlimited ? Number.MAX_SAFE_INTEGER : activeScenario.restrictions.budget,
     0,
@@ -3841,7 +3833,13 @@ const gameApi = {
     loadCampaignScenario("Stage check.");
     const scenario = getActiveCampaignScenarioDefinition()!;
     const zones = activeMapInstance.placementZones ?? activeMapInstance.zones;
-    const validator = new PlacementValidator(zones, activeMapInstance.obstacles, activeMapInstance.hazards);
+    // Breakout's locked enemies surround the player across the sandbox divider.
+    // Validate its authored ring on the clear ice without changing map zones or
+    // the player's placement rules when the same map is reused in sandbox.
+    const stageZones = scenarioId === "spooky.breakout" ? [...zones, {
+      team: 1 as const, center: Vector3.Zero(), size: new Vector3(52, 100, 56),
+    }] : zones;
+    const validator = new PlacementValidator(stageZones, activeMapInstance.obstacles, activeMapInstance.hazards);
     const misplaced: string[] = [];
     // For each misplaced unit, the nearest valid spot (rings of 0.6 m out to 30 m, clear of the units already standing) as a fix suggestion
     const moves: Array<{ index: number; unitId: string; from: [number, number]; to: [number, number] | null }> = [];
