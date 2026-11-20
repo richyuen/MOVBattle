@@ -536,6 +536,39 @@ function ancientApproach(scene: Scene): void {
   cleanup = () => { for (const m of pieces) if (!m.isDisposed()) m.dispose(); };
 }
 
+// Bone's reference is a graveyard approach: two broken low walls flank the
+// receding warriors and a tower rises immediately at the left. For this stage
+// only, use the map's own stone/tower, with all moved map meshes restored on exit.
+function boneApproach(scene: Scene): void {
+  const stone = scene.getMaterialByName("spooky1CliffStone");
+  const walls: Mesh[] = [];
+  for (const z of [1.5, 24]) for (const [x, w] of [[13, 6], [21.5, 5], [29, 6]] as const) {
+    for (let course = 0; course < 2; course++) {
+      const m = MeshBuilder.CreateBox("boneApproachWall", { width: w, height: 0.38, depth: 0.8 }, scene);
+      m.position.set(x + course * 0.2, 0.19 + course * 0.38, z);
+      m.material = stone;
+      m.isPickable = false;
+      markStatic([m]);
+      walls.push(m);
+    }
+  }
+  const towers = ["spooky1Watchtower", "spooky1TowerWindows"].flatMap(name => {
+    const m = scene.getMeshByName(name);
+    if (!m) return [];
+    const position = m.position.clone();
+    m.position.addInPlace(new Vector3(-15, 0, -6));
+    return [{ m, position }];
+  });
+  const fence = scene.getMeshByName("spooky1GraveFence");
+  const fenceEnabled = fence?.isEnabled();
+  fence?.setEnabled(false);
+  cleanup = () => {
+    for (const m of walls) if (!m.isDisposed()) m.dispose();
+    for (const { m, position } of towers) if (!m.isDisposed()) m.position.copyFrom(position);
+    if (fence && !fence.isDisposed()) fence.setEnabled(fenceEnabled ?? true);
+  };
+}
+
 export function clearStagePresentation(): void {
   cleanup?.();
   cleanup = null;
@@ -543,6 +576,10 @@ export function clearStagePresentation(): void {
 
 export function applyStagePresentation(scene: Scene, id: string, units: RuntimeUnit[], base: HeightField | null): void {
   clearStagePresentation();
+  if (id === "spooky.bone") {
+    boneApproach(scene);
+    return;
+  }
   if (id === "adventure.final_destination_wheelbarrow") {
     const cart = units.find(unit => unit.team === 1 && unit.definition.id === "farmer.wheelbarrow");
     if (!cart) return;
