@@ -264,11 +264,13 @@ async function stageScene(page, item) {
   const city = st.map === "ancient_1";
   const streets = item === "introduction.basic_formation";
   const archCart = item === "adventure.final_destination_wheelbarrow";
+  // The ship's beach-side rail hides deck formations from the low shore pose.
+  const deckArmy = item === "pirate.x_marks_the_spot";
   await frame(page, {
     target: { x: box.cx, y: archCart ? 9 : st.map === "pirate" ? 8.2 : 1, z: box.cz },
     radius: Math.max(archCart ? 32 : 16, Math.max(box.w, box.d) * 1.25 + 8),
     alpha: city ? Math.PI + 0.42 : Math.PI,
-    beta: archCart ? 1 : streets ? 0.24 : city ? 0.77 : 1.2,
+    beta: deckArmy ? 0.65 : archCart ? 1 : streets ? 0.24 : city ? 0.77 : 1.2,
   });
   await shot(page, `${p}army`);
   // 611: on the dynasty map the 135 m top view loses the army among the pagodas and canopies (AUDIT 610): frame the right half
