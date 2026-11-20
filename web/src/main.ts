@@ -3838,6 +3838,9 @@ const gameApi = {
     // the player's placement rules when the same map is reused in sandbox.
     const stageZones = scenarioId === "spooky.breakout" ? [...zones, {
       team: 1 as const, center: Vector3.Zero(), size: new Vector3(52, 100, 56),
+    }] : scenarioId === "spooky.turtle" ? [...zones, {
+      // Turtle's locked mixed force occupies the opposite bank (card Survey).
+      team: 1 as const, center: new Vector3(-23, 0, 0), size: new Vector3(36, 100, 62),
     }] : zones;
     const validator = new PlacementValidator(stageZones, activeMapInstance.obstacles, activeMapInstance.hazards);
     const misplaced: string[] = [];
