@@ -446,6 +446,10 @@ export function buildRenaissance(scene: Scene, base: () => MapBuildResult): MapB
   dogesPalace(scene);
   coveredBridge(scene);
   frontCanal(scene);
+  // The inherited canal occupied z -34..-14; frontCanal draws it only
+  // behind the piazza at -29.9..-24.9. Match its hazard to that water.
+  result.hazards = result.hazards.map(h => h.shape === "box" && h.kind === "water" && h.center.z === -24
+    ? { ...h, center: new Vector3(0, 0, -27.4), halfX: 43, halfZ: 2.5 } : h);
   stoneBase(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   creamPavement(scene, new Set<unknown>(scene.meshes.filter((m) => !prior.has(m))));
   // The circular object in the reference battle is a unit: the piazza itself has no fountain.
