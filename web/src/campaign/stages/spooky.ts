@@ -61,7 +61,7 @@ export const STAGES: TabsStageDef[] = [
       ["spooky.skeleton_warrior", 14, 18.5],
       ["spooky.skeleton_warrior", 14, 21],
       ["spooky.skeleton_warrior", 17, 16],
-      ["spooky.skeleton_warrior", 18.5, 18.5],
+      ["spooky.skeleton_warrior", 19.7, 18.5],
       ["spooky.skeleton_warrior", 17, 21],
       // Nine Vampires wait up the rear stair, hidden behind the central force.
       ["spooky.vampire", 26, -2.6],
