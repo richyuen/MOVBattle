@@ -1,5 +1,5 @@
 # Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
-Iteration: 614   Batch: stages_renaissance+stages_pirate   Consecutive empty: 0   Done: 57/99   Parked: 0
+Iteration: 615   Batch: stages_pirate   Consecutive empty: 0   Done: 64/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
 ## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
@@ -16,8 +16,8 @@ stages_introduction: clubs +++ D | army +++ D | hay_and_pitchforks +++ D | basic
 stages_adventure: tree_tribe +++ D | the_tiniest_attack +++ D | sneaky_tribe +++ D | tree_mammoths +++ D | final_destination_wheelbarrow +++ D | a_fierce_rider +++ D
 stages_challenge: ice_archer_and_friends +++ D | knights_and_priests +++ D | a_warm_welcome +++ D | zeus +++ D | twin_lords +++ D | big_brawl +++ D
 stages_dynasty: samurai +++ D | art_of_war +++ D | area_of_effect +++ D | catapults +++ D | zeus_and_other_folks +++ D | viking_army +++ D
-stages_renaissance: a_new_art_wave +++ D | balloons +++ D | renaissance_fencer +-+ o | renaissance_vs_farmer_1 +++ D | renaissance_vs_ancient_2 +-+ o | renaissance_vs_dynasty_3 +++ D
-stages_pirate: x_marks_the_spot +-+ o | a_rival_captain +-+ o | a_small_tribe +-+ o | you_won_t_make_us_walk_the_plank +-+ o | arrows_and_arrow +-+ o | boom_and_the_units_go_down +-+ o
+stages_renaissance: a_new_art_wave +++ D | balloons +++ D | renaissance_fencer +++ D | renaissance_vs_farmer_1 +++ D | renaissance_vs_ancient_2 +++ D | renaissance_vs_dynasty_3 +++ D
+stages_pirate: x_marks_the_spot +++ D | a_rival_captain +++ D | a_small_tribe +++ D | you_won_t_make_us_walk_the_plank +++ D | arrows_and_arrow +-+ o | boom_and_the_units_go_down +++ D
 stages_spooky: bone ??? q | war ??? q | cave ??? q | turtle ??? q | breakout ??? q | plunder ??? q
 stages_simulation: bridge_battle ??? q | hill ??? q | wall ??? q | siege ??? q | catapult_castle ??? q | pit ??? q
 stages_wild_west: leading_cacti ??? q | bullets_and_chains ??? q | lone_ranger_and_his_friends ??? q | laughing_knights ??? q | shogun_s_samurai ??? q | spooky_army ??? q
@@ -25,45 +25,50 @@ stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter614 batch stages_renaissance+stages_pirate; 9 [S]; BASE b44da324)
-- [S] pirate: walk_plank.b1 09e189d5 APPROVE struck 1,2; walk_plank.b3 4dbbd64c+ff4b17f9 APPROVE struck 4; small_tribe.b1 a5ea15f0 APPROVE struck 1; small_tribe.b3 40345484 APPROVE struck 3,4; boom.b4 090d6a67 APPROVE; boom.b2 546a125c APPROVE struck 2
-- [S] renaissance: fencer.b2 f135fc9e APPROVE; a_new_art_wave.b5 ccebe571 APPROVE struck 5; balloons.b4 85977a0e APPROVE struck 4
-- CONFIRM 614 (early): passed b on a_new_art_wave (balloons b confirmed 613) -> both D; failed walk_plank b (3: the arch hides the +z archer line); passed small_tribe and boom b but the critic kept a blocker on each
-- 9/9, 10 struck
+## Focus (iter615 stages_renaissance+stages_pirate; 9 [S]; BASE 084a4206)
+- [S] renaissance.renaissance_fencer.b2 5ff25056+b7d24ea3 APPROVE struck 2
+- [S] pirate.boom_and_the_units_go_down.b4 8375f571 APPROVE struck 4
+- [S] pirate.a_small_tribe.b2 a1363de3 APPROVE struck 2
+- [S] pirate.you_won_t_make_us_walk_the_plank.b3 cd65ec9e APPROVE struck 3
+- [S] pirate.x_marks_the_spot.b1 6d676fc0+97df2916 APPROVE struck 1,4; b2 c0e3830c+70807a69 APPROVE struck 2,3
+- [S] renaissance.renaissance_vs_ancient_2.b6 b7a1342a APPROVE struck 6
+- [S] pirate.a_rival_captain.b1 f8b8b9b7 APPROVE struck 1; b4 b7a228e2 APPROVE struck 2,3,4,5
+- Evidence 084a4206+8c8d80a0: X above rail/below sail, rival army at ground height; both open Pirate-map army b views re-opened and passed.
+- CONFIRM 615: all seven b lists passed, including earlier strikes; all seven D.
+- 9/9, 14 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] pirate.you_won_t_make_us_walk_the_plank (09e189d5)
+GAP: [S] renaissance.renaissance_fencer (5ff25056, b7d24ea3)
 VERDICT: APPROVE
-CRITERION: pirate.you_won_t_make_us_walk_the_plank.b FAIL   (previous: FAIL)
-GAP: [S] pirate.you_won_t_make_us_walk_the_plank (4dbbd64c, follow-up ff4b17f9)
+CRITERION: renaissance.renaissance_fencer.b PASS (previous: FAIL)
+GAP: [S] pirate.boom_and_the_units_go_down (8375f571)
 VERDICT: APPROVE
-CRITERION: pirate.you_won_t_make_us_walk_the_plank.b FAIL   (previous: FAIL)
-GAP: [S] pirate.a_small_tribe (a5ea15f0)
+CRITERION: pirate.boom_and_the_units_go_down.b PASS (previous: FAIL)
+GAP: [S] pirate.a_small_tribe (a1363de3)
 VERDICT: APPROVE
-CRITERION: pirate.a_small_tribe.b FAIL   (previous: FAIL)
-GAP: [S] pirate.a_small_tribe (40345484)
+CRITERION: pirate.a_small_tribe.b PASS (previous: FAIL)
+GAP: [S] pirate.you_won_t_make_us_walk_the_plank (cd65ec9e)
 VERDICT: APPROVE
-CRITERION: pirate.a_small_tribe.b FAIL   (previous: FAIL)
-GAP: [S] pirate.boom_and_the_units_go_down (090d6a67)
+CRITERION: pirate.you_won_t_make_us_walk_the_plank.b PASS (previous: FAIL)
+GAP: [S] pirate.x_marks_the_spot (6d676fc0, 97df2916)
 VERDICT: APPROVE
-CRITERION: pirate.boom_and_the_units_go_down.b FAIL   (previous: FAIL)
-GAP: [S] pirate.boom_and_the_units_go_down (546a125c)
+CRITERION: pirate.x_marks_the_spot.b FAIL (previous: FAIL)
+GAP: [S] pirate.x_marks_the_spot (c0e3830c, 70807a69)
 VERDICT: APPROVE
-CRITERION: pirate.boom_and_the_units_go_down.b FAIL   (previous: FAIL)
-GAP: [S] renaissance.renaissance_fencer (f135fc9e)
+CRITERION: pirate.x_marks_the_spot.b PASS (previous: FAIL)
+GAP: [S] renaissance.renaissance_vs_ancient_2 (b7a1342a)
 VERDICT: APPROVE
-CRITERION: renaissance.renaissance_fencer.b FAIL   (previous: FAIL)
-GAP: [S] renaissance.a_new_art_wave (ccebe571)
+CRITERION: renaissance.renaissance_vs_ancient_2.b PASS (previous: FAIL)
+GAP: [S] pirate.a_rival_captain (f8b8b9b7)
 VERDICT: APPROVE
-CRITERION: renaissance.a_new_art_wave.b PASS   (previous: FAIL)
-GAP: [S] renaissance.balloons (85977a0e)
+CRITERION: pirate.a_rival_captain.b FAIL (previous: FAIL)
+GAP: [S] pirate.a_rival_captain (b7a228e2)
 VERDICT: APPROVE
-CRITERION: renaissance.balloons.b PASS   (previous: FAIL)
-REGRESSIONS: none (judge.json: a and c PASS for all six touched stages; the struck blockers of the earlier items hold in their shots)
+CRITERION: pirate.a_rival_captain.b PASS (previous: FAIL)
+REGRESSIONS: none. Inspected every iter-615 PNG. The confirmed Renaissance map a/b remain PASS; its facade ring, paving, open square and canal retain their roles. The three regression-stage army groups remain readable and their field/battle shots show no change attributable to the placement-zone or hazard correction.
 
 ## Notes for next iteration (max5lines)
-- 614: loop stopped by the user after this iteration. Next: renaissance zone over z -24..-5 (placementZones, ancient_1 pattern) clears fencer b2 and boom b4 together; re-check every renaissance stage after it.
-- 614 open: walk_plank b3 (move the +z archer line out from behind plankArch), small_tribe b2 (irregular Chieftain scatter), vs_ancient_2 b6 (path scenery inside the zone), arrows_and_arrow b2/b3 (zone x>=27).
-- stages_pirate audited in 613 (iter-613/audit.md, audit2.md); x_marks_the_spot may need an on-deck _army pose (evidence re-aim).
-- Spans: "centred" means centred on the square; read the zone (renaissance x 19..43, z -5..29; viking_sandbox and ancient_2 x 27..61, |z| <= 20; tribal_1 x 0..54; medieval_1 x 5..75).
-- Validate a re-lay with game.checkStage(campaign, id) on the dev server (5173) before committing, and again after the final coordinates.
+- 615: 35 screenshots, 21/21 world-script criteria, no page errors or capture trouble; Renaissance batch checkpoint GREEN 12/12. World evidence in world-summary.json/summary.json; smoke results in regression-summary.json.
+- Renaissance batch closed. Only pirate.arrows_and_arrow.b2/b3 remains open in stages_pirate (off-cliff placement and right-flank file).
+- arrows_and_arrow: team-1 zone starts at x27 on viking_sandbox; the prior forward-move gap needs a valid inner-ice zone mechanism before re-laying the army. Its item file retains the original blockers.
+- stages_spooky is unaudited; apply the tail-overlap rule when picking the next batch iteration.

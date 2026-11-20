@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+615 | [S] 5ff25056+b7d24ea3 | renaissance.renaissance_fencer.b2 | approve,struck2
+615 | [S] 8375f571 | pirate.boom_and_the_units_go_down.b4 | approve,struck4
+615 | [S] a1363de3 | pirate.a_small_tribe.b2 | approve,struck2
+615 | [S] cd65ec9e | pirate.you_won_t_make_us_walk_the_plank.b3 | approve,struck3
+615 | [S] 6d676fc0+97df2916 | pirate.x_marks_the_spot.b1 | approve,struck1,4
+615 | [S] c0e3830c+70807a69 | pirate.x_marks_the_spot.b2 | approve,struck2,3
+615 | [S] b7a1342a | renaissance.renaissance_vs_ancient_2.b6 | approve,struck6
+615 | [S] f8b8b9b7 | pirate.a_rival_captain.b1 | approve,struck1
+615 | [S] b7a228e2 | pirate.a_rival_captain.b4 | approve,struck2,3,4,5
 614 | [S] 09e189d5 | pirate.you_won_t_make_us_walk_the_plank.b1 | approve,struck1,2 (stage scenery plankArch, Healers behind)
 614 | [S] 4dbbd64c+ff4b17f9 | pirate.you_won_t_make_us_walk_the_plank.b3 | approve,struck4 (two 4-archer lines 14 m back); CONFIRM failed b3: arch hides the +z line
 614 | [S] a5ea15f0 | pirate.a_small_tribe.b1 | approve,struck1 (Protector ahead, Chieftain arc)
@@ -40,18 +49,19 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 610 | [S] e3db6089 | challenge.zeus.b5 | approve,struck5 (phalanx 48 deg)
 610 | [S] 6e6423a2 | challenge.zeus.b3 | approve,struck3 (Hoplites hinged back); [P] 05b84fcd spacing 0.98 m struck1; CONFIRM -> D
 610 | [S] 3348b58f+1cb4aa72+579db65e | challenge.a_warm_welcome.b1 | approve,struck1-6 (drawn boulder cave welcomeCave); CONFIRM -> D
-609 | [S] 08421589+c3b30ff4 | adventure.tree_mammoths.b1 | approve,struck1 (perch crowns, stagePresentation PERCHES); CONFIRM -> D
-609 | [S] ff209a0c+093c86aa | adventure.tree_tribe.b1 | approve,struck1 (one man to a perch crown, 3 rows on enemy arc); CONFIRM -> D
-609 | [S] 55676eea | adventure.sneaky_tribe.b1 | approve,struck1 (drawn rock cave, 6x6 inside); CONFIRM -> D
-609 | [S] fceec30c | challenge.ice_archer_and_friends.b1 | approve,struck1-4 (five groups, archer arrow); CONFIRM -> D
-609 | [S] 4e382b32+29e3a14d | challenge.zeus.b4 | approve,struck2,4 (slanted phalanx ~23 deg, Zeus centre); b1,3,5 left
-609 | [S] aaf6e1bf | challenge.big_brawl.b1 | approve,struck1-7 (Brawler V, Longship back centre); CONFIRM -> D
-609 | [S] 3dc7a176 | challenge.knights_and_priests.b1 | approve,struck1-3 (under the castle wall, Knight arrow); CONFIRM -> D
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605), fantasy_good (587-608): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
+web/src/map/tabs/renaissance.ts:placementZones,canal | append x+-(19..43),z-24..-5; water z-29.9..-24.9 | 615 | approve | zones z-5..29; inherited water z-34..-14
+web/src/campaign/stages/renaissance.ts:renaissance_fencer Musketeers | stagger x21..28.5,z-20..27.6 | 615 | approve | 614 z-4.5..27.6
+web/src/campaign/stages/pirate.ts:boom formation | 3 layers z-20..28, V centre z4 | 615 | approve | 614 z-4..28, V centre z12
+web/src/campaign/stages/pirate.ts:small_tribe Chieftains | irregular x20.5..24,z-7.5..8.5 | 615 | approve | 614 mirrored arc
+web/src/campaign/stages/pirate.ts:walk_plank Archers | x33..33.8,z-10..-4.6 and 1..6.4 | 615 | approve | 614 z-8..-2.6 and 5.4..10.8
+web/src/campaign/stages/pirate.ts:x_marks formation | 17-man X x24.5..32.5,z-12.5..-0.5; two pairs x22/35,z-8/-5; stray25.5,-8.5 | 615 | approve | three deck ranks, two plank heads
+web/src/campaign/stages/renaissance.ts:ancient_2 formation; stagePresentation.ts:ancientApproach | formation +9z; path x26,z-2..26, return to city x0..26,z24 | 615 | approve | formation z-8.5..9.5, no approach
+web/src/campaign/stages/pirate.ts:rival formation | sand x3.5..14,z-16..-7; zigzag, flank trios, Bombs8.3,Captain10.5,Cannons14 | 615 | approve | deck ranks x19.25..31.1
 web/src/campaign/stagePresentation.ts:tiniestSummit | stage-only18x16m hill(20,-9.9),crest6.5,height+cleanup | 601 | approvec283afb0 | flat Farmer
 web/src/campaign/stagePresentation.ts:rider | head xz,head/crest maxY+.08,seated joints,restore before sim | 601 | approvea744ccde,c0d6c20a,799d316d | torso-local anchors hidden;flat Halfling
 web/src/campaign/stagePresentation.ts:wheelbarrowArchCrown; stages/adventure.ts:wheelbarrow | cap(1.2,7.15,10)8x.5x3.6 top7.4,cart+crew lift;actor(2.6,10) | 601 | approve5f92ad8a | absent cap/lift;actor(29,0)
