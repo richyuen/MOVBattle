@@ -1,13 +1,15 @@
 # spooky.turtle
-Status: open   Audited: 616 (AUDIT x2)   Done: -
+Status: done   Audited: 616 (AUDIT x2), 617 (CONFIRM: passed b)   Done: 617
 ## Verdicts
-a PASS (616 judge)
-b FAIL (0 since 616; list from AUDIT 616): 1. the thirteen right-side Squires are merged into a small bridgehead block in stage_spooky.turtle_field.png — TABS: thirteen Squires form a long spaced curve around the right side of the trapped player's ground (ref: reference/stages/spooky.turtle.png; loop/cards/stages/spooky.turtle.md Survey). 2. the five left-side Squires and eleven Archers stand in the same bridgehead block in stage_spooky.turtle_field.png — TABS: they form a separate left-side force opposite the thirteen Squires (ref: loop/cards/stages/spooky.turtle.md Survey; reference/stages/spooky.turtle.png).
-c PASS (616 judge)
+a PASS (617 judge)
+b PASS (617: struck 1,2; CONFIRM 617)
+c PASS (617 judge)
 ## Ranked gaps
-1. [S] b right Squire arc — blocker 1: re-lay thirteen Squires around the right perimeter of the trapped ground — ref: reference/stages/spooky.turtle.png — ours: stage_spooky.turtle_field.png
-2. [S] b opposite mixed group — blocker 2: place five Squires with eleven Archers on the opposite left field — ref: reference/stages/spooky.turtle.png — ours: stage_spooky.turtle_field.png
+None.
 ## Attempts (iter | gap | criterion | verdict)
+617 | 0dcb4ead+63569070 right arc | b1 | APPROVE (struck 1)
+617 | 0604b51b left mixed force | b2 | APPROVE (struck 2)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- AUDIT2 names the same split-force/arc elements. No formation attempt in 616.
+- Both locked AUDIT blockers independently confirmed; opposite-bank enemies use a stage-only validation zone.
+- Distant figures partly meet meadow dressing, but the two forces and right arc remain visible (CONFIRM 617).
