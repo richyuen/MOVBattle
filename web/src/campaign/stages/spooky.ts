@@ -24,7 +24,7 @@ export const STAGES: TabsStageDef[] = [
       ["spooky.skeleton_warrior", 25.8, 15.4],
       ["spooky.skeleton_warrior", 26.1, 4.8],
       ["spooky.skeleton_warrior", 27.5, 20.1],
-      ["spooky.skeleton_warrior", 28, 11.4],
+      ["spooky.skeleton_warrior", 24, 11.4],
       ["spooky.skeleton_warrior", 28.7, 16.8],
       ["spooky.skeleton_warrior", 29.8, 7.4],
       ["spooky.skeleton_warrior", 30.4, 13.5],
