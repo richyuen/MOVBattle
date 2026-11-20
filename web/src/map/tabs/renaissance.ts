@@ -256,6 +256,12 @@ function rectangularPiazza(scene: Scene, built: Set<unknown>, result: MapBuildRe
     const sx = Math.sign(zone.center.x) || 1;
     return { ...zone, center: new Vector3(sx * (inner + outer) / 2, zone.center.y, zone.center.z), size: new Vector3(outer - inner, zone.size.y, zone.size.z) };
   });
+  // The southern half of the paved piazza is open fighting ground too. Keep
+  // the inherited zones first for skirmishes, then extend each side to z -24.
+  for (const team of [0, 1] as const) {
+    const side = team === 0 ? -1 : 1;
+    result.placementZones.push({ team, center: new Vector3(side * 31, 0, -14.5), size: new Vector3(24, 100, 19) });
+  }
   return palazzoFrom;
 }
 
