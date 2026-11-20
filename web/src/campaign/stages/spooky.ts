@@ -137,7 +137,7 @@ export const STAGES: TabsStageDef[] = [
       ["medieval.squire", 24, 17.5],
       ["medieval.squire", 20, 21],
       ["medieval.squire", 15, 23],
-      ["medieval.squire", 10, 24],
+      ["medieval.squire", 9, 24.6],
       // The opposite bank closes the trap: five swords in front of eleven bows.
       ["medieval.squire", -13, -8, Math.PI / 2],
       ["medieval.squire", -12, -4, Math.PI / 2],
