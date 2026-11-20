@@ -1812,6 +1812,14 @@ function loadCampaignScenario(statusMessage?: string): void {
     suppressStatus: true,
   });
   loadMapById(activeScenario.mapId);
+  if (activeScenario.id === "spooky.breakout") {
+    // This locked army surrounds the player on the ice, crossing the sandbox's
+    // team divider. Its stage zone does not change either sandbox half.
+    activeMapInstance.placementZones = [...(activeMapInstance.placementZones ?? activeMapInstance.zones), {
+      team: 1, center: Vector3.Zero(), size: new Vector3(52, 100, 56),
+    }];
+    placementValidator = new PlacementValidator(activeMapInstance.placementZones, activeMapInstance.obstacles, activeMapInstance.hazards);
+  }
   budgetSystem = new BudgetSystem(
     campaignSession.unlimited ? Number.MAX_SAFE_INTEGER : activeScenario.restrictions.budget,
     0,
