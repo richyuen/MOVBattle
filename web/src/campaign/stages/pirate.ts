@@ -119,8 +119,8 @@ export const STAGES: TabsStageDef[] = [
     playerUnits: { factions: ["pirate"] },
     enemy: [
       // Mid-bowl: open ice separates the whole army from the rear cliff.
-      ["viking.headbutter", 20.6, -8.6],
-      ["viking.headbutter", 22, -6.6],
+      ["viking.headbutter", 15.8, -14],
+      ["viking.headbutter", 13.5, -16],
       ["viking.headbutter", 20.4, 12.2],
       ["viking.headbutter", 21.8, 10.6],
       ["viking.brawler", 19.6, -0.8],
@@ -138,10 +138,11 @@ export const STAGES: TabsStageDef[] = [
       ["viking.brawler", 23.2, -0.8],
       ["viking.brawler", 23.2, 0.4],
       ["viking.brawler", 23.2, 1.6],
-      ["viking.ice_archer", 26, -6.2],
-      ["viking.ice_archer", 24.6, -8.2],
-      ["viking.ice_archer", 23.2, -10.2],
-      ["viking.ice_archer", 21.8, -12.2],
+      // The right flank runs toward the player, with two Headbutters at its tip.
+      ["viking.ice_archer", 25, -6],
+      ["viking.ice_archer", 22.7, -8],
+      ["viking.ice_archer", 20.4, -10],
+      ["viking.ice_archer", 18.1, -12],
       ["viking.ice_archer", 25.6, 10.6],
       ["viking.ice_archer", 24.6, 12.2],
       ["viking.ice_archer", 23.6, 13.8],
