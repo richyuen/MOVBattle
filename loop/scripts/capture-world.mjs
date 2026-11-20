@@ -266,11 +266,14 @@ async function stageScene(page, item) {
   const archCart = item === "adventure.final_destination_wheelbarrow";
   // The ship's beach-side rail hides deck formations from the low shore pose.
   const deckArmy = item === "pirate.x_marks_the_spot";
+  // Catapult Castle: look through the gateway at platform height as well as at
+  // the wall batteries; the default target y1 looks into the ramp's face.
+  const castleBattery = item === "simulation.catapult_castle";
   await frame(page, {
-    target: { x: box.cx, y: archCart ? 9 : st.map === "pirate" && item !== "pirate.a_rival_captain" ? 8.2 : 1, z: box.cz },
+    target: { x: box.cx, y: castleBattery ? 12 : archCart ? 9 : st.map === "pirate" && item !== "pirate.a_rival_captain" ? 8.2 : 1, z: box.cz },
     radius: Math.max(archCart ? 32 : 16, Math.max(box.w, box.d) * 1.25 + 8),
     alpha: deckArmy ? Math.PI + 0.45 : city ? Math.PI + 0.42 : Math.PI,
-    beta: deckArmy ? 0.95 : archCart ? 1 : streets ? 0.24 : city ? 0.77 : 1.2,
+    beta: castleBattery ? 1.4 : deckArmy ? 0.95 : archCart ? 1 : streets ? 0.24 : city ? 0.77 : 1.2,
   });
   await shot(page, `${p}army`);
   // 611: on the dynasty map the 135 m top view loses the army among the pagodas and canopies (AUDIT 610): frame the right half
