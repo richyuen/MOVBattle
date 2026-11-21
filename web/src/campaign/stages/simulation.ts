@@ -29,11 +29,12 @@ export const STAGES: TabsStageDef[] = [
       ["ancient.sarissa", 33.2, -0.8],
       ["ancient.sarissa", 33.2, 0.8],
       ["ancient.sarissa", 33.2, 2.4],
-      ["renaissance.balloon_archer", 22.2, -2],
-      ["renaissance.balloon_archer", 22.2, 2],
-      ["renaissance.balloon_archer", 22.2, 6],
-      ["renaissance.balloon_archer", 22.2, 10],
-      ["renaissance.balloon_archer", 22.2, 14],
+      // Five archers form their own rear line beyond the second phalanx.
+      ["renaissance.balloon_archer", 37, -4],
+      ["renaissance.balloon_archer", 37, -2],
+      ["renaissance.balloon_archer", 37, 0],
+      ["renaissance.balloon_archer", 37, 2],
+      ["renaissance.balloon_archer", 37, 4],
       // Mounted vanguard abreast at the bridge mouth, ahead of both phalanxes.
       ["renaissance.jouster", 20.5, -2.5],
       ["renaissance.jouster", 20.5, 0],
