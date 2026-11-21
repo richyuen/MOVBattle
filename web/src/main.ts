@@ -3857,6 +3857,10 @@ const gameApi = {
       // Bullets and Chains' Gunslingers stand in the street between the two
       // skirmish strips, behind the split wings (card Survey).
       team: 1 as const, center: new Vector3(38, 0, 0), size: new Vector3(6, 100, 18),
+    }] : scenarioId === "wild_west.shogun_s_samurai" ? [...zones, {
+      // Shogun's Samurai hold the right-side terrace stair from its foot on
+      // the middle lawn to the outer lawn above (card Survey).
+      team: 1 as const, center: new Vector3(27, 0, -12), size: new Vector3(10, 100, 26),
     }] : zones;
     const validator = new PlacementValidator(stageZones, activeMapInstance.obstacles, activeMapInstance.hazards);
     const misplaced: string[] = [];
