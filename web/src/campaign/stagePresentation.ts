@@ -621,6 +621,12 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
     crownSeats(scene, units, base, unit => unit.definition.id === "viking.berserker" ? { dx: -4, y: 7 } : null);
     return;
   }
+  if (id === "simulation.siege") {
+    // Four rifle seats on either front wall, at the two stepped crown heights.
+    crownSeats(scene, units, base, unit => unit.definition.id === "renaissance.musketeer"
+      ? { dx: 3.5, y: Math.abs(unit.position.z) < 12 ? 15 : 18 } : null);
+    return;
+  }
   if (id === "simulation.catapult_castle") {
     // This level seats an engine inside the gate, below its crown. Keep the
     // map's normal crown height for its other stages and sandbox defenders.
