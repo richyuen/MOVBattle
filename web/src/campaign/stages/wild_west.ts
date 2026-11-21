@@ -133,7 +133,8 @@ export const STAGES: TabsStageDef[] = [
       ["dynasty.samurai", 25, -23.8],
       ["dynasty.samurai", 29, -23.8],
       ["dynasty.samurai", 27, -26.6],
-      ["secret.samurai_giant", 33.2, 4.7],
+      // The Samurai Giant stands apart on the outer lawn east of the stair head, beside the upper force.
+      ["secret.samurai_giant", 35, -20.5],
       ["secret.shogun", 27, -24],
     ],
   },
