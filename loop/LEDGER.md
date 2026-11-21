@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+619 | [S] 3153a700 | simulation.wall.b1 | approve,struck1
+619 | [S] cd82a8b2 | simulation.siege.b1 | approve,struck1
+619 | [S] 314b86b2 | simulation.siege.b2 | approve,struck2
+619 | [S] fbeb343d | simulation.siege.b3 | approve,struck3
+619 | [S] 5ee94eae | simulation.pit.b1 | approve,struck1
+619 | [S] 08ce63c5 | simulation.pit.b2 | approve,struck2
+619 | [S] 910dcfba | simulation.pit.b3 | approve,struck3
+619 | [S] 2bbbde3d | wild_west.leading_cacti.b1 | approve,struck1
+619 | [S] 33e6a0ad | wild_west.leading_cacti.b2 | approve,struck2
 618 | [S] 6f7fc7cf | spooky.war.b3 | approve,struck3
 618 | [S] b8026b2a | simulation.bridge_battle.b1 | approve,struck1
 618 | [S] 2a9b7b0f | simulation.bridge_battle.b2 | approve,struck2
@@ -48,20 +57,20 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 614 | [S] f135fc9e | renaissance.renaissance_fencer.b2 | approve,no strike (Musketeers z -4.5..27.6; zone stops at z -5)
 614 | [S] ccebe571 | renaissance.a_new_art_wave.b5 | approve,struck5 (the 2 mid-square) -> D
 614 | [S] 85977a0e | renaissance.balloons.b4 | approve,struck4 (stage scenery balloonStreet) -> D
-613 | [S] 4fd62091+c5116a82 | renaissance.renaissance_fencer.b1 | approve,struck1 (stage scenery fencerLoggia, Fencers inside)
-613 | [S] 959a5f15 | renaissance.renaissance_fencer.b2 | approve,no strike (Musketeers spread, only half the width)
-613 | [S] bfa72ff9 | renaissance.renaissance_vs_ancient_2.b6 | reject (shift to -z: path on the wrong side, city further); reverted 55e63609
-613 | [S] 13b240c7 | renaissance.balloons.b1 | approve,struck1-3 (three groups, chevron, back line)
-613 | [S] 2336f932 | renaissance.balloons.b4 | approve,no strike (street mouth behind the left group)
-613 | [S] f855c237 | renaissance.a_new_art_wave.b1 | approve,struck1-4 (numeral 2); b5 off-centre
-613 | [S] 0e162335 | pirate.arrows_and_arrow.b1 | approve,struck1 (Brawler blob)
-613 | [S] ef2073e7 | pirate.arrows_and_arrow.b3 | approve,struck4 (flank groups)
-613 | [S] c635404b | pirate.boom_and_the_units_go_down.b1 | approve,struck1,3 (three loose layers)
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605), fantasy_good (587-608): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
+web/src/campaign/stages/simulation.ts:wall Berserkers; stagePresentation.ts:crownSeats | five per crown x6,z+-4..12,y7; clear departure x10 | 619 | approve | rear pad24.4/26.6
+web/src/campaign/stages/simulation.ts:siege Musketeers | four per front wall x37.5,z+-7/10/17/22,y15/18; departure34 | 619 | approve | ground31.5,z+-6.3
+web/src/campaign/stages/simulation.ts:siege gate guards | Brawlers26,z+-20/0 trios; Jarls31 | 619 | approve | mixed broad20/25
+web/src/campaign/stages/simulation.ts:siege royals; main.ts:checkStage | Kings59,+-19; Fencers57,+-16/18/20/22,y14; courtyard zone36..54 | 619 | approve | mixed front20/25; forecourt only
+web/src/campaign/stages/simulation.ts:pit Samurai | x20,z0/+-1.8/+-3.6 | 619 | approve | z-7.2..0
+web/src/campaign/stages/simulation.ts:pit Monks | x26,z+-1/3 | 619 | approve | x20,z1.8..7.2
+web/src/campaign/stages/simulation.ts:pit Firework Archers | x35,z+-8 step2 | 619 | approve | x23.7,z+-7.2
+web/src/campaign/stages/wild_west.ts:leading Cacti | x28,z-24/-20/-16/-12 | 619 | approve | x31.2,z-19.9..-16.1
+web/src/campaign/stages/wild_west.ts:leading Miners | four files x31/34/37,z-24/-20/-16/-12 | 619 | approve | transverse x29,z-25..-11
 web/src/campaign/stages/spooky.ts:war Catapults | x20,z+-7.5 | 618 | approve | x31.8,z+-2
 web/src/campaign/stages/simulation.ts:bridge Jousters | x20.5,z0/+-2.5 | 618 | approve | x22.2,z18/22; x27.2,z0
 web/src/campaign/stages/simulation.ts:bridge phalanxes | shields25/31,spears27.2/33.2,z+-3.2 | 618 | approve | mixed wide ranks20/22.2

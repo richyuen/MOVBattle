@@ -18,7 +18,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 
 ## Capture and probes
 - A high oblique can hide a narrow corridor floor behind its wall: use a near-vertical stage field pose. Centre long rear formations on the defending half (618).
-- Regression-only replaces summary.json: back up world evidence and keep its smoke summary separately (599).
+- Regression-only overwrites summary.json: retain world and smoke summaries separately (599).
 - capture-world: mulberry32 0x4d4f5642 reseeded each resetBattle, time via advanceTime, setupScale8; re-add body.capture-mode before shots (loads drop it).
 - Test captures use look/ (--iter prunes). Near-black props vanish in black trees (587).
 - Capture wipes iter-N unless --add: save reviews after the last capture; audit step5 needs --add.
@@ -62,6 +62,6 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white and veil nearby water: exclude them (584-608).
 - Water from a structure is credited only as one run visible in the named shot (source face, channel, cascade); loose pieces read as tiles (608).
 - Stage _army: camera west of the line, -z on the right; roofs can hide ranks. Use a high view for street armies (583,599).
-- HeightField lifts passers-by onto roofs: actor-only seats need paired render observers, restored transforms before simulation and cleanup on reset (598,601).
+- Crown seats: paired observers restore transforms after terrain unlift; clear flat departure points avoid solid-wall spawns. Global roof height lifts passers-by too (598,601,619).
 - The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Notches: ~8 m hide under trees/rocks; pushing radial floor verts to a cut's nearest edge bevels it (596, 598).
 - Recess a descent before merging cliff columns (579). A concave bank: lengthwise strips, no hub fan (581).
