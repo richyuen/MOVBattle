@@ -6,6 +6,45 @@ import type { RuntimeUnit } from "../units/runtimeUnit";
 
 let cleanup: (() => void) | null = null;
 
+// Scenery seats use clear departure coordinates in the flat simulation. Draw
+// the actor on the adjacent crown until it leaves its seat, then lower it onto
+// that clear approach over its first four metres. Restore before simulation;
+// walls remain solid and ground infantry never inherit the crown's height.
+function crownSeats(scene: Scene, units: RuntimeUnit[], base: HeightField | null,
+  seat: (unit: RuntimeUnit) => { dx: number; y: number } | null): void {
+  const seats = units.flatMap(unit => {
+    const offset = unit.team === 1 ? seat(unit) : null;
+    return offset ? [{ unit, offset, start: unit.position.clone() }] : [];
+  });
+  const saved = new Map<RuntimeUnit, Vector3>();
+  const before = scene.onBeforeRenderObservable.add(() => {
+    for (const { unit, offset, start } of seats) {
+      if (unit.body.root.isDisposed()) continue;
+      const p = unit.position;
+      const t = Math.max(0, 1 - Math.hypot(p.x - start.x, p.z - start.z) / 4);
+      if (!t) continue;
+      saved.set(unit, p.clone());
+      // Terrain's observer already lifted the actor on its departure surface.
+      p.x += offset.dx * t;
+      p.y += (offset.y - (base?.(start.x, start.z) ?? 0)) * t;
+    }
+  });
+  const restore = () => {
+    for (const [unit, p] of saved) {
+      if (unit.body.root.isDisposed()) continue;
+      // Terrain's after-render observer has removed its own lift by now.
+      unit.position.x = p.x;
+      unit.position.y = p.y - (base?.(p.x, p.z) ?? 0);
+      unit.position.z = p.z;
+      unit.body.root.computeWorldMatrix(true);
+      for (const node of unit.body.root.getDescendants(false)) node.computeWorldMatrix(true);
+    }
+    saved.clear();
+  };
+  const after = scene.onAfterRenderObservable.add(restore);
+  cleanup = () => { restore(); scene.onBeforeRenderObservable.remove(before); scene.onAfterRenderObservable.remove(after); };
+}
+
 /**
  * Survey "perched on the trees" (reference/stages/adventure.tree_mammoths.png): every enemy starts on its own big ball crown on a white
  * birch trunk, the tribal_1 ring's crowns at perch size, set along the enemy arc of the ring. Spec: one crown under each team-1 unit's
@@ -576,6 +615,12 @@ export function clearStagePresentation(): void {
 
 export function applyStagePresentation(scene: Scene, id: string, units: RuntimeUnit[], base: HeightField | null): void {
   clearStagePresentation();
+  if (id === "simulation.wall") {
+    // Reference: five Berserkers along each seven-metre wall crown. Their
+    // clear departure pad is x10; crown x6, z +/-4..12, leaves the slot open.
+    crownSeats(scene, units, base, unit => unit.definition.id === "viking.berserker" ? { dx: -4, y: 7 } : null);
+    return;
+  }
   if (id === "simulation.catapult_castle") {
     // This level seats an engine inside the gate, below its crown. Keep the
     // map's normal crown height for its other stages and sandbox defenders.
