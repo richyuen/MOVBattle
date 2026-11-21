@@ -3860,7 +3860,7 @@ const gameApi = {
     }] : scenarioId === "wild_west.shogun_s_samurai" ? [...zones, {
       // Shogun's Samurai hold the right-side terrace stair from its foot on
       // the middle lawn to the outer lawn above (card Survey).
-      team: 1 as const, center: new Vector3(27, 0, -12), size: new Vector3(10, 100, 26),
+      team: 1 as const, center: new Vector3(27, 0, -13.5), size: new Vector3(10, 100, 29),
     }] : zones;
     const validator = new PlacementValidator(stageZones, activeMapInstance.obstacles, activeMapInstance.hazards);
     const misplaced: string[] = [];
