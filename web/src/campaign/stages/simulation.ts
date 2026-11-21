@@ -33,9 +33,10 @@ export const STAGES: TabsStageDef[] = [
       ["renaissance.balloon_archer", 22.2, 6],
       ["renaissance.balloon_archer", 22.2, 10],
       ["renaissance.balloon_archer", 22.2, 14],
-      ["renaissance.jouster", 22.2, 18],
-      ["renaissance.jouster", 22.2, 22],
-      ["renaissance.jouster", 27.2, 0],
+      // Mounted vanguard abreast at the bridge mouth, ahead of both phalanxes.
+      ["renaissance.jouster", 20.5, -2.5],
+      ["renaissance.jouster", 20.5, 0],
+      ["renaissance.jouster", 20.5, 2.5],
     ],
   },
   {
