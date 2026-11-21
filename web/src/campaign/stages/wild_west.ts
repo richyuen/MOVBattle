@@ -69,20 +69,23 @@ export const STAGES: TabsStageDef[] = [
     budget: 7500,
     playerUnits: { factions: ["tribal","farmer","medieval","ancient","viking","dynasty","renaissance","pirate","spooky"] },
     enemy: [
-      ["wild_west.miner", 29, -25],
-      ["wild_west.miner", 29, -23.7],
-      ["wild_west.miner", 29, -22.5],
-      ["wild_west.miner", 29, -21.2],
-      ["wild_west.cactus", 29, -19.9],
+      // Three Cacti hold the front with two Miners to each side of them (card Survey).
+      ["wild_west.miner", 29, -24],
+      ["wild_west.miner", 29, -22],
+      ["wild_west.cactus", 29, -20],
       ["wild_west.cactus", 28.6, -18.2],
-      ["wild_west.cactus", 29, -16.8],
+      ["wild_west.cactus", 29, -16],
+      ["wild_west.miner", 29, -14],
+      ["wild_west.miner", 29, -12],
+      // A Gunslinger behind the Cacti at each end, beside the Miners (card Survey).
       ["wild_west.gunslinger", 31.5, -21],
       ["wild_west.gunslinger", 31.5, -15],
+      // The rear: a Deadeye behind each Gunslinger with a Lasso outside it, the Quick Draw centred between them (card Survey; ref).
+      ["wild_west.deadeye", 34, -21],
+      ["wild_west.deadeye", 34, -15],
       ["wild_west.lasso", 34, -23.5],
       ["wild_west.lasso", 34, -12.5],
       ["wild_west.quick_draw", 35.5, -18],
-      ["wild_west.deadeye", 34, -21],
-      ["wild_west.deadeye", 34, -15],
     ],
   },
   {
