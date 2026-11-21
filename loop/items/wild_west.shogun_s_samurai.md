@@ -1,12 +1,14 @@
 # wild_west.shogun_s_samurai
-Status: open   Audited: 619 (AUDIT x2)   Done: -
+Status: done   Audited: 619 (AUDIT x2), 620 (CONFIRM: passed b; failed -)   Done: 620
 ## Verdicts
-a PASS (619 judge)
-b FAIL (0 since 619; list from AUDIT 619): 1. the seventeen ordinary Samurai form a dense mixed bar on the lower gardens in stage_wild_west.shogun_s_samurai_field.png — TABS: six stand below the right-side staircase, with eight above it (ref: reference/stages/wild_west.shogun_s_samurai.png; card Survey). 2. the Shogun lacks a distinct three-guard group on the upper landing in stage_wild_west.shogun_s_samurai_army.png — TABS: he stands behind the upper eight with three guards protecting him (ref: loop/cards/stages/wild_west.shogun_s_samurai.md Survey). 3. the Samurai Giant stands among the lower mixed bar in stage_wild_west.shogun_s_samurai_army.png — TABS: he is apart from the six-man stair-foot group near the upper force (ref: reference/stages/wild_west.shogun_s_samurai.png).
-c PASS (619 judge)
+a PASS (620 judge)
+b PASS (620: struck 3; CONFIRM 620; list from AUDIT 619): s1. six Samurai below the right-side stair, eight above in stage_wild_west.shogun_s_samurai_field.png (struck 620) | s2. Shogun with three guards behind the upper eight in stage_wild_west.shogun_s_samurai_army.png (struck 620) | s3. Samurai Giant apart beside the upper force in stage_wild_west.shogun_s_samurai_army.png (struck 620)
+c PASS (620 judge)
 ## Ranked gaps
-1. [S] wild_west.shogun_s_samurai.b split staircase ranks — blocker 1: six Samurai at the stair foot and eight on the upper landing — ref: reference/stages/wild_west.shogun_s_samurai.png — ours: stage_wild_west.shogun_s_samurai_field.png
 ## Attempts (iter | gap | criterion | verdict)
+620 | ff99df57+54fc4f85 six at the stair foot, eight above (stage zone 27,-13.5 10x29) | b1 | APPROVE (struck 1)
+620 | d4030188+1b3afdb5 Shogun and three guards | b2 | APPROVE (struck 2)
+620 | 0f419a14 Giant beside the upper force | b3 | APPROVE (struck 3)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- AUDIT2 corroborates the same elements.
+- CONFIRM 620 note: TABS's upper eight stand in one line along the stair head; ours are a 2x4 block. The army shot does not centre the stair.

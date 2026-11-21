@@ -1,14 +1,14 @@
 # wild_west.bullets_and_chains
-Status: open   Audited: 619 (AUDIT x2)   Done: -
+Status: done   Audited: 619 (AUDIT x2), 620 (CONFIRM: passed b; failed -)   Done: 620
 ## Verdicts
-a PASS (619 judge)
-b FAIL (0 since 619; list from AUDIT 619): 1. the six Cacti form one transverse group in stage_wild_west.bullets_and_chains_army.png — TABS: two separate groups of three lead opposite sides of town (ref: loop/cards/stages/wild_west.bullets_and_chains.md Survey). 2. the ten Ball 'n' Chains form one continuous offset block in stage_wild_west.bullets_and_chains_army.png — TABS: five follow each Cactus group, leaving a middle opening (ref: reference/stages/wild_west.bullets_and_chains.png; card Survey). 3. the two Gunslingers share the front mixed rank in stage_wild_west.bullets_and_chains_army.png — TABS: they fill the middle opening at the very back (ref: loop/cards/stages/wild_west.bullets_and_chains.md Survey).
-c PASS (619 judge)
+a PASS (620 judge)
+b PASS (620: struck 3; CONFIRM 620; list from AUDIT 619): s1. two Cactus trios on opposite flanks in stage_wild_west.bullets_and_chains_army.png (struck 620) | s2. five Ball 'n' Chains behind each trio, middle open, in stage_wild_west.bullets_and_chains_army.png (struck 620) | s3. Gunslinger pair at the back of the middle opening in stage_wild_west.bullets_and_chains_army.png (struck 620)
+c PASS (620 judge)
 ## Ranked gaps
-1. [S] wild_west.bullets_and_chains.b split Cactus wings — blocker 1: two three-man leaders on opposite town flanks — ref: loop/cards/stages/wild_west.bullets_and_chains.md Survey — ours: stage_wild_west.bullets_and_chains_army.png
-2. [S] wild_west.bullets_and_chains.b split prisoner wings — blocker 2: five prisoners behind each Cactus wing with an open middle — ref: reference/stages/wild_west.bullets_and_chains.png — ours: stage_wild_west.bullets_and_chains_army.png
-3. [S] wild_west.bullets_and_chains.b rear Gunslinger pair — blocker 3: both shooters at the back of the central opening — ref: loop/cards/stages/wild_west.bullets_and_chains.md Survey — ours: stage_wild_west.bullets_and_chains_army.png
 ## Attempts (iter | gap | criterion | verdict)
+620 | ad0443c7 rear Gunslinger pair (stage zone 38,0 6x18) | b3 | APPROVE (struck 3)
+620 | 8ee2b715+c24888e0 split Cactus trios | b1 | APPROVE (struck 1)
+620 | 1224a336 five Ball 'n' Chains per wing | b2 | APPROVE (struck 2)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- AUDIT2 corroborates the same elements.
+- CONFIRM 620 note: the Gunslingers read as perched on a low plank prop in _army (draw height only; c finds no unit on an obstacle).

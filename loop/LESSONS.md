@@ -47,10 +47,10 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A ribbon faces by path order (SSAO greys a DOUBLESIDE one inside): a down-facing deck renders black; check the first normal after convertToFlatShadedMesh, flipFaces(true) if wrong (561, 574). An underside away from the sun needs self-light ~1x its colour.
 - Read stage armies from the stage files, not Notes (tribal_2 563). campaign.challenge zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones inside it.
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns or a palisade (563): a rock mass wants heaped faceted boulders or tilted slabs, few and large, of unequal size (spooky_1 583: equal rocks read as an even band).
-- Stage enemies are validated vs team-1 zones, hazards and obstacles (game.checkStage). Use its nearest-valid moves for obstacle conflicts: small guessed shifts can still overlap (617).
+- Stage enemies are validated vs team-1 zones, hazards and obstacles (game.checkStage). Probe a new site with --check-only and lay from its moves: guessed shifts overlap again (617, 620).
 - campaign.challenge dressing: wallStone, boulder, hayBale, hill, stump, pits, "<name>_box|_cyl". loadMapForCapture needs "map." (564).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
-- capture-world builds a production snapshot first: source edits after its "starting vite preview" line do not reach that run (586).
+- capture-world builds a production snapshot first: edits after "starting vite preview" miss that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
 - Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
 - Run captures unsandboxed; use --port if a completed preview retains its port. Island sky band: z~200,y-25..35.
