@@ -129,11 +129,12 @@ export const STAGES: TabsStageDef[] = [
       ["dynasty.samurai", 26, -21],
       ["dynasty.samurai", 28, -21],
       ["dynasty.samurai", 30, -21],
-      ["dynasty.samurai", 33.2, -2.3],
-      ["dynasty.samurai", 33.2, 0],
-      ["dynasty.samurai", 33.2, 2.3],
+      // The Shogun stands behind the upper eight at the stair head, three guards round him (card Survey).
+      ["dynasty.samurai", 25, -23.8],
+      ["dynasty.samurai", 29, -23.8],
+      ["dynasty.samurai", 27, -26.6],
       ["secret.samurai_giant", 33.2, 4.7],
-      ["secret.shogun", 34.9, 6.4],
+      ["secret.shogun", 27, -24],
     ],
   },
   {
