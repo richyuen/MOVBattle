@@ -79,8 +79,9 @@ export const STAGES: TabsStageDef[] = [
       ["spooky.skeleton_archer", 21, -17],
       ["spooky.skeleton_archer", 21, 17],
       ["spooky.skeleton_archer", 21, 20],
-      ["spooky.pumpkin_catapult", 31.8, -2],
-      ["spooky.pumpkin_catapult", 31.8, 2],
+      // Two engines flank the central force at the foot of the rear stair.
+      ["spooky.pumpkin_catapult", 20, -7.5],
+      ["spooky.pumpkin_catapult", 20, 7.5],
     ],
   },
   {
