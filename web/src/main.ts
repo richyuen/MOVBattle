@@ -3845,6 +3845,10 @@ const gameApi = {
       // Wall's locked phalanx starts inside the clear central passage.
       // The wall colliders and void hazards still apply to every enemy.
       team: 1 as const, center: new Vector3(4.5, 0, 0), size: new Vector3(9, 100, 4),
+    }] : scenarioId === "simulation.siege" ? [...zones, {
+      // Authored terrace parties depart through the clear inner courtyard.
+      // Castle walls, terrace solids and pillar collisions remain active.
+      team: 1 as const, center: new Vector3(45, 0, 0), size: new Vector3(18, 100, 52),
     }] : zones;
     const validator = new PlacementValidator(stageZones, activeMapInstance.obstacles, activeMapInstance.hazards);
     const misplaced: string[] = [];

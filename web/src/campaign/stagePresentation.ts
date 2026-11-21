@@ -624,7 +624,11 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
   if (id === "simulation.siege") {
     // Four rifle seats on either front wall, at the two stepped crown heights.
     crownSeats(scene, units, base, unit => unit.definition.id === "renaissance.musketeer"
-      ? { dx: 3.5, y: Math.abs(unit.position.z) < 12 ? 15 : 18 } : null);
+      ? { dx: 3.5, y: Math.abs(unit.position.z) < 12 ? 15 : 18 }
+      // Each rear terrace wing seats one King behind four Fencers. Their
+      // clear courtyard departure points are eight metres before the seats.
+      : unit.definition.id === "medieval.king" || unit.definition.id === "renaissance.fencer"
+        ? { dx: 8, y: 14 } : null);
     return;
   }
   if (id === "simulation.catapult_castle") {
