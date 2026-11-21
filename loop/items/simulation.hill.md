@@ -1,14 +1,14 @@
 # simulation.hill
-Status: open   Audited: 617 (AUDIT x2)   Done: -
+Status: done   Audited: 617 (AUDIT x2), 618 (AUDIT x2), 618 (CONFIRM: passed b)   Done: 618
 ## Verdicts
-a PASS (617 judge)
-b FAIL (0 since 617; list from AUDIT 617): 1. the twelve Monks form one transverse central rank in stage_simulation.hill_field.png — TABS: six Monks line each lateral edge of the hill from top to bottom (ref: reference/stages/simulation.hill.png; card Survey). 2. the three Harpooners stand behind the central Monk rank in stage_simulation.hill_army.png — TABS: three connect the two Monk sides at the bottom of the hill (ref: loop/cards/stages/simulation.hill.md Survey). 3. the fourteen Musketeers stand in compact central ranks in stage_simulation.hill_field.png — TABS: one long rear line stands near the map's right edge (ref: reference/stages/simulation.hill.png; card Survey).
-c PASS (617 judge)
+a PASS (618 judge)
+b PASS (618: struck 1,2,3; AUDIT x2 and CONFIRM 618)
+c PASS (618 judge)
 ## Ranked gaps
-1. [S] b Monk edge files — blocker 1: six per lateral hill edge — ref: reference/stages/simulation.hill.png — ours: stage_simulation.hill_field.png
-2. [S] b Harpooner bottom bar — blocker 2: connect the two Monk files at the foot — ref: loop/cards/stages/simulation.hill.md Survey — ours: stage_simulation.hill_army.png
-3. [S] b Musketeer rear line — blocker 3: long line near the right edge — ref: reference/stages/simulation.hill.png — ours: stage_simulation.hill_field.png
 ## Attempts (iter | gap | criterion | verdict)
+618 | 88752814 Monk edge files | b1 | APPROVE (struck 1)
+618 | b5282674 Harpooner crossbar | b2 | APPROVE (struck 2)
+618 | e9a5f4e6+8f911699 Musketeer rear line and field evidence | b3 | APPROVE (struck 3)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- AUDIT2 corroborates the same three elements; no additional blocker.
+- Field camera now includes the entire rear line; re-opened b passed two independent AUDITs and locked-list CONFIRM.

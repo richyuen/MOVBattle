@@ -1,5 +1,5 @@
 # Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
-Iteration: 617   Batch: stages_spooky+stages_simulation   Consecutive empty: 0   Done: 71/99   Parked: 0
+Iteration: 618   Batch: stages_simulation   Consecutive empty: 0   Done: 74/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
 ## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
@@ -18,55 +18,55 @@ stages_challenge: ice_archer_and_friends +++ D | knights_and_priests +++ D | a_w
 stages_dynasty: samurai +++ D | art_of_war +++ D | area_of_effect +++ D | catapults +++ D | zeus_and_other_folks +++ D | viking_army +++ D
 stages_renaissance: a_new_art_wave +++ D | balloons +++ D | renaissance_fencer +++ D | renaissance_vs_farmer_1 +++ D | renaissance_vs_ancient_2 +++ D | renaissance_vs_dynasty_3 +++ D
 stages_pirate: x_marks_the_spot +++ D | a_rival_captain +++ D | a_small_tribe +++ D | you_won_t_make_us_walk_the_plank +++ D | arrows_and_arrow +++ D | boom_and_the_units_go_down +++ D
-stages_spooky: bone +++ D | war +-+ o | cave +++ D | turtle +++ D | breakout +++ D | plunder +++ D
-stages_simulation: bridge_battle +-+ o | hill +-+ o | wall +-+ o | siege +-+ o | catapult_castle +++ D | pit +-+ o
+stages_spooky: bone +++ D | war +++ D | cave +++ D | turtle +++ D | breakout +++ D | plunder +++ D
+stages_simulation: bridge_battle +++ D | hill +++ D | wall +-+ o | siege +-+ o | catapult_castle +++ D | pit +-+ o
 stages_wild_west: leading_cacti ??? q | bullets_and_chains ??? q | lone_ranger_and_his_friends ??? q | laughing_knights ??? q | shogun_s_samurai ??? q | spooky_army ??? q
 stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter617 stages_spooky+stages_simulation; 9 [S]; BASE d2090735)
-- [S] spooky.plunder.b2 2b5c4799 APPROVE struck 2; b3 611811bb+5639eb60 APPROVE struck 3
-- [S] spooky.turtle.b1 0dcb4ead+63569070 APPROVE struck 1; b2 0604b51b APPROVE struck 2
-- [S] spooky.war.b1 3ad84c80 APPROVE struck 1; b2 62623681 APPROVE struck 2; b4 d5cbbe24+59c1b039+b1d3d11a APPROVE struck 4
-- [S] simulation.catapult_castle.b1 a0e3e596 APPROVE struck 1; b2 66b970e2 APPROVE struck 2
-- Evidence a8a7a44c re-aimed Catapult Castle army; AUDIT617 b re-opened and independently CONFIRMed.
-- CONFIRM617: Plunder, Turtle and Catapult Castle passed b and became D.
+## Focus (iter618 stages_spooky+stages_simulation; 9 [S]; BASE a655cd95)
+- [S] spooky.war.b3 6f7fc7cf APPROVE struck 3
+- [S] simulation.bridge_battle.b1 b8026b2a APPROVE struck 1; b2 2a9b7b0f APPROVE struck 2; b3 43b24f31 APPROVE struck 3
+- [S] simulation.hill.b1 88752814 APPROVE struck 1; b2 b5282674 APPROVE struck 2; b3 e9a5f4e6+8f911699 APPROVE struck 3
+- [S] simulation.wall.b2 0bea9c00+87255cd9 APPROVE struck 2; b3 defa4af0 APPROVE struck 3; wall-top blocker 1 remains.
+- Evidence 1547b2af re-aimed Wall army; follow-ups re-aimed Hill/Wall field. Both b criteria re-opened and AUDITed x2.
+- CONFIRM618 passed War, Bridge Battle and Hill; all three D. Spooky checkpoint 12/12 GREEN; Batch advances to Simulation alone.
 - 9/9, 9 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] spooky.plunder (2b5c4799)
+GAP: [S] spooky.war (6f7fc7cf)
 VERDICT: APPROVE
-CRITERION: spooky.plunder.b FAIL (previous: FAIL)
-GAP: [S] spooky.plunder (611811bb, 5639eb60)
+CRITERION: spooky.war.b PASS (previous: FAIL)
+GAP: [S] simulation.bridge_battle (b8026b2a)
 VERDICT: APPROVE
-CRITERION: spooky.plunder.b PASS (previous: FAIL)
-GAP: [S] spooky.turtle (0dcb4ead, 63569070)
+CRITERION: simulation.bridge_battle.b FAIL (previous: FAIL)
+GAP: [S] simulation.bridge_battle (2a9b7b0f)
 VERDICT: APPROVE
-CRITERION: spooky.turtle.b FAIL (previous: FAIL)
-GAP: [S] spooky.turtle (0604b51b)
+CRITERION: simulation.bridge_battle.b FAIL (previous: FAIL)
+GAP: [S] simulation.bridge_battle (43b24f31)
 VERDICT: APPROVE
-CRITERION: spooky.turtle.b PASS (previous: FAIL)
-GAP: [S] spooky.war (3ad84c80)
+CRITERION: simulation.bridge_battle.b PASS (previous: FAIL)
+GAP: [S] simulation.hill (88752814)
 VERDICT: APPROVE
-CRITERION: spooky.war.b FAIL (previous: FAIL)
-GAP: [S] spooky.war (62623681)
+CRITERION: simulation.hill.b FAIL (previous: FAIL)
+GAP: [S] simulation.hill (b5282674)
 VERDICT: APPROVE
-CRITERION: spooky.war.b FAIL (previous: FAIL)
-GAP: [S] spooky.war (d5cbbe24, 59c1b039, b1d3d11a)
+CRITERION: simulation.hill.b FAIL (previous: FAIL)
+GAP: [S] simulation.hill (e9a5f4e6,8f911699)
 VERDICT: APPROVE
-CRITERION: spooky.war.b FAIL (previous: FAIL)
-GAP: [S] simulation.catapult_castle (a0e3e596)
+CRITERION: simulation.hill.b PASS (previous: FAIL)
+GAP: [S] simulation.wall (0bea9c00,87255cd9)
 VERDICT: APPROVE
-CRITERION: simulation.catapult_castle.b FAIL (previous: FAIL)
-GAP: [S] simulation.catapult_castle (66b970e2)
+CRITERION: simulation.wall.b FAIL (previous: FAIL)
+GAP: [S] simulation.wall (defa4af0)
 VERDICT: APPROVE
-CRITERION: simulation.catapult_castle.b PASS (previous: FAIL)
-REGRESSIONS: none. All 27 iter-617 PNGs inspected. No reviewed diff changes the five untouched Simulation formations or shared map geometry. All 18 army/battle script criteria PASS in judge.json; summary has no page or console errors and only three --add annotations. The Catapult Castle camera re-aim makes its gateway group and crown battery visible together.
+CRITERION: simulation.wall.b FAIL (previous: FAIL)
+REGRESSIONS: none. All 12 supplied iteration PNGs and all eight reference PNGs inspected. All nine gaps are structural formation relocations within their assigned units; follow-ups change only the relevant evidence pose. No reviewed diff changes shared map geometry, counts, budgets or allowed player armies. All eight army/battle script criteria PASS in judge.json. World evidence has no page or console errors and only the Wall --add annotation.
 
 ## Notes for next iteration (max5lines)
-- 617: 27 screenshots,18/18 world-script criteria PASS; no page/console errors or evidence trouble (only --add annotations).
-- Three independent confirmations bring done to71/99; no batch checkpoint triggered because War and five Simulation stages remain open.
-- Spooky War has only b3 left: spread the two Catapults at the front stair approach; locked text is unchanged in its item file.
-- Simulation AUDIT x2 complete; five open stages retain their closed blocker lists and ranked structural gaps.
-- War rear stair and Catapult Castle gate height are stage-only; Turtle's opposite-bank validation does not change sandbox zones.
+- 618: 12 screenshots,8/8 world-script criteria PASS; no page/console errors or evidence trouble (one --add annotation).
+- War, Bridge Battle and Hill independently CONFIRMed D; 74/99 done. Spooky checkpoint 12/12 GREEN, saved in regression-summary.json; world summary restored.
+- Simulation Wall retains only b1: five Berserkers on each wall crown, stage-scoped height and valid departures. Ground phalanx and reserve are struck.
+- Simulation Siege and Pit retain their locked lists unchanged; next ranked gaps are Wall's crowns, then Siege's wall/gate/royal parties.
+- Capture preview child readiness failed on4182/4190; a separately started local preview on4191 served all successful captures and checkpoint.

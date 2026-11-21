@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+618 | [S] 6f7fc7cf | spooky.war.b3 | approve,struck3
+618 | [S] b8026b2a | simulation.bridge_battle.b1 | approve,struck1
+618 | [S] 2a9b7b0f | simulation.bridge_battle.b2 | approve,struck2
+618 | [S] 43b24f31 | simulation.bridge_battle.b3 | approve,struck3
+618 | [S] 88752814 | simulation.hill.b1 | approve,struck1
+618 | [S] b5282674 | simulation.hill.b2 | approve,struck2
+618 | [S] e9a5f4e6+8f911699 | simulation.hill.b3 | approve,struck3
+618 | [S] 0bea9c00+87255cd9 | simulation.wall.b2 | approve,struck2
+618 | [S] defa4af0 | simulation.wall.b3 | approve,struck3
 617 | [S] 2b5c4799 | spooky.plunder.b2 | approve,struck2
 617 | [S] 611811bb+5639eb60 | spooky.plunder.b3 | approve,struck3
 617 | [S] 0dcb4ead+63569070 | spooky.turtle.b1 | approve,struck1
@@ -48,20 +57,23 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 613 | [S] 0e162335 | pirate.arrows_and_arrow.b1 | approve,struck1 (Brawler blob)
 613 | [S] ef2073e7 | pirate.arrows_and_arrow.b3 | approve,struck4 (flank groups)
 613 | [S] c635404b | pirate.boom_and_the_units_go_down.b1 | approve,struck1,3 (three loose layers)
-612 | [S] d4881493 | dynasty.samurai.b4 | approve,struck4 (stage scenery samuraiPath: flagstone path + stair, torii turned face-on); CONFIRM -> D
-612 | [S] 38cd6195 | dynasty.zeus_and_other_folks.b4 | approve,struck4 (stage scenery zeusHouse behind the phalanx); CONFIRM -> D
-612 | [S] 01ec6438 | dynasty.catapults.b1 | approve,struck1,2 (echelon at the bridge east foot, 2.5 m)
-612 | [S] 25d54b72 | dynasty.catapults.b3 | approve,struck3 (stage enemy tuple yaw, -70 deg); CONFIRM -> D
-612 | [S] d90f4a8b | dynasty.art_of_war.b1 | approve,struck1-4 (diamond on crossing (42,0), pickets z +-8); CONFIRM -> D
-612 | [S] 1bf29290 | renaissance.renaissance_fencer.b3 | approve,struck3 (+farmer_1 b2, ancient_2 b5: balloon rig disposed with its unit)
-612 | [S] 90b49f49 | renaissance.renaissance_vs_ancient_2.b1 | approve,struck1-4 (two shield groups, Minotaur bunch, Zeus 2+2); b6 left
-612 | [S] 0683b60e | renaissance.renaissance_vs_dynasty_3.b1 | approve,struck1-3 (three pickets)
-612 | [S] 3393211e | renaissance.renaissance_vs_farmer_1.b3 | approve,struck1,3 (band at the bridge end, Harvesters behind)
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605), fantasy_good (587-608): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
+web/src/campaign/stages/spooky.ts:war Catapults | x20,z+-7.5 | 618 | approve | x31.8,z+-2
+web/src/campaign/stages/simulation.ts:bridge Jousters | x20.5,z0/+-2.5 | 618 | approve | x22.2,z18/22; x27.2,z0
+web/src/campaign/stages/simulation.ts:bridge phalanxes | shields25/31,spears27.2/33.2,z+-3.2 | 618 | approve | mixed wide ranks20/22.2
+web/src/campaign/stages/simulation.ts:bridge Archers | x37,z0/+-2/+-4 | 618 | approve | x22.2,z-2..14
+web/src/campaign/stages/simulation.ts:hill Monks | x23..58,z+-24 | 618 | approve | x20,z+-9.9
+web/src/campaign/stages/simulation.ts:hill Harpooners | x60,z0/+-16 | 618 | approve | x25.9,z0/1.8/3.6
+web/src/campaign/stages/simulation.ts:hill Musketeers | x71,z+-23.4,step3.6 | 618 | approve | ranks23.7/25.9,z+-9.9
+web/src/campaign/stages/simulation.ts:wall front; main.ts:checkStage | shields x1.8..5,spears6.8..10,z+-1.1; slot enemy zone | 618 | approve | mixed pad ranks20/22.2,z+-9.9
+web/src/campaign/stages/simulation.ts:wall reserve | ten x18/20,z0/+-1.6/+-3.2 | 618 | approve | mixed22.2/24.4,z+-9.9
+loop/scripts/capture-world.mjs:wall army | beta.55 | 618 | evidence | beta1.2
+loop/scripts/capture-world.mjs:hill field | target35,5,0,radius120 | 618 | approve | default target0,0,0,radius135
+loop/scripts/capture-world.mjs:wall field | target5,0,0,radius90,beta.22 | 618 | approve | default target0,0,0,radius135,beta.72
 web/src/campaign/stages/spooky.ts:plunder Captains | main plank(11,-5.3),(14,-3.7) | 617 | approve | secondary heads(19.7,-18/8.55)
 web/src/campaign/stages/spooky.ts:plunder Bomb Throwers | trios x14/16.5/19,z around-18/8.6 | 617 | approve | deck x28.25/31.1
 web/src/campaign/stages/spooky.ts:turtle right Squires | 13-man arc x10..30,z+-24 | 617 | approve | bridgehead ranks x7/9.2

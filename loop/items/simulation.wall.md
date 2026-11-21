@@ -1,14 +1,15 @@
 # simulation.wall
-Status: open   Audited: 617 (AUDIT x2)   Done: -
+Status: open   Audited: 617 (AUDIT x2), 618 (AUDIT x2)   Done: -
 ## Verdicts
-a PASS (617 judge)
-b FAIL (0 since 617; list from AUDIT 617): 1. the ten Berserkers stand behind the ground infantry in stage_simulation.wall_field.png — TABS: five stand on each wall top beside the corridor (ref: reference/stages/simulation.wall.png; card Survey). 2. the Shield Bearers and front nine Sarissas stand beyond the corridor's rear mouth in stage_simulation.wall_field.png — TABS: the front phalanx is visible through the corridor (ref: loop/cards/stages/simulation.wall.md Survey; reference/stages/simulation.wall.png). 3. the rear ten Sarissas are merged into the shallow mixed ranks in stage_simulation.wall_army.png — TABS: ten more spearmen take cover behind the front phalanx (ref: loop/cards/stages/simulation.wall.md Survey).
-c PASS (617 judge)
+a PASS (618 judge)
+b FAIL (0 since 618; list from AUDIT 618): 1. the ten Berserkers stand behind the ground infantry in stage_simulation.wall_field.png — TABS: five stand on each wall top beside the corridor (ref: reference/stages/simulation.wall.png; card Survey). | s2. front shield-and-spear phalanx visible in the corridor in stage_simulation.wall_field.png (struck 618) | s3. separate ten-Sarissa reserve behind the phalanx in stage_simulation.wall_army.png (struck 618)
+c PASS (618 judge)
 ## Ranked gaps
-1. [S] b wall-top Berserkers — blocker 1: five per wall crown — ref: reference/stages/simulation.wall.png — ours: stage_simulation.wall_field.png
-2. [S] b corridor phalanx — blocker 2: put the front shield-and-spear body inside the passage — ref: reference/stages/simulation.wall.png — ours: stage_simulation.wall_field.png
-3. [S] b sheltered rear Sarissas — blocker 3: separate a ten-man reserve behind the front phalanx — ref: loop/cards/stages/simulation.wall.md Survey — ours: stage_simulation.wall_army.png
+1. [S] b wall-top Berserkers — blocker 1: seat five per wall crown with stage-specific height and valid runtime departures — ref: reference/stages/simulation.wall.png — ours: stage_simulation.wall_field.png
 ## Attempts (iter | gap | criterion | verdict)
+618 | 0bea9c00+87255cd9 corridor phalanx and field evidence | b2 | APPROVE (struck 2)
+618 | defa4af0 sheltered reserve | b3 | APPROVE (struck 3)
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- AUDIT2 combines blockers 2/3; no additional element.
+- 1547b2af re-aimed army; 87255cd9 exposed slot floor in field. Two fresh AUDITs agree on the single remaining blocker.
+- Stage-only enemy slot zone keeps wall colliders and hazards active; sandbox placement unchanged.
