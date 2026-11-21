@@ -3849,10 +3849,6 @@ const gameApi = {
       // Authored terrace parties depart through the clear inner courtyard.
       // Castle walls, terrace solids and pillar collisions remain active.
       team: 1 as const, center: new Vector3(45, 0, 0), size: new Vector3(18, 100, 52),
-    }] : scenarioId === "wild_west.leading_cacti" ? [...zones, {
-      // Leading Cacti's lanes form up on the open street before the near
-      // shopfronts, west of the skirmish zone; town colliders still apply.
-      team: 1 as const, center: new Vector3(22.5, 0, -22.25), size: new Vector3(12, 100, 14),
     }] : scenarioId === "wild_west.bullets_and_chains" ? [...zones, {
       // Bullets and Chains' Gunslingers stand in the street between the two
       // skirmish strips, behind the split wings (card Survey).
