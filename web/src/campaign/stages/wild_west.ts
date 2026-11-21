@@ -38,12 +38,13 @@ export const STAGES: TabsStageDef[] = [
     budget: 7500,
     playerUnits: { factions: ["tribal","farmer","medieval","ancient","viking","dynasty","renaissance","pirate","spooky"] },
     enemy: [
-      ["wild_west.cactus", 29, -25],
-      ["wild_west.cactus", 29, -23.7],
-      ["wild_west.cactus", 29, -22.5],
-      ["wild_west.cactus", 29, -21.2],
-      ["wild_west.cactus", 29, -19.9],
-      ["wild_west.cactus", 28.6, -18.2],
+      // Two Cactus trios lead the wings on opposite sides of town (card Survey).
+      ["wild_west.cactus", 29, -20],
+      ["wild_west.cactus", 29, -18],
+      ["wild_west.cactus", 29, -16],
+      ["wild_west.cactus", 29, 16],
+      ["wild_west.cactus", 29, 18],
+      ["wild_west.cactus", 29, 20],
       // The Gunslinger pair fills the middle opening between the wings, at the very back (card Survey).
       ["wild_west.gunslinger", 38, -1.5],
       ["wild_west.gunslinger", 38, 1.5],
