@@ -1,5 +1,5 @@
 # Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
-Iteration: 620   Batch: stages_wild_west   Consecutive empty: 0   Done: 79/99   Parked: 0
+Iteration: 621   Batch: stages_wild_west+stages_legacy   Consecutive empty: 0   Done: 80/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
 ## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
@@ -20,49 +20,49 @@ stages_renaissance: a_new_art_wave +++ D | balloons +++ D | renaissance_fencer +
 stages_pirate: x_marks_the_spot +++ D | a_rival_captain +++ D | a_small_tribe +++ D | you_won_t_make_us_walk_the_plank +++ D | arrows_and_arrow +++ D | boom_and_the_units_go_down +++ D
 stages_spooky: bone +++ D | war +++ D | cave +++ D | turtle +++ D | breakout +++ D | plunder +++ D
 stages_simulation: bridge_battle +++ D | hill +++ D | wall +++ D | siege +++ D | catapult_castle +++ D | pit +++ D
-stages_wild_west: leading_cacti +-+ o | bullets_and_chains +++ D | lone_ranger_and_his_friends +-+ o | laughing_knights +-+ o | shogun_s_samurai +++ D | spooky_army +-+ o
-stages_legacy: siege ??? q | a_tank ??? q | the_war ??? q | thor_s_battle ??? q
+stages_wild_west: leading_cacti +-+ o | bullets_and_chains +++ D | lone_ranger_and_his_friends +-+ o | laughing_knights +-+ o | shogun_s_samurai +++ D | spooky_army +++ D
+stages_legacy: siege +-+ o | a_tank +-+ o | the_war +-+ o | thor_s_battle +-+ o
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter620 stages_simulation+stages_wild_west; 9 [S]; BASE e48b926b)
-- [S] simulation.pit.b4 8674b5d5 APPROVE struck 4; CONFIRM620 passed b; D.
-- [S] wild_west.bullets_and_chains.b3 ad0443c7 APPROVE struck 3; b1 8ee2b715+c24888e0 APPROVE struck 1; b2 1224a336 APPROVE struck 2; CONFIRM620 passed b; D.
-- [S] wild_west.shogun_s_samurai.b1 ff99df57+54fc4f85 APPROVE struck 1; b2 d4030188+1b3afdb5 APPROVE struck 2; b3 0f419a14 APPROVE struck 3; CONFIRM620 passed b; D.
-- [S] wild_west.laughing_knights.b1 86f90f10 APPROVE struck 1.
-- [S] wild_west.leading_cacti.b3 9dac8173+155eb43f+29d441ac dropped (a Miner on a street prop after 2 follow-ups; reverted 8825d378,49f2cacf,52da4e2d).
-- 8/9, 8 struck
+## Focus (iter621 stages_wild_west, tail overlap audit of stages_legacy; 8 [S]; BASE 295790e3)
+- [S] wild_west.leading_cacti.b3 5d526992 APPROVE, no strike (facades beside, not behind, in _army); CONFIRM621 passed b; open.
+- [S] wild_west.laughing_knights.b5 c264f57d APPROVE struck 2,3,5; CONFIRM621 passed b; 4 open (Healers hidden behind Executioners).
+- [S] wild_west.lone_ranger_and_his_friends.b2 5ccadfa6 APPROVE struck 2; b3 5239e243 APPROVE struck 3,4; b1 b9af7403 APPROVE struck 1; CONFIRM621 failed b (5: Quick Draw hidden by a map saguaro).
+- [S] wild_west.spooky_army.b1 923f743a APPROVE struck 1,5; b2 59f6339e APPROVE struck 2; b3 e180a29d APPROVE struck 3,4; CONFIRM621 passed b; D.
+- stages_legacy audited (AUDIT x2): a,c PASS all four; b FAIL all four (siege 5, a_tank 4, the_war 2, thor_s_battle 3 blockers); no [D] fixes.
+- 8/8, 10 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] simulation.pit (8674b5d5)
+GAP: [S] wild_west.leading_cacti (5d526992)
 VERDICT: APPROVE
-CRITERION: simulation.pit.b PASS   (previous: FAIL)
-GAP: [S] wild_west.bullets_and_chains (ad0443c7)
-VERDICT: APPROVE
-CRITERION: wild_west.bullets_and_chains.b PASS   (previous: FAIL)
-GAP: [S] wild_west.bullets_and_chains (8ee2b715 + c24888e0)
-VERDICT: APPROVE
-CRITERION: wild_west.bullets_and_chains.b PASS   (previous: FAIL)
-GAP: [S] wild_west.bullets_and_chains (1224a336)
-VERDICT: APPROVE
-CRITERION: wild_west.bullets_and_chains.b PASS   (previous: FAIL)
-GAP: [S] wild_west.laughing_knights (86f90f10)
+CRITERION: wild_west.leading_cacti.b FAIL   (previous: FAIL)
+GAP: [S] wild_west.laughing_knights (c264f57d)
 VERDICT: APPROVE
 CRITERION: wild_west.laughing_knights.b FAIL   (previous: FAIL)
-GAP: [S] wild_west.shogun_s_samurai (ff99df57 + 54fc4f85)
+GAP: [S] wild_west.lone_ranger_and_his_friends (5ccadfa6)
 VERDICT: APPROVE
-CRITERION: wild_west.shogun_s_samurai.b PASS   (previous: FAIL)
-GAP: [S] wild_west.shogun_s_samurai (d4030188 + 1b3afdb5)
+CRITERION: wild_west.lone_ranger_and_his_friends.b FAIL   (previous: FAIL)
+GAP: [S] wild_west.lone_ranger_and_his_friends (5239e243)
 VERDICT: APPROVE
-CRITERION: wild_west.shogun_s_samurai.b PASS   (previous: FAIL)
-GAP: [S] wild_west.shogun_s_samurai (0f419a14)
+CRITERION: wild_west.lone_ranger_and_his_friends.b FAIL   (previous: FAIL)
+GAP: [S] wild_west.lone_ranger_and_his_friends (b9af7403)
 VERDICT: APPROVE
-CRITERION: wild_west.shogun_s_samurai.b PASS   (previous: FAIL)
+CRITERION: wild_west.lone_ranger_and_his_friends.b FAIL   (previous: FAIL)
+GAP: [S] wild_west.spooky_army (923f743a)
+VERDICT: APPROVE
+CRITERION: wild_west.spooky_army.b PASS   (previous: FAIL)
+GAP: [S] wild_west.spooky_army (59f6339e)
+VERDICT: APPROVE
+CRITERION: wild_west.spooky_army.b PASS   (previous: FAIL)
+GAP: [S] wild_west.spooky_army (e180a29d)
+VERDICT: APPROVE
+CRITERION: wild_west.spooky_army.b PASS   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max5lines)
-- 620: 15 shots + 6 re-shot, 0 page errors, 10/10 script criteria PASS after the Shogun guard follow-up; world summary kept as iter-620/world-summary.json.
-- Pit, Bullets and Chains, Shogun's Samurai CONFIRMed D (79/99). stages_simulation checkpoint regression GREEN 12/12, no page errors; Batch now stages_wild_west.
-- Open: Laughing Knights b2-b5 (column onto the land bridge first), Leading Cacti b3 (probe the street with --check-only before laying), Lone Ranger b1-b5, Spooky Army b1-b5.
-- Stage-only validator zones in main.ts checkStage now also cover bullets_and_chains (38,0 6x18) and shogun_s_samurai (27,-13.5 10x29).
-- Leading Cacti street props lie near z -25..-28, x 18..28; army camera ~21 m west of the centroid (keep centroid x >= 22).
+- 621: 12 legacy shots + 12 wild_west re-shots, 0 page errors, 16/16 script criteria PASS; legacy audit summary/judge kept as iter-621/legacy-summary.json, legacy-judge.json. Spooky Army CONFIRMed D (80/99).
+- Picks next: legacy ranked gaps (item files) plus Lone Ranger b5 (shift formation clear of the saguaro over (35.5,-18)) and Laughing Knights b4 (Healers clear of the Executioners). Leading Cacti b3 has 2 attempts: not pickable in batch mode.
+- legacy.siege shares simulation.siege's map and Survey: reuse its placements, checkStage zone and crown seats.
+- Stage-only checkStage zones now also cover leading_cacti (24.75,-17.9 11x11) and laughing_knights (2,1 14x6, the land bridge).
+- Validate formations with --check-only on the working tree before committing (never while another capture is mid-run: it rebuilds dist).

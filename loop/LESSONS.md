@@ -26,7 +26,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - Dev probe (5173): import the Babylon resource URL; EngineStore.LastCreatedScene is the live map scene.
 
 ## Maps and stages
-- Stage scenery is drawn per stage id in stagePresentation.ts, no colliders; may move a map mesh if restored. [id,x,z,yaw] turns a unit. Scenery on a rank's -x sight line hides it in _army (614).
+- Stage scenery is drawn per stage id in stagePresentation.ts, no colliders; may move a map mesh if restored. [id,x,z,yaw] turns a unit. Scenery or a map prop on a unit's -x sight line hides it in _army (614; saguaro 621).
 - Inherited placement zones can omit clear streets or inner ice. Append valid side-specific strips, keeping the original skirmish zone first (599).
 - Sim roots stay at y0; terrain.ts lifts dynamic roots through MapBuildResult.height only during drawing. Static map props seat at groundHeightAt(); nav uses zones/obstacles/hazards. World-placed effect children need a root at their own position.
 - Zone extensions can uncover hazards under dry paving: match the drawn water (615). A deck-to-sand move needs its army camera target lowered; high deck views can see into furled sails.

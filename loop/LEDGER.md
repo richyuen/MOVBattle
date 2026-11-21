@@ -3,6 +3,14 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+621 | [S] 5d526992 | wild_west.leading_cacti.b3 | approve, no strike
+621 | [S] c264f57d | wild_west.laughing_knights.b5 | approve,struck2,3,5
+621 | [S] 5ccadfa6 | wild_west.lone_ranger_and_his_friends.b2 | approve,struck2
+621 | [S] 5239e243 | wild_west.lone_ranger_and_his_friends.b3 | approve,struck3,4
+621 | [S] b9af7403 | wild_west.lone_ranger_and_his_friends.b1 | approve,struck1; CONFIRM621 failed b (5 hidden)
+621 | [S] 923f743a | wild_west.spooky_army.b1 | approve,struck1,5
+621 | [S] 59f6339e | wild_west.spooky_army.b2 | approve,struck2
+621 | [S] e180a29d | wild_west.spooky_army.b3 | approve,struck3,4; CONFIRM621 D
 620 | [S] 8674b5d5 | simulation.pit.b4 | approve,struck4; CONFIRM620 D
 620 | [S] ad0443c7 | wild_west.bullets_and_chains.b3 | approve,struck3
 620 | [S] 8ee2b715+c24888e0 | wild_west.bullets_and_chains.b1 | approve,struck1
@@ -48,20 +56,15 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 616 | [S] 995853ac | pirate.arrows_and_arrow.b2 | approve,struck2
 616 | [S] fefdffcd | pirate.arrows_and_arrow.b3 | approve,struck3
 616 | [S] d4648d25 | spooky.cave.b1 | approve,struck1
-615 | [S] 5ff25056+b7d24ea3 | renaissance.renaissance_fencer.b2 | approve,struck2
-615 | [S] 8375f571 | pirate.boom_and_the_units_go_down.b4 | approve,struck4
-615 | [S] a1363de3 | pirate.a_small_tribe.b2 | approve,struck2
-615 | [S] cd65ec9e | pirate.you_won_t_make_us_walk_the_plank.b3 | approve,struck3
-615 | [S] 6d676fc0+97df2916 | pirate.x_marks_the_spot.b1 | approve,struck1,4
-615 | [S] c0e3830c+70807a69 | pirate.x_marks_the_spot.b2 | approve,struck2,3
-615 | [S] b7a1342a | renaissance.renaissance_vs_ancient_2.b6 | approve,struck6
-615 | [S] f8b8b9b7 | pirate.a_rival_captain.b1 | approve,struck1
-615 | [S] b7a228e2 | pirate.a_rival_captain.b4 | approve,struck2,3,4,5
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605), fantasy_good (587-608): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
+web/src/campaign/stages/wild_west.ts:leading lanes; main.ts:checkStage | Cacti x20.8, Miners x23.6/26.4/29.2, z-22.4/-19.4/-16.4/-13.4; zone(24.75,-17.9)11x11 | 621 | approve, no strike | Cacti x28,Miners x31/34/37,z-24..-12 (619)
+web/src/campaign/stages/wild_west.ts:laughing column; main.ts:checkStage | bridge column z1: Jesters x-3.6..0.8, Knights3.2, Execs5.8, Healers8.4 (z-0.1/2.1); zone(2,1)14x6 | 621 | approve | diamond(20,0)..(24.4,0), transverse rank x20
+web/src/campaign/stages/wild_west.ts:lone_ranger | Cacti29,-20/28.6,-18.2/29,-16; Miners29,-24/-22/-14/-12; Guns31.5,-21/-15; Deadeyes34,-21/-15; Lassos34,-23.5/-12.5; QD35.5,-18 | 621 | approve (QD hidden by map saguaro) | one rank x29,z-25..-11; Deadeyes35.5
+web/src/campaign/stages/wild_west.ts:spooky_army | Candleheads x7/9,z-2..2; Archers x12/14,z-3..3; Vampires x10/12,z+-7.4/9.2; Reaper32,-3.6; Swordcasters x29.4..29.8,z-1.8..-5.4 | 621 | approve, D | front bar x20, archers x28.7
 web/src/campaign/stages/simulation.ts:wall Berserkers; stagePresentation.ts:crownSeats | five per crown x6,z+-4..12,y7; clear departure x10 | 619 | approve | rear pad24.4/26.6
 web/src/campaign/stages/simulation.ts:pit Hwachas | x35,z+-11 (Archer line ends) | 620 | approve | x27.4,z+-2
 web/src/campaign/stages/wild_west.ts:bullets wings; main.ts:checkStage | Cacti x28.4/29,z+-(15.6..20); BnC x32 z+-16/18/20, x34.5 z+-17/19 | 620 | approve | one block x29/31.2,z-25..-11
@@ -75,8 +78,6 @@ web/src/campaign/stages/simulation.ts:siege royals; main.ts:checkStage | Kings59
 web/src/campaign/stages/simulation.ts:pit Samurai | x20,z0/+-1.8/+-3.6 | 619 | approve | z-7.2..0
 web/src/campaign/stages/simulation.ts:pit Monks | x26,z+-1/3 | 619 | approve | x20,z1.8..7.2
 web/src/campaign/stages/simulation.ts:pit Firework Archers | x35,z+-8 step2 | 619 | approve | x23.7,z+-7.2
-web/src/campaign/stages/wild_west.ts:leading Cacti | x28,z-24/-20/-16/-12 | 619 | approve | x31.2,z-19.9..-16.1
-web/src/campaign/stages/wild_west.ts:leading Miners | four files x31/34/37,z-24/-20/-16/-12 | 619 | approve | transverse x29,z-25..-11
 web/src/campaign/stages/spooky.ts:war Catapults | x20,z+-7.5 | 618 | approve | x31.8,z+-2
 web/src/campaign/stages/simulation.ts:bridge Jousters | x20.5,z0/+-2.5 | 618 | approve | x22.2,z18/22; x27.2,z0
 web/src/campaign/stages/simulation.ts:bridge phalanxes | shields25/31,spears27.2/33.2,z+-3.2 | 618 | approve | mixed wide ranks20/22.2
