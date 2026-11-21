@@ -285,7 +285,9 @@ async function stageScene(page, item) {
   // The Hill level reaches the far edge at x76. Centre its field evidence on
   // the defending half so the whole long rear line fits inside the frame.
   const hillField = item === "simulation.hill" ? { ...POSE.top, target: { x: 35, y: 5, z: 0 }, radius: 120 } : null;
-  await frame(page, streets ? { ...POSE.top, beta: 0.2 } : hillField ?? dynastyField ?? POSE.top);
+  // The seven-metre wall occludes the slot floor from the usual oblique.
+  const corridorField = corridorArmy ? { ...POSE.top, target: { x: 5, y: 0, z: 0 }, radius: 90, beta: 0.22 } : null;
+  await frame(page, streets ? { ...POSE.top, beta: 0.2 } : corridorField ?? hillField ?? dynastyField ?? POSE.top);
   await shot(page, `${p}field`);
   await page.evaluate(({ c, s }) => { window.game.runCampaignSmokeCheck(c, s, { advanceMs: 5000 }); }, { c: st.campaign, s: item });
   await frame(page, st.map === "pirate" ? POSE_OVERRIDE["map.pirate"].battle : POSE.ground);
