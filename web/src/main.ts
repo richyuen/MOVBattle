@@ -3841,6 +3841,10 @@ const gameApi = {
     }] : scenarioId === "spooky.turtle" ? [...zones, {
       // Turtle's locked mixed force occupies the opposite bank (card Survey).
       team: 1 as const, center: new Vector3(-23, 0, 0), size: new Vector3(36, 100, 62),
+    }] : scenarioId === "simulation.wall" ? [...zones, {
+      // Wall's locked phalanx starts inside the clear central passage.
+      // The wall colliders and void hazards still apply to every enemy.
+      team: 1 as const, center: new Vector3(4.5, 0, 0), size: new Vector3(9, 100, 4),
     }] : zones;
     const validator = new PlacementValidator(stageZones, activeMapInstance.obstacles, activeMapInstance.hazards);
     const misplaced: string[] = [];
