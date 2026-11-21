@@ -39,9 +39,9 @@ export const STAGES: TabsStageDef[] = [
     playerUnits: { factions: ["tribal","farmer","medieval","ancient","viking","dynasty","renaissance","pirate","spooky"] },
     enemy: [
       // Two Cactus trios lead the wings on opposite sides of town (card Survey).
-      ["wild_west.cactus", 29, -20],
-      ["wild_west.cactus", 29, -18],
-      ["wild_west.cactus", 29, -16],
+      ["wild_west.cactus", 28.4, -19.6],
+      ["wild_west.cactus", 28.4, -17.6],
+      ["wild_west.cactus", 28.4, -15.6],
       ["wild_west.cactus", 29, 16],
       ["wild_west.cactus", 29, 18],
       ["wild_west.cactus", 29, 20],
