@@ -3853,6 +3853,10 @@ const gameApi = {
       // Leading Cacti's lanes form up on the open street before the near
       // shopfronts, west of the skirmish zone; town colliders still apply.
       team: 1 as const, center: new Vector3(22.5, 0, -22.25), size: new Vector3(12, 100, 14),
+    }] : scenarioId === "wild_west.bullets_and_chains" ? [...zones, {
+      // Bullets and Chains' Gunslingers stand in the street between the two
+      // skirmish strips, behind the split wings (card Survey).
+      team: 1 as const, center: new Vector3(38, 0, 0), size: new Vector3(6, 100, 18),
     }] : zones;
     const validator = new PlacementValidator(stageZones, activeMapInstance.obstacles, activeMapInstance.hazards);
     const misplaced: string[] = [];

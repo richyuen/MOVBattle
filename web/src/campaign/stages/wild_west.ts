@@ -44,8 +44,9 @@ export const STAGES: TabsStageDef[] = [
       ["wild_west.cactus", 29, -21.2],
       ["wild_west.cactus", 29, -19.9],
       ["wild_west.cactus", 28.6, -18.2],
-      ["wild_west.gunslinger", 29, -17.4],
-      ["wild_west.gunslinger", 29, -16.1],
+      // The Gunslinger pair fills the middle opening between the wings, at the very back (card Survey).
+      ["wild_west.gunslinger", 38, -1.5],
+      ["wild_west.gunslinger", 38, 1.5],
       ["secret.ball_n_chain", 29, -14.8],
       ["secret.ball_n_chain", 29, -13.5],
       ["secret.ball_n_chain", 29, -12.3],
