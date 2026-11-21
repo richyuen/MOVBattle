@@ -203,10 +203,10 @@ export const STAGES: TabsStageDef[] = [
     budget: 4500,
     playerUnits: "all",
     enemy: [
-      ["dynasty.samurai", 20, -7.2],
-      ["dynasty.samurai", 20, -5.4],
-      ["dynasty.samurai", 20, -3.6],
       ["dynasty.samurai", 20, -1.8],
+      ["dynasty.samurai", 20, 1.8],
+      ["dynasty.samurai", 20, -3.6],
+      ["dynasty.samurai", 20, 3.6],
       ["dynasty.samurai", 20, 0],
       ["dynasty.monk", 20, 1.8],
       ["dynasty.monk", 20, 3.6],
