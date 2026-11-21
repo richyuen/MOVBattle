@@ -221,8 +221,9 @@ export const STAGES: TabsStageDef[] = [
       ["dynasty.firework_archer", 35, 4],
       ["dynasty.firework_archer", 35, 6],
       ["dynasty.firework_archer", 35, 8],
-      ["dynasty.hwacha", 27.4, -2],
-      ["dynasty.hwacha", 27.4, 2],
+      // One Hwacha guards each end of the Firework Archer line (card Survey).
+      ["dynasty.hwacha", 35, -11],
+      ["dynasty.hwacha", 35, 11],
     ],
   },
 ];
