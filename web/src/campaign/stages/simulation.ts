@@ -76,9 +76,10 @@ export const STAGES: TabsStageDef[] = [
       ["renaissance.musketeer", 23.7, 9.9],
       ["renaissance.musketeer", 25.9, -3.6],
       ["renaissance.musketeer", 25.9, -1.8],
-      ["pirate.harpooner", 25.9, 0],
-      ["pirate.harpooner", 25.9, 1.8],
-      ["pirate.harpooner", 25.9, 3.6],
+      // Crossbar at the foot of the two Monk files.
+      ["pirate.harpooner", 60, -16],
+      ["pirate.harpooner", 60, 0],
+      ["pirate.harpooner", 60, 16],
     ],
   },
   {
