@@ -64,8 +64,9 @@ export const STAGES: TabsStageDef[] = [
       ["renaissance.musketeer", 13.6, 7],
       ["renaissance.musketeer", 15.2, 7],
       ["renaissance.musketeer", 14.4, 8.6],
-      ["legacy.barrel_roller", 10.7, 4.5],
-      ["legacy.barrel_roller", 10.7, 6.3],
+      // A Barrel Roller in front of each bearer, inside his ring (card Survey).
+      ["legacy.barrel_roller", 11.8, -5],
+      ["legacy.barrel_roller", 11.8, 5],
       // The tank at the centre of the army (ref; card Survey).
       ["legacy.tank", 14.4, 0],
     ],
