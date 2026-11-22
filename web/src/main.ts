@@ -3885,6 +3885,10 @@ const gameApi = {
       // Encircling Tribe's two Protector rings flank the player's circle on
       // both sides (card Survey "To either side is a group of Protectors").
       team: 1 as const, center: new Vector3(-6, 0, 0), size: new Vector3(12, 100, 32),
+    }] : scenarioId === "fantasy_evil.raze_the_homestead" ? [...zones, {
+      // Raze the Homestead's ring stands on the stone bridge across the
+      // centre line (card Survey "in a circle on the bridge").
+      team: 1 as const, center: new Vector3(0, 0, 0), size: new Vector3(14, 100, 5),
     }] : scenarioId === "wild_west.shogun_s_samurai" ? [...zones, {
       // Shogun's Samurai hold the right-side terrace stair from its foot on
       // the middle lawn to the outer lawn above (card Survey).
