@@ -36,10 +36,11 @@ export const STAGES: TabsStageDef[] = [
     budget: 4500,
     playerUnits: { units: ["secret.solar_architect"] },
     enemy: [
-      ["medieval.king", 20, -6],
-      ["medieval.king", 20, -2],
-      ["medieval.king", 20, 2],
-      ["medieval.king", 20, 6],
+      // Four Kings in a rectangle, two by two (card Survey).
+      ["medieval.king", 20, -2.5],
+      ["medieval.king", 20, 2.5],
+      ["medieval.king", 23, -2.5],
+      ["medieval.king", 23, 2.5],
       ["medieval.archer", 26.5, -6.3],
       ["medieval.archer", 26.5, -4.5],
       ["medieval.archer", 26.5, -2.7],
