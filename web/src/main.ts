@@ -3862,9 +3862,9 @@ const gameApi = {
       // skirmish strips, behind the split wings (card Survey).
       team: 1 as const, center: new Vector3(38, 0, 0), size: new Vector3(6, 100, 18),
     }] : scenarioId === "wild_west.leading_cacti" ? [...zones, {
-      // Leading Cacti's four lanes stand on the open street before the
-      // rim-row shopfronts, clear of their porches (card Survey).
-      team: 1 as const, center: new Vector3(24.75, 0, -17.9), size: new Vector3(11, 100, 11),
+      // Leading Cacti's four lanes stand on the open sand in the middle of
+      // the town before the back-row shopfronts (card Survey; ref image).
+      team: 1 as const, center: new Vector3(13.5, 0, 18.5), size: new Vector3(11, 100, 12),
     }] : scenarioId === "wild_west.laughing_knights" ? [...zones, {
       // Laughing Knights' column holds the land bridge (x -5..5, z -3..5)
       // from its player end to the right bank (card Survey).
