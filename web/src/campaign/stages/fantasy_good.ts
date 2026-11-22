@@ -113,10 +113,12 @@ export const STAGES: TabsStageDef[] = [
     budget: 7000,
     playerUnits: { units: ["secret.solar_architect"] },
     enemy: [
-      ["renaissance.jouster", 21, 6],
-      ["renaissance.jouster", 21, 10],
-      ["renaissance.jouster", 21, 14],
-      ["renaissance.jouster", 21, 18],
+      // Four Jousters on the same circle, one either side of each Tank (30 deg round from it, 6.2 m off), turned in
+      // toward the middle (card Survey "two on either side of each tank").
+      ["renaissance.jouster", -6, 12.4, -60],
+      ["renaissance.jouster", -18, 12.4, -120],
+      ["renaissance.jouster", -6, -8.4, 60],
+      ["renaissance.jouster", -18, -8.4, 120],
       // The player stands in a circle (radius 12 round (-12, 2), reaching into the player's zone at x -19): one Da Vinci
       // Tank at each end of it, north and south, facing in across the middle (card Survey).
       ["renaissance.da_vinci_tank", -12, 14, -90],
