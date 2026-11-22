@@ -3889,6 +3889,10 @@ const gameApi = {
       // Raze the Homestead's ring stands on the stone bridge across the
       // centre line (card Survey "in a circle on the bridge").
       team: 1 as const, center: new Vector3(0, 0, 0), size: new Vector3(14, 100, 5),
+    }] : scenarioId === "fantasy_evil.blasted_skirmish" ? [...zones, {
+      // Blasted Skirmish's west group holds the back street on the player's
+      // side of the arch (card Survey "On one side of the archway").
+      team: 1 as const, center: new Vector3(-6, 0, 10), size: new Vector3(12, 100, 4),
     }] : scenarioId === "wild_west.shogun_s_samurai" ? [...zones, {
       // Shogun's Samurai hold the right-side terrace stair from its foot on
       // the middle lawn to the outer lawn above (card Survey).
