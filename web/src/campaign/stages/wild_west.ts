@@ -85,7 +85,7 @@ export const STAGES: TabsStageDef[] = [
       ["wild_west.deadeye", 34, 5],
       ["wild_west.lasso", 34, -3.5],
       ["wild_west.lasso", 34, 7.5],
-      ["wild_west.quick_draw", 36.7, 2],
+      ["wild_west.quick_draw", 34.4, 2],
     ],
   },
   {
