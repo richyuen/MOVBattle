@@ -46,13 +46,13 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A ribbon faces by path order (SSAO greys a DOUBLESIDE one inside): a down-facing deck renders black; check the first normal after convertToFlatShadedMesh, flipFaces(true) if wrong (561, 574). An underside away from the sun needs self-light ~1x its colour.
 - Read stage armies from stage files, not Notes (563). campaign.challenge zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones inside it.
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns or a palisade (563): a rock mass wants heaped faceted boulders or tilted slabs, few and large, of unequal size (spooky_1 583: equal rocks read as an even band).
-- Stage enemies are validated vs team-1 zones, hazards and obstacles (game.checkStage). Probe a new site with --check-only and lay from its moves: guessed shifts overlap again (617, 620).
+- checkStage validates stage enemies vs team-1 zones, hazards, obstacles, not each other (space by collisionRadius). Probe with --check-only, lay from its moves (617-624).
 - campaign.challenge dressing: wallStone, boulder, hayBale, hill, stump, pits, "<name>_box|_cyl". loadMapForCapture needs "map." (564).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
 - capture-world builds a snapshot first: edits after "starting vite preview" miss that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
 - Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
-- Run captures unsandboxed; --port if a preview keeps its port. Island sky band z~200,y-25..35.
+- Run captures unsandboxed; --port if a preview keeps its port. Island sky z~200,y-25..35.
 - Moving a set piece can enclose a fixed camera (pirate 602): view every shot after. Turn/scale: build local, bakeTransformIntoVertices.
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six blades, normals up (583); flattened IcoSpheres read as paving from low cameras, leaf cards as beige flags (571).
@@ -60,8 +60,8 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
 - Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white and veil nearby water: exclude them (584-608).
 - Water from a structure is credited only as one run visible in the named shot (source face, channel, cascade); loose pieces read as tiles (608).
-- Stage _army: camera west, -z right; roofs, walls, end-on columns hide ranks: high view (583-623). A landmark off to +-z needs an alpha swing (PI+.75 showed a chapel 33 m abeam, 623).
-- Split one file's gaps into commits: git diff -U0 > d; split per @@; git apply --cached --unidiff-zero; re-diff after each (623).
+- Stage _army: camera west, -z right; roofs, walls, end-on columns hide ranks: high view. Landmark off to +-z: swing alpha. A box over the player half can put the camera behind far walls (583-624).
+- Split one file's gaps: git diff -U0, per @@, git apply --cached --unidiff-zero; an add can land misplaced: git show each (623-624).
 - Crown seats: paired observers restore transforms after terrain unlift; clear flat departure points avoid solid-wall spawns. Global roof height lifts passers-by too (598,601,619).
 - The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Notches: ~8 m hide under trees/rocks; pushing radial floor verts to a cut's nearest edge bevels it (596, 598).
 - Recess a descent before merging cliff columns (579). A concave bank: lengthwise strips, no hub fan (581).

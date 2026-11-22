@@ -1,5 +1,5 @@
 # Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
-Iteration: 623   Batch: stages_wild_west+stages_fantasy_good   Consecutive empty: 0   Done: 86/99   Parked: 0
+Iteration: 624   Batch: stages_wild_west+stages_fantasy_good+stages_fantasy_evil   Consecutive empty: 0   Done: 89/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
 ## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
@@ -22,30 +22,28 @@ stages_spooky: bone +++ D | war +++ D | cave +++ D | turtle +++ D | breakout +++
 stages_simulation: bridge_battle +++ D | hill +++ D | wall +++ D | siege +++ D | catapult_castle +++ D | pit +++ D
 stages_wild_west: leading_cacti +-+ o | bullets_and_chains +++ D | lone_ranger_and_his_friends +-+ o | laughing_knights +++ D | shogun_s_samurai +++ D | spooky_army +++ D
 stages_legacy: siege +++ D | a_tank +++ D | the_war +++ D | thor_s_battle +++ D
-stages_fantasy_good: colossal_spike +-+ o | royal_archers +++ D | clash_of_warriors +-+ o | chaotic_cavalry +-+ o | vicious_terror +-+ o | fortified_formation +-+ o
-stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
+stages_fantasy_good: colossal_spike +++ D | royal_archers +++ D | clash_of_warriors +++ D | chaotic_cavalry +-+ o | vicious_terror +++ D | fortified_formation +-+ o
+stages_fantasy_evil: encircling_tribe +-+ o | raze_the_homestead +-+ o | farmer_uprising_evil +-+ o | storm_the_fortress +-+ o | blasted_skirmish +-+ o | dismantle_the_spears +-+ o
 
-## Focus (iter623 stages_wild_west+stages_legacy+stages_fantasy_good; tail-overlap AUDIT of fantasy_good (all 6 b FAIL, a/c PASS, no [D]); 9 [S] + 1 evidence; BASE 308b85e9)
-- evidence 289dcb2b: siege _army high oblique APPROVE struck 4, CONFIRM D; lone_ranger _army swung to the chapel APPROVE no strike, CONFIRM failed b (3rd).
-- [S] thor.b2 a824f386 APPROVE struck 2; CONFIRM D.
-- [S] a_tank.b1 8c0b838f struck 1; b3 0859d60c struck 3,4; b2 73019b8f struck 2; all APPROVE; CONFIRM D.
-- [S] royal_archers.b1 a4edc4b1 struck 1; b2 6b2294ae struck 2; APPROVE; CONFIRM D.
-- [S] fortified.b1 4ed57ee6 struck 1; b2 d10c25d7 struck 2; APPROVE. [S] clash.b1 6d24fdca APPROVE struck 1,3.
-- 10/10, 13 struck
+## Focus (iter624 wild_west+fantasy_good; tail-overlap AUDIT of fantasy_evil (all 6 b FAIL, a/c PASS, no [D]); 8 [S] + 1 [R]; BASE 396e20cc)
+- [R] lone_ranger.b5 3caf1182+bd2eb57c APPROVE struck 5; CONFIRM failed b (QD legs hidden in the chapel's red mound).
+- [S] clash.b2 d8f85176 APPROVE struck 2; CONFIRM D. [S] colossal.b2 7722b347 struck 1,2; b3 86735c1b struck 3; CONFIRM D.
+- [S] vicious.b1 7d4cd947 struck 1,2; b3 9ab380dc struck 3; CONFIRM D.
+- [S] chaotic.b1 8af831d3 APPROVE no strike; b2 9652eeb2 struck 3; CONFIRM failed b (_army behind parapet). [S] fortified.b3 f2a5226e APPROVE struck 3; CONFIRM failed b (pair on camera axis).
+- 9/9 approved, 10 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: evidence legacy.siege (289dcb2b) / VERDICT: APPROVE / CRITERION: legacy.siege.b PASS   (previous: FAIL)
-GAP: evidence wild_west.lone_ranger_and_his_friends (289dcb2b) / VERDICT: APPROVE / CRITERION: wild_west.lone_ranger_and_his_friends.b FAIL plateau   (previous: FAIL)
-GAP: [S] legacy.thor_s_battle (a824f386) / VERDICT: APPROVE / CRITERION: legacy.thor_s_battle.b PASS   (previous: FAIL)
-GAP: [S] legacy.a_tank (8c0b838f) / (0859d60c) / (73019b8f) / VERDICT: APPROVE x3 / CRITERION: legacy.a_tank.b FAIL / FAIL / PASS   (previous: FAIL)
-GAP: [S] fantasy_good.royal_archers (a4edc4b1) / (6b2294ae) / VERDICT: APPROVE x2 / CRITERION: fantasy_good.royal_archers.b FAIL / PASS   (previous: FAIL)
-GAP: [S] fantasy_good.fortified_formation (4ed57ee6) / (d10c25d7) / VERDICT: APPROVE x2 / CRITERION: fantasy_good.fortified_formation.b FAIL / FAIL   (previous: FAIL)
-GAP: [S] fantasy_good.clash_of_warriors (6d24fdca) / VERDICT: APPROVE / CRITERION: fantasy_good.clash_of_warriors.b FAIL   (previous: FAIL)
+GAP: [R] wild_west.lone_ranger_and_his_friends (3caf1182 + bd2eb57c) / VERDICT: APPROVE / CRITERION: wild_west.lone_ranger_and_his_friends.b PASS   (previous: FAIL plateau)
+GAP: [S] fantasy_good.clash_of_warriors (d8f85176) / VERDICT: APPROVE / CRITERION: fantasy_good.clash_of_warriors.b PASS   (previous: FAIL)
+GAP: [S] fantasy_good.chaotic_cavalry (8af831d3) / (9652eeb2) / VERDICT: APPROVE x2 / CRITERION: fantasy_good.chaotic_cavalry.b FAIL / FAIL   (previous: FAIL)
+GAP: [S] fantasy_good.colossal_spike (7722b347) / (86735c1b) / VERDICT: APPROVE x2 / CRITERION: fantasy_good.colossal_spike.b FAIL / PASS   (previous: FAIL)
+GAP: [S] fantasy_good.vicious_terror (7d4cd947) / (9ab380dc) / VERDICT: APPROVE x2 / CRITERION: fantasy_good.vicious_terror.b FAIL / PASS   (previous: FAIL)
+GAP: [S] fantasy_good.fortified_formation (f2a5226e) / VERDICT: APPROVE / CRITERION: fantasy_good.fortified_formation.b PASS   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max5lines)
-- 623: 30 world shots, 0 page errors, 20/20 script criteria PASS; legacy checkpoint: regression 12/12 GREEN (smoke summary in iter-623/summary.smoke.json). Legacy batch closed (86/99).
-- Picks next: fortified b3 (Pharaohs back to back), clash b2 (Valkyrie placement height), chaotic_cavalry b1/b2, colossal_spike b2/b3, vicious_terror b1/b3 (rings/flank groups need stage enemy zones in main.ts:checkStage, precedent spooky breakout 616).
-- lone_ranger: plateau, the [R] re-lay toward the chapel takes this iteration's [R] slot (item file has the spec); return _army to alpha PI with it.
+- 624: 48 shots in iter-624, 0 page errors, 24/24 script criteria PASS; audit.md/audit2.md (fantasy_evil), critic.md, confirm.md saved. 89/99.
+- First: chaotic_cavalry evidence commit (own _army pose on the plaza, e.g. target(-12,1,2) r22 beta1.0) before any pick on it; fortified b3 turn the Pharaohs across the camera axis.
+- lone_ranger: plateau, [R] slot: QD + rear trio off the chapel's red mound (item file). fantasy_evil items are audited and pickable (12 ranked [S]).
 - Leading Cacti b3 (2 attempts, last 621) starves at 627: picked then.
-- Validate formations with --check-only before committing; split one file's gaps with -U0 hunks (LESSONS).
+- Validate formations with --check-only before committing; checkStage ignores unit-unit overlap (space by collisionRadius).
