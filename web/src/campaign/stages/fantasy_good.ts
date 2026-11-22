@@ -11,11 +11,13 @@ export const STAGES: TabsStageDef[] = [
     budget: 5800,
     playerUnits: { units: ["secret.solar_architect"] },
     enemy: [
-      ["tribal.protector", 2, -12],
-      ["tribal.protector", 2, -8],
-      ["tribal.protector", 2, -4],
-      ["tribal.chieftain", 2, 0],
-      ["tribal.chieftain", 2, 4],
+      // The infantry side: three Protectors in a short guard line before the two Chieftains, the eight Spear
+      // Throwers in the back rank (card Survey "three Protectors guarding two Chieftains with eight Spear Throwers in the back").
+      ["tribal.protector", 4.5, -2.4],
+      ["tribal.protector", 4.5, 0],
+      ["tribal.protector", 4.5, 2.4],
+      ["tribal.chieftain", 6.6, -1.2],
+      ["tribal.chieftain", 6.6, 1.2],
       // The player is surrounded on two sides: the infantry before him (east), the two Mammoths close together on his
       // south flank, apart from the infantry and turned in toward him (card Survey; thumb: the pair side by side).
       ["tribal.mammoth", -16, -19, 90],
