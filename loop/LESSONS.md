@@ -17,7 +17,6 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A pit below y 0 is lidded by the base slab (islandUnder/islandShelf, y -0.02): hide them (592).
 
 ## Capture and probes
-- A high oblique can hide a narrow corridor floor behind its wall: use a near-vertical stage field pose. Centre long rear formations on the defending half (618).
 - Regression-only overwrites summary.json: retain world and smoke summaries separately (599).
 - capture-world: mulberry32 0x4d4f5642 reseeded each resetBattle, time via advanceTime, setupScale8; re-add body.capture-mode before shots (loads drop it).
 - Test captures use look/; --iter N wipes iter-N unless --add (step 5 after an audit needs it). Near-black props vanish in black trees (587).
@@ -31,7 +30,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - Zone extensions can uncover hazards under dry paving: match the drawn water (615). A deck-to-sand move needs its army camera target lowered; high deck views can see into furled sails.
 - terrainMesh winds its grid to face +y; skirts are double-sided. The placement centre line and zone overlays stay flat (they are map meshes).
 - A TABS map without a builder in web/src/map/tabs/ is its base map (tabsMaps.ts); several maps share a base, so a base edit moves all of them and the regression scenarios on campaign.adventure.
-- Clear base props by name after base(), removing only their colliders (ring trees have them too). Keep builders self-contained so reverts never conflict. Base "hill" mounds and odd ground discs are base meshes: hide by name (587).
+- Clear base props by name after base(), removing only their colliders (ring trees have them too). Keep builders self-contained so reverts never conflict. Base "hill" mounds (_createHill domes) and odd ground discs are base meshes: hide by name (587); they bury stage units' legs: lay formations off them (wild_west (35,25) 10x8, 625).
 - A set piece inside a merged tree belt needs a clearing before the trees merge (580).
 - Base crowns read pale because CanopyAerialPlugin and scene fog mix them toward sky-white: fresh crown materials made after base() (diffuse = emissive = c*0.55), applyFog false, out of the glow, stay saturated (tribal_1 556).
 - A map build disposes every material it makes (trackMapBuild), so a builder may recolour base materials by name ("grass", "groundMat", blades); hide blades by name fieldBlades_*/grassTuft. Base props are `<displayName>_cyl|_box|_totem_top`, colliders at the same x,z.
@@ -44,10 +43,9 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - Scene fog is linear and re-keyed every frame by main.ts (fogStart/End from the camera radius): a map's fogDensity does nothing. Draw haze instead (inside-facing translucent mist walls, viking 572).
 - Farmer base ring trees are oaks ("oakCrown" lumps on oakLeaves/oakLeavesDark): recolour those, not canopy (561). A raised drawn-only set piece can carry units via MapBuildResult.height (farmer_1 bridgeHeight).
 - A ribbon faces by path order (SSAO greys a DOUBLESIDE one inside): a down-facing deck renders black; check the first normal after convertToFlatShadedMesh, flipFaces(true) if wrong (561, 574). An underside away from the sun needs self-light ~1x its colour.
-- Read stage armies from stage files, not Notes (563). campaign.challenge zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones inside it.
+- campaign.challenge: zones reach x +-61, past the 54 m rim (a walling builder clips placementZones); dressing wallStone, boulder, hayBale, hill, stump, pits, "<name>_box|_cyl". Read stage armies from stage files; loadMapForCapture needs "map." (563-564).
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns or a palisade (563): a rock mass wants heaped faceted boulders or tilted slabs, few and large, of unequal size (spooky_1 583: equal rocks read as an even band).
 - checkStage validates stage enemies vs team-1 zones, hazards, obstacles, not each other (space by collisionRadius). Probe with --check-only, lay from its moves (617-624).
-- campaign.challenge dressing: wallStone, boulder, hayBale, hill, stump, pits, "<name>_box|_cyl". loadMapForCapture needs "map." (564).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
 - capture-world builds a snapshot first: edits after "starting vite preview" miss that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
@@ -60,7 +58,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
 - Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white and veil nearby water: exclude them (584-608).
 - Water from a structure is credited only as one run visible in the named shot (source face, channel, cascade); loose pieces read as tiles (608).
-- Stage _army: camera west, -z right; roofs, walls, end-on columns hide ranks: high view. Landmark off to +-z: swing alpha. A box over the player half can put the camera behind far walls (583-624).
+- Stage _army: camera west, -z right; roofs, walls, end-on columns hide ranks: high view; a corridor floor: near-vertical, long rear lines centred on the defending half (618). Landmark off to +-z or a ring over the player half: an item-keyed ARMY_POSE in capture-world (583-625).
 - Split one file's gaps: git diff -U0, per @@, git apply --cached --unidiff-zero; an add can land misplaced: git show each (623-624).
 - Crown seats: paired observers restore transforms after terrain unlift; clear flat departure points avoid solid-wall spawns. Global roof height lifts passers-by too (598,601,619).
 - The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Notches: ~8 m hide under trees/rocks; pushing radial floor verts to a cut's nearest edge bevels it (596, 598).

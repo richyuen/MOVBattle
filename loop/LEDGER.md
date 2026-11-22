@@ -3,6 +3,12 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+625 | [R] 1db6aa8a | wild_west.lone_ranger_and_his_friends.b5 | approve,struck5; CONFIRM625 D
+625 | [S] 52026c59 | fantasy_good.fortified_formation.b3 | approve,struck3; CONFIRM625 D
+625 | [S] 6747ed8c / 050471d4 | fantasy_evil.dismantle_the_spears.b1 / b2 | approve,struck1 / 2,3; CONFIRM625 D
+625 | [S] 8f567c2f / 3821714c / 8a5bedf6 | fantasy_evil.storm_the_fortress.b4 / b1 / b3 | approve,struck4,2 / 1 / 3; CONFIRM625 D
+625 | [S] 3fd4836b / 51b0e532 | fantasy_evil.encircling_tribe.b1 / b3 | approve,struck1,2,4 / 3,5; CONFIRM625 D
+625 | evidence 5ba3d529+bd653803 | item-keyed _army poses; chaotic_cavalry.b1,b2 struck on re-audit | CONFIRM625 D
 624 | [R] 3caf1182+bd2eb57c | wild_west.lone_ranger_and_his_friends.b5 | approve,struck5; CONFIRM624 failed b (QD legs in red mound)
 624 | [S] d8f85176 | fantasy_good.clash_of_warriors.b2 | approve,struck2; CONFIRM624 D
 624 | [S] 8af831d3 / 9652eeb2 | fantasy_good.chaotic_cavalry.b1 / b2 | approve, no strike / struck3; CONFIRM624 failed b (_army behind parapet)
@@ -41,15 +47,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 620 | [S] d4030188+1b3afdb5 | wild_west.shogun_s_samurai.b2 | approve,struck2
 620 | [S] 0f419a14 | wild_west.shogun_s_samurai.b3 | approve,struck3
 620 | [S] 9dac8173+155eb43f+29d441ac | wild_west.leading_cacti.b3 | dropped (street props after 2 follow-ups)
-619 | [S] 3153a700 | simulation.wall.b1 | approve,struck1
-619 | [S] cd82a8b2 | simulation.siege.b1 | approve,struck1
-619 | [S] 314b86b2 | simulation.siege.b2 | approve,struck2
-619 | [S] fbeb343d | simulation.siege.b3 | approve,struck3
-619 | [S] 5ee94eae | simulation.pit.b1 | approve,struck1
-619 | [S] 08ce63c5 | simulation.pit.b2 | approve,struck2
-619 | [S] 910dcfba | simulation.pit.b3 | approve,struck3
-619 | [S] 2bbbde3d | wild_west.leading_cacti.b1 | approve,struck1
-619 | [S] 33e6a0ad | wild_west.leading_cacti.b2 | approve,struck2
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 Done stages (rows compacted): stages_spooky bone, war, cave, turtle, breakout, plunder (616-618) approved and CONFIRMed; final formations in web/src/campaign/stages/spooky.ts and git log loop(616..618).
@@ -63,14 +60,18 @@ web/src/campaign/stages/legacy.ts:the_war | front(8,+-6.5); flanks(24,+-22),(28.
 web/src/campaign/stages/legacy.ts:thor | Thor6,0; Peasants x6.4..7.1,z+-3.2..30.4; Pikes x13 | 623 | approve, D | Peasants x8.6..9.4 (622); block x7/9.2/11.4
 web/src/campaign/stages/legacy.ts:siege; capture-world.mjs:siege army | simulation.siege placements; _army target y8, beta .8 | 623 | approve, D | lines x20/25/31.5; beta1.2
 web/src/campaign/stages/legacy.ts:a_tank | tank14.4,0; bearers14.4,+-5; rollers11.8,+-5; muskets13.6/15.2,+-7,14.4,+-8.6 | 623 | approve, D | bearers7,+-.9; one row x10.7
-web/src/campaign/stages/fantasy_good.ts:chaotic; main.ts:checkStage | r12 circle round(-12,2): Tanks -12,14/-10 yaw-90/90; Jousters (-6/-18,12.4/-8.4) | 624 | approve | row x21 z6..18; tanks 27.5,10/14
+web/src/campaign/stages/fantasy_evil.ts:dismantle | Headbutter files x7..18.7,z+-5.5; Brawler 1-2-3 wedges x3.2/4.4/5.6 at each tip | 625 | approve, D | crosswise rows; Brawler shield row
+web/src/campaign/stages/fantasy_evil.ts:storm; main.ts:checkStage | before gate(-10,25); Squire V apex(-8,4), Knight off each arm, Kings in V; Archer rings r2.5 round Catapults(-12.4/-3,16.8); zone(-8,11)22x22 | 625 | approve, D | right-half meadow by the lake, straight rows
+web/src/campaign/stages/fantasy_evil.ts:encircling; main.ts:checkStage | Protector rings 6/5 round(-6,0) flanks, 2 Bone Mages each; Chieftains(6,+-4)+3 Throwers each; zone(-6,0)12x32 | 625 | approve, D | one block by the campfire x22-26
+loop/scripts/capture-world.mjs:ARMY_POSE (item-keyed) | chaotic target(-12,1,2)r24 beta.85; storm from -z to gate; encircling high r32; dismantle diagonal | 625 | evidence, D | default pose (alpha PI, 1.25x box radius)
+web/src/campaign/stages/fantasy_good.ts:chaotic; main.ts:checkStage | r12 circle round(-12,2): Tanks -12,14/-10 yaw-90/90; Jousters (-6/-18,12.4/-8.4) | 625 | approve, D | row x21 z6..18; tanks 27.5,10/14
 web/src/campaign/stages/fantasy_good.ts:colossal; main.ts:checkStage | Mammoths -16,-19/-11.5,-19.5 yaw90; Protectors x4.5 z+-2.4/0; Chieftains x6.6 z+-1.2; zone(-14,-19)14x8 | 624 | approve, D | one front row x2 z-12..12
 web/src/campaign/stages/fantasy_good.ts:vicious; main.ts:checkStage | Reapers 0,+-6; Candleheads x+-2.2/4 z+-6.3; Archers x+-1.1 |z|10/12.2/14.4; yaw-+45; zone(0,0)10x36 | 624 | approve, D | line x7 z-17.6..18; archers x13.5
 web/src/campaign/stages/fantasy_good.ts:royal | Kings x20/23,z+-2.5; Archers m x27..31.5,z+-9 | 623 | approve, D | Kings row x20; Archers row x26.5
-web/src/campaign/stages/fantasy_good.ts:fortified | Pike trios r8.5 round(13.5,0); Tanks13.5,+-3.8 yaw0/180; Pharaohs 12.9/14.1,0 yaw0/180 | 624 | approve; CONFIRM failed b3 | pike line x7; tanks x12.9; Pharaohs 9.2,+-.9
+web/src/campaign/stages/fantasy_good.ts:fortified | Pike trios r8.5 round(13.5,0); Tanks13.5,+-3.8 yaw0/180; Pharaohs 13.5,-+0.7 yaw-90/90 | 625 | approve, D | Pharaohs 12.9/14.1,0 yaw0/180 (624); pike line x7; tanks x12.9; Pharaohs 9.2,+-.9
 web/src/campaign/stages/fantasy_good.ts:clash; stagePresentation.ts:clash | Berserker ring r~9 round(16,0); Valkyries spread, drawn y7-10 | 624 | approve, D | block x29..34; Valkyries ground 13..19,+-3
 loop/scripts/capture-world.mjs:lone_ranger army | alpha PI+.6, default radius/beta | 624 | approve | alpha PI+.75, beta1.3, r34 (623); PI, beta1.2
-web/src/campaign/stages/wild_west.ts:lone_ranger; main.ts:checkStage | front x24 z16.6..27.4; Guns27.5; Deadeyes30.5,17.5/28.5; Lassos30.5,15/31.2,31; QD33,23; zone(27,23)16x20 | 624 | approve; CONFIRM failed b (QD in red mound) | dz+20 Cacti29,0.. QD34.4,2 (622); z-24..-12 (621)
+web/src/campaign/stages/wild_west.ts:lone_ranger; main.ts:checkStage | front x24 z16.6..27.4; Guns27.5; Deadeyes30.5,17.5/28.5; QD29,20.5 squared to _army line, Deadeyes/Lassos either side; zone(25.5,18.5)16x18 | 625 | approve, D | QD33,23 zone(27,23)16x20 (624); dz+20 Cacti29,0.. QD34.4,2 (622); z-24..-12 (621)
 web/src/campaign/stages/wild_west.ts:spooky_army | Candleheads x7/9,z-2..2; Archers x12/14,z-3..3; Vampires x10/12,z+-7.4/9.2; Reaper32,-3.6; Swordcasters x29.4..29.8,z-1.8..-5.4 | 621 | approve, D | front bar x20, archers x28.7
 web/src/campaign/stages/simulation.ts:wall Berserkers; stagePresentation.ts:crownSeats | five per crown x6,z+-4..12,y7; clear departure x10 | 619 | approve | rear pad24.4/26.6
 web/src/campaign/stages/simulation.ts:pit Hwachas | x35,z+-11 (Archer line ends) | 620 | approve | x27.4,z+-2
@@ -112,6 +113,3 @@ web/src/campaign/stages/pirate.ts:rival formation | sand x3.5..14,z-16..-7; zigz
 web/src/campaign/stagePresentation.ts:tiniestSummit | stage-only18x16m hill(20,-9.9),crest6.5,height+cleanup | 601 | approvec283afb0 | flat Farmer
 web/src/campaign/stagePresentation.ts:rider | head xz,head/crest maxY+.08,seated joints,restore before sim | 601 | approvea744ccde,c0d6c20a,799d316d | torso-local anchors hidden;flat Halfling
 web/src/campaign/stagePresentation.ts:wheelbarrowArchCrown; stages/adventure.ts:wheelbarrow | cap(1.2,7.15,10)8x.5x3.6 top7.4,cart+crew lift;actor(2.6,10) | 601 | approve5f92ad8a | absent cap/lift;actor(29,0)
-loop/scripts/capture-world.mjs:fantasyEvil poses, pirate army | island targety16 radius230, top targety12 radius160; Pirate stage army targety8.2 | 600 | evidence685f65a9,ce687e96 validated | Evil island targety8 radius200, top default; Pirate army targety1
-web/src/campaign/stages/adventure.ts:a_fierce_rider | Mammoth leaderx2,z0, wingsx3.5,z+-4.6, rearx7,z-5.6/0/5.6; Halfling unchanged | 600 | approve d4289c91, struck b1 | Mammoths line atx2,z-12..8 step4
-web/src/campaign/stages/adventure.ts:the_tiniest_attack | 15upper+16lower irregular crop pockets x9..41,z-25..17; two obstacle clearances; Farmer unchanged | 600 | approve ffe2e899,defaf4dd, struck b2 | Halflings regular ranks x20/22.2/24.4,z+-9.9

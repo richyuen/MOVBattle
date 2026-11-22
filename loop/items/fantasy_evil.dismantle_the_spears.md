@@ -1,13 +1,13 @@
 # fantasy_evil.dismantle_the_spears
-Status: open   Audited: 624 (AUDIT x2)   Done: -
+Status: done   Audited: 624 (AUDIT x2), 625 (CONFIRM: passed b; failed -)   Done: 625
 ## Verdicts
-a PASS (624 judge)
-b FAIL (0 since 624; list from AUDIT 624): 1. 20 Headbutters in crosswise rows facing the player in stage_fantasy_evil.dismantle_the_spears_army.png — TABS: each spear's pole is a single file of 10 Headbutters running toward the player (ref: thumb) 2. 12 Brawlers in one crosswise shield row in _army — TABS: 6 Brawlers form a pointed spearhead at the front of each pole (ref: card Survey) 3. army as one rectangular block of four files in stage_fantasy_evil.dismantle_the_spears_field.png — TABS: two separate spear shapes side by side with ice between them (ref: card Survey)
-c PASS (624 judge)
+a PASS (625 judge)
+b PASS (625: struck 1,2,3; CONFIRM 625)
+c PASS (625 judge)
 ## Ranked gaps
-1. [S] b two Headbutter poles — blocker 1: two single files of 10 Headbutters along x toward the player, open ice between them — ref: thumb — ours: _army
-2. [S] b Brawler spearheads — blocker 2: a 6-Brawler 1-2-3 wedge at the player-facing tip of each pole — ref: card Survey — ours: _army
 ## Attempts (iter | gap | criterion | verdict)
+625 | 6747ed8c two single files of ten Headbutters along x (x7..18.7, z+-5.5) | b1 | APPROVE (struck 1)
+625 | 050471d4 six-Brawler 1-2-3 wedge at each pole's player-facing tip (x3.2/4.4/5.6) | b2 | APPROVE (struck 2,3); CONFIRM D
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- Map viking: inner ice zone x 1..27, z +-20 (appended 616). A pole along x shows end-on in _army (camera west): the poles need z spacing.
+- Map viking: inner ice zone x 1..27, z +-20. _army has an item-keyed diagonal pose (5ba3d529).
