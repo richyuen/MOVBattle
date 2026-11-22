@@ -632,6 +632,13 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
         ? { dx: 8, y: 14 } : null);
     return;
   }
+  if (id === "fantasy_good.clash_of_warriors") {
+    // Card Survey "five Valkyries flying overhead"; thumb: Valkyries high in the sky over the Berserker ring, wide apart.
+    // Each is drawn 7-10 m up over her flat start (seeded by it, no sideways offset) and lowered over her first four metres.
+    crownSeats(scene, units, base, unit => unit.definition.id === "viking.valkyrie"
+      ? { dx: 0, y: 8.5 + 1.5 * Math.sin(unit.position.x * 1.3 + unit.position.z * 0.7) } : null);
+    return;
+  }
   if (id === "simulation.catapult_castle") {
     // This level seats an engine inside the gate, below its crown. Keep the
     // map's normal crown height for its other stages and sandbox defenders.

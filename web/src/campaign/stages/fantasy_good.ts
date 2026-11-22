@@ -94,12 +94,13 @@ export const STAGES: TabsStageDef[] = [
       ["viking.berserker", 24.7, -4.3],
       ["viking.berserker", 24.3, -3],
       ["viking.berserker", 25.4, -0.7],
-      // The Valkyries spread over the ring's open middle.
-      ["viking.valkyrie", 13, 3],
-      ["viking.valkyrie", 19, 3],
-      ["viking.valkyrie", 16, 0],
-      ["viking.valkyrie", 13, -3],
-      ["viking.valkyrie", 19, -3],
+      // The five Valkyries fly overhead, spread apart over the ring (thumb: two high in the sky, wide apart): their flat
+      // starts are 6-9 m apart over the ring's middle; stagePresentation.ts draws them 7-10 m up until they leave it.
+      ["viking.valkyrie", 12, 4.5],
+      ["viking.valkyrie", 20, 5],
+      ["viking.valkyrie", 16, -0.5],
+      ["viking.valkyrie", 11.5, -4.5],
+      ["viking.valkyrie", 20.5, -4.5],
     ],
   },
   {
