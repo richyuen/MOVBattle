@@ -93,20 +93,21 @@ export const STAGES: TabsStageDef[] = [
     budget: 5000,
     playerUnits: { factions: ["tribal","farmer","medieval","ancient","viking","dynasty","renaissance","pirate","spooky","wild_west"] },
     enemy: [
-      // Peasants forward and widely spaced, flanking Thor on both sides (ref; thumb).
-      ["legacy.peasant", 8.6, -3.6],
-      ["legacy.peasant", 9.2, -8],
-      ["legacy.peasant", 8.8, -12.6],
-      ["legacy.peasant", 9.4, -17],
-      ["legacy.peasant", 8.7, -21.6],
-      ["legacy.peasant", 9.1, -26],
-      ["legacy.peasant", 9, -30.4],
-      ["legacy.peasant", 8.6, 3.6],
-      ["legacy.peasant", 9, 8],
-      ["legacy.peasant", 8.8, 12.6],
-      ["legacy.peasant", 9.3, 17],
-      ["legacy.peasant", 8.7, 21.6],
-      ["legacy.peasant", 9.2, 26],
+      // Peasants forward and widely spaced, level with Thor (x 6..7), the nearest two just off his shoulders, a clear
+      // gap of ~6 m back to the pike line at x 13 (ref: the two foreground Peasants stand beside Thor; thumb).
+      ["legacy.peasant", 6.4, -3.2],
+      ["legacy.peasant", 7, -8],
+      ["legacy.peasant", 6.5, -12.6],
+      ["legacy.peasant", 7.1, -17],
+      ["legacy.peasant", 6.4, -21.6],
+      ["legacy.peasant", 6.9, -26],
+      ["legacy.peasant", 6.6, -30.4],
+      ["legacy.peasant", 6.4, 3.2],
+      ["legacy.peasant", 6.9, 8],
+      ["legacy.peasant", 6.5, 12.6],
+      ["legacy.peasant", 7.1, 17],
+      ["legacy.peasant", 6.4, 21.6],
+      ["legacy.peasant", 7, 26],
       // Thor at the front centre, the unit nearest the player (ref centre foreground).
       ["legacy.thor", 6, 0],
       // One long thin line of 24 Pikes across the field width behind Thor (ref mid-ground; thumb).
