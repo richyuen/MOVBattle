@@ -72,12 +72,13 @@ export const STAGES: TabsStageDef[] = [
     budget: 15000,
     playerUnits: { factions: ["tribal","farmer","medieval","ancient","viking","dynasty","renaissance","pirate","spooky","wild_west"] },
     enemy: [
-      ["legacy.tank", 7, -10],
-      ["legacy.tank", 7, -6],
       ["legacy.tank", 7, -2],
       ["legacy.tank", 7, 2],
-      ["legacy.tank", 7, 6],
-      ["legacy.tank", 7, 10],
+      // Two tanks set back and far out on each flank, near the back tree line (ref: far left and far right).
+      ["legacy.tank", 24, -22],
+      ["legacy.tank", 28.6, -27],
+      ["legacy.tank", 24, 22],
+      ["legacy.tank", 28, 27],
     ],
   },
   {
