@@ -3845,6 +3845,10 @@ const gameApi = {
     }] : scenarioId === "spooky.turtle" ? [...zones, {
       // Turtle's locked mixed force occupies the opposite bank (card Survey).
       team: 1 as const, center: new Vector3(-23, 0, 0), size: new Vector3(36, 100, 62),
+    }] : scenarioId === "fantasy_good.vicious_terror" ? [...zones, {
+      // Vicious Terror's two Reaper groups hold the central court's stair-
+      // bridges, one either side of the player (card Survey).
+      team: 1 as const, center: new Vector3(0, 0, 0), size: new Vector3(10, 100, 36),
     }] : scenarioId === "simulation.wall" ? [...zones, {
       // Wall's locked phalanx starts inside the clear central passage.
       // The wall colliders and void hazards still apply to every enemy.
