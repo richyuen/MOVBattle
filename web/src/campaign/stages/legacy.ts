@@ -54,8 +54,9 @@ export const STAGES: TabsStageDef[] = [
     budget: 7000,
     playerUnits: { factions: ["tribal","farmer","medieval","ancient","viking","dynasty","renaissance","pirate","spooky","wild_west"] },
     enemy: [
-      ["legacy.flag_bearer", 7, -0.9],
-      ["legacy.flag_bearer", 7, 0.9],
+      // A Flag Bearer on each side of the tank, level with it (card Survey).
+      ["legacy.flag_bearer", 14.4, -5],
+      ["legacy.flag_bearer", 14.4, 5],
       ["renaissance.musketeer", 10.7, -6.3],
       ["renaissance.musketeer", 10.7, -4.5],
       ["renaissance.musketeer", 10.7, -2.7],
@@ -64,6 +65,7 @@ export const STAGES: TabsStageDef[] = [
       ["renaissance.musketeer", 10.7, 2.7],
       ["legacy.barrel_roller", 10.7, 4.5],
       ["legacy.barrel_roller", 10.7, 6.3],
+      // The tank at the centre of the army (ref; card Survey).
       ["legacy.tank", 14.4, 0],
     ],
   },
