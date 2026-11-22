@@ -187,10 +187,11 @@ export const STAGES: TabsStageDef[] = [
       ["legacy.pike", 18.1, -7.1],
       ["legacy.pike", 19.5, -6],
       ["legacy.pike", 20.6, -4.6],
-      // The two Pharaohs back to back at the circle's centre, between the Tanks: one facing the player (yaw 0), one away
-      // (yaw 180), their backs 1.2 m apart (card Survey "two Pharaohs also back-to-back").
-      ["legacy.pharaoh", 12.9, 0],
-      ["legacy.pharaoh", 14.1, 0, 180],
+      // The two Pharaohs back to back at the circle's centre, between the Tanks, turned across the player's sight line so
+      // both show side on: one facing -z (yaw -90), one facing +z (yaw 90), their backs 1.4 m apart (card Survey "two
+      // Pharaohs also back-to-back").
+      ["legacy.pharaoh", 13.5, -0.7, -90],
+      ["legacy.pharaoh", 13.5, 0.7, 90],
       // The two Tanks inside the circle, side by side facing opposite ways (yaw 0 toward the player, 180 away).
       ["legacy.tank", 13.5, -3.8],
       ["legacy.tank", 13.5, 3.8, 180],
