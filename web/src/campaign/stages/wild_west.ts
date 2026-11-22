@@ -69,23 +69,30 @@ export const STAGES: TabsStageDef[] = [
     budget: 7500,
     playerUnits: { factions: ["tribal","farmer","medieval","ancient","viking","dynasty","renaissance","pirate","spooky"] },
     enemy: [
-      // Three Cacti hold the front with two Miners to each side of them (card Survey).
-      ["wild_west.miner", 29, -4],
-      ["wild_west.miner", 29, -2],
-      ["wild_west.cactus", 29, 0],
-      ["wild_west.cactus", 28.6, 1.8],
-      ["wild_west.cactus", 29, 4],
-      ["wild_west.miner", 29, 6],
-      ["wild_west.miner", 29, 7.4],
-      // A Gunslinger behind the Cacti at each end, beside the Miners (card Survey).
-      ["wild_west.gunslinger", 31.5, -1],
-      ["wild_west.gunslinger", 31.5, 5],
-      // The rear: a Deadeye behind each Gunslinger with a Lasso outside it, the Quick Draw centred between them (card Survey; ref).
-      ["wild_west.deadeye", 34, -1],
-      ["wild_west.deadeye", 34, 5],
-      ["wild_west.lasso", 34, -3.5],
-      ["wild_west.lasso", 34, 7.5],
-      ["wild_west.quick_draw", 34.4, 2],
+      // [R] 624 spec (reference/stages/wild_west.lone_ranger_and_his_friends.png: the Quick Draw alone at the centre of the
+      // rear, a Deadeye ~6 m either side of him a little nearer the player, the white chapel straight behind-left of him).
+      // The party is laid on the player-to-chapel axis, matching the reference's frame: the rear-street building
+      // (x ~18..27, z ~28..37) on the left, the chapel (x 35.3..42.7, z 29.3..40.7) behind-left of the Quick Draw at
+      // (33, 23) when seen from the player's side (looking +x).
+      // Front (x 24, just south of the building): three Cacti with two Miners to each side of them, the middle Cactus
+      // 9 m before him and low enough (2 m) to leave him clear from a raised player-side eye. Gunslingers behind the end
+      // Cacti (x 27.5), Deadeyes 5.5 m either side of him at x 30.5 (the north one in the alley between building and
+      // chapel), a Lasso outside each Deadeye. All on open sand inside the rim saguaros; stage zone (27, 23) 16 x 20 in
+      // main.ts:checkStage.
+      ["wild_west.miner", 24, 16.6],
+      ["wild_west.miner", 24, 18.1],
+      ["wild_west.cactus", 24, 20],
+      ["wild_west.cactus", 23.6, 22],
+      ["wild_west.cactus", 24, 24],
+      ["wild_west.miner", 24, 25.9],
+      ["wild_west.miner", 24, 27.4],
+      ["wild_west.gunslinger", 27.5, 19.4],
+      ["wild_west.gunslinger", 27.5, 24.6],
+      ["wild_west.deadeye", 30.5, 17.5],
+      ["wild_west.deadeye", 30.5, 28.5],
+      ["wild_west.lasso", 30.5, 15],
+      ["wild_west.lasso", 31.2, 31],
+      ["wild_west.quick_draw", 33, 23],
     ],
   },
   {

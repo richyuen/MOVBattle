@@ -277,13 +277,11 @@ async function stageScene(page, item) {
   const bridgeColumn = item === "wild_west.laughing_knights";
   // 623: Legacy Siege's Kings stand on the raised back terrace behind the front walls: look down over the walls (wiki high oblique).
   const siegeTerrace = item === "legacy.siege";
-  // 623: Lone Ranger's chapel stands at (39,35), off the party's +z side: swing the camera to -x,-z so it shows behind-left of the rear trio.
-  const chapelBehind = item === "wild_west.lone_ranger_and_his_friends";
   await frame(page, {
     target: { x: box.cx, y: siegeTerrace ? 8 : castleBattery ? 12 : archCart ? 9 : st.map === "pirate" && item !== "pirate.a_rival_captain" ? 8.2 : 1, z: box.cz },
-    radius: chapelBehind ? 34 : Math.max(archCart ? 32 : 16, Math.max(box.w, box.d) * 1.25 + 8),
-    alpha: chapelBehind ? Math.PI + 0.75 : deckArmy ? Math.PI + 0.45 : city ? Math.PI + 0.42 : Math.PI,
-    beta: siegeTerrace ? 0.8 : chapelBehind ? 1.3 : corridorArmy ? 0.55 : bridgeColumn ? 0.7 : castleBattery ? 1.4 : deckArmy ? 0.95 : archCart ? 1 : streets ? 0.24 : city ? 0.77 : 1.2,
+    radius: Math.max(archCart ? 32 : 16, Math.max(box.w, box.d) * 1.25 + 8),
+    alpha: deckArmy ? Math.PI + 0.45 : city ? Math.PI + 0.42 : Math.PI,
+    beta: siegeTerrace ? 0.8 : corridorArmy ? 0.55 : bridgeColumn ? 0.7 : castleBattery ? 1.4 : deckArmy ? 0.95 : archCart ? 1 : streets ? 0.24 : city ? 0.77 : 1.2,
   });
   await shot(page, `${p}army`);
   // 611: on the dynasty map the 135 m top view loses the army among the pagodas and canopies (AUDIT 610): frame the right half
