@@ -81,18 +81,21 @@ export const STAGES: TabsStageDef[] = [
     budget: 3300,
     playerUnits: { units: ["secret.infernal_whip"] },
     enemy: [
-      ["farmer.hay_baler", 20, -7.2],
-      ["farmer.hay_baler", 20, -5.4],
-      ["farmer.hay_baler", 20, -3.6],
-      ["farmer.hay_baler", 20, -1.8],
-      ["farmer.hay_baler", 20, 0],
-      ["farmer.hay_baler", 20, 1.8],
-      ["farmer.harvester", 20, 3.6],
-      ["farmer.harvester", 20, 5.4],
-      ["farmer.harvester", 20, 7.2],
-      ["farmer.scarecrow", 23.7, -4],
-      ["farmer.scarecrow", 23.7, 0],
-      ["farmer.scarecrow", 23.7, 4],
+      // Two groups of three Hay Balers on two sides of the player (card Survey): the south group on a stage-only hill
+      // (crest (9,-17), stagePresentation.ts) with three Scarecrows spread behind it (thumb), the north group in the open
+      // wheat with three Harvesters behind it.
+      ["farmer.hay_baler", 7, -19.5],
+      ["farmer.hay_baler", 7, -17],
+      ["farmer.hay_baler", 7, -14.5],
+      ["farmer.scarecrow", 10.5, -19.8],
+      ["farmer.scarecrow", 10.5, -17],
+      ["farmer.scarecrow", 10.5, -14.2],
+      ["farmer.hay_baler", 7, 10],
+      ["farmer.hay_baler", 7, 12.5],
+      ["farmer.hay_baler", 7, 15],
+      ["farmer.harvester", 10, 9.5],
+      ["farmer.harvester", 10, 12.5],
+      ["farmer.harvester", 10, 15.5],
     ],
   },
   {

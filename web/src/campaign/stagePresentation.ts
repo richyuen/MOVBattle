@@ -802,14 +802,22 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
     perchCrowns(scene, units, base, perch);
     return;
   }
-  if (id !== "adventure.the_tiniest_attack") return;
+  // Stage-only pasture hills on farmer_2, by stage: the crest's centre.
+  const SUMMITS: Record<string, [number, number]> = {
+    "adventure.the_tiniest_attack": [20, -9.9],
+    // Farmer Uprising (Evil): the south Hay Baler group and its Scarecrows stand on the hill (card Survey).
+    "fantasy_evil.farmer_uprising_evil": [9, -17],
+  };
+  const summit = SUMMITS[id];
+  if (!summit) return;
+  const [cx, cz] = summit;
   // Reference: a lone Farmer silhouettes the rounded crest above surrounding
   // wheat. An 18 x 16 m pasture hill rises 6.5 m, with smooth walkable shoulders.
   const hill: HeightField = (x, z) => {
-    const r = Math.hypot((x - 20) / 9, (z + 9.9) / 8);
+    const r = Math.hypot((x - cx) / 9, (z - cz) / 8);
     return r >= 1 ? 0 : 6.5 * Math.pow(1 - r * r, 2);
   };
-  const mound = terrainMesh(scene, "tiniestSummit", hill, { width: 18, depth: 16, step: 1, cx: 20, cz: -9.9 });
+  const mound = terrainMesh(scene, "tiniestSummit", hill, { width: 18, depth: 16, step: 1, cx, cz });
   mound.material = scene.getMaterialByName("grass");
   mound.receiveShadows = true;
   markStatic([mound]);
