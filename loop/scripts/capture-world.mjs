@@ -280,7 +280,24 @@ async function stageScene(page, item) {
   // 624: Lone Ranger's party stands south-west of the chapel (39,35) with a rear-street building west of the chapel:
   // look from the south-west so the chapel stands behind-left of the Quick Draw and the building falls to the left.
   const chapelBehind = item === "wild_west.lone_ranger_and_his_friends";
-  await frame(page, {
+  // 625: item-keyed army poses. Chaotic Cavalry: on the plaza inside the west parapet, framing the ring round (-12,2).
+  // Storm the Fortress: from the field (-z) looking at the castle gate behind the army. Encircling Tribe: the three groups
+  // round the player's circle from high on the player's side. Dismantle the Spears: the two poles at a diagonal so each
+  // file recedes and the two stand apart.
+  const ARMY_POSE = {
+    "fantasy_good.chaotic_cavalry": { target: { x: -12, y: 1, z: 2 }, radius: 24, alpha: Math.PI, beta: 0.85 },
+    "fantasy_evil.storm_the_fortress": { alpha: -Math.PI / 2, beta: 1.1 },
+    "fantasy_evil.encircling_tribe": { alpha: Math.PI, beta: 0.75 },
+    "fantasy_evil.dismantle_the_spears": { alpha: Math.PI + 0.5, beta: 1.05 },
+  };
+  const armyPose = ARMY_POSE[item];
+  if (armyPose) {
+    await frame(page, {
+      target: armyPose.target ?? { x: box.cx, y: 1, z: box.cz },
+      radius: armyPose.radius ?? Math.max(16, Math.max(box.w, box.d) * 1.25 + 8),
+      alpha: armyPose.alpha, beta: armyPose.beta,
+    });
+  } else await frame(page, {
     target: { x: box.cx, y: siegeTerrace ? 8 : castleBattery ? 12 : archCart ? 9 : st.map === "pirate" && item !== "pirate.a_rival_captain" ? 8.2 : 1, z: box.cz },
     radius: Math.max(archCart ? 32 : 16, Math.max(box.w, box.d) * 1.25 + 8),
     alpha: chapelBehind ? Math.PI + 0.6 : deckArmy ? Math.PI + 0.45 : city ? Math.PI + 0.42 : Math.PI,
