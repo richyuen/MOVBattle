@@ -3,6 +3,9 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+626 | [S] ea65bd91 | fantasy_evil.raze_the_homestead.b4 | approve,struck1-4; CONFIRM626 D
+626 | [S] 0c928abc | fantasy_evil.farmer_uprising_evil.b4 | approve,struck1-4; CONFIRM626 D
+626 | [S] 885ba3a8 | fantasy_evil.blasted_skirmish.b4 | approve,struck1-4; CONFIRM626 D
 625 | [R] 1db6aa8a | wild_west.lone_ranger_and_his_friends.b5 | approve,struck5; CONFIRM625 D
 625 | [S] 52026c59 | fantasy_good.fortified_formation.b3 | approve,struck3; CONFIRM625 D
 625 | [S] 6747ed8c / 050471d4 | fantasy_evil.dismantle_the_spears.b1 / b2 | approve,struck1 / 2,3; CONFIRM625 D
@@ -38,15 +41,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 621 | [S] 923f743a | wild_west.spooky_army.b1 | approve,struck1,5
 621 | [S] 59f6339e | wild_west.spooky_army.b2 | approve,struck2
 621 | [S] e180a29d | wild_west.spooky_army.b3 | approve,struck3,4; CONFIRM621 D
-620 | [S] 8674b5d5 | simulation.pit.b4 | approve,struck4; CONFIRM620 D
-620 | [S] ad0443c7 | wild_west.bullets_and_chains.b3 | approve,struck3
-620 | [S] 8ee2b715+c24888e0 | wild_west.bullets_and_chains.b1 | approve,struck1
-620 | [S] 1224a336 | wild_west.bullets_and_chains.b2 | approve,struck2
-620 | [S] 86f90f10 | wild_west.laughing_knights.b1 | approve,struck1
-620 | [S] ff99df57+54fc4f85 | wild_west.shogun_s_samurai.b1 | approve,struck1
-620 | [S] d4030188+1b3afdb5 | wild_west.shogun_s_samurai.b2 | approve,struck2
-620 | [S] 0f419a14 | wild_west.shogun_s_samurai.b3 | approve,struck3
-620 | [S] 9dac8173+155eb43f+29d441ac | wild_west.leading_cacti.b3 | dropped (street props after 2 follow-ups)
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 Done stages (rows compacted): stages_spooky bone, war, cave, turtle, breakout, plunder (616-618) approved and CONFIRMed; final formations in web/src/campaign/stages/spooky.ts and git log loop(616..618).
@@ -60,6 +54,10 @@ web/src/campaign/stages/legacy.ts:the_war | front(8,+-6.5); flanks(24,+-22),(28.
 web/src/campaign/stages/legacy.ts:thor | Thor6,0; Peasants x6.4..7.1,z+-3.2..30.4; Pikes x13 | 623 | approve, D | Peasants x8.6..9.4 (622); block x7/9.2/11.4
 web/src/campaign/stages/legacy.ts:siege; capture-world.mjs:siege army | simulation.siege placements; _army target y8, beta .8 | 623 | approve, D | lines x20/25/31.5; beta1.2
 web/src/campaign/stages/legacy.ts:a_tank | tank14.4,0; bearers14.4,+-5; rollers11.8,+-5; muskets13.6/15.2,+-7,14.4,+-8.6 | 623 | approve, D | bearers7,+-.9; one row x10.7
+web/src/campaign/stages/fantasy_evil.ts:raze; main.ts:checkStage | bridge ring: Farmers x-5.4..-3.7 (7) / 4..5.4 (6), Harvesters -2.2/2.4, Sellers +-0.6,+-0.8; zone(0,0)14x5 | 626 | approve, D | line x7 z-9.9..9.9 on the far bank
+web/src/campaign/stages/fantasy_evil.ts:farmer_uprising; stagePresentation.ts:SUMMITS | hill crest(9,-17): Balers x7 z-19.5..-14.5, Scarecrows x10.5; field Balers x7 z10..15, Harvesters x10 | 626 | approve, D | one block x20 z-7.2..7.2; hill only for tiniest (20,-9.9)
+web/src/campaign/stages/fantasy_evil.ts:blasted; main.ts:checkStage | back street z8.8..11.2: west 6H+M x-5..-8.2, Snakes x-3.2; east 5H+M x3..6.2, Snakes x7.8; zone(-6,10)12x4 | 626 | approve, D | diagonal line x29, plaza
+loop/scripts/capture-world.mjs:ARMY_POSE 626 | raze target(0,1,0) r18 alpha-PI/2 beta.85; uprising r34 beta1; blasted target(0,1,10) r28 alpha-PI/2 beta.45; blasted field target(0,0,6) r85 beta.25 | 626 | evidence, D | default
 web/src/campaign/stages/fantasy_evil.ts:dismantle | Headbutter files x7..18.7,z+-5.5; Brawler 1-2-3 wedges x3.2/4.4/5.6 at each tip | 625 | approve, D | crosswise rows; Brawler shield row
 web/src/campaign/stages/fantasy_evil.ts:storm; main.ts:checkStage | before gate(-10,25); Squire V apex(-8,4), Knight off each arm, Kings in V; Archer rings r2.5 round Catapults(-12.4/-3,16.8); zone(-8,11)22x22 | 625 | approve, D | right-half meadow by the lake, straight rows
 web/src/campaign/stages/fantasy_evil.ts:encircling; main.ts:checkStage | Protector rings 6/5 round(-6,0) flanks, 2 Bone Mages each; Chieftains(6,+-4)+3 Throwers each; zone(-6,0)12x32 | 625 | approve, D | one block by the campfire x22-26

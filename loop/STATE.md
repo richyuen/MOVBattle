@@ -1,5 +1,5 @@
 # Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
-Iteration: 625   Batch: stages_wild_west+stages_fantasy_evil   Consecutive empty: 0   Done: 95/99   Parked: 0
+Iteration: 626   Batch: stages_wild_west   Consecutive empty: 0   Done: 98/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
 ## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
@@ -23,27 +23,23 @@ stages_simulation: bridge_battle +++ D | hill +++ D | wall +++ D | siege +++ D |
 stages_wild_west: leading_cacti +-+ o | bullets_and_chains +++ D | lone_ranger_and_his_friends +++ D | laughing_knights +++ D | shogun_s_samurai +++ D | spooky_army +++ D
 stages_legacy: siege +++ D | a_tank +++ D | the_war +++ D | thor_s_battle +++ D
 stages_fantasy_good: colossal_spike +++ D | royal_archers +++ D | clash_of_warriors +++ D | chaotic_cavalry +++ D | vicious_terror +++ D | fortified_formation +++ D
-stages_fantasy_evil: encircling_tribe +++ D | raze_the_homestead +-+ o | farmer_uprising_evil +-+ o | storm_the_fortress +++ D | blasted_skirmish +-+ o | dismantle_the_spears +++ D
+stages_fantasy_evil: encircling_tribe +++ D | raze_the_homestead +++ D | farmer_uprising_evil +++ D | storm_the_fortress +++ D | blasted_skirmish +++ D | dismantle_the_spears +++ D
 
-## Focus (iter625 wild_west+fantasy_good+fantasy_evil; evidence 5ba3d529+bd653803 item-keyed _army poses; 8 [S] + 1 [R]; BASE 98eb143d)
-- [R] lone_ranger.b5 1db6aa8a APPROVE struck 5; CONFIRM D. [S] fortified.b3 52026c59 APPROVE struck 3; CONFIRM D.
-- chaotic (evidence re-aim only): re-audit struck 1,2; CONFIRM D.
-- [S] dismantle.b1 6747ed8c struck 1; b2 050471d4 struck 2,3; CONFIRM D.
-- [S] storm.b4 8f567c2f struck 4,2; b1 3821714c struck 1; b3 8a5bedf6 struck 3; CONFIRM D. [S] encircling.b1 3fd4836b struck 1,2,4; b3 51b0e532 struck 3,5; CONFIRM D.
-- 9/9 approved, 17 struck
+## Focus (iter626 fantasy_evil; evidence acc913c9 item-keyed _army poses (+ blasted _field); 3 [S]; BASE 83f4ab02)
+- [S] raze.b4 ea65bd91 APPROVE struck 1-4; CONFIRM D.
+- [S] farmer_uprising.b4 0c928abc APPROVE struck 1-4; CONFIRM D (stage-only hill via stagePresentation SUMMITS; the_tiniest_attack re-shot, unchanged).
+- [S] blasted.b4 885ba3a8 APPROVE struck 1-4; CONFIRM D.
+- 3/3 approved, 12 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [R] wild_west.lone_ranger_and_his_friends (1db6aa8a) / VERDICT: APPROVE / CRITERION: wild_west.lone_ranger_and_his_friends.b PASS   (previous: FAIL plateau)
-GAP: [S] fantasy_good.fortified_formation (52026c59) / VERDICT: APPROVE / CRITERION: fantasy_good.fortified_formation.b PASS   (previous: FAIL)
-GAP: (re-audit, no gap) fantasy_good.chaotic_cavalry (evidence 5ba3d529) / VERDICT: APPROVE (re-audit of open blockers on the re-aimed _army) / CRITERION: fantasy_good.chaotic_cavalry.b PASS   (previous: FAIL)
-GAP: [S] fantasy_evil.dismantle_the_spears (6747ed8c) / (050471d4) / VERDICT: APPROVE x2 / CRITERION: fantasy_evil.dismantle_the_spears.b FAIL / PASS   (previous: FAIL)
-GAP: [S] fantasy_evil.storm_the_fortress (8f567c2f) / (3821714c) / (8a5bedf6) / VERDICT: APPROVE x3 / CRITERION: fantasy_evil.storm_the_fortress.b FAIL / FAIL / PASS   (previous: FAIL)
-GAP: [S] fantasy_evil.encircling_tribe (3fd4836b) / (51b0e532) / VERDICT: APPROVE x2 / CRITERION: fantasy_evil.encircling_tribe.b FAIL / PASS   (previous: FAIL)
+GAP: [S] fantasy_evil.raze_the_homestead (ea65bd91) / VERDICT: APPROVE / CRITERION: fantasy_evil.raze_the_homestead.b PASS   (previous: FAIL)
+GAP: [S] fantasy_evil.farmer_uprising_evil (0c928abc) / VERDICT: APPROVE / CRITERION: fantasy_evil.farmer_uprising_evil.b PASS   (previous: FAIL)
+GAP: [S] fantasy_evil.blasted_skirmish (885ba3a8) / VERDICT: APPROVE / CRITERION: fantasy_evil.blasted_skirmish.b PASS   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max5lines)
-- 625: 18 shots, 0 page errors, 12/12 script criteria PASS (judge-world.json/summary-world.json; summary.json is the regression run); critic.md, confirm.md saved. 95/99. Iteration 625 was finished in a resumed session (steps 6-9).
-- Checkpoint 625: stages_fantasy_good all D; --regression-only GREEN 12/12; dropped from Batch.
-- Open: wild_west.leading_cacti, fantasy_evil.raze_the_homestead, farmer_uprising_evil, blasted_skirmish (critic 625 ranked 8 [S] on them; see output/loop/iter-625/critic.md RANKED GAPS).
-- Leading Cacti b3 (2 attempts, last 621) starves at 627: picked then.
+- 626: 12 shots, 0 page errors, 8/8 script criteria PASS (judge-world.json/summary-world.json; summary.json is the regression run); critic.md, confirm.md saved. 98/99.
+- Checkpoint 626: stages_fantasy_evil all D; --regression-only GREEN 12/12; dropped from Batch.
+- Last open item: wild_west.leading_cacti b3 (2 attempts, last 621): it starves at 627 and is picked then (item file: lanes before a facade row facing the _army camera, or an item-keyed _army pose).
+- When leading_cacti is D, stages_wild_west is the last batch: step 8 checkpoint, then the Scoreboard has nothing open (step 1 writes STOP).
 - Validate formations with --check-only before committing; checkStage ignores unit-unit overlap (space by collisionRadius).
