@@ -3,6 +3,12 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+623 | ev 289dcb2b | legacy.siege.b4; lone_ranger.b5 | approve: siege struck4, CONFIRM D; lone_ranger no strike, CONFIRM failed b
+623 | [S] a824f386 | legacy.thor_s_battle.b2 | approve,struck2; CONFIRM623 D
+623 | [S] 8c0b838f / 0859d60c / 73019b8f | legacy.a_tank.b1 / b3 / b2 | approve,struck1 / 3,4 / 2
+623 | [S] a4edc4b1 / 6b2294ae | fantasy_good.royal_archers.b1 / b2 | approve,struck1 / 2
+623 | [S] 4ed57ee6 / d10c25d7 | fantasy_good.fortified_formation.b1 / b2 | approve,struck1 / 2
+623 | [S] 6d24fdca | fantasy_good.clash_of_warriors.b1 | approve,struck1,3
 622 | [S] 33be5f30+60af33c0 | wild_west.lone_ranger_and_his_friends.b5 | approve, no strike; CONFIRM622 failed b (plateau)
 622 | [S] 9f80578c | legacy.the_war.b2 | approve,struck2
 622 | [S] dc76524d | legacy.the_war.b1 | approve,struck1; CONFIRM622 D
@@ -47,17 +53,9 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 618 | [S] e9a5f4e6+8f911699 | simulation.hill.b3 | approve,struck3
 618 | [S] 0bea9c00+87255cd9 | simulation.wall.b2 | approve,struck2
 618 | [S] defa4af0 | simulation.wall.b3 | approve,struck3
-617 | [S] 2b5c4799 | spooky.plunder.b2 | approve,struck2
-617 | [S] 611811bb+5639eb60 | spooky.plunder.b3 | approve,struck3
-617 | [S] 0dcb4ead+63569070 | spooky.turtle.b1 | approve,struck1
-617 | [S] 0604b51b | spooky.turtle.b2 | approve,struck2
-617 | [S] 3ad84c80 | spooky.war.b1 | approve,struck1
-617 | [S] 62623681 | spooky.war.b2 | approve,struck2
-617 | [S] d5cbbe24+59c1b039+b1d3d11a | spooky.war.b4 | approve,struck4
-617 | [S] a0e3e596 | simulation.catapult_castle.b1 | approve,struck1
-617 | [S] 66b970e2 | simulation.catapult_castle.b2 | approve,struck2
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
+Done stages (rows compacted): stages_spooky bone, war, cave, turtle, breakout, plunder (616-618) approved and CONFIRMed; final formations in web/src/campaign/stages/spooky.ts and git log loop(616..618).
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605), fantasy_good (587-608): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
@@ -65,8 +63,13 @@ web/src/campaign/stages/wild_west.ts:leading lanes; main.ts:checkStage | Cacti x
 web/src/campaign/stages/wild_west.ts:laughing column; main.ts:checkStage | bridge column z1: Jesters x-3.6..0.8, Knights3.2, Execs5.8, Healers8.4 (z-0.1/2.1); zone(2,1)14x6 | 621 | approve | diamond(20,0)..(24.4,0), transverse rank x20
 loop/scripts/capture-world.mjs:laughing army | beta.7 | 622 | approve, D | beta1.2
 web/src/campaign/stages/legacy.ts:the_war | front(8,+-6.5); flanks(24,+-22),(28.6,-27),(28,27) | 622 | approve, D | one row x7,z-10..10
-web/src/campaign/stages/legacy.ts:thor | Thor6,0; Peasants x8.6..9.4,z-30.4..26; Pikes x13,z-28.2..27.6 | 622 | approve; CONFIRM reopened Peasants | block x7/9.2/11.4,Thor13.6
-web/src/campaign/stages/legacy.ts:siege; stagePresentation.ts,main.ts siege branch | simulation.siege placements, seats and courtyard zone | 622 | approve; CONFIRM: Kings hidden in _army | lines x20/25/31.5
+web/src/campaign/stages/legacy.ts:thor | Thor6,0; Peasants x6.4..7.1,z+-3.2..30.4; Pikes x13 | 623 | approve, D | Peasants x8.6..9.4 (622); block x7/9.2/11.4
+web/src/campaign/stages/legacy.ts:siege; capture-world.mjs:siege army | simulation.siege placements; _army target y8, beta .8 | 623 | approve, D | lines x20/25/31.5; beta1.2
+web/src/campaign/stages/legacy.ts:a_tank | tank14.4,0; bearers14.4,+-5; rollers11.8,+-5; muskets13.6/15.2,+-7,14.4,+-8.6 | 623 | approve, D | bearers7,+-.9; one row x10.7
+web/src/campaign/stages/fantasy_good.ts:royal | Kings x20/23,z+-2.5; Archers m x27..31.5,z+-9 | 623 | approve, D | Kings row x20; Archers row x26.5
+web/src/campaign/stages/fantasy_good.ts:fortified | Pike trios r8.5 round(13.5,0); Tanks13.5,+-3.8 yaw0/180 | 623 | approve | pike line x7; tanks x12.9
+web/src/campaign/stages/fantasy_good.ts:clash | Berserker ring r~9 round(16,0); Valkyries inside | 623 | approve | block x29..34
+loop/scripts/capture-world.mjs:lone_ranger army | alpha PI+.75, beta1.3, radius34 | 623 | approve, no strike | alpha PI, beta1.2
 web/src/campaign/stages/wild_west.ts:lone_ranger; main.ts:checkStage | party dz+20: Cacti29,0/28.6,1.8/29,4; Miners29,-4/-2/6/7.4; Guns31.5,-1/5; Deadeyes34,-1/5; Lassos34,-3.5/7.5; QD34.4,2; zone(32,2)10x15 | 622 | approve, no strike (no church behind) | z-24..-12, QD35.5,-18 (621)
 web/src/campaign/stages/wild_west.ts:spooky_army | Candleheads x7/9,z-2..2; Archers x12/14,z-3..3; Vampires x10/12,z+-7.4/9.2; Reaper32,-3.6; Swordcasters x29.4..29.8,z-1.8..-5.4 | 621 | approve, D | front bar x20, archers x28.7
 web/src/campaign/stages/simulation.ts:wall Berserkers; stagePresentation.ts:crownSeats | five per crown x6,z+-4..12,y7; clear departure x10 | 619 | approve | rear pad24.4/26.6
@@ -82,7 +85,6 @@ web/src/campaign/stages/simulation.ts:siege royals; main.ts:checkStage | Kings59
 web/src/campaign/stages/simulation.ts:pit Samurai | x20,z0/+-1.8/+-3.6 | 619 | approve | z-7.2..0
 web/src/campaign/stages/simulation.ts:pit Monks | x26,z+-1/3 | 619 | approve | x20,z1.8..7.2
 web/src/campaign/stages/simulation.ts:pit Firework Archers | x35,z+-8 step2 | 619 | approve | x23.7,z+-7.2
-web/src/campaign/stages/spooky.ts:war Catapults | x20,z+-7.5 | 618 | approve | x31.8,z+-2
 web/src/campaign/stages/simulation.ts:bridge Jousters | x20.5,z0/+-2.5 | 618 | approve | x22.2,z18/22; x27.2,z0
 web/src/campaign/stages/simulation.ts:bridge phalanxes | shields25/31,spears27.2/33.2,z+-3.2 | 618 | approve | mixed wide ranks20/22.2
 web/src/campaign/stages/simulation.ts:bridge Archers | x37,z0/+-2/+-4 | 618 | approve | x22.2,z-2..14
@@ -94,24 +96,11 @@ web/src/campaign/stages/simulation.ts:wall reserve | ten x18/20,z0/+-1.6/+-3.2 |
 loop/scripts/capture-world.mjs:wall army | beta.55 | 618 | evidence | beta1.2
 loop/scripts/capture-world.mjs:hill field | target35,5,0,radius120 | 618 | approve | default target0,0,0,radius135
 loop/scripts/capture-world.mjs:wall field | target5,0,0,radius90,beta.22 | 618 | approve | default target0,0,0,radius135,beta.72
-web/src/campaign/stages/spooky.ts:plunder Captains | main plank(11,-5.3),(14,-3.7) | 617 | approve | secondary heads(19.7,-18/8.55)
-web/src/campaign/stages/spooky.ts:plunder Bomb Throwers | trios x14/16.5/19,z around-18/8.6 | 617 | approve | deck x28.25/31.1
-web/src/campaign/stages/spooky.ts:turtle right Squires | 13-man arc x10..30,z+-24 | 617 | approve | bridgehead ranks x7/9.2
-web/src/campaign/stages/spooky.ts:turtle mixed force; main.ts:checkStage | left bank x-11..-25.5,z+-15,yaw+PI/2; stage enemy zone | 617 | approve | bridgehead x9.2/12.9
-web/src/campaign/stages/spooky.ts:war centre | seven swords x13..16.5,z+-4,two bows20,+-2 | 617 | approve | rectangle x20/22.2,bows28.1
-web/src/campaign/stages/spooky.ts:war Vampires; stagePresentation.ts:war stair | 3x3 x26/28.5/31,z0/+-2.6; stair x22..34,h4 | 617 | approve | interleaved x22.2/24.4
-web/src/campaign/stages/spooky.ts:war wings | six swords14/17,z+-16..21,two bows21,z+-17/20 | 617 | approve | central ranks x20/22.2,bows28.1
 web/src/campaign/stages/simulation.ts:catapult_castle crowns | six x31.5,z+-7.5/12.5/17.5 | 617 | approve | line x20,z-16..4
 web/src/campaign/stages/simulation.ts:catapult_castle reserves; stagePresentation.ts:gate height | (32,0),(42,+-3); gate y12 | 617 | approve | line x20,z8/12/16; gate crown y24
 loop/scripts/capture-world.mjs:catapult_castle army | targety12,beta1.4 | 617 | evidence | targety1,beta1.2
-web/src/campaign/stages/spooky.ts:plunder Queen | sand(6.5,-4.5) | 616 | approve | deck(19.25,-4.5)
-web/src/campaign/stages/spooky.ts:bone formation | scattered x12..34.6,z4..20.5; stagePresentation.ts:boneApproach low walls and tower | 616 | approve | two ranks x20/22.2,z-9.9..9.9; no approach
-web/src/campaign/stages/spooky.ts:cave Chieftains | irregular cliff-foot pockets x24..30.1,z-14..22 | 616 | approve | two rows x20/22.2
-web/src/campaign/stages/spooky.ts:breakout Berserkers; main.ts:checkStage | inward oval24x19 at origin; stage-only enemy ice zone52x56 | 616 | approve | bank ranks x29..31.8, inherited team1 half
-web/src/campaign/stages/spooky.ts:breakout Jarls | separate x-5..5.5,z23.5..25 | 616 | approve | x31.2,z6/10/14/18
 web/src/map/tabs/viking_sandbox.ts:placementZones; stages/pirate.ts:arrows army | append inner ice x+-(1..27),z+-20; army -8x | 616 | approve | x>=27; original x27.6..34
 web/src/campaign/stages/pirate.ts:arrows right flank | archers x25..18.1,z-6..-12; Heads15.8,-14/13.5,-16 | 616 | approve | archers x26..21.8; Heads20.6/22
-web/src/campaign/stages/spooky.ts:cave Protectors | 2x3 x28.7/30.1,z4.6/6/7.4 | 616 | approve | one line x20,z-9.9..-0.9
 web/src/map/tabs/renaissance.ts:placementZones,canal | append x+-(19..43),z-24..-5; water z-29.9..-24.9 | 615 | approve | zones z-5..29; inherited water z-34..-14
 web/src/campaign/stages/renaissance.ts:renaissance_fencer Musketeers | stagger x21..28.5,z-20..27.6 | 615 | approve | 614 z-4.5..27.6
 web/src/campaign/stages/pirate.ts:boom formation | 3 layers z-20..28, V centre z4 | 615 | approve | 614 z-4..28, V centre z12

@@ -8,7 +8,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - ACES lifts mid code values toward pale: an unlit plate keeps a deep value; lit timber wants (.2,.11,.055) with a small self-light.
 - "metal" renders near black: use "cloth" with a small emissive. Lit cloth in shade reads grey.
 - A world box refreshes only on render: computeWorldMatrix(true) before reading bounds in a per-tick step. bakeCurrentTransformIntoVertices bakes the world matrix: bake, then parent.
-- Flat pieces need left-handed winding or closed slabs. execSync eats a caret: sha~1.
+- Flat pieces: left-handed winding or closed slabs. execSync eats a caret (sha~1).
 - An excluded mesh does not occlude the glow: a dark one out of the pass wears the glow behind it as a pale veil (562, 586). Keep dark solids in.
 - IcoSphere subdivisions 0 is falsy (becomes 4): use 1. A half-disc (arc .5) at rotation (PI/2,0,PI/2) faces +-x (595).
 - Lit thin-instance wheat reads gold above, brown low: two unlit glow-excluded instance meshes sharing one matrix buffer.
@@ -20,13 +20,12 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A high oblique can hide a narrow corridor floor behind its wall: use a near-vertical stage field pose. Centre long rear formations on the defending half (618).
 - Regression-only overwrites summary.json: retain world and smoke summaries separately (599).
 - capture-world: mulberry32 0x4d4f5642 reseeded each resetBattle, time via advanceTime, setupScale8; re-add body.capture-mode before shots (loads drop it).
-- Test captures use look/ (--iter prunes). Near-black props vanish in black trees (587).
-- Capture wipes iter-N unless --add: save reviews after the last capture; audit step5 needs --add.
+- Test captures use look/; --iter N wipes iter-N unless --add (step 5 after an audit needs it). Near-black props vanish in black trees (587).
 - A maroon/blue "ground tint" is the base's zone slabs (campaign_zone_overlay_*/border_*): hide them before recolouring a floor (577). A colour swap under full-width cap slabs never shows (pirate sterns 577).
-- Dev probe (5173): import the Babylon resource URL; EngineStore.LastCreatedScene is the live map scene.
+- Dev probe (5173): EngineStore.LastCreatedScene is the map scene.
 
 ## Maps and stages
-- Stage scenery is drawn per stage id in stagePresentation.ts, no colliders; may move a map mesh if restored. [id,x,z,yaw] turns a unit. Scenery or a map prop on a unit's -x sight line hides it in _army (614; saguaro 621).
+- Stage scenery: stagePresentation.ts per stage id, no colliders. [id,x,z,yaw] yaw in degrees. A prop on a unit's -x sight line hides it in _army (614, 621).
 - Inherited placement zones can omit clear streets or inner ice. Append valid side-specific strips, keeping the original skirmish zone first (599).
 - Sim roots stay at y0; terrain.ts lifts dynamic roots through MapBuildResult.height only during drawing. Static map props seat at groundHeightAt(); nav uses zones/obstacles/hazards. World-placed effect children need a root at their own position.
 - Zone extensions can uncover hazards under dry paving: match the drawn water (615). A deck-to-sand move needs its army camera target lowered; high deck views can see into furled sails.
@@ -45,15 +44,15 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - Scene fog is linear and re-keyed every frame by main.ts (fogStart/End from the camera radius): a map's fogDensity does nothing. Draw haze instead (inside-facing translucent mist walls, viking 572).
 - Farmer base ring trees are oaks ("oakCrown" lumps on oakLeaves/oakLeavesDark): recolour those, not canopy (561). A raised drawn-only set piece can carry units via MapBuildResult.height (farmer_1 bridgeHeight).
 - A ribbon faces by path order (SSAO greys a DOUBLESIDE one inside): a down-facing deck renders black; check the first normal after convertToFlatShadedMesh, flipFaces(true) if wrong (561, 574). An underside away from the sun needs self-light ~1x its colour.
-- Read stage armies from the stage files, not Notes (tribal_2 563). campaign.challenge zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones inside it.
+- Read stage armies from stage files, not Notes (563). campaign.challenge zones reach x +-61, past the 54 m rim: a builder that walls the field clips placementZones inside it.
 - Upright tessellation-5/6 cylinders with flat tops read as basalt columns or a palisade (563): a rock mass wants heaped faceted boulders or tilted slabs, few and large, of unequal size (spooky_1 583: equal rocks read as an even band).
 - Stage enemies are validated vs team-1 zones, hazards and obstacles (game.checkStage). Probe a new site with --check-only and lay from its moves: guessed shifts overlap again (617, 620).
 - campaign.challenge dressing: wallStone, boulder, hayBale, hill, stump, pits, "<name>_box|_cyl". loadMapForCapture needs "map." (564).
 - The shared skyDome covers clearColor: hide/restore it and draw a fog-free unlit sky sphere (Legacy 582); a vertex-colour gradient needs emissive white, diffuse black (unlit colour = emissive x vertex colour; 586).
-- capture-world builds a production snapshot first: edits after "starting vite preview" miss that run (586).
+- capture-world builds a snapshot first: edits after "starting vite preview" miss that run (586).
 - Night snow under blue light: warm the diffuse, carry the pale tone in self-light, field out of the glow (farmer_snow 573).
 - Turf caps on cliff columns flicker if coplanar with cliff or meadow: cap slightly below the meadow, shaft top inside the cap (567).
-- Run captures unsandboxed; use --port if a completed preview retains its port. Island sky band: z~200,y-25..35.
+- Run captures unsandboxed; --port if a preview keeps its port. Island sky band z~200,y-25..35.
 - Moving a set piece can enclose a fixed camera (pirate 602): view every shot after. Turn/scale: build local, bakeTransformIntoVertices.
 - Sim-family maps (588): tabs/simKit.ts (grid blocks, bareField, voidAround). setPlacementGuidesVisible re-enables every mesh named "border": rename a base one to hide it. terrainMesh skirts carry both windings: give them a backFaceCulling material.
 - Grass: thin-instance fans of six blades, normals up (583); flattened IcoSpheres read as paving from low cameras, leaf cards as beige flags (571).
@@ -61,7 +60,8 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
 - Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white and veil nearby water: exclude them (584-608).
 - Water from a structure is credited only as one run visible in the named shot (source face, channel, cascade); loose pieces read as tiles (608).
-- Stage _army: camera west, -z right; roofs, front walls, end-on columns hide ranks: high view (583,599,622).
+- Stage _army: camera west, -z right; roofs, walls, end-on columns hide ranks: high view (583-623). A landmark off to +-z needs an alpha swing (PI+.75 showed a chapel 33 m abeam, 623).
+- Split one file's gaps into commits: git diff -U0 > d; split per @@; git apply --cached --unidiff-zero; re-diff after each (623).
 - Crown seats: paired observers restore transforms after terrain unlift; clear flat departure points avoid solid-wall spawns. Global roof height lifts passers-by too (598,601,619).
 - The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Notches: ~8 m hide under trees/rocks; pushing radial floor verts to a cut's nearest edge bevels it (596, 598).
 - Recess a descent before merging cliff columns (579). A concave bank: lengthwise strips, no hub fan (581).
