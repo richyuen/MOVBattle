@@ -621,13 +621,15 @@ export function applyStagePresentation(scene: Scene, id: string, units: RuntimeU
     crownSeats(scene, units, base, unit => unit.definition.id === "viking.berserker" ? { dx: -4, y: 7 } : null);
     return;
   }
-  if (id === "simulation.siege") {
+  if (id === "simulation.siege" || id === "legacy.siege") {
+    // Legacy's Siege is the same level on the same map (card Survey).
+    const terraces = id === "simulation.siege";
     // Four rifle seats on either front wall, at the two stepped crown heights.
     crownSeats(scene, units, base, unit => unit.definition.id === "renaissance.musketeer"
       ? { dx: 3.5, y: Math.abs(unit.position.z) < 12 ? 15 : 18 }
       // Each rear terrace wing seats one King behind four Fencers. Their
       // clear courtyard departure points are eight metres before the seats.
-      : unit.definition.id === "medieval.king" || unit.definition.id === "renaissance.fencer"
+      : terraces && (unit.definition.id === "medieval.king" || unit.definition.id === "renaissance.fencer")
         ? { dx: 8, y: 14 } : null);
     return;
   }
