@@ -171,8 +171,9 @@ export const STAGES: TabsStageDef[] = [
       ["legacy.pike", 20.6, -4.6],
       ["legacy.pharaoh", 9.2, -0.9],
       ["legacy.pharaoh", 9.2, 0.9],
-      ["legacy.tank", 12.9, -2],
-      ["legacy.tank", 12.9, 2],
+      // The two Tanks inside the circle, side by side facing opposite ways (yaw 0 toward the player, 180 away).
+      ["legacy.tank", 13.5, -3.8],
+      ["legacy.tank", 13.5, 3.8, 180],
     ],
   },
 ];
