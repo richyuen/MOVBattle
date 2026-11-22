@@ -3,6 +3,7 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+627 | [S] 517aeff2 (+ evidence 93bd0ced) | wild_west.leading_cacti.b3 | approve,struck3 (s1,s2 re-judged); CONFIRM627 D
 626 | [S] ea65bd91 | fantasy_evil.raze_the_homestead.b4 | approve,struck1-4; CONFIRM626 D
 626 | [S] 0c928abc | fantasy_evil.farmer_uprising_evil.b4 | approve,struck1-4; CONFIRM626 D
 626 | [S] 885ba3a8 | fantasy_evil.blasted_skirmish.b4 | approve,struck1-4; CONFIRM626 D
@@ -33,21 +34,13 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 622 | [S] a83f7ac8 | legacy.siege.b1 | approve,struck1
 622 | [S] 1ba824d1 | legacy.siege.b4 | approve,struck4,5; CONFIRM622 reopened 4 (hidden in _army)
 622 | [S] 1ba77b68 | legacy.siege.b2 | approve,struck2,3
-621 | [S] 5d526992 | wild_west.leading_cacti.b3 | approve, no strike
-621 | [S] c264f57d | wild_west.laughing_knights.b5 | approve,struck2,3,5
-621 | [S] 5ccadfa6 | wild_west.lone_ranger_and_his_friends.b2 | approve,struck2
-621 | [S] 5239e243 | wild_west.lone_ranger_and_his_friends.b3 | approve,struck3,4
-621 | [S] b9af7403 | wild_west.lone_ranger_and_his_friends.b1 | approve,struck1; CONFIRM621 failed b (5 hidden)
-621 | [S] 923f743a | wild_west.spooky_army.b1 | approve,struck1,5
-621 | [S] 59f6339e | wild_west.spooky_army.b2 | approve,struck2
-621 | [S] e180a29d | wild_west.spooky_army.b3 | approve,struck3,4; CONFIRM621 D
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 Done stages (rows compacted): stages_spooky bone, war, cave, turtle, breakout, plunder (616-618) approved and CONFIRMed; final formations in web/src/campaign/stages/spooky.ts and git log loop(616..618).
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605), fantasy_good (587-608): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
 
 ## Tuned values
-web/src/campaign/stages/wild_west.ts:leading lanes; main.ts:checkStage | Cacti x20.8, Miners x23.6/26.4/29.2, z-22.4/-19.4/-16.4/-13.4; zone(24.75,-17.9)11x11 | 621 | approve, no strike | Cacti x28,Miners x31/34/37,z-24..-12 (619)
+web/src/campaign/stages/wild_west.ts:leading lanes; main.ts:checkStage; capture-world.mjs:ARMY_POSE | Cacti x8.8, Miners x11.6/14.4/17.2, z14/17/20/23; zone(13.5,18.5)11x12; _army alpha PI+.75 beta1.15 r26 | 627 | approve, D | Cacti x20.8, Miners x23.6..29.2, z-22.4..-13.4 (621); Cacti x28,Miners x31/34/37,z-24..-12 (619)
 web/src/campaign/stages/wild_west.ts:laughing column; main.ts:checkStage | bridge column z1: Jesters x-3.6..0.8, Knights3.2, Execs5.8, Healers8.4 (z-0.1/2.1); zone(2,1)14x6 | 621 | approve | diamond(20,0)..(24.4,0), transverse rank x20
 loop/scripts/capture-world.mjs:laughing army | beta.7 | 622 | approve, D | beta1.2
 web/src/campaign/stages/legacy.ts:the_war | front(8,+-6.5); flanks(24,+-22),(28.6,-27),(28,27) | 622 | approve, D | one row x7,z-10..10

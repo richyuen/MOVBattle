@@ -1,5 +1,5 @@
 # Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
-Iteration: 626   Batch: stages_wild_west   Consecutive empty: 0   Done: 98/99   Parked: 0
+Iteration: 627   Batch: (none: every batch done)   Consecutive empty: 0   Done: 99/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
 ## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
@@ -20,26 +20,20 @@ stages_renaissance: a_new_art_wave +++ D | balloons +++ D | renaissance_fencer +
 stages_pirate: x_marks_the_spot +++ D | a_rival_captain +++ D | a_small_tribe +++ D | you_won_t_make_us_walk_the_plank +++ D | arrows_and_arrow +++ D | boom_and_the_units_go_down +++ D
 stages_spooky: bone +++ D | war +++ D | cave +++ D | turtle +++ D | breakout +++ D | plunder +++ D
 stages_simulation: bridge_battle +++ D | hill +++ D | wall +++ D | siege +++ D | catapult_castle +++ D | pit +++ D
-stages_wild_west: leading_cacti +-+ o | bullets_and_chains +++ D | lone_ranger_and_his_friends +++ D | laughing_knights +++ D | shogun_s_samurai +++ D | spooky_army +++ D
+stages_wild_west: leading_cacti +++ D | bullets_and_chains +++ D | lone_ranger_and_his_friends +++ D | laughing_knights +++ D | shogun_s_samurai +++ D | spooky_army +++ D
 stages_legacy: siege +++ D | a_tank +++ D | the_war +++ D | thor_s_battle +++ D
 stages_fantasy_good: colossal_spike +++ D | royal_archers +++ D | clash_of_warriors +++ D | chaotic_cavalry +++ D | vicious_terror +++ D | fortified_formation +++ D
 stages_fantasy_evil: encircling_tribe +++ D | raze_the_homestead +++ D | farmer_uprising_evil +++ D | storm_the_fortress +++ D | blasted_skirmish +++ D | dismantle_the_spears +++ D
 
-## Focus (iter626 fantasy_evil; evidence acc913c9 item-keyed _army poses (+ blasted _field); 3 [S]; BASE 83f4ab02)
-- [S] raze.b4 ea65bd91 APPROVE struck 1-4; CONFIRM D.
-- [S] farmer_uprising.b4 0c928abc APPROVE struck 1-4; CONFIRM D (stage-only hill via stagePresentation SUMMITS; the_tiniest_attack re-shot, unchanged).
-- [S] blasted.b4 885ba3a8 APPROVE struck 1-4; CONFIRM D.
-- 3/3 approved, 12 struck
+## Focus (iter627 wild_west; starvation pick; evidence 93bd0ced item-keyed _army pose; 1 [S]; BASE a9b62a86)
+- [S] leading_cacti.b3 517aeff2 APPROVE struck 3 (s1, s2 re-judged on the new pose); CONFIRM D.
+- 1/1 approved, 1 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] fantasy_evil.raze_the_homestead (ea65bd91) / VERDICT: APPROVE / CRITERION: fantasy_evil.raze_the_homestead.b PASS   (previous: FAIL)
-GAP: [S] fantasy_evil.farmer_uprising_evil (0c928abc) / VERDICT: APPROVE / CRITERION: fantasy_evil.farmer_uprising_evil.b PASS   (previous: FAIL)
-GAP: [S] fantasy_evil.blasted_skirmish (885ba3a8) / VERDICT: APPROVE / CRITERION: fantasy_evil.blasted_skirmish.b PASS   (previous: FAIL)
+GAP: [S] wild_west.leading_cacti (517aeff2) / VERDICT: APPROVE / CRITERION: wild_west.leading_cacti.b PASS   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max5lines)
-- 626: 12 shots, 0 page errors, 8/8 script criteria PASS (judge-world.json/summary-world.json; summary.json is the regression run); critic.md, confirm.md saved. 98/99.
-- Checkpoint 626: stages_fantasy_evil all D; --regression-only GREEN 12/12; dropped from Batch.
-- Last open item: wild_west.leading_cacti b3 (2 attempts, last 621): it starves at 627 and is picked then (item file: lanes before a facade row facing the _army camera, or an item-keyed _army pose).
-- When leading_cacti is D, stages_wild_west is the last batch: step 8 checkpoint, then the Scoreboard has nothing open (step 1 writes STOP).
-- Validate formations with --check-only before committing; checkStage ignores unit-unit overlap (space by collisionRadius).
+- 627: 3 shots, 0 page errors, 2/2 script criteria PASS (judge-world.json/summary-world.json; summary.json is the regression run); critic.md, confirm.md saved. 99/99.
+- Checkpoint 627: stages_wild_west all D; --regression-only GREEN 12/12; dropped from Batch. No batch is left in the list.
+- Every map and stage is D: the next iteration's step 1 finds no open or queued item and writes STOP (v11 complete).
