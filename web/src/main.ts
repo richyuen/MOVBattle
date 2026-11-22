@@ -3881,6 +3881,10 @@ const gameApi = {
       // Storm the Fortress holds the open ground before the castle gate (-10, 25)
       // on the gate path's side of the field (thumb: the gate right behind it).
       team: 1 as const, center: new Vector3(-8, 0, 11), size: new Vector3(22, 100, 22),
+    }] : scenarioId === "fantasy_evil.encircling_tribe" ? [...zones, {
+      // Encircling Tribe's two Protector rings flank the player's circle on
+      // both sides (card Survey "To either side is a group of Protectors").
+      team: 1 as const, center: new Vector3(-6, 0, 0), size: new Vector3(12, 100, 32),
     }] : scenarioId === "wild_west.shogun_s_samurai" ? [...zones, {
       // Shogun's Samurai hold the right-side terrace stair from its foot on
       // the middle lawn to the outer lawn above (card Survey).
