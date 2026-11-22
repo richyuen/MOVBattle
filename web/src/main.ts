@@ -3861,6 +3861,10 @@ const gameApi = {
       // Laughing Knights' column holds the land bridge (x -5..5, z -3..5)
       // from its player end to the right bank (card Survey).
       team: 1 as const, center: new Vector3(2, 0, 1), size: new Vector3(14, 100, 6),
+    }] : scenarioId === "wild_west.lone_ranger_and_his_friends" ? [...zones, {
+      // Lone Ranger's party stands on the open sand before the church end of
+      // the town, clear of the rim saguaros (ref: church behind his left).
+      team: 1 as const, center: new Vector3(32, 0, 2), size: new Vector3(10, 100, 15),
     }] : scenarioId === "wild_west.shogun_s_samurai" ? [...zones, {
       // Shogun's Samurai hold the right-side terrace stair from its foot on
       // the middle lawn to the outer lawn above (card Survey).
