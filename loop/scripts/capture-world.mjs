@@ -272,11 +272,14 @@ async function stageScene(page, item) {
   // Wall's ground reserves sit behind a seven-metre wall. Look over the
   // crown so the same frame resolves the slot and the separate rear body.
   const corridorArmy = item === "simulation.wall";
+  // Laughing Knights' column runs end-on away from the camera along the land
+  // bridge: from the low pose each pair hides the next. Look down the column.
+  const bridgeColumn = item === "wild_west.laughing_knights";
   await frame(page, {
     target: { x: box.cx, y: castleBattery ? 12 : archCart ? 9 : st.map === "pirate" && item !== "pirate.a_rival_captain" ? 8.2 : 1, z: box.cz },
     radius: Math.max(archCart ? 32 : 16, Math.max(box.w, box.d) * 1.25 + 8),
     alpha: deckArmy ? Math.PI + 0.45 : city ? Math.PI + 0.42 : Math.PI,
-    beta: corridorArmy ? 0.55 : castleBattery ? 1.4 : deckArmy ? 0.95 : archCart ? 1 : streets ? 0.24 : city ? 0.77 : 1.2,
+    beta: corridorArmy ? 0.55 : bridgeColumn ? 0.7 : castleBattery ? 1.4 : deckArmy ? 0.95 : archCart ? 1 : streets ? 0.24 : city ? 0.77 : 1.2,
   });
   await shot(page, `${p}army`);
   // 611: on the dynasty map the 135 m top view loses the army among the pagodas and canopies (AUDIT 610): frame the right half
