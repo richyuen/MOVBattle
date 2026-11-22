@@ -3,6 +3,15 @@
 Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no approved reversal within 20 iterations; two failed polish attempts spend a row. S/R replace mechanisms. The unit phase's ledger is `loop/archive/v4/LEDGER.md`.
 
 ## Structural attempts (iter | sha | item.criterion | verdict)
+622 | [S] 33be5f30+60af33c0 | wild_west.lone_ranger_and_his_friends.b5 | approve, no strike; CONFIRM622 failed b (plateau)
+622 | [S] 9f80578c | legacy.the_war.b2 | approve,struck2
+622 | [S] dc76524d | legacy.the_war.b1 | approve,struck1; CONFIRM622 D
+622 | [S] 99579d89 | legacy.thor_s_battle.b1 | approve,struck1
+622 | [S] dd0754c0 | legacy.thor_s_battle.b3 | approve,struck3
+622 | [S] 6d13b695 | legacy.thor_s_battle.b2 | approve,struck2; CONFIRM622 reopened 2
+622 | [S] a83f7ac8 | legacy.siege.b1 | approve,struck1
+622 | [S] 1ba824d1 | legacy.siege.b4 | approve,struck4,5; CONFIRM622 reopened 4 (hidden in _army)
+622 | [S] 1ba77b68 | legacy.siege.b2 | approve,struck2,3
 621 | [S] 5d526992 | wild_west.leading_cacti.b3 | approve, no strike
 621 | [S] c264f57d | wild_west.laughing_knights.b5 | approve,struck2,3,5
 621 | [S] 5ccadfa6 | wild_west.lone_ranger_and_his_friends.b2 | approve,struck2
@@ -47,15 +56,6 @@ Rows: `file:identifier | value | last iter | verdict | earlier values`. P: no ap
 617 | [S] d5cbbe24+59c1b039+b1d3d11a | spooky.war.b4 | approve,struck4
 617 | [S] a0e3e596 | simulation.catapult_castle.b1 | approve,struck1
 617 | [S] 66b970e2 | simulation.catapult_castle.b2 | approve,struck2
-616 | [S] 24dca1bb | spooky.plunder.b1 | approve,struck1
-616 | [S] f6a98d2d | spooky.bone.b1 | approve,struck1
-616 | [S] 58221731+e4ec548f | spooky.bone.b2 | approve,struck2
-616 | [S] ebca0cfd+bbcb3192 | spooky.cave.b2 | approve,struck2
-616 | [S] daec95d3+dcdff888 | spooky.breakout.b1 | approve,struck1
-616 | [S] 9b61be07 | spooky.breakout.b2 | approve,struck2
-616 | [S] 995853ac | pirate.arrows_and_arrow.b2 | approve,struck2
-616 | [S] fefdffcd | pirate.arrows_and_arrow.b3 | approve,struck3
-616 | [S] d4648d25 | spooky.cave.b1 | approve,struck1
 
 ## Done maps (rows compacted; the maps are D and never tuned again)
 tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1, medieval_2, viking, viking_sandbox, ancient_1, ancient_sandbox, legacy (576-584), wild_west, ancient_2, renaissance, spooky_1 (565-587), simulation, hill, bridge, corridor (587-591), low_ground, defend_the_castle (588-592), high_ground (589-599), pirate (576-602), dynasty (576-603), spooky_2 (578-604), fantasy_evil (590-605), fantasy_good (587-608): every row approved and CONFIRMed; values in their builders' spec comments and git log `loop(5xx)`.
@@ -63,7 +63,11 @@ tribal_1, tribal_2, tribal_sandbox, farmer_1, farmer_2, farmer_snow, medieval_1,
 ## Tuned values
 web/src/campaign/stages/wild_west.ts:leading lanes; main.ts:checkStage | Cacti x20.8, Miners x23.6/26.4/29.2, z-22.4/-19.4/-16.4/-13.4; zone(24.75,-17.9)11x11 | 621 | approve, no strike | Cacti x28,Miners x31/34/37,z-24..-12 (619)
 web/src/campaign/stages/wild_west.ts:laughing column; main.ts:checkStage | bridge column z1: Jesters x-3.6..0.8, Knights3.2, Execs5.8, Healers8.4 (z-0.1/2.1); zone(2,1)14x6 | 621 | approve | diamond(20,0)..(24.4,0), transverse rank x20
-web/src/campaign/stages/wild_west.ts:lone_ranger | Cacti29,-20/28.6,-18.2/29,-16; Miners29,-24/-22/-14/-12; Guns31.5,-21/-15; Deadeyes34,-21/-15; Lassos34,-23.5/-12.5; QD35.5,-18 | 621 | approve (QD hidden by map saguaro) | one rank x29,z-25..-11; Deadeyes35.5
+loop/scripts/capture-world.mjs:laughing army | beta.7 | 622 | approve, D | beta1.2
+web/src/campaign/stages/legacy.ts:the_war | front(8,+-6.5); flanks(24,+-22),(28.6,-27),(28,27) | 622 | approve, D | one row x7,z-10..10
+web/src/campaign/stages/legacy.ts:thor | Thor6,0; Peasants x8.6..9.4,z-30.4..26; Pikes x13,z-28.2..27.6 | 622 | approve; CONFIRM reopened Peasants | block x7/9.2/11.4,Thor13.6
+web/src/campaign/stages/legacy.ts:siege; stagePresentation.ts,main.ts siege branch | simulation.siege placements, seats and courtyard zone | 622 | approve; CONFIRM: Kings hidden in _army | lines x20/25/31.5
+web/src/campaign/stages/wild_west.ts:lone_ranger; main.ts:checkStage | party dz+20: Cacti29,0/28.6,1.8/29,4; Miners29,-4/-2/6/7.4; Guns31.5,-1/5; Deadeyes34,-1/5; Lassos34,-3.5/7.5; QD34.4,2; zone(32,2)10x15 | 622 | approve, no strike (no church behind) | z-24..-12, QD35.5,-18 (621)
 web/src/campaign/stages/wild_west.ts:spooky_army | Candleheads x7/9,z-2..2; Archers x12/14,z-3..3; Vampires x10/12,z+-7.4/9.2; Reaper32,-3.6; Swordcasters x29.4..29.8,z-1.8..-5.4 | 621 | approve, D | front bar x20, archers x28.7
 web/src/campaign/stages/simulation.ts:wall Berserkers; stagePresentation.ts:crownSeats | five per crown x6,z+-4..12,y7; clear departure x10 | 619 | approve | rear pad24.4/26.6
 web/src/campaign/stages/simulation.ts:pit Hwachas | x35,z+-11 (Archer line ends) | 620 | approve | x27.4,z+-2

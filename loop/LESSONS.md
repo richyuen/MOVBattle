@@ -61,7 +61,7 @@ Read at step 1; merge near cap. Unit-phase lessons: loop/archive/v4/LESSONS.md.
 - A boulder heap receiving shadows goes near black: receiveShadows off, self .6 (583); slate (.09) vanishes on a void sky (595). Back cliff ledges with a skirt (584).
 - Builder hazards get no overlay: draw them (578). Self-lit/pale meshes in the glow bloom white and veil nearby water: exclude them (584-608).
 - Water from a structure is credited only as one run visible in the named shot (source face, channel, cascade); loose pieces read as tiles (608).
-- Stage _army: camera west of the line, -z on the right; roofs can hide ranks. Use a high view for street armies (583,599).
+- Stage _army: camera west, -z right; roofs, front walls, end-on columns hide ranks: high view (583,599,622).
 - Crown seats: paired observers restore transforms after terrain unlift; clear flat departure points avoid solid-wall spawns. Global roof height lifts passers-by too (598,601,619).
 - The island cam never sees under the slab: a backdrop or rock mass must rise above the deck behind the rim (fantasy_evil 596). Notches: ~8 m hide under trees/rocks; pushing radial floor verts to a cut's nearest edge bevels it (596, 598).
 - Recess a descent before merging cliff columns (579). A concave bank: lengthwise strips, no hub fan (581).

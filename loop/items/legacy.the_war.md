@@ -1,13 +1,13 @@
 # legacy.the_war
-Status: open   Audited: 621 (AUDIT x2)   Done: -
+Status: done   Audited: 621 (AUDIT x2), 622 (CONFIRM: passed b; failed -)   Done: 622
 ## Verdicts
-a PASS (621 judge)
-b FAIL (0 since 621; list from AUDIT 621): 1. Front pair in stage_legacy.the_war_army.png: there isn't one; six identical tanks stand in one row — TABS: two tanks forward, left and right of centre, with a wide empty gap between them (ref: reference/stages/legacy.the_war.png and .thumb.png centre). 2. Flank tanks in stage_legacy.the_war_army.png: the outer four continue the same row at the same tight spacing (about one tank width) — TABS: two tanks set back and far out on each flank, near the back tree line (ref: reference/stages/legacy.the_war.png far left and far right).
-c PASS (621 judge)
+a PASS (622 judge)
+b PASS (622: struck 1,2; CONFIRM 622)
+c PASS (622 judge)
 ## Ranked gaps
-1. [S] legacy.the_war.b Staggered front pair — blocker 1: two tanks forward either side of centre, a wide gap between — ref: reference/stages/legacy.the_war.png — ours: stage_legacy.the_war_army.png
-2. [S] legacy.the_war.b Rear flank pairs — blocker 2: two tanks deep and wide on each flank toward the back tree line — ref: reference/stages/legacy.the_war.png — ours: stage_legacy.the_war_field.png
 ## Attempts (iter | gap | criterion | verdict)
+622 | 9f80578c flank pairs (24,-22),(28.6,-27),(24,22),(28,27) | b2 | APPROVE (struck 2)
+622 | dc76524d front pair (8,+-6.5) | b1 | APPROVE (struck 1); CONFIRM passed b
 ## Rejected (last 4)
 ## Notes (max 3 lines)
-- AUDIT2 corroborates both (depth stagger; spread across the whole field width).
+- Done 622.

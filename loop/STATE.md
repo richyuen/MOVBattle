@@ -1,5 +1,5 @@
 # Loop state (v11: maps then stages; solo mode for stuck items; locked-list CONFIRM before done)
-Iteration: 621   Batch: stages_wild_west+stages_legacy   Consecutive empty: 0   Done: 80/99   Parked: 0
+Iteration: 622   Batch: stages_wild_west+stages_legacy   Consecutive empty: 0   Done: 82/99   Parked: 0
 Batches, in order: maps_1, maps_2, maps_3, maps_4, stages_introduction, stages_adventure, stages_challenge, stages_dynasty, stages_renaissance, stages_pirate, stages_spooky, stages_simulation, stages_wild_west, stages_legacy, stages_fantasy_good, stages_fantasy_evil
 <!-- Item template: # <id>; Status: open|done|parked Audited: N(AUDIT x2),N(CONFIRM: passed a; failed b) Done: N
 ## Verdicts: a FAIL (0 since N; list from AUDIT|CONFIRM N): 1. <blocker verbatim> s2. <element> in <shot> (struck N) / a PASS(N: struck n; CONFIRM N); b likewise; c PASS(N judge) / c FAIL(N judge): <reasons>
@@ -20,49 +20,40 @@ stages_renaissance: a_new_art_wave +++ D | balloons +++ D | renaissance_fencer +
 stages_pirate: x_marks_the_spot +++ D | a_rival_captain +++ D | a_small_tribe +++ D | you_won_t_make_us_walk_the_plank +++ D | arrows_and_arrow +++ D | boom_and_the_units_go_down +++ D
 stages_spooky: bone +++ D | war +++ D | cave +++ D | turtle +++ D | breakout +++ D | plunder +++ D
 stages_simulation: bridge_battle +++ D | hill +++ D | wall +++ D | siege +++ D | catapult_castle +++ D | pit +++ D
-stages_wild_west: leading_cacti +-+ o | bullets_and_chains +++ D | lone_ranger_and_his_friends +-+ o | laughing_knights +-+ o | shogun_s_samurai +++ D | spooky_army +++ D
-stages_legacy: siege +-+ o | a_tank +-+ o | the_war +-+ o | thor_s_battle +-+ o
+stages_wild_west: leading_cacti +-+ o | bullets_and_chains +++ D | lone_ranger_and_his_friends +-+ o | laughing_knights +++ D | shogun_s_samurai +++ D | spooky_army +++ D
+stages_legacy: siege +-+ o | a_tank +-+ o | the_war +++ D | thor_s_battle +-+ o
 stages_fantasy_good: colossal_spike ??? q | royal_archers ??? q | clash_of_warriors ??? q | chaotic_cavalry ??? q | vicious_terror ??? q | fortified_formation ??? q
 stages_fantasy_evil: encircling_tribe ??? q | raze_the_homestead ??? q | farmer_uprising_evil ??? q | storm_the_fortress ??? q | blasted_skirmish ??? q | dismantle_the_spears ??? q
 
-## Focus (iter621 stages_wild_west, tail overlap audit of stages_legacy; 8 [S]; BASE 295790e3)
-- [S] wild_west.leading_cacti.b3 5d526992 APPROVE, no strike (facades beside, not behind, in _army); CONFIRM621 passed b; open.
-- [S] wild_west.laughing_knights.b5 c264f57d APPROVE struck 2,3,5; CONFIRM621 passed b; 4 open (Healers hidden behind Executioners).
-- [S] wild_west.lone_ranger_and_his_friends.b2 5ccadfa6 APPROVE struck 2; b3 5239e243 APPROVE struck 3,4; b1 b9af7403 APPROVE struck 1; CONFIRM621 failed b (5: Quick Draw hidden by a map saguaro).
-- [S] wild_west.spooky_army.b1 923f743a APPROVE struck 1,5; b2 59f6339e APPROVE struck 2; b3 e180a29d APPROVE struck 3,4; CONFIRM621 passed b; D.
-- stages_legacy audited (AUDIT x2): a,c PASS all four; b FAIL all four (siege 5, a_tank 4, the_war 2, thor_s_battle 3 blockers); no [D] fixes.
-- 8/8, 10 struck
+## Focus (iter622 stages_wild_west+stages_legacy; 9 [S] + 1 evidence; BASE b70ba4db)
+- evidence b70ba4db: laughing_knights _army beta .7 down the bridge column; critic struck 4; CONFIRM622 passed b; D.
+- [S] lone_ranger.b5 33be5f30+60af33c0 APPROVE, no strike (QD visible, no church behind); CONFIRM622 failed b again: plateau.
+- [S] the_war.b2 9f80578c APPROVE struck 2; b1 dc76524d APPROVE struck 1; CONFIRM622 passed b; D.
+- [S] thor.b1 99579d89 APPROVE struck 1; b3 dd0754c0 APPROVE struck 3; b2 6d13b695 APPROVE struck 2; CONFIRM622 reopened 2.
+- [S] siege.b1 a83f7ac8 APPROVE struck 1; b4 1ba824d1 APPROVE struck 4,5; b2 1ba77b68 APPROVE struck 2,3; CONFIRM622 reopened 4.
+- 9/9, 11 struck
 
 ## Last verdicts (critic header lines verbatim)
-GAP: [S] wild_west.leading_cacti (5d526992)
-VERDICT: APPROVE
-CRITERION: wild_west.leading_cacti.b FAIL   (previous: FAIL)
-GAP: [S] wild_west.laughing_knights (c264f57d)
-VERDICT: APPROVE
-CRITERION: wild_west.laughing_knights.b FAIL   (previous: FAIL)
-GAP: [S] wild_west.lone_ranger_and_his_friends (5ccadfa6)
+GAP: [S] wild_west.lone_ranger_and_his_friends (33be5f30, follow-up 60af33c0)
 VERDICT: APPROVE
 CRITERION: wild_west.lone_ranger_and_his_friends.b FAIL   (previous: FAIL)
-GAP: [S] wild_west.lone_ranger_and_his_friends (5239e243)
+GAP: evidence wild_west.laughing_knights (b70ba4db)
 VERDICT: APPROVE
-CRITERION: wild_west.lone_ranger_and_his_friends.b FAIL   (previous: FAIL)
-GAP: [S] wild_west.lone_ranger_and_his_friends (b9af7403)
-VERDICT: APPROVE
-CRITERION: wild_west.lone_ranger_and_his_friends.b FAIL   (previous: FAIL)
-GAP: [S] wild_west.spooky_army (923f743a)
-VERDICT: APPROVE
-CRITERION: wild_west.spooky_army.b PASS   (previous: FAIL)
-GAP: [S] wild_west.spooky_army (59f6339e)
-VERDICT: APPROVE
-CRITERION: wild_west.spooky_army.b PASS   (previous: FAIL)
-GAP: [S] wild_west.spooky_army (e180a29d)
-VERDICT: APPROVE
-CRITERION: wild_west.spooky_army.b PASS   (previous: FAIL)
+CRITERION: wild_west.laughing_knights.b PASS   (previous: FAIL)
+GAP: [S] legacy.the_war (9f80578c) / (dc76524d)
+VERDICT: APPROVE / APPROVE
+CRITERION: legacy.the_war.b FAIL / PASS   (previous: FAIL)
+GAP: [S] legacy.thor_s_battle (99579d89) / (dd0754c0) / (6d13b695)
+VERDICT: APPROVE / APPROVE / APPROVE
+CRITERION: legacy.thor_s_battle.b FAIL / FAIL / PASS   (previous: FAIL)
+GAP: [S] legacy.siege (a83f7ac8) / (1ba824d1) / (1ba77b68)
+VERDICT: APPROVE / APPROVE / APPROVE
+CRITERION: legacy.siege.b FAIL / FAIL / PASS   (previous: FAIL)
 REGRESSIONS: none
 
 ## Notes for next iteration (max5lines)
-- 621: 12 legacy shots + 12 wild_west re-shots, 0 page errors, 16/16 script criteria PASS; legacy audit summary/judge kept as iter-621/legacy-summary.json, legacy-judge.json. Spooky Army CONFIRMed D (80/99).
-- Picks next: legacy ranked gaps (item files) plus Lone Ranger b5 (shift formation clear of the saguaro over (35.5,-18)) and Laughing Knights b4 (Healers clear of the Executioners). Leading Cacti b3 has 2 attempts: not pickable in batch mode.
-- legacy.siege shares simulation.siege's map and Survey: reuse its placements, checkStage zone and crown seats.
-- Stage-only checkStage zones now also cover leading_cacti (24.75,-17.9 11x11) and laughing_knights (2,1 14x6, the land bridge).
+- 622: 15 shots, 0 page errors, 10/10 script criteria PASS. Laughing Knights and The War CONFIRMed D (82/99).
+- Evidence first next: legacy.siege _army high oblique so the terrace Kings show (CONFIRM: no formation change); lone_ranger _army re-aim so the church is behind the Quick Draw (its _battle shot already shows it).
+- Picks next: thor b2 (Peasants up level with Thor, gap to the pikes), a_tank b1-b3 (unattempted), lone_ranger [R] if the re-aim fails. Leading Cacti b3 has 2 attempts: not pickable in batch mode.
+- legacy.siege shares simulation.siege's branch in stagePresentation.ts and main.ts checkStage; lone_ranger has its own stage zone (32,2) 10x15.
 - Validate formations with --check-only on the working tree before committing (never while another capture is mid-run: it rebuilds dist).
