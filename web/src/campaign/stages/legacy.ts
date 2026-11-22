@@ -127,7 +127,8 @@ export const STAGES: TabsStageDef[] = [
       ["legacy.pike", 11.4, 8.1],
       ["legacy.pike", 11.4, 9.9],
       ["legacy.pike", 13.6, -2],
-      ["legacy.thor", 13.6, 2],
+      // Thor at the front centre, the unit nearest the player (ref centre foreground).
+      ["legacy.thor", 6, 0],
       ["legacy.barrel_roller", 20.1, -3.6],
       ["legacy.barrel_roller", 20.1, -1.8],
       ["legacy.barrel_roller", 21, 1.6],
