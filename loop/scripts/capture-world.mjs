@@ -295,6 +295,9 @@ async function stageScene(page, item) {
     "fantasy_evil.raze_the_homestead": { target: { x: 0, y: 1, z: 0 }, radius: 18, alpha: -Math.PI / 2, beta: 0.85 },
     "fantasy_evil.farmer_uprising_evil": { radius: 34, alpha: Math.PI, beta: 1.0 },
     "fantasy_evil.blasted_skirmish": { target: { x: 0, y: 1, z: 10 }, radius: 28, alpha: -Math.PI / 2, beta: 0.45 },
+    // 627: Leading Cacti's lanes stand before the back-row shopfronts (+z): from the south-west so the lanes recede on a
+    // diagonal with the storefronts behind them (ref wild_west.leading_cacti.png).
+    "wild_west.leading_cacti": { radius: 26, alpha: Math.PI + 0.75, beta: 1.15 },
   };
   const armyPose = ARMY_POSE[item];
   if (armyPose) {
