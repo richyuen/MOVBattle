@@ -115,8 +115,10 @@ export const STAGES: TabsStageDef[] = [
       ["renaissance.jouster", 21, 10],
       ["renaissance.jouster", 21, 14],
       ["renaissance.jouster", 21, 18],
-      ["renaissance.da_vinci_tank", 27.5, 10],
-      ["renaissance.da_vinci_tank", 27.5, 14],
+      // The player stands in a circle (radius 12 round (-12, 2), reaching into the player's zone at x -19): one Da Vinci
+      // Tank at each end of it, north and south, facing in across the middle (card Survey).
+      ["renaissance.da_vinci_tank", -12, 14, -90],
+      ["renaissance.da_vinci_tank", -12, -10, 90],
     ],
   },
   {

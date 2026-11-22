@@ -3861,6 +3861,10 @@ const gameApi = {
       // Laughing Knights' column holds the land bridge (x -5..5, z -3..5)
       // from its player end to the right bank (card Survey).
       team: 1 as const, center: new Vector3(2, 0, 1), size: new Vector3(14, 100, 6),
+    }] : scenarioId === "fantasy_good.chaotic_cavalry" ? [...zones, {
+      // Chaotic Cavalry's riders and tanks ring the player across the
+      // plaza's middle (card Survey "The player is in a circle").
+      team: 1 as const, center: new Vector3(-12, 0, 2), size: new Vector3(28, 100, 30),
     }] : scenarioId === "wild_west.lone_ranger_and_his_friends" ? [...zones, {
       // Lone Ranger's party stands on the open sand west of the chapel, on the
       // player-to-chapel axis inside the rim saguaros (ref: church behind his left).
