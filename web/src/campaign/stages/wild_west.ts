@@ -69,30 +69,33 @@ export const STAGES: TabsStageDef[] = [
     budget: 7500,
     playerUnits: { factions: ["tribal","farmer","medieval","ancient","viking","dynasty","renaissance","pirate","spooky"] },
     enemy: [
-      // [R] 624 spec (reference/stages/wild_west.lone_ranger_and_his_friends.png: the Quick Draw alone at the centre of the
-      // rear, a Deadeye ~6 m either side of him a little nearer the player, the white chapel straight behind-left of him).
-      // The party is laid on the player-to-chapel axis, matching the reference's frame: the rear-street building
-      // (x ~18..27, z ~28..37) on the left, the chapel (x 35.3..42.7, z 29.3..40.7) behind-left of the Quick Draw at
-      // (33, 23) when seen from the player's side (looking +x).
-      // Front (x 24, just south of the building): three Cacti with two Miners to each side of them, the middle Cactus
-      // 9 m before him and low enough (2 m) to leave him clear from a raised player-side eye. Gunslingers behind the end
-      // Cacti (x 27.5), Deadeyes 5.5 m either side of him at x 30.5 (the north one in the alley between building and
-      // chapel), a Lasso outside each Deadeye. All on open sand inside the rim saguaros; stage zone (27, 23) 16 x 20 in
-      // main.ts:checkStage.
-      ["wild_west.miner", 24, 16.6],
-      ["wild_west.miner", 24, 18.1],
-      ["wild_west.cactus", 24, 20],
-      ["wild_west.cactus", 23.6, 22],
-      ["wild_west.cactus", 24, 24],
-      ["wild_west.miner", 24, 25.9],
-      ["wild_west.miner", 24, 27.4],
-      ["wild_west.gunslinger", 27.5, 19.4],
-      ["wild_west.gunslinger", 27.5, 24.6],
-      ["wild_west.deadeye", 30.5, 17.5],
-      ["wild_west.deadeye", 30.5, 28.5],
-      ["wild_west.lasso", 30.5, 15],
-      ["wild_west.lasso", 31.2, 31],
-      ["wild_west.quick_draw", 33, 23],
+      // [R] 625 spec (reference/stages/wild_west.lone_ranger_and_his_friends.png: the Quick Draw alone at the centre of the
+      // rear, whole from head to boots, a Deadeye ~5 m either side of him a little nearer the player, the white chapel
+      // behind-left of him, the town on the left). The base map's red mound ("hill", centre (35, 25), 10 x 8 m, 1.8 m
+      // high; mapBuilder.ts) swallowed his legs at (33, 23): the party now stands wholly in front of it.
+      // The party is laid square to the _army sight line (camera from the south-west, alpha PI+0.6: forward
+      // d = (0.825, 0.565), right r = (0.565, -0.825)), round the Quick Draw at O = (29, 20.5), 1.2 m clear of the
+      // mound's rim; the chapel (39, 35) is 16 m behind him and 6 m to his left, the mound 7 m behind-right.
+      // Local (u along d, v along r) -> world O + u*d + v*r:
+      //   Quick Draw (0, 0); Deadeyes (-1.5, +-5); Lassos (-2, +-7.5), outside the Deadeyes;
+      //   Gunslingers (-4.5, +-2.6), behind the end Cacti; Cacti (-8, -2/0/2), the middle one 2 m tall so the
+      //   sight line to his boots (18 deg) passes 0.6 m over it; Miners (-8, +-3.6 and +-5.1), two each side of the Cacti.
+      // Nobody on the mound, in the rear-street building (x ~18..27, z ~28..37) or behind its porch; stage zone
+      // (25.5, 18.5) 16 x 18 in main.ts:checkStage.
+      ["wild_west.miner", 20.4, 19],
+      ["wild_west.miner", 19.5, 20.2],
+      ["wild_west.cactus", 21.3, 17.6],
+      ["wild_west.cactus", 22.4, 16],
+      ["wild_west.cactus", 23.5, 14.3],
+      ["wild_west.miner", 24.4, 13],
+      ["wild_west.miner", 25.3, 11.8],
+      ["wild_west.gunslinger", 23.8, 20.1],
+      ["wild_west.gunslinger", 26.8, 15.8],
+      ["wild_west.deadeye", 24.9, 23.8],
+      ["wild_west.deadeye", 30.6, 15.5],
+      ["wild_west.lasso", 23.1, 25.6],
+      ["wild_west.lasso", 31.6, 13.2],
+      ["wild_west.quick_draw", 29, 20.5],
     ],
   },
   {

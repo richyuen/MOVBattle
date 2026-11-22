@@ -3874,9 +3874,9 @@ const gameApi = {
       // plaza's middle (card Survey "The player is in a circle").
       team: 1 as const, center: new Vector3(-12, 0, 2), size: new Vector3(28, 100, 30),
     }] : scenarioId === "wild_west.lone_ranger_and_his_friends" ? [...zones, {
-      // Lone Ranger's party stands on the open sand west of the chapel, on the
-      // player-to-chapel axis inside the rim saguaros (ref: church behind his left).
-      team: 1 as const, center: new Vector3(27, 0, 23), size: new Vector3(16, 100, 20),
+      // Lone Ranger's party stands on the open sand south-west of the chapel and
+      // the red mound, squared to the player-side view (ref: church behind his left).
+      team: 1 as const, center: new Vector3(25.5, 0, 18.5), size: new Vector3(16, 100, 18),
     }] : scenarioId === "wild_west.shogun_s_samurai" ? [...zones, {
       // Shogun's Samurai hold the right-side terrace stair from its foot on
       // the middle lawn to the outer lawn above (card Survey).
