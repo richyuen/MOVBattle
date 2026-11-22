@@ -3877,6 +3877,10 @@ const gameApi = {
       // Lone Ranger's party stands on the open sand south-west of the chapel and
       // the red mound, squared to the player-side view (ref: church behind his left).
       team: 1 as const, center: new Vector3(25.5, 0, 18.5), size: new Vector3(16, 100, 18),
+    }] : scenarioId === "fantasy_evil.storm_the_fortress" ? [...zones, {
+      // Storm the Fortress holds the open ground before the castle gate (-10, 25)
+      // on the gate path's side of the field (thumb: the gate right behind it).
+      team: 1 as const, center: new Vector3(-8, 0, 11), size: new Vector3(22, 100, 22),
     }] : scenarioId === "wild_west.shogun_s_samurai" ? [...zones, {
       // Shogun's Samurai hold the right-side terrace stair from its foot on
       // the middle lawn to the outer lawn above (card Survey).
