@@ -287,7 +287,7 @@ async function stageScene(page, item) {
   const ARMY_POSE = {
     "fantasy_good.chaotic_cavalry": { target: { x: -12, y: 1, z: 2 }, radius: 24, alpha: Math.PI, beta: 0.85 },
     "fantasy_evil.storm_the_fortress": { alpha: -Math.PI / 2, beta: 1.1 },
-    "fantasy_evil.encircling_tribe": { alpha: Math.PI, beta: 0.75 },
+    "fantasy_evil.encircling_tribe": { radius: 32, alpha: Math.PI, beta: 0.75 },
     "fantasy_evil.dismantle_the_spears": { alpha: Math.PI + 0.5, beta: 1.05 },
   };
   const armyPose = ARMY_POSE[item];
