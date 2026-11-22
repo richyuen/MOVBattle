@@ -16,8 +16,10 @@ export const STAGES: TabsStageDef[] = [
       ["tribal.protector", 2, -4],
       ["tribal.chieftain", 2, 0],
       ["tribal.chieftain", 2, 4],
-      ["tribal.mammoth", 2, 8],
-      ["tribal.mammoth", 2, 12],
+      // The player is surrounded on two sides: the infantry before him (east), the two Mammoths close together on his
+      // south flank, apart from the infantry and turned in toward him (card Survey; thumb: the pair side by side).
+      ["tribal.mammoth", -16, -19, 90],
+      ["tribal.mammoth", -11.5, -19.5, 90],
       ["tribal.spear_thrower", 8.5, -6.3],
       ["tribal.spear_thrower", 8.5, -4.5],
       ["tribal.spear_thrower", 8.5, -2.7],

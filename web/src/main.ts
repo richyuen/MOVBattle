@@ -3838,6 +3838,10 @@ const gameApi = {
     // the player's placement rules when the same map is reused in sandbox.
     const stageZones = scenarioId === "spooky.breakout" ? [...zones, {
       team: 1 as const, center: Vector3.Zero(), size: new Vector3(52, 100, 56),
+    }] : scenarioId === "fantasy_good.colossal_spike" ? [...zones, {
+      // Colossal Spike's Mammoth pair stands on the player's south flank,
+      // the second side of the surround (card Survey).
+      team: 1 as const, center: new Vector3(-14, 0, -19), size: new Vector3(14, 100, 8),
     }] : scenarioId === "spooky.turtle" ? [...zones, {
       // Turtle's locked mixed force occupies the opposite bank (card Survey).
       team: 1 as const, center: new Vector3(-23, 0, 0), size: new Vector3(36, 100, 62),
