@@ -73,6 +73,15 @@ import { PlacementValidator } from "./map/placementValidator";
 import { installTerrainLift, setActiveHeightField } from "./map/terrain";
 import { applyStagePresentation, clearStagePresentation } from "./campaign/stagePresentation";
 import {
+  clearedScenarioCount,
+  isCampaignCleared,
+  isScenarioCleared,
+  loadCampaignProgress,
+  markScenarioCleared,
+  resetCampaignProgress,
+  setLastCampaignScenario,
+} from "./campaign/campaignProgress";
+import {
   CameraController,
   type CameraViewState,
 } from "./ui/cameraController";
@@ -122,6 +131,7 @@ const btnResultPrimaryEl = document.getElementById("btnResultPrimary") as HTMLBu
 const btnResultSecondaryEl = document.getElementById("btnResultSecondary") as HTMLButtonElement | null;
 const btnLeaveCampaignEl = document.getElementById("btnLeaveCampaign") as HTMLButtonElement | null;
 const btnCloseCampaignEl = document.getElementById("btnCloseCampaign") as HTMLButtonElement | null;
+const btnResetProgressEl = document.getElementById("btnResetProgress") as HTMLButtonElement | null;
 const touchCameraControlsEl = document.getElementById("touchCameraControls");
 const btnTouchRotateLeftEl = document.getElementById("btnTouchRotateLeft") as HTMLButtonElement | null;
 const btnTouchRotateRightEl = document.getElementById("btnTouchRotateRight") as HTMLButtonElement | null;
@@ -799,8 +809,11 @@ function populateCampaignScenarioList(campaignId: CampaignId | null): void {
     const btn = document.createElement("button");
     btn.className = "campaign-scenario-item";
     btn.classList.toggle("active", selectedCampaignScenarioId === scenario.id);
+    // A stage won on a budget is kept between visits and ticked here (campaignProgress.ts)
+    const cleared = isScenarioCleared(campaign.id, scenario.id);
+    btn.classList.toggle("cleared", cleared);
     // One caps line per level: its number and name, the description left as the hover title
-    btn.textContent = `${index + 1}  ${scenario.displayName}`;
+    btn.textContent = `${index + 1}  ${scenario.displayName}${cleared ? "  \u2713" : ""}`;
     btn.title = scenario.description;
     btn.addEventListener("click", () => {
       const nextSession = createCampaignSession(campaign.id, campaignSession?.unlimited ?? false, scenario.id);
@@ -818,8 +831,10 @@ function populateCampaignList(): void {
   campaignListEl.innerHTML = "";
   const campaigns = listCampaignDefinitions();
   if (!selectedCampaignId && campaigns.length > 0) {
-    selectedCampaignId = campaigns[0].id;
-    selectedCampaignScenarioId = campaigns[0].scenarios[0]?.id ?? null;
+    // Reopen where the player left off on an earlier visit, else at the first campaign
+    const last = loadCampaignProgress().last;
+    selectedCampaignId = last?.campaignId ?? campaigns[0].id;
+    selectedCampaignScenarioId = last?.scenarioId ?? campaigns[0].scenarios[0]?.id ?? null;
   }
   // The campaigns as numbered nodes along a dashed route over the map, a tiny caps name under each
   const at = (index: number): [number, number] => CAMPAIGN_NODE_AT[index % CAMPAIGN_NODE_AT.length];
@@ -828,6 +843,7 @@ function populateCampaignList(): void {
     const btn = document.createElement("button");
     btn.className = "campaign-item";
     btn.classList.toggle("active", selectedCampaignId === campaign.id);
+    btn.classList.toggle("cleared", isCampaignCleared(campaign.id));
     btn.style.left = `${at(index)[0]}%`;
     btn.style.top = `${at(index)[1]}%`;
     btn.title = campaign.description;
@@ -1145,6 +1161,13 @@ btnResultSecondaryEl?.addEventListener("click", () => {
 });
 btnLeaveCampaignEl?.addEventListener("click", () => leaveCampaignMode());
 btnCloseCampaignEl?.addEventListener("click", () => toggleCampaignOverlay(false));
+btnResetProgressEl?.addEventListener("click", () => {
+  if (clearedScenarioCount() === 0 && !loadCampaignProgress().last) return;
+  if (!window.confirm("Reset campaign progress? Every cleared stage will be unmarked.")) return;
+  resetCampaignProgress();
+  populateCampaignList();
+  showStatus("Campaign progress reset.");
+});
 mapNameEl?.addEventListener("click", () => toggleMapPicker(true));
 btnCloseMapPickerEl?.addEventListener("click", () => toggleMapPicker(false));
 mapOverlayEl.addEventListener("click", (event) => {
@@ -1743,6 +1766,8 @@ function showResult(result: BattleResult): void {
   if (campaignSession) {
     const isPlayerVictory = !result.isDraw && result.winner === 0;
     pendingCampaignResultAction = isPlayerVictory ? "advance" : "retry";
+    // A win on the stage's budget is kept as cleared; an Unlimited win is not
+    if (isPlayerVictory && !campaignSession.unlimited) markScenarioCleared(campaignSession.campaignId, campaignSession.scenarioId);
     const outcomeText = isPlayerVictory
       ? "Click Next Scenario to continue, or Replay to run this battle again."
       : "Click Retry to replay this campaign battle.";
@@ -1806,6 +1831,7 @@ function loadCampaignScenario(statusMessage?: string): void {
   lastBattleRecap = null;
   selectedCampaignId = activeCampaign.id;
   selectedCampaignScenarioId = activeScenario.id;
+  setLastCampaignScenario(activeCampaign.id, activeScenario.id);
   clearPendingCampaignResolution();
   resetBattle({
     preserveCampaignSession: true,
@@ -2328,6 +2354,10 @@ function buildGameStatePayload() {
       mapId: activeMapInstance.id,
     } : null,
     activeFaction: FACTION_NAMES[activeFaction],
+    campaignProgress: {
+      clearedCount: clearedScenarioCount(),
+      last: loadCampaignProgress().last,
+    },
     selectedUnitId,
     budgets: {
       teamA: budgetSystem.getRemaining(0),

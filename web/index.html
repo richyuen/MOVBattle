@@ -330,6 +330,10 @@
     }
     .campaign-scenario-item.active, .campaign-scenario-item:hover { color: #fff; }
     .campaign-scenario-item.active::before { content: "\25B8  "; }
+    .campaign-scenario-item.cleared { color: #9fe0a8; }
+    .campaign-scenario-item.cleared.active, .campaign-scenario-item.cleared:hover { color: #c8f5ce; }
+    .campaign-item.cleared { border-color: #9fe0a8; }
+    .campaign-item.cleared:not(.active) { color: #9fe0a8; }
     .campaign-actions { margin-top: 14px; display: flex; gap: 10px; }
     .campaign-actions .btn { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
     .campaign-actions .btn[hidden] { display: none; }
@@ -724,6 +728,7 @@
         <div class="campaign-scenario-list" id="campaignScenarioList"></div>
         <div class="campaign-actions">
           <button class="btn" id="btnLeaveCampaign" hidden>Leave campaign</button>
+          <button class="btn" id="btnResetProgress" title="Unmark every cleared stage">Reset progress</button>
           <button class="btn" id="btnCloseCampaign">Close</button>
         </div>
       </div>
