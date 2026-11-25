@@ -719,3 +719,8 @@ Original prompt: Do a pass of every unit in the game against https://totally-acc
 - Changed startup intro so CSS no longer autoplays `titleFlyThrough`; playback now starts from JS after `window.load` and a one-shot Babylon post-render callback.
 - Added active/started/loadReady/renderReady state plus DOM connectivity guard to prevent late playback after dismissal.
 - Verification so far: static intro gate RED/green check, `npm run build`, custom Playwright startup/skip/capture check, and required `develop-web-game` client smoke run.
+
+## 2026-11-25 - Campaign progress saved between visits
+- New `web/src/campaign/campaignProgress.ts`: stages won on their budget and the last stage played, kept in localStorage (`movbattle.campaignProgress.v1`). Unlimited wins do not count. Stale or corrupt saves are ignored; with storage blocked it works for the session only.
+- `main.ts`: a budget win marks the stage cleared; loading a stage records it as the last; the campaign map reopens on the last stage; cleared stages show a tick and green text, a fully cleared campaign's node a green ring. A "Reset progress" button in the campaign card wipes it after a confirm. `render_game_to_text` reports `campaignProgress`.
+- Validation: `npm run build`; a Node check of the progress module against a fake localStorage (survives a reload, no duplicates, stale ids dropped, corrupt JSON ignored, reset, blocked storage). Not yet run in a real browser (no browser in the container).
